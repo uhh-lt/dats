@@ -1,7 +1,6 @@
 from fastapi import APIRouter, Depends, File, Form, HTTPException, UploadFile
-from sqlalchemy.orm import Session
 
-from common.dependencies import get_current_user, get_db_session
+from common.dependencies import DBSession, get_current_user
 from common.doc_type_enum import DocType
 from common.sdoc_status_enum import SDocStatus
 from core.auth.authz_user import AuthzUser
@@ -35,7 +34,7 @@ router = APIRouter(
 )
 def get_search_columns_by_doctype(
     *,
-    db: Session = Depends(get_db_session),
+    db: DBSession,
     doctype: DocType,
     authz_user: AuthzUser = Depends(),
 ) -> list[SdocHealthColumn]:
@@ -49,7 +48,7 @@ def get_search_columns_by_doctype(
 )
 def search_sdoc_health(
     *,
-    db: Session = Depends(get_db_session),
+    db: DBSession,
     project_id: int,
     doctype: DocType,
     sorts: list[SdocHealthSort],
@@ -75,7 +74,7 @@ def search_sdoc_health(
 )
 def get_simple_sdoc_status_by_project_and_status(
     *,
-    db: Session = Depends(get_db_session),
+    db: DBSession,
     project_id: int,
     status: SDocStatus,
     authz_user: AuthzUser = Depends(),
@@ -151,7 +150,7 @@ def retry_failed_sdocs(
 )
 def recompute_processing_step(
     *,
-    db: Session = Depends(get_db_session),
+    db: DBSession,
     project_id: int,
     processing_step: str,
     sdoc_ids: list[int],

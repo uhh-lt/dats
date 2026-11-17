@@ -1,9 +1,8 @@
 from fastapi import APIRouter, Depends
-from sqlalchemy.orm import Session
 
 from common.crud_enum import Crud
 from common.dats_event import DATSEvent
-from common.dependencies import get_current_user, get_db_session, skip_limit_params
+from common.dependencies import DBSession, get_current_user, skip_limit_params
 from core.auth.auth_exceptions import InvalidError
 from core.auth.authz_user import AuthzUser
 from core.project.project_crud import crud_project
@@ -37,7 +36,7 @@ def create_virtual_user(
     *,
     project_id: int,
     virtual_user: VirtualUserCreate,
-    db: Session = Depends(get_db_session),
+    db: DBSession,
     authz_user: AuthzUser = Depends(),
     ws: WebsocketEmitter = Depends(),
 ) -> UserRead:
@@ -68,7 +67,7 @@ def get_me(*, user: UserORM = Depends(get_current_user)) -> UserRead:
     response_model=PublicUserRead,
     summary="Returns the User with the given ID if it exists",
 )
-def get_by_id(*, db: Session = Depends(get_db_session), user_id: int) -> PublicUserRead:
+def get_by_id(*, db: DBSession, user_id: int) -> PublicUserRead:
     db_user = crud_user.read(db=db, id=user_id)
     return PublicUserRead.model_validate(db_user)
 
@@ -84,7 +83,7 @@ def get_by_id(*, db: Session = Depends(get_db_session), user_id: int) -> PublicU
 def get_by_project(
     *,
     project_id: int,
-    db: Session = Depends(get_db_session),
+    db: DBSession,
     authz_user: AuthzUser = Depends(),
 ) -> list[UserRead]:
     authz_user.assert_in_project(project_id)
@@ -102,7 +101,7 @@ def get_by_project(
 )
 def get_all(
     *,
-    db: Session = Depends(get_db_session),
+    db: DBSession,
     skip_limit: dict[str, int] = Depends(skip_limit_params),
 ) -> list[PublicUserRead]:
     db_objs = crud_user.read_multi(db=db, include_virtual=False, **skip_limit)
@@ -119,7 +118,7 @@ def get_all(
 )
 def update_me(
     *,
-    db: Session = Depends(get_db_session),
+    db: DBSession,
     user: UserUpdate,
     authz_user: AuthzUser = Depends(),
     ws: WebsocketEmitter = Depends(),
@@ -144,7 +143,7 @@ def update_by_id(
     *,
     user_id: int,
     user: UserUpdate,
-    db: Session = Depends(get_db_session),
+    db: DBSession,
     authz_user: AuthzUser = Depends(),
     ws: WebsocketEmitter = Depends(),
 ) -> UserRead:
@@ -170,7 +169,7 @@ def associate_user_to_project(
     *,
     project_id: int,
     user: ProjectAddUser,
-    db: Session = Depends(get_db_session),
+    db: DBSession,
     authz_user: AuthzUser = Depends(),
     ws: WebsocketEmitter = Depends(),
 ) -> ProjectUserLinks:
@@ -204,7 +203,7 @@ def associate_user_to_project(
 )
 def delete_me(
     *,
-    db: Session = Depends(get_db_session),
+    db: DBSession,
     authz_user: AuthzUser = Depends(),
     ws: WebsocketEmitter = Depends(),
 ) -> UserRead:
@@ -234,7 +233,7 @@ def delete_me(
 def delete_by_id(
     *,
     user_id: int,
-    db: Session = Depends(get_db_session),
+    db: DBSession,
     authz_user: AuthzUser = Depends(),
     ws: WebsocketEmitter = Depends(),
 ) -> UserRead:
@@ -256,7 +255,7 @@ def dissociate_user_from_project(
     *,
     project_id: int,
     user_id: int,
-    db: Session = Depends(get_db_session),
+    db: DBSession,
     authz_user: AuthzUser = Depends(),
     ws: WebsocketEmitter = Depends(),
 ) -> ProjectUserLinks:

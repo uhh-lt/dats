@@ -6,10 +6,9 @@ from fastapi import (
     HTTPException,
     status,
 )
-from sqlalchemy.orm import Session
 
 from common.dats_event import DATSEvent
-from common.dependencies import get_current_user, get_db_session
+from common.dependencies import DBSession, get_current_user
 from core.auth.api_key_crud import crud_api_key
 from core.auth.api_key_dto import ApiKeyCreate, ApiKeyCreatedResponse, ApiKeyRead
 from core.auth.auth_enum import ExpiryDuration
@@ -30,7 +29,7 @@ router = APIRouter(prefix="/api-keys", tags=["api-key"])
 )
 def create_api_key(
     *,
-    db: Session = Depends(get_db_session),
+    db: DBSession,
     name: str,
     expires_in: ExpiryDuration,
     current_user: UserORM = Depends(get_current_user),
@@ -77,7 +76,7 @@ def create_api_key(
 )
 def list_api_keys(
     *,
-    db: Session = Depends(get_db_session),
+    db: DBSession,
     current_user: UserORM = Depends(get_current_user),
 ) -> list[ApiKeyRead]:
     return [
@@ -95,7 +94,7 @@ def list_api_keys(
 )
 def delete_api_key(
     *,
-    db: Session = Depends(get_db_session),
+    db: DBSession,
     key_id: int,
     current_user: UserORM = Depends(get_current_user),
     ws: WebsocketEmitter = Depends(),

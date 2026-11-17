@@ -85,7 +85,7 @@ mutation result:
 @router.put("", response_model=CodeRead)
 def create_new_code(
     *,
-    db: Session = Depends(get_db_session),
+    db: DBSession,
     code: CodeCreate,
     authz_user: AuthzUser = Depends(),
     ws: WebsocketEmitter = Depends(),

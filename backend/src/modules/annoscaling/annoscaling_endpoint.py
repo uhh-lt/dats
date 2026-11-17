@@ -1,8 +1,7 @@
 from fastapi import APIRouter, Depends
-from sqlalchemy.orm import Session
 
 from common.dats_event import DATSEvent
-from common.dependencies import get_current_user, get_db_session
+from common.dependencies import DBSession, get_current_user
 from core.annotation.span_annotation_dto import SpanAnnotationRead
 from core.auth.authz_user import AuthzUser
 from modules.annoscaling.annoscaling_dto import (
@@ -31,7 +30,7 @@ ass: AnnoScalingService = AnnoScalingService()
 )
 def suggest(
     *,
-    db: Session = Depends(get_db_session),
+    db: DBSession,
     dto: AnnoscalingSuggest,
     authz_user: AuthzUser = Depends(),
 ) -> list[AnnoscalingResult]:
@@ -58,7 +57,7 @@ def suggest(
 )
 def confirm_suggestions(
     *,
-    db: Session = Depends(get_db_session),
+    db: DBSession,
     dto: AnnoscalingConfirmSuggest,
     authz_user: AuthzUser = Depends(),
     ws: WebsocketEmitter = Depends(),

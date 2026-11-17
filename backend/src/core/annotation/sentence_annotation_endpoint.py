@@ -1,10 +1,9 @@
 from fastapi import APIRouter, Depends, Query
 from loguru import logger
-from sqlalchemy.orm import Session
 
 from common.crud_enum import Crud
 from common.dats_event import DATSEvent
-from common.dependencies import get_current_user, get_db_session
+from common.dependencies import DBSession, get_current_user
 from core.annotation.sentence_annotation_crud import crud_sentence_anno
 from core.annotation.sentence_annotation_dto import (
     SentenceAnnotationCreate,
@@ -36,7 +35,7 @@ router = APIRouter(
 )
 def create_sentence_annotation(
     *,
-    db: Session = Depends(get_db_session),
+    db: DBSession,
     sentence_annotation: SentenceAnnotationCreate,
     user_id: int | None = Query(
         default=None,
@@ -71,7 +70,7 @@ def create_sentence_annotation(
 )
 def create_sentence_annotations_bulk(
     *,
-    db: Session = Depends(get_db_session),
+    db: DBSession,
     sentence_annotations: list[SentenceAnnotationCreate],
     user_id: int | None = Query(
         default=None,
@@ -113,7 +112,7 @@ def create_sentence_annotations_bulk(
 )
 def get_by_id(
     *,
-    db: Session = Depends(get_db_session),
+    db: DBSession,
     sentence_anno_id: int,
     authz_user: AuthzUser = Depends(),
 ) -> SentenceAnnotationRead:
@@ -130,7 +129,7 @@ def get_by_id(
 )
 def get_by_sdoc_and_user(
     *,
-    db: Session = Depends(get_db_session),
+    db: DBSession,
     sdoc_id: int,
     user_id: int,
     authz_user: AuthzUser = Depends(),
@@ -175,7 +174,7 @@ def get_by_sdoc_and_user(
 )
 def get_by_user_code(
     *,
-    db: Session = Depends(get_db_session),
+    db: DBSession,
     code_id: int,
     authz_user: AuthzUser = Depends(),
 ) -> list[SentenceAnnotationRead]:
@@ -197,7 +196,7 @@ def get_by_user_code(
 )
 def update_by_id(
     *,
-    db: Session = Depends(get_db_session),
+    db: DBSession,
     sentence_anno_id: int,
     sentence_annotation_anno: SentenceAnnotationUpdate,
     authz_user: AuthzUser = Depends(),
@@ -235,7 +234,7 @@ def update_by_id(
 )
 def update_sentence_annotations_bulk(
     *,
-    db: Session = Depends(get_db_session),
+    db: DBSession,
     sent_annos: list[SentenceAnnotationUpdateBulk],
     authz_user: AuthzUser = Depends(),
     validate: Validate = Depends(),
@@ -269,7 +268,7 @@ def update_sentence_annotations_bulk(
 )
 def delete_by_id(
     *,
-    db: Session = Depends(get_db_session),
+    db: DBSession,
     sentence_anno_id: int,
     authz_user: AuthzUser = Depends(),
     ws: WebsocketEmitter = Depends(),
@@ -296,7 +295,7 @@ def delete_by_id(
 )
 def delete_sentence_annotations_bulk(
     *,
-    db: Session = Depends(get_db_session),
+    db: DBSession,
     sentence_anno_ids: list[int],
     authz_user: AuthzUser = Depends(),
     ws: WebsocketEmitter = Depends(),
@@ -323,7 +322,7 @@ def delete_sentence_annotations_bulk(
 )
 def count_annotations(
     *,
-    db: Session = Depends(get_db_session),
+    db: DBSession,
     user_id: int,
     sdoc_ids: list[int],
     class_ids: list[int],

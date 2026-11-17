@@ -1,8 +1,7 @@
 from fastapi import APIRouter, Depends
-from sqlalchemy.orm import Session
 
 from common.dats_event import DATSEvent
-from common.dependencies import get_current_user, get_db_session
+from common.dependencies import DBSession, get_current_user
 from core.auth.authz_user import AuthzUser
 from systems.feature_system.feature_dto import (
     FeatureActivation,
@@ -39,7 +38,7 @@ def get_all() -> list[FeatureRead]:
 )
 def get_project_features(
     *,
-    db: Session = Depends(get_db_session),
+    db: DBSession,
     project_id: int,
     authz_user: AuthzUser = Depends(),
 ) -> list[ProjectFeatureRead]:
@@ -58,7 +57,7 @@ def get_project_features(
 )
 def enable_feature(
     *,
-    db: Session = Depends(get_db_session),
+    db: DBSession,
     project_id: int,
     feature: str,
     activation: FeatureActivation,
@@ -84,7 +83,7 @@ def enable_feature(
 )
 def complete_feature(
     *,
-    db: Session = Depends(get_db_session),
+    db: DBSession,
     project_id: int,
     feature: str,
     activation: FeatureActivation,
@@ -108,7 +107,7 @@ def complete_feature(
 )
 def disable_feature(
     *,
-    db: Session = Depends(get_db_session),
+    db: DBSession,
     project_id: int,
     feature: str,
     authz_user: AuthzUser = Depends(),

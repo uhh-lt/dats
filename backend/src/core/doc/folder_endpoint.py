@@ -1,9 +1,8 @@
 from fastapi import APIRouter, Depends
-from sqlalchemy.orm import Session
 
 from common.crud_enum import Crud
 from common.dats_event import DATSEvent
-from common.dependencies import get_current_user, get_db_session
+from common.dependencies import DBSession, get_current_user
 from common.doc_type_enum import DocType
 from core.auth.authz_user import AuthzUser
 from core.doc.folder_crud import crud_folder
@@ -28,7 +27,7 @@ router = APIRouter(
 def create_folder(
     *,
     folder: FolderCreate,
-    db: Session = Depends(get_db_session),
+    db: DBSession,
     authz_user: AuthzUser = Depends(),
     ws: WebsocketEmitter = Depends(),
 ) -> FolderRead:
@@ -50,7 +49,7 @@ def create_folder(
 def get_by_id(
     *,
     folder_id: int,
-    db: Session = Depends(get_db_session),
+    db: DBSession,
     authz_user: AuthzUser = Depends(),
 ) -> FolderRead:
     authz_user.assert_in_same_project_as(Crud.FOLDER, folder_id)
@@ -66,7 +65,7 @@ def get_by_id(
 def get_sdoc_ids_in_folder_by_doctype(
     *,
     folder_id: int,
-    db: Session = Depends(get_db_session),
+    db: DBSession,
     authz_user: AuthzUser = Depends(),
 ) -> dict[DocType, list[int]]:
     authz_user.assert_in_same_project_as(Crud.FOLDER, folder_id)
@@ -88,7 +87,7 @@ def get_folders_by_project_and_type(
     *,
     project_id: int,
     folder_type: FolderType,
-    db: Session = Depends(get_db_session),
+    db: DBSession,
     authz_user: AuthzUser = Depends(),
 ) -> list[FolderRead]:
     authz_user.assert_in_project(project_id)
@@ -110,7 +109,7 @@ def update_by_id(
     *,
     folder_id: int,
     folder_update: FolderUpdate,
-    db: Session = Depends(get_db_session),
+    db: DBSession,
     authz_user: AuthzUser = Depends(),
     ws: WebsocketEmitter = Depends(),
 ) -> FolderRead:
@@ -131,7 +130,7 @@ def update_by_id(
 def update_folders_bulk(
     *,
     folder_updates: list[FolderUpdateBulk],
-    db: Session = Depends(get_db_session),
+    db: DBSession,
     authz_user: AuthzUser = Depends(),
     ws: WebsocketEmitter = Depends(),
 ) -> list[FolderRead]:
@@ -169,7 +168,7 @@ def update_folders_bulk(
 def delete_by_id(
     *,
     folder_id: int,
-    db: Session = Depends(get_db_session),
+    db: DBSession,
     authz_user: AuthzUser = Depends(),
     ws: WebsocketEmitter = Depends(),
 ) -> FolderRead:

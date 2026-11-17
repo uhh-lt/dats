@@ -1,7 +1,6 @@
 from fastapi import APIRouter, Depends
-from sqlalchemy.orm import Session
 
-from common.dependencies import get_current_user, get_db_session
+from common.dependencies import DBSession, get_current_user
 from core.auth.authz_user import AuthzUser
 from modules.search_annotate.search_annotate import search_and_auto_annotate
 from modules.search_annotate.search_annotate_dto import PaginatedSpanAnnotationHits
@@ -20,7 +19,7 @@ router = APIRouter(
 )
 def auto_annotate(
     *,
-    db: Session = Depends(get_db_session),
+    db: DBSession,
     project_id: int,
     query: str,
     authz_user: AuthzUser = Depends(),

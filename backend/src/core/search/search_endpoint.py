@@ -1,7 +1,6 @@
 from fastapi import APIRouter, Depends
-from sqlalchemy.orm import Session
 
-from common.dependencies import get_current_user, get_db_session
+from common.dependencies import DBSession, get_current_user
 from core.auth.authz_user import AuthzUser
 from core.memo.memo_dto import MemoRead
 from core.search.bbox_anno_search.bbox_anno_search import (
@@ -58,7 +57,7 @@ router = APIRouter(
 )
 def search_sdoc_info(
     *,
-    db: Session = Depends(get_db_session),
+    db: DBSession,
     project_id: int,
     authz_user: AuthzUser = Depends(),
 ) -> list[ColumnInfo[SdocColumns]]:
@@ -74,7 +73,7 @@ def search_sdoc_info(
 )
 def search_sdocs(
     *,
-    db: Session = Depends(get_db_session),
+    db: DBSession,
     project_id: int,
     search_query: str,
     expert_mode: bool,
@@ -125,7 +124,7 @@ def search_memo_info(
 )
 def search_memos(
     *,
-    db: Session = Depends(get_db_session),
+    db: DBSession,
     request: QueryRequest[MemoColumns],
     authz_user: AuthzUser = Depends(),
 ) -> Page[MemoRead]:
@@ -140,7 +139,7 @@ def search_memos(
 )
 def search_memo_groups(
     *,
-    db: Session = Depends(get_db_session),
+    db: DBSession,
     request: GroupQueryRequest[MemoColumns],
     authz_user: AuthzUser = Depends(),
 ) -> GroupPage:
@@ -155,7 +154,7 @@ def search_memo_groups(
 )
 def search_span_annotation_info(
     *,
-    db: Session = Depends(get_db_session),
+    db: DBSession,
     project_id: int,
     authz_user: AuthzUser = Depends(),
 ) -> list[ColumnInfo[SpanColumns]]:
@@ -173,7 +172,7 @@ def search_span_annotation_info(
 )
 def search_span_annotations(
     *,
-    db: Session = Depends(get_db_session),
+    db: DBSession,
     request: QueryRequest[SpanColumns],
     authz_user: AuthzUser = Depends(),
 ) -> Page[SpanAnnotationRow]:
@@ -189,7 +188,7 @@ def search_span_annotations(
 )
 def search_span_annotation_groups(
     *,
-    db: Session = Depends(get_db_session),
+    db: DBSession,
     request: GroupQueryRequest[SpanColumns],
     authz_user: AuthzUser = Depends(),
 ) -> GroupPage:
@@ -207,7 +206,7 @@ def search_span_annotation_groups(
 )
 def search_sentence_annotation_info(
     *,
-    db: Session = Depends(get_db_session),
+    db: DBSession,
     project_id: int,
     authz_user: AuthzUser = Depends(),
 ) -> list[ColumnInfo[SentAnnoColumns]]:
@@ -225,7 +224,7 @@ def search_sentence_annotation_info(
 )
 def search_sentence_annotations(
     *,
-    db: Session = Depends(get_db_session),
+    db: DBSession,
     request: QueryRequest[SentAnnoColumns],
     authz_user: AuthzUser = Depends(),
 ) -> Page[SentenceAnnotationRow]:
@@ -241,7 +240,7 @@ def search_sentence_annotations(
 )
 def search_sentence_annotation_groups(
     *,
-    db: Session = Depends(get_db_session),
+    db: DBSession,
     request: GroupQueryRequest[SentAnnoColumns],
     authz_user: AuthzUser = Depends(),
 ) -> GroupPage:
@@ -259,7 +258,7 @@ def search_sentence_annotation_groups(
 )
 def search_bbox_annotation_info(
     *,
-    db: Session = Depends(get_db_session),
+    db: DBSession,
     project_id: int,
     authz_user: AuthzUser = Depends(),
 ) -> list[ColumnInfo[BBoxColumns]]:
@@ -277,7 +276,7 @@ def search_bbox_annotation_info(
 )
 def search_bbox_annotations(
     *,
-    db: Session = Depends(get_db_session),
+    db: DBSession,
     request: QueryRequest[BBoxColumns],
     authz_user: AuthzUser = Depends(),
 ) -> Page[BBoxAnnotationRow]:
@@ -293,7 +292,7 @@ def search_bbox_annotations(
 )
 def search_bbox_annotation_groups(
     *,
-    db: Session = Depends(get_db_session),
+    db: DBSession,
     request: GroupQueryRequest[BBoxColumns],
     authz_user: AuthzUser = Depends(),
 ) -> GroupPage:

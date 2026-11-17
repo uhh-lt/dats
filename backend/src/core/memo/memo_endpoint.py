@@ -1,11 +1,10 @@
 from uuid import uuid4
 
 from fastapi import APIRouter, Depends
-from sqlalchemy.orm import Session
 
 from common.crud_enum import Crud, attached_object_type_to_memo_crud
 from common.dats_event import DATSEvent
-from common.dependencies import get_current_user, get_db_session
+from common.dependencies import DBSession, get_current_user
 from core.auth.authz_user import AuthzUser
 from core.memo.memo_crud import crud_memo
 from core.memo.memo_dto import (
@@ -42,7 +41,7 @@ router = APIRouter(
 )
 def create_memo(
     *,
-    db: Session = Depends(get_db_session),
+    db: DBSession,
     attached_object_id: int,
     attached_object_type: AttachedObjectType,
     memo: MemoCreate,
@@ -96,7 +95,7 @@ def create_memo(
 )
 def get_recent_memos(
     *,
-    db: Session = Depends(get_db_session),
+    db: DBSession,
     project_id: int,
     limit: int = 10,
     authz_user: AuthzUser = Depends(),
@@ -118,7 +117,7 @@ def get_recent_memos(
 )
 def get_by_id(
     *,
-    db: Session = Depends(get_db_session),
+    db: DBSession,
     memo_id: int,
     authz_user: AuthzUser = Depends(),
 ) -> MemoRead:
@@ -135,7 +134,7 @@ def get_by_id(
 )
 def get_memos_by_attached_object_id(
     *,
-    db: Session = Depends(get_db_session),
+    db: DBSession,
     attached_obj_id: int,
     attached_obj_type: AttachedObjectType,
     authz_user: AuthzUser = Depends(),
@@ -169,7 +168,7 @@ def get_memos_by_attached_object_id(
 )
 def update_by_id(
     *,
-    db: Session = Depends(get_db_session),
+    db: DBSession,
     memo_id: int,
     memo: MemoUpdate,
     authz_user: AuthzUser = Depends(),
@@ -198,7 +197,7 @@ def update_by_id(
 )
 def update_memos_bulk(
     *,
-    db: Session = Depends(get_db_session),
+    db: DBSession,
     memos: list[MemoUpdateBulk],
     authz_user: AuthzUser = Depends(),
     ws: WebsocketEmitter = Depends(),
@@ -232,7 +231,7 @@ def update_memos_bulk(
 )
 def record_recent_memo(
     *,
-    db: Session = Depends(get_db_session),
+    db: DBSession,
     memo_id: int,
     authz_user: AuthzUser = Depends(),
 ) -> None:
@@ -251,7 +250,7 @@ def record_recent_memo(
 )
 def delete_by_id(
     *,
-    db: Session = Depends(get_db_session),
+    db: DBSession,
     memo_id: int,
     authz_user: AuthzUser = Depends(),
     ws: WebsocketEmitter = Depends(),
@@ -274,7 +273,7 @@ def delete_by_id(
 )
 def delete_memos_bulk(
     *,
-    db: Session = Depends(get_db_session),
+    db: DBSession,
     memo_ids: list[int],
     authz_user: AuthzUser = Depends(),
     ws: WebsocketEmitter = Depends(),
@@ -299,7 +298,7 @@ def delete_memos_bulk(
 )
 def generate_memo_suggestion(
     *,
-    db: Session = Depends(get_db_session),
+    db: DBSession,
     attached_obj_id: int,
     attached_obj_type: AttachedObjectType,
     model: str,

@@ -1,9 +1,8 @@
 from fastapi import APIRouter, Depends
-from sqlalchemy.orm import Session
 
 from common.crud_enum import Crud
 from common.dats_event import DATSEvent
-from common.dependencies import get_current_user, get_db_session
+from common.dependencies import DBSession, get_current_user
 from core.auth.authz_user import AuthzUser
 from core.prompt.prompt_dto import (
     PromptContent,
@@ -45,7 +44,7 @@ pts: PromptService = PromptService()
 )
 def create(
     *,
-    db: Session = Depends(get_db_session),
+    db: DBSession,
     prompt: PromptCreate,
     authz_user: AuthzUser = Depends(),
     ws: WebsocketEmitter = Depends(),
@@ -64,7 +63,7 @@ def create(
 )
 def create_version(
     *,
-    db: Session = Depends(get_db_session),
+    db: DBSession,
     prompt_id: int,
     version: PromptVersionCreate,
     authz_user: AuthzUser = Depends(),
@@ -89,7 +88,7 @@ def create_version(
 )
 def create_examples(
     *,
-    db: Session = Depends(get_db_session),
+    db: DBSession,
     examples: PromptExamplesCreate,
     authz_user: AuthzUser = Depends(),
 ) -> list[PromptExample]:
@@ -105,7 +104,7 @@ def create_examples(
 )
 def preview(
     *,
-    db: Session = Depends(get_db_session),
+    db: DBSession,
     request: PromptPreviewRequest,
     authz_user: AuthzUser = Depends(),
 ) -> PromptPreview:
@@ -149,7 +148,7 @@ def get_default(
 )
 def get_by_project(
     *,
-    db: Session = Depends(get_db_session),
+    db: DBSession,
     project_id: int,
     authz_user: AuthzUser = Depends(),
 ) -> list[PromptRead]:
@@ -165,7 +164,7 @@ def get_by_project(
 )
 def get_version_by_id(
     *,
-    db: Session = Depends(get_db_session),
+    db: DBSession,
     version_id: int,
     authz_user: AuthzUser = Depends(),
 ) -> PromptVersionRead:
@@ -181,7 +180,7 @@ def get_version_by_id(
 )
 def get_by_id(
     *,
-    db: Session = Depends(get_db_session),
+    db: DBSession,
     prompt_id: int,
     authz_user: AuthzUser = Depends(),
 ) -> PromptRead:
@@ -200,7 +199,7 @@ def get_by_id(
 )
 def update_by_id(
     *,
-    db: Session = Depends(get_db_session),
+    db: DBSession,
     prompt_id: int,
     prompt: PromptUpdate,
     authz_user: AuthzUser = Depends(),

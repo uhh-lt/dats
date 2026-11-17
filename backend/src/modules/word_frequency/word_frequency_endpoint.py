@@ -1,8 +1,7 @@
 from fastapi import APIRouter, Depends
-from sqlalchemy.orm import Session
 
 from common.crud_enum import Crud
-from common.dependencies import get_current_user, get_db_session
+from common.dependencies import DBSession, get_current_user
 from core.auth.authz_user import AuthzUser
 from modules.word_frequency.word_frequency_columns import WordFrequencyColumns
 from modules.word_frequency.word_frequency_dto import (
@@ -37,7 +36,7 @@ router = APIRouter(
 )
 def word_frequency_analysis_info(
     *,
-    db: Session = Depends(get_db_session),
+    db: DBSession,
     project_id: int,
     authz_user: AuthzUser = Depends(),
 ) -> list[ColumnInfo[WordFrequencyColumns]]:
@@ -59,7 +58,7 @@ def word_frequency_analysis_info(
 )
 def get_word_frequencies(
     *,
-    db: Session = Depends(get_db_session),
+    db: DBSession,
     sdoc_id: int,
     authz_user: AuthzUser = Depends(),
 ) -> list[WordFrequencyRead]:
@@ -80,7 +79,7 @@ def get_word_frequencies(
 )
 def word_frequency_analysis(
     *,
-    db: Session = Depends(get_db_session),
+    db: DBSession,
     project_id: int,
     filter: Filter[WordFrequencyColumns],
     page: int,
@@ -108,7 +107,7 @@ def word_frequency_analysis(
 )
 def word_frequency_analysis_export(
     *,
-    db: Session = Depends(get_db_session),
+    db: DBSession,
     project_id: int,
     filter: Filter[WordFrequencyColumns],
     sorts: list[Sort[WordFrequencyColumns]],

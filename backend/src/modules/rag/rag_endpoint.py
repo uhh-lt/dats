@@ -1,9 +1,8 @@
 from typing import Annotated
 
 from fastapi import APIRouter, Body, Depends
-from sqlalchemy.orm import Session
 
-from common.dependencies import get_current_user, get_db_session
+from common.dependencies import DBSession, get_current_user
 from core.auth.authz_user import AuthzUser
 from modules.rag.rag_dto import ChatSessionResponse
 from modules.rag.rag_feature import RAG_CHAT
@@ -29,9 +28,9 @@ def rag_session(
     threshold: float,
     model: str,
     sdoc_ids: list[int] | None,
+    db: DBSession,
     authz_user: AuthzUser = Depends(),
     session_id: str | None = None,
-    db: Session = Depends(get_db_session),
 ) -> ChatSessionResponse:
     authz_user.assert_in_project(project_id)
 

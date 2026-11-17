@@ -15,10 +15,9 @@ Endpoint modules define the REST API surface of the backend. Each file owns exac
 #    own-folder DTOs (never DTOs from other modules), own-folder service/crud,
 #    plus DATSEvent / WebsocketEmitter if the file has mutations.
 from fastapi import APIRouter, Depends
-from sqlalchemy.orm import Session
 
 from common.dats_event import DATSEvent
-from common.dependencies import get_current_user, get_db_session
+from common.dependencies import DBSession, get_current_user
 from core.auth.authz_user import AuthzUser
 from modules.example.example_dto import ExampleCreate, ExampleRead, ExampleUpdate
 from systems.websocket_system.websocket_dependency import WebsocketEmitter
@@ -84,7 +83,7 @@ router = APIRouter(
 ### Endpoint Anatomy
 
 - **Decorator**: Always set `response_model` and `summary`; the path uses `{resource_id}` path params for single-entity routes.
-- **Signature**: Keyword-only parameters (`*` first); `db: Session = Depends(get_db_session)` and `authz_user: AuthzUser = Depends()`; mutations add `ws`.
+- **Signature**: Keyword-only parameters (`*` first); `db: DBSession` (commits before the response and the websocket events) and `authz_user: AuthzUser = Depends()`; mutations add `ws`.
 - **Authz first**: The first statement of the body is `authz_user.assert_in_project(project_id)` or `authz_user.assert_in_same_project_as(Crud.X, id)`.
 - **Thin body**: Delegate to `crud_*` / service functions; no business logic in the route. Return type annotation matches `response_model`.
 

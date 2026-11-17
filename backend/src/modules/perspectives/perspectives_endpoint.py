@@ -5,7 +5,7 @@ from weaviate import WeaviateClient
 
 from common.crud_enum import Crud
 from common.dats_event import DATSEvent
-from common.dependencies import get_current_user, get_db_session, get_weaviate_client
+from common.dependencies import DBSession, get_current_user, get_weaviate_client
 from core.auth.authz_user import AuthzUser
 from core.project.project_crud import crud_project
 from core.search.sdoc_search.sdoc_search import find_sdoc_ids
@@ -66,7 +66,7 @@ js = JobService()
 )
 def create_aspect(
     *,
-    db: Session = Depends(get_db_session),
+    db: DBSession,
     aspect: AspectCreate,
     authz_user: AuthzUser = Depends(),
     ws: WebsocketEmitter = Depends(),
@@ -109,7 +109,7 @@ def create_aspect(
 )
 def get_all_aspects(
     *,
-    db: Session = Depends(get_db_session),
+    db: DBSession,
     project_id: int,
     authz_user: AuthzUser = Depends(),
 ) -> list[AspectRead]:
@@ -127,7 +127,7 @@ def get_all_aspects(
 )
 def get_by_id(
     *,
-    db: Session = Depends(get_db_session),
+    db: DBSession,
     aspect_id: int,
     authz_user: AuthzUser = Depends(),
 ) -> AspectRead:
@@ -144,7 +144,7 @@ def get_by_id(
 )
 def get_docaspect_by_id(
     *,
-    db: Session = Depends(get_db_session),
+    db: DBSession,
     aspect_id: int,
     sdoc_id: int,
     authz_user: AuthzUser = Depends(),
@@ -162,7 +162,7 @@ def get_docaspect_by_id(
 )
 def get_clusters_for_sdoc(
     *,
-    db: Session = Depends(get_db_session),
+    db: DBSession,
     aspect_id: int,
     sdoc_id: int,
     authz_user: AuthzUser = Depends(),
@@ -186,7 +186,7 @@ def get_clusters_for_sdoc(
 )
 def update_aspect_by_id(
     *,
-    db: Session = Depends(get_db_session),
+    db: DBSession,
     aspect_id: int,
     aspect: AspectUpdate,
     authz_user: AuthzUser = Depends(),
@@ -210,7 +210,7 @@ def update_aspect_by_id(
 )
 def update_cluster_details(
     *,
-    db: Session = Depends(get_db_session),
+    db: DBSession,
     cluster_id: int,
     cluster_update: ClusterUpdate,
     authz_user: AuthzUser = Depends(),
@@ -246,7 +246,7 @@ def update_cluster_details(
 )
 def remove_aspect_by_id(
     *,
-    db: Session = Depends(get_db_session),
+    db: DBSession,
     weaviate: WeaviateClient = Depends(get_weaviate_client),
     aspect_id: int,
     authz_user: AuthzUser = Depends(),
@@ -279,7 +279,7 @@ def remove_aspect_by_id(
 )
 def start_perspectives_job(
     *,
-    db: Session = Depends(get_db_session),
+    db: DBSession,
     aspect_id: int,
     perspectives_job_params: PerspectivesJobParamsNoCreate,
     authz_user: AuthzUser = Depends(),
@@ -463,7 +463,7 @@ def _build_document_visualization(
 )
 def visualize_documents(
     *,
-    db: Session = Depends(get_db_session),
+    db: DBSession,
     aspect_id: int,
     search_query: str,
     filter: Filter[SdocColumns],
@@ -488,7 +488,7 @@ def visualize_documents(
 )
 def accept_label(
     *,
-    db: Session = Depends(get_db_session),
+    db: DBSession,
     aspect_id: int,
     sdoc_ids: list[int],
     search_query: str,
@@ -522,7 +522,7 @@ def accept_label(
 )
 def revert_label(
     *,
-    db: Session = Depends(get_db_session),
+    db: DBSession,
     aspect_id: int,
     sdoc_ids: list[int],
     search_query: str,
@@ -556,7 +556,7 @@ def revert_label(
 )
 def get_cluster_similarities(
     *,
-    db: Session = Depends(get_db_session),
+    db: DBSession,
     weaviate: WeaviateClient = Depends(get_weaviate_client),
     aspect_id: int,
     authz_user: AuthzUser = Depends(),

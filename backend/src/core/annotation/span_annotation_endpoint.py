@@ -1,9 +1,8 @@
 from fastapi import APIRouter, Depends, Query
-from sqlalchemy.orm import Session
 
 from common.crud_enum import Crud
 from common.dats_event import DATSEvent
-from common.dependencies import get_current_user, get_db_session
+from common.dependencies import DBSession, get_current_user
 from core.annotation.span_annotation_crud import crud_span_anno
 from core.annotation.span_annotation_dto import (
     SpanAnnotationCreate,
@@ -35,7 +34,7 @@ router = APIRouter(
 )
 def create_span_annotation(
     *,
-    db: Session = Depends(get_db_session),
+    db: DBSession,
     span: SpanAnnotationCreate,
     user_id: int | None = Query(
         default=None,
@@ -73,7 +72,7 @@ def create_span_annotation(
 )
 def create_span_annotations_bulk(
     *,
-    db: Session = Depends(get_db_session),
+    db: DBSession,
     spans: list[SpanAnnotationCreate],
     user_id: int | None = Query(
         default=None,
@@ -115,7 +114,7 @@ def create_span_annotations_bulk(
 )
 def get_by_id(
     *,
-    db: Session = Depends(get_db_session),
+    db: DBSession,
     span_id: int,
     authz_user: AuthzUser = Depends(),
 ) -> SpanAnnotationRead:
@@ -132,7 +131,7 @@ def get_by_id(
 )
 def get_by_sdoc_and_user(
     *,
-    db: Session = Depends(get_db_session),
+    db: DBSession,
     sdoc_id: int,
     user_id: int,
     authz_user: AuthzUser = Depends(),
@@ -152,7 +151,7 @@ def get_by_sdoc_and_user(
 )
 def get_all_groups(
     *,
-    db: Session = Depends(get_db_session),
+    db: DBSession,
     span_id: int,
     authz_user: AuthzUser = Depends(),
 ) -> list[SpanGroupRead]:
@@ -172,7 +171,7 @@ def get_all_groups(
 )
 def get_by_user_code(
     *,
-    db: Session = Depends(get_db_session),
+    db: DBSession,
     code_id: int,
     authz_user: AuthzUser = Depends(),
 ) -> list[SpanAnnotationRead]:
@@ -194,7 +193,7 @@ def get_by_user_code(
 )
 def update_by_id(
     *,
-    db: Session = Depends(get_db_session),
+    db: DBSession,
     span_id: int,
     span_anno: SpanAnnotationUpdate,
     authz_user: AuthzUser = Depends(),
@@ -225,7 +224,7 @@ def update_by_id(
 )
 def update_span_annotations_bulk(
     *,
-    db: Session = Depends(get_db_session),
+    db: DBSession,
     spans: list[SpanAnnotationUpdateBulk],
     authz_user: AuthzUser = Depends(),
     validate: Validate = Depends(),
@@ -256,7 +255,7 @@ def update_span_annotations_bulk(
 )
 def add_to_group(
     *,
-    db: Session = Depends(get_db_session),
+    db: DBSession,
     span_id: int,
     group_id: int,
     authz_user: AuthzUser = Depends(),
@@ -287,7 +286,7 @@ def add_to_group(
 )
 def delete_by_id(
     *,
-    db: Session = Depends(get_db_session),
+    db: DBSession,
     span_id: int,
     authz_user: AuthzUser = Depends(),
     ws: WebsocketEmitter = Depends(),
@@ -314,7 +313,7 @@ def delete_by_id(
 )
 def delete_span_annotations_bulk(
     *,
-    db: Session = Depends(get_db_session),
+    db: DBSession,
     span_anno_ids: list[int],
     authz_user: AuthzUser = Depends(),
     ws: WebsocketEmitter = Depends(),
@@ -334,7 +333,7 @@ def delete_span_annotations_bulk(
 )
 def remove_from_all_groups(
     *,
-    db: Session = Depends(get_db_session),
+    db: DBSession,
     span_id: int,
     authz_user: AuthzUser = Depends(),
     ws: WebsocketEmitter = Depends(),
@@ -357,7 +356,7 @@ def remove_from_all_groups(
 )
 def remove_from_group(
     *,
-    db: Session = Depends(get_db_session),
+    db: DBSession,
     span_id: int,
     group_id: int,
     authz_user: AuthzUser = Depends(),
@@ -390,7 +389,7 @@ def remove_from_group(
 )
 def count_annotations(
     *,
-    db: Session = Depends(get_db_session),
+    db: DBSession,
     user_id: int,
     sdoc_ids: list[int],
     class_ids: list[int],

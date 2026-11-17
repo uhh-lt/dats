@@ -1,9 +1,8 @@
 from typing import Annotated
 
 from fastapi import APIRouter, Body, Depends
-from sqlalchemy.orm import Session
 
-from common.dependencies import get_current_user, get_db_session
+from common.dependencies import DBSession, get_current_user
 from core.auth.authz_user import AuthzUser
 from core.search.sdoc_search.sdoc_search_columns import SdocColumns
 from modules.simsearch.simsearch_dto import SimSearchImageHit, SimSearchSentenceHit
@@ -27,7 +26,7 @@ router = APIRouter(
 )
 def find_similar_sentences(
     *,
-    db: Session = Depends(get_db_session),
+    db: DBSession,
     project_id: int,
     query: Annotated[str | int, Body()],
     top_k: int,
@@ -55,7 +54,7 @@ def find_similar_sentences(
 )
 def find_similar_images(
     *,
-    db: Session = Depends(get_db_session),
+    db: DBSession,
     project_id: int,
     query: Annotated[str | int, Body()],
     top_k: int,

@@ -1,8 +1,7 @@
 from fastapi import APIRouter, Depends
-from sqlalchemy.orm import Session
 
 from common.dats_event import DATSEvent
-from common.dependencies import get_current_user, get_db_session
+from common.dependencies import DBSession, get_current_user
 from common.sdoc_status_enum import SDocStatus
 from core.auth.authz_user import AuthzUser
 from core.doc.source_document_crud import crud_sdoc
@@ -36,7 +35,7 @@ router = APIRouter(
 )
 def create_project(
     *,
-    db: Session = Depends(get_db_session),
+    db: DBSession,
     proj: ProjectCreate,
     current_user: UserORM = Depends(get_current_user),
     ws: WebsocketEmitter = Depends(),
@@ -58,7 +57,7 @@ def create_project(
 )
 def get_project(
     *,
-    db: Session = Depends(get_db_session),
+    db: DBSession,
     project_id: int,
     authz_user: AuthzUser = Depends(),
 ) -> ProjectRead:
@@ -77,7 +76,7 @@ def get_project(
 )
 def resolve_filename(
     *,
-    db: Session = Depends(get_db_session),
+    db: DBSession,
     project_id: int,
     filename: str,
     only_finished: bool = True,
@@ -102,7 +101,7 @@ def resolve_filename(
 )
 def get_user_projects(
     *,
-    db: Session = Depends(get_db_session),
+    db: DBSession,
     authz_user: AuthzUser = Depends(),
 ) -> list[ProjectRead]:
     db_obj = crud_user.read(db=db, id=authz_user.user.id)
@@ -116,7 +115,7 @@ def get_user_projects(
 )
 def count_sdocs_with_status(
     *,
-    db: Session = Depends(get_db_session),
+    db: DBSession,
     project_id: int,
     status: SDocStatus,
     authz_user: AuthzUser = Depends(),
@@ -137,7 +136,7 @@ def count_sdocs_with_status(
 )
 def update_project(
     *,
-    db: Session = Depends(get_db_session),
+    db: DBSession,
     project_id: int,
     proj: ProjectUpdate,
     authz_user: AuthzUser = Depends(),
@@ -162,7 +161,7 @@ def update_project(
 )
 def delete_project(
     *,
-    db: Session = Depends(get_db_session),
+    db: DBSession,
     project_id: int,
     authz_user: AuthzUser = Depends(),
     ws: WebsocketEmitter = Depends(),

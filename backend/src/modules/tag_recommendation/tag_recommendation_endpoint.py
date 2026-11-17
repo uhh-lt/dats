@@ -1,9 +1,8 @@
 from fastapi import APIRouter, Depends
-from sqlalchemy.orm import Session
 
 from common.crud_enum import Crud
 from common.dats_event import DATSEvent
-from common.dependencies import get_current_user, get_db_session
+from common.dependencies import DBSession, get_current_user
 from core.auth.authz_user import AuthzUser
 from modules.tag_recommendation.tag_recommendation_crud import (
     crud_tag_recommendation_link,
@@ -37,7 +36,7 @@ router = APIRouter(
 )
 def get_all_tagrecommendations_from_job(
     *,
-    db: Session = Depends(get_db_session),
+    db: DBSession,
     job_id: str,
     authz_user: AuthzUser = Depends(),
 ) -> list[TagRecommendationResult]:
@@ -65,7 +64,7 @@ def get_all_tagrecommendations_from_job(
 )
 def update_recommendations(
     *,
-    db: Session = Depends(get_db_session),
+    db: DBSession,
     reviewd_recommendation_ids: list[int],
     authz_user: AuthzUser = Depends(),
     ws: WebsocketEmitter = Depends(),

@@ -1,5 +1,5 @@
 from datetime import UTC, datetime
-from typing import Generator
+from typing import Annotated, Generator
 
 from fastapi import Depends, HTTPException, Query, Request, WebSocket
 from fastapi.security import OAuth2PasswordBearer
@@ -53,6 +53,14 @@ def get_db_session() -> Generator[Session, None, None]:
         yield db
 
 
+# Function scope commits the transaction right after the path operation (and its
+# response serialization) returns, i.e. before the response is sent and before
+# background tasks (websocket events) run. With the default request scope, the
+# commit would happen after both, so a client could read stale data and a failing
+# background task would roll back the request.
+DBSession = Annotated[Session, Depends(get_db_session, scope="function")]
+
+
 def get_weaviate_client() -> WeaviateClient:
     """Provides a Weaviate vector database client."""
     return WeaviateRepo().get_client()
@@ -99,7 +107,7 @@ def resolve_user(request: Request | WebSocket, db: Session, token: str) -> UserO
 
 def get_current_user(
     request: Request,
-    db: Session = Depends(get_db_session),
+    db: DBSession,
     token: str = Depends(reusable_oauth2_scheme),
 ) -> UserORM:
     """Authenticates the current user via the Authorization Bearer header (API key or JWT)."""
@@ -108,7 +116,7 @@ def get_current_user(
 
 def get_current_user_from_cookie(
     request: Request,
-    db: Session = Depends(get_db_session),
+    db: DBSession,
 ) -> UserORM:
     """Authenticates the current user via the Authorization cookie."""
     token = request.cookies.get("Authorization")

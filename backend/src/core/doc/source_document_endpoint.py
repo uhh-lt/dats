@@ -1,9 +1,8 @@
 from fastapi import APIRouter, Depends
-from sqlalchemy.orm import Session
 
 from common.crud_enum import Crud
 from common.dats_event import DATSEvent
-from common.dependencies import get_current_user, get_db_session
+from common.dependencies import DBSession, get_current_user
 from core.auth.authz_user import AuthzUser
 from core.doc.source_document_crud import crud_sdoc
 from core.doc.source_document_data_crud import crud_sdoc_data
@@ -30,7 +29,7 @@ router = APIRouter(
 )
 def get_by_id(
     *,
-    db: Session = Depends(get_db_session),
+    db: DBSession,
     sdoc_id: int,
     only_if_finished: bool = True,
     authz_user: AuthzUser = Depends(),
@@ -50,7 +49,7 @@ def get_by_id(
 )
 def get_by_id_with_data(
     *,
-    db: Session = Depends(get_db_session),
+    db: DBSession,
     sdoc_id: int,
     only_if_finished: bool = True,
     authz_user: AuthzUser = Depends(),
@@ -71,7 +70,7 @@ def get_by_id_with_data(
 )
 def get_same_folder_sdocs(
     *,
-    db: Session = Depends(get_db_session),
+    db: DBSession,
     sdoc_id: int,
     authz_user: AuthzUser = Depends(),
 ) -> list[int]:
@@ -90,7 +89,7 @@ def get_same_folder_sdocs(
 )
 def get_file_url(
     *,
-    db: Session = Depends(get_db_session),
+    db: DBSession,
     sdoc_id: int,
     relative: bool = True,
     webp: bool = False,
@@ -116,7 +115,7 @@ def get_file_url(
 )
 def get_annotators(
     *,
-    db: Session = Depends(get_db_session),
+    db: DBSession,
     sdoc_id: int,
     authz_user: AuthzUser = Depends(),
 ) -> list[int]:
@@ -137,7 +136,7 @@ def get_annotators(
 )
 def update_by_id(
     *,
-    db: Session = Depends(get_db_session),
+    db: DBSession,
     sdoc_id: int,
     sdoc: SourceDocumentUpdate,
     authz_user: AuthzUser = Depends(),
@@ -163,7 +162,7 @@ def update_by_id(
 )
 def delete_by_id(
     *,
-    db: Session = Depends(get_db_session),
+    db: DBSession,
     sdoc_id: int,
     authz_user: AuthzUser = Depends(),
     ws: WebsocketEmitter = Depends(),
@@ -187,7 +186,7 @@ def delete_by_id(
 )
 def delete_sdocs_bulk(
     *,
-    db: Session = Depends(get_db_session),
+    db: DBSession,
     sdoc_ids: list[int],
     authz_user: AuthzUser = Depends(),
     ws: WebsocketEmitter = Depends(),

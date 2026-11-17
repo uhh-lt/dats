@@ -1,9 +1,8 @@
 from fastapi import APIRouter, Depends
-from sqlalchemy.orm import Session
 
 from common.crud_enum import Crud
 from common.dats_event import DATSEvent
-from common.dependencies import get_current_user, get_db_session
+from common.dependencies import DBSession, get_current_user
 from core.auth.authz_user import AuthzUser
 from modules.concept_over_time_analysis.cota_crud import crud_cota
 from modules.concept_over_time_analysis.cota_dto import (
@@ -46,7 +45,7 @@ router = APIRouter(
 )
 def create(
     *,
-    db: Session = Depends(get_db_session),
+    db: DBSession,
     cota: COTACreate,
     authz_user: AuthzUser = Depends(),
     ws: WebsocketEmitter = Depends(),
@@ -74,7 +73,7 @@ def create(
 )
 def duplicate_by_id(
     *,
-    db: Session = Depends(get_db_session),
+    db: DBSession,
     cota_id: int,
     authz_user: AuthzUser = Depends(),
     ws: WebsocketEmitter = Depends(),
@@ -103,7 +102,7 @@ def duplicate_by_id(
 )
 def get_by_id(
     *,
-    db: Session = Depends(get_db_session),
+    db: DBSession,
     cota_id: int,
     authz_user: AuthzUser = Depends(),
 ) -> COTARead:
@@ -122,7 +121,7 @@ def get_by_id(
 )
 def get_by_project(
     *,
-    db: Session = Depends(get_db_session),
+    db: DBSession,
     project_id: int,
     authz_user: AuthzUser = Depends(),
 ) -> list[COTARead]:
@@ -146,7 +145,7 @@ def get_by_project(
 )
 def update_by_id(
     *,
-    db: Session = Depends(get_db_session),
+    db: DBSession,
     cota_id: int,
     cota_upate: COTAUpdate,
     authz_user: AuthzUser = Depends(),
@@ -173,7 +172,7 @@ def update_by_id(
 )
 def annotate_cota_sentence(
     *,
-    db: Session = Depends(get_db_session),
+    db: DBSession,
     cota_id: int,
     cota_sentence_ids: list[COTASentenceID],
     concept_id: str | None = None,
@@ -202,7 +201,7 @@ def annotate_cota_sentence(
 )
 def remove_cota_sentence(
     *,
-    db: Session = Depends(get_db_session),
+    db: DBSession,
     cota_id: int,
     cota_sentence_ids: list[COTASentenceID],
     authz_user: AuthzUser = Depends(),
@@ -230,7 +229,7 @@ def remove_cota_sentence(
 )
 def reset_cota(
     *,
-    db: Session = Depends(get_db_session),
+    db: DBSession,
     cota_id: int,
     authz_user: AuthzUser = Depends(),
     ws: WebsocketEmitter = Depends(),
@@ -259,7 +258,7 @@ def reset_cota(
 )
 def delete_by_id(
     *,
-    db: Session = Depends(get_db_session),
+    db: DBSession,
     cota_id: int,
     authz_user: AuthzUser = Depends(),
     ws: WebsocketEmitter = Depends(),
@@ -285,7 +284,7 @@ def delete_by_id(
 )
 def refine_cota(
     *,
-    db: Session = Depends(get_db_session),
+    db: DBSession,
     payload: COTARefinementJobInput,
     authz_user: AuthzUser = Depends(),
 ) -> COTARead:

@@ -17,10 +17,9 @@ from typing import Callable
 
 from fastapi import Depends, Request
 from fastapi.exceptions import RequestValidationError
-from sqlalchemy.orm import Session
 
 from common.crud_enum import Crud
-from common.dependencies import get_db_session
+from common.dependencies import DBSession
 from core.auth.authz_user import AuthzUser
 from systems.feature_system.feature_registry import Feature
 from systems.feature_system.feature_service import FeatureService
@@ -31,8 +30,8 @@ def require_feature(feature: Feature) -> Callable[..., None]:
 
     def check_feature_enabled(
         project_id: int,
+        db: DBSession,
         authz_user: AuthzUser = Depends(),
-        db: Session = Depends(get_db_session),
     ) -> None:
         authz_user.assert_in_project(project_id)
         FeatureService().assert_enabled(db=db, project_id=project_id, feature=feature)
@@ -49,8 +48,8 @@ def require_feature_of(
 
     def check_feature_enabled(
         request: Request,
+        db: DBSession,
         authz_user: AuthzUser = Depends(),
-        db: Session = Depends(get_db_session),
     ) -> None:
         raw_id = request.path_params[id_param]
         try:

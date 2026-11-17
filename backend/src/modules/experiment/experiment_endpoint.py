@@ -1,9 +1,8 @@
 from fastapi import APIRouter, Depends
-from sqlalchemy.orm import Session
 
 from common.crud_enum import Crud
 from common.dats_event import DATSEvent
-from common.dependencies import get_current_user, get_db_session
+from common.dependencies import DBSession, get_current_user
 from core.auth.authz_user import AuthzUser
 from modules.experiment.experiment_crud import crud_experiment
 from modules.experiment.experiment_dto import (
@@ -38,7 +37,7 @@ exs = ExperimentService()
 )
 def create(
     *,
-    db: Session = Depends(get_db_session),
+    db: DBSession,
     experiment: ExperimentCreate,
     authz_user: AuthzUser = Depends(),
     ws: WebsocketEmitter = Depends(),
@@ -62,7 +61,7 @@ def create(
 )
 def create_run(
     *,
-    db: Session = Depends(get_db_session),
+    db: DBSession,
     run: ExperimentRunCreate,
     authz_user: AuthzUser = Depends(),
     ws: WebsocketEmitter = Depends(),
@@ -90,7 +89,7 @@ def create_run(
 )
 def get_by_id(
     *,
-    db: Session = Depends(get_db_session),
+    db: DBSession,
     experiment_id: int,
     authz_user: AuthzUser = Depends(),
 ) -> ExperimentRead:
@@ -107,7 +106,7 @@ def get_by_id(
 )
 def get_by_project(
     *,
-    db: Session = Depends(get_db_session),
+    db: DBSession,
     project_id: int,
     authz_user: AuthzUser = Depends(),
 ) -> list[ExperimentRead]:
@@ -130,7 +129,7 @@ def get_by_project(
 )
 def update_by_id(
     *,
-    db: Session = Depends(get_db_session),
+    db: DBSession,
     experiment_id: int,
     experiment: ExperimentUpdate,
     authz_user: AuthzUser = Depends(),
@@ -160,7 +159,7 @@ def update_by_id(
 )
 def refresh_run_scores(
     *,
-    db: Session = Depends(get_db_session),
+    db: DBSession,
     run_id: int,
     authz_user: AuthzUser = Depends(),
     ws: WebsocketEmitter = Depends(),
@@ -185,7 +184,7 @@ def refresh_run_scores(
 )
 def refresh_all_run_scores(
     *,
-    db: Session = Depends(get_db_session),
+    db: DBSession,
     experiment_id: int,
     authz_user: AuthzUser = Depends(),
     ws: WebsocketEmitter = Depends(),
@@ -212,7 +211,7 @@ def refresh_all_run_scores(
 )
 def delete_by_id(
     *,
-    db: Session = Depends(get_db_session),
+    db: DBSession,
     experiment_id: int,
     authz_user: AuthzUser = Depends(),
     ws: WebsocketEmitter = Depends(),
@@ -239,7 +238,7 @@ def delete_by_id(
 )
 def delete_run(
     *,
-    db: Session = Depends(get_db_session),
+    db: DBSession,
     run_id: int,
     authz_user: AuthzUser = Depends(),
     ws: WebsocketEmitter = Depends(),
@@ -267,7 +266,7 @@ def delete_run(
 )
 def export_run_log(
     *,
-    db: Session = Depends(get_db_session),
+    db: DBSession,
     run_id: int,
     export_format: ExperimentRunLogFormat,
     authz_user: AuthzUser = Depends(),

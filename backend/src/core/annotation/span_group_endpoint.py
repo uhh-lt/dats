@@ -1,9 +1,8 @@
 from fastapi import APIRouter, Depends
-from sqlalchemy.orm import Session
 
 from common.crud_enum import Crud
 from common.dats_event import DATSEvent
-from common.dependencies import get_current_user, get_db_session, skip_limit_params
+from common.dependencies import DBSession, get_current_user, skip_limit_params
 from core.annotation.span_annotation_dto import SpanAnnotationRead
 from core.annotation.span_group_crud import crud_span_group
 from core.annotation.span_group_dto import (
@@ -34,7 +33,7 @@ router = APIRouter(
 )
 def create_span_group(
     *,
-    db: Session = Depends(get_db_session),
+    db: DBSession,
     span_group: SpanGroupCreate,
     authz_user: AuthzUser = Depends(),
     ws: WebsocketEmitter = Depends(),
@@ -62,7 +61,7 @@ def create_span_group(
 )
 def get_by_id(
     *,
-    db: Session = Depends(get_db_session),
+    db: DBSession,
     span_group_id: int,
     authz_user: AuthzUser = Depends(),
 ) -> SpanGroupRead | None:
@@ -79,7 +78,7 @@ def get_by_id(
 )
 def get_annotations(
     *,
-    db: Session = Depends(get_db_session),
+    db: DBSession,
     span_group_id: int,
     authz_user: AuthzUser = Depends(),
 ) -> list[SpanAnnotationRead]:
@@ -95,7 +94,7 @@ def get_annotations(
 )
 def get_by_sdoc(
     *,
-    db: Session = Depends(get_db_session),
+    db: DBSession,
     sdoc_id: int,
     skip_limit: dict[str, int] = Depends(skip_limit_params),
     authz_user: AuthzUser = Depends(),
@@ -117,7 +116,7 @@ def get_by_sdoc(
 )
 def get_by_sdoc_and_user(
     *,
-    db: Session = Depends(get_db_session),
+    db: DBSession,
     sdoc_id: int,
     user_id: int,
     authz_user: AuthzUser = Depends(),
@@ -139,7 +138,7 @@ def get_by_sdoc_and_user(
 )
 def update_by_id(
     *,
-    db: Session = Depends(get_db_session),
+    db: DBSession,
     span_group_id: int,
     span_anno: SpanGroupUpdate,
     authz_user: AuthzUser = Depends(),
@@ -167,7 +166,7 @@ def update_by_id(
 )
 def delete_by_id(
     *,
-    db: Session = Depends(get_db_session),
+    db: DBSession,
     span_group_id: int,
     authz_user: AuthzUser = Depends(),
     ws: WebsocketEmitter = Depends(),

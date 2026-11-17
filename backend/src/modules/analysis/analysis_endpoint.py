@@ -1,7 +1,6 @@
 from fastapi import APIRouter, Depends
-from sqlalchemy.orm import Session
 
-from common.dependencies import get_current_user, get_db_session
+from common.dependencies import DBSession, get_current_user
 from common.doc_type_enum import DocType
 from core.auth.authz_user import AuthzUser
 from modules.analysis.analysis_dto import (
@@ -32,7 +31,7 @@ router = APIRouter(
 )
 def code_frequencies(
     *,
-    db: Session = Depends(get_db_session),
+    db: DBSession,
     project_id: int,
     code_ids: list[int],
     user_ids: list[int],
@@ -57,7 +56,7 @@ def code_frequencies(
 )
 def code_occurrences(
     *,
-    db: Session = Depends(get_db_session),
+    db: DBSession,
     project_id: int,
     user_ids: list[int],
     code_id: int,
@@ -84,7 +83,7 @@ def code_occurrences(
 )
 def count_sdocs_with_date_metadata(
     *,
-    db: Session = Depends(get_db_session),
+    db: DBSession,
     project_id: int,
     date_metadata_id: int,
     authz_user: AuthzUser = Depends(),
@@ -105,7 +104,7 @@ def count_sdocs_with_date_metadata(
 )
 def sample_sdocs_by_tags(
     *,
-    db: Session = Depends(get_db_session),
+    db: DBSession,
     project_id: int,
     tag_groups: list[list[int]],
     n: int,

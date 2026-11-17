@@ -15,12 +15,11 @@ from fastapi.concurrency import run_in_threadpool
 from fastapi.encoders import jsonable_encoder
 from fastapi.responses import HTMLResponse
 from fastapi.security import OAuth2PasswordRequestForm
-from sqlalchemy.orm import Session
 
 from common.dependencies import (
+    DBSession,
     get_current_user,
     get_current_user_from_cookie,
-    get_db_session,
     reusable_oauth2_scheme,
 )
 from config import conf
@@ -57,7 +56,7 @@ router = APIRouter(prefix="/authentication", tags=["authentication"])
 )
 def register(
     *,
-    db: Session = Depends(get_db_session),
+    db: DBSession,
     user: UserCreate,
     background_tasks: BackgroundTasks,
 ) -> UserRead:
@@ -92,7 +91,7 @@ def register(
 )
 def login(
     *,
-    db: Session = Depends(get_db_session),
+    db: DBSession,
     user_login_form_data: OAuth2PasswordRequestForm = Depends(),
     response: Response,
 ) -> UserAuthorizationHeaderData:
@@ -133,7 +132,7 @@ def login(
 )
 def logout(
     *,
-    db: Session = Depends(get_db_session),
+    db: DBSession,
     dto: RefreshAccessTokenData = Depends(),
     response: Response,
 ) -> None:
@@ -148,7 +147,7 @@ def logout(
 )
 def refresh_access_token(
     *,
-    db: Session = Depends(get_db_session),
+    db: DBSession,
     dto: RefreshAccessTokenData = Depends(),
     response: Response,
 ) -> UserAuthorizationHeaderData:
@@ -186,12 +185,12 @@ def refresh_access_token(
 )
 def auth_content(
     request: Request,
-    db: Session = Depends(get_db_session),
+    db: DBSession,
     user: UserORM = Depends(get_current_user_from_cookie),
     x_original_uri: Annotated[str | None, Header()] = None,
 ) -> None:
     # returns None on purpose
-    authz = AuthzUser(request, user, db)
+    authz = AuthzUser(request=request, db=db, user=user)
     if x_original_uri is None or not x_original_uri.startswith(CONTENT_PREFIX):
         return
 
@@ -213,7 +212,7 @@ async def oidc_callback(
     request: Request,
     provider: str,
     response: Response,
-    db: Session = Depends(get_db_session),
+    db: DBSession,
 ):
     try:
         user = await oauth_service.authenticate_oidc(

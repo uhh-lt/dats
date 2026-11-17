@@ -233,7 +233,7 @@ def _install_test_auth(app: FastAPI) -> None:
     instead of a JWT.
 
     The user is resolved through a FRESH transaction per request (exactly like
-    the real `get_current_user` -> `get_db_session`), so the app never depends
+    the real `get_current_user` -> `DBSession`), so the app never depends
     on a long-lived test session. This is a generator dependency: it holds the
     session open for the whole request (so lazy relationships like
     `user.projects` load) and commits/closes on teardown.

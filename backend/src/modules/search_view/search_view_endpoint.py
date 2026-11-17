@@ -1,8 +1,7 @@
 from fastapi import APIRouter, Depends
-from sqlalchemy.orm import Session
 
 from common.dats_event import DATSEvent
-from common.dependencies import get_current_user, get_db_session
+from common.dependencies import DBSession, get_current_user
 from core.auth.authz_user import AuthzUser
 from modules.search_view.search_view_crud import crud_search_view
 from modules.search_view.search_view_dto import (
@@ -34,7 +33,7 @@ router = APIRouter(
 )
 def create(
     *,
-    db: Session = Depends(get_db_session),
+    db: DBSession,
     view: SearchViewCreateUnion,
     authz_user: AuthzUser = Depends(),
     ws: WebsocketEmitter = Depends(),
@@ -57,7 +56,7 @@ def create(
 )
 def get_by_project(
     *,
-    db: Session = Depends(get_db_session),
+    db: DBSession,
     project_id: int,
     entity_type: SearchEntityType,
     authz_user: AuthzUser = Depends(),
@@ -82,7 +81,7 @@ def get_by_project(
 )
 def reorder(
     *,
-    db: Session = Depends(get_db_session),
+    db: DBSession,
     project_id: int,
     entity_type: SearchEntityType,
     view_order: SearchViewReorder,
@@ -111,7 +110,7 @@ def reorder(
 )
 def update(
     *,
-    db: Session = Depends(get_db_session),
+    db: DBSession,
     view_id: int,
     view_update: SearchViewUpdateUnion,
     authz_user: AuthzUser = Depends(),
@@ -139,7 +138,7 @@ def update(
 )
 def delete(
     *,
-    db: Session = Depends(get_db_session),
+    db: DBSession,
     view_id: int,
     authz_user: AuthzUser = Depends(),
     ws: WebsocketEmitter = Depends(),

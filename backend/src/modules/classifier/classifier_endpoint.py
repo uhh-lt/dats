@@ -1,9 +1,8 @@
 from fastapi import APIRouter, Depends
-from sqlalchemy.orm import Session
 
 from common.crud_enum import Crud
 from common.dats_event import DATSEvent
-from common.dependencies import get_current_user, get_db_session
+from common.dependencies import DBSession, get_current_user
 from config import conf
 from core.auth.authz_user import AuthzUser
 from core.project.project_crud import crud_project
@@ -63,7 +62,7 @@ def get_classifier_info(
 def get_by_project(
     *,
     project_id: int,
-    db: Session = Depends(get_db_session),
+    db: DBSession,
     authz_user: AuthzUser = Depends(),
 ) -> list[ClassifierRead]:
     authz_user.assert_in_project(project_id)
@@ -84,7 +83,7 @@ def get_by_project(
 )
 def update_by_id(
     *,
-    db: Session = Depends(get_db_session),
+    db: DBSession,
     classifier_id: int,
     classifier: ClassifierUpdate,
     authz_user: AuthzUser = Depends(),
@@ -111,7 +110,7 @@ def update_by_id(
 )
 def delete_by_id(
     *,
-    db: Session = Depends(get_db_session),
+    db: DBSession,
     classifier_id: int,
     authz_user: AuthzUser = Depends(),
     ws: WebsocketEmitter = Depends(),
@@ -142,7 +141,7 @@ def compute_dataset_statistics(
     *,
     project_id: int,
     request: ClassifierDatasetStatisticsRequest,
-    db: Session = Depends(get_db_session),
+    db: DBSession,
     authz_user: AuthzUser = Depends(),
 ) -> ClassifierDatasetStatistics:
     authz_user.assert_in_project(project_id)

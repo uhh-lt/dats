@@ -1,10 +1,9 @@
 from typing import Sequence
 
-from fastapi import Depends
 from sqlalchemy.orm import Session
 
 from common.crud_enum import Crud
-from common.dependencies import get_db_session
+from common.dependencies import DBSession
 from core.auth.auth_exceptions import InvalidError
 from repos.db.orm_base import ORMBase
 from repos.db.sql_exceptions import NoSuchElementError
@@ -15,7 +14,7 @@ class Validate:
 
     def __init__(
         self,
-        db: Session = Depends(get_db_session),
+        db: DBSession,
     ):
         self.db = db
 

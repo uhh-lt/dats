@@ -1,9 +1,8 @@
 from fastapi import APIRouter, Depends
-from sqlalchemy.orm import Session
 
 from common.crud_enum import Crud
 from common.dats_event import DATSEvent
-from common.dependencies import get_current_user, get_db_session
+from common.dependencies import DBSession, get_current_user
 from core.auth.authz_user import AuthzUser
 from core.code.code_crud import crud_code
 from core.code.code_dto import CodeCreate, CodeRead, CodeUpdate, CodeUpdateBulk
@@ -25,7 +24,7 @@ router = APIRouter(
 )
 def create_code(
     *,
-    db: Session = Depends(get_db_session),
+    db: DBSession,
     code: CodeCreate,
     authz_user: AuthzUser = Depends(),
     ws: WebsocketEmitter = Depends(),
@@ -50,7 +49,7 @@ def create_code(
 )
 def get_by_id(
     *,
-    db: Session = Depends(get_db_session),
+    db: DBSession,
     code_id: int,
     authz_user: AuthzUser = Depends(),
 ) -> CodeRead:
@@ -68,7 +67,7 @@ def get_by_id(
 def get_by_project(
     *,
     project_id: int,
-    db: Session = Depends(get_db_session),
+    db: DBSession,
     authz_user: AuthzUser = Depends(),
 ) -> list[CodeRead]:
     authz_user.assert_in_project(project_id)
@@ -89,7 +88,7 @@ def get_by_project(
 )
 def update_by_id(
     *,
-    db: Session = Depends(get_db_session),
+    db: DBSession,
     code_id: int,
     code: CodeUpdate,
     authz_user: AuthzUser = Depends(),
@@ -111,7 +110,7 @@ def update_by_id(
 )
 def update_codes_bulk(
     *,
-    db: Session = Depends(get_db_session),
+    db: DBSession,
     codes: list[CodeUpdateBulk],
     authz_user: AuthzUser = Depends(),
     ws: WebsocketEmitter = Depends(),
@@ -144,7 +143,7 @@ def update_codes_bulk(
 )
 def delete_by_id(
     *,
-    db: Session = Depends(get_db_session),
+    db: DBSession,
     code_id: int,
     authz_user: AuthzUser = Depends(),
     ws: WebsocketEmitter = Depends(),

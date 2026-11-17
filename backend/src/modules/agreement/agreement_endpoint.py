@@ -1,7 +1,6 @@
 from fastapi import APIRouter, Depends
-from sqlalchemy.orm import Session
 
-from common.dependencies import get_current_user, get_db_session
+from common.dependencies import DBSession, get_current_user
 from core.auth.authz_user import AuthzUser
 from modules.agreement.agreement_dto import (
     AgreementParams,
@@ -27,7 +26,7 @@ router = APIRouter(
 )
 def compute_agreement(
     *,
-    db: Session = Depends(get_db_session),
+    db: DBSession,
     project_id: int,
     params: AgreementParams,
     authz_user: AuthzUser = Depends(),
@@ -46,7 +45,7 @@ def compute_agreement(
 )
 def export_agreement_counts(
     *,
-    db: Session = Depends(get_db_session),
+    db: DBSession,
     project_id: int,
     params: AgreementParams,
     authz_user: AuthzUser = Depends(),
@@ -63,7 +62,7 @@ def export_agreement_counts(
 )
 def get_segment_texts(
     *,
-    db: Session = Depends(get_db_session),
+    db: DBSession,
     project_id: int,
     ranges: list[AgreementTextRange],
     authz_user: AuthzUser = Depends(),

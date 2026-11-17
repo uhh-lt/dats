@@ -1,8 +1,7 @@
 from fastapi import APIRouter, Depends
-from sqlalchemy.orm import Session
 
 from common.crud_enum import Crud
-from common.dependencies import get_current_user, get_db_session
+from common.dependencies import DBSession, get_current_user
 from core.auth.authz_user import AuthzUser
 from modules.statistics.statistics_dto import KeywordStat, SpanEntityStat, TagStat
 from modules.statistics.statistics_feature import KEYWORD_STATISTICS
@@ -23,7 +22,7 @@ router = APIRouter(
 )
 def filter_code_stats(
     *,
-    db: Session = Depends(get_db_session),
+    db: DBSession,
     authz_user: AuthzUser = Depends(),
     # code stat params
     code_id: int,
@@ -53,7 +52,7 @@ def filter_code_stats(
 )
 def filter_keyword_stats(
     *,
-    db: Session = Depends(get_db_session),
+    db: DBSession,
     authz_user: AuthzUser = Depends(),
     project_id: int,
     # keyword stat params
@@ -82,7 +81,7 @@ def filter_keyword_stats(
 )
 def filter_tag_stats(
     *,
-    db: Session = Depends(get_db_session),
+    db: DBSession,
     authz_user: AuthzUser = Depends(),
     # keyword stat params
     sort_by_global: bool = False,

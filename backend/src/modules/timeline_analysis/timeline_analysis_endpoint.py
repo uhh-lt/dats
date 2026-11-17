@@ -1,9 +1,8 @@
 from fastapi import APIRouter, Depends
-from sqlalchemy.orm import Session
 
 from common.crud_enum import Crud
 from common.dats_event import DATSEvent
-from common.dependencies import get_current_user, get_db_session
+from common.dependencies import DBSession, get_current_user
 from core.auth.authz_user import AuthzUser
 from modules.timeline_analysis.timeline_analysis_crud import (
     crud_timeline_analysis,
@@ -34,7 +33,7 @@ router = APIRouter(
 )
 def create(
     *,
-    db: Session = Depends(get_db_session),
+    db: DBSession,
     timeline_analysis: TimelineAnalysisCreate,
     authz_user: AuthzUser = Depends(),
     ws: WebsocketEmitter = Depends(),
@@ -64,7 +63,7 @@ def create(
 )
 def duplicate_by_id(
     *,
-    db: Session = Depends(get_db_session),
+    db: DBSession,
     timeline_analysis_id: int,
     authz_user: AuthzUser = Depends(),
     ws: WebsocketEmitter = Depends(),
@@ -93,7 +92,7 @@ def duplicate_by_id(
 )
 def get_by_id(
     *,
-    db: Session = Depends(get_db_session),
+    db: DBSession,
     timeline_analysis_id: int,
     authz_user: AuthzUser = Depends(),
 ) -> TimelineAnalysisRead:
@@ -110,7 +109,7 @@ def get_by_id(
 )
 def get_by_project(
     *,
-    db: Session = Depends(get_db_session),
+    db: DBSession,
     project_id: int,
     authz_user: AuthzUser = Depends(),
 ) -> list[TimelineAnalysisRead]:
@@ -130,7 +129,7 @@ def get_by_project(
 )
 def update_by_id(
     *,
-    db: Session = Depends(get_db_session),
+    db: DBSession,
     timeline_analysis_id: int,
     timeline_analysis: TimelineAnalysisUpdate,
     authz_user: AuthzUser = Depends(),
@@ -154,7 +153,7 @@ def update_by_id(
 )
 def recompute_by_id(
     *,
-    db: Session = Depends(get_db_session),
+    db: DBSession,
     timeline_analysis_id: int,
     authz_user: AuthzUser = Depends(),
     ws: WebsocketEmitter = Depends(),
@@ -180,7 +179,7 @@ def recompute_by_id(
 )
 def delete_by_id(
     *,
-    db: Session = Depends(get_db_session),
+    db: DBSession,
     timeline_analysis_id: int,
     authz_user: AuthzUser = Depends(),
     ws: WebsocketEmitter = Depends(),

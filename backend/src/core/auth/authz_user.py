@@ -5,7 +5,7 @@ from loguru import logger
 from sqlalchemy.orm import Session
 
 from common.crud_enum import Crud
-from common.dependencies import get_current_user, get_db_session
+from common.dependencies import DBSession, get_current_user
 from core.auth.auth_exceptions import ForbiddenError
 from core.user.user_orm import UserORM
 from repos.db.orm_base import ORMBase
@@ -24,8 +24,8 @@ class AuthzUser:
     def __init__(
         self,
         request: Request,
+        db: DBSession,
         user: UserORM = Depends(get_current_user),
-        db: Session = Depends(get_db_session),
     ):
         self.request = request
         self.user = user
