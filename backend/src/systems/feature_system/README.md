@@ -25,7 +25,7 @@ WORD_FREQUENCY = register_feature(
 | `title`, `description` | Shown by the frontend, which reads them from `GET /feature`, with the titles of the artefacts the feature requires besides the core artefacts (what enabling it computes). |
 | `area`               | `FeatureArea`; features are listed by area, then by title.                                                     |
 | `requires_artefacts` | The artefacts the feature reads; at least one of them is not a core artefact (`always`).                        |
-| `default_enabled`    | Whether a new project without a feature list, and an archive without project details, enable it.              |
+| `default_enabled`    | Whether a new project without a feature list enables it.                                                       |
 | `set_up`             | Optional hook `(db, project_id) -> None` that sets up what else the feature needs in a project (see below).      |
 
 A feature requires artefacts only, never another feature, and exists only if it requires an artefact outside the core preprocessing pipeline: enabling it means more processing. Core declares no feature and checks no toggle.

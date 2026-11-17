@@ -20,7 +20,6 @@ from modules.eximport.sdocs.sdoc_export_schema import (
     SourceDocumentExportSchema,
 )
 from systems.artefact_system.artefact_registry import artefact_registry
-from systems.feature_system.feature_registry import Feature, feature_registry
 
 register_jobs()
 
@@ -129,13 +128,9 @@ def test_step_status_survives_the_csv_round_trip() -> None:
     assert collection.source_documents[0].step_status == archived
 
 
-def test_archive_without_project_details_enables_the_default_features(
-    off_by_default: Feature,
-) -> None:
-    """An archive without project details (old archives) enables the features a
-    new project enables; a feature off by default is not among them."""
-    assert archived_features(None) == feature_registry.defaults()
-    assert off_by_default not in archived_features(None)
+def test_archive_without_project_details_enables_no_feature() -> None:
+    """An archive without project details enables no feature."""
+    assert archived_features(None) == []
 
 
 def test_archived_features_are_restored() -> None:
@@ -157,40 +152,3 @@ def test_unknown_feature_is_rejected() -> None:
     )
     with pytest.raises(ImportProjectDetailsError, match="'time_travel'"):
         archived_features(details)
-
-
-@pytest.mark.parametrize(
-    "removed",
-    [
-        # image captions are always computed
-        pytest.param("image_captions", id="image-captions"),
-        # the search index is always computed
-        pytest.param("full_text_search", id="full-text-search"),
-        pytest.param("search_annotate", id="search-annotate"),
-    ],
-)
-def test_removed_feature_is_dropped(removed: str) -> None:
-    """An archive of an earlier version that enables a removed feature imports:
-    the name is dropped, the other features are restored, and an unknown name
-    next to it is still rejected."""
-    details = ProjectDetailsExportSchema(
-        title="p",
-        description="d",
-        enabled_features=[removed, "rag_chat"],
-    )
-    assert [f.name for f in archived_features(details)] == ["rag_chat"]
-
-    details.enabled_features.append("time_travel")
-    with pytest.raises(ImportProjectDetailsError, match="'time_travel'"):
-        archived_features(details)
-
-
-def test_the_similarity_searches_are_imported_as_semantic_search() -> None:
-    """An archive of an earlier version that enables the sentence and the image
-    similarity search enables Semantic Search once."""
-    details = ProjectDetailsExportSchema(
-        title="p",
-        description="d",
-        enabled_features=["sentence_similarity_search", "image_similarity_search"],
-    )
-    assert [f.name for f in archived_features(details)] == ["semantic_search"]

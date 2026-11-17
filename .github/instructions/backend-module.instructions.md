@@ -30,7 +30,7 @@ What a developer of a module or a core artefact must do; the model is explained 
 ## Features
 
 - A capability is a feature only if it requires an on-demand artefact; declare it once in `<module>_feature.py` with `FEATURE = register_feature("<name>", title=..., description=..., area=FeatureArea.X, requires_artefacts={...}, default_enabled=...)`, requiring artefacts only, never another feature.
-- `default_enabled` decides whether a new project created without a feature list and an archive without project details enable the feature.
+- `default_enabled` decides whether a new project created without a feature list enables the feature.
 - An optional `register_feature(set_up=...)` hook `(db, project_id) -> None` must be safe to run twice, is not undone by Disable and never creates system codes.
 - Gate the routes of a feature with `require_feature(FEATURE)`, `require_feature_of(FEATURE, Crud.X, "x_id")` or `FeatureService().assert_enabled(...)` as `backend-endpoint.instructions.md` says, and a job with generated endpoints in its `validate_input` hook (`duplicate_finder_job.py`).
 - A gate checks only that the feature is enabled, never that its artefacts are computed.

@@ -12,15 +12,6 @@ from modules.eximport.project.project_export_schema import (
 from systems.feature_system.feature_registry import Feature, feature_registry
 from systems.feature_system.feature_service import FeatureService
 
-# The features DATS no longer has, as what they need is always computed (image
-# captions, the search index), and the features that became Semantic Search.
-# Archives of an earlier version may still enable them.
-_REMOVED_FEATURES = {"image_captions", "full_text_search", "search_annotate"}
-_RENAMED_FEATURES = {
-    "sentence_similarity_search": "semantic_search",
-    "image_similarity_search": "semantic_search",
-}
-
 
 def read_project_details(path: Path) -> ProjectDetailsExportSchema:
     """Read and validate the project details file of a project archive."""
@@ -32,21 +23,12 @@ def read_project_details(path: Path) -> ProjectDetailsExportSchema:
 
 
 def archived_features(details: ProjectDetailsExportSchema | None) -> list[Feature]:
-    """The features to enable for the archive's project details. Archives
-    exported before the feature toggles have no project details: the features a
-    new project enables are enabled (`default_enabled`). Drops features DATS no
-    longer has and rejects features this DATS version does not know (e.g. of an
-    archive exported by a newer version)."""
+    """The features the archive's project details enable, none without project
+    details. Rejects features this DATS version does not know."""
     if details is None:
-        return feature_registry.defaults()
+        return []
 
-    archived = list(
-        dict.fromkeys(
-            _RENAMED_FEATURES.get(f, f)
-            for f in details.enabled_features
-            if f not in _REMOVED_FEATURES
-        )
-    )
+    archived = list(dict.fromkeys(details.enabled_features))
     known = set(feature_registry.names())
     unknown = [f for f in archived if f not in known]
     if unknown:
