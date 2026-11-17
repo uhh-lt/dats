@@ -18,6 +18,8 @@ Cross-cutting rules for all backend code (Python, FastAPI). The patterns of a si
 | `*_service.py` (incl. transactions)       | `backend-service.instructions.md`        |
 | `*_endpoint.py` (incl. authz, deps, sync) | `backend-endpoint.instructions.md`       |
 | `backend/test/**`                         | `backend-tests.instructions.md`          |
+| `modules/**`, `core/artefacts/**`         | `backend-module.instructions.md`         |
+| `systems/{artefact,feature}_system/**`    | `backend-systems.instructions.md`        |
 
 ## Libraries
 
@@ -171,62 +173,8 @@ def tag_recommendation_job(payload: TagRecommendationJobInput, job: Job) -> None
 - A job type is text its owner declares in `@register_job`: a job that code starts or names gets a module-level constant next to its handler (`DOC_CHUNKING_JOB` in `doc_chunking_job.py`) that callers import, a job started only through its generated endpoints a literal, and its input/output DTOs go to the module's `*_dto.py` (see `backend-dto.instructions.md`).
 - `device` selects the worker queue (`"cpu"`, `"gpu"`, `"api"`). Services start jobs with `JobService().start_job(X_JOB, <X>JobInput(...))`.
 - See [tag_recommendation_job.py](backend/src/modules/tag_recommendation/tag_recommendation_job.py) and `systems/job_system/README.md`.
-- A job of a gated module checks its feature in its `validate_input` hook with `FeatureService().assert_enabled(...)` (`duplicate_finder_job.py`).
 
-## Pipeline Steps
+## Modules, Artefacts and Features
 
-Add a step:
-
-1. Declare new artefacts with `artefact(name, always=..., uploaded_for=..., codes=..., archive=...)` in a `<name>_artefact.py` file next to the step that produces it, with the archive of its own store (`core/artefacts/<name>/` for the artefacts every document or several features need, the folder of its module for an artefact only one feature reads): `always=True` only if every document needs it whatever features its project enables; an artefact with a store of its own (a table, index or file) needs an `ArtefactArchive`, the others are carried by the generic export of document data, metadata and annotations, and the system code trees a project needs before the artefact is produced go into `codes` (`SystemCode` trees declared next to the artefact, shared ones in `core/code/system_codes.py`). See `systems/artefact_system/README.md`.
-2. Write the step file (`<module>/<name>_job.py`): an input DTO that extends `SdocProcessingJobInput`, an enricher, and the handler registered with `@register_job(job_type="<step name>", input_type, enricher)` and declared with `@pipeline_step(requires, produces, doctypes)` above it (`systems/artefact_system/pipeline_step_decorator.py`), with the imported artefact objects. The step name is text and never changes without a data migration (it is stored in `sourcedocumentstepstatus`); among the ready steps the name breaks ties in the derived order.
-3. Regenerate the API client (`just update-api`) if the step adds an endpoint or a DTO the API uses.
-
-Rules:
-
-- The pipeline order, the steps per doctype, the planning, the health view and the export and import are derived from the declarations (`systems/artefact_system/pipeline_graph.py`); never list steps by hand.
-- The job system knows no pipeline: the job handler calls the started and finished hooks and RQ's failure callback (`job_handler.rq_job_failed`, set as `on_failure` at enqueue) calls the failed hook; `bootstrap.register_jobs` registers them with the functions of `step_execution.py` (`handle_job_started`, `handle_job_finished`, `handle_job_error`).
-- Never call the failed hook anywhere else: RQ calls the failure callback once per failed job, also when its worker died, and `DATSWorker.handle_work_horse_killed` calls it for a killed job process.
-- Start step jobs only with `step_execution.start_steps` (document, steps, settings, an optional priority), which starts the job of each step with the bare input; never build an `SdocProcessingJobInput` or name a step's job to start it.
-- A finished step starts each planned successor with a bare `SdocProcessingJobInput` (project, document, settings), and the successor's enricher loads the rest of its input from the database or filesystem, so a step stores all its output before its handler returns and never passes data to the next step in memory.
-- Every step registers an enricher (`@pipeline_step` rejects a step without one); the same enricher serves the advancing, recompute and the artefact computation.
-- One failure rule: whatever goes wrong (the job raises, its input cannot be built, the queue is unreachable, its worker died), the step and the pending steps after it become erroneous on every start path, and Complete or Recompute retries it (`systems/artefact_system/README.md`).
-- A step applies to every doctype of the step it follows, as a step starts the same successors for every doctype (the startup check fails otherwise).
-- A step has one direct predecessor: the steps producing its required artefacts must depend on each other (`NER_SPANS` and `SENTENCE_EMBEDDINGS` together are rejected), as no step waits for several inputs (the startup check fails otherwise).
-- Only the jobs that create documents or fan out over files (the crawler, `extract_archive`, `doc_chunking`, `extract_html`, `sdoc_init`) start what follows them, at the end of their handlers; they build the input of the next job by hand, and a queue outage leaves them finished (`entrypoints/follower_utils.py`).
-- One job per step: the job is named like its step and computes only that step; a step that needs spaCy calls spaCy itself (`ner_job.py`, `word_frequency_job.py`).
-- The status of a step per document is a row of `sourcedocumentstepstatus`, no row means not planned, and only `crud_sdoc_step_status` (the generic reads and writes), `systems/artefact_system/source_document_status_rules.py` and the planning statements of `ArtefactService` (`systems/artefact_system/artefact_statements.py`) touch these rows.
-- The overall status of a document is derived from its step rows (erroneous, else processing, else finished) and the status of the steps some artefacts need from theirs (processing, else failed, else not planned, else ready), both only in `source_document_status_rules.py`; never store them.
-- `export_sdocs.py` and `import_sdocs.py` name no artefact: they iterate over `artefact_registry.archives()`, the export reads an artefact only if its step finished and keeps it only if its archive says it is complete, the import writes it only if its step was imported as finished.
-- A new artefact archive needs its round-trip case in `test_feature_toggle_eximport.py`.
-- The import rejects document archives without `step_status` (exported before the feature toggles).
-- A step that cannot run because its input step failed is erroneous, never processing: a failed job fails its pending successors, and planning fails a step whose input is erroneous; recomputing the input starts them again.
-- Code that needs the step of an artefact looks it up with `graph.producer(doctype, artefact)` instead of naming the step (`export_sdocs.py`, `import_sdocs.py`).
-- `test_new_pipeline_step.py` declares a step in a test and follows it through the pipeline; keep it passing when the pipeline changes.
-
-## Features
-
-Add a feature:
-
-1. Declare it in `<module>/<module>_feature.py` as a module constant: `FEATURE = register_feature("<name>", title=..., description=..., area=FeatureArea.X, requires_artefacts={...}, default_enabled=True)`.
-2. Gate its routes and jobs with the imported constant (see "Feature Gating" in `backend-endpoint.instructions.md`).
-3. Regenerate the API client; the frontend reads the feature from `GET /feature` and needs a change only for a page or a gate (`frontend.instructions.md`).
-
-Rules:
-
-- A toggleable feature is declared once with `register_feature` in a `<module>_feature.py` file of its module, which `import_by_suffix` loads; its text name never changes without a data migration (it is stored in `project.enabled_features`). Gated code imports the returned object.
-- A name a request names is looked up strictly (`FeatureService.read_by_name`, 404 for an unknown name); a stored name is read tolerantly (an unregistered name is ignored and dropped at the next write).
-- `default_enabled` says whether a new project (created without a feature list) and an archive without project details enable the feature; `GET /feature` lists the features ordered by area and title.
-- A feature requires artefacts only (`requires_artefacts`), never another feature, and at least one of them is not a core artefact (`always`); a capability that needs only core artefacts is no feature and is always available.
-- The startup check rejects unregistered artefacts and features without an on-demand artefact, so a new feature needs its artefacts first.
-- Enable (and the project creation and the import) set up the feature first (`FeatureService.set_up`): the set up of the artefact system creates the system codes the feature's artefacts declare (a user code named like a declared code makes it fail with 409), then the optional `register_feature(set_up=...)` hook `(db, project_id) -> None` runs; the hook is safe to run twice, Disable does not undo it, and it never creates system codes (they stay declared on the artefacts).
-- `systems/feature_system` holds the declarations, the registry, `FeatureService.assert_enabled` and the `require_feature` dependencies, the status of the features of a project (`FeatureService.read_project_features`), the allowed actions (`ALLOWED_STATUSES`, `FeatureService.assert_action_allowed`) and all `/feature` endpoints with their DTOs (`ProjectFeatureRead`, `FeatureActivation`), and carries out the actions (`FeatureService.enable_feature`, `complete_feature`, `disable_feature`, `add_features` for an import); it talks to `systems/artefact_system` in artefacts only, and the artefact system never imports it.
-- `systems/artefact_system` plans in artefacts: `PipelineGraph.steps_for` gives the steps of a doctype that some artefacts need, `PipelineGraph.applies` whether they apply to a doctype.
-- Only `PipelineGraph` derives which step feeds which (`inputs`, `successors`, `descendants`, `steps_for`); never walk the `requires` and `produces` of the declarations elsewhere.
-- Only the operations of `ArtefactService` (`systems/artefact_system/artefact_service.py`: `compute`, `plan_document`, `handle_artefact_computation_job` and `end_computation`) write planning rows and `project.artefact_computations` and start the `ARTEFACT_COMPUTATION` job, and only those of `FeatureService` write `project.enabled_features` (its private `_update_enabled_features`); the SQL of `ArtefactService` lives in `artefact_statements.py`, which only that service imports, and no CRUD offers it; the project lock is `crud_project.read_locked`; never plan steps by hand.
-- Enabling or completing a feature computes the artefacts it requires: an artefact computation plans `steps_for(core artefacts) | steps_for(its artefacts)` (the latter only where they apply) and never the missing data of other artefacts.
-- Enable and Complete plan nothing in the request: they store a pending artefact computation and start the `ARTEFACT_COMPUTATION` job before the commit, which plans the documents in batches (one transaction each, project share lock first) and removes the pending computation at the end or through its failure callback.
-- An upload plans the steps of the core artefacts and of the artefact demand (`FeatureService.read_artefact_demand`, read under the project share lock) with `ArtefactService.plan_document`.
-- Each action is allowed only in the feature statuses of `ALLOWED_STATUSES` (`systems/feature_system/feature_service.py`) (Enable when disabled, Complete when partly available, Disable when partly or fully available) and answers 409 otherwise, so every action is rejected while a feature is computing.
-- The enabled features change only through `FeatureService.enable_feature` and `disable_feature` (called by the `/feature/project/...` endpoints and the project import), never through `ProjectUpdate`.
-- Disabling a feature changes only the enabled features, calls nothing in the artefact system and never unplans a step.
-- An import restores only what the archive holds, adds the archive's features to the project's with `FeatureService.add_features` (never disables one) and plans no steps; features whose data is missing are partly available until a user completes them.
+- A module adds an artefact, a pipeline step, a feature or a job as `backend-module.instructions.md` says; the artefact and feature systems keep the invariants of `backend-systems.instructions.md`.
+- The model (feature, artefact, pipeline step, job) and the three rules are explained in `docs/development/module-architecture.md` and the READMEs of `systems/job_system`, `systems/artefact_system` and `systems/feature_system`.
