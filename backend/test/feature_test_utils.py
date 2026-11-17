@@ -9,16 +9,16 @@ from sqlalchemy.orm import Session
 
 from common.doc_type_enum import DocType
 from common.feature_enum import FeatureArea
+from core.artefacts.sentence_embeddings.sentence_embedding_crud import (
+    crud_sentence_embedding,
+)
+from core.artefacts.sentence_embeddings.sentence_embedding_dto import (
+    SentenceObjectIdentifier,
+)
 from core.doc.sdoc_elastic_crud import crud_sdoc_elastic
 from core.doc.sdoc_elastic_dto import ElasticSearchDocumentCreate
 from core.doc.source_document_dto import SourceDocumentRead
 from core.doc.source_document_orm import SourceDocumentORM
-from core.doc_processing.sentence_embeddings.sentence_embedding_crud import (
-    crud_sentence_embedding,
-)
-from core.doc_processing.sentence_embeddings.sentence_embedding_dto import (
-    SentenceObjectIdentifier,
-)
 from core.project.project_crud import crud_project
 from core.project.project_dto import ProjectCreate
 from core.project.project_orm import ProjectORM

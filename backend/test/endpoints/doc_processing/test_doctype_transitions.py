@@ -6,10 +6,10 @@ from common.doc_type_enum import DocType
 from common.job_type_enum import JobType
 from common.languages_enum import Language
 from common.sdoc_status_enum import SDocStatus
+from core.artefacts.transcript.transcription_job import TranscriptionJobInput
+from core.artefacts.video_utils import audio_stream_path
 from core.doc.source_document_crud import crud_sdoc
 from core.doc_processing.doc_processing_dto import SdocInitJobInput
-from core.doc_processing.transcript.transcription_job import TranscriptionJobInput
-from core.doc_processing.video_utils import audio_stream_path
 from job_test_utils import HeldJobs
 from pipeline_test_utils import core_steps, read_all_step_status
 from systems.artefact_system.artefact_dto import (

@@ -8,9 +8,9 @@ from repos.db.orm_base import ORMBase
 
 if TYPE_CHECKING:
     from core.annotation.annotation_document_orm import AnnotationDocumentORM
+    from core.artefacts.word_frequencies.word_frequency_orm import WordFrequencyORM
     from core.doc.folder_orm import FolderORM
     from core.doc.source_document_data_orm import SourceDocumentDataORM
-    from core.doc_processing.word_frequencies.word_frequency_orm import WordFrequencyORM
     from core.memo.object_handle_orm import ObjectHandleORM
     from core.metadata.source_document_metadata_orm import SourceDocumentMetadataORM
     from core.project.project_orm import ProjectORM

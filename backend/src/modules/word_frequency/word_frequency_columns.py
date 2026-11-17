@@ -6,12 +6,12 @@ from core.annotation.annotation_document_orm import AnnotationDocumentORM
 from core.annotation.sentence_annotation_orm import SentenceAnnotationORM
 from core.annotation.span_annotation_orm import SpanAnnotationORM
 from core.annotation.span_text_orm import SpanTextORM
+from core.artefacts.word_frequencies.word_frequency_orm import WordFrequencyORM
 from core.code.code_crud import crud_code
 from core.doc.folder_crud import crud_folder
 from core.doc.folder_enum import FolderType
 from core.doc.folder_orm import FolderORM
 from core.doc.source_document_orm import SourceDocumentORM
-from core.doc_processing.word_frequencies.word_frequency_orm import WordFrequencyORM
 from core.tag.tag_crud import crud_tag
 from core.tag.tag_orm import TagORM
 from core.user.user_crud import crud_user

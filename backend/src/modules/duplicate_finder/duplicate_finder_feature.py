@@ -1,5 +1,5 @@
 from common.feature_enum import FeatureArea
-from core.doc_processing.word_frequencies.word_frequencies_artefact import (
+from core.artefacts.word_frequencies.word_frequencies_artefact import (
     WORD_FREQUENCIES,
 )
 from systems.feature_system.feature_registry import register_feature

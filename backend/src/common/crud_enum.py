@@ -6,12 +6,12 @@ from core.annotation.sentence_annotation_crud import crud_sentence_anno
 from core.annotation.span_annotation_crud import crud_span_anno
 from core.annotation.span_group_crud import crud_span_group
 from core.annotation.span_text_crud import crud_span_text
+from core.artefacts.word_frequencies.word_frequency_crud import crud_word_frequency
 from core.auth.refresh_token_crud import crud_refresh_token
 from core.code.code_crud import crud_code
 from core.doc.folder_crud import crud_folder
 from core.doc.source_document_crud import crud_sdoc
 from core.doc.source_document_data_crud import crud_sdoc_data
-from core.doc_processing.word_frequencies.word_frequency_crud import crud_word_frequency
 from core.memo.memo_crud import crud_memo
 from core.memo.memo_enum import AttachedObjectType
 from core.memo.object_handle_crud import crud_object_handle

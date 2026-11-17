@@ -2,11 +2,11 @@ from common.doc_type_enum import DocType
 from common.job_type_enum import JobType
 from common.languages_enum import Language
 from common.sdoc_status_enum import SDocStatus
-from core.doc_processing.doc_processing_dto import SdocInitJobInput
-from core.doc_processing.raw_html.html_extraction_job import (
+from core.artefacts.raw_html.html_extraction_job import (
     ExtractHTMLJobInput,
     ExtractHTMLJobOutput,
 )
+from core.doc_processing.doc_processing_dto import SdocInitJobInput
 from feature_test_utils import FeatureProject, feature_named
 from job_test_utils import HeldJobs, unreachable_redis
 from pipeline_test_utils import failing_started_hook, read_step_status, started_steps

@@ -1,6 +1,6 @@
 from common.doc_type_enum import DocType
+from core.artefacts.content.content_artefact import CONTENT
 from core.doc.source_document_data_crud import crud_sdoc_data
-from core.doc_processing.content.content_artefact import CONTENT
 from modules.tag_recommendation.document_embedding_artefact import DOCUMENT_EMBEDDINGS
 from modules.tag_recommendation.document_embedding_crud import crud_document_embedding
 from modules.tag_recommendation.document_embedding_dto import DocumentObjectIdentifier

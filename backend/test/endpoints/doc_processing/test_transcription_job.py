@@ -5,14 +5,14 @@ import rq.job
 from fastapi.testclient import TestClient
 
 from common.languages_enum import Language
-from core.doc.source_document_data_dto import (
-    SourceDocumentDataRead,
-    WordLevelTranscription,
-)
-from core.doc_processing.transcript.transcription_job import (
+from core.artefacts.transcript.transcription_job import (
     TranscriptionJobInput,
     TranscriptionJobOutput,
     handle_transcription_job,
+)
+from core.doc.source_document_data_dto import (
+    SourceDocumentDataRead,
+    WordLevelTranscription,
 )
 from repos.ray.dto.whisper import (
     SegmentTranscription,
@@ -37,7 +37,7 @@ SETTINGS = ProcessingSettings(
 )
 
 # ===========================================================================
-# AUDIO TRANSCRIPTION JOB (core/doc_processing/transcript/transcription_job) TESTS
+# AUDIO TRANSCRIPTION JOB (core/artefacts/transcript/transcription_job) TESTS
 # ===========================================================================
 # The transcription runs as a background job of the document processing pipeline,
 # so these tests call its handler directly. The Whisper model is an external

@@ -9,14 +9,14 @@ from core.annotation.annotation_document_orm import AnnotationDocumentORM
 from core.annotation.span_annotation_dto import SpanAnnotationCreate, SpanAnnotationRead
 from core.annotation.span_annotation_orm import SpanAnnotationORM
 from core.annotation.span_annotation_service import SpanAnnotationService
-from core.doc.source_document_data_crud import crud_sdoc_data
-from core.doc.source_document_orm import SourceDocumentORM
-from core.doc_processing.sentence_embeddings.sentence_embedding_crud import (
+from core.artefacts.sentence_embeddings.sentence_embedding_crud import (
     crud_sentence_embedding,
 )
-from core.doc_processing.sentence_embeddings.sentence_embedding_dto import (
+from core.artefacts.sentence_embeddings.sentence_embedding_dto import (
     SentenceObjectIdentifier,
 )
+from core.doc.source_document_data_crud import crud_sdoc_data
+from core.doc.source_document_orm import SourceDocumentORM
 from modules.annoscaling.annoscaling_dto import (
     AnnoscalingResult,
     AnnoscalingSentenceHit,

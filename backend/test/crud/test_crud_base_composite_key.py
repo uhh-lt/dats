@@ -3,7 +3,7 @@
 import pytest
 from sqlalchemy.orm import Session
 
-from core.doc_processing.word_frequencies.word_frequency_crud import crud_word_frequency
+from core.artefacts.word_frequencies.word_frequency_crud import crud_word_frequency
 from repos.db import crud_base
 from repos.db.sql_exceptions import NoSuchElementError
 

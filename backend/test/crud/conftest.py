@@ -13,13 +13,13 @@ from core.annotation.span_annotation_service import SpanAnnotationService
 from core.annotation.span_group_crud import crud_span_group
 from core.annotation.span_group_dto import SpanGroupCreate
 from core.annotation.span_group_service import SpanGroupService
+from core.artefacts.word_frequencies.word_frequency_crud import crud_word_frequency
+from core.artefacts.word_frequencies.word_frequency_dto import WordFrequencyCreate
 from core.code.code_crud import crud_code
 from core.code.code_dto import CodeCreate
 from core.doc.source_document_crud import crud_sdoc
 from core.doc.source_document_dto import SourceDocumentCreate
 from core.doc.source_document_orm import SourceDocumentORM
-from core.doc_processing.word_frequencies.word_frequency_crud import crud_word_frequency
-from core.doc_processing.word_frequencies.word_frequency_dto import WordFrequencyCreate
 from core.memo.memo_crud import crud_memo
 from core.memo.memo_dto import MemoCreateIntern
 from core.memo.memo_enum import AttachedObjectType

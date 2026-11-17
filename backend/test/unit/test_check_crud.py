@@ -335,7 +335,7 @@ def test_check_crud_violation_names_file_class_method_and_rule() -> None:
             id="elastic-crud",
         ),
         pytest.param(
-            "from core.doc_processing.sentence_embeddings.sentence_embedding_crud import crud_sentence_embedding",
+            "from core.artefacts.sentence_embeddings.sentence_embedding_crud import crud_sentence_embedding",
             id="embedding-crud",
         ),
         pytest.param(

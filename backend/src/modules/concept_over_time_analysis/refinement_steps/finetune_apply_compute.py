@@ -9,10 +9,10 @@ from sklearn.linear_model import LogisticRegression
 from umap.umap_ import UMAP
 
 from config import conf
-from core.doc_processing.sentence_embeddings.sentence_embedding_crud import (
+from core.artefacts.sentence_embeddings.sentence_embedding_crud import (
     crud_sentence_embedding,
 )
-from core.doc_processing.sentence_embeddings.sentence_embedding_dto import (
+from core.artefacts.sentence_embeddings.sentence_embedding_dto import (
     SentenceObjectIdentifier,
 )
 from modules.concept_over_time_analysis.cota_dto import (

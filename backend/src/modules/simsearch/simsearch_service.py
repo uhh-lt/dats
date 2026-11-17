@@ -3,11 +3,11 @@ from sqlalchemy.orm import Session
 
 from common.doc_type_enum import DocType
 from common.singleton_meta import SingletonMeta
-from core.doc.source_document_crud import crud_sdoc
-from core.doc.source_document_dto import SourceDocumentRead
-from core.doc_processing.sentence_embeddings.sentence_embedding_crud import (
+from core.artefacts.sentence_embeddings.sentence_embedding_crud import (
     crud_sentence_embedding,
 )
+from core.doc.source_document_crud import crud_sdoc
+from core.doc.source_document_dto import SourceDocumentRead
 from core.search.sdoc_search.sdoc_search import filter_sdoc_ids
 from core.search.sdoc_search.sdoc_search_columns import SdocColumns
 from modules.simsearch.image_embedding_crud import crud_image_embedding

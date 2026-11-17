@@ -4,10 +4,10 @@ from pathlib import Path
 import pytest
 from sqlalchemy.orm import Session
 
-from core.doc.source_document_crud import crud_sdoc
-from core.doc_processing.sentence_embeddings.sentence_embedding_crud import (
+from core.artefacts.sentence_embeddings.sentence_embedding_crud import (
     crud_sentence_embedding,
 )
+from core.doc.source_document_crud import crud_sdoc
 from core.user.user_orm import UserORM
 from modules.eximport.import_csv_utils import read_import_csv
 from modules.eximport.import_enum import ImportJobType

@@ -1,5 +1,5 @@
 from common.feature_enum import FeatureArea
-from core.doc_processing.sentence_embeddings.sentence_embeddings_artefact import (
+from core.artefacts.sentence_embeddings.sentence_embeddings_artefact import (
     SENTENCE_EMBEDDINGS,
 )
 from systems.feature_system.feature_registry import register_feature

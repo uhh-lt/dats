@@ -6,12 +6,12 @@ from common.doc_type_enum import DocType
 from core.annotation.annotation_document_crud import crud_adoc
 from core.annotation.span_annotation_dto import SpanAnnotationCreateIntern
 from core.annotation.span_group_service import SpanGroupService
-from core.code.code_crud import crud_code
-from core.doc.source_document_data_crud import crud_sdoc_data
-from core.doc_processing.language.language_artefact import LANGUAGE
-from core.doc_processing.tokens_sentences.tokens_sentences_artefact import (
+from core.artefacts.language.language_artefact import LANGUAGE
+from core.artefacts.tokens_sentences.tokens_sentences_artefact import (
     TOKENS_SENTENCES,
 )
+from core.code.code_crud import crud_code
+from core.doc.source_document_data_crud import crud_sdoc_data
 from core.metadata.source_document_metadata_crud import crud_sdoc_meta
 from core.user.user_crud import SYSTEM_USER_ID
 from modules.coreference_resolution.coreference_artefact import COREFERENCES

@@ -1,5 +1,5 @@
 from common.feature_enum import FeatureArea
-from core.doc_processing.sentence_embeddings.sentence_embeddings_artefact import (
+from core.artefacts.sentence_embeddings.sentence_embeddings_artefact import (
     SENTENCE_EMBEDDINGS,
 )
 from modules.simsearch.image_embedding_artefact import IMAGE_EMBEDDINGS

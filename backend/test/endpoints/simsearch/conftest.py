@@ -4,13 +4,13 @@ import pytest
 from sqlalchemy.orm import Session
 
 from common.doc_type_enum import DocType
-from core.doc.source_document_orm import SourceDocumentORM
-from core.doc_processing.sentence_embeddings.sentence_embedding_crud import (
+from core.artefacts.sentence_embeddings.sentence_embedding_crud import (
     crud_sentence_embedding,
 )
-from core.doc_processing.sentence_embeddings.sentence_embedding_dto import (
+from core.artefacts.sentence_embeddings.sentence_embedding_dto import (
     SentenceObjectIdentifier,
 )
+from core.doc.source_document_orm import SourceDocumentORM
 from core.project.project_orm import ProjectORM
 from core.user.user_orm import UserORM
 from feature_test_utils import (

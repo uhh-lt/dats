@@ -11,14 +11,14 @@ from sqlalchemy.orm import Session
 from common.doc_type_enum import DocType
 from common.languages_enum import Language
 from common.sdoc_status_enum import SDocStatus
+from core.artefacts.sentence_embeddings.sentence_embedding_crud import (
+    crud_sentence_embedding,
+)
+from core.artefacts.video_utils import audio_stream_path
 from core.doc.sdoc_elastic_crud import crud_sdoc_elastic
 from core.doc.source_document_crud import crud_sdoc
 from core.doc.source_document_dto import SourceDocumentRead
 from core.doc.source_document_orm import SourceDocumentORM
-from core.doc_processing.sentence_embeddings.sentence_embedding_crud import (
-    crud_sentence_embedding,
-)
-from core.doc_processing.video_utils import audio_stream_path
 from core.project.project_crud import crud_project
 from job_test_utils import HeldJobs
 from modules.eximport.import_exceptions import ImportSourceDocumentsError
