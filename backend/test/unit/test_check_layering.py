@@ -3,11 +3,11 @@ from pathlib import Path
 
 import pytest
 
-LINT_SCRIPT = Path(__file__).parents[2] / "lint" / "check_core.py"
-_spec = importlib.util.spec_from_file_location("check_core", LINT_SCRIPT)
+LINT_SCRIPT = Path(__file__).parents[2] / "lint" / "check_layering.py"
+_spec = importlib.util.spec_from_file_location("check_layering", LINT_SCRIPT)
 assert _spec is not None and _spec.loader is not None
-check_core = importlib.util.module_from_spec(_spec)
-_spec.loader.exec_module(check_core)
+check_layering = importlib.util.module_from_spec(_spec)
+_spec.loader.exec_module(check_layering)
 
 
 def _src(tmp_path: Path, files: dict[str, str]) -> Path:
@@ -35,7 +35,7 @@ def test_the_artefact_system_must_not_import_the_feature_system(
     )
 
     with pytest.raises(SystemExit):
-        check_core.main(root, module_exceptions={})
+        check_layering.main(root, module_exceptions={})
 
     out = capsys.readouterr().out
     assert "imports from systems.feature_system" in out
@@ -55,7 +55,7 @@ def test_the_feature_system_may_import_the_artefact_system(
         },
     )
 
-    check_core.main(root, module_exceptions={})
+    check_layering.main(root, module_exceptions={})
 
     assert "passed" in capsys.readouterr().out
 
@@ -74,7 +74,7 @@ def test_no_system_may_import_a_module(
     )
 
     with pytest.raises(SystemExit):
-        check_core.main(root, module_exceptions={})
+        check_layering.main(root, module_exceptions={})
 
     assert "imports from modules" in capsys.readouterr().out
 
@@ -96,7 +96,7 @@ def test_a_module_must_not_import_another_module(
     )
 
     with pytest.raises(SystemExit):
-        check_core.main(root, module_exceptions={})
+        check_layering.main(root, module_exceptions={})
 
     out = capsys.readouterr().out
     assert "module 'rag' imports module 'simsearch'" in out
@@ -128,7 +128,7 @@ def test_a_module_must_not_import_another_module_from_the_package(
     root = _src(tmp_path, {"modules/rag/rag_service.py": source})
 
     with pytest.raises(SystemExit):
-        check_core.main(root, module_exceptions={})
+        check_layering.main(root, module_exceptions={})
 
     out = capsys.readouterr().out
     assert "module 'rag' imports module 'simsearch'" in out
@@ -147,7 +147,7 @@ def test_a_listed_module_import_is_allowed(
         },
     )
 
-    check_core.main(root, module_exceptions={("eximport", "whiteboard"): "reason"})
+    check_layering.main(root, module_exceptions={("eximport", "whiteboard"): "reason"})
 
     assert "passed" in capsys.readouterr().out
 
@@ -159,7 +159,9 @@ def test_an_exception_that_no_longer_occurs_fails(
     root = _src(tmp_path, {"modules/eximport/export_service.py": "x = 1\n"})
 
     with pytest.raises(SystemExit):
-        check_core.main(root, module_exceptions={("eximport", "whiteboard"): "reason"})
+        check_layering.main(
+            root, module_exceptions={("eximport", "whiteboard"): "reason"}
+        )
 
     assert "Stale exception: module 'eximport'" in capsys.readouterr().out
 
@@ -168,6 +170,6 @@ def test_the_module_import_exceptions_are_exactly_the_current_imports(
     capsys: pytest.CaptureFixture[str],
 ):
     """The real source tree passes with the listed exceptions."""
-    check_core.main()
+    check_layering.main()
 
     assert "passed" in capsys.readouterr().out

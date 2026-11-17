@@ -156,7 +156,7 @@ Decided after PR F, recorded in `specs/adr/0012-features-need-processing-core-ha
 
 1. **Toggle rule:** a feature exists only if it requires an artefact that is not a core artefact; enabling it means more processing. A feature requires artefacts only, never another feature. Features that share an artefact share its computation, not each other.
 2. **Core rule:** core declares no feature and checks no toggle. Everything in core is always available. Core may own on-demand artefacts that several modules use (word frequencies, sentence embeddings); only the features of modules decide whether they are computed.
-3. **Module rule:** a module does not import another module (`backend/lint/check_core.py`, with the remaining pairs listed as exceptions: export/import, and experiment on agreement and the LLM assistant). Small duplication in modules is preferred over a shared service.
+3. **Module rule:** a module does not import another module (`backend/lint/check_layering.py`, with the remaining pairs listed as exceptions: export/import, and experiment on agreement and the LLM assistant). Small duplication in modules is preferred over a shared service.
 
 Consequences: the search moved to `core/search` and its index is a core artefact, so Full-Text Search and Search & Auto-Annotate are no features; Sentence Search and Image Search are one feature, Semantic Search; RAG Chat, Annotation Scaling and Concepts Over Time require the sentence embeddings and embed their queries themselves.
 

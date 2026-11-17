@@ -58,7 +58,7 @@ Creating in a project what its features need before anything is computed: the sy
 _Avoid_: Initialization, provisioning
 
 **Module**:
-A folder that holds one capability of DATS with its feature (if it needs an artefact outside the core), the artefacts only it uses, their pipeline steps and storage, and its endpoints (e.g. `modules/entity_annotations`, `modules/object_detection`, `modules/tag_recommendation`). A module does not import another module; the remaining exceptions are listed in `backend/lint/check_core.py`.
+A folder that holds one capability of DATS with its feature (if it needs an artefact outside the core), the artefacts only it uses, their pipeline steps and storage, and its endpoints (e.g. `modules/entity_annotations`, `modules/object_detection`, `modules/tag_recommendation`). A module does not import another module; the remaining exceptions are listed in `backend/lint/check_layering.py`.
 _Avoid_: Plugin, package
 
 **Core Artefact**:

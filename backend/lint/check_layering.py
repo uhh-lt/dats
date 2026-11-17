@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-check_core.py
+check_layering.py
 
 This script enforces the layering of 'core' and 'systems':
 1. No file in 'core' may import anything from 'modules' at module level (type

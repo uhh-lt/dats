@@ -74,13 +74,13 @@ repos:
         entry: uv run --project backend python backend/lint/check_enums.py
         language: system
         files: ^backend/(src/.*\.py|lint/check_enums\.py)$
-      - id: lint-backend-core
-        name: "Lint: Backend core, systems and module layering"
-        entry: uv run --project backend python backend/lint/check_core.py
+      - id: lint-backend-layering
+        name: "Lint: Backend layering"
+        entry: uv run --project backend python backend/lint/check_layering.py
         language: system
         # always checks the whole core, systems and modules folders
         pass_filenames: false
-        files: ^backend/(src/(core|systems|modules)/.*\.py|lint/check_core\.py)$
+        files: ^backend/(src/(core|systems|modules)/.*\.py|lint/check_layering\.py)$
       - id: lint-ray
         name: "Lint: Ray"
         entry: just lint ray

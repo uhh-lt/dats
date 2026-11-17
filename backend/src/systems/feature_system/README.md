@@ -2,7 +2,7 @@
 
 The toggleable features: their declarations (`feature_registry.py`), the requirement resolution and the gating of routes and jobs (`feature_service.py`, `feature_dependency.py`), and the features of a project: their status and the actions Enable, Complete and Disable (`feature_endpoint.py`). The terms are in `GLOSSARY.md`.
 
-The feature system talks to the artefact system (`systems/artefact_system`) in artefacts only; the artefact system never imports the feature system (`backend/lint/check_core.py`).
+The feature system talks to the artefact system (`systems/artefact_system`) in artefacts only; the artefact system never imports the feature system (`backend/lint/check_layering.py`).
 
 ## Declaring a feature
 

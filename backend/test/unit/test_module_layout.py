@@ -1,7 +1,7 @@
 """The layout of the modules after the artefacts moved to their owners: the
 standard pipeline lives in `core/doc_processing`, every single-user artefact in
 the module of its feature, so `modules/doc_processing` is gone (that core
-imports no module is `lint/check_core.py`)."""
+imports no module is `lint/check_layering.py`)."""
 
 from pathlib import Path
 

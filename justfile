@@ -100,7 +100,7 @@ lint target *files:
           uv run python lint/check_services.py
           uv run python lint/check_exceptions.py
           uv run python lint/check_enums.py
-          uv run python lint/check_core.py
+          uv run python lint/check_layering.py
         else uv run ruff check --fix "${rel[@]}"; fi ;;
       frontend)
         {{ require_node_modules }}
