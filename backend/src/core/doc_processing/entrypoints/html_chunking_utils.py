@@ -1,5 +1,6 @@
 import copy
 import re
+from html import escape
 from typing import Any, NamedTuple
 
 from bs4 import BeautifulSoup, Tag
@@ -21,8 +22,8 @@ class PageChunk(NamedTuple):
 class _HtmlStructure(NamedTuple):
     elements: list[Any]
     head_html: str
-    has_html_tag: bool
-    has_body_tag: bool
+    html_open_tag: str | None
+    body_open_tag: str | None
 
 
 def _parse_html_structure(html_content: str) -> _HtmlStructure:
@@ -49,9 +50,21 @@ def _parse_html_structure(html_content: str) -> _HtmlStructure:
     return _HtmlStructure(
         elements=elements,
         head_html=head_html,
-        has_html_tag=soup.find("html") is not None,
-        has_body_tag=body is not None,
+        html_open_tag=_opening_tag(soup.find("html")),
+        body_open_tag=_opening_tag(body),
     )
+
+
+def _opening_tag(tag: Any) -> str | None:
+    """The opening tag of `tag` with its attributes (e.g. `<html
+    class="readability-watermark">`), or None if the document has no such tag."""
+    if not isinstance(tag, Tag):
+        return None
+    attrs = "".join(
+        f' {name}="{escape(" ".join(value) if isinstance(value, list) else str(value))}"'
+        for name, value in tag.attrs.items()
+    )
+    return f"<{tag.name}{attrs}>"
 
 
 def split_html_at_page_markers(
@@ -97,8 +110,8 @@ def split_html_at_page_markers(
         html = _wrap_html_chunk(
             [element for _, page_elements in chunk_pages for element in page_elements],
             structure.head_html,
-            structure.has_html_tag,
-            structure.has_body_tag,
+            structure.html_open_tag,
+            structure.body_open_tag,
         )
         chunks.append(
             PageChunk(
@@ -123,7 +136,7 @@ def split_html_into_chunks(html_content: str, max_chars: int) -> list[str]:
     Returns:
         A list of valid HTML chunks.
     """
-    elements, head_html, has_html_tag, has_body_tag = _parse_html_structure(
+    elements, head_html, html_open_tag, body_open_tag = _parse_html_structure(
         html_content
     )
 
@@ -148,7 +161,7 @@ def split_html_into_chunks(html_content: str, max_chars: int) -> list[str]:
             # Save current accumulated content first
             if current_elements:
                 chunk_html = _wrap_html_chunk(
-                    current_elements, head_html, has_html_tag, has_body_tag
+                    current_elements, head_html, html_open_tag, body_open_tag
                 )
                 chunks.append(chunk_html)
                 current_elements = []
@@ -159,7 +172,7 @@ def split_html_into_chunks(html_content: str, max_chars: int) -> list[str]:
                 sub_chunks = _split_large_element(element, max_chars)
                 for sub_chunk_elements in sub_chunks:
                     chunk_html = _wrap_html_chunk(
-                        sub_chunk_elements, head_html, has_html_tag, has_body_tag
+                        sub_chunk_elements, head_html, html_open_tag, body_open_tag
                     )
                     chunks.append(chunk_html)
             else:
@@ -168,7 +181,7 @@ def split_html_into_chunks(html_content: str, max_chars: int) -> list[str]:
                 for i in range(0, len(text), max_chars):
                     text_chunk = text[i : i + max_chars]
                     chunk_html = _wrap_html_chunk(
-                        [text_chunk], head_html, has_html_tag, has_body_tag
+                        [text_chunk], head_html, html_open_tag, body_open_tag
                     )
                     chunks.append(chunk_html)
             continue
@@ -177,7 +190,7 @@ def split_html_into_chunks(html_content: str, max_chars: int) -> list[str]:
         if current_length + element_length > max_chars and current_elements:
             # Save current chunk and start a new one
             chunk_html = _wrap_html_chunk(
-                current_elements, head_html, has_html_tag, has_body_tag
+                current_elements, head_html, html_open_tag, body_open_tag
             )
             chunks.append(chunk_html)
             current_elements = [element]
@@ -190,7 +203,7 @@ def split_html_into_chunks(html_content: str, max_chars: int) -> list[str]:
     # Don't forget the last chunk
     if current_elements:
         chunk_html = _wrap_html_chunk(
-            current_elements, head_html, has_html_tag, has_body_tag
+            current_elements, head_html, html_open_tag, body_open_tag
         )
         chunks.append(chunk_html)
 
@@ -221,8 +234,8 @@ def _get_content_length(element_html: str) -> int:
 def _wrap_html_chunk(
     elements: list[Any],
     head_html: str,
-    has_html_tag: bool,
-    has_body_tag: bool,
+    html_open_tag: str | None,
+    body_open_tag: str | None,
 ) -> str:
     """
     Wrap a list of elements in proper HTML structure.
@@ -230,19 +243,19 @@ def _wrap_html_chunk(
     Args:
         elements: List of HTML elements/strings to wrap.
         head_html: The head section HTML to include.
-        has_html_tag: Whether the original had an html tag.
-        has_body_tag: Whether the original had a body tag.
+        html_open_tag: The opening html tag of the original, if it had one.
+        body_open_tag: The opening body tag of the original, if it had one.
 
     Returns:
         A valid HTML string.
     """
     content = "".join(str(el) for el in elements)
 
-    if has_body_tag:
-        content = f"<body>{content}</body>"
+    if body_open_tag is not None:
+        content = f"{body_open_tag}{content}</body>"
 
-    if has_html_tag:
-        content = f"<!DOCTYPE html><html>{head_html}{content}</html>"
+    if html_open_tag is not None:
+        content = f"<!DOCTYPE html>{html_open_tag}{head_html}{content}</html>"
     elif head_html:
         content = f"{head_html}{content}"
 

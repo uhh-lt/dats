@@ -60,6 +60,23 @@ LATE_MARKED_HTML = (
     "</body></html>"
 )
 
+# Two pages with markers in an html and body tag with attributes, as Mistral OCR
+# output converted by a partner (the class tells DATS to skip readability).
+ATTRIBUTED_MARKED_HTML = (
+    '<html class="readability-watermark"><body class="journal">'
+    "<!-- page 1 --><p>Page one</p>"
+    "<!-- page 2 --><p>Page two</p>"
+    "</body></html>"
+)
+
+# Three paragraphs without markers that fit one page each but not two together,
+# in an html and body tag with attributes.
+ATTRIBUTED_LONG_HTML = (
+    '<html class="readability-watermark"><body class="journal">'
+    + f"<p>{'x' * (conf.chunking.characters_per_page - 100)}</p>" * 3
+    + "</body></html>"
+)
+
 # The markers of two pages inside a div, not among the top-level elements.
 NESTED_MARKED_HTML = (
     "<html><body><div>"
@@ -265,6 +282,35 @@ def test_upload_of_short_html_keeps_the_file_whole(
     )
 
     assert [(i.filepath.name, i.folder_id) for i in inputs] == [("book.html", None)]
+
+
+@pytest.mark.parametrize(
+    "html,expected_chunks",
+    [
+        # Split at the two page markers, one page per chunk.
+        pytest.param(ATTRIBUTED_MARKED_HTML, 2, id="page-markers"),
+        # Split by characters into three one-page chunks.
+        pytest.param(ATTRIBUTED_LONG_HTML, 3, id="characters"),
+    ],
+)
+def test_upload_of_html_keeps_the_attributes_of_html_and_body_in_each_chunk(
+    client: TestClient,
+    test_project,
+    held_jobs: HeldJobs,
+    html: str,
+    expected_chunks: int,
+):
+    """Every chunk keeps the attributes of the html and body tag, so a
+    readability watermark of the uploaded file still applies to its chunks."""
+    inputs = _upload_html_and_chunk(
+        client, held_jobs, test_project.id, "issue.html", html, 1
+    )
+
+    assert len(inputs) == expected_chunks
+    for job_input in inputs:
+        content = job_input.filepath.read_text(encoding="utf-8")
+        assert '<html class="readability-watermark">' in content
+        assert '<body class="journal">' in content
 
 
 def test_upload_of_html_without_page_markers_chunks_it_by_characters(
