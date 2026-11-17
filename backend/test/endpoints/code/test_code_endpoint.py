@@ -180,14 +180,15 @@ def test_get_by_project(
     client: TestClient,
     project_with_code,
 ):
-    """The project enables the features on by default: it has their 123 system
-    codes (the root, the entity and the COCO trees; not MENTION and the
-    quotation tree, whose features are off by default) and the fixture's code."""
+    """The project enables the features on by default: it has their 124 system
+    codes (the root, the entity and the COCO trees with HUMAN; not MENTION and
+    the quotation tree, whose features are off by default) and the fixture's
+    code."""
     project = project_with_code["project"]
 
     response = client.get(f"/code/project/{project.id}")
 
-    EXPECTED_COUNT = 124
+    EXPECTED_COUNT = 125
     assert response.status_code == 200, response.text
     codes_json = response.json()
     assert len(codes_json) == EXPECTED_COUNT
