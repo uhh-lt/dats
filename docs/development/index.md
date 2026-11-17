@@ -8,6 +8,8 @@ Working on several branches in parallel, for example with coding agents? See [Gi
 
 You'll also find architecture references for key subsystems like the [MCP Server & API Keys](mcp-server.md), which powers programmatic access to DATS, and [WebSockets](websockets.md), which power real-time updates in the frontend.
 
+How the backend is put together (features, artefacts, pipeline steps, jobs, and the core, systems and modules they live in) is explained in [Module Architecture](module-architecture.md).
+
 ## Domain language and architecture decisions
 
 [`GLOSSARY.md`](https://github.com/uhh-lt/dats/blob/main/GLOSSARY.md) is the single source of truth for DATS domain terminology. Use its terms in code, documentation, issues, and discussions, and make terminology changes there rather than duplicating definitions elsewhere.

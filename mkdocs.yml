@@ -88,6 +88,7 @@ nav:
       - WebSockets: development/websockets.md
       - Configure GitHub Action Runners: development/github-action-runner.md
       - GitHub Agentic Workflows: development/github-agentic-workflows.md
+      - Module Architecture: development/module-architecture.md
   - Admin:
       - admin/index.md
       - GPU Setup: admin/gpu-setup.md
