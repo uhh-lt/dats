@@ -166,7 +166,14 @@ class WebsocketService(metaclass=SingletonMeta):
     async def broadcast_to_multiple_users(
         self, user_ids: List[int], event: DATSEventBase
     ):
-        """Send an event to the given users, both locally and on all other workers."""
+        """Send an event to the given users, both locally and on all other workers.
+
+        An empty audience (e.g. a project whose only member is the excluded
+        actor) is a no-op.
+        """
+        if not user_ids:
+            logger.debug(f"Skipped websocket event '{event.type}': audience is empty")
+            return
         await self._send_to_users_local(user_ids, event)
         await self._publish(
             WebSocketEnvelope(

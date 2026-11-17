@@ -1,15 +1,21 @@
-from typing import TypedDict
+from typing import Any, Generator, TypedDict
 
 import pytest
+from fastapi.testclient import TestClient
 
+import dats_test_utils
 from common.doc_type_enum import DocType
 from core.doc.source_document_crud import crud_sdoc
 from core.doc.source_document_dto import SourceDocumentCreate
 from core.doc.source_document_orm import SourceDocumentORM
+from core.project.project_crud import crud_project
+from core.project.project_dto import ProjectCreate
 from core.project.project_orm import ProjectORM
+from core.project.project_service import ProjectService
 from core.tag.tag_crud import crud_tag
 from core.tag.tag_dto import TagCreate
 from core.tag.tag_orm import TagORM
+from core.user.user_crud import SYSTEM_USER_ID, crud_user
 
 
 class ProjectWithSdocAndTag(TypedDict):
@@ -168,3 +174,36 @@ def project_with_multiple_sdocs_and_multiple_tags(
         "tag1": tag1,
         "tag2": tag2,
     }
+
+
+class SystemOnlyProject(TypedDict):
+    project: ProjectORM
+    client: TestClient
+
+
+@pytest.fixture(scope="function")
+def system_only_project(
+    db_session, app_client
+) -> Generator[SystemOnlyProject, Any, None]:
+    """A project created by the SYSTEM user, and a client acting as SYSTEM.
+
+    This fixture sets up the following project:
+    - Project "System Only Project", created by the SYSTEM user (like the importer
+      tool does). SYSTEM is its only member; it has no tags and no documents.
+
+    Non-obvious derived behavior:
+    - The actor of every request of `client` is the only member, so the websocket
+      events of its mutations have an empty audience.
+    """
+    project_read = ProjectService().create_project(
+        db=db_session,
+        create_dto=ProjectCreate(title="System Only Project", description=""),
+        creating_user_id=SYSTEM_USER_ID,
+    )
+    db_session.commit()
+    project = crud_project.read(db=db_session, id=project_read.id)
+    system_user = crud_user.read(db=db_session, id=SYSTEM_USER_ID)
+
+    c = dats_test_utils.create_user_client(app_client, system_user)
+    yield {"project": project, "client": c}
+    c.close()

@@ -34,6 +34,27 @@ def test_create_new_doc_tag(
     assert tag_assert.parent_id == payload.parent_id
 
 
+def test_create_new_doc_tag_persists_when_the_actor_is_the_only_member(
+    system_only_project,
+):
+    """Creating a tag in a project whose only member is the actor persists the tag.
+
+    The tag's websocket event has an empty audience (the actor is excluded), which
+    must neither fail the request nor roll back its transaction.
+    """
+    project = system_only_project["project"]
+    client = system_only_project["client"]
+    payload = TagCreate(name="Tag", color="Red", project_id=project.id)
+
+    resp = client.put("/tag", json=payload.model_dump(exclude_none=True))
+
+    assert resp.status_code == 200, resp.text
+    created = TagRead.model_validate(resp.json())
+    resp = client.get(f"/tag/project/{project.id}")
+    assert resp.status_code == 200, resp.text
+    assert [TagRead.model_validate(tag) for tag in resp.json()] == [created]
+
+
 def test_create_new_doc_tag_if_not_exists(
     client: TestClient,
 ):
