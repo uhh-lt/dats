@@ -384,12 +384,12 @@ if args.tag_key != "":
         if len(tags_to_apply) == 0:
             continue
 
-        sdoc_id = api.resolve_sdoc_id_from_proj_and_filename(
+        sdoc_ids = api.resolve_sdoc_ids_from_proj_and_filename(
             proj_id=project["id"], filename=filename
         )
-        if sdoc_id is not None:
+        if len(sdoc_ids) > 0:
             tag_ids = [tag_name2_ids[tag_name] for tag_name in tags_to_apply]
-            api.bulk_apply_tags(sdoc_ids=[sdoc_id], tag_ids=tag_ids)
+            api.bulk_apply_tags(sdoc_ids=sdoc_ids, tag_ids=tag_ids)
 
 # apply sdoc metadata
 applied = set()
@@ -402,10 +402,13 @@ for filename, data in tqdm(
         api.refresh_login()
     idx += 1
 
-    sdoc_id = api.resolve_sdoc_id_from_proj_and_filename(
+    # a file that DATS split into chunks has one document per chunk
+    sdoc_ids = api.resolve_sdoc_ids_from_proj_and_filename(
         proj_id=project["id"], filename=filename
     )
-    if sdoc_id not in applied and sdoc_id is not None:
+    for sdoc_id in sdoc_ids:
+        if sdoc_id in applied:
+            continue
         for metakey, metatype in zip(args.metadata_keys, args.metadata_types):
             if metakey in data:
                 api.update_sdoc_metadata(

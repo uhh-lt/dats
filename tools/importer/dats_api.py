@@ -145,6 +145,8 @@ class DATSAPI:
                 + f"project/{proj_id}/resolve_filename/{quote(filename)}?only_finished=false",
                 headers={"Authorization": f"Bearer {self.access_token}"},
             )
+            if r.status_code != 200:
+                return None
             sdoc_id = r.json()
             return sdoc_id
         except Exception:
@@ -182,8 +184,29 @@ class DATSAPI:
             },
         )
         r.raise_for_status()
+        # the search matches names that contain the prefix, keep the chunks of
+        # this file only (not those of "other_<name>")
+        chunk_prefix = name_without_suffix + "_pages_"
         sdocs: dict[str, dict] = r.json()["sdocs"]
-        return [int(sdoc_id) for sdoc_id in sdocs.keys()]
+        return [
+            int(sdoc_id)
+            for sdoc_id, sdoc in sdocs.items()
+            if sdoc["filename"].startswith(chunk_prefix)
+        ]
+
+    def resolve_sdoc_ids_from_proj_and_filename(
+        self, proj_id: int, filename: str
+    ) -> list[int]:
+        """The ID of the document of the uploaded file, or the IDs of its chunks
+        (named <name>_pages_<range>) if DATS split it."""
+        sdoc_id = self.resolve_sdoc_id_from_proj_and_filename(
+            proj_id=proj_id, filename=filename
+        )
+        if sdoc_id is not None:
+            return [sdoc_id]
+        return self.resolve_sdoc_id_from_proj_and_filename_with_pages(
+            proj_id=proj_id, filename=filename
+        )
 
     def read_all_sdoc_ids(self, proj_id: int):
         # get all sdoc ids

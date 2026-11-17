@@ -72,6 +72,15 @@ python dats_importer.py --input_dir /path/to/json --backend_url http://localhost
 python zotero_converter.py Corpus/Corpus.bib
 ```
 
+## Pre-split documents
+
+HTML content with page markers (`<!-- page 1 -->`, `<!-- page 2 -->`, ... directly in the body, as Mistral OCR writes them) is split at these markers, `--pages_per_chunk` pages per document, and all documents of one file land in one folder. Tags (`--tag_key`) and metadata (`--metadata_keys`) of a JSON file are applied to every chunk of it.
+
+```
+# import mistral ocr output converted to html (one json file per journal, html in the "html" key)
+python dats_importer.py --input_dir /path/to/json --backend_url http://localhost:5500/ --project_id 1 --tag_name journals --is_json --content_key html --mime_type text/html --doctype text --pages_per_chunk 10
+```
+
 ## CLI Parameters
 
 ```
