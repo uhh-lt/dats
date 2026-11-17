@@ -7,7 +7,6 @@ from core.project.project_crud import crud_project
 from core.project.project_dto import (
     ProjectCreate,
     ProjectRead,
-    ProjectUpdate,
 )
 from core.prompt.prompt_service import PromptService
 from core.user.user_crud import SYSTEM_USER_ID, crud_user
@@ -87,15 +86,6 @@ class ProjectService(metaclass=SingletonMeta):
         self.fs.set_up(db=db, project_id=project_id, features=enabled_features)
 
         # 10) re-load a fresh instance to avoid detachment
-        return ProjectRead.model_validate(crud_project.read(db=db, id=project_id))
-
-    def update_project(
-        self, *, db: Session, project_id: int, update_dto: ProjectUpdate
-    ) -> ProjectRead:
-        """Update the title and description of the project. The enabled features
-        change through `FeatureService.enable_feature` and
-        `disable_feature`."""
-        crud_project.update(db=db, id=project_id, update_dto=update_dto)
         return ProjectRead.model_validate(crud_project.read(db=db, id=project_id))
 
     def delete_project(self, *, db: Session, project_id: int) -> ProjectRead:
