@@ -5,12 +5,6 @@ project_metadata:
     read_only: True
     doctype: "text"
     description: "The language of the document"
-  text_keywords:
-    key: "keywords"
-    metatype: "LIST"
-    read_only: True
-    doctype: "text"
-    description: "Keywords extracted from the document"
 
   image_language:
     key: "language"
@@ -18,12 +12,6 @@ project_metadata:
     read_only: True
     doctype: "image"
     description: "The language of the image caption"
-  image_keywords:
-    key: "keywords"
-    metatype: "LIST"
-    read_only: True
-    doctype: "image"
-    description: "Keywords extracted from the image's caption"
   image_caption:
     key: "caption"
     metatype: "STRING"
@@ -61,12 +49,6 @@ project_metadata:
     read_only: True
     doctype: "audio"
     description: "The language of the audio"
-  audio_keywords:
-    key: "keywords"
-    metatype: "LIST"
-    read_only: True
-    doctype: "audio"
-    description: "Keywords extracted from the transcript"
   audio_duration:
     key: "duration"
     metatype: "NUMBER"
@@ -110,12 +92,6 @@ project_metadata:
     read_only: True
     doctype: "video"
     description: "The language of the video"
-  video_keywords:
-    key: "keywords"
-    metatype: "LIST"
-    read_only: True
-    doctype: "video"
-    description: "Keywords extracted from the transcript"
   video_width:
     key: "width"
     metatype: "NUMBER"

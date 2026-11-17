@@ -38,7 +38,7 @@ An artefact is declared with `artefact(...)` in a `<name>_artefact.py` file next
 
 The keyword statistics (`backend/src/modules/statistics/`) are a small, complete example: an on-demand artefact, the step that produces it, the feature that requires it and the gated endpoint that reads it.
 
-1. **The artefact** (`keywords_artefact.py`): the keywords of a document, stored in its metadata key `keywords`. It has no store of its own, so it needs no archive.
+1. **The artefact** (`keywords_artefact.py`): the keywords of a document, stored in its metadata key `keywords`, which the feature creates in its project (`create_keywords_metadata`). It has no store of its own, so it needs no archive.
 
    ```python
    KEYWORDS = artefact("keywords", title="Keywords")
@@ -62,7 +62,7 @@ The keyword statistics (`backend/src/modules/statistics/`) are a small, complete
 
    The graph places the step after the steps that produce its inputs; nothing lists steps by hand. A step has one direct predecessor (the steps producing its inputs depend on each other) and applies to every doctype of the step it follows; the startup check rejects a step that breaks these limits.
 
-3. **The feature** (`statistics_feature.py`): it requires the on-demand artefact, so it is toggleable.
+3. **The feature** (`statistics_feature.py`): it requires the on-demand artefact, so it is toggleable, and its set-up hook creates the metadata key `keywords` when a project enables it (safe to run twice).
 
    ```python
    KEYWORD_STATISTICS = register_feature(
@@ -71,6 +71,7 @@ The keyword statistics (`backend/src/modules/statistics/`) are a small, complete
        description="Extract the keywords of each document, to count them and filter documents by them.",
        area=FeatureArea.ANALYSIS,
        requires_artefacts={KEYWORDS},
+       set_up=create_keywords_metadata,
    )
    ```
 

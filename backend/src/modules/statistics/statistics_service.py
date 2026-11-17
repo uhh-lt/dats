@@ -10,6 +10,7 @@ from core.annotation.span_text_orm import SpanTextORM
 from core.metadata.project_metadata_crud import crud_project_meta
 from core.metadata.source_document_metadata_orm import SourceDocumentMetadataORM
 from core.tag.tag_orm import SourceDocumentTagLinkTable, TagORM
+from modules.statistics.keywords_artefact import KEYWORDS_METADATA_KEY
 from modules.statistics.statistics_dto import KeywordStat, SpanEntityStat, TagStat
 
 
@@ -75,7 +76,7 @@ class StatisticsService(metaclass=SingletonMeta):
     ) -> list[KeywordStat]:
         # 1. query keyword project metadadta
         project_metadata = crud_project_meta.read_by_project_and_key(
-            db=db, project_id=project_id, key="keywords"
+            db=db, project_id=project_id, key=KEYWORDS_METADATA_KEY
         )
         project_metadata_ids = [pm.id for pm in project_metadata]
         if len(project_metadata_ids) == 0:
