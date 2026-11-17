@@ -37,5 +37,5 @@ What a developer of a module or a core artefact must do; the model is explained 
 
 ## Jobs
 
-- A job type is text its owner declares in `@register_job`, and a job that code starts or names gets a module-level constant next to its handler (`IMPORT_JOB` in `import_job.py`) that callers import.
+- A job type is a string, written where the job is registered (`@register_job(job_type="import")`) and where it is started, never a constant or an enum.
 - Regenerate the API client (`just update-api`) after adding a feature, an endpoint or a DTO the API uses; the frontend needs a change only for a page or a gate (`frontend.instructions.md`).

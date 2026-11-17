@@ -170,8 +170,8 @@ def tag_recommendation_job(payload: TagRecommendationJobInput, job: Job) -> None
         )
 ```
 
-- A job type is text its owner declares in `@register_job`: a job that code starts or names gets a module-level constant next to its handler (`DOC_CHUNKING_JOB` in `doc_chunking_job.py`) that callers import, a job started only through its generated endpoints a literal, and its input/output DTOs go to the module's `*_dto.py` (see `backend-dto.instructions.md`).
-- `device` selects the worker queue (`"cpu"`, `"gpu"`, `"api"`). Services start jobs with `JobService().start_job(X_JOB, <X>JobInput(...))`.
+- A job type is a string, written where the job is registered (`@register_job(job_type="doc_chunking")`) and where it is started, never a constant or an enum, and its input/output DTOs go to the module's `*_dto.py` (see `backend-dto.instructions.md`).
+- `device` selects the worker queue (`"cpu"`, `"gpu"`, `"api"`). Services start jobs with `JobService().start_job("<x>", <X>JobInput(...))`.
 - See [tag_recommendation_job.py](backend/src/modules/tag_recommendation/tag_recommendation_job.py) and `systems/job_system/README.md`.
 
 ## Modules, Artefacts and Features

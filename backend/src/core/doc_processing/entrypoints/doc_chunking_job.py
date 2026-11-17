@@ -14,7 +14,6 @@ from core.doc_processing.entrypoints.follower_utils import start_followers
 from core.doc_processing.entrypoints.html_chunking_utils import (
     split_html_into_chunks,
 )
-from core.doc_processing.entrypoints.init_sdoc_job import SDOC_INIT_JOB
 from core.doc_processing.entrypoints.txt_chunking_utils import split_text_into_chunks
 from repos.db.sql_repo import SQLRepo
 from repos.filesystem_exceptions import (
@@ -26,8 +25,6 @@ from repos.ray.ray_repo import RayRepo
 from systems.artefact_system.artefact_dto import ProcessingJobInput
 from systems.job_system.job_dto import Job, JobOutputBase
 from systems.job_system.job_register_decorator import register_job
-
-DOC_CHUNKING_JOB = "doc_chunking"
 
 CHARACTERS_PER_PAGE = conf.chunking.characters_per_page
 
@@ -46,7 +43,7 @@ class DocChunkingJobOutput(JobOutputBase):
 
 
 @register_job(
-    job_type=DOC_CHUNKING_JOB,
+    job_type="doc_chunking",
     input_type=DocChunkingJobInput,
     output_type=DocChunkingJobOutput,
 )
@@ -89,10 +86,10 @@ def handle_pdf_chunking_job(
 
     # create a document for every chunk
     start_followers(
-        DOC_CHUNKING_JOB,
+        "doc_chunking",
         [
             (
-                SDOC_INIT_JOB,
+                "sdoc_init",
                 SdocInitJobInput(
                     project_id=payload.project_id,
                     doctype=DocType.text,

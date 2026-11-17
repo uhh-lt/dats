@@ -19,7 +19,6 @@ from pipeline_test_utils import (
 )
 from repos.db.sql_repo import SQLRepo
 from systems.artefact_system import artefact_service
-from systems.artefact_system.artefact_computation_job import ARTEFACT_COMPUTATION_JOB
 from systems.artefact_system.artefact_dto import (
     ArtefactComputationJobInput,
     ProcessingSettings,
@@ -46,7 +45,7 @@ SETTINGS = ProcessingSettings(
 
 def _computation(held_jobs: HeldJobs) -> ArtefactComputationJobInput:
     """The input of the one held artefact computation job."""
-    (computation,) = held_jobs.inputs(ARTEFACT_COMPUTATION_JOB)
+    (computation,) = held_jobs.inputs("artefact_computation")
     assert isinstance(computation, ArtefactComputationJobInput)
     return computation
 
@@ -78,7 +77,7 @@ def test_enable_feature_plans_only_the_documents_of_the_project(
     p = planning_projects
 
     _enable_keyword_statistics(db_session, p["project"].id)
-    held_jobs.run(ARTEFACT_COMPUTATION_JOB)
+    held_jobs.run("artefact_computation")
     started = started_steps(held_jobs)
 
     assert crud_project.read(db=db_session, id=p["project"].id).enabled_features == [
@@ -118,7 +117,7 @@ def test_enable_feature_fails_the_planned_steps_after_an_erroneous_input(
     sdoc_id = planning_projects["spacy_failed"].id
 
     _enable_keyword_statistics(db_session, planning_projects["project"].id)
-    held_jobs.run(ARTEFACT_COMPUTATION_JOB)
+    held_jobs.run("artefact_computation")
 
     assert read_all_step_status(db_session, sdoc_id) == {
         "html_extraction": 1,
@@ -185,7 +184,7 @@ def test_computation_plans_in_batches_like_in_one(
     monkeypatch.setattr(artefact_service, "COMPUTATION_BATCH_SIZE", 1)
 
     _enable_keyword_statistics(db_session, p["project"].id)
-    held_jobs.run(ARTEFACT_COMPUTATION_JOB)
+    held_jobs.run("artefact_computation")
     started = started_steps(held_jobs)
 
     assert started == {
@@ -222,11 +221,11 @@ def test_computation_leaves_the_documents_after_its_last_document_alone(
     computation = _computation(held_jobs)
     held_jobs.empty()
     JobService().start_job(
-        ARTEFACT_COMPUTATION_JOB,
+        "artefact_computation",
         computation.model_copy(update={"last_sdoc_id": p["done"].id}),
     )
 
-    held_jobs.run(ARTEFACT_COMPUTATION_JOB)
+    held_jobs.run("artefact_computation")
 
     started = started_steps(held_jobs)
 
@@ -254,7 +253,7 @@ def test_a_failing_computation_removes_the_pending_computation(
     _enable_keyword_statistics(db_session, p["project"].id)
     monkeypatch.setattr(artefact_service, "start_steps", _fail)
 
-    held_jobs.run(ARTEFACT_COMPUTATION_JOB)
+    held_jobs.run("artefact_computation")
 
     assert started_steps(held_jobs) == {}
     db_session.expire_all()

@@ -20,11 +20,8 @@ Jobs are declared with the `@register_job` decorator
 module (auto-imported at startup):
 
 ```python
-MY_JOB = "my_job"  # only if code starts or names this job
-
-
 @register_job(
-    job_type=MY_JOB,
+    job_type="my_job",
     input_type=MyJobInput,
     output_type=MyJobOutput,
     device="cpu",                       # "cpu" | "gpu" | "api"
@@ -165,10 +162,9 @@ The job system does not reinvent delivery — it reuses the
 ## Adding a New Job
 
 1. Define `MyJobInput` / `MyJobOutput` pydantic models and name the job type
-   as text in `@register_job`; if code starts or names the job, declare the
-   name as a module-level constant next to the handler (`DOC_CHUNKING_JOB` in
-   `doc_chunking_job.py`), which callers import from there. The name is stored
-   in Redis and never changes while jobs of it exist.
+   as a string in `@register_job`; code that starts the job writes the same
+   string (`JobService().start_job("my_job", MyJobInput(...))`). The name is
+   stored in Redis and never changes while jobs of it exist.
 2. Write the handler in a `*_job.py` module with `@register_job(...)`; set
    `publish_updates=True` if users should see live progress.
 3. Call `job.update(...)` inside the handler to report progress.

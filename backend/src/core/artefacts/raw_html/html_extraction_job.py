@@ -13,7 +13,6 @@ from core.doc.source_document_data_dto import SourceDocumentDataUpdate
 from core.doc.source_document_dto import SourceDocumentRead
 from core.doc_processing.doc_processing_dto import SdocInitJobInput
 from core.doc_processing.entrypoints.follower_utils import start_followers
-from core.doc_processing.entrypoints.init_sdoc_job import SDOC_INIT_JOB
 from repos.db.sql_repo import SQLRepo
 from repos.docling_repo import DoclingRepo
 from repos.filesystem_repo import FilesystemRepo
@@ -108,7 +107,7 @@ def handle_html_extraction_job(
         "html_extraction",
         [
             (
-                SDOC_INIT_JOB,
+                "sdoc_init",
                 SdocInitJobInput(
                     project_id=payload.project_id,
                     filepath=path,

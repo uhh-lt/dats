@@ -21,14 +21,12 @@ from systems.feature_system.feature_service import FeatureService
 from systems.job_system.job_dto import Job
 from systems.job_system.job_register_decorator import register_job
 
-SDOC_INIT_JOB = "sdoc_init"
-
 sqlr = SQLRepo()
 fsr = FilesystemRepo()
 
 
 @register_job(
-    job_type=SDOC_INIT_JOB,
+    job_type="sdoc_init",
     input_type=SdocInitJobInput,
     output_type=SdocInitJobOutput,
 )

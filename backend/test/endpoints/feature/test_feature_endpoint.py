@@ -12,7 +12,6 @@ from job_test_utils import HeldJobs, unreachable_redis
 from pipeline_test_utils import artefact_named, read_step_status, started_steps
 from repos.db.sql_repo import SQLRepo
 from systems.artefact_system import artefact_service
-from systems.artefact_system.artefact_computation_job import ARTEFACT_COMPUTATION_JOB
 from systems.artefact_system.artefact_dto import (
     ArtefactComputationJobInput,
     ProcessingSettings,
@@ -341,7 +340,7 @@ def test_feature_actions_are_rejected_while_its_computation_is_pending(
         response = _act(client, project_id, "keyword_statistics", action)
         assert response.status_code == 409, (action, response.text)
         assert "it is 'computing'" in response.text, action
-    assert len(held_jobs.inputs(ARTEFACT_COMPUTATION_JOB)) == 1
+    assert len(held_jobs.inputs("artefact_computation")) == 1
 
 
 def test_feature_actions_require_membership(client: TestClient):
@@ -392,8 +391,8 @@ def test_enable_feature_plans_its_steps_and_starts_them_with_the_settings(
     p = feature_project
 
     _activate(client, p["project"].id, "keyword_statistics")
-    (computation,) = held_jobs.inputs(ARTEFACT_COMPUTATION_JOB)
-    held_jobs.run(ARTEFACT_COMPUTATION_JOB)
+    (computation,) = held_jobs.inputs("artefact_computation")
+    held_jobs.run("artefact_computation")
     started = started_steps(held_jobs)
 
     for sdoc in (p["text_done"], p["text_running"], p["image"]):
@@ -424,7 +423,7 @@ def test_enable_feature_plans_but_does_not_start_a_step_whose_input_is_processin
     p = feature_project
 
     _activate(client, p["project"].id, "semantic_search")
-    held_jobs.run(ARTEFACT_COMPUTATION_JOB)
+    held_jobs.run("artefact_computation")
     started = started_steps(held_jobs)
 
     assert read_step_status(db_session, p["text_running"].id, "sentence_embedding") == 0
@@ -443,7 +442,7 @@ def test_enable_feature_makes_it_computing(
     project_id = feature_project["project"].id
 
     _activate(client, project_id, "keyword_statistics")
-    held_jobs.run(ARTEFACT_COMPUTATION_JOB)
+    held_jobs.run("artefact_computation")
 
     read = _features(client, project_id)["keyword_statistics"]
     assert read.status == FeatureStatus.COMPUTING
@@ -501,7 +500,7 @@ def test_enable_feature_sharing_an_artefact_of_a_computing_feature_starts_its_co
     enabled = _activate(client, project_id, "rag_chat")
 
     assert enabled == ["rag_chat", "semantic_search"]
-    computations = held_jobs.inputs(ARTEFACT_COMPUTATION_JOB)
+    computations = held_jobs.inputs("artefact_computation")
     assert [
         a.artefacts for a in computations if isinstance(a, ArtefactComputationJobInput)
     ] == [["image_embeddings", "sentence_embeddings"], ["sentence_embeddings"]]
@@ -520,8 +519,8 @@ def test_enable_two_features_sharing_a_step_starts_it_once(
     _activate(client, p["project"].id, "word_frequency")
     _activate(client, p["project"].id, "duplicate_finder")
 
-    assert len(held_jobs.inputs(ARTEFACT_COMPUTATION_JOB)) == 2
-    held_jobs.run(ARTEFACT_COMPUTATION_JOB)
+    assert len(held_jobs.inputs("artefact_computation")) == 2
+    held_jobs.run("artefact_computation")
     assert started_steps(held_jobs) == {
         p["text_done"].id: ["word_frequency"],
         p["text_running"].id: ["word_frequency"],
@@ -541,7 +540,7 @@ def test_enable_text_feature_plans_its_steps_for_images(
     p = feature_project
 
     _activate(client, p["project"].id, "keyword_statistics")
-    held_jobs.run(ARTEFACT_COMPUTATION_JOB)
+    held_jobs.run("artefact_computation")
 
     assert read_step_status(db_session, p["image"].id, "keywords") == 0
     assert started_steps(held_jobs)[p["image"].id] == ["keywords"]
@@ -580,7 +579,7 @@ def test_enable_feature_job_waits_for_the_request_to_commit(
     request = threading.Thread(target=_request)
     request.start()
     enqueued.wait()
-    held_jobs.run(ARTEFACT_COMPUTATION_JOB)
+    held_jobs.run("artefact_computation")
     request.join()
 
     assert errors == []
@@ -631,9 +630,9 @@ def test_enable_feature_with_redis_down_in_a_batch_fails_the_steps_it_cannot_sta
     _activate(client, project_id, "keyword_statistics")
 
     with unreachable_redis(after_starts=1):
-        held_jobs.run(ARTEFACT_COMPUTATION_JOB)
+        held_jobs.run("artefact_computation")
 
-    (computation,) = held_jobs.ran(ARTEFACT_COMPUTATION_JOB)
+    (computation,) = held_jobs.ran("artefact_computation")
     assert computation.get_status() == JobStatus.FINISHED
     assert "2 step jobs could not start" in computation.job.meta["status_message"]
     assert started_steps(held_jobs) == {p["text_done"].id: ["keywords"]}
@@ -645,7 +644,7 @@ def test_enable_feature_with_redis_down_in_a_batch_fails_the_steps_it_cannot_sta
     assert read.status == FeatureStatus.PARTLY_AVAILABLE
 
     _complete(client, project_id, "keyword_statistics")
-    held_jobs.run(ARTEFACT_COMPUTATION_JOB)
+    held_jobs.run("artefact_computation")
     assert started_steps(held_jobs) == {
         p["text_running"].id: ["keywords"],
         p["image"].id: ["keywords"],
@@ -666,7 +665,7 @@ def test_enable_feature_whose_computation_dies_with_its_worker_stops_computing(
     project_id = p["project"].id
     _activate(client, project_id, "keyword_statistics")
 
-    held_jobs.abandon(ARTEFACT_COMPUTATION_JOB)
+    held_jobs.abandon("artefact_computation")
 
     db_session.expire_all()
     assert crud_project.read(db=db_session, id=project_id).artefact_computations == {}
@@ -674,7 +673,7 @@ def test_enable_feature_whose_computation_dies_with_its_worker_stops_computing(
     assert read.status == FeatureStatus.PARTLY_AVAILABLE
 
     _complete(client, project_id, "keyword_statistics")
-    held_jobs.run(ARTEFACT_COMPUTATION_JOB)
+    held_jobs.run("artefact_computation")
     assert started_steps(held_jobs) == {
         p["text_done"].id: ["keywords"],
         p["text_running"].id: ["keywords"],
@@ -699,7 +698,7 @@ def test_enable_feature_rolled_back_after_the_enqueue_leaves_a_job_that_stops(
     )
     db_session.rollback()
 
-    held_jobs.run(ARTEFACT_COMPUTATION_JOB)
+    held_jobs.run("artefact_computation")
 
     assert held_jobs.jobs() == []
     project = crud_project.read(db=db_session, id=project_id)
@@ -787,7 +786,7 @@ def test_complete_feature_plans_failed_and_not_planned_documents(
     p = partly_project
 
     _complete(client, p["project"].id, "keyword_statistics")
-    held_jobs.run(ARTEFACT_COMPUTATION_JOB)
+    held_jobs.run("artefact_computation")
     started = started_steps(held_jobs)
 
     for key in (
@@ -825,7 +824,7 @@ def test_complete_feature_marks_a_new_step_with_an_erroneous_input_erroneous(
     sdoc_id = partly_project["spacy_failed"].id
 
     _complete(client, partly_project["project"].id, "keyword_statistics")
-    held_jobs.run(ARTEFACT_COMPUTATION_JOB)
+    held_jobs.run("artefact_computation")
 
     assert read_step_status(db_session, sdoc_id, "html_mapping") == -100
     assert read_step_status(db_session, sdoc_id, "tokens_sentences") == -100
@@ -846,7 +845,7 @@ def test_complete_feature_with_redis_down_fails_the_steps_it_cannot_start(
     _complete(client, project_id, "keyword_statistics")
 
     with unreachable_redis():
-        held_jobs.run(ARTEFACT_COMPUTATION_JOB)
+        held_jobs.run("artefact_computation")
 
     assert held_jobs.jobs() == []
     for key in (
@@ -864,7 +863,7 @@ def test_complete_feature_with_redis_down_fails_the_steps_it_cannot_start(
     assert read.status == FeatureStatus.PARTLY_AVAILABLE
 
     _complete(client, project_id, "keyword_statistics")
-    held_jobs.run(ARTEFACT_COMPUTATION_JOB)
+    held_jobs.run("artefact_computation")
     assert started_steps(held_jobs) == {
         p["keywords_failed"].id: ["keywords"],
         p["without_keywords"].id: ["keywords"],
@@ -889,7 +888,7 @@ def test_complete_feature_recovers_the_steps_an_advancing_with_redis_down_failed
     project_id = p["project"].id
     sdoc_id = p["extraction_failed"].id
     _complete(client, project_id, "keyword_statistics")
-    held_jobs.run(ARTEFACT_COMPUTATION_JOB)
+    held_jobs.run("artefact_computation")
 
     with unreachable_redis():
         held_jobs.run("text_extraction")
@@ -902,7 +901,7 @@ def test_complete_feature_recovers_the_steps_an_advancing_with_redis_down_failed
     assert read.status == FeatureStatus.PARTLY_AVAILABLE
 
     _complete(client, project_id, "keyword_statistics")
-    held_jobs.run(ARTEFACT_COMPUTATION_JOB)
+    held_jobs.run("artefact_computation")
     assert started_steps(held_jobs) == {sdoc_id: ["language_detection"]}
 
 

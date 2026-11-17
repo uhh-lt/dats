@@ -7,13 +7,11 @@ from systems.job_system.job_dto import Job
 from systems.job_system.job_register_decorator import register_job
 from systems.job_system.job_system_enum import JobTiming
 
-PERSPECTIVES_JOB = "perspectives"
-
 sqlr = SQLRepo()
 
 
 @register_job(
-    job_type=PERSPECTIVES_JOB,
+    job_type="perspectives",
     input_type=PerspectivesJobInput,
     publish_updates=True,
     device="gpu",

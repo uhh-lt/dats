@@ -29,7 +29,6 @@ from modules.perspectives.cluster_embedding_dto import ClusterObjectIdentifier
 from modules.perspectives.document_aspect_crud import crud_document_aspect
 from modules.perspectives.document_cluster_crud import crud_document_cluster
 from modules.perspectives.perspectives_enum import PerspectivesJobType
-from modules.perspectives.perspectives_job import PERSPECTIVES_JOB
 from modules.perspectives.perspectives_job_dto import (
     CreateAspectParams,
     PerspectivesJobInput,
@@ -78,7 +77,7 @@ def create_aspect(
 
     params = CreateAspectParams(perspectives_job_type=PerspectivesJobType.CREATE_ASPECT)
     job = js.start_job(
-        PERSPECTIVES_JOB,
+        "perspectives",
         payload=PerspectivesJobInput(
             project_id=aspect.project_id,
             aspect_id=db_aspect.id,
@@ -303,7 +302,7 @@ def start_perspectives_job(
 
     # No job running, so we can start a new one
     job = js.start_job(
-        PERSPECTIVES_JOB,
+        "perspectives",
         payload=PerspectivesJobInput(
             project_id=aspect.project_id,
             aspect_id=aspect_id,

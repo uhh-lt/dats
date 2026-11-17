@@ -12,7 +12,6 @@ from core.code.code_crud import crud_code
 from core.project.project_crud import crud_project
 from repos.db.sql_repo import SQLRepo
 from systems.artefact_system import artefact_statements as statements
-from systems.artefact_system.artefact_computation_job import ARTEFACT_COMPUTATION_JOB
 from systems.artefact_system.artefact_dto import (
     ArtefactComputationJobInput,
     ProcessingSettings,
@@ -119,7 +118,7 @@ class ArtefactService(metaclass=SingletonMeta):
             computation_id=computation.computation_id,
             artefacts=computation.artefacts,
         )
-        self.js.start_job(ARTEFACT_COMPUTATION_JOB, computation)
+        self.js.start_job("artefact_computation", computation)
 
     def read_availability(
         self,

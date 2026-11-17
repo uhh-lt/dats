@@ -9,14 +9,12 @@ from common.languages_enum import Language
 from common.sdoc_status_enum import SDocStatus
 from core.doc.source_document_crud import crud_sdoc
 from core.doc_processing.doc_processing_dto import SdocHealthResult, SdocInitJobInput
-from core.doc_processing.entrypoints.init_sdoc_job import SDOC_INIT_JOB
 from feature_test_utils import FeatureProject
 from job_test_utils import HeldJobs
 from modules.eximport.project.export_project import export_project
 from modules.eximport.project.import_project import import_project
 from pipeline_test_utils import artefact_named, read_step_status, started_steps
 from repos.filesystem_repo import FilesystemRepo
-from systems.artefact_system.artefact_computation_job import ARTEFACT_COMPUTATION_JOB
 from systems.artefact_system.artefact_dto import (
     ProcessingSettings,
     SdocProcessingJobInput,
@@ -65,7 +63,7 @@ def test_a_step_declared_once_is_planned_run_shown_exported_and_imported(
 
     # planned at upload
     JobService().start_job(
-        SDOC_INIT_JOB,
+        "sdoc_init",
         SdocInitJobInput(
             project_id=p["project"].id,
             filepath=p["upload"],
@@ -74,7 +72,7 @@ def test_a_step_declared_once_is_planned_run_shown_exported_and_imported(
             settings=SETTINGS,
         ),
     )
-    held_jobs.run(SDOC_INIT_JOB)
+    held_jobs.run("sdoc_init")
     (html_extraction,) = held_jobs.inputs("html_extraction")
     assert isinstance(html_extraction, SdocProcessingJobInput)
     sdoc_id = html_extraction.sdoc_id
@@ -146,7 +144,7 @@ def test_a_step_requiring_two_artefacts_of_one_step_is_planned_and_started(
     )
 
     assert response.status_code == 200, response.text
-    held_jobs.run(ARTEFACT_COMPUTATION_JOB)
+    held_jobs.run("artefact_computation")
     started = started_steps(held_jobs)
     assert producer in started[sdoc_id]
     assert consumer not in started[sdoc_id]

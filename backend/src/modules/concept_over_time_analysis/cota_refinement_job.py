@@ -18,13 +18,11 @@ from systems.job_system.job_dto import Job
 from systems.job_system.job_register_decorator import register_job
 from systems.job_system.job_system_enum import JobTiming
 
-COTA_REFINEMENT_JOB = "cota_refinement"
-
 sqlr = SQLRepo()
 
 
 @register_job(
-    job_type=COTA_REFINEMENT_JOB,
+    job_type="cota_refinement",
     input_type=COTARefinementJobInput,
     output_type=None,
     publish_updates=True,

@@ -86,7 +86,7 @@ class ExampleService(metaclass=SingletonMeta):
 
 ### Jobs and Events
 
-- **Starting jobs**: Start background work with `self.js.start_job(X_JOB, <X>JobInput(...))` (the job type constant declared next to the handler) and return the `Job` (or `list[Job]`) to the caller.
+- **Starting jobs**: Start background work with `self.js.start_job("<x>", <X>JobInput(...))` (the job type string of its `@register_job`) and return the `Job` (or `list[Job]`) to the caller.
 - **Running jobs**: Job-side entry points (when a job delegates all its work) are named `handle_<x>_job(self, db, [job,] payload)` and return the job's `<X>JobOutput`. Report progress with `job.update(current_step=..., status_message=...)`; dispatch on the payload's enum with `match` or a dispatch table from `__new__`.
 - **No websocket events**: Services do not emit `DATSEvent`s or call the `WebsocketService`; the endpoint emits after the service call returns.
 

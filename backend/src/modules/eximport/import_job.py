@@ -3,11 +3,9 @@ from repos.db.sql_repo import SQLRepo
 from systems.job_system.job_dto import Job
 from systems.job_system.job_register_decorator import register_job
 
-IMPORT_JOB = "import"
-
 
 @register_job(
-    job_type=IMPORT_JOB,
+    job_type="import",
     input_type=ImportJobInput,
     publish_updates=True,
     read_model=ImportJobRead,

@@ -22,14 +22,11 @@ from core.doc_processing.doc_processing_exceptions import (
     UnsupportedMimeTypeError,
 )
 from core.doc_processing.entrypoints.archive_extraction_job import (
-    EXTRACT_ARCHIVE_JOB,
     ArchiveExtractionJobInput,
 )
 from core.doc_processing.entrypoints.doc_chunking_job import (
-    DOC_CHUNKING_JOB,
     DocChunkingJobInput,
 )
-from core.doc_processing.entrypoints.init_sdoc_job import SDOC_INIT_JOB
 from repos.filesystem_repo import FilesystemRepo
 from systems.artefact_system.artefact_dto import (
     ProcessingSettings,
@@ -79,7 +76,7 @@ class DocProcessingService(metaclass=SingletonMeta):
             # 3. start correct job based on type
             if is_archive_file(mime_type):
                 job = self.js.start_job(
-                    EXTRACT_ARCHIVE_JOB,
+                    "extract_archive",
                     ArchiveExtractionJobInput(
                         project_id=project_id, filepath=file_path, settings=settings
                     ),
@@ -92,7 +89,7 @@ class DocProcessingService(metaclass=SingletonMeta):
                 raise UnsupportedMimeTypeError(mime_type)
             elif doc_type == DocType.text:
                 job = self.js.start_job(
-                    DOC_CHUNKING_JOB,
+                    "doc_chunking",
                     DocChunkingJobInput(
                         project_id=project_id, filepath=file_path, settings=settings
                     ),
@@ -100,7 +97,7 @@ class DocProcessingService(metaclass=SingletonMeta):
                 jobs.append(job)
             else:
                 job = self.js.start_job(
-                    job_type=SDOC_INIT_JOB,
+                    job_type="sdoc_init",
                     payload=SdocInitJobInput(
                         project_id=project_id,
                         filepath=file_path,

@@ -48,7 +48,6 @@ from modules.experiment.experiment_run_dto import (
     ExperimentRunScores,
     ExperimentRunUpdateIntern,
 )
-from modules.experiment.experiment_run_job import EXPERIMENT_RUN_JOB
 from repos.filesystem_repo import FilesystemRepo
 from systems.job_system.job_service import JobService
 from systems.job_system.job_system_enum import JobStatus
@@ -146,7 +145,7 @@ class ExperimentService(metaclass=SingletonMeta):
             db,
             "after_commit",
             lambda _session: self.js.start_job(
-                job_type=EXPERIMENT_RUN_JOB, payload=job_input
+                job_type="experiment_run", payload=job_input
             ),
             once=True,
         )

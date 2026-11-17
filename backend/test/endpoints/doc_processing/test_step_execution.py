@@ -6,11 +6,9 @@ from core.artefacts.raw_html.html_extraction_job import (
     ExtractHTMLJobOutput,
 )
 from core.doc_processing.doc_processing_dto import SdocInitJobInput
-from core.doc_processing.entrypoints.init_sdoc_job import SDOC_INIT_JOB
 from feature_test_utils import FeatureProject, feature_named
 from job_test_utils import HeldJobs, unreachable_redis
 from pipeline_test_utils import failing_started_hook, read_step_status, started_steps
-from systems.artefact_system.artefact_computation_job import ARTEFACT_COMPUTATION_JOB
 from systems.artefact_system.artefact_dto import (
     ProcessingSettings,
     SdocProcessingJobInput,
@@ -111,7 +109,7 @@ def test_a_finished_job_fails_its_successors_if_the_queue_is_unreachable(
     finished, and the steps after it cannot start, so they are erroneous
     instead of processing without a job."""
     JobService().start_job(
-        SDOC_INIT_JOB,
+        "sdoc_init",
         SdocInitJobInput(
             project_id=dummy_step_projects["project"].id,
             filepath=dummy_step_projects["upload"],
@@ -120,7 +118,7 @@ def test_a_finished_job_fails_its_successors_if_the_queue_is_unreachable(
             settings=SETTINGS,
         ),
     )
-    held_jobs.run(SDOC_INIT_JOB)
+    held_jobs.run("sdoc_init")
     (html_extraction,) = held_jobs.inputs("html_extraction")
     assert isinstance(html_extraction, SdocProcessingJobInput)
     sdoc_id = html_extraction.sdoc_id
@@ -173,7 +171,7 @@ def test_a_finished_step_stays_finished_if_the_queue_is_unreachable_for_its_entr
     extracted image while the queue cannot be reached: starting the image's
     sdoc_init fails, which is only logged, and the step stays finished."""
     JobService().start_job(
-        SDOC_INIT_JOB,
+        "sdoc_init",
         SdocInitJobInput(
             project_id=dummy_step_projects["project"].id,
             filepath=dummy_step_projects["upload"],
@@ -182,7 +180,7 @@ def test_a_finished_step_stays_finished_if_the_queue_is_unreachable_for_its_entr
             settings=SETTINGS,
         ),
     )
-    held_jobs.run(SDOC_INIT_JOB)
+    held_jobs.run("sdoc_init")
     (html_extraction,) = held_jobs.inputs("html_extraction")
     assert isinstance(html_extraction, ExtractHTMLJobInput)
     output = ExtractHTMLJobOutput(
@@ -219,7 +217,7 @@ def test_a_step_planned_while_text_spacy_runs_starts_after_the_language_detectio
         settings=SETTINGS,
     )
     db_session.commit()
-    held_jobs.run(ARTEFACT_COMPUTATION_JOB)
+    held_jobs.run("artefact_computation")
 
     assert started_steps(held_jobs) == {sdoc_id: ["keywords"]}
     held_jobs.run("keywords")

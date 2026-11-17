@@ -24,7 +24,6 @@ from unittest.mock import MagicMock, patch
 import pytest
 
 from common.dats_event import DATSEvent
-from core.doc_processing.entrypoints.init_sdoc_job import SDOC_INIT_JOB
 from core.project.project_orm import ProjectORM
 from core.user.user_orm import UserORM
 from modules.eximport.export_enum import ExportJobType
@@ -211,7 +210,7 @@ class TestJobUpdatedEmission:
         with patch(
             "systems.job_system.job_events._publish_envelope_sync"
         ) as mock_publish:
-            job = JobService().start_job(job_type=SDOC_INIT_JOB, payload=payload)
+            job = JobService().start_job(job_type="sdoc_init", payload=payload)
             job.update(status_message="working on it")
         _wait_until_ended(job)
 

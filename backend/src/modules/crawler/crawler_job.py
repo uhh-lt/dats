@@ -6,7 +6,6 @@ from loguru import logger
 from pydantic import Field
 
 from core.doc_processing.entrypoints.archive_extraction_job import (
-    EXTRACT_ARCHIVE_JOB,
     ArchiveExtractionJobInput,
 )
 from core.project.project_crud import crud_project
@@ -89,7 +88,7 @@ def handle_crawler_job(payload: CrawlerJobInput, job: Job) -> CrawlerJobOutput:
     # import the crawled data; a queue outage leaves the crawl finished
     try:
         JobService().start_job(
-            EXTRACT_ARCHIVE_JOB,
+            "extract_archive",
             ArchiveExtractionJobInput(
                 project_id=payload.project_id,
                 filepath=result,

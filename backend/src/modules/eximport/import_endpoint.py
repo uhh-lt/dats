@@ -5,7 +5,6 @@ from fastapi import APIRouter, Depends, UploadFile
 from common.dependencies import get_current_user
 from core.auth.authz_user import AuthzUser
 from modules.eximport.import_enum import ImportJobType
-from modules.eximport.import_job import IMPORT_JOB
 from modules.eximport.import_job_dto import ImportJobInput, ImportJobRead
 from modules.eximport.import_service import ImportJobPreparationError, ImportService
 from repos.filesystem_repo import FilesystemRepo
@@ -121,7 +120,7 @@ def start_import_job(
 
     # Start the import job
     job = js.start_job(
-        job_type=IMPORT_JOB,
+        job_type="import",
         payload=ImportJobInput(
             import_job_type=import_job_type,
             project_id=project_id,
@@ -155,6 +154,6 @@ def get_all_import_jobs(
 ) -> list[ImportJobRead]:
     authz_user.assert_in_project(project_id)
 
-    jobs = js.get_jobs_by_project(job_type=IMPORT_JOB, project_id=project_id)
+    jobs = js.get_jobs_by_project(job_type="import", project_id=project_id)
     jobs.sort(key=lambda x: x.get_created(), reverse=True)
     return [ImportJobRead.from_rq_job(job) for job in jobs]

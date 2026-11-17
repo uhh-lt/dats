@@ -16,7 +16,6 @@ from job_test_utils import HeldJobs
 from modules.eximport.project.export_project import export_project
 from modules.eximport.project.import_project import import_project
 from repos.filesystem_repo import FilesystemRepo
-from systems.artefact_system.artefact_computation_job import ARTEFACT_COMPUTATION_JOB
 from systems.artefact_system.artefact_dto import ProcessingSettings
 from systems.feature_system.feature_dto import FeatureActivation
 from systems.feature_system.feature_registry import Feature
@@ -210,5 +209,5 @@ def test_complete_does_not_run_the_set_up_hook(
     )
 
     assert response.status_code == 200, response.text
-    held_jobs.run(ARTEFACT_COMPUTATION_JOB)
+    held_jobs.run("artefact_computation")
     assert hooked_feature["calls"] == [(project_id, HOOK_FINDS_ALL)]
