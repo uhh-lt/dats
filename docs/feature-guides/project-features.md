@@ -2,7 +2,7 @@
 
 Not every project needs every DATS feature. A project that only uses the LLM Assistant on tens of thousands of documents does not need sentence embeddings or keyword statistics for each of them. **Project features** let you choose what DATS prepares for your documents: the fewer features you enable, the faster your uploads are processed.
 
-Annotation, document search (full-text search included), Search & Auto-Annotate, the analysis tools, the LLM Assistant, Perspectives, the Classifier, Whiteboards and the Logbook are always available. The features below can be switched on and off per project: each of them computes extra data for every document.
+Annotation, document search (full-text search included), Search & Auto-Annotate, the LLM Assistant, Perspectives, the Classifier, Whiteboards and the Logbook are always available. So are the analysis tools not listed below. The features below can be switched on and off per project: each of them computes extra data for every document.
 
 | Area                 | Features                                                                                                                                       |
 | -------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------- |
@@ -13,6 +13,8 @@ Annotation, document search (full-text search included), Search & Auto-Annotate,
 Every feature stands on its own: enabling or disabling one never changes another. Several features may share data: Semantic Search, RAG Chat, Annotation Scaling and Concepts Over Time Analysis all use the sentence embeddings, which are computed once.
 
 **Coreference Resolution** and **Quotation Detection** annotate German text documents (mention groups; quotations with their speaker, cue, addressee and frame). They run a hosted model for every German text document, so a new project leaves them off until you enable them. Documents in other languages finish without annotations. They replace the former ML Automation page: you no longer start them by hand for the whole project, the pipeline computes them for every German text document of a project that enables them, and Recompute in the document health view runs them again.
+
+**Tag Recommendations** are started from **Analysis → Tag Recommendations**, not from the former ML Automation page. DATS suggests tags for untagged documents from similar tagged documents, using every tag applied in the project. Choose a **Method** (`KNN`, `SIMPLE`, or `EXCLUSIVE`), optionally enable **Multiple tags per document**, and click **Recommend tags**. The new job is selected automatically. **Job Selection** lists earlier jobs with their status; a running job shows its recommendations when it finishes, while a failed job shows its status message. Review the suggested tags on the same page.
 
 ## 1\. Choosing Features When Creating a Project
 
@@ -41,6 +43,8 @@ While a feature is computing, DATS refreshes its progress by itself, and the fea
 ### Enabling and Completing a Feature
 
 Click **Enable** (or **Complete** for a partly available feature). A dialog tells you how many documents will be processed. Use the cog button to adjust the **processing settings** (model, language, number of keywords, ...), exactly like in the [Document Upload](document-upload.md) dialog, then confirm. DATS computes the missing data in the background, with a lower priority than new uploads. Features that use the same data, such as Word Frequency Analysis and the Duplicate Finder, are computing together while it is computed.
+
+Enabling a feature also creates the system codes its processing needs. If one of your own codes has the name of a required system code, enabling fails until you rename that code. Disabling a feature keeps its system codes.
 
 A feature becomes **partly available** when documents lack its data, for example:
 

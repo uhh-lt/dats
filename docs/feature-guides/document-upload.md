@@ -2,7 +2,7 @@
 
 Before you can annotate or analyze your data, you need to bring it into your DATS workspace. DATS handles a wide variety of data modalities, including text, images, audio, and video files, as well as live web pages.
 
-Every document brought into DATS runs through an automated machine-learning pipeline that extracts text, identifies entities, and generates semantic embeddings.
+Every document brought into DATS runs through an automated machine-learning pipeline that extracts text and computes the additional data required by the project's enabled features.
 
 ## 1\. Accessing the Upload Dialog
 
