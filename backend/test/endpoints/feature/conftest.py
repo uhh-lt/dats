@@ -35,7 +35,6 @@ from repos.filesystem_repo import FilesystemRepo
 from repos.vector.collection_base import BaseCollection
 from repos.vector.weaviate_repo import WeaviateRepo
 from systems.artefact_system.artefact_registry import artefact, artefact_registry
-from systems.artefact_system.artefact_system_enum import StorageKind
 from systems.feature_system.feature_registry import (
     Feature,
     feature_registry,
@@ -271,7 +270,6 @@ def coded_feature() -> Generator[Feature, None, None]:
     """
     coded = artefact(
         "test_coded_artefact",
-        kind=StorageKind.DOCUMENT_DATA,
         uploaded_for={DocType.audio},
         codes=(CODED_TREE,),
     )
@@ -352,7 +350,6 @@ def hooked_feature() -> Generator[HookedFeature, None, None]:
 
     hooked = artefact(
         "test_hooked_artefact",
-        kind=StorageKind.DOCUMENT_DATA,
         uploaded_for={DocType.audio},
         codes=(CODED_TREE,),
     )

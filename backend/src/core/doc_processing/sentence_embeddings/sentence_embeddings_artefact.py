@@ -15,7 +15,6 @@ from core.doc_processing.sentence_embeddings.sentence_embedding_dto import (
 )
 from repos.vector.weaviate_repo import WeaviateRepo
 from systems.artefact_system.artefact_registry import ArtefactArchive, artefact
-from systems.artefact_system.artefact_system_enum import StorageKind
 
 _EMBEDDINGS = TypeAdapter(list[list[float]])
 _STARTS = TypeAdapter(list[int])
@@ -64,6 +63,5 @@ class _SentenceEmbeddingArchive(ArtefactArchive):
 
 SENTENCE_EMBEDDINGS = artefact(
     "sentence_embeddings",
-    kind=StorageKind.OWN_STORE,
     archive=_SentenceEmbeddingArchive(),
 )

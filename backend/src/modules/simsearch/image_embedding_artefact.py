@@ -11,7 +11,6 @@ from modules.simsearch.image_embedding_dto import ImageObjectIdentifier
 from repos.vector.weaviate_exceptions import WeaviateObjectIDNotFoundException
 from repos.vector.weaviate_repo import WeaviateRepo
 from systems.artefact_system.artefact_registry import ArtefactArchive, artefact
-from systems.artefact_system.artefact_system_enum import StorageKind
 
 _EMBEDDING = TypeAdapter(list[float])
 
@@ -49,6 +48,4 @@ class _ImageEmbeddingArchive(ArtefactArchive):
         )
 
 
-IMAGE_EMBEDDINGS = artefact(
-    "image_embeddings", kind=StorageKind.OWN_STORE, archive=_ImageEmbeddingArchive()
-)
+IMAGE_EMBEDDINGS = artefact("image_embeddings", archive=_ImageEmbeddingArchive())

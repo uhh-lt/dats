@@ -11,7 +11,6 @@ from core.doc.sdoc_elastic_dto import ElasticSearchDocumentCreate
 from core.doc.source_document_orm import SourceDocumentORM
 from repos.elastic.elastic_repo import ElasticSearchRepo
 from systems.artefact_system.artefact_registry import ArtefactArchive, artefact
-from systems.artefact_system.artefact_system_enum import StorageKind
 
 _CONTENT = TypeAdapter(str | None)
 
@@ -37,6 +36,4 @@ class _ElasticIndexArchive(ArtefactArchive):
         )
 
 
-ES_INDEX = artefact(
-    "es_index", kind=StorageKind.OWN_STORE, always=True, archive=_ElasticIndexArchive()
-)
+ES_INDEX = artefact("es_index", always=True, archive=_ElasticIndexArchive())

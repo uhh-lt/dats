@@ -11,7 +11,6 @@ from core.doc_processing.thumbnail.image_thumbnail_utils import generate_thumbna
 from core.doc_processing.video_utils import store_video_thumbnail
 from repos.filesystem_repo import FilesystemRepo
 from systems.artefact_system.artefact_registry import ArtefactArchive, artefact
-from systems.artefact_system.artefact_system_enum import StorageKind
 
 
 class _ThumbnailArchive(ArtefactArchive):
@@ -34,6 +33,4 @@ class _ThumbnailArchive(ArtefactArchive):
                 store_video_thumbnail(db=db, sdoc=sdoc_read, video_path=path)
 
 
-THUMBNAIL = artefact(
-    "thumbnail", kind=StorageKind.OWN_STORE, always=True, archive=_ThumbnailArchive()
-)
+THUMBNAIL = artefact("thumbnail", always=True, archive=_ThumbnailArchive())

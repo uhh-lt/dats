@@ -35,7 +35,6 @@ from systems.artefact_system.artefact_registry import (
     artefact,
     artefact_registry,
 )
-from systems.artefact_system.artefact_system_enum import StorageKind
 from systems.artefact_system.pipeline_step_decorator import pipeline_step
 from systems.job_system.job_dto import Job
 from systems.job_system.job_register_decorator import register_job
@@ -391,9 +390,7 @@ def dummy_step() -> Generator[DummyStep, None, None]:
     its handler records it in `computed`. The fixture removes the step again.
     """
     step = "test_dummy_step"
-    test_artefact = artefact(
-        "test_dummy_artefact", kind=StorageKind.DOCUMENT_DATA, always=True
-    )
+    test_artefact = artefact("test_dummy_artefact", always=True)
 
     _DUMMY_COMPUTED.clear()
     pipeline_step(
@@ -461,7 +458,7 @@ def paired_steps() -> Generator[PairedSteps, None, None]:
     producer = "test_producer_step"
     consumer = "test_consumer_step"
     artefacts = [
-        artefact(f"test_{name}_artefact", kind=StorageKind.DOCUMENT_DATA, always=True)
+        artefact(f"test_{name}_artefact", always=True)
         for name in ("first", "second", "third")
     ]
 

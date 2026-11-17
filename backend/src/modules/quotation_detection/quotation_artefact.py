@@ -3,7 +3,6 @@ user in span groups named "quote", with the code tree of the quotation parts."""
 
 from core.code.system_codes import SystemCode
 from systems.artefact_system.artefact_registry import artefact
-from systems.artefact_system.artefact_system_enum import StorageKind
 
 QUOTATION_CODES = SystemCode(
     "QUOTATIONS",
@@ -45,6 +44,4 @@ QUOTATION_CODES = SystemCode(
     ),
 )
 
-QUOTATIONS = artefact(
-    "quotations", kind=StorageKind.ANNOTATIONS, codes=(QUOTATION_CODES,)
-)
+QUOTATIONS = artefact("quotations", codes=(QUOTATION_CODES,))

@@ -20,20 +20,19 @@ Disable calls nothing: the stored data and the step statuses stay. A computation
 An artefact is declared by the code that owns it, in a file that its steps and features import (`<name>_artefact.py`, next to the steps that produce it: `core/doc_processing/<name>/` holds the standard ones, one folder per artefact):
 
 ```python
-KEYWORDS = artefact("keywords", kind=StorageKind.METADATA)
+KEYWORDS = artefact("keywords")
 ```
 
 | Argument       | Meaning                                                                                                                                                  |
 | -------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `kind`         | Where it is stored (`StorageKind`): the document data row, the metadata, annotations, or an own store (a table, index or file of its own).               |
 | `always`       | Computed for every document, whatever features its project enables (a core artefact). A step produces either always-computed or on-demand artefacts.    |
 | `uploaded_for` | The doctypes whose uploaded file is the artefact, so no step produces it there (the audio stream of an audio document).                                  |
 | `codes`        | The system code trees (`SystemCode`, `core/code/system_codes.py`; a tree only one artefact needs is declared next to it, `NAMED_ENTITY_PERSON` is shared) a project needs before the artefact is produced. Data, not a function: the import reads them too. Copy new trees into `tools/project_doctor/system_codes.yaml`. |
-| `archive`      | Required exactly for an own store: an `ArtefactArchive` that reads the artefact for the project export, says whether an archive holds it completely and writes it on import. |
+| `archive`      | For an artefact with a store of its own (a table, index or file): an `ArtefactArchive` that reads the artefact for the project export, says whether an archive holds it completely and writes it on import. Without it, the generic export of document data, metadata and annotations carries the artefact. |
 
 The name never changes without a data migration: step status rows, pending computations and archives store it. A step names the artefacts it requires and produces with the imported objects (`@pipeline_step(requires={CONTENT}, produces={KEYWORDS}, ...)`); tests name them by text (`artefact_named` in `backend/test/pipeline_test_utils.py`).
 
-The startup check (`artefact_registry.check()`, from `bootstrap.register_jobs`) rejects an artefact no step produces and no upload provides, an own store without archive (or an archive without own store), a step that mixes always-computed and on-demand artefacts, the step of an always-computed artefact that requires an on-demand one, and a system code name that two declared trees (of one artefact or of two) give a different parent, description or `enabled` flag.
+The startup check (`artefact_registry.check()`, from `bootstrap.register_jobs`) rejects an artefact no step produces and no upload provides, a step that mixes always-computed and on-demand artefacts, the step of an always-computed artefact that requires an on-demand one, and a system code name that two declared trees (of one artefact or of two) give a different parent, description or `enabled` flag.
 
 Deletion is not declared: a store goes with its document as before (foreign key cascades, the document's files, the Elasticsearch delete and the Weaviate loop in `SourceDocumentService`).
 

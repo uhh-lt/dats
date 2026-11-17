@@ -19,7 +19,6 @@ from systems.artefact_system.artefact_exceptions import (
     PipelineDeclarationError,
     PipelineNotRegisteredError,
 )
-from systems.artefact_system.artefact_system_enum import StorageKind
 from systems.artefact_system.pipeline_graph import PipelineGraph, PipelineStep
 
 if TYPE_CHECKING:
@@ -54,14 +53,14 @@ class Artefact:
     Compared by identity: the registry keeps the names unique."""
 
     name: str
-    kind: StorageKind
     # computed for every document, whatever features its project enables
     always: bool
     # the doctypes whose uploaded file is the artefact (no step produces it)
     uploaded_for: frozenset[DocType]
     # the system code trees a project needs before the artefact is produced
     codes: tuple[SystemCode, ...]
-    # own store only, required there
+    # the archive of its own store; None if the generic export of document
+    # data, metadata and annotations carries it
     archive: ArtefactArchive | None
 
 
@@ -179,7 +178,6 @@ artefact_registry = ArtefactRegistry()
 def artefact(
     name: str,
     *,
-    kind: StorageKind,
     always: bool = False,
     uploaded_for: Collection[DocType] = (),
     codes: Collection[SystemCode] = (),
@@ -189,7 +187,6 @@ def artefact(
     artefact, which steps and features import."""
     declared = Artefact(
         name=name,
-        kind=kind,
         always=always,
         uploaded_for=frozenset(uploaded_for),
         codes=tuple(codes),

@@ -5,7 +5,6 @@ import dataclasses
 
 from core.code.system_codes import NAMED_ENTITY_PERSON, SystemCode
 from systems.artefact_system.artefact_registry import artefact
-from systems.artefact_system.artefact_system_enum import StorageKind
 
 # NAMED_ENTITY with its 19 entity types; PERSON comes from core
 NAMED_ENTITY_CODES = dataclasses.replace(
@@ -45,6 +44,4 @@ NAMED_ENTITY_CODES = dataclasses.replace(
     ),
 )
 
-NER_SPANS = artefact(
-    "ner_spans", kind=StorageKind.ANNOTATIONS, codes=(NAMED_ENTITY_CODES,)
-)
+NER_SPANS = artefact("ner_spans", codes=(NAMED_ENTITY_CODES,))

@@ -16,7 +16,6 @@ from typing import TYPE_CHECKING
 
 from common.doc_type_enum import DocType
 from systems.artefact_system.artefact_exceptions import PipelineDeclarationError
-from systems.artefact_system.artefact_system_enum import StorageKind
 
 if TYPE_CHECKING:
     from systems.artefact_system.artefact_registry import Artefact
@@ -197,18 +196,12 @@ class PipelineGraph:
 def _check_artefacts(
     steps: dict[str, PipelineStep], artefacts: frozenset["Artefact"]
 ) -> list[str]:
-    """Every registered artefact is produced by a step or uploaded, and has an
-    archive exactly if it has an own store."""
+    """Every registered artefact is produced by a step or uploaded."""
     produced = {a for s in steps.values() for a in s.produces}
     problems: list[str] = []
     for a in sorted(artefacts, key=lambda a: a.name):
         if a not in produced and not a.uploaded_for:
             problems.append(f"Artefact '{a.name}' is produced by no step.")
-        if (a.kind == StorageKind.OWN_STORE) != (a.archive is not None):
-            problems.append(
-                f"Artefact '{a.name}' must declare an archive exactly if it has "
-                "its own store."
-            )
     return problems
 
 

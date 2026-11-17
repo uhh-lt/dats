@@ -11,7 +11,6 @@ from core.doc.source_document_orm import SourceDocumentORM
 from core.doc_processing.video_utils import extract_audio_stream
 from repos.filesystem_repo import FilesystemRepo
 from systems.artefact_system.artefact_registry import ArtefactArchive, artefact
-from systems.artefact_system.artefact_system_enum import StorageKind
 
 
 class _AudioArchive(ArtefactArchive):
@@ -34,7 +33,6 @@ class _AudioArchive(ArtefactArchive):
 
 AUDIO = artefact(
     "audio",
-    kind=StorageKind.OWN_STORE,
     always=True,
     uploaded_for={DocType.audio},
     archive=_AudioArchive(),

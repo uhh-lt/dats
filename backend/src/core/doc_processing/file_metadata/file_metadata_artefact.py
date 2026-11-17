@@ -2,6 +2,5 @@
 image, audio and video documents, carried by their metadata keys."""
 
 from systems.artefact_system.artefact_registry import artefact
-from systems.artefact_system.artefact_system_enum import StorageKind
 
-FILE_METADATA = artefact("file_metadata", kind=StorageKind.METADATA, always=True)
+FILE_METADATA = artefact("file_metadata", always=True)

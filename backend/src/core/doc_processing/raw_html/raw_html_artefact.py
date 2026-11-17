@@ -2,6 +2,5 @@
 of the document's data row."""
 
 from systems.artefact_system.artefact_registry import artefact
-from systems.artefact_system.artefact_system_enum import StorageKind
 
-RAW_HTML = artefact("raw_html", kind=StorageKind.DOCUMENT_DATA, always=True)
+RAW_HTML = artefact("raw_html", always=True)

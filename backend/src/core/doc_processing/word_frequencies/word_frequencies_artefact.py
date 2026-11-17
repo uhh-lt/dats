@@ -14,7 +14,6 @@ from core.doc_processing.word_frequencies.word_frequency_dto import (
     WordFrequencyCreate,
 )
 from systems.artefact_system.artefact_registry import ArtefactArchive, artefact
-from systems.artefact_system.artefact_system_enum import StorageKind
 
 _WORD_FREQUENCIES = TypeAdapter(list[tuple[str, int]])
 
@@ -41,6 +40,4 @@ class _WordFrequencyArchive(ArtefactArchive):
         )
 
 
-WORD_FREQUENCIES = artefact(
-    "word_frequencies", kind=StorageKind.OWN_STORE, archive=_WordFrequencyArchive()
-)
+WORD_FREQUENCIES = artefact("word_frequencies", archive=_WordFrequencyArchive())

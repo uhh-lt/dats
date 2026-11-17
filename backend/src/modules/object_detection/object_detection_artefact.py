@@ -4,7 +4,6 @@ NAMED_ENTITY, shared with the named-entity spans."""
 
 from core.code.system_codes import NAMED_ENTITY_PERSON, SystemCode
 from systems.artefact_system.artefact_registry import artefact
-from systems.artefact_system.artefact_system_enum import StorageKind
 
 # the COCO 2017 super categories with their categories, and BACKGROUND
 COCO_CODES = (
@@ -169,6 +168,5 @@ COCO_CODES = (
 
 OBJECT_BBOXES = artefact(
     "object_bboxes",
-    kind=StorageKind.ANNOTATIONS,
     codes=(*COCO_CODES, NAMED_ENTITY_PERSON),
 )

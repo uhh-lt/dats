@@ -11,7 +11,6 @@ from modules.tag_recommendation.document_embedding_dto import DocumentObjectIden
 from repos.vector.weaviate_exceptions import WeaviateObjectIDNotFoundException
 from repos.vector.weaviate_repo import WeaviateRepo
 from systems.artefact_system.artefact_registry import ArtefactArchive, artefact
-from systems.artefact_system.artefact_system_enum import StorageKind
 
 _EMBEDDING = TypeAdapter(list[float])
 
@@ -51,6 +50,5 @@ class _DocumentEmbeddingArchive(ArtefactArchive):
 
 DOCUMENT_EMBEDDINGS = artefact(
     "document_embeddings",
-    kind=StorageKind.OWN_STORE,
     archive=_DocumentEmbeddingArchive(),
 )

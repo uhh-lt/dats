@@ -1,24 +1,18 @@
 """The pipeline graph derived from the step declarations, and its startup checks."""
 
-from collections.abc import Mapping
-
 import pytest
-from sqlalchemy.orm import Session
 
 from bootstrap import register_jobs
 from common.doc_type_enum import DocType
 from core.code.system_codes import SystemCode
-from core.doc.source_document_orm import SourceDocumentORM
 from pipeline_test_utils import artefact_named
 from systems.artefact_system import pipeline_graph
 from systems.artefact_system.artefact_exceptions import PipelineDeclarationError
 from systems.artefact_system.artefact_registry import (
     Artefact,
-    ArtefactArchive,
     ArtefactRegistry,
     artefact_registry,
 )
-from systems.artefact_system.artefact_system_enum import StorageKind
 from systems.artefact_system.pipeline_graph import PipelineGraph, PipelineStep
 
 # the registered artefacts, which the graphs below are built with
@@ -388,51 +382,17 @@ def test_pipeline_graph_fails_on_more_steps_than_the_feature_states_count(
 
 def _test_artefact(
     name: str,
-    kind: StorageKind = StorageKind.DOCUMENT_DATA,
     always: bool = False,
-    archive: ArtefactArchive | None = None,
     codes: tuple[SystemCode, ...] = (),
 ) -> Artefact:
     """An artefact that is not registered."""
     return Artefact(
         name=name,
-        kind=kind,
         always=always,
         uploaded_for=frozenset(),
         codes=codes,
-        archive=archive,
+        archive=None,
     )
-
-
-class _NoArchive(ArtefactArchive):
-    def read(self, sdoc: SourceDocumentORM) -> dict[str, object]:
-        return {}
-
-    def write(
-        self, db: Session, sdoc: SourceDocumentORM, archived: Mapping[str, object]
-    ) -> None:
-        return None
-
-
-def test_pipeline_graph_fails_on_an_own_store_without_archive_and_vice_versa():
-    """An artefact has an archive exactly if it has its own store."""
-    steps = _producing_all_other_artefacts({})
-    lacking = _test_artefact("test_lacking", kind=StorageKind.OWN_STORE)
-    extra = _test_artefact("test_extra", archive=_NoArchive())
-    steps["extract_html"] = _step(set(), {lacking, extra})
-
-    problems = [
-        p
-        for p in _graph_problems(
-            steps, [*artefact_registry.artefacts(), lacking, extra]
-        )
-        if "archive" in p
-    ]
-
-    assert problems == [
-        "Artefact 'test_extra' must declare an archive exactly if it has its own store.",
-        "Artefact 'test_lacking' must declare an archive exactly if it has its own store.",
-    ]
 
 
 def test_pipeline_graph_fails_on_a_step_mixing_always_and_on_demand_artefacts():
