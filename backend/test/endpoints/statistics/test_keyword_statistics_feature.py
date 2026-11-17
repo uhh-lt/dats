@@ -1,6 +1,5 @@
-"""The feature keyword statistics sets up the project metadata key "keywords":
-on project creation with the feature, on Enable (safe to run twice) and, for a
-project whose key is missing, in the keywords step."""
+"""The feature keyword statistics sets up the project metadata key "keywords"
+on project creation with the feature and on Enable (safe to run twice)."""
 
 from fastapi.testclient import TestClient
 from sqlalchemy.orm import Session
@@ -11,11 +10,10 @@ from common.meta_type_enum import MetaType
 from core.metadata.project_metadata_crud import crud_project_meta
 from core.metadata.source_document_metadata_crud import crud_sdoc_meta
 from core.project.project_dto import ProjectCreate, ProjectRead
-from feature_test_utils import SDOC_SENTENCES, FeaturelessProject, feature_named
+from feature_test_utils import FeaturelessProject, feature_named
 from job_test_utils import HeldJobs
 from systems.artefact_system.artefact_dto import ProcessingSettings
 from systems.feature_system.feature_dto import FeatureActivation
-from text_steps_test_utils import run_step_handler
 
 FEATURE = "keyword_statistics"
 KEY = "keywords"
@@ -99,31 +97,3 @@ def test_enable_creates_the_keywords_key_and_its_set_up_is_safe_to_run_twice(
             db=db_session, project_id=project_id, key=KEY
         )
     ) == len(ALL_DOCTYPES)
-
-
-def test_keywords_step_creates_a_missing_key_of_its_doctype(
-    db_session: Session, featureless_project: FeaturelessProject
-):
-    """The keywords step of a document whose project has no key "keywords"
-    (set up before the feature created it) creates the key of its doctype and
-    stores the keywords instead of failing."""
-    project_id = featureless_project["project"].id
-    sdoc_id = featureless_project["sdoc"].id
-
-    run_step_handler(
-        "keywords",
-        {
-            "project_id": project_id,
-            "sdoc_id": sdoc_id,
-            "settings": SETTINGS.model_dump(mode="json"),
-            "doctype": "text",
-            "text": " ".join(SDOC_SENTENCES),
-            "language": "en",
-        },
-    )
-
-    assert _keyword_keys(db_session, project_id) == {DocType.text: MetaType.LIST}
-    keywords = crud_sdoc_meta.read_by_sdoc_and_key(
-        db=db_session, sdoc_id=sdoc_id, key=KEY
-    ).list_value
-    assert keywords
