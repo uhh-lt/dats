@@ -69,7 +69,6 @@ MENTION_CODES = SystemCode("MENTION", "Co-reference mention")
 
 COREFERENCES = artefact(
     "coreferences",
-    kind=StorageKind.ANNOTATIONS,        # travels with the annotations
     codes=(MENTION_CODES,),              # what a project needs first, as data
 )
 
@@ -112,7 +111,7 @@ register_feature("rag_chat", ..., requires_artefacts={SENTENCE_EMBEDDINGS})
 | ----------------- | ------------------------------------------------------------------------------ | --------------------------------------------------------------- |
 | Set up            | The codes the project needs first, declared as data                            | All codes are listed in the config and created in every project |
 | Produce           | The pipeline step and its inputs                                               | Declared on the step, in one module                             |
-| Store             | Where it is stored (see below); the storage itself does not change             | Not declared                                                    |
+| Store             | An archive, if it has a store of its own (see below)                           | Not declared                                                    |
 | Export and import | Follows from where it is stored                                                | One central table in the export module                          |
 | Delete            | Not declared: stays central (cascades, the Elasticsearch and Weaviate deletes) | Central                                                         |
 
@@ -120,16 +119,7 @@ The set up runs when a project first demands the artefact and creates what is mi
 
 ### Where an artefact is stored
 
-Nothing moves. An artefact keeps the storage it has today and only declares which kind it is. Export, import and deletion follow from the kind, so most artefacts need no code for them. This is what the artefact archive of uhh-lt/dats#892 does already; the entry moves from the central table to the artefact's declaration.
-
-| Kind          | Stored in                           | Export, import, delete              | Examples                                              |
-| ------------- | ----------------------------------- | ----------------------------------- | ----------------------------------------------------- |
-| Document data | The source document data            | Travels with the document           | Content, tokens and sentences, HTML                   |
-| Metadata      | Source document metadata            | Travels with the metadata           | Language, file metadata, keywords                     |
-| Annotations   | Span or bbox annotations with codes | Travels with the annotations        | Named-entity spans, object boxes, coreferences        |
-| Own store     | A table, index or file of its own   | The artefact brings its own archive | Embeddings, search index, word frequencies, thumbnail |
-
-A new artefact picks a kind. Only "own store" needs code, for export and import (its archive); deletion stays central for every kind.
+Nothing moves. An artefact keeps the storage it has today. An artefact with a store of its own (a table, index or file: the embeddings, the search index, the word frequencies, the thumbnail, the audio stream) brings an archive (`ArtefactArchive`), which the export and import of a document iterate over. All others live in the source document data (content, tokens and sentences, HTML), the source document metadata (language, file metadata, keywords) or annotations with codes (named-entity spans, object boxes, coreferences), and the generic export of document data, metadata and annotations carries them, so they need no code for it. Deletion stays central for every artefact.
 
 Tables that hold a feature's results (the tag recommendations, for example) are not artefacts: nothing requires them and no pipeline step produces them. They stay ordinary module tables.
 
@@ -137,7 +127,7 @@ Tables that hold a feature's results (the tag recommendations, for example) are 
 
 Artefacts, pipeline steps and features are declared by the code that owns them. The central lists `Artefact`, `Feature` and the step names in `JobType` go away.
 
-- The check moves from the type checker to the start of the backend: an artefact without a producer, a cycle, a missing artefact archive or a duplicate name stops the start.
+- The check moves from the type checker to the start of the backend: an artefact without a producer, a cycle or a duplicate name stops the start.
 - Names are stored as text in the database (step statuses, enabled features).
 - The frontend reads the features from the backend. It keeps its own list only for the features it has pages or menu entries for.
 
@@ -202,7 +192,7 @@ This also resolves issue 884 (the ML job status table), issue 885 (the central j
 | Captions for every image    | No concern: the feature toggles are not deployed, so no project has captions off.                                                                                                                                                                                                                                             |
 | ML Automation page          | Deleted from the frontend.                                                                                                                                                                                                                                                                                                    |
 | ML job statuses             | No migration: nobody used coreference and quotation so far. The table is dropped.                                                                                                                                                                                                                                             |
-| Storage                     | Unchanged; an artefact declares its kind (see "Where an artefact is stored").                                                                                                                                                                                                                                                 |
+| Storage                     | Unchanged; an artefact with a store of its own declares its archive (see "Where an artefact is stored").                                                                                                                                                                                                                      |
 | Sentence embeddings         | Core, by the general rule: the code inventory found three direct readers.                                                                                                                                                                                                                                                     |
 | Order of the work           | Captions become core first, before the artefact system is built. Then no planning question depends on which other features are enabled.                                                                                                                                                                                       |
 | Name of the background work | "Feature Activation" becomes "Artefact Computation": the artefact system computes artefacts and does not know features.                                                                                                                                                                                                       |
