@@ -91,24 +91,12 @@ def test_steps_missing_in_the_archive_are_not_planned() -> None:
 
 
 def test_unknown_step_is_ignored() -> None:
-    """An archived status of a step this version does not have (removed since the
-    export) is dropped; the other statuses are imported."""
+    """An archived status of a step this version does not have (renamed or
+    removed since the export) is dropped; the other statuses are imported."""
     sdoc = _sdoc(step_status={"removed_step": FINISHED, "html_extraction": FINISHED})
 
     assert sdoc.step_status == {"html_extraction": FINISHED}
     assert archived_step_status(sdoc)["html_extraction"] == FINISHED
-
-
-def test_old_step_names_are_imported_under_their_new_names() -> None:
-    """An archive of a version before the step renames names the steps by their
-    old names (text_spacy for tokens_sentences, extract_html for
-    html_extraction); the import reads them under their new names."""
-    sdoc = _sdoc(step_status={"extract_html": FINISHED, "text_spacy": ERRONEOUS})
-
-    assert sdoc.step_status == {
-        "html_extraction": FINISHED,
-        "tokens_sentences": ERRONEOUS,
-    }
 
 
 def test_step_of_another_doctype_is_ignored() -> None:

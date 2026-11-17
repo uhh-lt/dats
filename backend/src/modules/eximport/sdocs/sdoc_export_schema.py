@@ -13,25 +13,6 @@ from common.doc_type_enum import DocType
 from common.sdoc_status_enum import SDocStatus
 from systems.artefact_system.artefact_registry import artefact_registry
 
-# the steps renamed after the feature toggles, old name -> new name: an archive
-# of a version before the rename names them by their old names
-RENAMED_STEPS = {
-    "extract_html": "html_extraction",
-    "text_language_detection": "language_detection",
-    "text_spacy": "tokens_sentences",
-    "text_html_mapping": "html_mapping",
-    "text_es_index": "es_index",
-    "text_word_frequency": "word_frequency",
-    "text_sentence_embedding": "sentence_embedding",
-    "text_keywords": "keywords",
-    "text_ner": "named_entity_recognition",
-    "text_document_embedding": "document_embedding",
-    "image_object_detection": "object_detection",
-    "audio_transcription": "transcription",
-    "audio_metadata": "audio_metadata_extraction",
-    "video_metadata": "video_metadata_extraction",
-}
-
 
 class SourceDocumentExportSchema(BaseModel):
     """Schema definition for source document info export/import operations."""
@@ -149,18 +130,16 @@ class SourceDocumentExportSchema(BaseModel):
     @field_validator("step_status")
     @classmethod
     def validate_step_status(cls, v, info: ValidationInfo):
-        """Validate that the values are statuses, map the old names of renamed
-        steps to their new names, and drop the keys that are no pipeline step of
-        the doctype: an archive of another version may name a step this version
-        does not have (removed)."""
+        """Validate that the values are statuses, and drop the keys that are no
+        pipeline step of the doctype: an archive of another version may name a
+        step this version does not have (renamed or removed)."""
         if "doctype" not in info.data:
             return v
         steps = set(artefact_registry.graph().steps(DocType(info.data["doctype"])))
         for status in v.values():
             if status is not None:
                 SDocStatus(status)
-        renamed = {RENAMED_STEPS.get(step, step): status for step, status in v.items()}
-        return {step: status for step, status in renamed.items() if step in steps}
+        return {step: status for step, status in v.items() if step in steps}
 
     @field_validator("tags")
     @classmethod
