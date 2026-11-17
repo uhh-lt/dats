@@ -2,7 +2,7 @@ import sqlalchemy as sa
 from alembic import command
 from sqlalchemy.orm import Session
 
-from .conftest import ARTEFACT_COMPUTATIONS, CAPTIONS_CORE, alembic_config
+from .conftest import ARTEFACT_COMPUTATIONS, ENABLED_FEATURES, alembic_config
 
 
 def _column(db: Session, project_id: int, column: str) -> dict:
@@ -46,7 +46,7 @@ def test_downgrade_restores_the_column_name(
         {"id": feature_activations_database},
     )
     db_session.commit()
-    command.downgrade(config, CAPTIONS_CORE)
+    command.downgrade(config, ENABLED_FEATURES)
 
     assert (
         _column(db_session, feature_activations_database, "feature_activations") == {}

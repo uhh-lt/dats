@@ -7,7 +7,7 @@ translated (its job cannot be loaded either). The downgrade renames back and
 resets as well.
 
 Revision ID: 457909d274d4
-Revises: 41c2d56be9f3
+Revises: f0bfbe883d73
 Create Date: 2026-11-13 18:11:21.105209
 
 """
@@ -18,7 +18,7 @@ from alembic import op
 
 # revision identifiers, used by Alembic.
 revision: str = "457909d274d4"
-down_revision: str | None = "41c2d56be9f3"
+down_revision: str | None = "f0bfbe883d73"
 branch_labels: str | Sequence[str] | None = None
 depends_on: str | Sequence[str] | None = None
 

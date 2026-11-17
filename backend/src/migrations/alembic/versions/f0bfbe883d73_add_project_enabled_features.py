@@ -1,7 +1,7 @@
 """add project enabled features
 
 Projects get the list of their enabled features. Every existing project enables
-all features, so its documents keep all their steps and nothing is recomputed.
+every feature except coreference resolution and quotation detection.
 
 Revision ID: f0bfbe883d73
 Revises: 448579029394
@@ -21,13 +21,10 @@ down_revision: str | None = "448579029394"
 branch_labels: str | Sequence[str] | None = None
 depends_on: str | Sequence[str] | None = None
 
-# The names of all features, so existing projects keep every capability. The
-# list follows the later renames of features that were never deployed (one
-# "semantic_search" for the sentence and the image similarity search); a name
-# that is no feature anymore is ignored when read.
-ALL_FEATURES = [
-    "full_text_search",
-    "search_annotate",
+# The features of a new project that enables the default ones, so existing
+# projects keep their capabilities; coreference resolution and quotation
+# detection stay off.
+ENABLED_FEATURES = [
     "semantic_search",
     "rag_chat",
     "annotation_scaling",
@@ -37,7 +34,6 @@ ALL_FEATURES = [
     "duplicate_finder",
     "keyword_statistics",
     "entity_annotations",
-    "image_captions",
     "object_detection",
 ]
 
@@ -49,10 +45,10 @@ def upgrade() -> None:
         sa.Column("enabled_features", postgresql.ARRAY(sa.String()), nullable=True),
     )
 
-    # 2) existing projects enable all features
+    # 2) existing projects enable the default features
     op.get_bind().execute(
         sa.text("UPDATE project SET enabled_features = :features"),
-        {"features": ALL_FEATURES},
+        {"features": ENABLED_FEATURES},
     )
     op.alter_column("project", "enabled_features", nullable=False)
 
