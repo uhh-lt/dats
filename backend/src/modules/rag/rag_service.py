@@ -4,8 +4,10 @@ from loguru import logger
 from sqlalchemy.orm import Session
 
 from common.singleton_meta import SingletonMeta
-from core.doc.sentence_embedding_crud import crud_sentence_embedding
 from core.doc.source_document_data_crud import crud_sdoc_data
+from core.doc_processing.sentence_embeddings.sentence_embedding_crud import (
+    crud_sentence_embedding,
+)
 from modules.rag.rag_dto import ChatSessionResponse
 from repos.llm_repo import LLMRepo
 from repos.ray.dto.clip import ClipTextEmbeddingInput

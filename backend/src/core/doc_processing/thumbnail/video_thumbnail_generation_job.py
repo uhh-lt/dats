@@ -2,11 +2,9 @@ from pathlib import Path
 
 from common.doc_type_enum import DocType
 from core.doc.source_document_crud import crud_sdoc
-from core.doc.source_document_data_crud import crud_sdoc_data
-from core.doc.source_document_data_dto import SourceDocumentDataUpdate
 from core.doc.source_document_dto import SourceDocumentRead
 from core.doc_processing.artefacts import THUMBNAIL
-from core.doc_processing.image.image_thumbnail_utils import generate_thumbnails
+from core.doc_processing.video_utils import store_video_thumbnail
 from repos.db.sql_repo import SQLRepo
 from repos.filesystem_repo import FilesystemRepo
 from systems.artefact_system.artefact_dto import SdocProcessingJobInput
@@ -18,55 +16,42 @@ fsr = FilesystemRepo()
 sqlr = SQLRepo()
 
 
-class ImageThumbnailJobInput(SdocProcessingJobInput):
+class VideoThumbnailJobInput(SdocProcessingJobInput):
     filepath: Path
 
 
 def enrich_for_recompute(
     payload: SdocProcessingJobInput,
-) -> ImageThumbnailJobInput:
+) -> VideoThumbnailJobInput:
     with sqlr.transaction() as db:
         sdoc = SourceDocumentRead.model_validate(
             crud_sdoc.read(db=db, id=payload.sdoc_id)
         )
-        assert sdoc.doctype == DocType.image, (
-            f"SourceDocument with {payload.sdoc_id=} is not an image!"
+        assert sdoc.doctype == DocType.video, (
+            f"SourceDocument with {payload.sdoc_id=} is not a video file!"
         )
 
-    image_path = fsr.get_path_to_sdoc_file(sdoc, raise_if_not_exists=True)
+    video_path = fsr.get_path_to_sdoc_file(sdoc, raise_if_not_exists=True)
 
-    return ImageThumbnailJobInput(
+    return VideoThumbnailJobInput(
         **payload.model_dump(),
-        filepath=image_path,
+        filepath=video_path,
     )
 
 
 @pipeline_step(
     requires=set(),
     produces={THUMBNAIL},
-    doctypes={DocType.image},
+    doctypes={DocType.video},
 )
 @register_job(
-    job_type="image_thumbnail",
-    input_type=ImageThumbnailJobInput,
+    job_type="video_thumbnail",
+    input_type=VideoThumbnailJobInput,
     enricher=enrich_for_recompute,
 )
-def handle_image_thumbnail_job(payload: ImageThumbnailJobInput, job: Job) -> None:
-    generate_thumbnails(payload.filepath)
-
-    # Store link to webp image in DB
+def handle_video_thumbnail_job(payload: VideoThumbnailJobInput, job: Job) -> None:
     with sqlr.transaction() as db:
         sdoc = SourceDocumentRead.model_validate(
             crud_sdoc.read(db=db, id=payload.sdoc_id)
         )
-        repo_url = FilesystemRepo().get_sdoc_url(
-            sdoc=sdoc,
-            relative=True,
-            webp=True,
-            thumbnail=False,
-        )
-        crud_sdoc_data.update(
-            db=db,
-            id=payload.sdoc_id,
-            update_dto=SourceDocumentDataUpdate(repo_url=repo_url),
-        )
+        store_video_thumbnail(db=db, sdoc=sdoc, video_path=payload.filepath)

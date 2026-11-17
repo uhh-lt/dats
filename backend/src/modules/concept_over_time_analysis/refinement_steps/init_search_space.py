@@ -4,10 +4,12 @@ from sqlalchemy import select
 from sqlalchemy.orm import Session
 
 from config import conf
-from core.doc.sentence_embedding_crud import crud_sentence_embedding
 from core.doc.source_document_data_crud import crud_sdoc_data
 from core.doc.source_document_data_orm import SourceDocumentDataORM
 from core.doc.source_document_orm import SourceDocumentORM
+from core.doc_processing.sentence_embeddings.sentence_embedding_crud import (
+    crud_sentence_embedding,
+)
 from core.metadata.source_document_metadata_orm import SourceDocumentMetadataORM
 from modules.concept_over_time_analysis.cota_dto import (
     COTARead,

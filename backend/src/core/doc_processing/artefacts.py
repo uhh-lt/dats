@@ -11,17 +11,21 @@ from sqlalchemy.orm import Session
 from common.doc_type_enum import DocType
 from core.doc.sdoc_elastic_crud import crud_sdoc_elastic
 from core.doc.sdoc_elastic_dto import ElasticSearchDocumentCreate
-from core.doc.sentence_embedding_crud import crud_sentence_embedding
-from core.doc.sentence_embedding_dto import SentenceObjectIdentifier
 from core.doc.source_document_dto import SourceDocumentRead
 from core.doc.source_document_orm import SourceDocumentORM
-from core.doc.word_frequency_crud import crud_word_frequency
-from core.doc.word_frequency_dto import WordFrequencyCreate
-from core.doc_processing.image.image_thumbnail_utils import generate_thumbnails
-from core.doc_processing.video.video_utils import (
+from core.doc_processing.sentence_embeddings.sentence_embedding_crud import (
+    crud_sentence_embedding,
+)
+from core.doc_processing.sentence_embeddings.sentence_embedding_dto import (
+    SentenceObjectIdentifier,
+)
+from core.doc_processing.thumbnail.image_thumbnail_utils import generate_thumbnails
+from core.doc_processing.video_utils import (
     extract_audio_stream,
     store_video_thumbnail,
 )
+from core.doc_processing.word_frequencies.word_frequency_crud import crud_word_frequency
+from core.doc_processing.word_frequencies.word_frequency_dto import WordFrequencyCreate
 from repos.elastic.elastic_repo import ElasticSearchRepo
 from repos.filesystem_repo import FilesystemRepo
 from repos.vector.weaviate_repo import WeaviateRepo

@@ -15,8 +15,6 @@ from core.code.code_dto import CodeCreate
 from core.code.code_orm import CodeORM
 from core.doc.sdoc_elastic_crud import crud_sdoc_elastic
 from core.doc.sdoc_elastic_dto import ElasticSearchDocumentCreate
-from core.doc.sentence_embedding_crud import crud_sentence_embedding
-from core.doc.sentence_embedding_dto import SentenceObjectIdentifier
 from core.doc.source_document_crud import crud_sdoc
 from core.doc.source_document_data_crud import crud_sdoc_data
 from core.doc.source_document_data_dto import SourceDocumentDataCreate
@@ -25,13 +23,19 @@ from core.doc.source_document_dto import (
     SourceDocumentRead,
 )
 from core.doc.source_document_orm import SourceDocumentORM
-from core.doc.word_frequency_crud import crud_word_frequency
-from core.doc.word_frequency_dto import WordFrequencyCreate
-from core.doc_processing.image.image_thumbnail_utils import generate_thumbnails
-from core.doc_processing.video.video_utils import (
+from core.doc_processing.sentence_embeddings.sentence_embedding_crud import (
+    crud_sentence_embedding,
+)
+from core.doc_processing.sentence_embeddings.sentence_embedding_dto import (
+    SentenceObjectIdentifier,
+)
+from core.doc_processing.thumbnail.image_thumbnail_utils import generate_thumbnails
+from core.doc_processing.video_utils import (
     extract_audio_stream,
     store_video_thumbnail,
 )
+from core.doc_processing.word_frequencies.word_frequency_crud import crud_word_frequency
+from core.doc_processing.word_frequencies.word_frequency_dto import WordFrequencyCreate
 from core.metadata.project_metadata_crud import crud_project_meta
 from core.metadata.project_metadata_dto import ProjectMetadataCreate
 from core.project.project_crud import crud_project

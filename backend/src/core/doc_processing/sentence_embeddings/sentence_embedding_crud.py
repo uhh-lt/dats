@@ -1,8 +1,12 @@
 from weaviate import WeaviateClient
 from weaviate.classes.query import Filter
 
-from core.doc.sentence_collection import SentenceCollection
-from core.doc.sentence_embedding_dto import SentenceObjectIdentifier
+from core.doc_processing.sentence_embeddings.sentence_collection import (
+    SentenceCollection,
+)
+from core.doc_processing.sentence_embeddings.sentence_embedding_dto import (
+    SentenceObjectIdentifier,
+)
 from repos.vector.embedding_crud_base import EmbeddingCRUDBase
 from repos.vector.weaviate_models import EmbeddingSearchResult, SimSearchResult
 

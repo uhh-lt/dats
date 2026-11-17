@@ -2,8 +2,8 @@ from common.doc_type_enum import DocType
 from core.doc.source_document_data_crud import crud_sdoc_data
 from core.doc.source_document_data_dto import SourceDocumentDataUpdate
 from core.doc_processing.artefacts import CONTENT, LANGUAGE, TOKENS_SENTENCES
-from core.doc_processing.html.html_mapping_utils import HTMLTextMapper
-from core.doc_processing.html.text_step_utils import read_stored_text
+from core.doc_processing.html_mapping_utils import HTMLTextMapper
+from core.doc_processing.text_step_utils import read_stored_text
 from repos.db.sql_repo import SQLRepo
 from repos.ray.dto.spacy import SpacyInput, SpacyPipelineOutput
 from repos.ray.ray_repo import RayRepo

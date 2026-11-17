@@ -3,7 +3,7 @@ from common.job_type_enum import JobType
 from common.languages_enum import Language
 from common.sdoc_status_enum import SDocStatus
 from core.doc_processing.doc_processing_dto import SdocInitJobInput
-from core.doc_processing.text.html_extraction_job import (
+from core.doc_processing.raw_html.html_extraction_job import (
     ExtractHTMLJobInput,
     ExtractHTMLJobOutput,
 )

@@ -4,7 +4,7 @@
 # See: https://docs.scrapy.org/en/latest/topics/item-pipeline.html
 
 
-from core.doc_processing.html.html_cleaning_utils import (
+from core.doc_processing.raw_html.html_cleaning_utils import (
     cleaning_with_readability_pipeline,
 )
 from modules.crawler.crawled_item import CrawledItem

@@ -9,7 +9,7 @@ from core.doc.source_document_data_dto import (
     SourceDocumentDataRead,
     WordLevelTranscription,
 )
-from core.doc_processing.audio.transcription_job import (
+from core.doc_processing.transcript.transcription_job import (
     TranscriptionJobInput,
     TranscriptionJobOutput,
     handle_transcription_job,
@@ -37,7 +37,7 @@ SETTINGS = ProcessingSettings(
 )
 
 # ===========================================================================
-# AUDIO TRANSCRIPTION JOB (core/doc_processing/audio/transcription_job) TESTS
+# AUDIO TRANSCRIPTION JOB (core/doc_processing/transcript/transcription_job) TESTS
 # ===========================================================================
 # The transcription runs as a background job of the document processing pipeline,
 # so these tests call its handler directly. The Whisper model is an external

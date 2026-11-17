@@ -13,7 +13,7 @@ from core.doc.source_document_data_dto import (
 )
 from core.doc.source_document_dto import SourceDocumentRead
 from core.doc_processing.artefacts import AUDIO, RAW_HTML, TRANSCRIPT
-from core.doc_processing.video.video_utils import audio_stream_path
+from core.doc_processing.video_utils import audio_stream_path
 from repos.db.sql_repo import SQLRepo
 from repos.filesystem_repo import FilesystemRepo
 from repos.ray.ray_repo import RayRepo

@@ -1,6 +1,6 @@
 from pydantic import BaseModel, ConfigDict, Field
 
-from core.doc.word_frequency_dto import WordFrequencyBase
+from core.doc_processing.word_frequencies.word_frequency_dto import WordFrequencyBase
 
 
 class WordFrequencyRead(WordFrequencyBase):

@@ -5,8 +5,12 @@ import uuid
 import pytest
 
 from config import conf
-from core.doc.sentence_embedding_crud import crud_sentence_embedding
-from core.doc.sentence_embedding_dto import SentenceObjectIdentifier
+from core.doc_processing.sentence_embeddings.sentence_embedding_crud import (
+    crud_sentence_embedding,
+)
+from core.doc_processing.sentence_embeddings.sentence_embedding_dto import (
+    SentenceObjectIdentifier,
+)
 from core.project.project_orm import ProjectORM
 from modules.perspectives.aspect_embedding_crud import crud_aspect_embedding
 from modules.perspectives.aspect_embedding_dto import AspectObjectIdentifier

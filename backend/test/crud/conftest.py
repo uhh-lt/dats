@@ -18,8 +18,8 @@ from core.code.code_dto import CodeCreate
 from core.doc.source_document_crud import crud_sdoc
 from core.doc.source_document_dto import SourceDocumentCreate
 from core.doc.source_document_orm import SourceDocumentORM
-from core.doc.word_frequency_crud import crud_word_frequency
-from core.doc.word_frequency_dto import WordFrequencyCreate
+from core.doc_processing.word_frequencies.word_frequency_crud import crud_word_frequency
+from core.doc_processing.word_frequencies.word_frequency_dto import WordFrequencyCreate
 from core.memo.memo_crud import crud_memo
 from core.memo.memo_dto import MemoCreateIntern
 from core.memo.memo_enum import AttachedObjectType

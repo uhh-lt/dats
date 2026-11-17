@@ -13,7 +13,7 @@ from core.doc.source_document_dto import SourceDocumentRead
 from core.doc_processing.artefacts import RAW_HTML
 from core.doc_processing.doc_processing_dto import SdocInitJobInput
 from core.doc_processing.entrypoints.follower_utils import start_followers
-from core.doc_processing.html.html_cleaning_utils import clean_html
+from core.doc_processing.raw_html.html_cleaning_utils import clean_html
 from repos.db.sql_repo import SQLRepo
 from repos.docling_repo import DoclingRepo
 from repos.filesystem_repo import FilesystemRepo

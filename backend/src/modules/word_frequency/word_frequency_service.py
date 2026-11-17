@@ -5,7 +5,7 @@ from sqlalchemy.orm import Session
 from common.doc_type_enum import DocType
 from common.singleton_meta import SingletonMeta
 from core.doc.source_document_orm import SourceDocumentORM
-from core.doc.word_frequency_orm import WordFrequencyORM
+from core.doc_processing.word_frequencies.word_frequency_orm import WordFrequencyORM
 from core.metadata.project_metadata_crud import crud_project_meta
 from core.metadata.project_metadata_dto import ProjectMetadataRead
 from modules.word_frequency.word_frequency_columns import WordFrequencyColumns
