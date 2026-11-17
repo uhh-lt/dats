@@ -179,8 +179,7 @@ Add a step:
 
 1. Declare new artefacts with `artefact(name, always=..., uploaded_for=..., codes=..., archive=...)` in a `<name>_artefact.py` file next to the step that produces it, with the archive of its own store (`core/artefacts/<name>/` for the artefacts every document or several features need, the folder of its module for an artefact only one feature reads): `always=True` only if every document needs it whatever features its project enables; an artefact with a store of its own (a table, index or file) needs an `ArtefactArchive`, the others are carried by the generic export of document data, metadata and annotations, and the system code trees a project needs before the artefact is produced go into `codes` (`SystemCode` trees declared next to the artefact, shared ones in `core/code/system_codes.py`). See `systems/artefact_system/README.md`.
 2. Write the step file (`<module>/<name>_job.py`): an input DTO that extends `SdocProcessingJobInput`, an enricher, and the handler registered with `@register_job(job_type="<step name>", input_type, enricher)` and declared with `@pipeline_step(requires, produces, doctypes)` above it (`systems/artefact_system/pipeline_step_decorator.py`), with the imported artefact objects. The step name is text and never changes without a data migration (it is stored in `sourcedocumentstepstatus`); among the ready steps the name breaks ties in the derived order.
-3. Add the step to the step copy of the project doctor (`tools/project_doctor/doctor_stores.py`), which imports no DATS code, and the trees of an artefact that declares `codes` to its `tools/project_doctor/system_codes.yaml`; `test_project_doctor_steps.py` fails otherwise.
-4. Regenerate the API client (`just update-api`) if the step adds an endpoint or a DTO the API uses.
+3. Regenerate the API client (`just update-api`) if the step adds an endpoint or a DTO the API uses.
 
 Rules:
 
@@ -198,7 +197,7 @@ Rules:
 - The status of a step per document is a row of `sourcedocumentstepstatus`, no row means not planned, and only `crud_sdoc_step_status` (the generic reads and writes), `systems/artefact_system/source_document_status_rules.py` and the planning statements of `ArtefactService` (`systems/artefact_system/artefact_statements.py`) touch these rows.
 - The overall status of a document is derived from its step rows (erroneous, else processing, else finished) and the status of the steps some artefacts need from theirs (processing, else failed, else not planned, else ready), both only in `source_document_status_rules.py`; never store them.
 - `export_sdocs.py` and `import_sdocs.py` name no artefact: they iterate over `artefact_registry.archives()`, the export reads an artefact only if its step finished and keeps it only if its archive says it is complete, the import writes it only if its step was imported as finished.
-- A new artefact archive needs its round-trip case in `test_feature_toggle_eximport.py` and the doctor's check of its store or an entry in `UNCHECKED_STORES` (`tools/project_doctor/doctor_stores.py`); both tests fail otherwise.
+- A new artefact archive needs its round-trip case in `test_feature_toggle_eximport.py`.
 - The import rejects document archives without `step_status` (exported before the feature toggles).
 - A step that cannot run because its input step failed is erroneous, never processing: a failed job fails its pending successors, and planning fails a step whose input is erroneous; recomputing the input starts them again.
 - Code that needs the step of an artefact looks it up with `graph.producer(doctype, artefact)` instead of naming the step (`export_sdocs.py`, `import_sdocs.py`).

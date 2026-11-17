@@ -63,9 +63,8 @@ class CRUDCode(SQLCRUDBase[CodeORM, CodeCreate, CodeUpdate]):
                 raise SystemCodeConflictError(
                     project_id=project_id,
                     name=name,
-                    reason="a system code of the name has another parent. An "
-                    "administrator can move it back with the project doctor "
-                    "(system_code_conflict).",
+                    reason="a system code of the name has another parent. Move "
+                    "it back below its declared parent first.",
                 )
             return existing.id
 
