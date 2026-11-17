@@ -1,7 +1,8 @@
 import yake
 
 from common.doc_type_enum import DocType
-from core.doc_processing.artefacts import CONTENT, LANGUAGE
+from core.doc_processing.content.content_artefact import CONTENT
+from core.doc_processing.language.language_artefact import LANGUAGE
 from core.doc_processing.text_step_utils import read_stored_text
 from core.metadata.source_document_metadata_crud import crud_sdoc_meta
 from modules.statistics.keywords_artefact import KEYWORDS

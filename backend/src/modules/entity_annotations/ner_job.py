@@ -5,7 +5,8 @@ from core.annotation.annotation_document_crud import crud_adoc
 from core.annotation.span_annotation_crud import crud_span_anno
 from core.annotation.span_annotation_dto import SpanAnnotationCreateIntern
 from core.code.code_crud import crud_code
-from core.doc_processing.artefacts import CONTENT, LANGUAGE
+from core.doc_processing.content.content_artefact import CONTENT
+from core.doc_processing.language.language_artefact import LANGUAGE
 from core.doc_processing.text_step_utils import read_stored_text
 from core.user.user_crud import SYSTEM_USER_ID
 from modules.entity_annotations.ner_artefact import NER_SPANS

@@ -2,7 +2,8 @@ from common.doc_type_enum import DocType
 from core.doc.sdoc_elastic_crud import crud_sdoc_elastic
 from core.doc.sdoc_elastic_dto import ElasticSearchDocumentCreate
 from core.doc.source_document_data_crud import crud_sdoc_data
-from core.doc_processing.artefacts import CONTENT, ES_INDEX
+from core.doc_processing.content.content_artefact import CONTENT
+from core.doc_processing.es_index.es_index_artefact import ES_INDEX
 from repos.db.sql_repo import SQLRepo
 from repos.elastic.elastic_repo import ElasticSearchRepo
 from systems.artefact_system.artefact_dto import SdocProcessingJobInput

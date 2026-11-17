@@ -12,7 +12,9 @@ from core.doc.source_document_data_dto import (
     SourceDocumentDataUpdate,
 )
 from core.doc.source_document_dto import SourceDocumentRead
-from core.doc_processing.artefacts import AUDIO, RAW_HTML, TRANSCRIPT
+from core.doc_processing.audio.audio_artefact import AUDIO
+from core.doc_processing.raw_html.raw_html_artefact import RAW_HTML
+from core.doc_processing.transcript.transcript_artefact import TRANSCRIPT
 from core.doc_processing.video_utils import audio_stream_path
 from repos.db.sql_repo import SQLRepo
 from repos.filesystem_repo import FilesystemRepo

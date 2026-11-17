@@ -3,7 +3,7 @@ from pathlib import Path
 from common.doc_type_enum import DocType
 from core.doc.source_document_crud import crud_sdoc
 from core.doc.source_document_dto import SourceDocumentRead
-from core.doc_processing.artefacts import AUDIO
+from core.doc_processing.audio.audio_artefact import AUDIO
 from core.doc_processing.video_utils import extract_audio_stream
 from repos.db.sql_repo import SQLRepo
 from repos.filesystem_repo import FilesystemRepo

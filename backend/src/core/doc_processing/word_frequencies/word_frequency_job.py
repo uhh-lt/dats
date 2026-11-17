@@ -1,8 +1,12 @@
 from collections import Counter
 
 from common.doc_type_enum import DocType
-from core.doc_processing.artefacts import CONTENT, LANGUAGE, WORD_FREQUENCIES
+from core.doc_processing.content.content_artefact import CONTENT
+from core.doc_processing.language.language_artefact import LANGUAGE
 from core.doc_processing.text_step_utils import read_stored_text
+from core.doc_processing.word_frequencies.word_frequencies_artefact import (
+    WORD_FREQUENCIES,
+)
 from core.doc_processing.word_frequencies.word_frequency_crud import crud_word_frequency
 from core.doc_processing.word_frequencies.word_frequency_dto import WordFrequencyCreate
 from repos.db.sql_repo import SQLRepo

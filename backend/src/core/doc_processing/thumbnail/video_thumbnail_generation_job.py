@@ -3,7 +3,7 @@ from pathlib import Path
 from common.doc_type_enum import DocType
 from core.doc.source_document_crud import crud_sdoc
 from core.doc.source_document_dto import SourceDocumentRead
-from core.doc_processing.artefacts import THUMBNAIL
+from core.doc_processing.thumbnail.thumbnail_artefact import THUMBNAIL
 from core.doc_processing.video_utils import store_video_thumbnail
 from repos.db.sql_repo import SQLRepo
 from repos.filesystem_repo import FilesystemRepo

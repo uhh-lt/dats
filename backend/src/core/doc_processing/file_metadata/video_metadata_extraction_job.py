@@ -5,7 +5,7 @@ import ffmpeg
 from common.doc_type_enum import DocType
 from core.doc.source_document_crud import crud_sdoc
 from core.doc.source_document_dto import SourceDocumentRead
-from core.doc_processing.artefacts import FILE_METADATA
+from core.doc_processing.file_metadata.file_metadata_artefact import FILE_METADATA
 from core.metadata.source_document_metadata_crud import crud_sdoc_meta
 from repos.db.sql_repo import SQLRepo
 from repos.filesystem_repo import FilesystemRepo

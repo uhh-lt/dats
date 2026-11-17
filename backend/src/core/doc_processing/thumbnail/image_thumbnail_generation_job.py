@@ -5,8 +5,8 @@ from core.doc.source_document_crud import crud_sdoc
 from core.doc.source_document_data_crud import crud_sdoc_data
 from core.doc.source_document_data_dto import SourceDocumentDataUpdate
 from core.doc.source_document_dto import SourceDocumentRead
-from core.doc_processing.artefacts import THUMBNAIL
 from core.doc_processing.thumbnail.image_thumbnail_utils import generate_thumbnails
+from core.doc_processing.thumbnail.thumbnail_artefact import THUMBNAIL
 from repos.db.sql_repo import SQLRepo
 from repos.filesystem_repo import FilesystemRepo
 from systems.artefact_system.artefact_dto import SdocProcessingJobInput

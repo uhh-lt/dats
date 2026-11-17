@@ -5,10 +5,11 @@ from core.doc.source_document_crud import crud_sdoc
 from core.doc.source_document_data_crud import crud_sdoc_data
 from core.doc.source_document_data_dto import SourceDocumentDataUpdate
 from core.doc.source_document_dto import SourceDocumentRead
-from core.doc_processing.artefacts import IMAGE_CAPTION, RAW_HTML
+from core.doc_processing.image_caption.image_caption_artefact import IMAGE_CAPTION
 from core.doc_processing.image_caption.image_captioning_prompt import (
     IMG_CAPTION_USER_PROMPT,
 )
+from core.doc_processing.raw_html.raw_html_artefact import RAW_HTML
 from core.metadata.source_document_metadata_crud import crud_sdoc_meta
 from repos.db.sql_repo import SQLRepo
 from repos.filesystem_repo import FilesystemRepo
