@@ -1,24 +1,34 @@
 import copy
 import re
-from typing import Any
+from typing import Any, NamedTuple
 
 from bs4 import BeautifulSoup, Tag
-from bs4.element import NavigableString
+from bs4.element import Comment, NavigableString
+
+# A page marker is an HTML comment like <!-- page 12 --> (as Mistral OCR writes
+# them) directly in the body: it starts the page with that number.
+PAGE_MARKER_PATTERN = re.compile(r"^\s*page\s+(\d+)\s*$", re.IGNORECASE)
 
 
-def split_html_into_chunks(html_content: str, max_chars: int) -> list[str]:
-    """
-    Split HTML content into chunks at element boundaries.
+class PageChunk(NamedTuple):
+    """One chunk of a document with the pages it covers."""
 
-    Each chunk is valid HTML with properly opened/closed tags.
+    html: str
+    first_page: int
+    last_page: int
 
-    Args:
-        html_content: The HTML content to split.
-        max_chars: Maximum number of characters per chunk.
 
-    Returns:
-        A list of valid HTML chunks.
-    """
+class _HtmlStructure(NamedTuple):
+    elements: list[Any]
+    head_html: str
+    has_html_tag: bool
+    has_body_tag: bool
+
+
+def _parse_html_structure(html_content: str) -> _HtmlStructure:
+    """Parse the HTML into the top-level elements of its body (or of the whole
+    document if it has no body), without whitespace-only text, and what is
+    needed to wrap a chunk of them like the original document."""
     soup = BeautifulSoup(html_content, "html.parser")
 
     # Extract head content if present (to include in each chunk)
@@ -36,6 +46,87 @@ def split_html_into_chunks(html_content: str, max_chars: int) -> list[str]:
     # Filter out whitespace-only NavigableStrings
     elements = [el for el in elements if not (isinstance(el, str) and el.strip() == "")]
 
+    return _HtmlStructure(
+        elements=elements,
+        head_html=head_html,
+        has_html_tag=soup.find("html") is not None,
+        has_body_tag=body is not None,
+    )
+
+
+def split_html_at_page_markers(
+    html_content: str, pages_per_chunk: int
+) -> list[PageChunk] | None:
+    """
+    Split HTML content at its page markers (`<!-- page N -->` comments among
+    the top-level elements of the body), `pages_per_chunk` pages per chunk.
+
+    Content before the first marker belongs to the first page. A chunk covers
+    the page numbers of its first and last marker.
+
+    Args:
+        html_content: The HTML content to split.
+        pages_per_chunk: Number of pages per chunk.
+
+    Returns:
+        The chunks in document order, or None if the HTML has no page markers
+        at the top level.
+    """
+    structure = _parse_html_structure(html_content)
+
+    # group the elements into pages, each starting at its marker
+    pages: list[tuple[int, list[Any]]] = []
+    leading_elements: list[Any] = []
+    for element in structure.elements:
+        if isinstance(element, Comment) and (
+            match := PAGE_MARKER_PATTERN.match(str(element))
+        ):
+            pages.append((int(match.group(1)), [element]))
+        elif pages:
+            pages[-1][1].append(element)
+        else:
+            leading_elements.append(element)
+
+    if not pages:
+        return None
+    pages[0][1][:0] = leading_elements
+
+    chunks: list[PageChunk] = []
+    for i in range(0, len(pages), pages_per_chunk):
+        chunk_pages = pages[i : i + pages_per_chunk]
+        html = _wrap_html_chunk(
+            [element for _, page_elements in chunk_pages for element in page_elements],
+            structure.head_html,
+            structure.has_html_tag,
+            structure.has_body_tag,
+        )
+        chunks.append(
+            PageChunk(
+                html=html,
+                first_page=chunk_pages[0][0],
+                last_page=chunk_pages[-1][0],
+            )
+        )
+    return chunks
+
+
+def split_html_into_chunks(html_content: str, max_chars: int) -> list[str]:
+    """
+    Split HTML content into chunks at element boundaries.
+
+    Each chunk is valid HTML with properly opened/closed tags.
+
+    Args:
+        html_content: The HTML content to split.
+        max_chars: Maximum number of characters per chunk.
+
+    Returns:
+        A list of valid HTML chunks.
+    """
+    elements, head_html, has_html_tag, has_body_tag = _parse_html_structure(
+        html_content
+    )
+
     if not elements:
         # No elements to split
         return [html_content]
@@ -43,10 +134,6 @@ def split_html_into_chunks(html_content: str, max_chars: int) -> list[str]:
     chunks: list[str] = []
     current_elements: list[Any] = []
     current_length = 0
-
-    # Detect document structure for wrapping
-    has_html_tag = soup.find("html") is not None
-    has_body_tag = body is not None
 
     # Note: We do NOT subtract wrapper overhead from max_chars.
     # The wrapper (html, head, body tags) is structural and should not

@@ -42,6 +42,7 @@ _It is highly recommended to review these settings before initiating a large upl
 
 - **Language:** By default, this is set to Auto, meaning DATS will attempt to detect the language of the text. If your entire corpus is in a specific language (e.g., German), explicitly selecting de can improve processing accuracy.
 - **Pages per chunk:** _(Crucial for large texts)_ Large files (like a 300-page book) cannot be processed by AI models all at once. DATS splits them into smaller "Documents" (grouped in a File-Folder). The default is 10 pages per chunk. You can adjust this based on your preferred reading and analysis size.
+  - **Pre-split HTML:** If an HTML file already marks its pages with comments like `<!-- page 12 -->` (as Mistral OCR writes them) directly in its body, DATS splits it at these markers instead, and the chunk names show the marked page numbers. Set Pages per chunk to 1 to keep each marked part (a page, or a chapter if you marked chapters) as its own document.
 - **Extract images:** Toggle whether DATS should extract images embedded within PDFs and HTML pages and process them as separate image documents.
 
 ## 4\. The Processing Pipeline and Upload Jobs

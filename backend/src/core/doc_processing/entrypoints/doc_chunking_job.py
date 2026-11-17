@@ -12,6 +12,8 @@ from core.doc.folder_enum import FolderType
 from core.doc_processing.doc_processing_dto import SdocInitJobInput
 from core.doc_processing.entrypoints.follower_utils import start_followers
 from core.doc_processing.entrypoints.html_chunking_utils import (
+    PageChunk,
+    split_html_at_page_markers,
     split_html_into_chunks,
 )
 from core.doc_processing.entrypoints.txt_chunking_utils import split_text_into_chunks
@@ -273,10 +275,13 @@ def chunk_word(payload: DocChunkingJobInput) -> list[Path]:
 
 def chunk_html(payload: DocChunkingJobInput) -> list[Path]:
     """
-    Chunk an HTML file into smaller files based on character limits.
+    Chunk an HTML file into smaller files.
 
-    The function splits HTML at element boundaries to preserve document structure
-    and ensures each chunk is valid HTML by properly opening/closing tags.
+    If the HTML has page markers (`<!-- page N -->` comments among the top-level
+    elements of its body), it is split at them, `pages_per_chunk` pages per
+    chunk, and the chunks are named after the page numbers of the markers.
+    Otherwise it is split at element boundaries based on character limits.
+    Either way, each chunk is valid HTML with properly opened/closed tags.
 
     Args:
         payload: The job input containing the filepath and chunking settings.
@@ -285,8 +290,6 @@ def chunk_html(payload: DocChunkingJobInput) -> list[Path]:
         A list of paths to the chunked files. If no chunking is needed,
         returns a list containing only the original file path.
     """
-    characters_per_chunk = CHARACTERS_PER_PAGE * payload.settings.pages_per_chunk
-
     # Read the HTML content
     try:
         html_content = payload.filepath.read_text(encoding="utf-8")
@@ -295,43 +298,35 @@ def chunk_html(payload: DocChunkingJobInput) -> list[Path]:
         logger.error(msg)
         raise RuntimeError(msg)
 
-    # Check if chunking is needed
-    if len(html_content) <= characters_per_chunk:
-        logger.info(
-            f"HTML file {payload.filepath.name} has {len(html_content)} characters; "
-            f"no split needed (limit: {characters_per_chunk})."
-        )
-        return [payload.filepath]
-
-    # Split HTML into chunks
-    html_chunks = split_html_into_chunks(html_content, characters_per_chunk)
+    page_chunks = split_html_at_page_markers(
+        html_content, payload.settings.pages_per_chunk
+    )
+    if page_chunks is None:
+        page_chunks = _split_html_by_characters(payload, html_content)
 
     # If splitting resulted in only one chunk, no need to save
-    if len(html_chunks) == 1:
+    if len(page_chunks) <= 1:
         logger.info(
-            f"HTML file {payload.filepath.name} could not be split further; "
-            "returning original file."
+            f"HTML file {payload.filepath.name} needs no split; returning original file."
         )
         return [payload.filepath]
 
-    # Calculate total "pages" and digits needed for zero-padding
-    total_chunks = len(html_chunks)
-    total_pages = total_chunks * payload.settings.pages_per_chunk
-    total_digits = len(str(total_pages))
+    # Calculate the digits needed for zero-padding
+    total_digits = len(str(max(chunk.last_page for chunk in page_chunks)))
 
     # Save chunks to disk
     out_dir = payload.filepath.parent
     logger.info(
-        f"Splitting HTML file {payload.filepath.name} into {total_chunks} chunks of "
-        f"up to {characters_per_chunk} characters each. Output will be saved in {out_dir}."
+        f"Splitting HTML file {payload.filepath.name} into {len(page_chunks)} chunks. "
+        f"Output will be saved in {out_dir}."
     )
 
     chunks: list[Path] = []
-    for i, chunk_html in enumerate(html_chunks):
-        # Calculate page range for this chunk
-        start_page = i * payload.settings.pages_per_chunk + 1
-        end_page = (i + 1) * payload.settings.pages_per_chunk
-        page_range_str = f"{start_page:0{total_digits}}-{end_page:0{total_digits}}"
+    for page_chunk in page_chunks:
+        page_range_str = (
+            f"{page_chunk.first_page:0{total_digits}}"
+            f"-{page_chunk.last_page:0{total_digits}}"
+        )
         output_fn = out_dir / f"{payload.filepath.stem}_pages_{page_range_str}.html"
 
         try:
@@ -339,7 +334,7 @@ def chunk_html(payload: DocChunkingJobInput) -> list[Path]:
             _prepare_chunk_output_path(payload.project_id, output_fn)
 
             # Save the chunk to disk
-            output_fn.write_text(chunk_html, encoding="utf-8")
+            output_fn.write_text(page_chunk.html, encoding="utf-8")
             chunks.append(output_fn)
             logger.debug(f"Stored chunk '{output_fn}'")
         except Exception as e:
@@ -347,3 +342,34 @@ def chunk_html(payload: DocChunkingJobInput) -> list[Path]:
             logger.error(msg)
 
     return chunks
+
+
+def _split_html_by_characters(
+    payload: DocChunkingJobInput, html_content: str
+) -> list[PageChunk]:
+    """
+    Split HTML content without page markers at element boundaries, up to
+    `CHARACTERS_PER_PAGE * pages_per_chunk` characters per chunk, each chunk
+    counting as `pages_per_chunk` pages.
+    """
+    characters_per_chunk = CHARACTERS_PER_PAGE * payload.settings.pages_per_chunk
+
+    # Check if chunking is needed
+    if len(html_content) <= characters_per_chunk:
+        logger.info(
+            f"HTML file {payload.filepath.name} has {len(html_content)} characters; "
+            f"no split needed (limit: {characters_per_chunk})."
+        )
+        return []
+
+    pages_per_chunk = payload.settings.pages_per_chunk
+    return [
+        PageChunk(
+            html=chunk_html,
+            first_page=i * pages_per_chunk + 1,
+            last_page=(i + 1) * pages_per_chunk,
+        )
+        for i, chunk_html in enumerate(
+            split_html_into_chunks(html_content, characters_per_chunk)
+        )
+    ]

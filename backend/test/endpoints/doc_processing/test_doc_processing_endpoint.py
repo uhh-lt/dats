@@ -5,11 +5,13 @@ from fastapi.testclient import TestClient
 
 from common.doc_type_enum import DocType
 from common.languages_enum import Language
+from config import conf
 from core.doc.source_document_crud import crud_sdoc
 from core.doc_processing.doc_processing_dto import (
     SdocHealthColumn,
     SdocHealthResult,
     SdocHealthSort,
+    SdocInitJobInput,
 )
 from feature_test_utils import FeatureProject
 from job_test_utils import HeldJobs, unreachable_redis
@@ -36,6 +38,34 @@ SETTINGS = ProcessingSettings(
     pages_per_chunk=10,
     language=Language.auto,
     model="default",
+)
+
+# Front matter, then five pages with the markers <!-- page 1 --> to <!-- page 5 -->.
+MARKED_HTML = (
+    "<html><body><h1>Front matter</h1>"
+    "<!-- page 1 --><p>Page one</p>"
+    "<!-- page 2 --><p>Page two</p>"
+    "<!-- Page 3 --><p>Page three</p>"
+    "<!--page 4--><p>Page four</p>"
+    "<!-- page 5 --><p>Page five</p>"
+    "</body></html>"
+)
+
+# Three pages with the markers <!-- page 9 --> to <!-- page 11 -->.
+LATE_MARKED_HTML = (
+    "<html><body>"
+    "<!-- page 9 --><p>Page nine</p>"
+    "<!-- page 10 --><p>Page ten</p>"
+    "<!-- page 11 --><p>Page eleven</p>"
+    "</body></html>"
+)
+
+# The markers of two pages inside a div, not among the top-level elements.
+NESTED_MARKED_HTML = (
+    "<html><body><div>"
+    "<!-- page 1 --><p>Page one</p>"
+    "<!-- page 2 --><p>Page two</p>"
+    "</div></body></html>"
 )
 
 # ===========================================================================
@@ -103,6 +133,158 @@ def test_upload_with_unsupported_file_stores_nothing(client: TestClient, test_pr
     )
     assert response.status_code == 200, response.text
     assert response.json() == 1
+
+
+# --- HTML chunking ----------------------------------------------------------
+# An uploaded HTML file is split into chunks by the doc_chunking job: at its
+# page markers (`<!-- page N -->` among the top-level elements of the body),
+# pages_per_chunk pages per chunk, or by characters if it has none. Each chunk
+# becomes a document of one folder (an sdoc_init job with the chunk's file).
+
+
+def _upload_html_and_chunk(
+    client: TestClient,
+    held_jobs: HeldJobs,
+    project_id: int,
+    filename: str,
+    html: str,
+    pages_per_chunk: int,
+) -> list[SdocInitJobInput]:
+    """Upload the HTML file, run its doc_chunking job and return the inputs of
+    the sdoc_init jobs it started, in the order of the chunks."""
+    settings = SETTINGS.model_copy(update={"pages_per_chunk": pages_per_chunk})
+    response = client.post(
+        f"/docprocessing/project/{project_id}",
+        data={"settings": settings.model_dump_json()},
+        files=[("uploaded_files", (filename, html.encode("utf-8"), "text/html"))],
+    )
+    assert response.status_code == 200, response.text
+    assert response.json() == 1
+
+    held_jobs.run("doc_chunking")
+    inputs = [job_input for _, job_input in held_jobs.jobs("sdoc_init")]
+    assert all(isinstance(job_input, SdocInitJobInput) for job_input in inputs)
+    return sorted(
+        [job_input for job_input in inputs if isinstance(job_input, SdocInitJobInput)],
+        key=lambda job_input: job_input.filepath.name,
+    )
+
+
+@pytest.mark.parametrize(
+    "pages_per_chunk,expected_filenames",
+    [
+        # Two pages per chunk -> the fifth page is a chunk of its own.
+        pytest.param(
+            2,
+            ["book_pages_1-2.html", "book_pages_3-4.html", "book_pages_5-5.html"],
+            id="two-pages-per-chunk",
+        ),
+        # One page per chunk -> one chunk per marker.
+        pytest.param(
+            1,
+            [f"book_pages_{n}-{n}.html" for n in range(1, 6)],
+            id="one-page-per-chunk",
+        ),
+        # Four pages per chunk -> one full and one partial chunk.
+        pytest.param(
+            4,
+            ["book_pages_1-4.html", "book_pages_5-5.html"],
+            id="four-pages-per-chunk",
+        ),
+    ],
+)
+def test_upload_of_html_with_page_markers_chunks_it_at_the_markers(
+    client: TestClient,
+    test_project,
+    held_jobs: HeldJobs,
+    pages_per_chunk: int,
+    expected_filenames: list[str],
+):
+    """An HTML file with five page markers is split into chunks of
+    pages_per_chunk pages, named after their page range, all in one folder."""
+    inputs = _upload_html_and_chunk(
+        client, held_jobs, test_project.id, "book.html", MARKED_HTML, pages_per_chunk
+    )
+
+    assert [job_input.filepath.name for job_input in inputs] == expected_filenames
+    folder_ids = {job_input.folder_id for job_input in inputs}
+    assert len(folder_ids) == 1 and None not in folder_ids
+
+
+def test_upload_of_html_with_page_markers_keeps_the_content_of_each_page(
+    client: TestClient, test_project, held_jobs: HeldJobs
+):
+    """Each chunk holds the content of its pages; the content before the first
+    marker belongs to the first page."""
+    inputs = _upload_html_and_chunk(
+        client, held_jobs, test_project.id, "book.html", MARKED_HTML, 2
+    )
+
+    contents = [job_input.filepath.read_text(encoding="utf-8") for job_input in inputs]
+    expected = [
+        ["Front matter", "Page one", "Page two"],
+        ["Page three", "Page four"],
+        ["Page five"],
+    ]
+    all_texts = {text for texts in expected for text in texts}
+    for content, texts in zip(contents, expected, strict=True):
+        assert {text for text in all_texts if text in content} == set(texts)
+
+
+def test_upload_of_html_with_page_markers_names_the_chunks_by_the_marker_numbers(
+    client: TestClient, test_project, held_jobs: HeldJobs
+):
+    """The page numbers in the chunk names are those of the markers (pages 9 to
+    11), zero-padded to the digits of the highest page."""
+    inputs = _upload_html_and_chunk(
+        client, held_jobs, test_project.id, "journal.html", LATE_MARKED_HTML, 2
+    )
+
+    assert [job_input.filepath.name for job_input in inputs] == [
+        "journal_pages_09-10.html",
+        "journal_pages_11-11.html",
+    ]
+
+
+@pytest.mark.parametrize(
+    "html",
+    [
+        # Five pages fit into one chunk of ten pages.
+        pytest.param(MARKED_HTML, id="fewer-pages-than-pages-per-chunk"),
+        # Markers inside a div are no page markers, and the file is short.
+        pytest.param(NESTED_MARKED_HTML, id="nested-markers"),
+    ],
+)
+def test_upload_of_short_html_keeps_the_file_whole(
+    client: TestClient, test_project, held_jobs: HeldJobs, html: str
+):
+    """An HTML file that needs no split becomes one document of its own file,
+    without a chunk folder."""
+    inputs = _upload_html_and_chunk(
+        client, held_jobs, test_project.id, "book.html", html, 10
+    )
+
+    assert [(i.filepath.name, i.folder_id) for i in inputs] == [("book.html", None)]
+
+
+def test_upload_of_html_without_page_markers_chunks_it_by_characters(
+    client: TestClient, test_project, held_jobs: HeldJobs
+):
+    """Without page markers, an HTML file longer than characters_per_page *
+    pages_per_chunk is split at element boundaries: three paragraphs that fit
+    one page each but not two together become three one-page chunks."""
+    paragraph = f"<p>{'x' * (conf.chunking.characters_per_page - 100)}</p>"
+    html = f"<html><body>{paragraph * 3}</body></html>"
+
+    inputs = _upload_html_and_chunk(
+        client, held_jobs, test_project.id, "long.html", html, 1
+    )
+
+    assert [job_input.filepath.name for job_input in inputs] == [
+        "long_pages_1-1.html",
+        "long_pages_2-2.html",
+        "long_pages_3-3.html",
+    ]
 
 
 # ===========================================================================
