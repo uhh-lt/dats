@@ -291,24 +291,16 @@ class Checker:
     # POSTGRES
     # ==========================================================================
     def _read_sdocs(self, *, project_id: int) -> list[SdocRow]:
-        step_columns = (
-            [] if self.stores.has_step_status_table else self.stores.step_columns
-        )
-        columns = ", ".join(["id", "filename", "doctype", "project_id", *step_columns])
         rows = [
             dict(row)
             for row in self.conn.execute(
                 text(
-                    f"SELECT {columns} FROM sourcedocument "
+                    "SELECT id, filename, doctype, project_id FROM sourcedocument "
                     "WHERE project_id = :pid ORDER BY id"
                 ),
                 {"pid": project_id},
             ).mappings()
         ]
-        if not self.stores.has_step_status_table:
-            return [
-                SdocRow(row, {step: row[step] for step in step_columns}) for row in rows
-            ]
 
         # one row per planned step; the steps without a row are not planned
         planned: dict[int, dict[str, int]] = {}
@@ -348,7 +340,7 @@ class Checker:
             f"  Not checked, as the step is not planned: {steps}. The step of a "
             "feature is not planned if the project does not enable the feature: "
             "enable or complete it in the project settings to compute the data. "
-            "A core step (e.g. text_es_index) is not planned if it was never "
+            "A core step (e.g. es_index) is not planned if it was never "
             "computed for the document (e.g. an imported document): recompute it "
             "in the document health view.",
             file=sys.stderr,

@@ -27,7 +27,7 @@ from doctor_report import (
     SetParents,
     SetValues,
 )
-from doctor_stores import CSV_NA_VALUES, Stores
+from doctor_stores import CSV_NA_VALUES, FEATURE_METADATA, Stores
 from sqlalchemy import Connection, text
 
 # how many ids a message lists before it abbreviates
@@ -447,8 +447,15 @@ class PortabilityChecker:
         return issues
 
     def _check_metadata_keys(self, project_id: int) -> list[Issue]:
-        # the import creates the configured metadata first; an exported key with
-        # the same doctype but another type violates the unique constraint
+        # the import creates the configured metadata and the metadata of the
+        # archive's features first; an exported key with the same doctype but
+        # another type violates the unique constraint
+        enabled = self._rows(
+            "SELECT enabled_features FROM project WHERE id = :pid", pid=project_id
+        )[0].enabled_features
+        created = dict(self.stores.config_metadata)
+        for feature in enabled:
+            created |= FEATURE_METADATA.get(feature, {})
         rows = self._rows(
             "SELECT id, key, doctype, metatype FROM projectmetadata "
             "WHERE project_id = :pid",
@@ -457,7 +464,7 @@ class PortabilityChecker:
         keys = {(r.key, r.doctype) for r in rows}
         renames: dict[int, str] = {}
         for r in rows:
-            configured = self.stores.config_metadata.get((r.key, r.doctype))
+            configured = created.get((r.key, r.doctype))
             if configured is None or configured == r.metatype:
                 continue
             new_key = f"{r.key} (custom)"

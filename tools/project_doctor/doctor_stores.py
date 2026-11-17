@@ -8,7 +8,7 @@ an incompatible DATS version fails early instead of half-way.
 """
 
 import os
-from dataclasses import dataclass, field
+from dataclasses import dataclass
 from pathlib import Path
 from typing import Any, Literal
 
@@ -28,62 +28,61 @@ STATUS_FINISHED = 1
 # (artefact_registry.graph().steps(doctype) of the backend), and the steps that
 # write the embeddings of a Weaviate collection, the Elasticsearch index and the
 # thumbnail of an image. A copy: the doctor imports no
-# DATS code, so it runs on the released backend image.
-# backend/test/unit/test_project_doctor_steps.py fails when it differs from the
-# backend.
+# DATS code, so it runs on the released backend image; update it by hand when
+# the pipeline changes.
 #
-# Since the feature toggles, the status of a step is a row of
-# sourcedocumentstepstatus (STEP_STATUS_TABLE), and a step without a row is not
-# planned for the document (its feature is not enabled, or a core step was never
-# computed for it, e.g. after an import). Before, every step was a
-# status column of sourcedocument and only the steps of the doctype counted.
+# The status of a step is a row of sourcedocumentstepstatus (STEP_STATUS_TABLE),
+# and a step without a row is not planned for the document (its feature is not
+# enabled, or a core step was never computed for it, e.g. after an import).
 _TEXT_STEPS = [
     "text_extraction",
-    "text_document_embedding",
-    "text_es_index",
-    "text_language_detection",
-    "text_keywords",
-    "text_ner",
-    "text_spacy",
+    "document_embedding",
+    "es_index",
+    "language_detection",
+    "keywords",
+    "named_entity_recognition",
+    "tokens_sentences",
     "coreference_resolution",
+    "html_mapping",
     "quotation_detection",
-    "text_html_mapping",
-    "text_sentence_embedding",
-    "text_word_frequency",
+    "sentence_embedding",
+    "word_frequency",
 ]
 PROCESSING_STEPS: dict[str, list[str]] = {
-    "text": ["extract_html", *_TEXT_STEPS],
+    "text": ["html_extraction", *_TEXT_STEPS],
     "image": [
         "image_caption",
         "image_embedding",
         "image_metadata_extraction",
-        "image_object_detection",
         "image_thumbnail",
+        "object_detection",
         *_TEXT_STEPS,
     ],
-    "audio": ["audio_metadata", "audio_thumbnail", "audio_transcription", *_TEXT_STEPS],
+    "audio": [
+        "audio_metadata_extraction",
+        "audio_thumbnail",
+        "transcription",
+        *_TEXT_STEPS,
+    ],
     "video": [
         "video_audio_extraction",
-        "video_metadata",
+        "video_metadata_extraction",
         "video_thumbnail",
-        "audio_transcription",
+        "transcription",
         *_TEXT_STEPS,
     ],
 }
 EMBEDDING_STEPS = {
-    "Document": "text_document_embedding",
-    "Sentence": "text_sentence_embedding",
+    "Document": "document_embedding",
+    "Sentence": "sentence_embedding",
     "Image": "image_embedding",
 }
-ES_INDEX_STEP = "text_es_index"
+ES_INDEX_STEP = "es_index"
 IMAGE_THUMBNAIL_STEP = "image_thumbnail"
 # The artefacts with their own store in the project export (the artefacts with
 # an archive, backend/src/systems/artefact_system/artefact_registry.py) that the doctor does
 # not check: the word frequencies and the audio stream extracted from a video.
-# test_project_doctor_steps.py fails when an artefact archive is neither checked
-# nor listed here.
 UNCHECKED_STORES = ["word_frequencies", "audio"]
-ALL_STEPS = sorted({step for steps in PROCESSING_STEPS.values() for step in steps})
 STEP_STATUS_TABLE = "sourcedocumentstepstatus"
 
 # The Weaviate collections (the `name` of the *_collection.py classes) and
@@ -97,6 +96,15 @@ ANNOTATION_TABLES: dict[AnnotationKind, str] = {
     "span": "spanannotation",
     "sentence": "sentenceannotation",
     "bbox": "bboxannotation",
+}
+
+# The metadata keys a feature creates in its project when it is set up (enable,
+# project creation, import), besides the configured project metadata: the
+# keywords of Keyword Statistics (modules/statistics/keywords_artefact.py)
+FEATURE_METADATA: dict[str, dict[tuple[str, str], str]] = {
+    "keyword_statistics": {
+        ("keywords", doctype): "LIST" for doctype in ("text", "image", "audio", "video")
+    },
 }
 
 # The text columns heal may set (SetValues), as the report can be edited by hand
@@ -144,7 +152,7 @@ _SDOC_SUFFIX_MAX_LENGTH = 30
 
 # The tables and columns the doctor reads or writes
 REQUIRED_COLUMNS: dict[str, list[str]] = {
-    "project": ["id"],
+    "project": ["id", "enabled_features"],
     "user": ["id"],
     "projectuserlinktable": ["project_id", "user_id"],
     "sourcedocument": [
@@ -222,6 +230,7 @@ REQUIRED_COLUMNS: dict[str, list[str]] = {
     "whiteboard": ["id", "title", "content", "project_id"],
     "timelineanalysis": ["id", "name", "concepts", "project_id"],
     "conceptovertimeanalysis": ["id", "name", "project_id"],
+    "sourcedocumentstepstatus": ["sdoc_id", "step", "status"],
 }
 
 
@@ -239,11 +248,6 @@ class Stores:
     collection_postfix: str
     system_code_parents: dict[str, str | None]
     config_metadata: dict[tuple[str, str], str]
-    # where this database keeps the step statuses (set by verify_schema): the
-    # status table, or the step columns of sourcedocument (versions before the
-    # feature toggles)
-    has_step_status_table: bool = False
-    step_columns: list[str] = field(default_factory=list)
 
     # ==========================================================================
     # NAMING
@@ -312,9 +316,7 @@ class Stores:
             )
 
     def verify_schema(self) -> None:
-        """Raises if a table or column the doctor uses does not exist. Remembers
-        where the step statuses are: the status table, or the step columns of
-        older versions."""
+        """Raises if a table or column the doctor uses does not exist."""
         with self.db.connect() as conn:
             rows = conn.execute(
                 text(
@@ -329,12 +331,6 @@ class Stores:
             for column in columns
             if (table, column) not in existing
         ]
-        self.has_step_status_table = (STEP_STATUS_TABLE, "status") in existing
-        self.step_columns = [
-            step for step in ALL_STEPS if ("sourcedocument", step) in existing
-        ]
-        if not self.has_step_status_table and not self.step_columns:
-            missing.append(f"{STEP_STATUS_TABLE}.status")
         if missing:
             raise UnsupportedSchemaError(
                 "This DATS version is not supported by the doctor: the database "

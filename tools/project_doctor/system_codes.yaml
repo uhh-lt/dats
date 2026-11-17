@@ -1,8 +1,8 @@
 # The system code trees a DATS project can have, nested via `children`: the copy
 # of the project doctor, which imports no DATS code. The backend declares them on
 # its artefacts (`codes=`, e.g. backend/src/modules/entity_annotations/ner_artefact.py)
-# and in backend/src/core/code/system_codes.py;
-# backend/test/unit/test_project_doctor_steps.py fails when the two differ.
+# and in backend/src/core/code/system_codes.py; update this copy by hand when
+# they change.
 system_codes:
   SYSTEM_CODE:
     desc: "A system code"
@@ -62,7 +62,9 @@ system_codes:
           MISC:
             desc: "Miscellaneous entities, e.g. events, nationalities, products or works of art"
             enabled: False
-      # image codes from COCO 2017 (bbox)
+      # image codes from COCO 2017 (bbox); people are HUMAN, a top code
+      HUMAN:
+        desc: Object Category from COCO 2017
       ACCESSORY:
         desc: Super Object Category from COCO 2017
         children:
