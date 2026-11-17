@@ -1,12 +1,24 @@
 import { generalQueries } from "@api/general/generalQueries";
 import { ProcessingSettingsButton } from "@components/ProcessingSettingsButton";
+import { ProcessingSettings } from "@models/ProcessingSettings";
+import { SdocHealthColumn } from "@models/SdocHealthColumn";
 import { Button, Menu, MenuItem, Stack, Tooltip, Typography } from "@mui/material";
 import { useQuery } from "@tanstack/react-query";
-import { useState } from "react";
-import { HealthTableToolbarProps } from "./HealthTableToolbarProps";
+import { Dispatch, SetStateAction, useState } from "react";
 
-export function HealthTableToolbarLeft({
-  selectedRows,
+interface HealthSelectionActionsProps {
+  /** The steps planned for at least one selected document; the recompute menu offers only these. */
+  plannedSteps: SdocHealthColumn[];
+  settings: ProcessingSettings;
+  onChangeSettings: Dispatch<SetStateAction<ProcessingSettings>>;
+  isRetryPending: boolean;
+  isRecomputePending: boolean;
+  onRetry: () => void;
+  onRecompute: (step: string) => void;
+}
+
+/** The actions on the selected documents, shown in the selection banner of the health table next to the selected count. */
+export function HealthSelectionActions({
   plannedSteps,
   settings,
   onChangeSettings,
@@ -14,13 +26,9 @@ export function HealthTableToolbarLeft({
   isRecomputePending,
   onRetry,
   onRecompute,
-}: HealthTableToolbarProps) {
+}: HealthSelectionActionsProps) {
   const availableLLMs = useQuery(generalQueries.availableModels());
   const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
-
-  if (selectedRows.length === 0) {
-    return null;
-  }
 
   return (
     <Stack direction="row" spacing={1} alignItems="center">

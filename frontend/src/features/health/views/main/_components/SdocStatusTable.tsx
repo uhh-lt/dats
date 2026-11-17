@@ -9,7 +9,7 @@ import DoNotDisturbOnOutlinedIcon from "@mui/icons-material/DoNotDisturbOnOutlin
 import ErrorOutlineIcon from "@mui/icons-material/ErrorOutline";
 import HourglassTopOutlinedIcon from "@mui/icons-material/HourglassTopOutlined";
 import TaskAltIcon from "@mui/icons-material/TaskAlt";
-import { Tooltip } from "@mui/material";
+import { Divider, Stack, Tooltip } from "@mui/material";
 import { useReduxConnector } from "@store/storeHooks";
 import { InfiniteData } from "@tanstack/react-query";
 import { MRT_ColumnDef } from "material-react-table";
@@ -17,11 +17,16 @@ import { ReactElement, useCallback, useMemo } from "react";
 import { HealthHooks } from "../../../api/healthHooks";
 import { HealthActions } from "../../../store/healthSlice";
 import { HealthRouteAPI } from "../_hooks/healthRouteAPI";
-import { HealthTableToolbarLeft } from "./HealthTableToolbarLeft";
+import { HealthSelectionActions } from "./HealthSelectionActions";
 import { HealthTableToolbarProps } from "./HealthTableToolbarProps";
 import { HealthTableToolbarRight } from "./HealthTableToolbarRight";
 
 const flatMapData = (page: SdocHealthResult) => page.data;
+
+// the actions on the selected documents live in the selection banner, so the top left toolbar is empty
+const renderNoTopLeftToolbar = () => null;
+
+const ERROR_MESSAGE = "Error loading data";
 
 const sdocStatus2Icon: Record<SDocStatus, ReactElement> = {
   [SDocStatus["_-100"]]: <ErrorOutlineIcon sx={{ color: "error.main" }} />,
@@ -196,20 +201,33 @@ export function SdocStatusTable({
       onSortingChange={setSortingModel}
       columnVisibilityModel={columnVisibilityModel}
       onColumnVisibilityChange={setColumnVisibilityModel}
-      renderTopLeftToolbar={HealthTableToolbarLeft}
+      renderTopLeftToolbar={renderNoTopLeftToolbar}
       renderTopRightToolbar={HealthTableToolbarRight}
       toolbarExtraProps={{
-        selectedRows,
-        plannedSteps,
-        settings,
-        onChangeSettings: setSettings,
-        isRetryPending,
-        isRecomputePending,
-        onRetry: handleRetry,
-        onRecompute: handleRecompute,
         onRefetch,
         isRefreshing: isFetching || isLoading,
       }}
+      errorMessage={ERROR_MESSAGE}
+      // the selection banner shows the selected count with the actions on the selection, so nothing covers them
+      renderToolbarAlertBannerContent={({ selectedAlert }) =>
+        isError ? (
+          <Stack sx={{ p: "0.5rem 1rem" }}>{ERROR_MESSAGE}</Stack>
+        ) : (
+          <Stack direction="row" alignItems="center" spacing={2} sx={{ px: "1rem", py: "0.25rem" }}>
+            {selectedAlert}
+            <Divider orientation="vertical" flexItem />
+            <HealthSelectionActions
+              plannedSteps={plannedSteps}
+              settings={settings}
+              onChangeSettings={setSettings}
+              isRetryPending={isRetryPending}
+              isRecomputePending={isRecomputePending}
+              onRetry={handleRetry}
+              onRecompute={handleRecompute}
+            />
+          </Stack>
+        )
+      }
       enableColumnResizing
       columnResizeMode="onEnd"
       // enableHiding={false}

@@ -33,7 +33,7 @@ Below the tabs is the main status table.
 
 ## 3\. Fixing Errors: Retry vs. Recompute
 
-If you notice that a document has failed a preprocessing step, you can easily select it using the checkbox on the left side of the row. Once one or more documents are selected, two action buttons will appear at the top of the table: **Retry** and **Recompute**.
+If you notice that a document has failed a preprocessing step, you can easily select it using the checkbox on the left side of the row. Once one or more documents are selected, a bar above the table shows how many are selected, a **Clear selection** button and two actions: **Retry** and **Recompute**.
 
 It is important to understand the difference between these two functions:
 
