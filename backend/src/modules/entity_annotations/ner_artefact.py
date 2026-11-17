@@ -43,4 +43,4 @@ NAMED_ENTITY_CODES = SystemCode(
     ),
 )
 
-NER_SPANS = artefact("ner_spans", codes=(NAMED_ENTITY_CODES,))
+NER_SPANS = artefact("ner_spans", title="Named entities", codes=(NAMED_ENTITY_CODES,))

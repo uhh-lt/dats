@@ -64,7 +64,7 @@ export function HealthTableToolbarLeft({
             onClose={() => setAnchorEl(null)}
             anchorOrigin={{ vertical: "bottom", horizontal: "left" }}
           >
-            {plannedSteps.map((step) => (
+            {plannedSteps.map(({ step, title }) => (
               <MenuItem
                 key={step}
                 onClick={() => {
@@ -72,7 +72,7 @@ export function HealthTableToolbarLeft({
                   setAnchorEl(null);
                 }}
               >
-                {step}
+                {title}
               </MenuItem>
             ))}
           </Menu>

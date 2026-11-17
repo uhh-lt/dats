@@ -3,4 +3,4 @@ the document's data row."""
 
 from systems.artefact_system.artefact_registry import artefact
 
-CONTENT = artefact("content", always=True)
+CONTENT = artefact("content", title="Text content", always=True)

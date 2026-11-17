@@ -617,9 +617,9 @@ def toggled_text_steps() -> list[str]:
     """The steps of the text document of `feature_toggle_eximport_projects`."""
     return [
         *minimal_text_steps(),
-        "text_word_frequency",
-        "text_sentence_embedding",
-        "text_document_embedding",
+        "word_frequency",
+        "sentence_embedding",
+        "document_embedding",
     ]
 
 
@@ -641,8 +641,8 @@ def feature_toggle_eximport_projects(
       that hold the data of every artefact archive (`artefact_registry.archives()`):
       - "text.txt" (`text`), a text document with the 30 sentences "Sentence
         0." to "Sentence 29.", its raw file, and finished `toggled_text_steps()`
-        (the core steps, `text_es_index` among them, `text_word_frequency`,
-        `text_sentence_embedding` and `text_document_embedding`); every other
+        (the core steps, `es_index` among them, `word_frequency`,
+        `sentence_embedding` and `document_embedding`); every other
         step is not planned. Each sentence has its own embedding in Weaviate
         (`sentence_embeddings`, by sentence id): sentence i has 1.0 at position
         i of 30. Its document embedding is [0.1, 0.2, 0.3], its word
@@ -880,16 +880,16 @@ def indexing_eximport_projects(
     db_session: Session, feature_toggle_eximport_projects: FeatureToggleEximportProjects
 ) -> FeatureToggleEximportProjects:
     """The projects of `feature_toggle_eximport_projects`, except that the
-    core step text_es_index of "text.txt" is processing (the document is
+    core step es_index of "text.txt" is processing (the document is
     exported while it is being indexed).
 
     Non-obvious derived behavior:
 
     - The import does not plan a step that was processing at the export: the
-      imported "text.txt" has no row of text_es_index and no index entry.
+      imported "text.txt" has no row of es_index and no index entry.
     """
     projects = feature_toggle_eximport_projects
-    set_step_status(db_session, projects["text"].id, {"text_es_index": 0})
+    set_step_status(db_session, projects["text"].id, {"es_index": 0})
     db_session.commit()
     return projects
 
@@ -899,17 +899,17 @@ def mid_pipeline_eximport_projects(
     db_session: Session, feature_toggle_eximport_projects: FeatureToggleEximportProjects
 ) -> FeatureToggleEximportProjects:
     """The projects of `feature_toggle_eximport_projects`, except that the
-    core steps text_spacy and text_es_index of "text.txt" are processing (the
+    core steps tokens_sentences and es_index of "text.txt" are processing (the
     document is exported in the middle of its pipeline).
 
     Non-obvious derived behavior:
 
-    - The imported "text.txt" has no row of text_spacy and text_es_index; its
+    - The imported "text.txt" has no row of tokens_sentences and es_index; its
       other core steps are imported as finished.
     """
     projects = feature_toggle_eximport_projects
     set_step_status(
-        db_session, projects["text"].id, {"text_spacy": 0, "text_es_index": 0}
+        db_session, projects["text"].id, {"tokens_sentences": 0, "es_index": 0}
     )
     db_session.commit()
     return projects

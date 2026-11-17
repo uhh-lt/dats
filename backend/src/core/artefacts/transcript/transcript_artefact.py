@@ -4,4 +4,4 @@ row."""
 
 from systems.artefact_system.artefact_registry import artefact
 
-TRANSCRIPT = artefact("transcript", always=True)
+TRANSCRIPT = artefact("transcript", title="Transcript", always=True)

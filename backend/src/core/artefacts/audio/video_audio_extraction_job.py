@@ -54,7 +54,7 @@ def enrich_for_recompute(
     output_type=VideoAudioExtractionJobOutput,
     enricher=enrich_for_recompute,
 )
-def create_and_store_audio_stream_file(
+def handle_video_audio_extraction_job(
     payload: VideoAudioExtractionJobInput, job: Job
 ) -> VideoAudioExtractionJobOutput:
     return VideoAudioExtractionJobOutput(

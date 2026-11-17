@@ -3,4 +3,6 @@ carried by the columns of the document's data row."""
 
 from systems.artefact_system.artefact_registry import artefact
 
-TOKENS_SENTENCES = artefact("tokens_sentences", always=True)
+TOKENS_SENTENCES = artefact(
+    "tokens_sentences", title="Tokens and sentences", always=True
+)

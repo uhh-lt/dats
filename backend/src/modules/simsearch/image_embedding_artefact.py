@@ -48,4 +48,6 @@ class _ImageEmbeddingArchive(ArtefactArchive):
         )
 
 
-IMAGE_EMBEDDINGS = artefact("image_embeddings", archive=_ImageEmbeddingArchive())
+IMAGE_EMBEDDINGS = artefact(
+    "image_embeddings", title="Image embeddings", archive=_ImageEmbeddingArchive()
+)

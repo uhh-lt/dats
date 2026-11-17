@@ -33,6 +33,7 @@ class _AudioArchive(ArtefactArchive):
 
 AUDIO = artefact(
     "audio",
+    title="Audio stream",
     always=True,
     uploaded_for={DocType.audio},
     archive=_AudioArchive(),

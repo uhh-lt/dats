@@ -37,11 +37,11 @@ def enrich_for_recompute(payload: SdocProcessingJobInput) -> KeywordsJobInput:
     doctypes={DocType.text, DocType.image, DocType.audio, DocType.video},
 )
 @register_job(
-    job_type="text_keywords",
+    job_type="keywords",
     input_type=KeywordsJobInput,
     enricher=enrich_for_recompute,
 )
-def handle_text_keywords_job(payload: KeywordsJobInput, job: Job) -> None:
+def handle_keywords_job(payload: KeywordsJobInput, job: Job) -> None:
     keywords = extract_keywords(payload)
     with sqlr.transaction() as db:
         crud_sdoc_meta.update_multi_with_doctype(

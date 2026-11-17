@@ -16921,6 +16921,11 @@
       "SdocHealthColumn": {
         "properties": {
           "step": { "type": "string", "title": "Step", "description": "Name of the pipeline step" },
+          "title": {
+            "type": "string",
+            "title": "Title",
+            "description": "Titles of the artefacts the step produces, the header of its column"
+          },
           "core": {
             "type": "boolean",
             "title": "Core",
@@ -16928,7 +16933,7 @@
           }
         },
         "type": "object",
-        "required": ["step", "core"],
+        "required": ["step", "title", "core"],
         "title": "SdocHealthColumn"
       },
       "SdocHealthResult": {

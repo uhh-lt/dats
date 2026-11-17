@@ -29,18 +29,18 @@ class TextStepsProject(TypedDict):
       codes `NAMED_ENTITY` > `PERSON`, `ORG`, ...
     - text: text document "text.txt" with the text of `SDOC_SENTENCES`
       ("Hello world. The cat sits on the mat.") and the language "en"; the
-      steps of a project without features and text_keywords,
-      text_word_frequency and text_ner are finished (no data of the last three
+      steps of a project without features and keywords,
+      word_frequency and named_entity_recognition are finished (no data of the last three
       is stored)
     - spacy_running: text document "spacy_running.txt" with the same text;
-      extract_html, text_extraction, text_language_detection and text_es_index
-      are finished, text_spacy and text_html_mapping are processing (the spaCy
+      html_extraction, text_extraction, language_detection and es_index
+      are finished, tokens_sentences and html_mapping are processing (the spaCy
       job runs), no other step is planned
 
     Non-obvious derived behavior:
 
-    - text_keywords, text_word_frequency and text_ner each follow the language
-      detection only, not text_spacy.
+    - keywords, word_frequency and named_entity_recognition each follow the language
+      detection only, not tokens_sentences.
     """
 
     project: ProjectORM
@@ -63,9 +63,9 @@ def create_text_steps_project(db: Session, user: UserORM) -> TextStepsProject:
         doctype=DocType.text,
         status={
             **dict.fromkeys(minimal_text_steps(), 1),
-            "text_keywords": 1,
-            "text_word_frequency": 1,
-            "text_ner": 1,
+            "keywords": 1,
+            "word_frequency": 1,
+            "named_entity_recognition": 1,
         },
     )
     spacy_running = _create_sdoc(
@@ -74,12 +74,12 @@ def create_text_steps_project(db: Session, user: UserORM) -> TextStepsProject:
         name="spacy_running.txt",
         doctype=DocType.text,
         status={
-            "extract_html": 1,
+            "html_extraction": 1,
             "text_extraction": 1,
-            "text_language_detection": 1,
-            "text_es_index": 1,
-            "text_spacy": 0,
-            "text_html_mapping": 0,
+            "language_detection": 1,
+            "es_index": 1,
+            "tokens_sentences": 0,
+            "html_mapping": 0,
         },
     )
     db.commit()

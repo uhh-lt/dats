@@ -28,7 +28,7 @@ At the very top of the view, you will see tabs for **Text**, **Image**, **Video*
 Below the tabs is the main status table.
 
 - **Document Name:** The first column lists the names of the documents or split file chunks.
-- **Pipeline Steps:** The remaining columns represent the specific chronological steps of the preprocessing pipeline for that modality. For example, under the **Text** tab, you might see columns like extract_html, text_extraction, text_language_detect, text_spacy (tokens and sentences), text_ner (Named Entity Recognition), and text_es_index (Elasticsearch indexing).
+- **Pipeline Steps:** The remaining columns represent the specific chronological steps of the preprocessing pipeline for that modality. Each column is titled by the data its step computes. For example, under the **Text** tab, you might see columns like Raw HTML, Text content, Language, Tokens and sentences, Named entities and Full-text index.
 - **Status Icons:** Inside each cell is an icon indicating the status of that specific step for that document (e.g., a green checkmark for success, a spinning wheel for in-progress, or a red warning icon for failure).
 
 ## 3\. Fixing Errors: Retry vs. Recompute
@@ -43,13 +43,13 @@ Use **Retry** when a step has explicitly failed (shows an error icon).
 
 - Clicking **Retry** tells DATS to automatically look at the selected documents, identify exactly which steps failed, and attempt to run them again.
 - _Use Case:_ A temporary server timeout caused the language detection to fail. Clicking Retry will simply try the language detection again.
-- A failed text_spacy job from a DATS version before each step got its own job also computed keywords, word frequencies or named entities; Retry now recomputes only tokens and sentences. Use **Recompute** for text_keywords, text_word_frequency or text_ner instead.
+- A failed tokens and sentences job from a DATS version before each step got its own job also computed keywords, word frequencies or named entities; Retry now recomputes only tokens and sentences. Use **Recompute** for Keywords, Word frequencies or Named entities instead.
 
 ### ⚙️ Recompute (The Force Run)
 
 Use **Recompute** when you want to force DATS to re-run a step that has _already succeeded_, or if you want to manually trigger a specific part of the pipeline.
 
-- Clicking **Recompute** opens a small dropdown menu allowing you to select a _specific_ pipeline step (e.g., text_ner). DATS will then force-run that step (and all subsequent dependent steps) for the selected documents, even if they had previously completed successfully.
+- Clicking **Recompute** opens a small dropdown menu allowing you to select a _specific_ pipeline step by the data it computes (e.g., Named entities). DATS will then force-run that step (and all subsequent dependent steps) for the selected documents, even if they had previously completed successfully.
 - _Use Case:_ You have updated the global project settings or you want to force the system to re-evaluate the named entities in a document.
 - Recompute works for steps that are planned for the selected documents (they show a status icon) and for the core steps that every document gets (text extraction, the search index, ...), which it plans, together with the other missing core steps, for a document that lacks them. A step of a feature that is not planned for a document ("Not computed") is computed by enabling or completing its feature in **Project Settings** → **Features**; if you select such a document, DATS shows an error and starts nothing.
 

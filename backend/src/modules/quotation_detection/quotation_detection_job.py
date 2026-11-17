@@ -112,7 +112,7 @@ def enrich_for_recompute(
 @pipeline_step(
     requires={TOKENS_SENTENCES, LANGUAGE},
     produces={QUOTATIONS},
-    # the doctypes of text_spacy, which a step that follows it must apply to; the
+    # the doctypes of tokens_sentences, which a step that follows it must apply to; the
     # enricher and handler skip all but German text documents
     doctypes={DocType.text, DocType.image, DocType.audio, DocType.video},
 )

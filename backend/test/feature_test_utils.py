@@ -91,24 +91,24 @@ class FeatureProject(TypedDict):
     as its file, so the step jobs a computation starts can be enriched.
 
     - text_done: text document "text_done.txt"; the steps of a project without
-      features are finished (extract_html, text_extraction,
-      text_language_detection, text_es_index, text_spacy, text_html_mapping),
+      features are finished (html_extraction, text_extraction,
+      language_detection, es_index, tokens_sentences, html_mapping),
       all other steps are not planned
-    - text_running: text document "text_running.txt"; extract_html,
-      text_extraction and text_language_detection are finished, text_es_index,
-      text_spacy and text_html_mapping are processing, all other steps are not
+    - text_running: text document "text_running.txt"; html_extraction,
+      text_extraction and language_detection are finished, es_index,
+      tokens_sentences and html_mapping are processing, all other steps are not
       planned
     - image: image document "image.png"; the steps of an image in a project
       without features are finished (image_metadata_extraction,
       image_thumbnail, image_caption and the text steps after it:
-      text_extraction, text_language_detection, text_es_index, text_spacy,
-      text_html_mapping), all other steps are not planned
+      text_extraction, language_detection, es_index, tokens_sentences,
+      html_mapping), all other steps are not planned
 
     Non-obvious derived behavior:
 
     - A feature's steps include the core steps it needs: keyword statistics on
-      text needs extract_html, text_extraction, text_language_detection and
-      text_keywords (not text_spacy, keywords need no tokens), so the keywords
+      text needs html_extraction, text_extraction, language_detection and
+      keywords (not tokens_sentences, keywords need no tokens), so the keywords
       of text_running can start at once.
     - Every image has a caption, so features that need text apply to the
       image too; image features (object detection)
@@ -192,12 +192,12 @@ def create_feature_project(db: Session, user: UserORM) -> FeatureProject:
         name="text_running.txt",
         doctype=DocType.text,
         status={
-            "extract_html": 1,
+            "html_extraction": 1,
             "text_extraction": 1,
-            "text_language_detection": 1,
-            "text_es_index": 0,
-            "text_spacy": 0,
-            "text_html_mapping": 0,
+            "language_detection": 1,
+            "es_index": 0,
+            "tokens_sentences": 0,
+            "html_mapping": 0,
         },
     )
     image = _create_sdoc(
@@ -228,21 +228,21 @@ class PartlyProject(TypedDict):
     - project: "Partly Available Project" of `test_user`, with only keyword
       statistics enabled
     - five text documents with the text of `SDOC_SENTENCES` and the language
-      "en"; the minimal text steps are extract_html, text_extraction,
-      text_language_detection, text_es_index, text_spacy, text_html_mapping;
+      "en"; the minimal text steps are html_extraction, text_extraction,
+      language_detection, es_index, tokens_sentences, html_mapping;
       steps not listed are not planned:
-      - with_keywords: minimal steps and text_keywords finished
-      - keywords_failed: minimal steps finished, text_keywords erroneous
-      - without_keywords: minimal steps finished (text_keywords not planned)
-      - extraction_failed: extract_html finished, text_extraction and the
+      - with_keywords: minimal steps and keywords finished
+      - keywords_failed: minimal steps finished, keywords erroneous
+      - without_keywords: minimal steps finished (keywords not planned)
+      - extraction_failed: html_extraction finished, text_extraction and the
         minimal steps after it erroneous
-      - spacy_failed: extract_html, text_extraction, text_language_detection,
-        text_es_index finished, text_spacy erroneous
+      - spacy_failed: html_extraction, text_extraction, language_detection,
+        es_index finished, tokens_sentences erroneous
 
     Non-obvious derived behavior:
 
-    - Keyword statistics needs extract_html, text_extraction,
-      text_language_detection and text_keywords, so it covers with_keywords
+    - Keyword statistics needs html_extraction, text_extraction,
+      language_detection and keywords, so it covers with_keywords
       only: keywords_failed and extraction_failed count as failed,
       without_keywords and spacy_failed as not planned; it is partly available.
     """
@@ -262,23 +262,23 @@ def create_partly_project(db: Session, user: UserORM) -> PartlyProject:
     )
     done = dict.fromkeys(minimal_text_steps(), 1)
     sdocs = {
-        "with_keywords": {**done, "text_keywords": 1},
-        "keywords_failed": {**done, "text_keywords": -100},
+        "with_keywords": {**done, "keywords": 1},
+        "keywords_failed": {**done, "keywords": -100},
         "without_keywords": done,
         "extraction_failed": {
-            "extract_html": 1,
+            "html_extraction": 1,
             "text_extraction": -100,
-            "text_language_detection": -100,
-            "text_es_index": -100,
-            "text_spacy": -100,
-            "text_html_mapping": -100,
+            "language_detection": -100,
+            "es_index": -100,
+            "tokens_sentences": -100,
+            "html_mapping": -100,
         },
         "spacy_failed": {
-            "extract_html": 1,
+            "html_extraction": 1,
             "text_extraction": 1,
-            "text_language_detection": 1,
-            "text_es_index": 1,
-            "text_spacy": -100,
+            "language_detection": 1,
+            "es_index": 1,
+            "tokens_sentences": -100,
         },
     }
     created = {
@@ -372,7 +372,7 @@ class SentenceEmbeddingProject(TypedDict):
       search)
     - text: text document "text.txt" with the text of `SDOC_SENTENCES`
       ("Hello world." and "The cat sits on the mat.") and the language "en";
-      its core steps and text_sentence_embedding are finished; sentence 0 has
+      its core steps and sentence_embedding are finished; sentence 0 has
       the sentence embedding [1, 0], sentence 1 [0, 1]
 
     Non-obvious derived behavior:
@@ -395,7 +395,7 @@ def create_sentence_embedding_project(
         project,
         name="text.txt",
         doctype=DocType.text,
-        status={**dict.fromkeys(minimal_text_steps(), 1), "text_sentence_embedding": 1},
+        status={**dict.fromkeys(minimal_text_steps(), 1), "sentence_embedding": 1},
     )
     crud_sentence_embedding.create_multi(
         client=WeaviateRepo().get_client(),

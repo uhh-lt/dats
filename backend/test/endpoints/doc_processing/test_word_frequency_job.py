@@ -19,7 +19,7 @@ SETTINGS = {
 }
 
 # ===========================================================================
-# WORD FREQUENCY JOB (step text_word_frequency) TESTS
+# WORD FREQUENCY JOB (step word_frequency) TESTS
 # ===========================================================================
 # The step runs as a background job, so these tests call its handler, taken
 # from the job registry by the step name. spaCy is an external service: the
@@ -34,7 +34,7 @@ def _run_word_frequency(project: TextStepsProject) -> None:
             lambda self, spacy_input: spacy_output(spacy_input.text, {}),
         )
         run_step_handler(
-            "text_word_frequency",
+            "word_frequency",
             {
                 "project_id": project["project"].id,
                 "sdoc_id": project["text"].id,

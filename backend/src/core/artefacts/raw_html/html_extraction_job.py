@@ -64,12 +64,12 @@ def enrich_for_recompute(
     doctypes={DocType.text},
 )
 @register_job(
-    job_type="extract_html",
+    job_type="html_extraction",
     input_type=ExtractHTMLJobInput,
     output_type=ExtractHTMLJobOutput,
     enricher=enrich_for_recompute,
 )
-def handle_extract_html_job(
+def handle_html_extraction_job(
     payload: ExtractHTMLJobInput, job: Job
 ) -> ExtractHTMLJobOutput:
     if not payload.filepath.exists():
@@ -105,7 +105,7 @@ def handle_extract_html_job(
 
     # the extracted images become documents of their own
     start_followers(
-        "extract_html",
+        "html_extraction",
         [
             (
                 SDOC_INIT_JOB,

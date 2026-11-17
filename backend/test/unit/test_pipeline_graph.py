@@ -34,7 +34,7 @@ def _step(
 
 
 # the two root steps of `_producing_all_other_artefacts`, in pipeline order
-FILLERS = ["video_metadata", "video_thumbnail"]
+FILLERS = ["video_metadata_extraction", "video_thumbnail"]
 
 
 def _producing_all_other_artefacts(
@@ -48,7 +48,7 @@ def _producing_all_other_artefacts(
     rest = set(artefact_registry.artefacts()) - produced - {artefact_named("audio")}
     return {
         **steps,
-        "video_metadata": _step(set(), {a for a in rest if a.always}),
+        "video_metadata_extraction": _step(set(), {a for a in rest if a.always}),
         "video_thumbnail": _step(set(), {a for a in rest if not a.always}),
     }
 
@@ -76,10 +76,10 @@ def test_pipeline_graph_derives_order_roots_and_successors():
     steps = _producing_all_other_artefacts(
         {
             "text_extraction": _step(set(), {artefact_named("content")}),
-            "text_language_detection": _step(
+            "language_detection": _step(
                 {artefact_named("content")}, {artefact_named("language")}
             ),
-            "text_spacy": _step(
+            "tokens_sentences": _step(
                 {artefact_named("content"), artefact_named("language")},
                 {artefact_named("tokens_sentences")},
             ),
@@ -90,14 +90,14 @@ def test_pipeline_graph_derives_order_roots_and_successors():
 
     assert graph.steps(DocType.text) == [
         "text_extraction",
-        "text_language_detection",
-        "text_spacy",
+        "language_detection",
+        "tokens_sentences",
         *FILLERS,
     ]
     assert graph.roots(DocType.text) == ["text_extraction", *FILLERS]
-    assert graph.successors("text_extraction") == ["text_language_detection"]
-    assert graph.successors("text_language_detection") == ["text_spacy"]
-    assert graph.successors("text_spacy") == []
+    assert graph.successors("text_extraction") == ["language_detection"]
+    assert graph.successors("language_detection") == ["tokens_sentences"]
+    assert graph.successors("tokens_sentences") == []
 
 
 def test_pipeline_graph_orders_doctype_specific_steps_first():
@@ -113,7 +113,7 @@ def test_pipeline_graph_orders_doctype_specific_steps_first():
             "text_extraction": _step(
                 {artefact_named("raw_html")}, {artefact_named("content")}, image_audio
             ),
-            "audio_transcription": _step(
+            "transcription": _step(
                 set(), {artefact_named("raw_html")}, frozenset({DocType.audio})
             ),
         }
@@ -136,7 +136,7 @@ def test_pipeline_graph_uploaded_audio_satisfies_the_audio_requirement():
             "video_audio_extraction": _step(
                 set(), {artefact_named("audio")}, frozenset({DocType.video})
             ),
-            "audio_transcription": _step(
+            "transcription": _step(
                 {artefact_named("audio")}, {artefact_named("transcript")}, av
             ),
         }
@@ -144,9 +144,9 @@ def test_pipeline_graph_uploaded_audio_satisfies_the_audio_requirement():
 
     graph = _graph(steps)
 
-    assert "audio_transcription" in graph.roots(DocType.audio)
-    assert "audio_transcription" not in graph.roots(DocType.video)
-    assert graph.successors("video_audio_extraction") == ["audio_transcription"]
+    assert "transcription" in graph.roots(DocType.audio)
+    assert "transcription" not in graph.roots(DocType.video)
+    assert graph.successors("video_audio_extraction") == ["transcription"]
 
 
 # ===========================================================================
@@ -159,13 +159,13 @@ TEXT_IMAGE = frozenset({DocType.text, DocType.image})
 
 
 def _planning_graph() -> PipelineGraph:
-    """Text gets its raw HTML from extract_html, an image from its caption,
+    """Text gets its raw HTML from html_extraction, an image from its caption,
     which produces the core caption and the core raw HTML. Keywords are
     optional and the document embeddings require them."""
     return _graph(
         _producing_all_other_artefacts(
             {
-                "extract_html": _step(set(), {artefact_named("raw_html")}, TEXT),
+                "html_extraction": _step(set(), {artefact_named("raw_html")}, TEXT),
                 "image_caption": _step(
                     set(),
                     {artefact_named("image_caption"), artefact_named("raw_html")},
@@ -177,17 +177,17 @@ def _planning_graph() -> PipelineGraph:
                     {artefact_named("content")},
                     TEXT_IMAGE,
                 ),
-                "text_language_detection": _step(
+                "language_detection": _step(
                     {artefact_named("content")},
                     {artefact_named("language")},
                     TEXT_IMAGE,
                 ),
-                "text_keywords": _step(
+                "keywords": _step(
                     {artefact_named("language")},
                     {artefact_named("keywords")},
                     TEXT_IMAGE,
                 ),
-                "text_document_embedding": _step(
+                "document_embedding": _step(
                     {artefact_named("keywords")},
                     {artefact_named("document_embeddings")},
                     TEXT_IMAGE,
@@ -203,16 +203,16 @@ def test_steps_for_are_the_producers_of_the_artefacts_and_their_inputs():
     graph = _planning_graph()
 
     assert graph.steps_for(DocType.text, frozenset({artefact_named("keywords")})) == [
-        "extract_html",
+        "html_extraction",
         "text_extraction",
-        "text_language_detection",
-        "text_keywords",
+        "language_detection",
+        "keywords",
     ]
     assert graph.steps_for(DocType.image, frozenset({artefact_named("keywords")})) == [
         "image_caption",
         "text_extraction",
-        "text_language_detection",
-        "text_keywords",
+        "language_detection",
+        "keywords",
     ]
 
 
@@ -225,7 +225,7 @@ def test_steps_for_pull_in_the_artefacts_a_step_requires():
         DocType.text, frozenset({artefact_named("document_embeddings")})
     )
 
-    assert steps[-2:] == ["text_keywords", "text_document_embedding"]
+    assert steps[-2:] == ["keywords", "document_embedding"]
 
 
 def test_steps_for_skip_an_artefact_without_producer_for_the_doctype():
@@ -254,23 +254,23 @@ def test_artefacts_apply_if_one_has_a_producer_or_is_uploaded():
 
 
 def test_inputs_are_the_producers_of_the_required_artefacts_per_doctype():
-    """Text extraction reads the raw HTML of extract_html in a text document and
+    """Text extraction reads the raw HTML of html_extraction in a text document and
     of the caption in an image."""
     graph = _planning_graph()
 
-    assert graph.inputs(DocType.text, "text_extraction") == ["extract_html"]
+    assert graph.inputs(DocType.text, "text_extraction") == ["html_extraction"]
     assert graph.inputs(DocType.image, "text_extraction") == ["image_caption"]
-    assert graph.inputs(DocType.text, "extract_html") == []
+    assert graph.inputs(DocType.text, "html_extraction") == []
 
 
 def test_descendants_are_the_steps_after_a_step_transitively():
     graph = _planning_graph()
 
-    assert graph.descendants(["text_language_detection"]) == [
-        "text_keywords",
-        "text_document_embedding",
+    assert graph.descendants(["language_detection"]) == [
+        "keywords",
+        "document_embedding",
     ]
-    assert graph.descendants(["text_document_embedding"]) == []
+    assert graph.descendants(["document_embedding"]) == []
 
 
 # ===========================================================================
@@ -313,10 +313,10 @@ def test_pipeline_graph_fails_on_cycle():
     """Two steps that require each other's artefacts form a cycle."""
     steps = _producing_all_other_artefacts(
         {
-            "text_spacy": _step(
+            "tokens_sentences": _step(
                 {artefact_named("language")}, {artefact_named("content")}
             ),
-            "text_language_detection": _step(
+            "language_detection": _step(
                 {artefact_named("content")}, {artefact_named("language")}
             ),
         }
@@ -332,7 +332,7 @@ def test_pipeline_graph_fails_on_artefact_produced_twice():
     steps = _producing_all_other_artefacts(
         {
             "text_extraction": _step(set(), {artefact_named("content")}),
-            "extract_html": _step(set(), {artefact_named("content")}),
+            "html_extraction": _step(set(), {artefact_named("content")}),
         }
     )
 
@@ -347,8 +347,8 @@ def test_pipeline_graph_fails_on_step_with_two_direct_predecessors():
     steps = _producing_all_other_artefacts(
         {
             "text_extraction": _step(set(), {artefact_named("content")}),
-            "extract_html": _step(set(), {artefact_named("raw_html")}),
-            "text_html_mapping": _step(
+            "html_extraction": _step(set(), {artefact_named("raw_html")}),
+            "html_mapping": _step(
                 {artefact_named("content"), artefact_named("raw_html")},
                 {artefact_named("html")},
             ),
@@ -358,7 +358,7 @@ def test_pipeline_graph_fails_on_step_with_two_direct_predecessors():
     problems = _problems(steps)
 
     assert any(
-        "'text_html_mapping'" in p and "started by several steps" in p for p in problems
+        "'html_mapping'" in p and "started by several steps" in p for p in problems
     ), problems
 
 
@@ -369,7 +369,7 @@ def test_pipeline_graph_fails_on_more_steps_than_the_feature_states_count(
     with more steps than that fails with a clear message."""
     monkeypatch.setattr(pipeline_graph, "MAX_COUNTED_STEPS", 1)
     steps = _producing_all_other_artefacts(
-        {"extract_html": _step(set(), {artefact_named("raw_html")})}
+        {"html_extraction": _step(set(), {artefact_named("raw_html")})}
     )
 
     problems = _problems(steps)
@@ -388,6 +388,7 @@ def _test_artefact(
     """An artefact that is not registered."""
     return Artefact(
         name=name,
+        title=name,
         always=always,
         uploaded_for=frozenset(),
         codes=codes,
@@ -399,12 +400,12 @@ def test_pipeline_graph_fails_on_a_step_mixing_always_and_on_demand_artefacts():
     """A step produces either always-computed or on-demand artefacts."""
     steps = _producing_all_other_artefacts({})
     mixed = _test_artefact("test_on_demand")
-    steps["extract_html"] = _step(
+    steps["html_extraction"] = _step(
         set(), {_test_artefact("test_always", always=True), mixed}
     )
 
     assert (
-        "Step 'extract_html' produces always-computed and on-demand artefacts."
+        "Step 'html_extraction' produces always-computed and on-demand artefacts."
         in _graph_problems(steps, artefact_registry.artefacts())
     )
 
@@ -413,12 +414,12 @@ def test_pipeline_graph_fails_on_an_always_step_requiring_an_on_demand_artefact(
     """The step of an always-computed artefact requires only always-computed
     ones, so the core steps never wait for an on-demand step."""
     steps = _producing_all_other_artefacts({})
-    steps["extract_html"] = _step(
+    steps["html_extraction"] = _step(
         {artefact_named("keywords")}, {_test_artefact("test_always", always=True)}
     )
 
     assert (
-        "Step 'extract_html' produces an always-computed artefact but requires an "
+        "Step 'html_extraction' produces an always-computed artefact but requires an "
         "on-demand one." in _graph_problems(steps, artefact_registry.artefacts())
     )
 
@@ -455,13 +456,13 @@ def test_registry_check_fails_on_a_system_code_declared_differently():
     registry = ArtefactRegistry()
     for declared in artefacts:
         registry.register_artefact(declared)
-    registry.register_step("extract_html", _step(set(), set(artefacts), TEXT))
+    registry.register_step("html_extraction", _step(set(), set(artefacts), TEXT))
     registry.check()
 
     artefacts.append(_test_artefact("test_other", codes=(other,)))
     registry.register_artefact(artefacts[-1])
-    registry.unregister_step("extract_html")
-    registry.register_step("extract_html", _step(set(), set(artefacts), TEXT))
+    registry.unregister_step("html_extraction")
+    registry.register_step("html_extraction", _step(set(), set(artefacts), TEXT))
     with pytest.raises(PipelineDeclarationError) as exc_info:
         registry.check()
 
@@ -524,7 +525,7 @@ def test_registry_check_fails_on_two_trees_of_one_artefact_that_disagree(
     declared = _test_artefact("test_codes", codes=codes)
     registry = ArtefactRegistry()
     registry.register_artefact(declared)
-    registry.register_step("extract_html", _step(set(), {declared}, TEXT))
+    registry.register_step("html_extraction", _step(set(), {declared}, TEXT))
     with pytest.raises(PipelineDeclarationError) as exc_info:
         registry.check()
 
@@ -545,7 +546,7 @@ def test_registry_check_lists_the_graph_and_the_code_problems_in_one_error():
     registry = ArtefactRegistry()
     registry.register_artefact(declared)
     registry.register_artefact(unproduced)
-    registry.register_step("extract_html", _step(set(), {declared}, TEXT))
+    registry.register_step("html_extraction", _step(set(), {declared}, TEXT))
     with pytest.raises(PipelineDeclarationError) as exc_info:
         registry.check()
 
@@ -570,11 +571,11 @@ def test_registry_rejects_an_artefact_name_declared_twice():
 
 def test_registry_rejects_a_step_name_declared_twice():
     registry = ArtefactRegistry()
-    registry.register_step("extract_html", _step(set(), set(), TEXT))
+    registry.register_step("html_extraction", _step(set(), set(), TEXT))
     with pytest.raises(
-        PipelineDeclarationError, match="'extract_html' is declared twice"
+        PipelineDeclarationError, match="'html_extraction' is declared twice"
     ):
-        registry.register_step("extract_html", _step(set(), set(), TEXT))
+        registry.register_step("html_extraction", _step(set(), set(), TEXT))
 
 
 def test_bootstrap_runs_the_check_of_the_declarations():
@@ -626,31 +627,31 @@ def test_the_core_steps_produce_core_artefacts(graph: PipelineGraph, doctype: Do
         pytest.param(
             DocType.text,
             artefact_named("keywords"),
-            ["text_keywords"],
+            ["keywords"],
             id="text-keywords",
         ),
         pytest.param(
             DocType.text,
             artefact_named("ner_spans"),
-            ["text_ner"],
+            ["named_entity_recognition"],
             id="text-entities",
         ),
         pytest.param(
             DocType.audio,
             artefact_named("word_frequencies"),
-            ["text_word_frequency"],
+            ["word_frequency"],
             id="audio-word-frequencies",
         ),
         pytest.param(
             DocType.video,
             artefact_named("document_embeddings"),
-            ["text_document_embedding"],
+            ["document_embedding"],
             id="video-document-embeddings",
         ),
         pytest.param(
             DocType.image,
             artefact_named("object_bboxes"),
-            ["image_object_detection"],
+            ["object_detection"],
             id="image-object-boxes",
         ),
         pytest.param(
@@ -663,7 +664,7 @@ def test_the_core_steps_produce_core_artefacts(graph: PipelineGraph, doctype: Do
         pytest.param(
             DocType.image,
             artefact_named("sentence_embeddings"),
-            ["text_sentence_embedding"],
+            ["sentence_embedding"],
             id="image-sentence-embeddings",
         ),
     ],
@@ -686,11 +687,11 @@ def test_the_steps_of_sentence_embeddings_are_the_text_chain(graph: PipelineGrap
     embeddings = frozenset({artefact_named("sentence_embeddings")})
 
     assert graph.steps_for(DocType.text, embeddings) == [
-        "extract_html",
+        "html_extraction",
         "text_extraction",
-        "text_language_detection",
-        "text_spacy",
-        "text_sentence_embedding",
+        "language_detection",
+        "tokens_sentences",
+        "sentence_embedding",
     ]
     assert graph.steps_for(DocType.image, embeddings)[0] == "image_caption"
 

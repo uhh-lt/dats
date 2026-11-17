@@ -53,6 +53,8 @@ class Artefact:
     Compared by identity: the registry keeps the names unique."""
 
     name: str
+    # short and user-facing, in the style of the feature titles
+    title: str
     # computed for every document, whatever features its project enables
     always: bool
     # the doctypes whose uploaded file is the artefact (no step produces it)
@@ -178,6 +180,7 @@ artefact_registry = ArtefactRegistry()
 def artefact(
     name: str,
     *,
+    title: str,
     always: bool = False,
     uploaded_for: Collection[DocType] = (),
     codes: Collection[SystemCode] = (),
@@ -187,6 +190,7 @@ def artefact(
     artefact, which steps and features import."""
     declared = Artefact(
         name=name,
+        title=title,
         always=always,
         uploaded_for=frozenset(uploaded_for),
         codes=tuple(codes),

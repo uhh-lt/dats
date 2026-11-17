@@ -20,7 +20,7 @@ SETTINGS = {
 }
 
 # ===========================================================================
-# NAMED ENTITY JOB (step text_ner) TESTS
+# NAMED ENTITY JOB (step named_entity_recognition) TESTS
 # ===========================================================================
 # The step runs as a background job, so these tests call its handler, taken
 # from the job registry by the step name. spaCy is an external service: the
@@ -35,7 +35,7 @@ def _run_ner(project: TextStepsProject, entities: dict[str, str]) -> None:
             lambda self, spacy_input: spacy_output(spacy_input.text, entities),
         )
         run_step_handler(
-            "text_ner",
+            "named_entity_recognition",
             {
                 "project_id": project["project"].id,
                 "sdoc_id": project["text"].id,

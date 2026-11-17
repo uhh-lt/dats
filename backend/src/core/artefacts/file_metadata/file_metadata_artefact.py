@@ -3,4 +3,4 @@ image, audio and video documents, carried by their metadata keys."""
 
 from systems.artefact_system.artefact_registry import artefact
 
-FILE_METADATA = artefact("file_metadata", always=True)
+FILE_METADATA = artefact("file_metadata", title="File metadata", always=True)

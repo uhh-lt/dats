@@ -194,7 +194,7 @@ def test_project_features_count_the_documents_of_a_disabled_feature(
     client: TestClient, feature_project: FeatureProject
 ):
     """A disabled feature is disabled whatever its documents: semantic
-    search counts text_running as processing (text_spacy),
+    search counts text_running as processing (tokens_sentences),
     text_done and the image as not planned (no sentence or image embeddings)."""
     read = _features(client, feature_project["project"].id)["semantic_search"]
 
@@ -358,7 +358,7 @@ def test_enable_feature_plans_its_steps_and_starts_them_with_the_settings(
     held_jobs: HeldJobs,
 ):
     """Enabling keyword statistics starts one artefact computation job with the
-    chosen settings, which plans text_keywords for every document (the image
+    chosen settings, which plans keywords for every document (the image
     has a caption) and starts it, as its input language detection is finished
     everywhere; it leaves the steps of other features alone."""
     p = feature_project
@@ -369,16 +369,16 @@ def test_enable_feature_plans_its_steps_and_starts_them_with_the_settings(
     started = started_steps(held_jobs)
 
     for sdoc in (p["text_done"], p["text_running"], p["image"]):
-        assert read_step_status(db_session, sdoc.id, "text_keywords") == 0, sdoc.name
-        assert read_step_status(db_session, sdoc.id, "text_word_frequency") is None
-    assert read_step_status(db_session, p["text_done"].id, "text_spacy") == 1
-    assert read_step_status(db_session, p["image"].id, "image_object_detection") is None
+        assert read_step_status(db_session, sdoc.id, "keywords") == 0, sdoc.name
+        assert read_step_status(db_session, sdoc.id, "word_frequency") is None
+    assert read_step_status(db_session, p["text_done"].id, "tokens_sentences") == 1
+    assert read_step_status(db_session, p["image"].id, "object_detection") is None
     assert isinstance(computation, ArtefactComputationJobInput)
     assert computation.settings == SETTINGS
     assert started == {
-        p["text_done"].id: ["text_keywords"],
-        p["text_running"].id: ["text_keywords"],
-        p["image"].id: ["text_keywords"],
+        p["text_done"].id: ["keywords"],
+        p["text_running"].id: ["keywords"],
+        p["image"].id: ["keywords"],
     }
 
 
@@ -388,8 +388,8 @@ def test_enable_feature_plans_but_does_not_start_a_step_whose_input_is_processin
     feature_project: FeatureProject,
     held_jobs: HeldJobs,
 ):
-    """Enabling semantic search plans text_sentence_embedding for every document
-    and image_embedding for the image. The sentence embeddings need text_spacy:
+    """Enabling semantic search plans sentence_embedding for every document
+    and image_embedding for the image. The sentence embeddings need tokens_sentences:
     they start for text_done and the image, whose spaCy step finished; for
     text_running, whose spaCy step is still processing, they are planned but not
     started."""
@@ -399,13 +399,10 @@ def test_enable_feature_plans_but_does_not_start_a_step_whose_input_is_processin
     held_jobs.run(ARTEFACT_COMPUTATION_JOB)
     started = started_steps(held_jobs)
 
-    assert (
-        read_step_status(db_session, p["text_running"].id, "text_sentence_embedding")
-        == 0
-    )
+    assert read_step_status(db_session, p["text_running"].id, "sentence_embedding") == 0
     assert started == {
-        p["text_done"].id: ["text_sentence_embedding"],
-        p["image"].id: ["image_embedding", "text_sentence_embedding"],
+        p["text_done"].id: ["sentence_embedding"],
+        p["image"].id: ["image_embedding", "sentence_embedding"],
     }
 
 
@@ -498,9 +495,9 @@ def test_enable_two_features_sharing_a_step_starts_it_once(
     assert len(held_jobs.inputs(ARTEFACT_COMPUTATION_JOB)) == 2
     held_jobs.run(ARTEFACT_COMPUTATION_JOB)
     assert started_steps(held_jobs) == {
-        p["text_done"].id: ["text_word_frequency"],
-        p["text_running"].id: ["text_word_frequency"],
-        p["image"].id: ["text_word_frequency"],
+        p["text_done"].id: ["word_frequency"],
+        p["text_running"].id: ["word_frequency"],
+        p["image"].id: ["word_frequency"],
     }
 
 
@@ -518,8 +515,8 @@ def test_enable_text_feature_plans_its_steps_for_images(
     _activate(client, p["project"].id, "keyword_statistics")
     held_jobs.run(ARTEFACT_COMPUTATION_JOB)
 
-    assert read_step_status(db_session, p["image"].id, "text_keywords") == 0
-    assert started_steps(held_jobs)[p["image"].id] == ["text_keywords"]
+    assert read_step_status(db_session, p["image"].id, "keywords") == 0
+    assert started_steps(held_jobs)[p["image"].id] == ["keywords"]
 
 
 def test_enable_feature_job_waits_for_the_request_to_commit(
@@ -560,9 +557,9 @@ def test_enable_feature_job_waits_for_the_request_to_commit(
 
     assert errors == []
     assert started_steps(held_jobs) == {
-        feature_project["text_done"].id: ["text_keywords"],
-        feature_project["text_running"].id: ["text_keywords"],
-        feature_project["image"].id: ["text_keywords"],
+        feature_project["text_done"].id: ["keywords"],
+        feature_project["text_running"].id: ["keywords"],
+        feature_project["image"].id: ["keywords"],
     }
 
 
@@ -611,19 +608,19 @@ def test_enable_feature_with_redis_down_in_a_batch_fails_the_steps_it_cannot_sta
     (computation,) = held_jobs.ran(ARTEFACT_COMPUTATION_JOB)
     assert computation.get_status() == JobStatus.FINISHED
     assert "2 step jobs could not start" in computation.job.meta["status_message"]
-    assert started_steps(held_jobs) == {p["text_done"].id: ["text_keywords"]}
+    assert started_steps(held_jobs) == {p["text_done"].id: ["keywords"]}
     for sdoc in (p["text_running"], p["image"]):
-        assert read_step_status(db_session, sdoc.id, "text_keywords") == -100
+        assert read_step_status(db_session, sdoc.id, "keywords") == -100
 
-    held_jobs.run("text_keywords")
+    held_jobs.run("keywords")
     read = _features(client, project_id)["keyword_statistics"]
     assert read.status == FeatureStatus.PARTLY_AVAILABLE
 
     _complete(client, project_id, "keyword_statistics")
     held_jobs.run(ARTEFACT_COMPUTATION_JOB)
     assert started_steps(held_jobs) == {
-        p["text_running"].id: ["text_keywords"],
-        p["image"].id: ["text_keywords"],
+        p["text_running"].id: ["keywords"],
+        p["image"].id: ["keywords"],
     }
 
 
@@ -651,9 +648,9 @@ def test_enable_feature_whose_computation_dies_with_its_worker_stops_computing(
     _complete(client, project_id, "keyword_statistics")
     held_jobs.run(ARTEFACT_COMPUTATION_JOB)
     assert started_steps(held_jobs) == {
-        p["text_done"].id: ["text_keywords"],
-        p["text_running"].id: ["text_keywords"],
-        p["image"].id: ["text_keywords"],
+        p["text_done"].id: ["keywords"],
+        p["text_running"].id: ["keywords"],
+        p["image"].id: ["keywords"],
     }
 
 
@@ -681,7 +678,7 @@ def test_enable_feature_rolled_back_after_the_enqueue_leaves_a_job_that_stops(
     assert project.enabled_features == []
     assert project.artefact_computations == {}
     assert (
-        read_step_status(db_session, feature_project["text_done"].id, "text_keywords")
+        read_step_status(db_session, feature_project["text_done"].id, "keywords")
         is None
     )
 
@@ -771,17 +768,20 @@ def test_complete_feature_plans_failed_and_not_planned_documents(
         "extraction_failed",
         "spacy_failed",
     ):
-        assert read_step_status(db_session, p[key].id, "text_keywords") == 0, key
+        assert read_step_status(db_session, p[key].id, "keywords") == 0, key
     assert (
         read_step_status(db_session, p["extraction_failed"].id, "text_extraction") == 0
     )
-    assert read_step_status(db_session, p["extraction_failed"].id, "text_spacy") == -100
-    assert read_step_status(db_session, p["with_keywords"].id, "text_keywords") == 1
+    assert (
+        read_step_status(db_session, p["extraction_failed"].id, "tokens_sentences")
+        == -100
+    )
+    assert read_step_status(db_session, p["with_keywords"].id, "keywords") == 1
     assert started == {
-        p["keywords_failed"].id: ["text_keywords"],
-        p["without_keywords"].id: ["text_keywords"],
+        p["keywords_failed"].id: ["keywords"],
+        p["without_keywords"].id: ["keywords"],
         p["extraction_failed"].id: ["text_extraction"],
-        p["spacy_failed"].id: ["text_keywords"],
+        p["spacy_failed"].id: ["keywords"],
     }
 
 
@@ -792,15 +792,15 @@ def test_complete_feature_marks_a_new_step_with_an_erroneous_input_erroneous(
     held_jobs: HeldJobs,
 ):
     """Completing keyword statistics plans the not planned HTML mapping of
-    spacy_failed (a core step); its input text_spacy is erroneous and no step of
+    spacy_failed (a core step); its input tokens_sentences is erroneous and no step of
     keyword statistics, so the mapping is erroneous instead of processing forever."""
     sdoc_id = partly_project["spacy_failed"].id
 
     _complete(client, partly_project["project"].id, "keyword_statistics")
     held_jobs.run(ARTEFACT_COMPUTATION_JOB)
 
-    assert read_step_status(db_session, sdoc_id, "text_html_mapping") == -100
-    assert read_step_status(db_session, sdoc_id, "text_spacy") == -100
+    assert read_step_status(db_session, sdoc_id, "html_mapping") == -100
+    assert read_step_status(db_session, sdoc_id, "tokens_sentences") == -100
 
 
 def test_complete_feature_with_redis_down_fails_the_steps_it_cannot_start(
@@ -827,7 +827,7 @@ def test_complete_feature_with_redis_down_fails_the_steps_it_cannot_start(
         "extraction_failed",
         "spacy_failed",
     ):
-        assert read_step_status(db_session, p[key].id, "text_keywords") == -100, key
+        assert read_step_status(db_session, p[key].id, "keywords") == -100, key
     assert (
         read_step_status(db_session, p["extraction_failed"].id, "text_extraction")
         == -100
@@ -838,10 +838,10 @@ def test_complete_feature_with_redis_down_fails_the_steps_it_cannot_start(
     _complete(client, project_id, "keyword_statistics")
     held_jobs.run(ARTEFACT_COMPUTATION_JOB)
     assert started_steps(held_jobs) == {
-        p["keywords_failed"].id: ["text_keywords"],
-        p["without_keywords"].id: ["text_keywords"],
+        p["keywords_failed"].id: ["keywords"],
+        p["without_keywords"].id: ["keywords"],
         p["extraction_failed"].id: ["text_extraction"],
-        p["spacy_failed"].id: ["text_keywords"],
+        p["spacy_failed"].id: ["keywords"],
     }
 
 
@@ -867,15 +867,15 @@ def test_complete_feature_recovers_the_steps_an_advancing_with_redis_down_failed
         held_jobs.run("text_extraction")
 
     assert read_step_status(db_session, sdoc_id, "text_extraction") == 1
-    assert read_step_status(db_session, sdoc_id, "text_language_detection") == -100
-    assert read_step_status(db_session, sdoc_id, "text_keywords") == -100
-    held_jobs.run("text_keywords")
+    assert read_step_status(db_session, sdoc_id, "language_detection") == -100
+    assert read_step_status(db_session, sdoc_id, "keywords") == -100
+    held_jobs.run("keywords")
     read = _features(client, project_id)["keyword_statistics"]
     assert read.status == FeatureStatus.PARTLY_AVAILABLE
 
     _complete(client, project_id, "keyword_statistics")
     held_jobs.run(ARTEFACT_COMPUTATION_JOB)
-    assert started_steps(held_jobs) == {sdoc_id: ["text_language_detection"]}
+    assert started_steps(held_jobs) == {sdoc_id: ["language_detection"]}
 
 
 # ===========================================================================
@@ -897,7 +897,7 @@ def test_disable_feature_keeps_its_steps(
 
     assert response.status_code == 200, response.text
     assert response.json() == []
-    assert read_step_status(db_session, p["with_keywords"].id, "text_keywords") == 1
+    assert read_step_status(db_session, p["with_keywords"].id, "keywords") == 1
     read = _features(client, p["project"].id)["keyword_statistics"]
     assert read.status == FeatureStatus.DISABLED
 
@@ -916,12 +916,8 @@ def test_disable_partly_available_feature_keeps_its_failed_steps(
     )
 
     assert response.status_code == 200, response.text
-    assert (
-        read_step_status(db_session, p["keywords_failed"].id, "text_keywords") == -100
-    )
-    assert (
-        read_step_status(db_session, p["without_keywords"].id, "text_keywords") is None
-    )
+    assert read_step_status(db_session, p["keywords_failed"].id, "keywords") == -100
+    assert read_step_status(db_session, p["without_keywords"].id, "keywords") is None
 
 
 def test_disable_feature_keeps_a_feature_sharing_its_artefact(

@@ -60,7 +60,7 @@ def enrich_for_recompute(
     doctypes={DocType.video},
 )
 @register_job(
-    job_type="video_metadata",
+    job_type="video_metadata_extraction",
     input_type=VideoMetadataExtractionJobInput,
     enricher=enrich_for_recompute,
 )

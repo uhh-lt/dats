@@ -2,4 +2,4 @@
 
 from systems.artefact_system.artefact_registry import artefact
 
-KEYWORDS = artefact("keywords")
+KEYWORDS = artefact("keywords", title="Keywords")

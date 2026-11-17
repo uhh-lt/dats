@@ -6,4 +6,4 @@ from systems.artefact_system.artefact_registry import artefact
 
 MENTION_CODES = SystemCode("MENTION", "Co-reference mention")
 
-COREFERENCES = artefact("coreferences", codes=(MENTION_CODES,))
+COREFERENCES = artefact("coreferences", title="Coreferences", codes=(MENTION_CODES,))

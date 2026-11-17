@@ -51,12 +51,12 @@ def enrich_for_recompute(
     doctypes={DocType.text, DocType.image, DocType.audio, DocType.video},
 )
 @register_job(
-    job_type="text_language_detection",
+    job_type="language_detection",
     input_type=TextLanguageDetectionJobInput,
     output_type=TextLanguageDetectionJobOutput,
     enricher=enrich_for_recompute,
 )
-def handle_text_language_detection_job(
+def handle_language_detection_job(
     payload: TextLanguageDetectionJobInput, job: Job
 ) -> TextLanguageDetectionJobOutput:
     if payload.settings.language != Language.auto:

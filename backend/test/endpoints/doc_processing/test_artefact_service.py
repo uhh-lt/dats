@@ -88,24 +88,24 @@ def test_enable_feature_plans_only_the_documents_of_the_project(
         "keyword_statistics"
     ]
     assert read_all_step_status(db_session, p["done"].id) == {
-        "extract_html": 1,
+        "html_extraction": 1,
         "text_extraction": 1,
-        "text_language_detection": 1,
-        "text_es_index": 1,
-        "text_spacy": 1,
-        "text_html_mapping": 1,
-        "text_keywords": 0,
+        "language_detection": 1,
+        "es_index": 1,
+        "tokens_sentences": 1,
+        "html_mapping": 1,
+        "keywords": 0,
     }
     assert read_all_step_status(db_session, p["image"].id) == {
         **dict.fromkeys(minimal_image_steps(), 1),
-        "text_keywords": 0,
+        "keywords": 0,
     }
     assert read_all_step_status(db_session, p["new"].id) == {}
-    assert read_step_status(db_session, p["extracting"].id, "text_keywords") == 0
+    assert read_step_status(db_session, p["extracting"].id, "keywords") == 0
     assert started == {
-        p["done"].id: ["text_keywords"],
-        p["spacy_failed"].id: ["text_keywords"],
-        p["image"].id: ["text_keywords"],
+        p["done"].id: ["keywords"],
+        p["spacy_failed"].id: ["keywords"],
+        p["image"].id: ["keywords"],
     }
 
 
@@ -114,9 +114,9 @@ def test_enable_feature_fails_the_planned_steps_after_an_erroneous_input(
     planning_projects: PlanningProjects,
     held_jobs: HeldJobs,
 ):
-    """Enabling keyword statistics plans the core step text_html_mapping for
-    spacy_failed: it is erroneous as its input text_spacy is. The erroneous
-    text_spacy is no step of keyword statistics and stays erroneous; the
+    """Enabling keyword statistics plans the core step html_mapping for
+    spacy_failed: it is erroneous as its input tokens_sentences is. The erroneous
+    tokens_sentences is no step of keyword statistics and stays erroneous; the
     keywords start, as their input language detection is finished."""
     sdoc_id = planning_projects["spacy_failed"].id
 
@@ -124,13 +124,13 @@ def test_enable_feature_fails_the_planned_steps_after_an_erroneous_input(
     held_jobs.run(ARTEFACT_COMPUTATION_JOB)
 
     assert read_all_step_status(db_session, sdoc_id) == {
-        "extract_html": 1,
+        "html_extraction": 1,
         "text_extraction": 1,
-        "text_language_detection": 1,
-        "text_es_index": 1,
-        "text_spacy": -100,
-        "text_html_mapping": -100,
-        "text_keywords": 0,
+        "language_detection": 1,
+        "es_index": 1,
+        "tokens_sentences": -100,
+        "html_mapping": -100,
+        "keywords": 0,
     }
 
 
@@ -192,19 +192,19 @@ def test_computation_plans_in_batches_like_in_one(
     started = started_steps(held_jobs)
 
     assert started == {
-        p["done"].id: ["text_keywords"],
-        p["spacy_failed"].id: ["text_keywords"],
-        p["image"].id: ["text_keywords"],
+        p["done"].id: ["keywords"],
+        p["spacy_failed"].id: ["keywords"],
+        p["image"].id: ["keywords"],
     }
-    assert read_step_status(db_session, p["done"].id, "text_keywords") == 0
+    assert read_step_status(db_session, p["done"].id, "keywords") == 0
     assert read_all_step_status(db_session, p["spacy_failed"].id) == {
-        "extract_html": 1,
+        "html_extraction": 1,
         "text_extraction": 1,
-        "text_language_detection": 1,
-        "text_es_index": 1,
-        "text_spacy": -100,
-        "text_html_mapping": -100,
-        "text_keywords": 0,
+        "language_detection": 1,
+        "es_index": 1,
+        "tokens_sentences": -100,
+        "html_mapping": -100,
+        "keywords": 0,
     }
     assert (
         crud_project.read(db=db_session, id=p["project"].id).artefact_computations == {}
@@ -233,8 +233,8 @@ def test_computation_leaves_the_documents_after_its_last_document_alone(
 
     started = started_steps(held_jobs)
 
-    assert started == {p["done"].id: ["text_keywords"]}
-    assert read_step_status(db_session, p["spacy_failed"].id, "text_keywords") is None
+    assert started == {p["done"].id: ["keywords"]}
+    assert read_step_status(db_session, p["spacy_failed"].id, "keywords") is None
 
 
 def _fail(*args: object, **kwargs: object) -> None:
@@ -264,7 +264,7 @@ def test_a_failing_computation_removes_the_pending_computation(
     assert (
         crud_project.read(db=db_session, id=p["project"].id).artefact_computations == {}
     )
-    assert read_step_status(db_session, p["done"].id, "text_keywords") == 0
+    assert read_step_status(db_session, p["done"].id, "keywords") == 0
 
 
 # ===========================================================================
@@ -294,13 +294,13 @@ def test_add_features_enables_them_and_plans_nothing(
     project = crud_project.read(db=db_session, id=p["other_project"].id)
     assert project.enabled_features == expected
     assert read_all_step_status(db_session, p["extracting"].id) == {
-        "extract_html": 1,
+        "html_extraction": 1,
         "text_extraction": 1,
-        "text_language_detection": 1,
-        "text_es_index": 1,
-        "text_spacy": 1,
-        "text_html_mapping": 1,
-        "text_keywords": 0,
+        "language_detection": 1,
+        "es_index": 1,
+        "tokens_sentences": 1,
+        "html_mapping": 1,
+        "keywords": 0,
     }
     assert read_all_step_status(db_session, p["new"].id) == {}
     assert held_jobs.jobs() == []
@@ -330,15 +330,15 @@ def test_plan_document_plans_the_steps_of_the_artefact_demand(
     db_session.commit()
 
     assert demand == {artefact_named("keywords")}
-    assert roots == ["extract_html"]
+    assert roots == ["html_extraction"]
 
     assert read_all_step_status(db_session, p["new"].id) == {
-        "extract_html": 0,
+        "html_extraction": 0,
         "text_extraction": 0,
-        "text_language_detection": 0,
-        "text_es_index": 0,
-        "text_spacy": 0,
-        "text_html_mapping": 0,
-        "text_keywords": 0,
+        "language_detection": 0,
+        "es_index": 0,
+        "tokens_sentences": 0,
+        "html_mapping": 0,
+        "keywords": 0,
     }
     assert held_jobs.jobs() == []

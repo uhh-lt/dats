@@ -15,6 +15,7 @@ from feature_test_utils import FeatureProject
 from job_test_utils import HeldJobs, unreachable_redis
 from pipeline_test_utils import (
     all_steps,
+    artefact_named,
     core_steps,
     failing_started_hook,
     read_step_status,
@@ -120,20 +121,20 @@ def test_upload_with_unsupported_file_stores_nothing(client: TestClient, test_pr
     [
         # processing (0) before finished (1)
         pytest.param(
-            [("text_es_index", SortDirection.ASC)],
+            [("es_index", SortDirection.ASC)],
             2,
             ["text_running.txt", "text_done.txt"],
             id="step-asc",
         ),
         pytest.param(
-            [("text_es_index", SortDirection.DESC)],
+            [("es_index", SortDirection.DESC)],
             2,
             ["text_done.txt", "text_running.txt"],
             id="step-desc",
         ),
         # not planned for both, so the name decides
         pytest.param(
-            [("text_keywords", SortDirection.DESC)],
+            [("keywords", SortDirection.DESC)],
             2,
             ["text_done.txt", "text_running.txt"],
             id="step-not-planned",
@@ -195,7 +196,7 @@ def test_search_sdoc_health_ignores_the_row_of_an_unregistered_step(
 @pytest.mark.parametrize(
     "doctype",
     [
-        # extract_html, then the text steps
+        # html_extraction, then the text steps
         pytest.param(DocType.text, id="text"),
         # the image steps, then the text steps on the caption
         pytest.param(DocType.image, id="image"),
@@ -210,14 +211,32 @@ def test_search_columns_lists_the_pipeline_steps_of_the_doctype_in_order(
 ):
     """The steps per doctype are derived from the requires/produces/doctypes
     declarations of the jobs, in pipeline order; the core steps (those of a
-    project without features, text_es_index among them) are flagged."""
+    project without features, es_index among them) are flagged."""
     response = client.get(f"/docprocessing/searchColumns/{doctype.value}")
 
     assert response.status_code == 200, response.text
     columns = [SdocHealthColumn.model_validate(c) for c in response.json()]
     assert [c.step for c in columns] == all_steps(doctype)
     assert {c.step for c in columns if c.core} == set(core_steps(doctype))
-    assert "text_es_index" in core_steps(doctype)
+    assert "es_index" in core_steps(doctype)
+
+
+def test_search_columns_are_titled_by_the_artefacts_their_steps_produce(
+    client: TestClient,
+):
+    """A column is titled by the titles of the artefacts its step produces, not
+    by the step name: the step tokens_sentences shows "Tokens and sentences",
+    es_index the title of the artefact es_index."""
+    response = client.get(f"/docprocessing/searchColumns/{DocType.text.value}")
+
+    assert response.status_code == 200, response.text
+    titles = {
+        c.step: c.title
+        for c in (SdocHealthColumn.model_validate(c) for c in response.json())
+    }
+    assert titles["tokens_sentences"] == "Tokens and sentences"
+    assert titles["es_index"] == artefact_named("es_index").title
+    assert all(titles.values())
 
 
 # ===========================================================================
@@ -279,11 +298,11 @@ def test_recompute_starts_the_step_of_each_document(
     p = recompute_project
     sdoc_id = p["text_done"].id
 
-    response = _recompute(client, p["project"].id, "text_language_detection", [sdoc_id])
+    response = _recompute(client, p["project"].id, "language_detection", [sdoc_id])
 
     assert response.status_code == 200, response.text
     assert response.json() == 1
-    assert started_steps(held_jobs) == {sdoc_id: ["text_language_detection"]}
+    assert started_steps(held_jobs) == {sdoc_id: ["language_detection"]}
 
 
 def test_recompute_of_a_document_without_input_data_marks_it_erroneous(
@@ -302,18 +321,18 @@ def test_recompute_of_a_document_without_input_data_marks_it_erroneous(
     response = _recompute(
         client,
         p["project"].id,
-        "text_language_detection",
+        "language_detection",
         [no_data, p["text_done"].id],
     )
 
     assert response.status_code == 200, response.text
     assert response.json() == 1
-    assert started_steps(held_jobs) == {p["text_done"].id: ["text_language_detection"]}
+    assert started_steps(held_jobs) == {p["text_done"].id: ["language_detection"]}
     steps = [
         "text_extraction",
-        "text_language_detection",
-        "text_spacy",
-        "text_html_mapping",
+        "language_detection",
+        "tokens_sentences",
+        "html_mapping",
     ]
     assert [read_step_status(db_session, no_data, s) for s in steps] == [
         1,
@@ -329,27 +348,29 @@ def test_recompute_of_text_ner_runs_that_step_only(
     text_steps_project: TextStepsProject,
     held_jobs: HeldJobs,
 ):
-    """Recomputing the named entities of text starts the job text_ner only;
-    once it ran, nothing follows it, and text_spacy and the HTML mapping keep
+    """Recomputing the named entities of text starts the job named_entity_recognition only;
+    once it ran, nothing follows it, and tokens_sentences and the HTML mapping keep
     their status."""
     p = text_steps_project
     sdoc_id = p["text"].id
 
-    response = _recompute(client, p["project"].id, "text_ner", [sdoc_id])
+    response = _recompute(
+        client, p["project"].id, "named_entity_recognition", [sdoc_id]
+    )
 
     assert response.status_code == 200, response.text
-    assert started_steps(held_jobs) == {sdoc_id: ["text_ner"]}
+    assert started_steps(held_jobs) == {sdoc_id: ["named_entity_recognition"]}
     with pytest.MonkeyPatch.context() as patch:
         patch.setattr(
             RayRepo,
             "spacy_pipline",
             lambda self, spacy_input: spacy_output(spacy_input.text, {}),
         )
-        held_jobs.run("text_ner")
+        held_jobs.run("named_entity_recognition")
     assert [job_type for job_type, _ in held_jobs.jobs()] == []
     assert [
         read_step_status(db_session, sdoc_id, s)
-        for s in ("text_ner", "text_spacy", "text_html_mapping")
+        for s in ("named_entity_recognition", "tokens_sentences", "html_mapping")
     ] == [1, 1, 1]
 
 
@@ -365,14 +386,12 @@ def test_recompute_with_an_unreachable_queue_fails_the_step(
     sdoc_id = p["text_done"].id
 
     with unreachable_redis():
-        response = _recompute(
-            client, p["project"].id, "text_language_detection", [sdoc_id]
-        )
+        response = _recompute(client, p["project"].id, "language_detection", [sdoc_id])
 
     assert response.status_code == 200, response.text
     assert response.json() == 0
     assert held_jobs.jobs() == []
-    assert read_step_status(db_session, sdoc_id, "text_language_detection") == -100
+    assert read_step_status(db_session, sdoc_id, "language_detection") == -100
 
 
 def test_recompute_of_a_step_that_is_not_planned_is_rejected(
@@ -388,12 +407,12 @@ def test_recompute_of_a_step_that_is_not_planned_is_rejected(
     p = recompute_project
     sdoc_id = p["text_done"].id
 
-    response = _recompute(client, p["project"].id, "text_keywords", [sdoc_id])
+    response = _recompute(client, p["project"].id, "keywords", [sdoc_id])
 
     assert response.status_code == 400, response.text
-    assert "text_keywords" in response.text
+    assert "keywords" in response.text
     assert held_jobs.jobs() == []
-    assert read_step_status(db_session, sdoc_id, "text_keywords") is None
+    assert read_step_status(db_session, sdoc_id, "keywords") is None
 
 
 def test_recompute_plans_a_core_step_that_is_not_planned(
@@ -402,18 +421,18 @@ def test_recompute_plans_a_core_step_that_is_not_planned(
     recompute_project: RecomputeProject,
     held_jobs: HeldJobs,
 ):
-    """text_es_index of no_data has no status row (no_data was created without
+    """es_index of no_data has no status row (no_data was created without
     it). It is a core step, which no feature owns: Recompute plans it and
     starts its job, which cannot start for no_data (no content), so it becomes
     erroneous instead of staying unplanned."""
     p = recompute_project
     sdoc_id = p["no_data"].id
-    assert read_step_status(db_session, sdoc_id, "text_es_index") is None
+    assert read_step_status(db_session, sdoc_id, "es_index") is None
 
-    response = _recompute(client, p["project"].id, "text_es_index", [sdoc_id])
+    response = _recompute(client, p["project"].id, "es_index", [sdoc_id])
 
     assert response.status_code == 200, response.text
-    assert read_step_status(db_session, sdoc_id, "text_es_index") == -100
+    assert read_step_status(db_session, sdoc_id, "es_index") == -100
     assert held_jobs.jobs() == []
 
 
@@ -429,7 +448,7 @@ def test_recompute_is_rejected_as_a_whole_if_one_document_lacks_the_step(
     p = recompute_project
     sdoc_ids = [p["keywords_done"].id, p["text_done"].id]
 
-    response = _recompute(client, p["project"].id, "text_keywords", sdoc_ids)
+    response = _recompute(client, p["project"].id, "keywords", sdoc_ids)
 
     assert response.status_code == 400, response.text
     assert f"[{p['text_done'].id}]" in response.text

@@ -169,5 +169,6 @@ COCO_CODES = (
 
 OBJECT_BBOXES = artefact(
     "object_bboxes",
+    title="Detected objects",
     codes=COCO_CODES,
 )

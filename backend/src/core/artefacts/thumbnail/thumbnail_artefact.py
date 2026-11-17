@@ -33,4 +33,6 @@ class _ThumbnailArchive(ArtefactArchive):
                 store_video_thumbnail(db=db, sdoc=sdoc_read, video_path=path)
 
 
-THUMBNAIL = artefact("thumbnail", always=True, archive=_ThumbnailArchive())
+THUMBNAIL = artefact(
+    "thumbnail", title="Thumbnail", always=True, archive=_ThumbnailArchive()
+)

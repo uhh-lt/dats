@@ -59,44 +59,56 @@ def _sdoc(**kwargs) -> SourceDocumentExportSchema:
 def test_archive_step_status_keeps_not_planned_steps() -> None:
     """Steps archived as not planned (None) stay not planned."""
     archived: dict[str, int | None] = dict.fromkeys(TEXT_STEPS, FINISHED)
-    archived["text_es_index"] = None
-    archived["text_keywords"] = None
+    archived["es_index"] = None
+    archived["keywords"] = None
 
     status = archived_step_status(_sdoc(step_status=archived))
 
-    assert status["text_es_index"] is None
-    assert status["text_keywords"] is None
-    assert status["text_ner"] == FINISHED
+    assert status["es_index"] is None
+    assert status["keywords"] is None
+    assert status["named_entity_recognition"] == FINISHED
 
 
 def test_processing_steps_are_imported_as_not_planned() -> None:
     """Steps archived as processing are not planned: the import starts no job, so
     they would stay processing forever. Other steps keep their status."""
     archived: dict[str, int | None] = dict.fromkeys(TEXT_STEPS, FINISHED)
-    archived["text_es_index"] = PROCESSING
-    archived["text_keywords"] = ERRONEOUS
+    archived["es_index"] = PROCESSING
+    archived["keywords"] = ERRONEOUS
 
     status = archived_step_status(_sdoc(step_status=archived))
 
-    assert status["text_es_index"] is None
-    assert status["text_keywords"] == ERRONEOUS
-    assert status["text_spacy"] == FINISHED
+    assert status["es_index"] is None
+    assert status["keywords"] == ERRONEOUS
+    assert status["tokens_sentences"] == FINISHED
 
 
 def test_steps_missing_in_the_archive_are_not_planned() -> None:
     """Steps of the doctype that the archived statuses do not list are not planned."""
-    status = archived_step_status(_sdoc(step_status={"extract_html": FINISHED}))
-    assert status["extract_html"] == FINISHED
-    assert status["text_spacy"] is None
+    status = archived_step_status(_sdoc(step_status={"html_extraction": FINISHED}))
+    assert status["html_extraction"] == FINISHED
+    assert status["tokens_sentences"] is None
 
 
 def test_unknown_step_is_ignored() -> None:
-    """An archived status of a step this version does not have (renamed or
-    removed since the export) is dropped; the other statuses are imported."""
-    sdoc = _sdoc(step_status={"removed_step": FINISHED, "extract_html": FINISHED})
+    """An archived status of a step this version does not have (removed since the
+    export) is dropped; the other statuses are imported."""
+    sdoc = _sdoc(step_status={"removed_step": FINISHED, "html_extraction": FINISHED})
 
-    assert sdoc.step_status == {"extract_html": FINISHED}
-    assert archived_step_status(sdoc)["extract_html"] == FINISHED
+    assert sdoc.step_status == {"html_extraction": FINISHED}
+    assert archived_step_status(sdoc)["html_extraction"] == FINISHED
+
+
+def test_old_step_names_are_imported_under_their_new_names() -> None:
+    """An archive of a version before the step renames names the steps by their
+    old names (text_spacy for tokens_sentences, extract_html for
+    html_extraction); the import reads them under their new names."""
+    sdoc = _sdoc(step_status={"extract_html": FINISHED, "text_spacy": ERRONEOUS})
+
+    assert sdoc.step_status == {
+        "html_extraction": FINISHED,
+        "tokens_sentences": ERRONEOUS,
+    }
 
 
 def test_step_of_another_doctype_is_ignored() -> None:
@@ -110,14 +122,14 @@ def test_step_of_another_doctype_is_ignored() -> None:
 def test_invalid_step_status_is_rejected() -> None:
     """An archived status that is no step status fails the validation."""
     with pytest.raises(ValueError, match="is not a valid SDocStatus"):
-        _sdoc(step_status={"extract_html": 7})
+        _sdoc(step_status={"html_extraction": 7})
 
 
 def test_step_status_survives_the_csv_round_trip() -> None:
     """The per-step statuses, including None, are written to and read from the CSV unchanged."""
     archived: dict[str, int | None] = {
-        "extract_html": FINISHED,
-        "text_es_index": None,
+        "html_extraction": FINISHED,
+        "es_index": None,
     }
     df = SourceDocumentExportCollection(
         source_documents=[_sdoc(step_status=archived)]

@@ -59,7 +59,7 @@ def enrich_for_recompute(
     doctypes={DocType.image},
 )
 @register_job(
-    job_type="image_object_detection",
+    job_type="object_detection",
     input_type=ObjectDetectionJobInput,
     device="api",
     enricher=enrich_for_recompute,

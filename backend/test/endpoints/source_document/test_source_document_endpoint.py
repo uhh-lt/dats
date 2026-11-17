@@ -258,9 +258,9 @@ def test_update_sdoc_cannot_write_step_statuses(client: TestClient, project_with
     sdoc = project_with_sdoc["source_document"]
 
     with_name = client.patch(
-        f"/sdoc/{sdoc.id}", json={"name": "Renamed", "text_spacy": -100}
+        f"/sdoc/{sdoc.id}", json={"name": "Renamed", "tokens_sentences": -100}
     )
-    status_only = client.patch(f"/sdoc/{sdoc.id}", json={"text_spacy": -100})
+    status_only = client.patch(f"/sdoc/{sdoc.id}", json={"tokens_sentences": -100})
 
     assert with_name.status_code == 200, with_name.text
     assert status_only.status_code == 422, status_only.text

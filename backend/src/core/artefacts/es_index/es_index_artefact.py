@@ -36,4 +36,6 @@ class _ElasticIndexArchive(ArtefactArchive):
         )
 
 
-ES_INDEX = artefact("es_index", always=True, archive=_ElasticIndexArchive())
+ES_INDEX = artefact(
+    "es_index", title="Full-text index", always=True, archive=_ElasticIndexArchive()
+)

@@ -3,4 +3,4 @@ key "language"."""
 
 from systems.artefact_system.artefact_registry import artefact
 
-LANGUAGE = artefact("language", always=True)
+LANGUAGE = artefact("language", title="Language", always=True)

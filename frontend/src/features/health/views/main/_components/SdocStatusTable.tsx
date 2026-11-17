@@ -99,12 +99,10 @@ export function SdocStatusTable({
   const plannedSteps = useMemo(() => {
     const selected = new Set(selectedRows);
     const rows = searchData.pages.flatMap(flatMapData).filter((row) => selected.has(row.sdoc_id));
-    return tableColumnInfo
-      .filter(
-        ({ step, core }) =>
-          (core && rows.length > 0) || rows.some((row) => row.status[step] !== null && row.status[step] !== undefined),
-      )
-      .map(({ step }) => step);
+    return tableColumnInfo.filter(
+      ({ step, core }) =>
+        (core && rows.length > 0) || rows.some((row) => row.status[step] !== null && row.status[step] !== undefined),
+    );
   }, [searchData, selectedRows, tableColumnInfo]);
 
   // actions
@@ -137,10 +135,10 @@ export function SdocStatusTable({
   const columns: MRT_ColumnDef<SdocStatusRow>[] = useMemo(() => {
     if (!tableColumnInfo) return [];
     const result: MRT_ColumnDef<SdocStatusRow>[] = tableColumnInfo.reduce(
-      (prev, { step: current }) => {
+      (prev, { step: current, title }) => {
         prev.push({
           id: current,
-          header: current,
+          header: title,
           size: 200,
           accessorFn: (row) => row.status[current],
           Cell: ({ row }) => {

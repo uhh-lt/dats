@@ -16,7 +16,7 @@ SETTINGS = {
 }
 
 # ===========================================================================
-# KEYWORDS JOB (step text_keywords) TESTS
+# KEYWORDS JOB (step keywords) TESTS
 # ===========================================================================
 # The step runs as a background job, so these tests call its handler, taken
 # from the job registry by the step name. The keywords come from YAKE, which
@@ -31,7 +31,7 @@ def test_keywords_job_stores_the_keywords_as_metadata(
     sdoc_id = text_steps_project["text"].id
 
     run_step_handler(
-        "text_keywords",
+        "keywords",
         {
             "project_id": text_steps_project["project"].id,
             "sdoc_id": sdoc_id,

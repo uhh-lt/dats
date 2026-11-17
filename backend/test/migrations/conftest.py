@@ -744,3 +744,66 @@ def person_boxes_database(
         db_session.rollback()
         db_session.close()
         command.upgrade(config, "head")
+
+
+RENAME_STEPS = "10b8dac1fdd6"
+# the steps renamed by 10b8dac1fdd6, old name -> new name
+RENAMED_STEPS = {
+    "extract_html": "html_extraction",
+    "text_language_detection": "language_detection",
+    "text_spacy": "tokens_sentences",
+    "text_html_mapping": "html_mapping",
+    "text_es_index": "es_index",
+    "text_word_frequency": "word_frequency",
+    "text_sentence_embedding": "sentence_embedding",
+    "text_keywords": "keywords",
+    "text_ner": "named_entity_recognition",
+    "text_document_embedding": "document_embedding",
+    "image_object_detection": "object_detection",
+    "audio_transcription": "transcription",
+    "audio_metadata": "audio_metadata_extraction",
+    "video_metadata": "video_metadata_extraction",
+}
+# steps whose names stay
+KEPT_STEPS = ["text_extraction", "image_caption", "coreference_resolution"]
+
+
+@pytest.fixture(scope="function")
+def old_step_names_database(
+    db_session: Session, project_with_sdoc: ProjectWithSdoc
+) -> Generator[dict[str, int], None, None]:
+    """
+    This fixture migrates the database down to the revision before
+    `10b8dac1fdd6_rename_the_pipeline_steps` and replaces the step status rows
+    of the document of `project_with_sdoc` with one row per old step name
+    (`RENAMED_STEPS`) and per kept name (`KEPT_STEPS`), the n-th of them with
+    status 1 if n is even and -100 otherwise. It migrates the database back to
+    head afterwards.
+
+    Returns the status per step name and, under "sdoc_id", the document id.
+    """
+    sdoc_id = project_with_sdoc["source_document"].id
+    db_session.commit()
+    config = alembic_config()
+    command.downgrade(config, HUMAN_CODE)
+    try:
+        db_session.execute(
+            sa.text("DELETE FROM sourcedocumentstepstatus WHERE sdoc_id = :id"),
+            {"id": sdoc_id},
+        )
+        statuses: dict[str, int] = {}
+        for n, step in enumerate([*RENAMED_STEPS, *KEPT_STEPS]):
+            statuses[step] = 1 if n % 2 == 0 else -100
+            db_session.execute(
+                sa.text(
+                    "INSERT INTO sourcedocumentstepstatus (sdoc_id, step, status) "
+                    "VALUES (:id, :step, :status)"
+                ),
+                {"id": sdoc_id, "step": step, "status": statuses[step]},
+            )
+        db_session.commit()
+        yield {**statuses, "sdoc_id": sdoc_id}
+    finally:
+        db_session.rollback()
+        db_session.close()
+        command.upgrade(config, "head")

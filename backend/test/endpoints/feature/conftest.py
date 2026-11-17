@@ -63,7 +63,7 @@ class DuplicateFinderProject(TypedDict):
       duplicate finder enabled
     - text: text document "text.txt" with the text of `SDOC_SENTENCES` and the
       language "en"; the minimal text steps are finished, all other steps
-      (text_word_frequency among them) are not planned
+      (word_frequency among them) are not planned
 
     Non-obvious derived behavior:
 
@@ -106,13 +106,13 @@ class UploadingProject(TypedDict):
       enabled
     - uploading: text document "uploading.txt" with the text of
       `SDOC_SENTENCES` and the language "en", still being uploaded: all steps
-      a text document of this project gets (extract_html, text_extraction,
-      text_language_detection, text_spacy, text_html_mapping, text_keywords)
-      are processing, and the job of extract_html runs
+      a text document of this project gets (html_extraction, text_extraction,
+      language_detection, tokens_sentences, html_mapping, keywords)
+      are processing, and the job of html_extraction runs
 
     Non-obvious derived behavior:
 
-    - Every processing step of uploading is a core step except text_keywords,
+    - Every processing step of uploading is a core step except keywords,
       which waits for the language detection.
     """
 
@@ -151,11 +151,11 @@ class ActivationProject(TypedDict):
     - project: "Activation Project" of `test_user`, without any enabled feature
     - tokenized: text document "tokenized.txt" with the sentences "Hello
       world." and "The cat sits on the mat." and the language "en"; the steps of
-      a project without features are finished (extract_html, text_extraction,
-      text_language_detection, text_spacy, text_html_mapping), all other steps
+      a project without features are finished (html_extraction, text_extraction,
+      language_detection, tokens_sentences, html_mapping), all other steps
       are not planned
     - extracted: text document "extracted.txt" with the same text; only
-      extract_html and text_extraction are finished, all other steps are not
+      html_extraction and text_extraction are finished, all other steps are not
       planned
     - no_data: text document "no_data.txt" without any content (no
       SourceDocumentData); the steps of a project without features are finished
@@ -197,7 +197,9 @@ def activation_project(db_session, test_user: UserORM) -> ActivationProject:
     )
     db_session.flush()
     set_step_status(db_session, tokenized.id, dict.fromkeys(minimal_text_steps(), 1))
-    set_step_status(db_session, extracted.id, {"extract_html": 1, "text_extraction": 1})
+    set_step_status(
+        db_session, extracted.id, {"html_extraction": 1, "text_extraction": 1}
+    )
     no_data = crud_sdoc.create(
         db=db_session,
         create_dto=SourceDocumentCreate(
@@ -270,6 +272,7 @@ def coded_feature() -> Generator[Feature, None, None]:
     """
     coded = artefact(
         "test_coded_artefact",
+        title="Test coded",
         uploaded_for={DocType.audio},
         codes=(CODED_TREE,),
     )
@@ -350,6 +353,7 @@ def hooked_feature() -> Generator[HookedFeature, None, None]:
 
     hooked = artefact(
         "test_hooked_artefact",
+        title="Test hooked",
         uploaded_for={DocType.audio},
         codes=(CODED_TREE,),
     )
@@ -375,7 +379,7 @@ def hooked_partly_project(
 ) -> ProjectORM:
     """The project "Hook Partly", created with the feature of `hooked_feature`
     (its hook ran once for it), with one text document "text_done.txt" whose
-    core steps are finished and whose text_keywords is not planned: the
+    core steps are finished and whose keywords is not planned: the
     feature is partly available."""
     project = create_project_with_features(
         db_session,
@@ -407,7 +411,7 @@ class CodeImportProjects(TypedDict):
     - target: "Codes Target", without any enabled feature: it has no codes
     - entity_spans: "Entity Spans", with automatic entity annotations enabled
       and one text document "persons.txt" (the sentences "Ada met Alan." and
-      "They talked.", with its raw file); its core steps and `text_ner` are
+      "They talked.", with its raw file); its core steps and `named_entity_recognition` are
       finished, and `test_user` annotated "Ada" and "Alan" with the system
       code `PERSON` (below `NAMED_ENTITY`)
     - user_animals: "User Animals", without any enabled feature, with the
@@ -473,7 +477,9 @@ def code_import_projects(db_session, test_user: UserORM) -> CodeImportProjects:
         project_id=entity_spans.id, filename="persons.txt"
     ).write_text(" ".join(sentences))
     set_step_status(
-        db_session, persons.id, dict.fromkeys([*minimal_text_steps(), "text_ner"], 1)
+        db_session,
+        persons.id,
+        dict.fromkeys([*minimal_text_steps(), "named_entity_recognition"], 1),
     )
     person = crud_code.read_by_name_and_project(
         db=db_session, code_name="PERSON", project_id=entity_spans.id

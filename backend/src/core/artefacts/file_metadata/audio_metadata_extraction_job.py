@@ -56,7 +56,7 @@ def enrich_for_recompute(
     doctypes={DocType.audio},
 )
 @register_job(
-    job_type="audio_metadata",
+    job_type="audio_metadata_extraction",
     input_type=AudioMetadataExtractionJobInput,
     enricher=enrich_for_recompute,
 )

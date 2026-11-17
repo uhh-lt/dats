@@ -39,11 +39,11 @@ def enrich_for_recompute(payload: SdocProcessingJobInput) -> WordFrequencyJobInp
     doctypes={DocType.text, DocType.image, DocType.audio, DocType.video},
 )
 @register_job(
-    job_type="text_word_frequency",
+    job_type="word_frequency",
     input_type=WordFrequencyJobInput,
     enricher=enrich_for_recompute,
 )
-def handle_text_word_frequency_job(payload: WordFrequencyJobInput, job: Job) -> None:
+def handle_word_frequency_job(payload: WordFrequencyJobInput, job: Job) -> None:
     spacy_output = ray.spacy_pipline(
         SpacyInput(text=payload.text, language=payload.language)
     )

@@ -7,7 +7,7 @@ from systems.job_system.job_service import JobService
 
 def start_followers(finished: str, followers: list[tuple[str, JobInputBase]]) -> None:
     """Start the jobs that follow a finished entry point (`extract_archive`,
-    `doc_chunking`, `extract_html`), once its data is stored. If the queue
+    `doc_chunking`, `html_extraction`), once its data is stored. If the queue
     (Redis) cannot be reached, the outage is logged and the finished job
     stays finished: its data is stored."""
     try:

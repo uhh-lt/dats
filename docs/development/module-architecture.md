@@ -41,7 +41,7 @@ The keyword statistics (`backend/src/modules/statistics/`) are a small, complete
 1. **The artefact** (`keywords_artefact.py`): the keywords of a document, stored in its metadata key `keywords`. It has no store of its own, so it needs no archive.
 
    ```python
-   KEYWORDS = artefact("keywords")
+   KEYWORDS = artefact("keywords", title="Keywords")
    ```
 
 2. **The step** (`keywords_job.py`): it requires the core artefacts `CONTENT` and `LANGUAGE`, produces `KEYWORDS` for every doctype, and loads its input in its enricher, so it can run after its predecessor, on recompute and in an artefact computation alike.
@@ -53,11 +53,11 @@ The keyword statistics (`backend/src/modules/statistics/`) are a small, complete
        doctypes={DocType.text, DocType.image, DocType.audio, DocType.video},
    )
    @register_job(
-       job_type="text_keywords",
+       job_type="keywords",
        input_type=KeywordsJobInput,
        enricher=enrich_for_recompute,
    )
-   def handle_text_keywords_job(payload: KeywordsJobInput, job: Job) -> None: ...
+   def handle_keywords_job(payload: KeywordsJobInput, job: Job) -> None: ...
    ```
 
    The graph places the step after the steps that produce its inputs; nothing lists steps by hand. A step has one direct predecessor (the steps producing its inputs depend on each other) and applies to every doctype of the step it follows; the startup check rejects a step that breaks these limits.

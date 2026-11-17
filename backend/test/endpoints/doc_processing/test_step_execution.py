@@ -55,7 +55,7 @@ def test_a_failed_step_fails_the_pending_steps_after_it(
     sdoc_id = feature_project["text_running"].id
 
     handle_job_error(
-        "text_language_detection",
+        "language_detection",
         SdocProcessingJobInput(
             project_id=feature_project["project"].id,
             sdoc_id=sdoc_id,
@@ -64,12 +64,12 @@ def test_a_failed_step_fails_the_pending_steps_after_it(
     )
 
     steps = [
-        "extract_html",
+        "html_extraction",
         "text_extraction",
-        "text_language_detection",
-        "text_spacy",
-        "text_html_mapping",
-        "text_sentence_embedding",
+        "language_detection",
+        "tokens_sentences",
+        "html_mapping",
+        "sentence_embedding",
     ]
     assert _statuses(db_session, sdoc_id, steps) == [1, 1, -100, -100, -100, None]
 
@@ -86,20 +86,20 @@ def test_a_job_whose_started_hook_fails_fails_its_steps(
     started = start_steps(
         project_id=feature_project["project"].id,
         sdoc_id=sdoc_id,
-        steps=["text_language_detection"],
+        steps=["language_detection"],
         settings=SETTINGS,
     )
-    job = started["text_language_detection"]
+    job = started["language_detection"]
     assert job is not None
 
     with failing_started_hook():
-        held_jobs.run("text_language_detection")
+        held_jobs.run("language_detection")
 
     assert JobService().get_job(job.get_id()).get_status() == JobStatus.FAILED
     steps = [
-        "text_language_detection",
-        "text_spacy",
-        "text_html_mapping",
+        "language_detection",
+        "tokens_sentences",
+        "html_mapping",
     ]
     assert _statuses(db_session, sdoc_id, steps) == [-100, -100, -100]
 
@@ -109,7 +109,7 @@ def test_a_finished_job_fails_its_successors_if_the_queue_is_unreachable(
     dummy_step_projects: DummyStepProjects,
     held_jobs: HeldJobs,
 ):
-    """The upload of `dummy_step_projects` runs up to extract_html, which
+    """The upload of `dummy_step_projects` runs up to html_extraction, which
     finishes while the queue cannot be reached: the job and its step are
     finished, and the steps after it cannot start, so they are erroneous
     instead of processing without a job."""
@@ -124,18 +124,18 @@ def test_a_finished_job_fails_its_successors_if_the_queue_is_unreachable(
         ),
     )
     held_jobs.run(SDOC_INIT_JOB)
-    (extract_html,) = held_jobs.inputs("extract_html")
-    assert isinstance(extract_html, SdocProcessingJobInput)
-    sdoc_id = extract_html.sdoc_id
+    (html_extraction,) = held_jobs.inputs("html_extraction")
+    assert isinstance(html_extraction, SdocProcessingJobInput)
+    sdoc_id = html_extraction.sdoc_id
 
     with unreachable_redis():
-        held_jobs.run("extract_html")
+        held_jobs.run("html_extraction")
 
-    (job,) = held_jobs.ran("extract_html")
+    (job,) = held_jobs.ran("html_extraction")
     assert job.get_status() == JobStatus.FINISHED
     assert held_jobs.jobs() == []
     status = crud_sdoc_step_status.read_by_sdoc(db=db_session, sdoc_id=sdoc_id)
-    assert status.pop("extract_html") == SDocStatus.finished
+    assert status.pop("html_extraction") == SDocStatus.finished
     assert "text_extraction" in status
     assert set(status.values()) == {SDocStatus.erroneous}
 
@@ -153,16 +153,16 @@ def test_a_step_job_whose_worker_dies_fails_its_steps(
     start_steps(
         project_id=feature_project["project"].id,
         sdoc_id=sdoc_id,
-        steps=["text_language_detection"],
+        steps=["language_detection"],
         settings=SETTINGS,
     )
 
-    held_jobs.abandon("text_language_detection")
+    held_jobs.abandon("language_detection")
 
     steps = [
-        "text_language_detection",
-        "text_spacy",
-        "text_html_mapping",
+        "language_detection",
+        "tokens_sentences",
+        "html_mapping",
     ]
     assert _statuses(db_session, sdoc_id, steps) == [-100, -100, -100]
 
@@ -172,7 +172,7 @@ def test_a_finished_step_stays_finished_if_the_queue_is_unreachable_for_its_entr
     dummy_step_projects: DummyStepProjects,
     held_jobs: HeldJobs,
 ):
-    """extract_html of the upload of `dummy_step_projects` finishes with an
+    """html_extraction of the upload of `dummy_step_projects` finishes with an
     extracted image while the queue cannot be reached: starting the image's
     sdoc_init fails, which is only logged, and the step stays finished."""
     JobService().start_job(
@@ -186,8 +186,8 @@ def test_a_finished_step_stays_finished_if_the_queue_is_unreachable_for_its_entr
         ),
     )
     held_jobs.run(SDOC_INIT_JOB)
-    (extract_html,) = held_jobs.inputs("extract_html")
-    assert isinstance(extract_html, ExtractHTMLJobInput)
+    (html_extraction,) = held_jobs.inputs("html_extraction")
+    assert isinstance(html_extraction, ExtractHTMLJobInput)
     output = ExtractHTMLJobOutput(
         raw_html="<p>text</p>",
         image_paths=[dummy_step_projects["upload"]],
@@ -195,10 +195,10 @@ def test_a_finished_step_stays_finished_if_the_queue_is_unreachable_for_its_entr
     )
 
     with unreachable_redis():
-        handle_job_finished("extract_html", extract_html, output)
+        handle_job_finished("html_extraction", html_extraction, output)
 
     assert (
-        read_step_status(db_session, extract_html.sdoc_id, "extract_html")
+        read_step_status(db_session, html_extraction.sdoc_id, "html_extraction")
         == SDocStatus.finished
     )
 
@@ -208,10 +208,10 @@ def test_a_step_planned_while_text_spacy_runs_starts_after_the_language_detectio
     text_steps_project: TextStepsProject,
     held_jobs: HeldJobs,
 ):
-    """Completing keyword statistics plans text_keywords for spacy_running,
-    whose spaCy job runs: text_keywords follows the language detection, which
+    """Completing keyword statistics plans keywords for spacy_running,
+    whose spaCy job runs: keywords follows the language detection, which
     is finished, so the computation starts it at once, and it finishes while
-    text_spacy is still processing."""
+    tokens_sentences is still processing."""
     p = text_steps_project
     sdoc_id = p["spacy_running"].id
 
@@ -224,9 +224,9 @@ def test_a_step_planned_while_text_spacy_runs_starts_after_the_language_detectio
     db_session.commit()
     held_jobs.run(ARTEFACT_COMPUTATION_JOB)
 
-    assert started_steps(held_jobs) == {sdoc_id: ["text_keywords"]}
-    held_jobs.run("text_keywords")
-    assert _statuses(db_session, sdoc_id, ["text_keywords", "text_spacy"]) == [
+    assert started_steps(held_jobs) == {sdoc_id: ["keywords"]}
+    held_jobs.run("keywords")
+    assert _statuses(db_session, sdoc_id, ["keywords", "tokens_sentences"]) == [
         SDocStatus.finished,
         SDocStatus.processing,
     ]

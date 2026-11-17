@@ -78,13 +78,13 @@ def test_a_step_declared_once_is_planned_run_shown_exported_and_imported(
         ),
     )
     held_jobs.run(SDOC_INIT_JOB)
-    (extract_html,) = held_jobs.inputs("extract_html")
-    assert isinstance(extract_html, SdocProcessingJobInput)
-    sdoc_id = extract_html.sdoc_id
+    (html_extraction,) = held_jobs.inputs("html_extraction")
+    assert isinstance(html_extraction, SdocProcessingJobInput)
+    sdoc_id = html_extraction.sdoc_id
     assert read_step_status(db_session, sdoc_id, step) == SDocStatus.processing
 
     # started after its input step, its input completed by its enricher
-    held_jobs.run("extract_html")
+    held_jobs.run("html_extraction")
     assert held_jobs.inputs(step) == []
     held_jobs.run("text_extraction")
     (payload,) = held_jobs.inputs(step)

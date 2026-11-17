@@ -192,7 +192,7 @@ def test_project_import_plans_and_starts_nothing(
     assert len(imported) == 3
     for sdoc in imported:
         assert 0 not in _step_status(db_session, sdoc).values(), sdoc.filename
-        assert "text_keywords" not in _step_status(db_session, sdoc)
+        assert "keywords" not in _step_status(db_session, sdoc)
     assert held_jobs.jobs() == []
 
 
@@ -240,8 +240,8 @@ def test_archive_without_one_embedding_per_sentence_imports_the_step_not_planned
     )
 
     status = _step_status(db_session, _imported(db_session, projects, "text.txt"))
-    assert "text_sentence_embedding" not in status
-    assert status["text_document_embedding"] == SDocStatus.finished
+    assert "sentence_embedding" not in status
+    assert status["document_embedding"] == SDocStatus.finished
 
 
 def test_archive_without_step_status_is_rejected(
@@ -328,12 +328,12 @@ def _audio_stream(db: Session, sdoc: SourceDocumentORM) -> object:
     started = start_steps(
         project_id=sdoc.project_id,
         sdoc_id=sdoc.id,
-        steps=["audio_transcription"],
+        steps=["transcription"],
         settings=SETTINGS,
     )
     return (
         audio_stream_path(_file(sdoc)).read_bytes(),
-        started["audio_transcription"] is not None,
+        started["transcription"] is not None,
     )
 
 
@@ -424,22 +424,22 @@ def test_recompute_plans_the_core_index_step_an_import_left_unplanned(
     indexing_eximport_projects: FeatureToggleEximportProjects,
     held_jobs: HeldJobs,
 ) -> None:
-    """The imported text has no row of the core step text_es_index and no
+    """The imported text has no row of the core step es_index and no
     index entry (it was processing at the export). No feature computes it, so
     Recompute plans it and starts its job, which indexes the document."""
     projects = indexing_eximport_projects
     _round_trip(db_session, projects)
     sdoc = _imported(db_session, projects, "text.txt")
-    assert read_step_status(db_session, sdoc.id, "text_es_index") is None
+    assert read_step_status(db_session, sdoc.id, "es_index") is None
     assert not _has_index_entry(db_session, sdoc)
 
-    response = _recompute(client, projects, "text_es_index", sdoc.id)
+    response = _recompute(client, projects, "es_index", sdoc.id)
 
     assert response.status_code == 200, response.text
-    assert read_step_status(db_session, sdoc.id, "text_es_index") == 0
-    assert started_steps(held_jobs) == {sdoc.id: ["text_es_index"]}
-    held_jobs.run("text_es_index")
-    assert read_step_status(db_session, sdoc.id, "text_es_index") == 1
+    assert read_step_status(db_session, sdoc.id, "es_index") == 0
+    assert started_steps(held_jobs) == {sdoc.id: ["es_index"]}
+    held_jobs.run("es_index")
+    assert read_step_status(db_session, sdoc.id, "es_index") == 1
     assert _has_index_entry(db_session, sdoc)
 
 
@@ -449,18 +449,18 @@ def test_recompute_plans_every_missing_core_step_of_an_imported_document(
     mid_pipeline_eximport_projects: FeatureToggleEximportProjects,
     held_jobs: HeldJobs,
 ) -> None:
-    """The imported text has no row of text_spacy and text_es_index. Recompute
-    of text_es_index plans both, as processing, and starts both, as the
-    inputs of both are finished (text_es_index does not follow text_spacy)."""
+    """The imported text has no row of tokens_sentences and es_index. Recompute
+    of es_index plans both, as processing, and starts both, as the
+    inputs of both are finished (es_index does not follow tokens_sentences)."""
     projects = mid_pipeline_eximport_projects
     _round_trip(db_session, projects)
     sdoc_id = _imported(db_session, projects, "text.txt").id
-    assert read_step_status(db_session, sdoc_id, "text_spacy") is None
-    assert read_step_status(db_session, sdoc_id, "text_es_index") is None
+    assert read_step_status(db_session, sdoc_id, "tokens_sentences") is None
+    assert read_step_status(db_session, sdoc_id, "es_index") is None
 
-    response = _recompute(client, projects, "text_es_index", sdoc_id)
+    response = _recompute(client, projects, "es_index", sdoc_id)
 
     assert response.status_code == 200, response.text
-    assert read_step_status(db_session, sdoc_id, "text_spacy") == 0
-    assert read_step_status(db_session, sdoc_id, "text_es_index") == 0
-    assert started_steps(held_jobs) == {sdoc_id: ["text_es_index", "text_spacy"]}
+    assert read_step_status(db_session, sdoc_id, "tokens_sentences") == 0
+    assert read_step_status(db_session, sdoc_id, "es_index") == 0
+    assert started_steps(held_jobs) == {sdoc_id: ["es_index", "tokens_sentences"]}

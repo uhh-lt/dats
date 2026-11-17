@@ -40,12 +40,12 @@ def enrich_for_recompute(
     doctypes={DocType.text, DocType.image, DocType.audio, DocType.video},
 )
 @register_job(
-    job_type="text_document_embedding",
+    job_type="document_embedding",
     input_type=TextDocumentEmbeddingJobInput,
     device="api",
     enricher=enrich_for_recompute,
 )
-def handle_text_document_embedding_job(
+def handle_document_embedding_job(
     payload: TextDocumentEmbeddingJobInput, job: Job
 ) -> None:
     # embed the text and replace the document's previous embedding

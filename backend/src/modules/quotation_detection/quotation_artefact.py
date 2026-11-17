@@ -44,4 +44,4 @@ QUOTATION_CODES = SystemCode(
     ),
 )
 
-QUOTATIONS = artefact("quotations", codes=(QUOTATION_CODES,))
+QUOTATIONS = artefact("quotations", title="Quotations", codes=(QUOTATION_CODES,))

@@ -51,11 +51,11 @@ def enrich_for_recompute(
     doctypes={DocType.text, DocType.image, DocType.audio, DocType.video},
 )
 @register_job(
-    job_type="text_html_mapping",
+    job_type="html_mapping",
     input_type=TextHTMLMappingJobInput,
     enricher=enrich_for_recompute,
 )
-def handle_text_html_mapping_job(payload: TextHTMLMappingJobInput, job: Job) -> None:
+def handle_html_mapping_job(payload: TextHTMLMappingJobInput, job: Job) -> None:
     # parse html
     parser = HTMLTextMapper()
     html_parse = parser(payload.raw_html)

@@ -47,11 +47,11 @@ def enrich_for_recompute(
     doctypes={DocType.text, DocType.image, DocType.audio, DocType.video},
 )
 @register_job(
-    job_type="text_spacy",
+    job_type="tokens_sentences",
     input_type=SpacyJobInput,
     enricher=enrich_for_recompute,
 )
-def handle_text_spacy_job(payload: SpacyJobInput, job: Job) -> None:
+def handle_tokens_sentences_job(payload: SpacyJobInput, job: Job) -> None:
     spacy_output = ray.spacy_pipline(
         SpacyInput(text=payload.text, language=payload.language)
     )

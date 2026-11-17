@@ -43,11 +43,11 @@ def enrich_for_recompute(payload: SdocProcessingJobInput) -> NerJobInput:
     doctypes={DocType.text, DocType.image, DocType.audio, DocType.video},
 )
 @register_job(
-    job_type="text_ner",
+    job_type="named_entity_recognition",
     input_type=NerJobInput,
     enricher=enrich_for_recompute,
 )
-def handle_text_ner_job(payload: NerJobInput, job: Job) -> None:
+def handle_named_entity_recognition_job(payload: NerJobInput, job: Job) -> None:
     spacy_output = ray.spacy_pipline(
         SpacyInput(text=payload.text, language=payload.language)
     )

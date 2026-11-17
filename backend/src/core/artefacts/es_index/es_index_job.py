@@ -41,11 +41,11 @@ def enrich_for_recompute(
     doctypes={DocType.text, DocType.image, DocType.audio, DocType.video},
 )
 @register_job(
-    job_type="text_es_index",
+    job_type="es_index",
     input_type=TextESIndexJobInput,
     enricher=enrich_for_recompute,
 )
-def handle_text_es_index_job(payload: TextESIndexJobInput, job: Job) -> None:
+def handle_es_index_job(payload: TextESIndexJobInput, job: Job) -> None:
     # if we re-run this job, filename and text is None, we need to query it from db
     esdoc = ElasticSearchDocumentCreate(
         filename=payload.filename,

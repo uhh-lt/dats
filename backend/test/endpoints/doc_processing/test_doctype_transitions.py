@@ -45,10 +45,10 @@ PROCESSING = SDocStatus.processing.value
 
 # the steps that run in the tests (no hosted model)
 RUNNABLE = {
-    "extract_html",
-    "audio_metadata",
+    "html_extraction",
+    "audio_metadata_extraction",
     "audio_thumbnail",
-    "video_metadata",
+    "video_metadata_extraction",
     "video_thumbnail",
     "video_audio_extraction",
     "image_metadata_extraction",
@@ -104,17 +104,17 @@ def test_audio_runs_its_roots_and_transcribes_the_uploaded_file(
     held = _follow(held_jobs, p["project"].id, p["audio"], DocType.audio)
 
     sdoc_id = _sdoc_id(db_session, p["project"].id, DocType.audio)
-    assert set(held) == {"audio_transcription"}
-    transcription = held["audio_transcription"]
+    assert set(held) == {"transcription"}
+    transcription = held["transcription"]
     assert isinstance(transcription, TranscriptionJobInput)
     assert transcription.sdoc_id == sdoc_id
     assert transcription.filepath.name == p["audio"].name
     status = read_all_step_status(db_session, sdoc_id)
     ran = {step for step, value in status.items() if value == FINISHED}
     assert ran | set(held) == set(artefact_registry.graph().roots(DocType.audio))
-    assert status["audio_metadata"] == FINISHED
+    assert status["audio_metadata_extraction"] == FINISHED
     assert status["audio_thumbnail"] == FINISHED
-    assert status["audio_transcription"] == PROCESSING
+    assert status["transcription"] == PROCESSING
 
 
 def test_video_extracts_its_audio_and_transcribes_it(
@@ -128,23 +128,23 @@ def test_video_extracts_its_audio_and_transcribes_it(
     held = _follow(held_jobs, p["project"].id, p["video"], DocType.video)
 
     sdoc_id = _sdoc_id(db_session, p["project"].id, DocType.video)
-    assert set(held) == {"audio_transcription"}
-    transcription = held["audio_transcription"]
+    assert set(held) == {"transcription"}
+    transcription = held["transcription"]
     assert isinstance(transcription, TranscriptionJobInput)
     assert transcription.sdoc_id == sdoc_id
     assert transcription.filepath.name == audio_stream_path(p["video"]).name
     assert transcription.filepath.exists()
     status = read_all_step_status(db_session, sdoc_id)
     assert status["video_audio_extraction"] == FINISHED
-    assert status["video_metadata"] == FINISHED
+    assert status["video_metadata_extraction"] == FINISHED
     assert status["video_thumbnail"] == FINISHED
-    assert status["audio_transcription"] == PROCESSING
+    assert status["transcription"] == PROCESSING
 
 
 def test_an_image_extracted_from_a_document_runs_its_roots(
     db_session: Session, media_uploads: MediaUploads, held_jobs: HeldJobs
 ):
-    """extract_html of page.html stores its embedded image and creates an image
+    """html_extraction of page.html stores its embedded image and creates an image
     document for it (an entry point); the image document starts and finishes its
     metadata extraction and thumbnail, whose enrichers find the stored image,
     and starts its caption, which stays processing (its model is hosted)."""

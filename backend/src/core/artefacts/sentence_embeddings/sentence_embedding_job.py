@@ -51,12 +51,12 @@ def enrich_for_recompute(
     doctypes={DocType.text, DocType.image, DocType.audio, DocType.video},
 )
 @register_job(
-    job_type="text_sentence_embedding",
+    job_type="sentence_embedding",
     input_type=TextSentenceEmbeddingJobInput,
     device="api",
     enricher=enrich_for_recompute,
 )
-def handle_text_sentence_embedding_job(
+def handle_sentence_embedding_job(
     payload: TextSentenceEmbeddingJobInput, job: Job
 ) -> None:
     if len(payload.sentences) > 0:

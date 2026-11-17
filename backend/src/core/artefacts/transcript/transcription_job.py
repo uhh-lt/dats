@@ -75,7 +75,7 @@ def enrich_for_recompute(
     doctypes={DocType.audio, DocType.video},
 )
 @register_job(
-    job_type="audio_transcription",
+    job_type="transcription",
     input_type=TranscriptionJobInput,
     output_type=TranscriptionJobOutput,
     device="api",

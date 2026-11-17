@@ -74,7 +74,7 @@ def enrich_for_recompute(
 @pipeline_step(
     requires={TOKENS_SENTENCES, LANGUAGE},
     produces={COREFERENCES},
-    # the doctypes of text_spacy, which the step follows; it resolves text only
+    # the doctypes of tokens_sentences, which the step follows; it resolves text only
     doctypes={DocType.text, DocType.image, DocType.audio, DocType.video},
 )
 @register_job(

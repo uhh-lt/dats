@@ -40,4 +40,6 @@ class _WordFrequencyArchive(ArtefactArchive):
         )
 
 
-WORD_FREQUENCIES = artefact("word_frequencies", archive=_WordFrequencyArchive())
+WORD_FREQUENCIES = artefact(
+    "word_frequencies", title="Word frequencies", archive=_WordFrequencyArchive()
+)

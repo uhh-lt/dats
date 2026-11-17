@@ -58,7 +58,7 @@ class CorefProject(TypedDict):
 
     - The tokens are the whitespace-separated words, so a token of a sentence
       end includes its period ("Buch.").
-    - The coreference step follows text_spacy, which runs for every doctype, so
+    - The coreference step follows tokens_sentences, which runs for every doctype, so
       it is planned for the image too, where it finishes without output.
     """
 

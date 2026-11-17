@@ -3,4 +3,4 @@
 
 from systems.artefact_system.artefact_registry import artefact
 
-IMAGE_CAPTION = artefact("image_caption", always=True)
+IMAGE_CAPTION = artefact("image_caption", title="Image caption", always=True)

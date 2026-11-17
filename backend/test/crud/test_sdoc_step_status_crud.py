@@ -39,9 +39,9 @@ def test_read_by_sdocs_returns_the_planned_steps_in_input_order(
     assert list(result) == ids
     assert result[p["image"].id] == {}
     assert result[p["failed"].id] == {
-        "extract_html": FINISHED,
+        "html_extraction": FINISHED,
         "text_extraction": ERRONEOUS,
-        "text_language_detection": PROCESSING,
+        "language_detection": PROCESSING,
     }
 
 
@@ -74,18 +74,18 @@ def test_count_by_project_groups_the_documents_by_step_status(
 def test_count_by_project_leaves_out_the_steps_not_counted(
     db_session: Session, step_status_project: StepStatusProject
 ):
-    """Only the given steps are in the counted statuses: counting extract_html
-    alone puts the three text documents (each with a finished extract_html) into
+    """Only the given steps are in the counted statuses: counting html_extraction
+    alone puts the three text documents (each with a finished html_extraction) into
     one group."""
     p = step_status_project
 
     counts = crud_sdoc_step_status.count_by_project(
-        db=db_session, project_id=p["project"].id, steps=["extract_html"]
+        db=db_session, project_id=p["project"].id, steps=["html_extraction"]
     )
 
     assert sorted(counts) == [
         (DocType.image, {}, 1),
-        (DocType.text, {"extract_html": FINISHED}, 3),
+        (DocType.text, {"html_extraction": FINISHED}, 3),
     ]
 
 
@@ -97,7 +97,7 @@ def test_count_by_project_rejects_more_steps_than_bits(
         crud_sdoc_step_status.count_by_project(
             db=db_session,
             project_id=step_status_project["project"].id,
-            steps=["extract_html"] * 64,
+            steps=["html_extraction"] * 64,
         )
 
 
@@ -116,21 +116,21 @@ def test_update_status_plans_new_steps_and_overwrites_planned_ones(
     crud_sdoc_step_status.update_status(
         db=db_session,
         sdoc_ids=[p["running"].id, p["image"].id],
-        steps=["text_spacy", "text_es_index"],
+        steps=["tokens_sentences", "es_index"],
         status=FINISHED,
     )
     db_session.commit()
 
     assert _read(db_session, p["running"].id) == {
-        "extract_html": FINISHED,
+        "html_extraction": FINISHED,
         "text_extraction": FINISHED,
-        "text_language_detection": PROCESSING,
-        "text_spacy": FINISHED,
-        "text_es_index": FINISHED,
+        "language_detection": PROCESSING,
+        "tokens_sentences": FINISHED,
+        "es_index": FINISHED,
     }
     assert _read(db_session, p["image"].id) == {
-        "text_spacy": FINISHED,
-        "text_es_index": FINISHED,
+        "tokens_sentences": FINISHED,
+        "es_index": FINISHED,
     }
 
 
@@ -144,15 +144,15 @@ def test_update_pending_to_erroneous_fails_only_processing_steps(
     crud_sdoc_step_status.update_pending_to_erroneous(
         db=db_session,
         sdoc_id=p["running"].id,
-        steps=["text_extraction", "text_spacy", "text_ner"],
+        steps=["text_extraction", "tokens_sentences", "named_entity_recognition"],
     )
     db_session.commit()
 
     assert _read(db_session, p["running"].id) == {
-        "extract_html": FINISHED,
+        "html_extraction": FINISHED,
         "text_extraction": FINISHED,
-        "text_language_detection": PROCESSING,
-        "text_spacy": ERRONEOUS,
+        "language_detection": PROCESSING,
+        "tokens_sentences": ERRONEOUS,
     }
 
 

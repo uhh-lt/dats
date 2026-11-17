@@ -13,9 +13,9 @@ ERRONEOUS = SDocStatus.erroneous
 PROCESSING = SDocStatus.processing
 FINISHED = SDocStatus.finished
 
-HTML = "extract_html"
-LANG = "text_language_detection"
-INDEX = "text_es_index"
+HTML = "html_extraction"
+LANG = "language_detection"
+INDEX = "es_index"
 
 
 @pytest.mark.parametrize(

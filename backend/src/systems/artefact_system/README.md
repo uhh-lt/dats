@@ -20,11 +20,12 @@ Disable calls nothing: the stored data and the step statuses stay. A computation
 An artefact is declared by the code that owns it, in a file that its steps and features import (`<name>_artefact.py`, next to the steps that produce it: `core/artefacts/<name>/` holds the standard ones, one folder per artefact):
 
 ```python
-KEYWORDS = artefact("keywords")
+KEYWORDS = artefact("keywords", title="Keywords")
 ```
 
 | Argument       | Meaning                                                                                                                                                  |
 | -------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `title`        | Required. Short and user-facing, in the style of the feature titles ("Tokens and sentences"): the health view titles a step's column by the artefacts it produces, and a feature shows the artefacts it needs. |
 | `always`       | Computed for every document, whatever features its project enables (a core artefact). A step produces either always-computed or on-demand artefacts.    |
 | `uploaded_for` | The doctypes whose uploaded file is the artefact, so no step produces it there (the audio stream of an audio document).                                  |
 | `codes`        | The system code trees (`SystemCode`, `core/code/system_codes.py`, declared next to the artefact) a project needs before the artefact is produced. Data, not a function: the import reads them too. |
@@ -89,7 +90,7 @@ Enable and Complete start the computation job before their transaction commits: 
 
 ## Step runs
 
-A step run is one run of the job of one pipeline step for one document; the job is named like its step and computes that step only. A finished step starts its planned successors with a bare `SdocProcessingJobInput`, and the successor's enricher loads its input from the stored data. The jobs that create documents (the entry points `crawler`, `extract_archive`, `doc_chunking`, `extract_html` and `sdoc_init`) start what follows them themselves, at the end of their handlers.
+A step run is one run of the job of one pipeline step for one document; the job is named like its step and computes that step only. A step is named like its job file without `_job` (`tokens_sentences_job.py` runs `tokens_sentences`), with a doctype prefix only where there is one step per doctype (`image_thumbnail`, `audio_thumbnail`). A finished step starts its planned successors with a bare `SdocProcessingJobInput`, and the successor's enricher loads its input from the stored data. The jobs that create documents (the entry points `crawler`, `extract_archive`, `doc_chunking`, `html_extraction` and `sdoc_init`) start what follows them themselves, at the end of their handlers.
 
 ## Failures
 

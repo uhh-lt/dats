@@ -8,6 +8,10 @@ export type SdocHealthColumn = {
    */
   step: string;
   /**
+   * Titles of the artefacts the step produces, the header of its column
+   */
+  title: string;
+  /**
    * Whether the step is a core step, which every document gets and Recompute plans where it is missing
    */
   core: boolean;

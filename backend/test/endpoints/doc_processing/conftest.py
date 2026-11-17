@@ -133,8 +133,8 @@ def feature_project(db_session, test_user: UserORM) -> FeatureProject:
 class PlanningProjects(TypedDict):
     """
     This fixture sets up two projects of `test_user`; the minimal text steps are
-    extract_html, text_extraction, text_language_detection, text_es_index,
-    text_spacy and text_html_mapping, the minimal image steps image_metadata_extraction,
+    html_extraction, text_extraction, language_detection, es_index,
+    tokens_sentences and html_mapping, the minimal image steps image_metadata_extraction,
     image_thumbnail, image_caption and the text steps after it; steps not
     listed are not planned. Every document has the text of `SDOC_SENTENCES`
     and the language "en" (the image as its caption), the image an 8x8 red
@@ -142,25 +142,25 @@ class PlanningProjects(TypedDict):
 
     - project: "Planning Project", without any enabled feature
       - done: text document "done.txt"; the minimal text steps are finished
-      - spacy_failed: text document "spacy_failed.txt"; extract_html,
-        text_extraction, text_language_detection and text_es_index are finished,
-        text_spacy is erroneous
+      - spacy_failed: text document "spacy_failed.txt"; html_extraction,
+        text_extraction, language_detection and es_index are finished,
+        tokens_sentences is erroneous
       - image: image document "image.png"; the minimal image steps are finished
     - other_project: "Other Planning Project", with keyword statistics enabled
       - extracting: text document "extracting.txt"; the minimal text steps are
-        finished, text_keywords is processing
+        finished, keywords is processing
       - new: text document "new.txt" without any step, as an upload creates it
         before it plans its steps
 
     Non-obvious derived behavior:
 
-    - Keyword statistics needs extract_html, text_extraction,
-      text_language_detection and text_keywords; text_spacy and
-      text_html_mapping are core steps outside it, so enabling it in project
-      plans text_html_mapping for spacy_failed without planning its erroneous
-      text_spacy again.
-    - text_spacy needs text_language_detection, text_html_mapping needs
-      text_spacy.
+    - Keyword statistics needs html_extraction, text_extraction,
+      language_detection and keywords; tokens_sentences and
+      html_mapping are core steps outside it, so enabling it in project
+      plans html_mapping for spacy_failed without planning its erroneous
+      tokens_sentences again.
+    - tokens_sentences needs language_detection, html_mapping needs
+      tokens_sentences.
     """
 
     project: ProjectORM
@@ -191,15 +191,15 @@ def planning_projects(db_session: Session, test_user: UserORM) -> PlanningProjec
             project,
             DocType.text,
             {
-                "extract_html": 1,
+                "html_extraction": 1,
                 "text_extraction": 1,
-                "text_language_detection": 1,
-                "text_es_index": 1,
-                "text_spacy": -100,
+                "language_detection": 1,
+                "es_index": 1,
+                "tokens_sentences": -100,
             },
         ),
         "image": (project, DocType.image, dict.fromkeys(minimal_image_steps(), 1)),
-        "extracting": (other_project, DocType.text, {**done, "text_keywords": 0}),
+        "extracting": (other_project, DocType.text, {**done, "keywords": 0}),
         "new": (other_project, DocType.text, {}),
     }
     created = {
@@ -271,23 +271,23 @@ class RecomputeProject(TypedDict):
     - project: "Recompute Project" of `test_user`, without any enabled feature
     - text_done: text document "text_done.txt" with the text of
       `SDOC_SENTENCES` and the language "en"; the steps of a project without
-      features are finished (extract_html, text_extraction,
-      text_language_detection, text_es_index, text_spacy, text_html_mapping)
+      features are finished (html_extraction, text_extraction,
+      language_detection, es_index, tokens_sentences, html_mapping)
     - no_data: text document "no_data.txt" without any content (no
-      SourceDocumentData); extract_html, text_extraction and
-      text_language_detection are finished, text_spacy and text_html_mapping
+      SourceDocumentData); html_extraction, text_extraction and
+      language_detection are finished, tokens_sentences and html_mapping
       are processing (its spaCy job waits in the queue), the core step
-      text_es_index is not planned
+      es_index is not planned
     - keywords_done: text document "keywords_done.txt" with the text of
       `SDOC_SENTENCES` and the language "en"; the steps of a project without
-      features and text_keywords are finished (as if keyword statistics was
+      features and keywords are finished (as if keyword statistics was
       enabled once)
 
     Non-obvious derived behavior:
 
     - No step job of no_data can start: the enricher of the language
       detection finds no content.
-    - text_keywords is planned for keywords_done only.
+    - keywords is planned for keywords_done only.
     """
 
     project: ProjectORM
@@ -322,11 +322,11 @@ def recompute_project(db_session: Session, test_user: UserORM) -> RecomputeProje
         db_session,
         no_data.id,
         {
-            "extract_html": 1,
+            "html_extraction": 1,
             "text_extraction": 1,
-            "text_language_detection": 1,
-            "text_spacy": 0,
-            "text_html_mapping": 0,
+            "language_detection": 1,
+            "tokens_sentences": 0,
+            "html_mapping": 0,
         },
     )
     keywords_done = _create_sdoc(
@@ -334,7 +334,7 @@ def recompute_project(db_session: Session, test_user: UserORM) -> RecomputeProje
         project,
         name="keywords_done.txt",
         doctype=DocType.text,
-        status={**dict.fromkeys(minimal_text_steps(), 1), "text_keywords": 1},
+        status={**dict.fromkeys(minimal_text_steps(), 1), "keywords": 1},
     )
     db_session.commit()
     for obj in (project, text_done, no_data, keywords_done):
@@ -390,7 +390,7 @@ def dummy_step() -> Generator[DummyStep, None, None]:
     its handler records it in `computed`. The fixture removes the step again.
     """
     step = "test_dummy_step"
-    test_artefact = artefact("test_dummy_artefact", always=True)
+    test_artefact = artefact("test_dummy_artefact", title="Test dummy", always=True)
 
     _DUMMY_COMPUTED.clear()
     pipeline_step(
@@ -458,7 +458,7 @@ def paired_steps() -> Generator[PairedSteps, None, None]:
     producer = "test_producer_step"
     consumer = "test_consumer_step"
     artefacts = [
-        artefact(f"test_{name}_artefact", always=True)
+        artefact(f"test_{name}_artefact", title=f"Test {name}", always=True)
         for name in ("first", "second", "third")
     ]
 
@@ -569,7 +569,7 @@ def media_uploads(db_session: Session, test_user: UserORM) -> MediaUploads:
 
     Non-obvious derived behavior:
 
-    - With `extract_images`, extract_html of page.html stores the image next to
+    - With `extract_images`, html_extraction of page.html stores the image next to
       the page and starts an `sdoc_init` for it, which creates an image document.
     - The transcription (whisper) of audio and video runs on the hosted Ray
       service, so the tests only build its input.

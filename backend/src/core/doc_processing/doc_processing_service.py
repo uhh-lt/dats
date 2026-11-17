@@ -118,11 +118,21 @@ class DocProcessingService(metaclass=SingletonMeta):
 
     def read_health_columns(self, *, doctype: DocType) -> list[SdocHealthColumn]:
         """The columns of the health view of the doctype: its pipeline steps in
-        pipeline order, with whether each is a core step."""
+        pipeline order, each titled by the artefacts it produces, with whether
+        it is a core step."""
         graph = artefact_registry.graph()
         core = set(graph.core_steps(doctype))
         return [
-            SdocHealthColumn(step=step, core=step in core)
+            SdocHealthColumn(
+                step=step,
+                title=", ".join(
+                    a.title
+                    for a in sorted(
+                        graph.declaration(step).produces, key=lambda a: a.name
+                    )
+                ),
+                core=step in core,
+            )
             for step in graph.steps(doctype)
         ]
 

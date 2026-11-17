@@ -3,4 +3,4 @@ column of the document's data row."""
 
 from systems.artefact_system.artefact_registry import artefact
 
-HTML = artefact("html", always=True)
+HTML = artefact("html", title="Display HTML", always=True)

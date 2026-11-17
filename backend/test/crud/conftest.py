@@ -290,16 +290,16 @@ def step_status_project(db_session, test_project, test_user) -> StepStatusProjec
     (1 finished, 0 processing, -100 erroneous; steps not listed are not planned):
 
     - In the test project:
-      - text "done.txt" (`done`): extract_html 1, text_extraction 1,
-        text_language_detection 1, text_spacy 1
-      - text "running.txt" (`running`): extract_html 1, text_extraction 1,
-        text_language_detection 0, text_spacy 0
-      - text "failed.txt" (`failed`): extract_html 1, text_extraction -100,
-        text_language_detection 0
+      - text "done.txt" (`done`): html_extraction 1, text_extraction 1,
+        language_detection 1, tokens_sentences 1
+      - text "running.txt" (`running`): html_extraction 1, text_extraction 1,
+        language_detection 0, tokens_sentences 0
+      - text "failed.txt" (`failed`): html_extraction 1, text_extraction -100,
+        language_detection 0
       - image "image.png" (`image`): no step planned
     - In the project "Other Project" of the test user:
-      - text "other.txt" (`other_project_doc`): extract_html 1,
-        text_language_detection 0
+      - text "other.txt" (`other_project_doc`): html_extraction 1,
+        language_detection 0
 
     Non-obvious derived behavior:
 
@@ -315,29 +315,29 @@ def step_status_project(db_session, test_project, test_user) -> StepStatusProjec
             test_project,
             DocType.text,
             {
-                "extract_html": 1,
+                "html_extraction": 1,
                 "text_extraction": 1,
-                "text_language_detection": 1,
-                "text_spacy": 1,
+                "language_detection": 1,
+                "tokens_sentences": 1,
             },
         ),
         "running": (
             test_project,
             DocType.text,
             {
-                "extract_html": 1,
+                "html_extraction": 1,
                 "text_extraction": 1,
-                "text_language_detection": 0,
-                "text_spacy": 0,
+                "language_detection": 0,
+                "tokens_sentences": 0,
             },
         ),
         "failed": (
             test_project,
             DocType.text,
             {
-                "extract_html": 1,
+                "html_extraction": 1,
                 "text_extraction": -100,
-                "text_language_detection": 0,
+                "language_detection": 0,
             },
         ),
         "image": (test_project, DocType.image, {}),
@@ -345,8 +345,8 @@ def step_status_project(db_session, test_project, test_user) -> StepStatusProjec
             other_project,
             DocType.text,
             {
-                "extract_html": 1,
-                "text_language_detection": 0,
+                "html_extraction": 1,
+                "language_detection": 0,
             },
         ),
     }
