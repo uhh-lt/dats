@@ -9,7 +9,6 @@ from core.project.project_dto import ProjectRead
 from systems.artefact_system.artefact_dto import ProcessingSettings
 from systems.artefact_system.artefact_registry import Artefact
 from systems.artefact_system.artefact_service import ArtefactService
-from systems.feature_system import feature_statements as statements
 from systems.feature_system.feature_dto import FeatureRead, ProjectFeatureRead
 from systems.feature_system.feature_exceptions import (
     FeatureActionNotAllowedError,
@@ -40,8 +39,7 @@ class FeatureService(metaclass=SingletonMeta):
     artefact system in artefacts only: Enable and Complete compute the
     artefacts of the feature, the upload plans with the artefact demand of the
     project (`read_artefact_demand`). Its operations are the only code that
-    changes `project.enabled_features`; their SQL is private to it, in
-    `feature_statements.py`. Every action first locks the project
+    changes `project.enabled_features` (`_update_enabled_features`). Every action first locks the project
     (FOR NO KEY UPDATE)."""
 
     def __new__(cls, *args, **kwargs):
@@ -186,7 +184,7 @@ class FeatureService(metaclass=SingletonMeta):
         self.assert_action_allowed(
             db=db, project_id=project_id, feature=feature, action=FeatureAction.ENABLE
         )
-        statements.update_enabled_features(
+        self._update_enabled_features(
             db=db, project_id=project_id, features=self._enabled(project) | {feature}
         )
         self.set_up(db=db, project_id=project_id, features=[feature])
@@ -234,7 +232,7 @@ class FeatureService(metaclass=SingletonMeta):
         self.assert_action_allowed(
             db=db, project_id=project_id, feature=feature, action=FeatureAction.DISABLE
         )
-        statements.update_enabled_features(
+        self._update_enabled_features(
             db=db, project_id=project_id, features=self._enabled(project) - {feature}
         )
         return ProjectRead.model_validate(crud_project.read(db=db, id=project_id))
@@ -247,10 +245,17 @@ class FeatureService(metaclass=SingletonMeta):
         completes them). Returns the enabled features."""
         project = crud_project.read_locked(db=db, id=project_id)
         enabled = sorted(self._enabled(project) | set(features), key=lambda f: f.name)
-        statements.update_enabled_features(
-            db=db, project_id=project_id, features=enabled
-        )
+        self._update_enabled_features(db=db, project_id=project_id, features=enabled)
         return enabled
+
+    def _update_enabled_features(
+        self, *, db: Session, project_id: int, features: Iterable[Feature]
+    ) -> None:
+        """Store the names of the enabled features of the project, sorted. The
+        caller has locked the project (FOR NO KEY UPDATE)."""
+        db_obj = crud_project.read(db=db, id=project_id)
+        db_obj.enabled_features = sorted(f.name for f in features)
+        db.flush()
 
     def _enabled(self, project: "ProjectORM") -> set[Feature]:
         """The registered features among the project's stored names; a name
