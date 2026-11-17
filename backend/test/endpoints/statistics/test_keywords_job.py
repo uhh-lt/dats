@@ -8,9 +8,6 @@ TEXT = " ".join(SDOC_SENTENCES)
 SETTINGS = {
     "extract_images": False,
     "pages_per_chunk": 10,
-    "keyword_number": 3,
-    "keyword_deduplication_threshold": 0.5,
-    "keyword_max_ngram_size": 1,
     "language": "en",
     "model": "default",
 }
@@ -26,8 +23,9 @@ SETTINGS = {
 def test_keywords_job_stores_the_keywords_as_metadata(
     db_session: Session, text_steps_project: TextStepsProject
 ):
-    """With at most 3 keywords of one word, the job stores 3 words of the text
-    as the document's metadata "keywords"."""
+    """The job stores at most 5 keywords of at most two words (the constants of
+    the step), each found in the text, as the document's metadata
+    "keywords"."""
     sdoc_id = text_steps_project["text"].id
 
     run_step_handler(
@@ -47,5 +45,6 @@ def test_keywords_job_stores_the_keywords_as_metadata(
         db=db_session, sdoc_id=sdoc_id, key="keywords"
     ).list_value
     assert keywords is not None
-    assert len(keywords) == 3
+    assert 0 < len(keywords) <= 5
+    assert all(len(keyword.split()) <= 2 for keyword in keywords), keywords
     assert all(keyword.lower() in TEXT.lower() for keyword in keywords), keywords

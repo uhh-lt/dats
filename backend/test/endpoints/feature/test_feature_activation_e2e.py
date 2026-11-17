@@ -17,9 +17,6 @@ from .conftest import ActivationProject
 SETTINGS = ProcessingSettings(
     extract_images=False,
     pages_per_chunk=3,
-    keyword_number=7,
-    keyword_deduplication_threshold=0.3,
-    keyword_max_ngram_size=3,
     language=Language.english,
     model="default",
 )

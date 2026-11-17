@@ -24,9 +24,6 @@ from .conftest import MediaUploads
 SETTINGS = ProcessingSettings(
     extract_images=True,
     pages_per_chunk=10,
-    keyword_number=5,
-    keyword_deduplication_threshold=0.5,
-    keyword_max_ngram_size=2,
     language=Language.english,
     model="default",
 )

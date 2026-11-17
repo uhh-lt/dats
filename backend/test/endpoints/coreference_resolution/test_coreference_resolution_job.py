@@ -31,9 +31,6 @@ STEP = "coreference_resolution"
 SETTINGS = ProcessingSettings(
     extract_images=False,
     pages_per_chunk=1,
-    keyword_number=5,
-    keyword_deduplication_threshold=0.1,
-    keyword_max_ngram_size=3,
     language=Language.auto,
     model="default",
 )

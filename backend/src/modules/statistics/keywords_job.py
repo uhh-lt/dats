@@ -18,6 +18,13 @@ from systems.job_system.job_register_decorator import register_job
 
 sqlr = SQLRepo()
 
+# the keyword extraction (YAKE): the keywords per document, the longest
+# n-gram of a keyword, and how similar two keywords may be before the
+# lower-ranked one is dropped
+KEYWORD_NUMBER = 5
+KEYWORD_MAX_NGRAM_SIZE = 2
+KEYWORD_DEDUPLICATION_THRESHOLD = 0.5
+
 
 class KeywordsJobInput(SdocProcessingJobInput):
     doctype: DocType
@@ -65,9 +72,9 @@ def extract_keywords(payload: KeywordsJobInput) -> list[str]:
     """The keywords of the text (YAKE, no spaCy)."""
     kw_extractor = yake.KeywordExtractor(
         lan=payload.language,
-        n=payload.settings.keyword_max_ngram_size,
-        dedupLim=payload.settings.keyword_deduplication_threshold,
+        n=KEYWORD_MAX_NGRAM_SIZE,
+        dedupLim=KEYWORD_DEDUPLICATION_THRESHOLD,
         windowsSize=1,
-        top=payload.settings.keyword_number,
+        top=KEYWORD_NUMBER,
     )
     return [kw for kw, _ in kw_extractor.extract_keywords(payload.text)]

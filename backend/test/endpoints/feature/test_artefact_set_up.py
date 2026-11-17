@@ -29,9 +29,6 @@ CODE_NAMES = ["TEST_CODED_TREE", "TEST_CODED_LEAF"]
 SETTINGS = ProcessingSettings(
     extract_images=False,
     pages_per_chunk=10,
-    keyword_number=5,
-    keyword_deduplication_threshold=0.5,
-    keyword_max_ngram_size=2,
     language=Language.english,
     model="default",
 )

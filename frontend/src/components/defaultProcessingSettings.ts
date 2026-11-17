@@ -1,13 +1,10 @@
 import { Language } from "@models/Language";
 import type { ProcessingSettings } from "@models/ProcessingSettings";
 
-/** The processing settings that upload, recompute and enabling or completing a feature start with; users change them with the `ProcessingSettingsButton`. */
+/** The processing settings of upload and recompute, which users change with the `ProcessingSettingsButton`, and of enabling or completing a feature, which has no settings button. */
 export const DEFAULT_PROCESSING_SETTINGS: ProcessingSettings = {
   model: "default",
   extract_images: true,
   pages_per_chunk: 10,
-  keyword_deduplication_threshold: 0.5,
-  keyword_max_ngram_size: 2,
-  keyword_number: 5,
   language: Language.AUTO,
 };

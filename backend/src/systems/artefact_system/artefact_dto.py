@@ -11,13 +11,6 @@ class ProcessingSettings(BaseModel):
     pages_per_chunk: int = Field(
         description="Number of pages to chunk the documents into"
     )
-    keyword_number: int = Field(description="Number of keywords to extract")
-    keyword_deduplication_threshold: float = Field(
-        description="Threshold for keyword deduplication (0.0 - 1.0)"
-    )
-    keyword_max_ngram_size: int = Field(
-        description="Maximum n-gram size for keyword extraction"
-    )
     language: Language = Field(description="Language of the documents: 'de', 'en', ...")
     model: str = Field(description="Large Language Model to use for processing")
 

@@ -11,9 +11,6 @@ TEXT = " ".join(SDOC_SENTENCES)
 SETTINGS = {
     "extract_images": False,
     "pages_per_chunk": 10,
-    "keyword_number": 5,
-    "keyword_deduplication_threshold": 0.5,
-    "keyword_max_ngram_size": 2,
     "language": "en",
     "model": "default",
 }

@@ -40,7 +40,7 @@ While a feature is computing, DATS refreshes its progress by itself, and the fea
 
 ### Enabling and Completing a Feature
 
-Click **Enable** (or **Complete** for a partly available feature). A dialog tells you how many documents will be processed. Use the cog button to adjust the **processing settings** (model, language, number of keywords, ...), exactly like in the [Document Upload](document-upload.md) dialog, then confirm. DATS computes the missing data in the background, with a lower priority than new uploads. Features that use the same data, such as Word Frequency Analysis and the Duplicate Finder, are computing together while it is computed.
+Click **Enable** (or **Complete** for a partly available feature). A dialog tells you how many documents will be processed; confirm it. The feature has no processing settings: it uses the default settings of the [Document Upload](document-upload.md) dialog (default model, automatic language detection). DATS computes the missing data in the background, with a lower priority than new uploads. Features that use the same data, such as Word Frequency Analysis and the Duplicate Finder, are computing together while it is computed.
 
 A feature becomes **partly available** when documents lack its data, for example:
 

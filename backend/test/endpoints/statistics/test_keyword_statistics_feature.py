@@ -24,9 +24,6 @@ ALL_DOCTYPES = {DocType.text, DocType.image, DocType.audio, DocType.video}
 SETTINGS = ProcessingSettings(
     extract_images=False,
     pages_per_chunk=10,
-    keyword_number=5,
-    keyword_deduplication_threshold=0.5,
-    keyword_max_ngram_size=2,
     language=Language.english,
     model="default",
 )

@@ -209,9 +209,6 @@ def test_project_features_count_the_documents_of_a_disabled_feature(
 SETTINGS = ProcessingSettings(
     extract_images=False,
     pages_per_chunk=3,
-    keyword_number=7,
-    keyword_deduplication_threshold=0.3,
-    keyword_max_ngram_size=3,
     language=Language.german,
     model="default",
 )
