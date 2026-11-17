@@ -92,4 +92,3 @@ nav:
       - admin/index.md
       - GPU Setup: admin/gpu-setup.md
       - Project Doctor: admin/project-doctor.md
-      - Release Notes: admin/release-notes.md

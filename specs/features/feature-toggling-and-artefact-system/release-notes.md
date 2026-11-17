@@ -4,7 +4,7 @@ Notes for administrators on what to expect when upgrading a DATS instance.
 
 ## Project Features
 
-This release adds [project features](../feature-guides/project-features.md): every project chooses which features DATS computes for its documents.
+This release adds [project features](../../../docs/feature-guides/project-features.md): every project chooses which features DATS computes for its documents.
 
 - **Database migration**: the backend migrates the database on its first start. The migration moves the processing status of every document from the `sourcedocument` table into the new table `sourcedocumentstepstatus` and holds an exclusive lock on `sourcedocument`; it took about 13 seconds for 300,000 documents on a development machine. Plan the start accordingly, and make sure no health check restarts the backend while it migrates. The migration checks that no document changes its processing status and aborts the start (rolling back) otherwise.
 - **Features stay enabled**: every existing project enables all features after the migration, except Coreference Resolution and Quotation Detection, so nothing is recomputed. Full-text search and Search & Auto-Annotate are always available and no features; Sentence Search and Image Search are one feature, **Semantic Search**. Coreference Resolution and Quotation Detection are new features that a project member enables in **Project Settings** → **Features**; they compute coreferences and quotations of German text documents.

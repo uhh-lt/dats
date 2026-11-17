@@ -1,6 +1,6 @@
 # Feature toggles: maintainability rework
 
-> Historical: the current design is `specs/module-architecture.md` (the artefact, feature and job systems, ADR 0008 and 0009).
+> Historical: the current design is `module-architecture.md` in this folder and `docs/development/module-architecture.md` (the artefact, feature and job systems, ADR 0008 and 0009).
 
 Status: implemented (phases M1 to M5, 2026-11-12); approved on 2026-11-11 with the recommended option of each decision. Builds on `feature-toggles-plan.md` and on the branch
 `agentic/feature-toggles-review-fixes-15b54a`. Nothing of the feature toggle work is released, so
