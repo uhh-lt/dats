@@ -8,7 +8,6 @@ from PIL import Image
 from sqlalchemy.orm import Session
 
 from common.doc_type_enum import DocType
-from common.feature_enum import FeatureArea
 from core.artefacts.sentence_embeddings.sentence_embedding_crud import (
     crud_sentence_embedding,
 )
@@ -34,6 +33,7 @@ from systems.feature_system.feature_registry import (
     feature_registry,
     register_feature,
 )
+from systems.feature_system.feature_system_enum import FeatureArea
 
 FEATURE_PROJECT_TITLE = "Feature Project"
 

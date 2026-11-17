@@ -4,7 +4,6 @@ import time
 import pytest
 from fastapi.testclient import TestClient
 
-from common.feature_enum import FeatureAction, FeatureArea, FeatureStatus
 from common.job_type_enum import JobType
 from common.languages_enum import Language
 from core.project.project_crud import crud_project
@@ -25,6 +24,11 @@ from systems.feature_system.feature_dto import (
 )
 from systems.feature_system.feature_registry import Feature, feature_registry
 from systems.feature_system.feature_service import FeatureService
+from systems.feature_system.feature_system_enum import (
+    FeatureAction,
+    FeatureArea,
+    FeatureStatus,
+)
 from systems.job_system.job_system_enum import JobStatus
 
 from .conftest import DuplicateFinderProject

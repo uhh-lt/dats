@@ -15,9 +15,9 @@ from typing import Iterable
 
 from sqlalchemy.orm import Session
 
-from common.feature_enum import FeatureArea
 from systems.artefact_system.artefact_registry import Artefact, artefact_registry
 from systems.feature_system.feature_exceptions import FeatureDeclarationError
+from systems.feature_system.feature_system_enum import FeatureArea
 
 
 @dataclass(frozen=True, eq=False)

@@ -1,7 +1,7 @@
 from pydantic import BaseModel, Field
 
-from common.feature_enum import FeatureArea, FeatureStatus
 from systems.artefact_system.artefact_dto import ProcessingSettings
+from systems.feature_system.feature_system_enum import FeatureArea, FeatureStatus
 
 
 class FeatureRead(BaseModel):

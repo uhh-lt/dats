@@ -5,7 +5,6 @@ import pytest
 from sqlalchemy.orm import Session
 
 from common.doc_type_enum import DocType
-from common.feature_enum import FeatureArea
 from core.code.code_crud import crud_code
 from core.code.code_dto import CodeCreate
 from core.code.system_codes import SystemCode
@@ -41,6 +40,7 @@ from systems.feature_system.feature_registry import (
     register_feature,
 )
 from systems.feature_system.feature_service import FeatureService
+from systems.feature_system.feature_system_enum import FeatureArea
 
 
 @pytest.fixture(scope="function")

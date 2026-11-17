@@ -1,6 +1,6 @@
-from common.feature_enum import FeatureArea
 from modules.entity_annotations.ner_artefact import NER_SPANS
 from systems.feature_system.feature_registry import register_feature
+from systems.feature_system.feature_system_enum import FeatureArea
 
 ENTITY_ANNOTATIONS = register_feature(
     "entity_annotations",

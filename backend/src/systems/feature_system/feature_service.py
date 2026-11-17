@@ -2,7 +2,6 @@ from typing import TYPE_CHECKING, Iterable
 
 from sqlalchemy.orm import Session
 
-from common.feature_enum import FeatureAction, FeatureStatus
 from common.singleton_meta import SingletonMeta
 from core.project.project_crud import crud_project
 from core.project.project_dto import ProjectRead
@@ -16,6 +15,7 @@ from systems.feature_system.feature_exceptions import (
     FeatureNotFoundError,
 )
 from systems.feature_system.feature_registry import Feature, feature_registry
+from systems.feature_system.feature_system_enum import FeatureAction, FeatureStatus
 
 if TYPE_CHECKING:
     from core.project.project_orm import ProjectORM

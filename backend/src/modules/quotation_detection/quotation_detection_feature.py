@@ -1,6 +1,6 @@
-from common.feature_enum import FeatureArea
 from modules.quotation_detection.quotation_artefact import QUOTATIONS
 from systems.feature_system.feature_registry import register_feature
+from systems.feature_system.feature_system_enum import FeatureArea
 
 QUOTATION_DETECTION = register_feature(
     "quotation_detection",

@@ -4,7 +4,6 @@ import pytest
 
 from bootstrap import register_jobs
 from common.doc_type_enum import DocType
-from common.feature_enum import FeatureArea
 from feature_test_utils import feature_named
 from pipeline_test_utils import all_steps, artefact_named, planned_steps
 from systems.artefact_system.artefact_registry import Artefact, artefact_registry
@@ -14,6 +13,7 @@ from systems.feature_system.feature_registry import (
     FeatureRegistry,
     feature_registry,
 )
+from systems.feature_system.feature_system_enum import FeatureArea
 
 register_jobs()
 

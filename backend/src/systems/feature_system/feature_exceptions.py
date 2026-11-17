@@ -2,7 +2,7 @@ from fastapi import status
 
 from common.common_exceptions import NotFoundError
 from common.exception_handler import exception_handler
-from common.feature_enum import FeatureAction, FeatureStatus
+from systems.feature_system.feature_system_enum import FeatureAction, FeatureStatus
 
 
 class FeatureDeclarationError(Exception):

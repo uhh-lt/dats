@@ -1,6 +1,6 @@
-from common.feature_enum import FeatureArea
 from modules.object_detection.object_detection_artefact import OBJECT_BBOXES
 from systems.feature_system.feature_registry import register_feature
+from systems.feature_system.feature_system_enum import FeatureArea
 
 OBJECT_DETECTION = register_feature(
     "object_detection",

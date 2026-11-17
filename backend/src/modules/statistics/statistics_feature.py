@@ -1,6 +1,6 @@
-from common.feature_enum import FeatureArea
 from modules.statistics.keywords_artefact import KEYWORDS
 from systems.feature_system.feature_registry import register_feature
+from systems.feature_system.feature_system_enum import FeatureArea
 
 KEYWORD_STATISTICS = register_feature(
     "keyword_statistics",
