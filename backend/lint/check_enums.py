@@ -9,7 +9,7 @@ without importing each other:
     core|modules/<module>/<module>_enum.py   one enum file per module
     repos/<component>_enum.py                 repo enums, next to the repo
     systems/<system>/<system>_enum.py         system enums, next to the system
-    common/<name>_enum.py                     shared enums (DocType, JobType, ...)
+    common/<name>_enum.py                     shared enums (DocType, MetaType, ...)
 
 Exempt, because they are not plain value sets:
 

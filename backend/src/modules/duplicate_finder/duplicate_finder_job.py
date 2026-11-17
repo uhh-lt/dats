@@ -7,7 +7,6 @@ from pydantic import Field
 from sqlalchemy.orm import Session
 
 from common.doc_type_enum import DocType
-from common.job_type_enum import JobType
 from core.artefacts.word_frequencies.word_frequency_crud import crud_word_frequency
 from modules.duplicate_finder.duplicate_finder_feature import DUPLICATE_FINDER
 from repos.db.sql_repo import SQLRepo
@@ -42,7 +41,7 @@ def validate_duplicate_finder_input(db: Session, payload: DuplicateFinderInput) 
 
 
 @register_job(
-    job_type=JobType.DUPLICATE_FINDER,
+    job_type="duplicate_finder",
     input_type=DuplicateFinderInput,
     output_type=DuplicateFinderOutput,
     validate_input=validate_duplicate_finder_input,

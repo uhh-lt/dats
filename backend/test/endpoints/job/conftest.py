@@ -1,7 +1,6 @@
 import pytest
 import rq
 
-from common.job_type_enum import JobType
 from core.user.user_orm import UserORM
 from feature_test_utils import FeaturelessProject, create_featureless_project
 from modules.tag_recommendation.tag_recommendation_dto import (
@@ -33,14 +32,14 @@ def featureless_tag_recommendation_job(featureless_project: FeaturelessProject) 
     job = rq.job.Job.create(
         rq_job_handler,
         kwargs={
-            "jobtype": JobType.TAG_RECOMMENDATION,
+            "jobtype": "tag_recommendation",
             "handler": None,
             "payload": TagRecommendationJobInput(
                 project_id=featureless_project["project"].id
             ),
         },
         meta={
-            "type": JobType.TAG_RECOMMENDATION,
+            "type": "tag_recommendation",
             "project_id": featureless_project["project"].id,
         },
         connection=js.redis_conn,

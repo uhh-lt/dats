@@ -4,7 +4,6 @@ import pandas as pd
 from sqlalchemy import event
 from sqlalchemy.orm import Session
 
-from common.job_type_enum import JobType
 from common.singleton_meta import SingletonMeta
 from core.annotation.annotation_document_crud import crud_adoc
 from core.code.code_crud import crud_code
@@ -49,6 +48,7 @@ from modules.experiment.experiment_run_dto import (
     ExperimentRunScores,
     ExperimentRunUpdateIntern,
 )
+from modules.experiment.experiment_run_job import EXPERIMENT_RUN_JOB
 from repos.filesystem_repo import FilesystemRepo
 from systems.job_system.job_service import JobService
 from systems.job_system.job_system_enum import JobStatus
@@ -146,7 +146,7 @@ class ExperimentService(metaclass=SingletonMeta):
             db,
             "after_commit",
             lambda _session: self.js.start_job(
-                job_type=JobType.EXPERIMENT_RUN, payload=job_input
+                job_type=EXPERIMENT_RUN_JOB, payload=job_input
             ),
             once=True,
         )

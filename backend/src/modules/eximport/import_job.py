@@ -1,12 +1,13 @@
-from common.job_type_enum import JobType
 from modules.eximport.import_job_dto import ImportJobInput, ImportJobRead
 from repos.db.sql_repo import SQLRepo
 from systems.job_system.job_dto import Job
 from systems.job_system.job_register_decorator import register_job
 
+IMPORT_JOB = "import"
+
 
 @register_job(
-    job_type=JobType.IMPORT,
+    job_type=IMPORT_JOB,
     input_type=ImportJobInput,
     publish_updates=True,
     read_model=ImportJobRead,

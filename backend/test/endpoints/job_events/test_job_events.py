@@ -24,7 +24,7 @@ from unittest.mock import MagicMock, patch
 import pytest
 
 from common.dats_event import DATSEvent
-from common.job_type_enum import JobType
+from core.doc_processing.entrypoints.init_sdoc_job import SDOC_INIT_JOB
 from core.project.project_orm import ProjectORM
 from core.user.user_orm import UserORM
 from modules.eximport.export_enum import ExportJobType
@@ -47,7 +47,7 @@ def _start_export_job(project: ProjectORM) -> Job:
         export_job_type=ExportJobType.ALL_SDOCS,
         specific_export_job_parameters=None,
     )
-    return JobService().start_job(job_type=JobType.EXPORT, payload=payload)
+    return JobService().start_job(job_type="export", payload=payload)
 
 
 _ENDED_JOB_STATUS = [
@@ -128,7 +128,7 @@ class TestJobUpdatedEmission:
         payload = _payload(envelope)
         assert payload.job_id == job.get_id()
         assert payload.project_id == test_project.id
-        assert payload.job_type == JobType.EXPORT.value
+        assert payload.job_type == "export"
 
     def test_job_update_emits_job_updated(
         self, test_project: ProjectORM, test_user: UserORM
@@ -214,7 +214,7 @@ class TestJobUpdatedEmission:
         with patch(
             "systems.job_system.job_events._publish_envelope_sync"
         ) as mock_publish:
-            job = JobService().start_job(job_type=JobType.SDOC_INIT, payload=payload)
+            job = JobService().start_job(job_type=SDOC_INIT_JOB, payload=payload)
             job.update(status_message="working on it")
         _wait_until_ended(job)
 
@@ -242,7 +242,7 @@ class TestJobUpdatedEmission:
             ) as mock_publish,
         ):
             rq_job_handler(
-                jobtype=JobType.EXPORT,
+                jobtype="export",
                 handler=lambda payload, job: None,
                 payload=job.job.kwargs["payload"],
             )

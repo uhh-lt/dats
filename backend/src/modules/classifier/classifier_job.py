@@ -1,6 +1,5 @@
 from sqlalchemy.orm import Session
 
-from common.job_type_enum import JobType
 from core.auth.auth_exceptions import InvalidError
 from core.user.user_crud import crud_user
 from modules.classifier.classifier_dto import (
@@ -34,7 +33,7 @@ def validate_classifier_input(db: Session, payload: ClassifierJobInput) -> None:
 
 
 @register_job(
-    job_type=JobType.CLASSIFIER,
+    job_type="classifier",
     input_type=ClassifierJobInput,
     output_type=ClassifierJobOutput,
     generate_endpoints=EndpointGeneration.ALL,

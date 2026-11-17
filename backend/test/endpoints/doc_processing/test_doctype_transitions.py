@@ -3,13 +3,13 @@ from pathlib import Path
 from sqlalchemy.orm import Session
 
 from common.doc_type_enum import DocType
-from common.job_type_enum import JobType
 from common.languages_enum import Language
 from common.sdoc_status_enum import SDocStatus
 from core.artefacts.transcript.transcription_job import TranscriptionJobInput
 from core.artefacts.video_utils import audio_stream_path
 from core.doc.source_document_crud import crud_sdoc
 from core.doc_processing.doc_processing_dto import SdocInitJobInput
+from core.doc_processing.entrypoints.init_sdoc_job import SDOC_INIT_JOB
 from job_test_utils import HeldJobs
 from pipeline_test_utils import core_steps, read_all_step_status
 from systems.artefact_system.artefact_dto import (
@@ -62,7 +62,7 @@ def _follow(
     """Upload the file and run the document creation and the runnable steps
     until none is held. Returns the enriched input of every held step job."""
     JobService().start_job(
-        JobType.SDOC_INIT,
+        SDOC_INIT_JOB,
         SdocInitJobInput(
             project_id=project_id,
             filepath=filepath,
@@ -71,7 +71,7 @@ def _follow(
             settings=SETTINGS,
         ),
     )
-    held_jobs.run(JobType.SDOC_INIT, *RUNNABLE)
+    held_jobs.run(SDOC_INIT_JOB, *RUNNABLE)
     held: dict[str, SdocProcessingJobInput] = {}
     for job_type, payload in held_jobs.jobs():
         assert isinstance(payload, SdocProcessingJobInput)

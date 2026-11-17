@@ -1,6 +1,5 @@
 from sqlalchemy.orm import Session
 
-from common.job_type_enum import JobType
 from core.auth.auth_exceptions import InvalidError
 from core.prompt.prompt_service import PromptService
 from core.user.user_crud import crud_user
@@ -39,7 +38,7 @@ def validate_llm_assistant_input(db: Session, payload: LLMAssistantJobInput) -> 
 
 
 @register_job(
-    job_type=JobType.LLM_ASSISTANT,
+    job_type="llm_assistant",
     input_type=LLMAssistantJobInput,
     output_type=LLMAssistantJobOutput,
     generate_endpoints=EndpointGeneration.ALL,

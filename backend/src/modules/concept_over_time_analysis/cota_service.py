@@ -4,7 +4,6 @@ from fastapi.encoders import jsonable_encoder
 from sqlalchemy.orm import Session
 
 from common.doc_type_enum import DocType
-from common.job_type_enum import JobType
 from common.meta_type_enum import MetaType
 from common.singleton_meta import SingletonMeta
 from core.metadata.project_metadata_crud import crud_project_meta
@@ -20,6 +19,7 @@ from modules.concept_over_time_analysis.cota_dto import (
     COTAUpdate,
     COTAUpdateIntern,
 )
+from modules.concept_over_time_analysis.cota_refinement_job import COTA_REFINEMENT_JOB
 from repos.filesystem_repo import FilesystemRepo
 from systems.job_system.job_service import JobService
 
@@ -213,7 +213,7 @@ class COTAService(metaclass=SingletonMeta):
 
         # start the refinement job
         job = self.js.start_job(
-            job_type=JobType.COTA_REFINEMENT,
+            job_type=COTA_REFINEMENT_JOB,
             payload=payload,
         )
 

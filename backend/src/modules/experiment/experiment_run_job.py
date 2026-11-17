@@ -1,13 +1,11 @@
 from datetime import UTC, datetime
 
-from common.job_type_enum import JobType
 from core.prompt.prompt_enum import TaskType
 from modules.experiment.experiment_run_crud import crud_experiment_run
 from modules.experiment.experiment_run_dto import (
     ExperimentRunJobInput,
     ExperimentRunUpdateIntern,
 )
-from modules.experiment.experiment_service import ExperimentService
 from modules.llm_assistant.llm_assistant_job import llm_assistant
 from modules.llm_assistant.llm_assistant_job_dto import (
     LLMAssistantJobInput,
@@ -18,11 +16,13 @@ from systems.job_system.job_dto import Job
 from systems.job_system.job_register_decorator import register_job
 from systems.job_system.job_system_enum import JobStatus, JobTiming
 
+EXPERIMENT_RUN_JOB = "experiment_run"
+
 sqlr = SQLRepo()
 
 
 @register_job(
-    job_type=JobType.EXPERIMENT_RUN,
+    job_type=EXPERIMENT_RUN_JOB,
     input_type=ExperimentRunJobInput,
     output_type=LLMAssistantJobOutput,
     publish_updates=True,
@@ -63,6 +63,9 @@ def experiment_run(
 
         # 3) store the agreement with the gold annotator and mark the run finished
         job.update(status_message="Computing the agreement with the gold annotator")
+        # imported here: ExperimentService imports EXPERIMENT_RUN_JOB from this file
+        from modules.experiment.experiment_service import ExperimentService
+
         with sqlr.transaction() as db:
             ExperimentService().store_run_scores(db=db, run_id=payload.run_id)
             crud_experiment_run.update(

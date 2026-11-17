@@ -1,4 +1,3 @@
-from common.job_type_enum import JobType
 from modules.eximport.export_job_dto import ExportJobInput, ExportJobOutput
 from repos.db.sql_repo import SQLRepo
 from systems.job_system.job_dto import Job
@@ -7,7 +6,7 @@ from systems.job_system.job_system_enum import EndpointGeneration
 
 
 @register_job(
-    job_type=JobType.EXPORT,
+    job_type="export",
     input_type=ExportJobInput,
     output_type=ExportJobOutput,
     generate_endpoints=EndpointGeneration.MINIMAL,

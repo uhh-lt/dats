@@ -1,6 +1,5 @@
 from sqlalchemy.orm import Session
 
-from common.job_type_enum import JobType
 from modules.tag_recommendation.tag_recommendation_dto import (
     TagRecommendationJobInput,
 )
@@ -26,7 +25,7 @@ def validate_tag_recommendation_input(
 
 
 @register_job(
-    job_type=JobType.TAG_RECOMMENDATION,
+    job_type="tag_recommendation",
     input_type=TagRecommendationJobInput,
     validate_input=validate_tag_recommendation_input,
     generate_endpoints=EndpointGeneration.ALL,

@@ -1,7 +1,6 @@
 from loguru import logger
 
 from common.doc_type_enum import DocType
-from common.job_type_enum import JobType
 from core.doc.source_document_crud import crud_sdoc
 from core.doc.source_document_data_crud import crud_sdoc_data
 from core.doc.source_document_data_dto import SourceDocumentDataCreate
@@ -22,12 +21,14 @@ from systems.feature_system.feature_service import FeatureService
 from systems.job_system.job_dto import Job
 from systems.job_system.job_register_decorator import register_job
 
+SDOC_INIT_JOB = "sdoc_init"
+
 sqlr = SQLRepo()
 fsr = FilesystemRepo()
 
 
 @register_job(
-    job_type=JobType.SDOC_INIT,
+    job_type=SDOC_INIT_JOB,
     input_type=SdocInitJobInput,
     output_type=SdocInitJobOutput,
 )

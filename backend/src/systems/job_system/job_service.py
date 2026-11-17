@@ -128,8 +128,6 @@ class JobService(metaclass=SingletonMeta):
         read_model: type[JobRead] | None = None,
         validate_input: Callable[[Session, InputT], None] | None = None,
     ) -> None:
-        # a job type is text; a JobType member is stored as its plain value
-        job_type = str(job_type)
         # Enforce that the only parameter is named 'payload'
         sig = inspect.signature(handler_func)
         params = list(sig.parameters.values())
@@ -208,8 +206,6 @@ class JobService(metaclass=SingletonMeta):
         validate and the enricher cannot complete it), and
         `JobQueueUnavailableError` if the queue (Redis) cannot be reached.
         Anything else, e.g. an unknown job type, raises as it is."""
-        # stored and pickled as plain text, never as a JobType member
-        job_type = str(job_type)
         job_info = self.job_registry.get(job_type)
         if not job_info:
             raise ValueError(f"Unknown job type: {job_type}")

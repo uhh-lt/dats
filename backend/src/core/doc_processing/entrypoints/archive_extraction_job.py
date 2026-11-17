@@ -5,13 +5,17 @@ from loguru import logger
 
 from common.doc_type_enum import DocType
 from common.doc_type_utils import get_doc_type
-from common.job_type_enum import JobType
-from core.doc_processing.entrypoints.doc_chunking_job import DocChunkingJobInput
+from core.doc_processing.entrypoints.doc_chunking_job import (
+    DOC_CHUNKING_JOB,
+    DocChunkingJobInput,
+)
 from core.doc_processing.entrypoints.follower_utils import start_followers
 from repos.filesystem_repo import FilesystemRepo
 from systems.artefact_system.artefact_dto import ProcessingJobInput
 from systems.job_system.job_dto import Job, JobOutputBase
 from systems.job_system.job_register_decorator import register_job
+
+EXTRACT_ARCHIVE_JOB = "extract_archive"
 
 fsr: FilesystemRepo = FilesystemRepo()
 
@@ -27,7 +31,7 @@ class ArchiveExtractionJobOutput(JobOutputBase):
 
 
 @register_job(
-    job_type=JobType.EXTRACT_ARCHIVE,
+    job_type=EXTRACT_ARCHIVE_JOB,
     input_type=ArchiveExtractionJobInput,
     output_type=ArchiveExtractionJobOutput,
 )
@@ -58,10 +62,10 @@ def handle_archive_extraction_job(
     )
     # chunk every extracted file
     start_followers(
-        JobType.EXTRACT_ARCHIVE,
+        EXTRACT_ARCHIVE_JOB,
         [
             (
-                JobType.DOC_CHUNKING,
+                DOC_CHUNKING_JOB,
                 DocChunkingJobInput(
                     project_id=payload.project_id,
                     filepath=path,

@@ -1,4 +1,3 @@
-from common.job_type_enum import JobType
 from modules.perspectives.perspectives_job_dto import (
     PerspectivesJobInput,
     PerspectivesJobRead,
@@ -8,11 +7,13 @@ from systems.job_system.job_dto import Job
 from systems.job_system.job_register_decorator import register_job
 from systems.job_system.job_system_enum import JobTiming
 
+PERSPECTIVES_JOB = "perspectives"
+
 sqlr = SQLRepo()
 
 
 @register_job(
-    job_type=JobType.PERSPECTIVES,
+    job_type=PERSPECTIVES_JOB,
     input_type=PerspectivesJobInput,
     publish_updates=True,
     device="gpu",

@@ -7,7 +7,6 @@ import zipfile
 from fastapi.testclient import TestClient
 from sqlalchemy.orm import Session
 
-from common.job_type_enum import JobType
 from common.languages_enum import Language
 from core.code.code_crud import crud_code
 from core.project.project_orm import ProjectORM
@@ -17,6 +16,7 @@ from job_test_utils import HeldJobs
 from modules.eximport.project.export_project import export_project
 from modules.eximport.project.import_project import import_project
 from repos.filesystem_repo import FilesystemRepo
+from systems.artefact_system.artefact_computation_job import ARTEFACT_COMPUTATION_JOB
 from systems.artefact_system.artefact_dto import ProcessingSettings
 from systems.feature_system.feature_dto import FeatureActivation
 from systems.feature_system.feature_registry import Feature
@@ -213,5 +213,5 @@ def test_complete_does_not_run_the_set_up_hook(
     )
 
     assert response.status_code == 200, response.text
-    held_jobs.run(JobType.ARTEFACT_COMPUTATION)
+    held_jobs.run(ARTEFACT_COMPUTATION_JOB)
     assert hooked_feature["calls"] == [(project_id, HOOK_FINDS_ALL)]

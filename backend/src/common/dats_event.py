@@ -250,7 +250,7 @@ _DATS_EVENT_PAYLOADS: dict[DATSEvent, object] = {
     DATSEvent.EXPERIMENT_UPDATED: ExperimentRead,
     DATSEvent.EXPERIMENT_DELETED: ExperimentRead,
     # NOTE: DATSEvent.JOB_UPDATED is intentionally absent — its payload is a
-    # per-JobType union of concrete JobRead models, built lazily by
+    # per-job-type union of concrete JobRead models, built lazily by
     # build_job_event_models() once all jobs are registered.
 }
 
@@ -289,7 +289,7 @@ def build_job_event_models() -> None:
     """Build and register the JOB_UPDATED event model.
 
     The payload is a Union over the concrete JobRead model of each registered
-    JobType that publishes updates (the models live in the job registry, so
+    job type that publishes updates (the models live in the job registry, so
     the OpenAPI schema contains exactly ONE model per job type). Must be
     called once at startup AFTER all jobs are registered (i.e. after
     `import_by_suffix("_job.py")`) and BEFORE websocket_dto.py is first

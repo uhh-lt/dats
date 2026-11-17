@@ -7,7 +7,6 @@ import pytest
 from fastapi.testclient import TestClient
 from sqlalchemy.orm import Session
 
-from common.job_type_enum import JobType
 from common.languages_enum import Language
 from core.annotation.span_annotation_dto import SpanAnnotationRead
 from core.annotation.span_group_dto import SpanGroupWithAnnotationsRead
@@ -20,6 +19,7 @@ from job_test_utils import HeldJobs
 from pipeline_test_utils import read_step_status
 from repos.ray.dto.coref import CorefJobInput, CorefJobOutput, CorefOutputDoc
 from repos.ray.ray_repo import RayRepo
+from systems.artefact_system.artefact_computation_job import ARTEFACT_COMPUTATION_JOB
 from systems.artefact_system.artefact_dto import ProcessingSettings
 from systems.feature_system.feature_dto import FeatureActivation
 
@@ -117,7 +117,7 @@ def test_enable_resolves_the_german_text_into_mention_groups(
     calls = _mock_coref(monkeypatch, CLUSTERS)
 
     _enable(client, p["project"].id)
-    held_jobs.run(JobType.ARTEFACT_COMPUTATION, STEP)
+    held_jobs.run(ARTEFACT_COMPUTATION_JOB, STEP)
 
     sdoc_id = p["german_text"].id
     assert read_step_status(db_session, sdoc_id, STEP) == 1
@@ -149,7 +149,7 @@ def test_enable_reuses_the_mention_code_of_the_project(
     _mock_coref(monkeypatch, CLUSTERS)
 
     _enable(client, p["project"].id)
-    held_jobs.run(JobType.ARTEFACT_COMPUTATION, STEP)
+    held_jobs.run(ARTEFACT_COMPUTATION_JOB, STEP)
 
     db_session.expire_all()
     mentions = [
@@ -209,7 +209,7 @@ def test_enable_finishes_documents_it_does_not_resolve_without_output(
     calls = _mock_coref(monkeypatch, CLUSTERS)
 
     _enable(client, p["project"].id)
-    held_jobs.run(JobType.ARTEFACT_COMPUTATION, STEP)
+    held_jobs.run(ARTEFACT_COMPUTATION_JOB, STEP)
 
     sdoc_id = p[sdoc_key].id
     assert read_step_status(db_session, sdoc_id, STEP) == 1
@@ -243,7 +243,7 @@ def test_recompute_replaces_the_mentions_and_groups(
     sdoc_id = p["german_text"].id
     _mock_coref(monkeypatch, CLUSTERS)
     _enable(client, p["project"].id)
-    held_jobs.run(JobType.ARTEFACT_COMPUTATION, STEP)
+    held_jobs.run(ARTEFACT_COMPUTATION_JOB, STEP)
 
     _mock_coref(monkeypatch, RECOMPUTED_CLUSTERS)
     _recompute(client, p["project"].id, sdoc_id)

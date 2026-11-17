@@ -6,7 +6,6 @@ from weaviate import WeaviateClient
 from common.crud_enum import Crud
 from common.dats_event import DATSEvent
 from common.dependencies import get_current_user, get_db_session, get_weaviate_client
-from common.job_type_enum import JobType
 from core.auth.authz_user import AuthzUser
 from core.project.project_crud import crud_project
 from core.search.sdoc_search.sdoc_search import find_sdoc_ids
@@ -30,6 +29,7 @@ from modules.perspectives.cluster_embedding_dto import ClusterObjectIdentifier
 from modules.perspectives.document_aspect_crud import crud_document_aspect
 from modules.perspectives.document_cluster_crud import crud_document_cluster
 from modules.perspectives.perspectives_enum import PerspectivesJobType
+from modules.perspectives.perspectives_job import PERSPECTIVES_JOB
 from modules.perspectives.perspectives_job_dto import (
     CreateAspectParams,
     PerspectivesJobInput,
@@ -78,7 +78,7 @@ def create_aspect(
 
     params = CreateAspectParams(perspectives_job_type=PerspectivesJobType.CREATE_ASPECT)
     job = js.start_job(
-        JobType.PERSPECTIVES,
+        PERSPECTIVES_JOB,
         payload=PerspectivesJobInput(
             project_id=aspect.project_id,
             aspect_id=db_aspect.id,
@@ -303,7 +303,7 @@ def start_perspectives_job(
 
     # No job running, so we can start a new one
     job = js.start_job(
-        JobType.PERSPECTIVES,
+        PERSPECTIVES_JOB,
         payload=PerspectivesJobInput(
             project_id=aspect.project_id,
             aspect_id=aspect_id,

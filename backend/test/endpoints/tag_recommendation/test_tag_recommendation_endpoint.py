@@ -4,7 +4,6 @@ import pytest
 from fastapi.testclient import TestClient
 
 import dats_test_utils
-from common.job_type_enum import JobType
 from feature_test_utils import FeaturelessProject
 from job_test_utils import HeldJobs
 from modules.tag_recommendation.tag_recommendation_dto import (
@@ -169,9 +168,9 @@ def _run_job(
         "/job/tag_recommendation", json=payload.model_dump(mode="json")
     )
     assert started.status_code == 200, started.text
-    held_jobs.run(JobType.TAG_RECOMMENDATION)
+    held_jobs.run("tag_recommendation")
     job_id = started.json()["job_id"]
-    (job,) = held_jobs.ran(JobType.TAG_RECOMMENDATION)
+    (job,) = held_jobs.ran("tag_recommendation")
     assert job.get_status() == JobStatus.FINISHED
 
     response = client.get(f"/tagrecommendation/job/{job_id}")

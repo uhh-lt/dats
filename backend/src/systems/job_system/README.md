@@ -20,8 +20,11 @@ Jobs are declared with the `@register_job` decorator
 module (auto-imported at startup):
 
 ```python
+MY_JOB = "my_job"  # only if code starts or names this job
+
+
 @register_job(
-    job_type=JobType.MY_JOB,
+    job_type=MY_JOB,
     input_type=MyJobInput,
     output_type=MyJobOutput,
     device="cpu",                       # "cpu" | "gpu" | "api"
@@ -38,7 +41,7 @@ Key decorator arguments:
 
 | Argument             | Meaning                                                                                                                                          |
 | -------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------ |
-| `job_type`           | The text name identifying this job: a `JobType` member for a job that is no pipeline step, the step name (e.g. `"text_es_index"`) for a step.     |
+| `job_type`           | The text name identifying this job, declared by its owner: a module-level constant next to the handler if code starts or names the job, else a literal; a step uses its step name. |
 | `input_type`         | Pydantic model of the job input (stored in the RQ job kwargs).                                                                                   |
 | `output_type`        | Pydantic model of the result (optional).                                                                                                         |
 | `device`             | Which queue the job lands on: `cpu`, `gpu`, or `api`.                                                                                            |
@@ -161,7 +164,11 @@ The job system does not reinvent delivery — it reuses the
 
 ## Adding a New Job
 
-1. Define `MyJobInput` / `MyJobOutput` pydantic models and a `JobType` member (a pipeline step names its job type as text in `@register_job` instead).
+1. Define `MyJobInput` / `MyJobOutput` pydantic models and name the job type
+   as text in `@register_job`; if code starts or names the job, declare the
+   name as a module-level constant next to the handler (`DOC_CHUNKING_JOB` in
+   `doc_chunking_job.py`), which callers import from there. The name is stored
+   in Redis and never changes while jobs of it exist.
 2. Write the handler in a `*_job.py` module with `@register_job(...)`; set
    `publish_updates=True` if users should see live progress.
 3. Call `job.update(...)` inside the handler to report progress.

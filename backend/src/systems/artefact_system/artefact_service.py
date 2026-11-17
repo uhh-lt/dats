@@ -5,7 +5,6 @@ from loguru import logger
 from sqlalchemy.orm import Session
 
 from common.doc_type_enum import DocType
-from common.job_type_enum import JobType
 from common.sdoc_status_enum import SDocStatus
 from common.singleton_meta import SingletonMeta
 from config import conf
@@ -13,6 +12,7 @@ from core.code.code_crud import crud_code
 from core.project.project_crud import crud_project
 from repos.db.sql_repo import SQLRepo
 from systems.artefact_system import artefact_statements as statements
+from systems.artefact_system.artefact_computation_job import ARTEFACT_COMPUTATION_JOB
 from systems.artefact_system.artefact_dto import (
     ArtefactComputationJobInput,
     ProcessingSettings,
@@ -119,7 +119,7 @@ class ArtefactService(metaclass=SingletonMeta):
             computation_id=computation.computation_id,
             artefacts=computation.artefacts,
         )
-        self.js.start_job(JobType.ARTEFACT_COMPUTATION, computation)
+        self.js.start_job(ARTEFACT_COMPUTATION_JOB, computation)
 
     def read_availability(
         self,

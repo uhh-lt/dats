@@ -33,7 +33,7 @@ Dependencies are declared in `backend/pyproject.toml` and managed with uv. Use w
 - `backend/lint/`: custom architecture lint scripts (see below)
 - `backend/test/`: tests
 - `backend/src/`: application code, every top-level folder is an import root (`from core.code.code_crud import crud_code`)
-  - `common/`: shared enums and helpers (`DocType`, `JobType`, `Crud` in `*_enum.py` files, `DATSEvent`, `SingletonMeta`, `exception_handler`, `NotFoundError`, FastAPI dependencies)
+  - `common/`: shared enums and helpers (`DocType`, `MetaType`, `Crud` in `*_enum.py` files, `DATSEvent`, `SingletonMeta`, `exception_handler`, `NotFoundError`, FastAPI dependencies)
   - `core/`: the core concepts (project, user, doc, code, tag, annotation, memo, metadata, auth, ...), the search (`core/search`) and the standard pipeline: `core/artefacts` holds one folder per artefact every document or several features need, named like the artefact, with its `<name>_artefact.py`, its steps and its store (utils that steps of several folders use sit directly in `core/artefacts`), and `core/doc_processing` holds the upload (`entrypoints/`), the health view, retry and recompute; core declares no feature and checks no toggle
   - `modules/`: capabilities built on `core` and `systems` (analysis, export/import, entity annotations, object detection, tag recommendation, ...), with or without a feature; a module never imports another module (small duplication is preferred over a shared service); a step whose artefact only one feature reads lives with that feature (`modules/entity_annotations`, `modules/object_detection`, the image embeddings in `modules/simsearch`, the document embeddings in `modules/tag_recommendation`, the keywords in `modules/statistics`)
   - `systems/`: reusable infrastructure (`job_system`, `artefact_system`, `feature_system`, `search_system`, `websocket_system`, `mcp_system`)
@@ -120,7 +120,7 @@ class FolderMoveCycleError(Exception):
 
 ## Enums and Constants
 
-- Every enum class lives in an enum module, one per module, named like the module's exceptions file: `<module>_enum.py` in `core/` and `modules/` (`core/doc/folder_enum.py`, `modules/whiteboard/whiteboard_enum.py`, `modules/eximport/import_enum.py`), `<component>_enum.py` next to its repo or system (`repos/llm_enum.py`, `systems/job_system/job_system_enum.py`), and `common/<name>_enum.py` for shared ones (`doc_type_enum.py`, `job_type_enum.py`, `meta_type_enum.py`, `crud_enum.py`). DTOs, ORMs, CRUDs and services import them from there, so an ORM never imports a DTO module for an enum.
+- Every enum class lives in an enum module, one per module, named like the module's exceptions file: `<module>_enum.py` in `core/` and `modules/` (`core/doc/folder_enum.py`, `modules/whiteboard/whiteboard_enum.py`, `modules/eximport/import_enum.py`), `<component>_enum.py` next to its repo or system (`repos/llm_enum.py`, `systems/job_system/job_system_enum.py`), and `common/<name>_enum.py` for shared ones (`doc_type_enum.py`, `meta_type_enum.py`, `crud_enum.py`). DTOs, ORMs, CRUDs and services import them from there, so an ORM never imports a DTO module for an enum.
 - Exempt, because they are no plain value sets: `DATSEvent` (`common/dats_event.py`), the enums of `systems/search_system/` (operators, sorting, grouping) and the search columns (`*_columns.py`).
 - Enums subclass `(str, Enum)` (or `StrEnum`) so they serialize as their value; `(int, Enum)` only where the values are ints (`common/sdoc_status_enum.py`). Keep enum methods small and free of business logic (`DateGroupBy`, `MetaType` map members to columns or expressions).
 - `backend/lint/check_enums.py` enforces this (`enum-location`, `value-type`).
@@ -144,7 +144,6 @@ Use Loguru: `from loguru import logger`, never the stdlib `logging` module. Mess
 Jobs are functions in `*_job.py` files, registered with the decorator from `systems/job_system`. The job opens its own transactions; it may call CRUDs directly for its own steps (e.g. status updates, see `experiment_run_job.py`) and delegates logic that endpoints or other jobs share to a service:
 
 ```python
-from common.job_type_enum import JobType
 from repos.db.sql_repo import SQLRepo
 from systems.job_system.job_dto import Job
 from systems.job_system.job_system_enum import EndpointGeneration, JobTiming
@@ -154,7 +153,7 @@ sqlr = SQLRepo()
 
 
 @register_job(
-    job_type=JobType.TAG_RECOMMENDATION,
+    job_type="tag_recommendation",
     input_type=TagRecommendationJobInput,
     validate_input=validate_tag_recommendation_input,
     generate_endpoints=EndpointGeneration.ALL,
@@ -169,8 +168,8 @@ def tag_recommendation_job(payload: TagRecommendationJobInput, job: Job) -> None
         )
 ```
 
-- Add the job type to `JobType` (`common/job_type_enum.py`, a `StrEnum` for the jobs that are no pipeline steps; a step names its job type as text) and its input/output DTOs to the module's `*_dto.py` (see `backend-dto.instructions.md`).
-- `device` selects the worker queue (`"cpu"`, `"gpu"`, `"api"`). Services start jobs with `JobService().start_job(JobType.X, <X>JobInput(...))`.
+- A job type is text its owner declares in `@register_job`: a job that code starts or names gets a module-level constant next to its handler (`DOC_CHUNKING_JOB` in `doc_chunking_job.py`) that callers import, a job started only through its generated endpoints a literal, and its input/output DTOs go to the module's `*_dto.py` (see `backend-dto.instructions.md`).
+- `device` selects the worker queue (`"cpu"`, `"gpu"`, `"api"`). Services start jobs with `JobService().start_job(X_JOB, <X>JobInput(...))`.
 - See [tag_recommendation_job.py](backend/src/modules/tag_recommendation/tag_recommendation_job.py) and `systems/job_system/README.md`.
 - A job of a gated module checks its feature in its `validate_input` hook with `FeatureService().assert_enabled(...)` (`duplicate_finder_job.py`).
 
