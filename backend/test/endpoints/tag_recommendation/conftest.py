@@ -31,6 +31,7 @@ from repos.vector.weaviate_repo import WeaviateRepo
 
 OWN_ML_JOB_ID = "own-tag-recommendation-job"
 FOREIGN_ML_JOB_ID = "foreign-tag-recommendation-job"
+FEATURELESS_ML_JOB_ID = "featureless-tag-recommendation-job"
 
 
 class TagRecommendationProject(TypedDict):
@@ -160,6 +161,29 @@ def featureless_project(db_session, test_user: UserORM) -> FeaturelessProject:
       without features finished
     """
     return create_featureless_project(db_session, test_user)
+
+
+@pytest.fixture(scope="function")
+def featureless_recommendation(
+    db_session: Session, featureless_project: FeaturelessProject
+) -> TagRecommendationLinkORM:
+    """
+    This fixture adds to `featureless_project` (whose tag recommendation is
+    disabled) the tag "Featureless Tag" and one unreviewed recommendation of
+    the tag recommendation job `FEATURELESS_ML_JOB_ID`, which predicts that
+    tag for its document "text_done.txt" with score 0.8.
+    """
+    project = featureless_project["project"]
+    tag = _create_tag(db_session, project.id, "Featureless Tag")
+    recommendation = _create_recommendation(
+        db_session,
+        ml_job_id=FEATURELESS_ML_JOB_ID,
+        sdoc_id=featureless_project["sdoc"].id,
+        tag_id=tag.id,
+        score=0.8,
+    )
+    db_session.commit()
+    return recommendation
 
 
 class TagRecommendationJobProject(TypedDict):

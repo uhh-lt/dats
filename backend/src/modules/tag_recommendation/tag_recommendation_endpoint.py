@@ -73,6 +73,13 @@ def update_recommendations(
     authz_user.assert_in_same_project_as_many(
         Crud.TAG_RECOMMENDATION, reviewd_recommendation_ids
     )
+    reviewed = crud_tag_recommendation_link.read_by_ids(
+        db=db, ids=reviewd_recommendation_ids
+    )
+    for project_id in {link.get_project_id() for link in reviewed}:
+        FeatureService().assert_enabled(
+            db=db, project_id=project_id, feature=TAG_RECOMMENDATION
+        )
 
     modifications = crud_tag_recommendation_link.update_multi(
         db=db,

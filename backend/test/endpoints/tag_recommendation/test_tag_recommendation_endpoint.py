@@ -2,10 +2,14 @@ from collections.abc import Generator
 
 import pytest
 from fastapi.testclient import TestClient
+from sqlalchemy.orm import Session
 
 import dats_test_utils
-from feature_test_utils import FeaturelessProject
+from feature_test_utils import FeaturelessProject, assert_feature_disabled
 from job_test_utils import HeldJobs
+from modules.tag_recommendation.tag_recommendation_crud import (
+    crud_tag_recommendation_link,
+)
 from modules.tag_recommendation.tag_recommendation_dto import (
     TagRecommendationJobInput,
     TagRecommendationLinkRead,
@@ -13,6 +17,9 @@ from modules.tag_recommendation.tag_recommendation_dto import (
 )
 from modules.tag_recommendation.tag_recommendation_enum import (
     TagRecommendationMethod,
+)
+from modules.tag_recommendation.tag_recommendation_orm import (
+    TagRecommendationLinkORM,
 )
 from systems.job_system.job_system_enum import JobStatus
 
@@ -115,6 +122,26 @@ def test_review_recommendations_rejects_unknown_id(
     response = client.patch("/tagrecommendation/review_recommendations", json=[999_999])
 
     assert response.status_code == 403, response.text
+
+
+def test_review_recommendations_rejects_a_disabled_feature_and_changes_nothing(
+    client: TestClient,
+    db_session: Session,
+    featureless_recommendation: TagRecommendationLinkORM,
+):
+    """A member cannot review the recommendations of a project whose tag
+    recommendation is disabled, and the recommendation stays unreviewed (read
+    from the database, as the job listing is gated by the feature too)."""
+    response = client.patch(
+        "/tagrecommendation/review_recommendations",
+        json=[featureless_recommendation.id],
+    )
+
+    assert_feature_disabled(response, "tag_recommendation")
+    db_session.expire_all()
+    assert not crud_tag_recommendation_link.read(
+        db=db_session, id=featureless_recommendation.id
+    ).is_reviewed
 
 
 # ===========================================================================
