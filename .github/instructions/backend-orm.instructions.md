@@ -135,4 +135,4 @@ See:
 - [code_orm.py](backend/src/core/code/code_orm.py): project-scoped entity with timestamps, object handle, one-to-many with cascades, hierarchy, unique constraint, `memo_ids` and `get_project_id`.
 - [tag_orm.py](backend/src/core/tag/tag_orm.py): many-to-many through a `<A><B>LinkTable` in the same file.
 - [cota_orm.py](backend/src/modules/concept_over_time_analysis/cota_orm.py): JSONB documents with JSONB server defaults.
-- [word_frequency_orm.py](backend/src/core/doc_processing/word_frequencies/word_frequency_orm.py): minimal dependent table with a composite primary key that delegates `get_project_id`.
+- [word_frequency_orm.py](backend/src/core/artefacts/word_frequencies/word_frequency_orm.py): minimal dependent table with a composite primary key that delegates `get_project_id`.

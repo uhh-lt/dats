@@ -9,3 +9,5 @@ Every pipeline step is computed by a job of its own, named like the step. The sp
 Deploy: the Redis queues and the failed registry must be empty, as a `text_spacy` job stored before names the further step it was started for and a retry of it would compute tokens and sentences only; afterwards `project.artefact_computations` is reset to `{}` for every project: an entry whose job is gone keeps its features at Computing forever. An upgrade from a release before the feature toggles gets this reset from migration `457909d274d4`; an instance already past it runs `UPDATE project SET artefact_computations = '{}'` after emptying the queues.
 
 Closes uhh-lt/dats#900.
+
+Amended 2026-11-17: the artefact folders of the standard pipeline live in `core/artefacts/<name>/`; `core/doc_processing` keeps the upload, the health view, retry and recompute.

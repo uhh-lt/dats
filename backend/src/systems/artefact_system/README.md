@@ -17,7 +17,7 @@ Disable calls nothing: the stored data and the step statuses stay. A computation
 
 ## Declaring an artefact
 
-An artefact is declared by the code that owns it, in a file that its steps and features import (`<name>_artefact.py`, next to the steps that produce it: `core/doc_processing/<name>/` holds the standard ones, one folder per artefact):
+An artefact is declared by the code that owns it, in a file that its steps and features import (`<name>_artefact.py`, next to the steps that produce it: `core/artefacts/<name>/` holds the standard ones, one folder per artefact):
 
 ```python
 KEYWORDS = artefact("keywords")

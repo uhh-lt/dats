@@ -98,7 +98,7 @@ A feature that reuses an existing artefact:
 
 ```python
 # modules/rag/rag_feature.py
-from core.doc_processing.sentence_embeddings.sentence_embeddings_artefact import (
+from core.artefacts.sentence_embeddings.sentence_embeddings_artefact import (
     SENTENCE_EMBEDDINGS,
 )
 
@@ -167,7 +167,8 @@ Consequences: the search moved to `core/search` and its index is a core artefact
 | `systems/feature_system`  | Feature registry, enabled features, statuses, actions, endpoints                                                                                                                                    |
 | `systems/artefact_system` | Artefact and step registry, pipeline graph, step planning, step runs, step statuses, availability                                                                                                   |
 | `systems/job_system`      | Unchanged                                                                                                                                                                                           |
-| `core/doc_processing`     | The standard pipeline: upload, then one folder per core or shared on-demand artefact (its declaration, steps and store)                                                                             |
+| `core/artefacts`          | The standard pipeline: one folder per core or shared on-demand artefact (its declaration, steps and store)                                                                                          |
+| `core/doc_processing`     | The upload, the health view, retry and recompute                                                                                                                                                    |
 | `core/search`             | The search of documents, memos and annotations, on the core search index                                                                                                                            |
 | `modules/<capability>`    | One capability, with a feature if it needs an artefact outside the core, with its own artefacts, steps, storage, endpoints; a module without a feature (Search & Auto-Annotate) is always available |
 
@@ -175,7 +176,7 @@ Removed:
 
 | Removed                                    | Replaced by                                                                                        |
 | ------------------------------------------ | -------------------------------------------------------------------------------------------------- |
-| `modules/doc_processing`                   | `core/doc_processing` and the feature modules                                                      |
+| `modules/doc_processing`                   | `core/doc_processing`, `core/artefacts` and the feature modules                                    |
 | `modules/project_features`                 | The feature system                                                                                 |
 | `modules/ml` (ML jobs, their status table) | Coreference, quotation and tag recommendation modules with normal pipeline steps and step statuses |
 | The embedding service                      | Each embedding step, and the search that embeds a query, calls the model service itself            |
