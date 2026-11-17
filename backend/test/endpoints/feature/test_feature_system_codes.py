@@ -107,40 +107,39 @@ def test_enable_entity_annotations_creates_the_entity_codes_and_disable_keeps_th
     assert "NAMED_ENTITY" in _codes(db_session, project.id)
 
 
-def test_enable_object_detection_reuses_the_entity_person_code(
+def test_enable_object_detection_adds_the_coco_trees_with_human_and_no_entities(
     db_session: Session, test_user: UserORM
 ):
-    """Object detection declares `NAMED_ENTITY` > `PERSON` too: in a project with
-    entity annotations, Enable reuses both codes and adds the COCO trees."""
+    """Object detection declares the COCO trees with the top code `HUMAN` for
+    the people it finds, and no named-entity code: Enable adds them below
+    `SYSTEM_CODE` and leaves `NAMED_ENTITY` and `PERSON` out."""
     project = create_project_with_features(
-        db_session,
-        test_user,
-        title="Entities And Objects",
-        features=["entity_annotations"],
+        db_session, test_user, title="Objects Later", features=[]
     )
-    before = _codes(db_session, project.id)
 
     _enable(db_session, project.id, "object_detection")
 
-    after = _codes(db_session, project.id)
-    assert after["NAMED_ENTITY"].id == before["NAMED_ENTITY"].id
-    assert after["PERSON"].id == before["PERSON"].id
-    assert after["ANIMAL"].is_system
-    assert after["BACKGROUND"].is_system
+    codes = _codes(db_session, project.id)
+    assert codes["HUMAN"].is_system
+    assert codes["HUMAN"].parent_id == codes["SYSTEM_CODE"].id
+    assert codes["ANIMAL"].parent_id == codes["SYSTEM_CODE"].id
+    assert "NAMED_ENTITY" not in codes
+    assert "PERSON" not in codes
 
 
 def test_a_project_with_all_features_has_the_system_codes_of_before(
     db_session: Session, test_user: UserORM
 ):
-    """With every feature, a new project has the 135 system codes it had when
-    they were configured: the root, the entity, COCO, mention and quotation
-    trees."""
+    """With every feature, a new project has 136 system codes: the 135 it had
+    when they were configured (the root, the entity, COCO, mention and
+    quotation trees) and `HUMAN`, the code of the people object detection
+    finds."""
     project = create_project_with_features(
         db_session, test_user, title="All Features", features=feature_registry.names()
     )
 
     codes = _codes(db_session, project.id)
-    assert len(codes) == 135
+    assert len(codes) == 136
     assert all(code.is_system for code in codes.values())
 
 

@@ -26,6 +26,9 @@ fsr = FilesystemRepo()
 ray = RayRepo()
 sqlr = SQLRepo()
 
+# the code of a DETR label whose code is not named like it
+LABEL_CODES = {"PERSON": "HUMAN"}
+
 
 class ObjectDetectionJobInput(SdocProcessingJobInput):
     filepath: Path
@@ -91,13 +94,13 @@ def handle_object_detection_job(payload: ObjectDetectionJobInput, job: Job) -> N
                 y_min=box.y_min,
                 x_max=box.x_max,
                 y_max=box.y_max,
-                code_id=system_code_ids[box.label],
+                code_id=system_code_ids[LABEL_CODES.get(box.label, box.label)],
                 uuid=str(uuid4()),
                 project_id=payload.project_id,
                 annotation_document_id=adoc.id,
             )
             for box in result.bboxes
-            if box.label in system_code_ids
+            if LABEL_CODES.get(box.label, box.label) in system_code_ids
         ]
 
         # store bboxes in db

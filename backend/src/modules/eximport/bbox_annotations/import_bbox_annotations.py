@@ -8,7 +8,7 @@ from core.annotation.bbox_annotation_dto import BBoxAnnotationCreateIntern
 from core.doc.source_document_crud import crud_sdoc
 from core.doc.source_document_orm import SourceDocumentORM
 from core.project.project_crud import crud_project
-from core.user.user_crud import crud_user
+from core.user.user_crud import SYSTEM_USER_ID, crud_user
 from modules.eximport.annotation_provenance_utils import (
     import_annotation_provenance,
 )
@@ -17,6 +17,11 @@ from modules.eximport.bbox_annotations.bbox_annotations_export_schema import (
     BBoxAnnotationExportSchema,
 )
 from modules.eximport.import_exceptions import ImportBBoxAnnotationsError
+
+# Archives exported before the object boxes had a code of their own mark the
+# people the object detection found with the named-entity code PERSON.
+LEGACY_PERSON_CODE = "PERSON"
+PERSON_BOX_CODE = "HUMAN"
 
 
 def import_bbox_annotations_to_proj(
@@ -54,6 +59,22 @@ def import_bbox_annotations_to_proj(
         f"Importing {len(annotation_collection.annotations)} bbox annotations..."
     )
 
+    # 0. Get the project
+    error_messages = []
+    project = crud_project.read(db=db, id=project_id)
+
+    # the system user's PERSON boxes of an old archive move to HUMAN where the
+    # project has that system code, as the migration moved the stored boxes
+    if any(c.name == PERSON_BOX_CODE and c.is_system for c in project.codes):
+        system_user_email = crud_user.read(db=db, id=SYSTEM_USER_ID).email
+        annotation_collection.annotations = [
+            annotation.model_copy(update={"code_name": PERSON_BOX_CODE})
+            if annotation.user_email == system_user_email
+            and annotation.code_name == LEGACY_PERSON_CODE
+            else annotation
+            for annotation in annotation_collection.annotations
+        ]
+
     # BBoxAnnotations need a User, a SourceDocument and a Code. We need to check if
     # all of them exist in the database:
     user_emails: set[str] = set()
@@ -65,10 +86,6 @@ def import_bbox_annotations_to_proj(
         sdoc_names.add(annotation.sdoc_name)
         code_names.add(annotation.code_name)
         user_email2annos.setdefault(annotation.user_email, []).append(annotation)
-
-    # 0. Get the project
-    error_messages = []
-    project = crud_project.read(db=db, id=project_id)
 
     # 1. Check if the Users exists
     project_user_emails = {

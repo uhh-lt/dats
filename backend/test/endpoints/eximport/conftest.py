@@ -48,7 +48,7 @@ from core.prompt.prompt_enum import OutputFormat, PromptLanguage, TaskType
 from core.prompt.prompt_service import PromptService
 from core.tag.tag_crud import crud_tag
 from core.tag.tag_dto import TagCreate
-from core.user.user_crud import crud_user
+from core.user.user_crud import SYSTEM_USER_ID, crud_user
 from core.user.user_orm import UserORM
 from dats_test_utils import create_text_document
 from feature_test_utils import (
@@ -913,3 +913,47 @@ def mid_pipeline_eximport_projects(
     )
     db_session.commit()
     return projects
+
+
+class PersonBoxProject(TypedDict):
+    project: ProjectORM
+    image: SourceDocumentORM
+    user: UserORM
+    system_user: UserORM
+
+
+@pytest.fixture(scope="function")
+def person_box_project(db_session: Session, test_user: UserORM) -> PersonBoxProject:
+    """
+    This fixture sets up the following project:
+
+    - Project "Person Boxes" of `test_user`, which enables the features
+      `object_detection` and `entity_annotations`, so it has the system codes
+      `HUMAN` (below `SYSTEM_CODE`) and `NAMED_ENTITY` > `PERSON`.
+    - One image document "people.png" without annotations.
+
+    The system user (`SYSTEM_USER_ID`) is a member of every project.
+    """
+    project = create_project_with_features(
+        db_session,
+        test_user,
+        title="Person Boxes",
+        features=["object_detection", "entity_annotations"],
+    )
+    image = crud_sdoc.create(
+        db=db_session,
+        create_dto=SourceDocumentCreate(
+            filename="people.png",
+            name="people.png",
+            doctype=DocType.image,
+            project_id=project.id,
+            folder_id=None,
+        ),
+    )
+    db_session.commit()
+    return {
+        "project": project,
+        "image": image,
+        "user": test_user,
+        "system_user": crud_user.read(db=db_session, id=SYSTEM_USER_ID),
+    }

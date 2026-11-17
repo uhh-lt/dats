@@ -18,6 +18,7 @@ from core.annotation.span_annotation_dto import SpanAnnotationCreate
 from core.annotation.span_annotation_service import SpanAnnotationService
 from core.code.code_crud import crud_code
 from core.code.code_dto import CodeCreate
+from core.code.system_codes import SystemCode
 from core.doc.source_document_orm import SourceDocumentORM
 from core.memo.memo_crud import crud_memo
 from core.memo.memo_dto import MemoCreateIntern
@@ -26,6 +27,7 @@ from core.project.project_crud import crud_project
 from core.project.project_dto import ProjectCreate
 from core.project.project_orm import ProjectORM
 from core.project.project_service import ProjectService
+from core.user.user_crud import SYSTEM_USER_ID
 from core.user.user_orm import UserORM
 from dats_test_utils import ProjectWithSdoc, create_span_for_text, create_text_document
 
@@ -576,6 +578,168 @@ def ml_job_status_database(
         )
         db_session.commit()
         yield sdoc_id
+    finally:
+        db_session.rollback()
+        db_session.close()
+        command.upgrade(config, "head")
+
+
+HUMAN_CODE = "a7b1a760a827"
+
+
+class PersonBoxesDatabase(TypedDict):
+    coco_project_id: int
+    own_human_project_id: int
+    own_human_code_id: int
+    system_person_box_ids: dict[int, list[int]]
+    user_person_box_ids: dict[int, list[int]]
+    system_cat_box_ids: dict[int, list[int]]
+
+
+def _insert(db: Session, sql: str, **params: object) -> int:
+    return db.execute(sa.text(sql), params).scalar_one()
+
+
+def _person_boxes_project(
+    db: Session, *, title: str, user_id: int, own_human: bool
+) -> tuple[int, list[int], list[int], list[int]]:
+    """A project with two of the COCO system codes as they were before HUMAN
+    and the system codes NAMED_ENTITY > PERSON, one image and its boxes;
+    returns its id and the ids of the system user's PERSON boxes, the user's
+    PERSON box and the system user's CAT box."""
+    project_id = _insert(
+        db,
+        "INSERT INTO project (title, description, enabled_features) "
+        "VALUES (:title, 'boxes', '{object_detection}') RETURNING id",
+        title=title,
+    )
+    crud_code.create_system_codes(
+        db,
+        project_id=project_id,
+        codes=[
+            SystemCode(
+                "ANIMAL",
+                "Super Object Category from COCO 2017",
+                children=(SystemCode("CAT", "Object Category from COCO 2017"),),
+            ),
+            SystemCode("BACKGROUND", "Super Object Category from COCO 2017"),
+            SystemCode(
+                "NAMED_ENTITY",
+                "A named entity",
+                children=(SystemCode("PERSON", "People, including fictional"),),
+            ),
+        ],
+    )
+    if own_human:
+        crud_code.create(
+            db=db,
+            create_dto=CodeCreate(
+                name="HUMAN",
+                description="My people",
+                project_id=project_id,
+                is_system=False,
+                enabled=True,
+            ),
+        )
+    folder_id = _insert(
+        db,
+        "INSERT INTO folder (name, project_id, folder_type) "
+        "VALUES ('people.png', :project_id, 'sdoc_folder') RETURNING id",
+        project_id=project_id,
+    )
+    sdoc_id = _insert(
+        db,
+        "INSERT INTO sourcedocument (filename, name, doctype, project_id, folder_id) "
+        "VALUES ('people.png', 'people.png', 'image', :project_id, :folder_id) "
+        "RETURNING id",
+        project_id=project_id,
+        folder_id=folder_id,
+    )
+    code_ids = {
+        code.name: code.id
+        for code in crud_code.read_system_codes_by_project(db=db, project_id=project_id)
+    }
+    boxes: dict[tuple[int, str], list[int]] = {}
+    for owner, names in (
+        (SYSTEM_USER_ID, ["PERSON", "PERSON", "CAT"]),
+        (user_id, ["PERSON"]),
+    ):
+        adoc_id = _insert(
+            db,
+            "INSERT INTO annotationdocument (user_id, source_document_id) "
+            "VALUES (:user_id, :sdoc_id) RETURNING id",
+            user_id=owner,
+            sdoc_id=sdoc_id,
+        )
+        for name in names:
+            boxes.setdefault((owner, name), []).append(
+                _insert(
+                    db,
+                    "INSERT INTO bboxannotation (uuid, project_id, "
+                    "annotation_document_id, code_id, x_min, y_min, x_max, y_max) "
+                    "VALUES (:uuid, :project_id, :adoc_id, :code_id, 0, 0, 1, 1) "
+                    "RETURNING id",
+                    uuid=str(uuid4()),
+                    project_id=project_id,
+                    adoc_id=adoc_id,
+                    code_id=code_ids[name],
+                )
+            )
+    return (
+        project_id,
+        boxes[(SYSTEM_USER_ID, "PERSON")],
+        boxes[(user_id, "PERSON")],
+        boxes[(SYSTEM_USER_ID, "CAT")],
+    )
+
+
+@pytest.fixture(scope="function")
+def person_boxes_database(
+    db_session: Session, test_user: UserORM
+) -> Generator[PersonBoxesDatabase, None, None]:
+    """
+    This fixture migrates the database down to the revision before
+    `a7b1a760a827_object_boxes_of_people_get_the_code_` and sets up two
+    projects as they were then, each with the COCO system codes ANIMAL > CAT
+    and BACKGROUND (below SYSTEM_CODE, no HUMAN), the system codes
+    NAMED_ENTITY > PERSON and one image with these bbox annotations:
+
+    - two boxes of the system user with the code PERSON,
+    - one box of the system user with the code CAT (below ANIMAL),
+    - one box of `test_user` with the code PERSON.
+
+    `coco` has nothing else; `own human` also has the top-level user code
+    HUMAN ("My people"). It migrates the database back to head afterwards.
+    """
+    db_session.commit()
+    config = alembic_config()
+    command.downgrade(config, DROP_ML_JOB_STATUS)
+    try:
+        result: PersonBoxesDatabase = {
+            "coco_project_id": 0,
+            "own_human_project_id": 0,
+            "own_human_code_id": 0,
+            "system_person_box_ids": {},
+            "user_person_box_ids": {},
+            "system_cat_box_ids": {},
+        }
+        for title, own_human in (("coco", False), ("own human", True)):
+            project_id, system_person, user_person, system_cat = _person_boxes_project(
+                db_session, title=title, user_id=test_user.id, own_human=own_human
+            )
+            result["coco_project_id" if not own_human else "own_human_project_id"] = (
+                project_id
+            )
+            result["system_person_box_ids"][project_id] = system_person
+            result["user_person_box_ids"][project_id] = user_person
+            result["system_cat_box_ids"][project_id] = system_cat
+        own_human_code = crud_code.read_by_name_and_project(
+            db_session, code_name="HUMAN", project_id=result["own_human_project_id"]
+        )
+        assert own_human_code is not None
+        result["own_human_code_id"] = own_human_code.id
+        db_session.commit()
+        yield result
     finally:
         db_session.rollback()
         db_session.close()

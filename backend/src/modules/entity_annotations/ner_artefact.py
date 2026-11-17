@@ -1,16 +1,15 @@
 """The named-entity spans of a document, span annotations of the system user,
 with the code tree of their entity types."""
 
-import dataclasses
-
-from core.code.system_codes import NAMED_ENTITY_PERSON, SystemCode
+from core.code.system_codes import SystemCode
 from systems.artefact_system.artefact_registry import artefact
 
-# NAMED_ENTITY with its 19 entity types; PERSON comes from core
-NAMED_ENTITY_CODES = dataclasses.replace(
-    NAMED_ENTITY_PERSON,
+# NAMED_ENTITY with its 19 entity types
+NAMED_ENTITY_CODES = SystemCode(
+    "NAMED_ENTITY",
+    "A named entity",
     children=(
-        *NAMED_ENTITY_PERSON.children,
+        SystemCode("PERSON", "People, including fictional"),
         SystemCode(
             "CARDINAL", "Numerals that do not fall under another type", enabled=False
         ),

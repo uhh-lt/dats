@@ -48,12 +48,3 @@ def declared_codes(trees: Iterable[SystemCode]) -> dict[str, SystemCode]:
     for tree in trees:
         visit(tree)
     return codes
-
-
-# The path NAMED_ENTITY > PERSON has two users: the named-entity spans and the
-# object boxes (DETR's "person"). Declared once, here; both extend it.
-NAMED_ENTITY_PERSON = SystemCode(
-    "NAMED_ENTITY",
-    "A named entity",
-    children=(SystemCode("PERSON", "People, including fictional"),),
-)

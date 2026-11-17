@@ -1,8 +1,8 @@
 """The object boxes of an image, bbox annotations of the system user, with the
-code trees of the COCO 2017 categories; a person is the code PERSON below
-NAMED_ENTITY, shared with the named-entity spans."""
+code trees of the COCO 2017 categories; a person is the code HUMAN (COCO's
+super category person has the one category person)."""
 
-from core.code.system_codes import NAMED_ENTITY_PERSON, SystemCode
+from core.code.system_codes import SystemCode
 from systems.artefact_system.artefact_registry import artefact
 
 # the COCO 2017 super categories with their categories, and BACKGROUND
@@ -50,6 +50,7 @@ COCO_CODES = (
         ),
     ),
     SystemCode("BACKGROUND", "Super Object Category from COCO 2017"),
+    SystemCode("HUMAN", "Object Category from COCO 2017"),
     SystemCode(
         "ELECTRONIC",
         "Super Object Category from COCO 2017",
@@ -168,5 +169,5 @@ COCO_CODES = (
 
 OBJECT_BBOXES = artefact(
     "object_bboxes",
-    codes=(*COCO_CODES, NAMED_ENTITY_PERSON),
+    codes=COCO_CODES,
 )
