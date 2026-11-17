@@ -1,5 +1,6 @@
 import json
 import os
+import re
 from time import sleep
 from typing import Any
 from urllib.parse import quote
@@ -185,13 +186,17 @@ class DATSAPI:
         )
         r.raise_for_status()
         # the search matches names that contain the prefix, keep the chunks of
-        # this file only (not those of "other_<name>")
-        chunk_prefix = name_without_suffix + "_pages_"
+        # this file only: <name>_pages_<first>-<last><suffix> (not those of
+        # "other_<name>", "<name>_pages_2024<suffix>" or "<name>.txt")
+        suffix = os.path.splitext(filename)[1]
+        chunk_name = re.compile(
+            re.escape(name_without_suffix) + r"_pages_\d+-\d+" + re.escape(suffix)
+        )
         sdocs: dict[str, dict] = r.json()["sdocs"]
         return [
             int(sdoc_id)
             for sdoc_id, sdoc in sdocs.items()
-            if sdoc["filename"].startswith(chunk_prefix)
+            if chunk_name.fullmatch(sdoc["filename"])
         ]
 
     def resolve_sdoc_ids_from_proj_and_filename(
