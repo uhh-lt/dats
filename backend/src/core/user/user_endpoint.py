@@ -261,6 +261,8 @@ def dissociate_user_from_project(
 ) -> ProjectUserLinks:
     authz_user.assert_in_project(project_id)
 
+    # the members before the removal: the removed user gets the event too
+    member_ids = [u.id for u in crud_user.read_by_project(db=db, project_id=project_id)]
     crud_project.dissociate_user(db=db, project_id=project_id, user_id=user_id)
     result = ProjectUserLinks(
         project_id=project_id,
@@ -269,5 +271,5 @@ def dissociate_user_from_project(
             for u in crud_user.read_by_project(db=db, project_id=project_id)
         ],
     )
-    ws.emit_to_project(DATSEvent.PROJECT_USERS_LINKED, result, project_id=project_id)
+    ws.emit_to_users(DATSEvent.PROJECT_USERS_LINKED, result, user_ids=member_ids)
     return result
