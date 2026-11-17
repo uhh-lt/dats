@@ -99,7 +99,9 @@ A feature that reuses an existing artefact:
 
 ```python
 # modules/rag/rag_feature.py
-from core.doc_processing.artefacts import SENTENCE_EMBEDDINGS
+from core.doc_processing.sentence_embeddings.sentence_embeddings_artefact import (
+    SENTENCE_EMBEDDINGS,
+)
 
 register_feature("rag_chat", ..., requires_artefacts={SENTENCE_EMBEDDINGS})
 ```
