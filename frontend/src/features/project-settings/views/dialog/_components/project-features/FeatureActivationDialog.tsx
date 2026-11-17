@@ -59,9 +59,11 @@ export function FeatureActivationDialog({ projectId, feature, state, onClose }: 
         <Stack spacing={2}>
           <Typography>{feature?.description}</Typography>
           <Typography>
-            {count === 0
-              ? `Nothing is computed: every document already has its data (${needs}).`
-              : `Computes ${needs} for ${count.toLocaleString("en-US")} ${count === 1 ? "document" : "documents"} in the background${isComplete ? ` (${count === 1 ? "its" : "their"} data failed or was never computed)` : ""}. The feature can be used while it is computing.`}
+            {state?.total_documents === 0
+              ? "Nothing is computed: the project has no documents yet."
+              : count === 0
+                ? `Nothing is computed: every document already has its data (${needs}).`
+                : `Computes ${needs} for ${count.toLocaleString("en-US")} ${count === 1 ? "document" : "documents"} in the background${isComplete ? ` (${count === 1 ? "its" : "their"} data failed or was never computed)` : ""}. The feature can be used while it is computing.`}
           </Typography>
         </Stack>
       </DialogContent>

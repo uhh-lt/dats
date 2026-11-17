@@ -116,6 +116,7 @@ export const ProjectFeatureListItem = memo(({ projectId, feature, state, onActiv
           <Typography variant="caption" color="text.secondary" component="div" mt={0.5}>
             Needs: {needs}
             {state.status === FeatureStatus.DISABLED &&
+              state.total_documents > 0 &&
               (state.ready
                 ? " · its data is complete, enabling it computes nothing"
                 : ` · ${formatCount(lacking)} of ${formatCount(state.total_documents)} documents lack it`)}
