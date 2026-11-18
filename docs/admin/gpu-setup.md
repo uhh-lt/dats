@@ -31,6 +31,20 @@ CDI needs one entry per device and Compose cannot split a variable into a list. 
 
 The `rq-gpu-worker` runs every GPU job on a single GPU from `RQ_DEVICE_IDS`: it prefers GPUs without other running DATS jobs, then idle GPUs, then the most free memory, and restricts the job to that GPU. Its healthcheck (`python src/worker.py healthcheck gpu`) also fails when the container cannot reach its GPUs anymore. The backend API does not wait for the GPU worker to be healthy, so a GPU problem does not keep DATS from starting.
 
+## Sizing the Ray deployments
+
+Each GPU deployment in `ray/configs/ray_config.yaml` requests a share of one GPU per replica (`ray_actor_options.num_gpus`). Ray starts a replica only if its share still fits on one of the GPUs in `RAY_DEVICE_IDS`; a replica that does not fit waits, and the Ray healthcheck reports the deployment as unhealthy meanwhile. The shares do not limit the GPU memory, so they should roughly reflect it.
+
+| Deployment          | Share per replica | Replicas |
+| ------------------- | ----------------- | -------- |
+| whisper, detr, clip | 0.2 each          | 1        |
+| spacy               | 0.2               | 1 to 2   |
+| quote, coref        | 0.2 each          | 0 to 1   |
+
+The defaults need 0.8 to 1.0 GPUs, and up to 1.4 GPUs while quote and coref are in use. On a single GPU, quote and coref therefore only start while spaCy runs a single replica; give Ray a second GPU for them.
+
+A spaCy replica needs up to about 4.5 GB of GPU memory: about 2.5 GB for the models and up to 2 GB for a segment of `spacy.segment_length` characters (50,000 by default; longer texts are processed segment by segment). On hosts with more GPUs, raise `spacy.deployment.model_worker.autoscaling_config.max_replicas` for throughput: on an A100, four replicas process about twice as many documents as one. To run spaCy on the CPU instead, set `spacy.device` to `cpu` and its `num_gpus` to `0.0`.
+
 ## Troubleshooting
 
 ### `Failed to initialize NVML: Unknown Error` inside a container
