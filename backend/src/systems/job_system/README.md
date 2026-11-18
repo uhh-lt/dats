@@ -70,7 +70,9 @@ Key decorator arguments:
    until its handler returned. `JobStoppedError` is a `BaseException`, so no
    `except Exception` in the job swallows it; transactions roll back, and code
    that records a failure (e.g. `experiment_run_job.py`) catches it
-   explicitly. Either way the job runs its `failed` hook and ends as STOPPED
+   explicitly. Code that waits for other threads must not wait for them once
+   stopped (`LLMRepo.llm_batch_chat` does not wait for its requests in
+   flight). Either way the job runs its `failed` hook and ends as STOPPED
    in the failed job registry; RQ does not retry it, but
    `JobService.retry_job` retries it like a failed job.
 5. **Checkpoint** — a job that works in batches can record what it finished

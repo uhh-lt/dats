@@ -48,7 +48,7 @@ The annotation tasks keep the raw LLM responses of the failed requests in an err
 
 Concrete tasks implement `_get_response_model()`, `_process_document()`, `_error_result()` and `_build_result()`. They override `_prepare()` only when setup such as deleting prior annotations is required.
 
-`LLMAssistantDocumentProcessor` owns the batching mechanics. It reads the documents of a batch (`llm_assistant.document_read_batch_size`) in a short transaction of its own and sends their prompts in bounded batches of LLM requests (`llm_assistant.request_batch_size`). A strategy may yield one or many prompts per document; responses retain their document and message (sentence/chunk) identity and are delivered to tasks only when the document is complete.
+`LLMAssistantDocumentProcessor` owns the batching mechanics. It reads the documents of a batch (`llm_assistant.document_read_batch_size`) in a short transaction of its own and sends their prompts in waves of LLM requests (`llm_assistant.request_batch_size`), whose requests run in parallel (`LLMRepo.llm_batch_chat`); a wave starts once the previous one is answered. A stop of the job ends the wave at once: no further request starts, and the requests in flight are not waited for. A strategy may yield one or many prompts per document; responses retain their document and message (sentence/chunk) identity and are delivered to tasks only when the document is complete.
 
 | Task                     | File                          | Description                          |
 | ------------------------ | ----------------------------- | ------------------------------------ |

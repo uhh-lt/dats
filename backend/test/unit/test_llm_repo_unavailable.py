@@ -4,55 +4,58 @@ failed with a server error), which the LLM Assistant treats as an outage, or
 because of the request itself, which fails on every attempt."""
 
 import httpx
+import openai
 import pytest
-from litellm import exceptions as litellm
 
 from repos.llm_repo import LLMRepo
 
-MODEL = "model"
-PROVIDER = "hosted_vllm"
+REQUEST = httpx.Request("POST", "http://llm")
 
 
 def _response(status_code: int) -> httpx.Response:
-    return httpx.Response(status_code, request=httpx.Request("POST", "http://llm"))
+    return httpx.Response(status_code, request=REQUEST)
 
 
 @pytest.mark.parametrize(
     "error,unavailable",
     [
         # The LLM did not answer in time.
-        pytest.param(litellm.Timeout("timed out", MODEL, PROVIDER), True, id="timeout"),
+        pytest.param(openai.APITimeoutError(REQUEST), True, id="timeout"),
         # The LLM could not be reached.
         pytest.param(
-            litellm.APIConnectionError("refused", PROVIDER, MODEL),
+            openai.APIConnectionError(message="refused", request=REQUEST),
             True,
             id="connection",
         ),
         # The LLM failed with a server error (5xx).
         pytest.param(
-            litellm.InternalServerError("error", PROVIDER, MODEL, _response(500)),
+            openai.InternalServerError("error", response=_response(500), body=None),
             True,
             id="500",
         ),
         pytest.param(
-            litellm.ServiceUnavailableError("busy", PROVIDER, MODEL, _response(503)),
+            openai.InternalServerError("busy", response=_response(503), body=None),
             True,
             id="503",
         ),
         # The request is too long: it fails on every attempt.
         pytest.param(
-            litellm.ContextWindowExceededError("too long", MODEL, PROVIDER),
+            openai.BadRequestError(
+                "maximum context length exceeded", response=_response(400), body=None
+            ),
             False,
             id="context-window",
         ),
         # Another error of the request (4xx).
         pytest.param(
-            litellm.BadRequestError("bad", MODEL, PROVIDER, _response(400)),
+            openai.UnprocessableEntityError(
+                "invalid", response=_response(422), body=None
+            ),
             False,
-            id="400",
+            id="422",
         ),
         pytest.param(
-            litellm.RateLimitError("slow down", PROVIDER, MODEL, _response(429)),
+            openai.RateLimitError("slow down", response=_response(429), body=None),
             False,
             id="429",
         ),

@@ -1,12 +1,13 @@
 import time
-from typing import Generic, Type, TypeVar
+from concurrent.futures import Future, ThreadPoolExecutor, wait
+from typing import Any, Generic, Type, TypeVar
 from uuid import uuid4
 
 import numpy as np
 import openai
-from litellm import batch_completion
 from loguru import logger
 from openai import OpenAI
+from openai.types.chat import ChatCompletion, ChatCompletionMessageParam
 from pydantic import BaseModel
 
 from common.singleton_meta import SingletonMeta
@@ -15,6 +16,10 @@ from repos.llm_enum import ProviderType
 from repos.repo_base import RepoBase
 
 T = TypeVar("T", bound=BaseModel)
+
+# the requests of a batch chat that run in parallel, the others wait for a free
+# worker
+BATCH_CHAT_MAX_WORKERS = 100
 
 
 class LLMMessage(BaseModel):
@@ -289,15 +294,90 @@ class LLMRepo(RepoBase, metaclass=SingletonMeta):
         return response_model.model_validate_json(msg.content)
 
     @staticmethod
-    def is_unavailable(error: Exception) -> bool:
+    def is_unavailable(error: BaseException) -> bool:
         """Whether a request failed because the LLM could not answer it now: it
-        could not be reached, timed out (`openai.APIConnectionError`, which
-        litellm's errors extend) or failed with a server error (5xx). Other
-        errors (4xx, e.g. an exceeded context window) fail on every attempt."""
+        could not be reached, timed out (`openai.APIConnectionError`) or failed
+        with a server error (5xx). Other errors (4xx, e.g. an exceeded context
+        window) fail on every attempt."""
         if isinstance(error, openai.APIConnectionError):
             return True
-        status_code = getattr(error, "status_code", None)
-        return isinstance(status_code, int) and status_code >= 500
+        return isinstance(error, openai.APIStatusError) and error.status_code >= 500
+
+    def _completion_kwargs(
+        self, model: str, response_model: Type[BaseModel]
+    ) -> dict[str, Any]:
+        """The arguments of the chat completion that all chat requests of a
+        model and response model share."""
+        return {
+            "model": self._validate_llm_name(model),
+            # "temperature": self.sampling_parameters.temperature,
+            # "top_p": self.sampling_parameters.top_p,
+            "response_format": {
+                "type": "json_schema",
+                "json_schema": {
+                    "name": response_model.__name__.lower(),
+                    "schema": response_model.model_json_schema(),
+                },
+            },
+        }
+
+    @staticmethod
+    def _chat_messages(message: LLMMessage) -> list[ChatCompletionMessageParam]:
+        messages: list[ChatCompletionMessageParam] = []
+        if message.system_prompt is not None:
+            messages.append(
+                {"role": "system", "content": message.system_prompt.strip()}
+            )
+        messages.append({"role": "user", "content": message.user_prompt.strip()})
+        return messages
+
+    @staticmethod
+    def _parse_response(
+        request: Future[ChatCompletion], response_model: Type[T], *, capture_raw: bool
+    ) -> LLMBatchChatResponse[T]:
+        """Parse the response of one finished chat completion request, or its
+        failure.
+
+        If capture_raw is False, a failed request or an invalid/unparseable
+        response raises an exception and a successful one has raw=None. If
+        capture_raw is True, a failure is returned with error set (and raw
+        populated when available).
+        """
+        error = request.exception()
+        if error is not None:
+            if capture_raw:
+                return LLMBatchChatResponse(
+                    raw=None,
+                    error=f"LLM request failed: {error}",
+                    unavailable=LLMRepo.is_unavailable(error),
+                )
+            raise Exception(f"LLM request failed: {error}") from error
+        response = request.result()
+        if not response.choices:
+            if capture_raw:
+                return LLMBatchChatResponse(
+                    raw=None, error=f"LLM response is invalid: {response}"
+                )
+            raise Exception(f"LLM response is invalid: {response}")
+        msg = response.choices[0].message
+        if msg.content is None:
+            if capture_raw:
+                return LLMBatchChatResponse(
+                    raw=None, error=f"LLM response is None: {response}"
+                )
+            raise Exception(f"LLM response is None: {response}")
+        try:
+            return LLMBatchChatResponse(
+                raw=msg.content if capture_raw else None,
+                parsed=response_model.model_validate_json(msg.content),
+            )
+        except Exception as e:
+            if capture_raw:
+                return LLMBatchChatResponse(
+                    raw=msg.content,
+                    error=f"Failed to parse LLM response: {e}",
+                )
+            raise
 
     def llm_batch_chat(
         self,
@@ -307,106 +387,43 @@ class LLMRepo(RepoBase, metaclass=SingletonMeta):
         *,
         capture_raw: bool = False,
     ) -> list[LLMBatchChatResponse[T]]:
-        """Prompts the LLM in batch mode.
+        """Prompts the LLM in batch mode: sends all messages at once, up to
+        `BATCH_CHAT_MAX_WORKERS` in parallel, and waits for all responses.
 
-        Always returns one LLMBatchChatResponse per input message.
+        Always returns one LLMBatchChatResponse per input message, in the order
+        of the messages.
 
-        If capture_raw is False (default), any invalid/unparseable response raises
-        an exception and successful items are returned with raw=None.
+        If capture_raw is False (default), any failed request or invalid/
+        unparseable response raises an exception and successful items are
+        returned with raw=None.
         If capture_raw is True, failed items are returned as LLMBatchChatResponse
         with error set (and raw populated when available) instead of raising.
+
+        On an exception in the calling thread while it waits (e.g. a stop of the
+        job), the requests not started yet are never started and it returns
+        without waiting for the ones in flight: their threads end with their
+        request.
         """
         if self.__llm_conn is None:
             raise RuntimeError("LLMRepo is not connected. Call connect() first.")
 
-        model = self._validate_llm_name(model)
-
-        # prepare batch messages
-        batch_messages = [
-            [
-                *(
-                    [{"role": "system", "content": message.system_prompt.strip()}]
-                    if message.system_prompt is not None
-                    else []
-                ),
-                {
-                    "role": "user",
-                    "content": message.user_prompt.strip(),
-                },
-            ]
-            for message in messages
-        ]
-
-        # do batch inference
-        batch_responses = batch_completion(
-            model=f"hosted_vllm/{model}",
-            messages=batch_messages,
-            base_url=str(self.__llm_conn.base_url),
-            api_key=self.__llm_conn.api_key,
-            # temperature=self.sampling_parameters.temperature,
-            # top_p=self.sampling_parameters.top_p,
-            response_format={
-                "type": "json_schema",
-                "json_schema": {
-                    "name": response_model.__name__.lower(),
-                    "schema": response_model.model_json_schema(),
-                },
-            },
+        create = self.__llm_conn.chat.completions.create
+        kwargs = self._completion_kwargs(model, response_model)
+        executor = ThreadPoolExecutor(
+            max_workers=BATCH_CHAT_MAX_WORKERS, thread_name_prefix="llm_batch_chat"
         )
-
-        # parse responses
-        responses: list[LLMBatchChatResponse[T]] = []
-        for response in batch_responses:
-            # litellm returns exception objects for failed requests (e.g. Timeout)
-            if isinstance(response, Exception):
-                if capture_raw:
-                    responses.append(
-                        LLMBatchChatResponse(
-                            raw=None,
-                            error=f"LLM request failed: {response}",
-                            unavailable=self.is_unavailable(response),
-                        )
-                    )
-                    continue
-                raise Exception(f"LLM request failed: {response}") from response
-            if response.get("choices", None) is None:
-                if capture_raw:
-                    responses.append(
-                        LLMBatchChatResponse(
-                            raw=None, error=f"LLM response is invalid: {response}"
-                        )
-                    )
-                    continue
-                raise Exception(f"LLM response is invalid: {response}")
-            msg = response.choices[0].message
-            if msg.content is None:
-                if capture_raw:
-                    responses.append(
-                        LLMBatchChatResponse(
-                            raw=None, error=f"LLM response is None: {response}"
-                        )
-                    )
-                    continue
-                raise Exception(f"LLM response is None: {response}")
-            try:
-                responses.append(
-                    LLMBatchChatResponse(
-                        raw=msg.content if capture_raw else None,
-                        parsed=response_model.model_validate_json(msg.content),
-                    )
-                )
-            except Exception as e:
-                if capture_raw:
-                    responses.append(
-                        LLMBatchChatResponse(
-                            raw=msg.content,
-                            error=f"Failed to parse LLM response: {e}",
-                        )
-                    )
-                    continue
-                raise
-
-        return responses
+        try:
+            requests = [
+                executor.submit(create, messages=self._chat_messages(message), **kwargs)
+                for message in messages
+            ]
+            wait(requests)
+        finally:
+            executor.shutdown(wait=False, cancel_futures=True)
+        return [
+            self._parse_response(request, response_model, capture_raw=capture_raw)
+            for request in requests
+        ]
 
     def _start_vlm_chat_session(self) -> str:
         session_id = str(uuid4())
