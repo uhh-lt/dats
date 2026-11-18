@@ -79,6 +79,7 @@ nav:
       - workflows/index.md
       - Frame Analysis: workflows/workflow-frame-analysis.md
       - Tracking Word Sense Evolution: workflows/workflow-tracking-word-senses.md
+      - Drawing a Sentence Validation Sample: workflows/workflow-sentence-sampling.md
   - FAQ: faq.md
   - Development:
       - development/index.md
