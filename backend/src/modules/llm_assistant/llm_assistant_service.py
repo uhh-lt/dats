@@ -21,22 +21,32 @@ class LLMAssistantService(metaclass=SingletonMeta):
         return super(LLMAssistantService, cls).__new__(cls)
 
     def assert_documents_in_project(
-        self, db: Session, *, project_id: int, sdoc_ids: list[int]
+        self,
+        db: Session,
+        *,
+        project_id: int,
+        sdoc_ids: list[int],
+        allow_missing: bool = False,
     ) -> None:
         """
         Check that the documents of an LLM Assistant job belong to its project, so
         a member of one project cannot run the assistant on another project's
         documents.
 
+        Args:
+            allow_missing: Accept documents that do not exist (anymore), e.g. on a
+                retry: the job gives them an error result.
+
         Raises:
-            LLMAssistantDocumentsNotInProjectError: If a document does not exist or
-                belongs to another project.
+            LLMAssistantDocumentsNotInProjectError: If a document belongs to another
+                project, or does not exist and `allow_missing` is not set.
         """
         sdoc_by_id = crud_sdoc.read_existing_by_ids(db=db, ids=sdoc_ids)
         foreign_ids = [
             sdoc_id
             for sdoc_id in dict.fromkeys(sdoc_ids)
-            if sdoc_id not in sdoc_by_id or sdoc_by_id[sdoc_id].project_id != project_id
+            if (sdoc_id not in sdoc_by_id and not allow_missing)
+            or (sdoc_id in sdoc_by_id and sdoc_by_id[sdoc_id].project_id != project_id)
         ]
         if foreign_ids:
             raise LLMAssistantDocumentsNotInProjectError(

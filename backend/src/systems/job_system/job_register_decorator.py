@@ -29,6 +29,7 @@ def register_job(
     enricher: Callable[[InputT], InputT] | None = None,
     read_model: type[JobRead] | None = None,
     validate_input: Callable[[Session, InputT], None] | None = None,
+    validate_retry: Callable[[Session, InputT], None] | None = None,
 ):
     """
     Register a job handler with the job system.
@@ -36,6 +37,9 @@ def register_job(
     `validate_input` checks the input when the generated start endpoint starts a
     job, after the project membership check and before the job is enqueued. It
     raises an exception (e.g. a 400 or 403 error) to reject the input.
+    `validate_retry` checks the stored input when the generated retry endpoint
+    requeues a job, which may be valid for a retry only (e.g. some of its data
+    was deleted meanwhile); without it, the retry runs `validate_input`.
     """
 
     def decorator(func: Callable[[InputT, Job], OutputT | None]):
@@ -57,6 +61,7 @@ def register_job(
             enricher=enricher,
             read_model=read_model,
             validate_input=validate_input,
+            validate_retry=validate_retry,
         )
         return func
 
