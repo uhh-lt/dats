@@ -1,0 +1,50 @@
+{
+  "juicy": ["juicy", "juicier", "juiciest", "juiciness"],
+  "crisp": [
+    "crisp",
+    "crisps",
+    "crisper",
+    "crispest",
+    "crisply",
+    "crispness",
+    "crisped",
+    "crisping",
+    "crispy",
+    "crispier",
+    "crispiest",
+    "crispiness"
+  ],
+  "finest": ["finest", "finer"],
+  "tender": [
+    "tender",
+    "tenderer",
+    "tenderest",
+    "tenderly",
+    "tenderness",
+    "tenderize",
+    "tenderized",
+    "tenderizes",
+    "tenderizing",
+    "tenderise",
+    "tenderised",
+    "tenderises",
+    "tenderising"
+  ],
+  "delicious": ["delicious", "deliciously", "deliciousness"],
+  "just picked": ["just picked"],
+  "natural": ["natural", "naturally", "naturalness"],
+  "unprocessed": ["unprocessed"],
+  "healthy": [
+    "healthy",
+    "healthier",
+    "healthiest",
+    "healthily",
+    "healthiness",
+    "healthful",
+    "healthfully",
+    "healthfulness",
+    "health"
+  ],
+  "harvested": ["harvest", "harvests", "harvested", "harvesting"],
+  "raw": ["raw", "rawness"]
+}
