@@ -3,13 +3,16 @@ import os
 import signal
 import sys
 import threading
+import time
 from collections.abc import Iterator
 from contextlib import contextmanager
 from os import environ
 
+import rq
 from loguru import logger
 from rq import SimpleWorker, Worker
 from rq.exceptions import AbandonedJobError
+from rq.worker.base import WorkerStatus
 from rq.worker_pool import WorkerPool
 
 from bootstrap import (
@@ -24,6 +27,7 @@ from repos.redis_repo import RedisRepo
 from repos.repo_base import RepoBase
 from systems.job_system.job_exceptions import JobStoppedError
 from systems.job_system.job_handler import STOP_SIGNAL
+from systems.job_system.job_system_enum import JobTiming
 from utils.import_utils import import_by_suffix
 
 init_logging()
@@ -32,6 +36,14 @@ init_logging()
 # ==============================================================================
 # CUSTOM WORKER CLASSES
 # ==============================================================================
+
+# The TTL of the heartbeat of a job that a simple worker runs, renewed every
+# monitoring interval: once the worker died, the job is failed after it. It is
+# generous, so a short stall of Redis or of the renewing thread (e.g. the GIL
+# held by the job) never fails a live job, which a retry would then run twice.
+HEARTBEAT_TTL = int(JobTiming.TEN_MINUTES)
+
+
 def _start_job_process() -> list[RepoBase]:
     """Startup of a process that executes jobs: register the jobs, connect all
     repos and init the services. Returns the connected repos."""
@@ -124,7 +136,68 @@ class DATSWorker(Worker):
 
 
 class DATSSimpleWorker(SimpleWorker):
-    """Custom simple worker (does NOT fork per job - used for CPU/API)"""
+    """Custom simple worker (does NOT fork per job - used for CPU/API).
+
+    RQ's simple worker keeps the heartbeat of its job alive for the job's whole
+    timeout, as nothing renews it while the job runs in its main thread: the job
+    of a killed worker stays STARTED until its timeout passed (days for the LLM
+    Assistant), and cannot be retried meanwhile. This worker gives the
+    heartbeats of the job and its entry in the started registry a TTL of
+    `HEARTBEAT_TTL` and renews them, and the heartbeat of the worker, from a
+    thread every monitoring interval, so the cleanup of the started jobs fails
+    the job of a killed worker within minutes (`job_handler.rq_job_failed`).
+    """
+
+    _job_ended: threading.Event | None = None
+    _heartbeat_renewer: threading.Thread | None = None
+
+    def get_heartbeat_ttl(self, job: rq.job.Job) -> int:
+        return HEARTBEAT_TTL
+
+    def execute_job(self, job: rq.job.Job, queue: rq.Queue) -> None:
+        """Run the job as RQ's simple worker does, while a thread renews its
+        heartbeats until its execution ended."""
+        self.prepare_execution(job)
+        self._job_ended = threading.Event()
+        self._heartbeat_renewer = threading.Thread(
+            target=self._renew_heartbeats,
+            args=(job, self._job_ended),
+            name=f"heartbeat-{job.id}",
+            daemon=True,
+        )
+        self._heartbeat_renewer.start()
+        try:
+            self.perform_job(job, queue)
+        finally:
+            self._stop_renewing_heartbeats()
+        self.set_state(WorkerStatus.IDLE)
+
+    def handle_execution_ended(
+        self, job: rq.job.Job, queue: rq.Queue, heartbeat_ttl: int
+    ) -> None:
+        # RQ calls it once the job returned or raised, before it ends the
+        # execution: a renewal afterwards would recreate what the end removed
+        self._stop_renewing_heartbeats()
+        super().handle_execution_ended(job, queue, heartbeat_ttl)
+
+    def _renew_heartbeats(self, job: rq.job.Job, ended: threading.Event) -> None:
+        """Renew the heartbeats every `job_monitoring_interval` seconds, as the
+        forking worker does while it waits for its job process."""
+        started = time.monotonic()
+        while not ended.wait(self.job_monitoring_interval):
+            try:
+                self.set_current_job_working_time(time.monotonic() - started)
+                self.maintain_heartbeats(job)
+            except Exception as e:
+                logger.warning(f"Cannot renew the heartbeat of job {job.id}: {e}")
+
+    def _stop_renewing_heartbeats(self) -> None:
+        if self._job_ended is None or self._heartbeat_renewer is None:
+            return
+        self._job_ended.set()
+        self._heartbeat_renewer.join()
+        self._job_ended = None
+        self._heartbeat_renewer = None
 
     def prepare_execution(self, job):
         """RQ remembers a stop (`_stopped_job_id`) until the job it stopped

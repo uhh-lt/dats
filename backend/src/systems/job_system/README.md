@@ -55,6 +55,10 @@ Key decorator arguments:
 2. **Run** — a worker picks the job up; `rq_job_handler`
    ([job_handler.py](job_handler.py)) wraps execution: it selects a CUDA
    device for GPU jobs, calls the handler, and manages the terminal states.
+   While a job runs, its worker renews its heartbeat (a simple worker from a
+   thread, with a TTL of ten minutes, see `DATSSimpleWorker`): once a worker
+   died, the cleanup of the started jobs fails its job within minutes and runs
+   its failure callback, so it can be retried.
 3. **Progress** — inside the handler, `job.update(...)`
    ([job_dto.py](job_dto.py)) writes progress (`status_message`,
    `current_step`, `steps`, `finished`) into the RQ job meta.

@@ -25,6 +25,9 @@ from worker import DATSSimpleWorker
 # no held queue starts with "gpu": the job handler would take its GPU branch
 _HELD_PREFIX = "held"
 _RUN_QUEUE = f"{_HELD_PREFIX}-run"
+# the worker of the held jobs renews their heartbeats every second, so a test
+# sees a renewal at once
+HELD_JOB_MONITORING_INTERVAL = 1
 
 
 class _HeldWorker(DATSSimpleWorker):
@@ -129,9 +132,11 @@ class HeldJobs:
         # the stop signal only interrupts a running job, as in `DATSSimpleWorker`
         signal.signal(STOP_SIGNAL, signal.SIG_IGN)
         try:
-            _HeldWorker([self._run_queue], connection=self._run_queue.connection).work(
-                burst=True, logging_level="WARNING"
-            )
+            _HeldWorker(
+                [self._run_queue],
+                connection=self._run_queue.connection,
+                job_monitoring_interval=HELD_JOB_MONITORING_INTERVAL,
+            ).work(burst=True, logging_level="WARNING")
         finally:
             for s, handler in handlers.items():
                 signal.signal(s, handler)
