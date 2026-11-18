@@ -2,8 +2,6 @@ from typing import Literal, Self
 
 from pydantic import BaseModel, Field, model_validator
 
-from core.annotation.sentence_annotation_dto import SentenceAnnotationRead
-from core.annotation.span_annotation_dto import SpanAnnotationRead
 from core.metadata.source_document_metadata_dto import (
     SourceDocumentMetadataReadResolved,
 )
@@ -125,8 +123,8 @@ class MetadataExtractionLLMAssistantJobResult(BaseModel):
 
 class AnnotationResult(LLMAssistantResultWithStatus):
     sdoc_id: int = Field(description="ID of the source document")
-    suggested_annotations: list[SpanAnnotationRead] = Field(
-        description="Suggested annotations"
+    annotation_count_by_code_id: dict[int, int] = Field(
+        description="Number of the created annotations per code ID"
     )
     raw_response: str | None = Field(
         description="Raw LLM response (only set if no annotations were suggested or an error occurred)",
@@ -145,8 +143,8 @@ class AnnotationLLMAssistantJobResult(BaseModel):
 
 class SentenceAnnotationResult(LLMAssistantResultWithStatus):
     sdoc_id: int = Field(description="ID of the source document")
-    suggested_annotations: list[SentenceAnnotationRead] = Field(
-        description="Suggested annotations"
+    annotation_count_by_code_id: dict[int, int] = Field(
+        description="Number of the created annotations per code ID"
     )
     raw_response: str | None = Field(
         description="Raw LLM response (only set if no annotations were suggested or an error occurred)",

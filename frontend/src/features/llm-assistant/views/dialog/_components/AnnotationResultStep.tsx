@@ -6,6 +6,7 @@ import { useAppDispatch, useAppSelector } from "@store/storeHooks";
 import { memo, useCallback, useMemo } from "react";
 import { llmAssistantQueries } from "../../../api/llmAssistantQueries";
 import { LLMAssistantActions } from "../../../store/llmAssistantSlice";
+import { findFirstAnnotatedSdocId } from "../_utils/annotationResultUtils";
 import { AnnotationResultSummary } from "./AnnotationResultSummary";
 import { LLMAssistantUtterance } from "./LLMAssistantUtterance";
 
@@ -51,10 +52,7 @@ const AnnotationResultStepContent = memo(({ jobResult, virtualUserId }: Annotati
   const tabNavigate = useTabNavigate();
 
   // the first document that actually got annotations
-  const firstAnnotatedSdocId = useMemo(
-    () => jobResult.results.find((r) => r.suggested_annotations.length > 0)?.sdoc_id,
-    [jobResult.results],
-  );
+  const firstAnnotatedSdocId = useMemo(() => findFirstAnnotatedSdocId(jobResult.results), [jobResult.results]);
 
   const handleOpenFirstDocument = () => {
     if (!projectId || firstAnnotatedSdocId === undefined) return;

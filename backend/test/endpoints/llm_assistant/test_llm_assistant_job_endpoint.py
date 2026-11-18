@@ -1,9 +1,15 @@
 import time
+from collections import Counter
 
 import pytest
 from fastapi.testclient import TestClient
 from pydantic import TypeAdapter
 
+from core.annotation.sentence_annotation_dto import (
+    SentenceAnnotationRead,
+    SentenceAnnotatorResult,
+)
+from core.annotation.span_annotation_dto import SpanAnnotationRead
 from core.memo.memo_dto import MemoRead
 from core.memo.memo_enum import AttachedObjectType
 from core.prompt.prompt_defaults import DEFAULT_PROMPTS
@@ -188,6 +194,44 @@ def _expected_approach(is_fewshot: bool) -> ApproachType:
     return ApproachType.LLM_ZERO_SHOT
 
 
+def _run_a_span_annotations(
+    client: TestClient, project: JobPromptProject
+) -> list[SpanAnnotationRead]:
+    """The span annotations of run A in the target document."""
+    base = project["base"]
+    response = client.get(
+        f"/span/sdoc/{base['target_sdoc'].id}/user/{base['run_a'].id}"
+    )
+    assert response.status_code == 200, response.text
+    return TypeAdapter(list[SpanAnnotationRead]).validate_python(response.json())
+
+
+def _run_a_sentence_annotations(
+    client: TestClient, project: JobPromptProject
+) -> list[SentenceAnnotationRead]:
+    """The sentence annotations of run A in the target document, each once, by
+    sentence."""
+    base = project["base"]
+    response = client.get(
+        f"/sentence/sdoc/{base['target_sdoc'].id}/user/{base['run_a'].id}"
+    )
+    assert response.status_code == 200, response.text
+    result = SentenceAnnotatorResult.model_validate(response.json())
+    by_id = {
+        annotation.id: annotation
+        for annotations in result.sentence_annotations.values()
+        for annotation in annotations
+    }
+    return sorted(by_id.values(), key=lambda a: (a.sentence_id_start, a.id))
+
+
+def _count_by_code_id(
+    annotations: list[SpanAnnotationRead] | list[SentenceAnnotationRead],
+) -> dict[int, int]:
+    """The number of annotations per code."""
+    return dict(Counter(annotation.code_id for annotation in annotations))
+
+
 # ===========================================================================
 # START/GET LLM ASSISTANT JOB (/llm_assistant/llm_assistant) TESTS
 # ===========================================================================
@@ -288,6 +332,8 @@ def test_span_annotation_job_covers_all_formats_units_and_approaches(
     the prompt decide the approach.
     """
     base = job_prompt_project["base"]
+    run_a_alice_id = base["run_a_span_annotation"].id
+    run_b_alice_id = base["run_b_span_annotation"].id
     draft = _draft(
         job_prompt_project,
         output_format=output_format,
@@ -311,12 +357,13 @@ def test_span_annotation_job_covers_all_formats_units_and_approaches(
     assert result.sdoc_id == base["target_sdoc"].id
     suggestions = [
         (annotation.text, annotation.code_id, annotation.user_id)
-        for annotation in result.suggested_annotations
+        for annotation in _run_a_span_annotations(client, job_prompt_project)
     ]
     assert suggestions == [("Alice", base["person_code"].id, assistant_user_id)]
-    run_a_alice = client.get(f"/span/{base['run_a_span_annotation'].id}")
+    assert result.annotation_count_by_code_id == {base["person_code"].id: 1}
+    run_a_alice = client.get(f"/span/{run_a_alice_id}")
     assert run_a_alice.status_code == 403, run_a_alice.text  # deleted
-    run_b_alice = client.get(f"/span/{base['run_b_span_annotation'].id}")
+    run_b_alice = client.get(f"/span/{run_b_alice_id}")
     assert run_b_alice.status_code == 200, run_b_alice.text
 
 
@@ -366,6 +413,8 @@ def test_sentence_annotation_job_covers_all_units_and_approaches(
     assert result.status == "finished", result.model_dump_json(indent=2)
     assert result.raw_response is None
     assert result.sdoc_id == base["target_sdoc"].id
+    annotations = _run_a_sentence_annotations(client, job_prompt_project)
+    assert result.annotation_count_by_code_id == _count_by_code_id(annotations)
     suggestions = [
         (
             annotation.sentence_id_start,
@@ -373,7 +422,7 @@ def test_sentence_annotation_job_covers_all_units_and_approaches(
             annotation.code_id,
             annotation.user_id,
         )
-        for annotation in result.suggested_annotations
+        for annotation in annotations
     ]
     assert suggestions
 
@@ -422,8 +471,8 @@ def test_annotation_job_stores_a_reasoning_memo_per_annotation_only_when_request
 ) -> None:
     """With ``request_reasoning``, every suggested annotation has exactly one
     non-empty "LLM reasoning" memo, authored by the virtual user of the run (run
-    A), and the job output lists it in the annotation's ``memo_ids``; without it,
-    no annotation has a memo."""
+    A), which the annotation lists in its ``memo_ids``; without it, no annotation
+    has a memo."""
     base = job_prompt_project["base"]
     draft = _draft(
         job_prompt_project,
@@ -443,8 +492,14 @@ def test_annotation_job_stores_a_reasoning_memo_per_annotation_only_when_request
     )
     result = task_result.results[0]
     assert result.status == "finished", result.model_dump_json(indent=2)
-    assert result.suggested_annotations, result.model_dump_json(indent=2)
-    for annotation in result.suggested_annotations:
+    annotations = (
+        _run_a_sentence_annotations(client, job_prompt_project)
+        if output_format == OutputFormat.SENTENCES
+        else _run_a_span_annotations(client, job_prompt_project)
+    )
+    assert annotations, result.model_dump_json(indent=2)
+    assert result.annotation_count_by_code_id == _count_by_code_id(annotations)
+    for annotation in annotations:
         response = client.get(
             f"/memo/attached_obj/{attached_object_type.value}/to/{annotation.id}"
         )
@@ -481,12 +536,16 @@ def test_sentence_annotation_job_runs_a_stored_version(
     assert isinstance(task_result, SentenceAnnotationLLMAssistantJobResult)
     result = task_result.results[0]
     assert result.status == "finished", result.model_dump_json(indent=2)
-    assert result.suggested_annotations
+    annotations = _run_a_sentence_annotations(client, job_prompt_project)
+    assert annotations
     assert all(
         annotation.code_id == base["fact_code"].id
         and annotation.user_id == base["run_a"].id
-        for annotation in result.suggested_annotations
+        for annotation in annotations
     )
+    assert result.annotation_count_by_code_id == {
+        base["fact_code"].id: len(annotations)
+    }
 
 
 # --- B. prompts a job rejects -------------------------------------------------------
