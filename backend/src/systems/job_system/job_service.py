@@ -8,7 +8,8 @@ from loguru import logger
 from pydantic import Field, create_model
 from redis import Redis
 from redis.exceptions import RedisError
-from rq.exceptions import NoSuchJobError
+from rq.command import send_stop_job_command
+from rq.exceptions import InvalidJobOperation, NoSuchJobError
 from rq.registry import (
     BaseRegistry,
     CanceledJobRegistry,
@@ -60,7 +61,7 @@ class JobHooks(NamedTuple):
     # after the handler returned; a failing hook fails the job
     finished: Callable[[str, JobInputBase, JobOutputBase | None], None]
     # once the job failed: the `started` hook, the handler or the `finished`
-    # hook raised, or its worker died (`job_handler.rq_job_failed`)
+    # hook raised, its worker died, or it was stopped (`job_handler.rq_job_failed`)
     failed: Callable[[str, JobInputBase], None]
 
 
@@ -352,16 +353,19 @@ class JobService(metaclass=SingletonMeta):
         return jobs
 
     def stop_job(self, job_id: str) -> bool:
+        """Stop a started job. Its worker interrupts it and ends it as STOPPED:
+        the job runs its `failed` hook and publishes its STOPPED state
+        (`job_handler.rq_job_failed`). Returns whether the stop was sent; a job
+        that has not started or has ended already is left as it is."""
         job = rq.job.Job.fetch(job_id, connection=self.redis_conn)
-        if job and job.is_started:
-            job.cancel()
-
-            # Push the CANCELED state to websocket clients (never raises)
-            from systems.job_system.job_events import publish_job_update
-
-            publish_job_update(Job(job))
-            return True
-        return False
+        if not job.is_started:
+            return False
+        try:
+            send_stop_job_command(job.connection, job_id)
+        except InvalidJobOperation:
+            # its worker ended the job meanwhile
+            return False
+        return True
 
     def retry_job(self, job_id: str) -> bool:
         job = rq.job.Job.fetch(job_id, connection=self.redis_conn)

@@ -17,12 +17,23 @@ from rq.registry import (
 )
 
 from systems.job_system.job_dto import Job, JobInputBase
+from systems.job_system.job_handler import STOP_SIGNAL
 from systems.job_system.job_service import JobService
 from systems.job_system.job_system_enum import JobPriority
+from worker import DATSSimpleWorker
 
 # no held queue starts with "gpu": the job handler would take its GPU branch
 _HELD_PREFIX = "held"
 _RUN_QUEUE = f"{_HELD_PREFIX}-run"
+
+
+class _HeldWorker(DATSSimpleWorker):
+    """Runs the held jobs like the CPU/API workers run theirs (`JobService.stop_job`
+    interrupts a job), with the repos of the test process."""
+
+    def work(self, *args: Any, **kwargs: Any) -> bool:
+        # DATSSimpleWorker connects and closes the repos of a worker process
+        return SimpleWorker.work(self, *args, **kwargs)
 
 
 class HeldJobs:
@@ -112,9 +123,13 @@ class HeldJobs:
 
     def _work(self) -> None:
         """Run the run queue empty, keeping the signal handlers of pytest."""
-        handlers = {s: signal.getsignal(s) for s in (signal.SIGINT, signal.SIGTERM)}
+        handlers = {
+            s: signal.getsignal(s) for s in (signal.SIGINT, signal.SIGTERM, STOP_SIGNAL)
+        }
+        # the stop signal only interrupts a running job, as in `DATSSimpleWorker`
+        signal.signal(STOP_SIGNAL, signal.SIG_IGN)
         try:
-            SimpleWorker([self._run_queue], connection=self._run_queue.connection).work(
+            _HeldWorker([self._run_queue], connection=self._run_queue.connection).work(
                 burst=True, logging_level="WARNING"
             )
         finally:

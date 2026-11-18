@@ -6,9 +6,9 @@ the Redis backplane. The actual Redis publish is mocked
 a running websocket subscriber.
 
 Covered behavior:
-- JOB_UPDATED is emitted on enqueue (start_job), update, stop, and retry.
+- JOB_UPDATED is emitted on enqueue (start_job) and update.
 - The last JOB_UPDATED of a job run carries its terminal status (FINISHED /
-  FAILED), although RQ sets that status only after the handler returned.
+  FAILED / STOPPED), although RQ sets that status only after the handler returned.
 - The emitted envelope has kind="users", targets the project's member ids, and
   carries the full per-type JobRead payload.
 - An emission failure does NOT fail the job (never-raise contract).
@@ -18,6 +18,7 @@ until the worker ended its job: a job still running when the next test cleans
 the data stores deadlocks with the cleanup or writes into the next test's data.
 """
 
+import signal
 import time
 from unittest.mock import MagicMock, patch
 
@@ -29,7 +30,7 @@ from core.user.user_orm import UserORM
 from modules.eximport.export_enum import ExportJobType
 from modules.eximport.export_job_dto import ExportJobInput
 from systems.job_system.job_dto import Job, JobRead
-from systems.job_system.job_handler import rq_job_failed, rq_job_handler
+from systems.job_system.job_handler import STOP_SIGNAL, rq_job_failed, rq_job_handler
 from systems.job_system.job_service import JobService
 from systems.job_system.job_system_enum import JobStatus
 from systems.websocket_system.websocket_dto import WebSocketEnvelope
@@ -92,12 +93,13 @@ def _payload(envelope: WebSocketEnvelope) -> JobRead:
 @pytest.mark.usefixtures("client")
 def _run_like_rq(job: Job, handler) -> None:
     """Run the job's handler through the job handler, and call the failure
-    callback with the error if it raises, as RQ's worker does."""
+    callback with the error if it raises, as RQ's worker does (also a stop,
+    which is no `Exception`)."""
     try:
         rq_job_handler(
             jobtype=job.get_type(), handler=handler, payload=job.job.kwargs["payload"]
         )
-    except Exception as e:
+    except BaseException as e:
         rq_job_failed(job.job, job.job.connection, type(e), e, e.__traceback__)
 
 
@@ -149,25 +151,6 @@ class TestJobUpdatedEmission:
         assert payload.job_id == job.get_id()
         assert payload.status_message == "Halfway there"
         assert payload.current_step == 1
-
-    def test_stop_job_emits_job_updated(
-        self, test_project: ProjectORM, test_user: UserORM
-    ):
-        """Stopping a job emits JOB_UPDATED."""
-        with patch("systems.job_system.job_events._publish_envelope_sync"):
-            job = _start_export_job(test_project)
-
-        with patch(
-            "systems.job_system.job_events._publish_envelope_sync"
-        ) as mock_publish:
-            JobService().stop_job(job.get_id())
-        # The job is CANCELED now, but the worker may still run it: the cleanup
-        # of the next test waits for the worker (see `dats_test_utils`)
-
-        assert mock_publish.called, "stop_job should publish a JOB_UPDATED event"
-        envelope = _captured_envelopes(mock_publish)[-1]
-        assert envelope.message.type == DATSEvent.JOB_UPDATED
-        assert _payload(envelope).job_id == job.get_id()
 
     def test_emission_failure_does_not_fail_job(
         self, test_project: ProjectORM, test_user: UserORM
@@ -341,3 +324,41 @@ class TestJobUpdatedEmission:
         payload = _payload(_captured_envelopes(mock_publish)[-1])
         assert payload.status == JobStatus.FAILED
         assert payload.status_message == "export exploded"
+
+    def test_stopped_job_emits_stopped_status(
+        self, test_project: ProjectORM, test_user: UserORM
+    ):
+        """A job interrupted by the stop signal (as `DATSSimpleWorker` sends it on
+        `JobService.stop_job`) runs its `failed` hook, never its `finished` hook,
+        and its last JOB_UPDATED carries STOPPED, not FAILED or FINISHED."""
+        with patch("systems.job_system.job_events._publish_envelope_sync"):
+            job = _start_export_job(test_project)
+        # Let the worker end its run of the job before it runs here again
+        _wait_until_ended(job)
+
+        def stopped_handler(payload, job):
+            signal.raise_signal(STOP_SIGNAL)
+
+        failed_hook = MagicMock()
+        finished_hook = MagicMock()
+        with (
+            patch("systems.job_system.job_handler.Job", return_value=job),
+            patch.object(
+                JobService(),
+                "hooks",
+                JobService().hooks._replace(failed=failed_hook, finished=finished_hook),
+            ),
+            patch(
+                "systems.job_system.job_events._publish_envelope_sync"
+            ) as mock_publish,
+        ):
+            _run_like_rq(job, stopped_handler)
+
+        failed_hook.assert_called_once()
+        finished_hook.assert_not_called()
+        statuses = [_payload(e).status for e in _captured_envelopes(mock_publish)]
+        assert JobStatus.FINISHED not in statuses
+        payload = _payload(_captured_envelopes(mock_publish)[-1])
+        assert payload.status == JobStatus.STOPPED
+        assert payload.status_message == "The job was stopped"
+        assert payload.finished is not None

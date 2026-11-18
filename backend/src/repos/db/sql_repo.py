@@ -122,10 +122,11 @@ class SQLRepo(RepoBase, metaclass=SingletonMeta):
             session = self._session_maker()
             yield session
             session.commit()
-        except Exception as e:
+        # also a stop of the job (`JobStoppedError`), which is no `Exception`
+        except BaseException:
             if session is not None:
                 session.rollback()
-            raise e
+            raise
         finally:
             if session is not None:
                 session.close()

@@ -13,7 +13,7 @@ The invariants of the two systems; `systems/artefact_system/README.md` and `syst
 
 - The artefact system knows artefacts and steps, never features, and never imports the feature system, which talks to it in artefacts only.
 - The job system knows no pipeline: the job handler calls the started and finished hooks, RQ's failure callback (`job_handler.rq_job_failed`) calls the failed hook, and `bootstrap.register_jobs` registers the functions of `step_execution.py` for them.
-- Never call the failed hook anywhere else, as RQ calls the failure callback once per failed job, also when its worker died, and `DATSWorker.handle_work_horse_killed` calls it for a killed job process.
+- Never call the failed hook anywhere else, as RQ calls the failure callback once per failed job, also when its worker died, and `DATSWorker` calls it for a job process that died or that it stopped (`handle_work_horse_killed`, `handle_job_failure`).
 - Only `PipelineGraph` derives which step feeds which (`inputs`, `successors`, `descendants`, `steps_for`, `producer`); never walk the `requires` and `produces` of the declarations elsewhere.
 
 ## Who writes what
