@@ -6,6 +6,7 @@ from uuid import uuid4
 
 from loguru import logger
 from pydantic import BaseModel
+from rq.timeouts import JobTimeoutException
 from sqlalchemy.orm import Session
 
 from core.annotation.sentence_annotation_dto import SentenceAnnotationRead
@@ -185,13 +186,20 @@ class LLMAssistantTask(
         batch and its record, the retry processes that batch again: its
         documents get their annotations and reasoning memos twice (if it was
         the first batch, the preparation runs again and deletes them first).
+
+        A document that no longer exists or whose processing fails becomes an
+        error result; the other documents of its batch are still saved. The
+        output holds one result per document, in the order in which `sdoc_ids`
+        first names it.
         """
         approach_type = (
             ApproachType.LLM_FEW_SHOT
             if strategy.is_fewshot
             else ApproachType.LLM_ZERO_SHOT
         )
-        self._start_job(job=job, num_documents=len(payload.sdoc_ids))
+        # every document once, also if the input repeats it
+        sdoc_ids = list(dict.fromkeys(payload.sdoc_ids))
+        self._start_job(job=job, num_documents=len(sdoc_ids))
         logger.info(
             "Using model '{}', strategy '{}', and approach '{}'.",
             payload.model,
@@ -219,8 +227,6 @@ class LLMAssistantTask(
                 self._prepare(
                     LLMAssistantTaskContext(db=db, payload=payload, strategy=strategy)
                 )
-        # every document once, also if the input repeats it
-        sdoc_ids = list(dict.fromkeys(payload.sdoc_ids))
         self._update_progress(
             job=job,
             processed_documents=len(result_by_sdoc_id),
@@ -242,11 +248,15 @@ class LLMAssistantTask(
                     db=db, payload=payload, strategy=strategy
                 )
                 batch_results = {
-                    document.sdoc_data.id: self._process_batch_document(
+                    sdoc_id: self._error_result(
+                        sdoc_id=sdoc_id, message="The document does not exist"
+                    )
+                    for sdoc_id in batch.missing_sdoc_ids
+                }
+                for document in batch.documents:
+                    batch_results[document.sdoc_data.id] = self._process_batch_document(
                         context=context, document=document
                     )
-                    for document in batch
-                }
             job.save_checkpoint(
                 {
                     str(sdoc_id): result.model_dump_json()
@@ -260,7 +270,7 @@ class LLMAssistantTask(
                 total_documents=len(sdoc_ids),
             )
 
-        results = [result_by_sdoc_id[sdoc_id] for sdoc_id in payload.sdoc_ids]
+        results = [result_by_sdoc_id[sdoc_id] for sdoc_id in sdoc_ids]
         logger.info(
             "Finished {} task: {} successful, {} partial, {} failed document(s).",
             self.task_name,
@@ -281,13 +291,27 @@ class LLMAssistantTask(
         context: LLMAssistantTaskContext[StrategyT],
         document: LLMAssistantDocumentResponse[ResponseT],
     ) -> ResultT:
-        """Process one document of a batch and log its outcome."""
+        """Process one document of a batch in a savepoint of its own and log its
+        outcome. A document that fails becomes an error result and its savepoint
+        rolls back, so the other documents of the batch are still saved; a stop
+        of the job (no `Exception`) or its timeout rolls back the whole batch."""
         logger.info(
             "Processing {} LLM response(s) for document {}.",
             len(document.responses),
             document.sdoc_data.id,
         )
-        result = self._process_document(context=context, document=document)
+        try:
+            with context.db.begin_nested():
+                result = self._process_document(context=context, document=document)
+        except JobTimeoutException:
+            # the job ran out of time: it fails, it does not run on without one
+            raise
+        except Exception as e:
+            logger.exception(f"Cannot process document {document.sdoc_data.id}: {e}")
+            result = self._error_result(
+                sdoc_id=document.sdoc_data.id,
+                message=f"The document could not be processed ({type(e).__name__})",
+            )
         logger.info(
             "Finished document {} with status '{}': {}",
             document.sdoc_data.id,
@@ -335,6 +359,12 @@ class LLMAssistantTask(
         document: LLMAssistantDocumentResponse[ResponseT],
     ) -> ResultT:
         """Validate, parse, deduplicate if needed, persist, and build the result for one document."""
+        ...
+
+    @abstractmethod
+    def _error_result(self, *, sdoc_id: int, message: str) -> ResultT:
+        """The result of a document that could not be processed: it no longer
+        exists or its processing failed."""
         ...
 
     @abstractmethod

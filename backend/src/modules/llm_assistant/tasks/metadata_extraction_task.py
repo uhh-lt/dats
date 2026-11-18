@@ -108,6 +108,15 @@ class MetadataExtractionTask(
             suggested_metadata=suggested_metadata,
         )
 
+    def _error_result(self, *, sdoc_id: int, message: str) -> MetadataExtractionResult:
+        return MetadataExtractionResult(
+            status="error",
+            status_message=message,
+            sdoc_id=sdoc_id,
+            current_metadata=[],
+            suggested_metadata=[],
+        )
+
     def _build_result(
         self, results: list[MetadataExtractionResult]
     ) -> MetadataExtractionLLMAssistantJobResult:

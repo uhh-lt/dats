@@ -332,6 +332,14 @@ class AnnotationTask(LLMAssistantTask[AnnotationStrategy, BaseModel, AnnotationR
             ),
         )
 
+    def _error_result(self, *, sdoc_id: int, message: str) -> AnnotationResult:
+        return AnnotationResult(
+            status="error",
+            status_message=message,
+            sdoc_id=sdoc_id,
+            annotation_count_by_code_id={},
+        )
+
     def _build_result(
         self, results: list[AnnotationResult]
     ) -> AnnotationLLMAssistantJobResult:

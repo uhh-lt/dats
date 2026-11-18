@@ -269,6 +269,14 @@ class SentenceAnnotationTask(
             ),
         )
 
+    def _error_result(self, *, sdoc_id: int, message: str) -> SentenceAnnotationResult:
+        return SentenceAnnotationResult(
+            status="error",
+            status_message=message,
+            sdoc_id=sdoc_id,
+            annotation_count_by_code_id={},
+        )
+
     def _build_result(
         self, results: list[SentenceAnnotationResult]
     ) -> SentenceAnnotationLLMAssistantJobResult:
