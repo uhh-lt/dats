@@ -36,6 +36,7 @@ STATUS_FINISHED = 1
 STATUS_PROCESSING = 0
 STATUS_ERRONEOUS = -100
 YEAR_PATTERN = re.compile(r"\d{4}")
+YEAR_METATYPES = ("NUMBER", "STRING")
 
 
 @dataclass
@@ -53,13 +54,12 @@ class ExportStats:
 
 
 def parse_year(metadata: dict[str, Any] | None) -> int | None:
-    """The year of a metadata value of type number, date (YYYY-MM-DD) or string (YYYY)."""
+    """The year of a metadata value of type number or string (YYYY). DATS stores an
+    unset number as 0 and an unset string as "", both mean no year."""
     if metadata is None:
         return None
     if metadata["int_value"] is not None:
-        return metadata["int_value"]
-    if metadata["date_value"] is not None:
-        return int(metadata["date_value"][:4])
+        return metadata["int_value"] or None
     str_value = (metadata["str_value"] or "").strip()
     if YEAR_PATTERN.fullmatch(str_value):
         return int(str_value)
@@ -151,13 +151,23 @@ def main() -> None:
     api = connect(args.backend_url, args.username)
 
     # the year key must exist, otherwise every year would silently be empty
-    metadata_keys = sorted(
-        {m["key"] for m in api.read_all_project_metadata(args.project_id)}
-    )
-    if args.year_key not in metadata_keys:
+    text_metadata = {
+        m["key"]: m
+        for m in api.read_all_project_metadata(args.project_id)
+        if m["doctype"] == "text"
+    }
+    if args.year_key not in text_metadata:
         raise SystemExit(
-            f"Project {args.project_id} has no metadata key '{args.year_key}'. "
-            f"Available keys: {', '.join(metadata_keys)}"
+            f"Project {args.project_id} has no text metadata key '{args.year_key}'. "
+            f"Available keys: {', '.join(sorted(text_metadata))}"
+        )
+    # DATS fills an unset date with the day the value was created, so a missing
+    # year could not be told apart from a real one
+    year_metatype = text_metadata[args.year_key]["metatype"]
+    if year_metatype not in YEAR_METATYPES:
+        raise SystemExit(
+            f"The metadata key '{args.year_key}' has the type {year_metatype}; the "
+            f"year must be one of {', '.join(YEAR_METATYPES)}"
         )
 
     finished = api.read_sdocs_by_status(args.project_id, STATUS_FINISHED)
