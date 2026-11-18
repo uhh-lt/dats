@@ -30,6 +30,7 @@ from modules.llm_assistant.tasks.llm_assistant_document_processor import (
     LLMAssistantDocumentProcessor,
     LLMAssistantDocumentResponse,
 )
+from repos.db.sql_repo import SQLRepo
 from repos.llm_repo import LLMRepo
 from systems.job_system.job_dto import Job
 
@@ -187,16 +188,20 @@ class LLMAssistantTask(
     def execute(
         self,
         *,
-        db: Session,
+        sqlr: SQLRepo,
         job: Job,
         payload: LLMAssistantJobInput,
         strategy: StrategyT,
     ) -> LLMAssistantJobOutput:
-        """Run the fixed task lifecycle around task-specific execution hooks."""
-        context = LLMAssistantTaskContext(db=db, payload=payload, strategy=strategy)
+        """Run the fixed task lifecycle around task-specific execution hooks.
+
+        The preparation commits before the first LLM request, and every batch of
+        documents commits once its documents are done, each in a transaction of
+        its own: a failure or a stop loses the batch in progress only.
+        """
         approach_type = (
             ApproachType.LLM_FEW_SHOT
-            if context.is_fewshot
+            if strategy.is_fewshot
             else ApproachType.LLM_ZERO_SHOT
         )
         self._start_job(job=job, num_documents=len(payload.sdoc_ids))
@@ -206,7 +211,10 @@ class LLMAssistantTask(
             strategy.__class__.__name__,
             approach_type.value,
         )
-        self._prepare(context)
+        with sqlr.transaction() as db:
+            self._prepare(
+                LLMAssistantTaskContext(db=db, payload=payload, strategy=strategy)
+            )
         self._update_progress(
             processed_documents=0,
             total_documents=len(payload.sdoc_ids),
@@ -214,30 +222,28 @@ class LLMAssistantTask(
             job=job,
         )
 
-        documents = self.document_processor.process(
+        # every document once, also if the input repeats it
+        sdoc_ids = list(dict.fromkeys(payload.sdoc_ids))
+        result_by_sdoc_id: dict[int, ResultT] = {}
+        batches = self.document_processor.process(
             model=payload.model,
             strategy=strategy,
-            db=db,
-            sdoc_ids=payload.sdoc_ids,
+            sqlr=sqlr,
+            sdoc_ids=sdoc_ids,
             response_model=self._get_response_model(strategy),
             on_progress=partial(self._update_progress, job=job),
         )
-        results: list[ResultT] = []
-        for document in documents:
-            logger.info(
-                "Processing {} LLM response(s) for document {}.",
-                len(document.responses),
-                document.sdoc_data.id,
-            )
-            result = self._process_document(context=context, document=document)
-            results.append(result)
-            logger.info(
-                "Finished document {} with status '{}': {}",
-                document.sdoc_data.id,
-                result.status,
-                result.status_message,
-            )
+        for batch in batches:
+            with sqlr.transaction() as db:
+                context = LLMAssistantTaskContext(
+                    db=db, payload=payload, strategy=strategy
+                )
+                for document in batch:
+                    result_by_sdoc_id[document.sdoc_data.id] = (
+                        self._process_batch_document(context=context, document=document)
+                    )
 
+        results = [result_by_sdoc_id[sdoc_id] for sdoc_id in payload.sdoc_ids]
         logger.info(
             "Finished {} task: {} successful, {} partial, {} failed document(s).",
             self.task_name,
@@ -251,6 +257,27 @@ class LLMAssistantTask(
             approach_type=approach_type,
             specific_task_result=self._build_result(results),
         )
+
+    def _process_batch_document(
+        self,
+        *,
+        context: LLMAssistantTaskContext[StrategyT],
+        document: LLMAssistantDocumentResponse[ResponseT],
+    ) -> ResultT:
+        """Process one document of a batch and log its outcome."""
+        logger.info(
+            "Processing {} LLM response(s) for document {}.",
+            len(document.responses),
+            document.sdoc_data.id,
+        )
+        result = self._process_document(context=context, document=document)
+        logger.info(
+            "Finished document {} with status '{}': {}",
+            document.sdoc_data.id,
+            result.status,
+            result.status_message,
+        )
+        return result
 
     def _start_job(self, job: Job, num_documents: int) -> None:
         """Set and log the initial status for this task execution."""

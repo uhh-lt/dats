@@ -9,6 +9,7 @@ from modules.llm_assistant.llm_assistant_job_dto import (
     LLMAssistantJobOutput,
 )
 from modules.llm_assistant.llm_assistant_service import LLMAssistantService
+from modules.llm_assistant.strategies.llm_assistant_strategy import LLMAssistantStrategy
 from modules.llm_assistant.strategies.strategy_factory import build_strategy
 from modules.llm_assistant.tasks.task_factory import build_task
 from repos.db.sql_repo import SQLRepo
@@ -37,6 +38,27 @@ def validate_llm_assistant_input(db: Session, payload: LLMAssistantJobInput) -> 
         )
 
 
+def _build_strategy(db: Session, payload: LLMAssistantJobInput) -> LLMAssistantStrategy:
+    """The strategy of the job's prompt: a stored prompt version or a draft."""
+    pts = PromptService()
+    if payload.draft is not None:
+        prompt = payload.draft
+        renderer = pts.validate_prompt(
+            db=db, project_id=payload.project_id, prompt=prompt
+        )
+    else:
+        assert payload.prompt_version_id is not None
+        prompt = pts.read_snapshot(
+            db=db,
+            version_id=payload.prompt_version_id,
+            project_id=payload.project_id,
+            task_type=payload.task_type,
+        )
+        renderer = pts.build_renderer(prompt=prompt)
+    pts.assert_runnable(prompt=prompt)
+    return build_strategy(renderer=renderer)
+
+
 @register_job(
     job_type="llm_assistant",
     input_type=LLMAssistantJobInput,
@@ -59,31 +81,14 @@ def llm_assistant(
         status_message="Started LLM Assistant!",
     )
 
-    pts = PromptService()
+    # resolve the prompt, it decides everything but the documents and the model;
+    # the strategy holds DTOs only, so it outlives this transaction
     with sqlr.transaction() as db:
-        # resolve the prompt, it decides everything but the documents and the model
-        if payload.draft is not None:
-            prompt = payload.draft
-            renderer = pts.validate_prompt(
-                db=db, project_id=payload.project_id, prompt=prompt
-            )
-        else:
-            assert payload.prompt_version_id is not None
-            prompt = pts.read_snapshot(
-                db=db,
-                version_id=payload.prompt_version_id,
-                project_id=payload.project_id,
-                task_type=payload.task_type,
-            )
-            renderer = pts.build_renderer(prompt=prompt)
-        pts.assert_runnable(prompt=prompt)
+        strategy = _build_strategy(db=db, payload=payload)
 
-        # build the strategy of the prompt's output format and the task
-        strategy = build_strategy(renderer=renderer)
-        task = build_task(payload.task_type, llm=LLMRepo())
-
-        # execute
-        result = task.execute(db=db, job=job, payload=payload, strategy=strategy)
+    # execute: commits per batch of documents, no transaction stays open meanwhile
+    task = build_task(payload.task_type, llm=LLMRepo())
+    result = task.execute(sqlr=sqlr, job=job, payload=payload, strategy=strategy)
 
     job.update(
         current_step=2,
