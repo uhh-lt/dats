@@ -11,7 +11,7 @@ The tool's [README](https://github.com/uhh-lt/dats/blob/main/tools/sentence_samp
 Before drawing the sample:
 
 - Wait until every source document has finished processing. The export uses finished text documents only.
-- Add a year to every document as metadata. The default metadata key is `year`; use `--year_key` for another key.
+- Add a year to every document as text metadata of type `NUMBER` or `STRING` (`YYYY`). The default metadata key is `year`; use `--year_key` for another key. `DATE` keys are refused because DATS fills an unset date with the day it was created, making it indistinguishable from a real date.
 - Review and finalize `proxy_terms.json`, and choose separate seeds for the draw and the annotator assignment. Do not draw again with another seed because you dislike the result.
 - Create the code `SELECTED` in the project and add the five annotators as project members.
 
@@ -32,7 +32,7 @@ All commands below run from `tools/sentence_sampling`. Output goes to the git-ig
 python export_sentences.py --backend_url <BACKEND_URL> --project_id <PROJECT_ID> --username <USERNAME>
 ```
 
-The export contains one row per sentence, including its source document ID, zero-based sentence index, year, filename, and text. Its manifest records document counts, omitted documents, and the CSV's SHA-256. Check the manifest for processing or erroneous documents and documents without a year before continuing. Keep the export and manifest together as the frozen sampling frame.
+The export contains one row per sentence, including its source document ID, zero-based sentence index, year, filename, and text. Unset numeric years (`0`) and empty strings count as missing years. The manifest records document counts, omitted documents, and the CSV's SHA-256. Check the manifest for processing or erroneous documents and documents without a year before continuing. Keep the export and manifest together as the frozen sampling frame.
 
 ## 2. Draw the sample
 
