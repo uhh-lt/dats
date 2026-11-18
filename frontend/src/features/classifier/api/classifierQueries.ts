@@ -96,5 +96,9 @@ export const classifierQueries = {
     "classifier",
     (jobId) => ClassifierService.getClassifierJobById({ jobId }),
     (projectId) => ClassifierService.getClassifierJobsByProject({ projectId }),
+    {
+      abort: (jobId) => ClassifierService.abortClassifierJob({ jobId }),
+      retry: (jobId) => ClassifierService.retryClassifierJob({ jobId }),
+    },
   ),
 };

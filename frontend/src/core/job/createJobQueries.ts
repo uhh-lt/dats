@@ -1,7 +1,27 @@
 import { type QueryKey, queryOptions, skipToken } from "@tanstack/react-query";
 
-export interface JobQueriesWithoutList<TJob> {
+/** The generated abort and retry endpoints of a job type; each answers whether it stopped or requeued the job. */
+export interface JobActions {
+  abort: (jobId: string) => Promise<boolean>;
+  retry: (jobId: string) => Promise<boolean>;
+}
+
+/** What a job list item needs to offer the actions of its job type: none if the type generates no such endpoints. */
+export interface JobActionQueries {
   all: () => readonly [string, "job"];
+  actions?: JobActions;
+}
+
+/** The queries of a job type that generates the abort and retry endpoints. */
+export interface JobQueriesWithActions extends JobActionQueries {
+  actions: JobActions;
+}
+
+/** Whether a job type offers the abort and retry actions. */
+export const hasJobActions = (jobQueries: JobActionQueries): jobQueries is JobQueriesWithActions =>
+  jobQueries.actions !== undefined;
+
+export interface JobQueriesWithoutList<TJob> extends JobActionQueries {
   byId: (jobId: string | null | undefined) => ReturnType<typeof jobById<TJob>>;
 }
 
@@ -40,10 +60,12 @@ const jobsByProject = <TJob>(
  *   xQueries.job.all()                 [<domain>, "job"]
  *   xQueries.job.byId(jobId)           [<domain>, "job", "detail", jobId]
  *   xQueries.job.byProject(projectId)  [<domain>, "job", "project", projectId]     (only if the domain lists its jobs)
+ *   xQueries.job.actions               abort and retry                              (only if the type generates them)
  *
  * Every job type has this shape, so the cache-sync code can handle all of them the same way. It writes every job
  * update into both caches, so they never go stale and are not refetched when a view mounts or the window gets focus.
  * @param root the root query key of the domain, i.e. what its `all()` returns (lint checks that they match)
+ * @param actions the generated abort and retry endpoints of the job type, which JobListItem offers
  */
 export function createJobQueries<TJob>(
   root: string,
@@ -53,11 +75,13 @@ export function createJobQueries<TJob>(
   root: string,
   fetchJob: (jobId: string) => Promise<TJob>,
   fetchJobs: (projectId: number) => Promise<TJob[]>,
+  actions?: JobActions,
 ): JobQueriesWithList<TJob>;
 export function createJobQueries<TJob>(
   root: string,
   fetchJob: (jobId: string) => Promise<TJob>,
   fetchJobs?: (projectId: number) => Promise<TJob[]>,
+  actions?: JobActions,
 ) {
   const all = () => [root, "job"] as const;
   const byId = (jobId: string | null | undefined) => jobById([...all()], jobId, fetchJob);
@@ -65,7 +89,7 @@ export function createJobQueries<TJob>(
 
   const byProjectScope = () => [...all(), "project"] as const;
   const byProject = (projectId: number) => jobsByProject(byProjectScope(), projectId, fetchJobs);
-  return { all, byId, byProjectScope, byProject };
+  return { all, byId, byProjectScope, byProject, actions };
 }
 
 /**

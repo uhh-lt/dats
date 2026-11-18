@@ -33,6 +33,7 @@ export const ImportJobListItem = memo(({ initialImportJob }: ImportJobListItemPr
       <JobListItem
         jobStatus={importJob.data.status}
         jobId={importJob.data.job_id}
+        jobQueries={importQueries.job}
         title={`Import Job - ${importJob.data.input.import_job_type}`}
         subTitle={subTitle}
       >
