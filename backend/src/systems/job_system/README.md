@@ -67,7 +67,16 @@ Key decorator arguments:
    that records a failure (e.g. `experiment_run_job.py`) catches it
    explicitly. Either way the job runs its `failed` hook and ends as STOPPED
    in the failed job registry; it is not retried.
-5. **State** — job state lives in Redis (RQ meta), not Postgres. The REST
+5. **Checkpoint** — a job that works in batches can record what it finished
+   with `job.save_checkpoint({key: value})` and read it back with
+   `job.read_checkpoint()`, so a retry (`JobService.retry_job`: same job, same
+   input) skips it. The checkpoint is a Redis hash next to the job: saving
+   costs what the new entries cost. It never outlives its job: while the job
+   runs, it expires a day after the job's timeout; `rq_job_failed` lets it
+   expire with the failed or stopped job (its `failure_ttl`), and
+   `rq_job_handler` a day after the job finished, so a retry still continues
+   from it if the worker died before RQ saved the result.
+6. **State** — job state lives in Redis (RQ meta), not Postgres. The REST
    polling endpoints (`/job/...`) read it from there and stay fully
    functional — they are used by MCP/agents and as the frontend's
    initial-load and websocket-disconnected fallback.

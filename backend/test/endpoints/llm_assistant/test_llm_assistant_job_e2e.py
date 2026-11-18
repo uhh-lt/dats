@@ -1,6 +1,7 @@
 """End-to-end runs of the LLM Assistant job (`llm_assistant_job.py`) on several
 documents, run in-process by `held_jobs`: the job commits per batch of
-documents. The LLM is an external service: the tests replace
+documents and a retry continues where the failed attempt stopped. The LLM is
+an external service: the tests replace
 `LLMRepo.llm_batch_chat` with a fake that classifies the first sentence of
 every document as FACT, or fails for chosen documents."""
 
@@ -10,6 +11,7 @@ import pytest
 import rq
 from fastapi.testclient import TestClient
 from pydantic import BaseModel
+from rq.defaults import DEFAULT_FAILURE_TTL
 
 from core.annotation.sentence_annotation_dto import (
     SentenceAnnotationRead,
@@ -20,15 +22,16 @@ from job_test_utils import HeldJobs
 from modules.llm_assistant.llm_assistant_job_dto import (
     LLMAssistantJobInput,
     LLMAssistantJobOutput,
+    SentenceAnnotationLLMAssistantJobResult,
 )
 from modules.llm_assistant.tasks import llm_assistant_document_processor
 from modules.llm_assistant.tasks.sentence_annotation_task import (
     SentenceAnnotationTask,
 )
 from repos.llm_repo import LLMBatchChatResponse, LLMMessage, LLMRepo
-from systems.job_system.job_dto import JobRead
+from systems.job_system.job_dto import Job, JobRead
 from systems.job_system.job_service import JobService
-from systems.job_system.job_system_enum import JobStatus
+from systems.job_system.job_system_enum import JobStatus, JobTiming
 
 from .conftest import TARGET_SENTENCES, JobPromptProject
 
@@ -50,11 +53,13 @@ FACT_ANSWER = '{"data": [{"sent_id": 1, "category": "FACT"}]}'
 
 class FakeLLM:
     """Answers every message with `FACT_ANSWER`, or fails a whole request batch
-    that holds a message of a document in `failing`. Records the documents of
+    that holds a message of a document in `failing`. A message of a document in
+    `unparseable` gets an answer that cannot be parsed. Records the documents of
     the messages it was asked, in order."""
 
     def __init__(self) -> None:
         self.failing: set[str] = set()
+        self.unparseable: set[str] = set()
         self.asked: list[str] = []
 
     def batch_chat(
@@ -72,11 +77,13 @@ class FakeLLM:
         if self.failing.intersection(documents):
             raise RuntimeError("The LLM is down")
         return [
-            LLMBatchChatResponse(
+            LLMBatchChatResponse(raw="no answer", error="Failed to parse LLM response")
+            if document in self.unparseable
+            else LLMBatchChatResponse(
                 raw=FACT_ANSWER,
                 parsed=response_model.model_validate_json(FACT_ANSWER),
             )
-            for _ in messages
+            for document in documents
         ]
 
 
@@ -189,6 +196,62 @@ def test_a_failing_batch_keeps_the_annotations_of_the_earlier_batches(
     assert _run_a_annotations(client, job_prompt_project, NO_MATCH) == []
 
 
+def test_a_retry_skips_the_finished_documents_and_returns_the_results_of_all(
+    client: TestClient,
+    job_prompt_project: JobPromptProject,
+    held_jobs: HeldJobs,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """The first attempt fails at the third document; the retry asks the LLM for
+    the third document only, keeps the annotations the first attempt saved
+    (no second "delete existing annotations", no duplicates), and its output
+    holds the results of all three documents in the order of the input."""
+    base = job_prompt_project["base"]
+    fact_id = base["fact_code"].id
+    sdoc_ids = [
+        base["target_sdoc"].id,
+        base["example_sdoc"].id,
+        base["no_match_sdoc"].id,
+    ]
+    fake = _fake_llm(monkeypatch)
+    fake.failing = {NO_MATCH}
+    job_id = _start_sentence_job(client, job_prompt_project)
+    held_jobs.run("llm_assistant")
+    saved = {
+        document: _run_a_annotations(client, job_prompt_project, document)
+        for document in (TARGET, EXAMPLE)
+    }
+    fake.failing = set()
+    fake.asked.clear()
+
+    response = client.post(f"{LLM_ASSISTANT_JOB_URL}/{job_id}/retry")
+    assert response.status_code == 200, response.text
+    assert response.json() is True
+    held_jobs.run("llm_assistant")
+
+    job = _read_job(client, job_id)
+    assert job.status == JobStatus.FINISHED, job.status_message
+    assert fake.asked == [NO_MATCH]
+    for document, annotations in saved.items():
+        assert _run_a_annotations(client, job_prompt_project, document) == annotations
+    no_match = _run_a_annotations(client, job_prompt_project, NO_MATCH)
+    assert _ranges(no_match) == [(0, 0, fact_id)]
+
+    assert job.output is not None
+    task_result = job.output.specific_task_result
+    assert isinstance(task_result, SentenceAnnotationLLMAssistantJobResult)
+    assert [result.sdoc_id for result in task_result.results] == sdoc_ids
+    assert [result.status for result in task_result.results] == ["finished"] * 3
+    assert [
+        [annotation.id for annotation in result.suggested_annotations]
+        for result in task_result.results
+    ] == [
+        [annotation.id for annotation in saved[TARGET]],
+        [annotation.id for annotation in saved[EXAMPLE]],
+        [annotation.id for annotation in no_match],
+    ]
+
+
 def _stop_after(monkeypatch: pytest.MonkeyPatch, sdoc_id: int) -> None:
     """Stop the job (`JobService.stop_job`) once it wrote the annotations of the
     document, before its batch commits; the job waits to be interrupted."""
@@ -236,3 +299,101 @@ def test_a_stop_keeps_the_earlier_batches_and_rolls_back_the_batch_in_progress(
         annotations = _run_a_annotations(client, job_prompt_project, document)
         assert _ranges(annotations) == [(0, 0, fact_id)]
     assert _run_a_annotations(client, job_prompt_project, NO_MATCH) == []
+
+
+def test_a_retry_processes_the_documents_with_an_error_result_again(
+    client: TestClient,
+    job_prompt_project: JobPromptProject,
+    held_jobs: HeldJobs,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """The first attempt saves an error result for the example document (its
+    answer cannot be parsed) and fails at the third document; the example
+    document saved nothing, so the retry asks the LLM for it again, and for the
+    third document, and finishes with the results of all three."""
+    base = job_prompt_project["base"]
+    fact_id = base["fact_code"].id
+    fake = _fake_llm(monkeypatch)
+    fake.unparseable = {EXAMPLE}
+    fake.failing = {NO_MATCH}
+    job_id = _start_sentence_job(client, job_prompt_project)
+    held_jobs.run("llm_assistant")
+    assert _read_job(client, job_id).status == JobStatus.FAILED
+    assert _run_a_annotations(client, job_prompt_project, EXAMPLE) == []
+    fake.unparseable = set()
+    fake.failing = set()
+    fake.asked.clear()
+
+    response = client.post(f"{LLM_ASSISTANT_JOB_URL}/{job_id}/retry")
+    assert response.status_code == 200, response.text
+    held_jobs.run("llm_assistant")
+
+    job = _read_job(client, job_id)
+    assert job.status == JobStatus.FINISHED, job.status_message
+    assert fake.asked == [EXAMPLE, NO_MATCH]
+    assert _ranges(_run_a_annotations(client, job_prompt_project, EXAMPLE)) == [
+        (0, 0, fact_id)
+    ]
+    assert job.output is not None
+    assert [result.status for result in job.output.specific_task_result.results] == [
+        "finished"
+    ] * 3
+
+
+def _checkpoint_ttl(job_id: str) -> int:
+    """The seconds until the job's checkpoint expires (-1: never, -2: none)."""
+    job = JobService().get_job(job_id)
+    return job.job.connection.ttl(job._checkpoint_key)
+
+
+@pytest.mark.parametrize(
+    "end,status,saved,ttl",
+    [
+        # a day after the finish, so a retry continues from it if the worker
+        # died before RQ saved the output
+        pytest.param("finish", JobStatus.FINISHED, 3, JobTiming.ONE_DAY, id="finish"),
+        # the LLM fails for the third document: a retry continues from it
+        pytest.param("fail", JobStatus.FAILED, 2, DEFAULT_FAILURE_TTL, id="failure"),
+        # stopped in the third batch: a retry continues from it
+        pytest.param("stop", JobStatus.STOPPED, 2, DEFAULT_FAILURE_TTL, id="stop"),
+    ],
+)
+def test_the_checkpoint_expires_with_the_job(
+    client: TestClient,
+    job_prompt_project: JobPromptProject,
+    held_jobs: HeldJobs,
+    monkeypatch: pytest.MonkeyPatch,
+    end: str,
+    status: JobStatus,
+    saved: int,
+    ttl: int,
+) -> None:
+    """While the job runs, its checkpoint expires a day after the job's timeout
+    (one hour); once the job ended, a day after the finish, or with the failed
+    or stopped job after RQ's failure TTL (one year). It holds the documents of
+    the committed batches."""
+    fake = _fake_llm(monkeypatch)
+    if end == "fail":
+        fake.failing = {NO_MATCH}
+    if end == "stop":
+        _stop_after(monkeypatch, job_prompt_project["base"]["no_match_sdoc"].id)
+    running_ttls: list[int] = []
+    save_checkpoint = Job.save_checkpoint
+
+    def _record_ttl(self: Job, entries: dict[str, str]) -> None:
+        save_checkpoint(self, entries)
+        running_ttls.append(_checkpoint_ttl(self.get_id()))
+
+    monkeypatch.setattr(Job, "save_checkpoint", _record_ttl)
+
+    job_id = _start_sentence_job(client, job_prompt_project)
+    held_jobs.run("llm_assistant")
+
+    assert _read_job(client, job_id).status == status
+    timeout = JobService().get_job(job_id).job.timeout
+    assert timeout is not None
+    running = timeout + JobTiming.ONE_DAY
+    assert len(running_ttls) == saved
+    assert all(running - 60 < running_ttl <= running for running_ttl in running_ttls)
+    assert len(JobService().get_job(job_id).read_checkpoint()) == saved
+    assert ttl - 60 < _checkpoint_ttl(job_id) <= ttl

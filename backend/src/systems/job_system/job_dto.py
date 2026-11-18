@@ -1,10 +1,13 @@
+from collections.abc import Mapping
 from datetime import UTC, datetime
 from typing import Generic, TypeVar
 
 import rq
 from pydantic import BaseModel, Field
+from redis.typing import EncodableT
+from rq.utils import as_text
 
-from systems.job_system.job_system_enum import JobStatus
+from systems.job_system.job_system_enum import JobStatus, JobTiming
 
 RUNNING_JOB_STATUS = [
     JobStatus.QUEUED,
@@ -48,6 +51,47 @@ class Job:
 
     def get_id(self) -> str:
         return self.job.id
+
+    @property
+    def _checkpoint_key(self) -> str:
+        return f"{self.job.key}:checkpoint"
+
+    def save_checkpoint(self, entries: Mapping[str, str]) -> None:
+        """Add entries to the job's checkpoint: what the job finished so far, by
+        a key of the job's choice, so a retry of the job can skip it. Saving costs
+        what the entries cost, whatever the checkpoint holds. The checkpoint lives
+        in Redis next to the job and never outlives it: while the job runs, it
+        expires a day after the job's timeout (never if the job has none); once
+        the job ended, the job handler sets its TTL (`end_checkpoint`)."""
+        if not entries:
+            return
+        with self.job.connection.pipeline() as pipe:
+            mapping: dict[EncodableT, EncodableT] = {k: v for k, v in entries.items()}
+            pipe.hset(self._checkpoint_key, mapping=mapping)
+            # a running job ends within its timeout, and its end sets the TTL
+            # of its checkpoint, unless its worker died: then the cleanup of the
+            # started jobs ends it, but no later than a day after its timeout
+            timeout = int(self.job.timeout or rq.Queue.DEFAULT_TIMEOUT)
+            if timeout < 0:
+                pipe.persist(self._checkpoint_key)
+            else:
+                pipe.expire(self._checkpoint_key, timeout + JobTiming.ONE_DAY)
+            pipe.execute()
+
+    def read_checkpoint(self) -> dict[str, str]:
+        """The entries of the job's checkpoint, empty unless an earlier attempt
+        of the job saved some."""
+        entries = self.job.connection.hgetall(self._checkpoint_key)
+        return {as_text(key): as_text(value) for key, value in entries.items()}
+
+    def end_checkpoint(self, ttl: int) -> None:
+        """Let the checkpoint of the ended job expire in `ttl` seconds (never if
+        negative): a failed or stopped job keeps it for a retry as long as RQ
+        keeps the job, a finished job until RQ surely saved its result."""
+        if ttl < 0:
+            self.job.connection.persist(self._checkpoint_key)
+            return
+        self.job.connection.expire(self._checkpoint_key, ttl)
 
     def get_type(self) -> str:
         return self.job.meta["type"]

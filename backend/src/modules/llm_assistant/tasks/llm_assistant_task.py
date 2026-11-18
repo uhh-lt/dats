@@ -180,6 +180,8 @@ class LLMAssistantTask(
 
     task_name: str
     task_type: ClassVar[TaskType]
+    # the result of one document, stored in the job's checkpoint
+    result_type: type[ResultT]
 
     def __init__(self, llm: LLMRepo):
         self.document_processor = LLMAssistantDocumentProcessor(llm)
@@ -198,6 +200,16 @@ class LLMAssistantTask(
         The preparation commits before the first LLM request, and every batch of
         documents commits once its documents are done, each in a transaction of
         its own: a failure or a stop loses the batch in progress only.
+
+        After its commit, a batch records the results of its documents in the
+        job's checkpoint. A retry of the job (same job, same input) skips the
+        documents of the checkpoint, except those with an error result, which
+        saved nothing, and never runs the preparation again, which
+        would delete what the earlier attempts saved, and its output holds the
+        results of all documents. If the worker dies between the commit of a
+        batch and its record, the retry processes that batch again: its
+        documents get their annotations and reasoning memos twice (if it was
+        the first batch, the preparation runs again and deletes them first).
         """
         approach_type = (
             ApproachType.LLM_FEW_SHOT
@@ -211,25 +223,43 @@ class LLMAssistantTask(
             strategy.__class__.__name__,
             approach_type.value,
         )
-        with sqlr.transaction() as db:
-            self._prepare(
-                LLMAssistantTaskContext(db=db, payload=payload, strategy=strategy)
+        # the results of the documents that earlier attempts of the job processed
+        checkpoint: dict[int, ResultT] = {
+            int(sdoc_id): self.result_type.model_validate_json(result)
+            for sdoc_id, result in job.read_checkpoint().items()
+        }
+        # a document with an error result saved nothing: it is processed again
+        result_by_sdoc_id = {
+            sdoc_id: result
+            for sdoc_id, result in checkpoint.items()
+            if result.status != "error"
+        }
+        if checkpoint:
+            logger.info(
+                "Resuming: {} document(s) were finished by an earlier attempt.",
+                len(result_by_sdoc_id),
             )
+        else:
+            with sqlr.transaction() as db:
+                self._prepare(
+                    LLMAssistantTaskContext(db=db, payload=payload, strategy=strategy)
+                )
+        # every document once, also if the input repeats it
+        sdoc_ids = list(dict.fromkeys(payload.sdoc_ids))
         self._update_progress(
-            processed_documents=0,
-            total_documents=len(payload.sdoc_ids),
+            processed_documents=len(result_by_sdoc_id),
+            total_documents=len(sdoc_ids),
             completed_requests=0,
             job=job,
         )
 
-        # every document once, also if the input repeats it
-        sdoc_ids = list(dict.fromkeys(payload.sdoc_ids))
-        result_by_sdoc_id: dict[int, ResultT] = {}
         batches = self.document_processor.process(
             model=payload.model,
             strategy=strategy,
             sqlr=sqlr,
-            sdoc_ids=sdoc_ids,
+            sdoc_ids=[
+                sdoc_id for sdoc_id in sdoc_ids if sdoc_id not in result_by_sdoc_id
+            ],
             response_model=self._get_response_model(strategy),
             on_progress=partial(self._update_progress, job=job),
         )
@@ -238,10 +268,19 @@ class LLMAssistantTask(
                 context = LLMAssistantTaskContext(
                     db=db, payload=payload, strategy=strategy
                 )
-                for document in batch:
-                    result_by_sdoc_id[document.sdoc_data.id] = (
-                        self._process_batch_document(context=context, document=document)
+                batch_results = {
+                    document.sdoc_data.id: self._process_batch_document(
+                        context=context, document=document
                     )
+                    for document in batch
+                }
+            job.save_checkpoint(
+                {
+                    str(sdoc_id): result.model_dump_json()
+                    for sdoc_id, result in batch_results.items()
+                }
+            )
+            result_by_sdoc_id.update(batch_results)
 
         results = [result_by_sdoc_id[sdoc_id] for sdoc_id in payload.sdoc_ids]
         logger.info(

@@ -39,6 +39,7 @@ class SentenceAnnotationTask(
 
     task_name = "Sentence Annotation"
     task_type = TaskType.SENTENCE_ANNOTATION
+    result_type = SentenceAnnotationResult
 
     @staticmethod
     def _group_into_ranges(
