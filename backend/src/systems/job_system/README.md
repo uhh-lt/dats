@@ -46,6 +46,7 @@ Key decorator arguments:
 | `publish_updates`    | Whether state changes are pushed over websockets (see below).                                                                                    |
 | `read_model`         | Optional custom `JobRead` subclass for the event/REST payload.                                                                                   |
 | `validate_input`     | Optional check `(db, payload)` the generated start endpoint runs before enqueueing; it raises to reject the input (e.g. ids of another project). |
+| `validate_retry`     | Optional check `(db, payload)` the generated retry endpoint runs instead of `validate_input` before requeueing (e.g. data deleted meanwhile is no reason to refuse a retry). |
 
 ## Execution Lifecycle
 

@@ -28,6 +28,23 @@ def validate_llm_assistant_input(db: Session, payload: LLMAssistantJobInput) -> 
     LLMAssistantService().assert_documents_in_project(
         db=db, project_id=payload.project_id, sdoc_ids=payload.sdoc_ids
     )
+    _assert_virtual_user_of_project(db=db, payload=payload)
+
+
+def validate_llm_assistant_retry(db: Session, payload: LLMAssistantJobInput) -> None:
+    """Like `validate_llm_assistant_input`, but documents deleted since the job
+    started do not block its retry: the retry gives them an error result."""
+    LLMAssistantService().assert_documents_in_project(
+        db=db,
+        project_id=payload.project_id,
+        sdoc_ids=payload.sdoc_ids,
+        allow_missing=True,
+    )
+    _assert_virtual_user_of_project(db=db, payload=payload)
+
+
+def _assert_virtual_user_of_project(db: Session, payload: LLMAssistantJobInput) -> None:
+    """Reject a user that is no virtual user of the job's project."""
     user_id = payload.virtual_user_id
     if (
         user_id is not None
@@ -70,6 +87,7 @@ def _build_strategy(db: Session, payload: LLMAssistantJobInput) -> LLMAssistantS
     result_ttl=JobTiming.NINETY_DAYS,
     timeout=JobTiming.ONE_WEEK,
     validate_input=validate_llm_assistant_input,
+    validate_retry=validate_llm_assistant_retry,
 )
 def llm_assistant(
     payload: LLMAssistantJobInput,

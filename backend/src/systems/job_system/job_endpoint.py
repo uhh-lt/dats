@@ -25,6 +25,7 @@ def register_job_endpoints(
     endpoint_generation: EndpointGeneration,
     router: APIRouter,
     validate_input: Callable[[Session, Any], None] | None,
+    validate_retry: Callable[[Session, Any], None] | None,
 ):
     if endpoint_generation == EndpointGeneration.NONE:
         return
@@ -94,8 +95,9 @@ def register_job_endpoints(
             job = job_service.get_job(job_id)
             authz_user.assert_in_project(job.get_project_id())
             # the input may not be valid anymore (e.g. its feature was disabled)
-            if validate_input is not None:
-                validate_input(authz_user.db, job.job.kwargs["payload"])
+            validate = validate_retry or validate_input
+            if validate is not None:
+                validate(authz_user.db, job.job.kwargs["payload"])
             return job_service.retry_job(job_id)
 
         router.add_api_route(
@@ -133,4 +135,5 @@ for job_type, job_info in job_service.job_registry.items():
         endpoint_generation=job_info["generate_endpoints"],
         router=job_info["router"] or router,
         validate_input=job_info["validate_input"],
+        validate_retry=job_info["validate_retry"],
     )

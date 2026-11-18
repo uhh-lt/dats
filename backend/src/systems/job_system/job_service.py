@@ -50,6 +50,8 @@ class RegisteredJob(TypedDict):
     enricher: Callable | None
     # checks the input when the generated endpoint starts a job (see register_job)
     validate_input: Callable[[Session, Any], None] | None
+    # checks the input when the generated retry endpoint requeues a job
+    validate_retry: Callable[[Session, Any], None] | None
 
 
 class JobHooks(NamedTuple):
@@ -129,6 +131,7 @@ class JobService(metaclass=SingletonMeta):
         enricher: Callable[[InputT], InputT] | None = None,
         read_model: type[JobRead] | None = None,
         validate_input: Callable[[Session, InputT], None] | None = None,
+        validate_retry: Callable[[Session, InputT], None] | None = None,
     ) -> None:
         # Enforce that the only parameter is named 'payload'
         sig = inspect.signature(handler_func)
@@ -178,6 +181,7 @@ class JobService(metaclass=SingletonMeta):
             "timeout": timeout,
             "enricher": enricher,
             "validate_input": validate_input,
+            "validate_retry": validate_retry,
         }
 
     def register_hooks(self, hooks: JobHooks) -> None:

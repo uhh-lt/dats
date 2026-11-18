@@ -730,3 +730,41 @@ def test_a_batch_whose_requests_all_were_rejected_saves_error_results(
         ),
         (base["no_match_sdoc"].id, "finished", "Sentence annotation successful"),
     ]
+
+
+def test_a_job_whose_document_was_deleted_can_be_retried(
+    client: TestClient,
+    job_prompt_project: JobPromptProject,
+    held_jobs: HeldJobs,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """The first attempt fails at the third document, which is deleted before
+    the retry: the retry is accepted (only the documents that still exist must
+    belong to the project), and the deleted document gets an error result."""
+    base = job_prompt_project["base"]
+    no_match_id = base["no_match_sdoc"].id
+    fake = _fake_llm(monkeypatch)
+    fake.failing = {NO_MATCH}
+    job_id = _start_sentence_job(client, job_prompt_project)
+    held_jobs.run("llm_assistant")
+    assert _read_job(client, job_id).status == JobStatus.FAILED
+    response = client.delete(f"/sdoc/{no_match_id}")
+    assert response.status_code == 200, response.text
+    fake.failing = set()
+
+    response = client.post(f"{LLM_ASSISTANT_JOB_URL}/{job_id}/retry")
+    assert response.status_code == 200, response.text
+    assert response.json() is True
+    held_jobs.run("llm_assistant")
+
+    job = _read_job(client, job_id)
+    assert job.status == JobStatus.FINISHED, job.status_message
+    assert job.output is not None
+    assert [
+        (result.sdoc_id, result.status, result.status_message)
+        for result in job.output.specific_task_result.results
+    ] == [
+        (base["target_sdoc"].id, "finished", "Sentence annotation successful"),
+        (base["example_sdoc"].id, "finished", "Sentence annotation successful"),
+        (no_match_id, "error", "The document does not exist"),
+    ]
