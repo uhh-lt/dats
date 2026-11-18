@@ -48,5 +48,9 @@ export const llmAssistantQueries = {
     "llmAssistant",
     (jobId) => LlmAssistantService.getLlmAssistantJobById({ jobId }),
     (projectId) => LlmAssistantService.getLlmAssistantJobsByProject({ projectId }),
+    {
+      abort: (jobId) => LlmAssistantService.abortLlmAssistantJob({ jobId }),
+      retry: (jobId) => LlmAssistantService.retryLlmAssistantJob({ jobId }),
+    },
   ),
 };

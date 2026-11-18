@@ -66,6 +66,7 @@ export const LLMAssistantJobListItem = memo(({ initialLLMAssistantJob }: LLMAssi
       <JobListItem
         jobStatus={llmAssistantJob.data.status}
         jobId={llmAssistantJob.data.job_id}
+        jobQueries={llmAssistantQueries.job}
         title={`LLM Assistant Job - ${llmAssistantJob.data.input.task_type}${llmAssistantJob.data.output ? ` - ${llmAssistantJob.data.output.approach_type}` : ""}`}
         subTitle={subTitle}
       >

@@ -23,6 +23,7 @@ export const CrawlerJobListItem = memo(({ initialCrawlerJob }: CrawlerJobListIte
       <JobListItem
         jobStatus={crawlerJob.data.status}
         jobId={crawlerJob.data.job_id}
+        jobQueries={documentUploadQueries.job}
         title={`Crawler Job: ${crawlerJob.data.job_id}`}
         subTitle={dateString}
       >

@@ -40,6 +40,7 @@ export const ClassifierJobListItem = memo(({ initialClassifierJob }: ClassifierJ
       <JobListItem
         jobStatus={cj.data.status}
         jobId={cj.data.job_id}
+        jobQueries={classifierQueries.job}
         title={`${cj.data.input.model_type} - ${cj.data.input.task_type}`}
         subTitle={subTitle}
       >

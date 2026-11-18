@@ -17,5 +17,9 @@ export const documentUploadQueries = {
     "documentUpload",
     (jobId) => JobService.getCrawlerJobById({ jobId }),
     (projectId) => JobService.getCrawlerJobsByProject({ projectId }),
+    {
+      abort: (jobId) => JobService.abortCrawlerJob({ jobId }),
+      retry: (jobId) => JobService.retryCrawlerJob({ jobId }),
+    },
   ),
 };
