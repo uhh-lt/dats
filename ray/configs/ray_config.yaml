@@ -1,3 +1,12 @@
+# --- GPU ---
+
+gpu:
+  # GPU memory in GB that Ray plans with; null uses the memory of the smallest GPU in
+  # RAY_DEVICE_IDS. Set it lower if the GPU is shared with other services (e.g. vLLM).
+  memory_gb: null
+  # the deployment that gets as many replicas as fit next to all others at their max_replicas
+  fill_with: spacy
+
 # --- CPU Deployments ---
 
 glotlid:
@@ -37,8 +46,7 @@ whisper:
       max_ongoing_requests: 128
     model_worker:
       max_ongoing_requests: 64
-      ray_actor_options:
-        num_gpus: .2
+      gpu_memory_gb: 4.2
       autoscaling_config:
         min_replicas: 1
         max_replicas: 1
@@ -53,8 +61,7 @@ detr:
       max_ongoing_requests: 128
     model_worker:
       max_ongoing_requests: 64
-      ray_actor_options:
-        num_gpus: .2
+      gpu_memory_gb: 1.5
       autoscaling_config:
         min_replicas: 1
         max_replicas: 1
@@ -170,8 +177,7 @@ clip:
       max_ongoing_requests: 128
     model_worker:
       max_ongoing_requests: 64
-      ray_actor_options:
-        num_gpus: .2
+      gpu_memory_gb: 3.6
       autoscaling_config:
         min_replicas: 1
         max_replicas: 1
@@ -187,11 +193,11 @@ spacy:
     de: de_core_news_lg-3.8.0
     it: it_core_news_lg-3.8.0
     default: en
-  device: cuda # to run spaCy on the CPU, set device: cpu and num_gpus: 0.0
+  device: cuda # to run spaCy on the CPU, set device: cpu and remove gpu_memory_gb
   max_text_length: 2000000 # in characters (1000000 is spaCy default)
-  # longer texts are processed in segments of at most this many characters to bound
-  # the GPU memory (en_core_web_trf needs about 2 GB per 100k characters)
-  segment_length: 50000
+  # texts are processed in segments of at most this many characters, which bounds the GPU
+  # memory: 50k segments need 1.8 GB more per replica and are only about 5% faster
+  segment_length: 10000
   deployment:
     api:
       name: "spacy"
@@ -199,11 +205,10 @@ spacy:
       max_ongoing_requests: 128
     model_worker:
       max_ongoing_requests: 64
-      ray_actor_options:
-        num_gpus: .2
+      gpu_memory_gb: 2.7
       autoscaling_config:
         min_replicas: 1
-        max_replicas: 2 # fits one GPU next to whisper, detr and clip, raise it on hosts with more GPUs
+        max_replicas: 4 # lowered to what fits on the GPU (gpu.fill_with)
         upscale_delay_s: 5
         metrics_interval_s: 5
         target_ongoing_requests: 1
@@ -222,8 +227,7 @@ quote:
       max_ongoing_requests: 128
     model_worker:
       max_ongoing_requests: 64
-      ray_actor_options:
-        num_gpus: .2
+      gpu_memory_gb: 4.2
       autoscaling_config:
         min_replicas: 0
         max_replicas: 1
@@ -238,8 +242,7 @@ coref:
       max_ongoing_requests: 128
     model_worker:
       max_ongoing_requests: 64
-      ray_actor_options:
-        num_gpus: .2
+      gpu_memory_gb: 5.8 # for documents of 10k characters, grows with the document length (#920)
       autoscaling_config:
         min_replicas: 0
         max_replicas: 1

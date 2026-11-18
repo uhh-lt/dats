@@ -33,17 +33,26 @@ The `rq-gpu-worker` runs every GPU job on a single GPU from `RQ_DEVICE_IDS`: it 
 
 ## Sizing the Ray deployments
 
-Each GPU deployment in `ray/configs/ray_config.yaml` requests a share of one GPU per replica (`ray_actor_options.num_gpus`). Ray starts a replica only if its share still fits on one of the GPUs in `RAY_DEVICE_IDS`; a replica that does not fit waits, and the Ray healthcheck reports the deployment as unhealthy meanwhile. The shares do not limit the GPU memory, so they should roughly reflect it.
+Ray schedules a GPU deployment by its share of a GPU (`num_gpus`) and never checks the GPU memory. DATS therefore states in `ray/configs/ray_config.yaml` how much GPU memory a replica of each deployment needs (`gpu_memory_gb`), and computes the shares when Ray starts: the memory of the deployment divided by the memory of the GPU. All deployments fit on one GPU at their `max_replicas`, so a replica never waits for another deployment to scale down.
 
-| Deployment          | Share per replica | Replicas |
-| ------------------- | ----------------- | -------- |
-| whisper, detr, clip | 0.2 each          | 1        |
-| spacy               | 0.2               | 1 to 2   |
-| quote, coref        | 0.2 each          | 0 to 1   |
+Ray needs a GPU with at least 22 GB, in practice a 24 GB GPU, and does not start on a smaller one. spaCy (`gpu.fill_with`) gets as many replicas as fit next to all other deployments at their `max_replicas`, up to its own `max_replicas` of 4: a larger GPU processes more documents at once. Four spaCy replicas process about twice as many documents as one; more replicas are not faster on one GPU.
 
-The defaults need 0.8 to 1.0 GPUs, and up to 1.4 GPUs while quote and coref are in use. On a single GPU, quote and coref therefore only start while spaCy runs a single replica; give Ray a second GPU for them.
+Ray plans with the memory of the smallest GPU in `RAY_DEVICE_IDS`. If the GPU also runs other services, such as vLLM, set `gpu.memory_gb` to the memory left for Ray.
 
-A spaCy replica needs up to about 4.5 GB of GPU memory: about 2.5 GB for the models and up to 2 GB for a segment of `spacy.segment_length` characters (50,000 by default; longer texts are processed segment by segment). On hosts with more GPUs, raise `spacy.deployment.model_worker.autoscaling_config.max_replicas` for throughput: on an A100, four replicas process about twice as many documents as one. To run spaCy on the CPU instead, set `spacy.device` to `cpu` and its `num_gpus` to `0.0`.
+| Deployment | Memory per replica | Replicas | Measured with                                                              |
+| ---------- | ------------------ | -------- | -------------------------------------------------------------------------- |
+| spacy      | 2.7 GB             | 1 to 4   | 2M characters of English, in segments of 10k characters (`segment_length`) |
+| whisper    | 4.2 GB             | 1        | 15 minutes of audio                                                        |
+| detr       | 1.5 GB             | 1        | images of up to 4000 × 3000 pixels                                         |
+| clip       | 3.6 GB             | 1        | 32 documents of 459 sentences, an image of 4000 × 3000 pixels              |
+| quote      | 4.2 GB             | 0 to 1   | German documents of up to 25k characters                                   |
+| coref      | 5.8 GB             | 0 to 1   | a German document of 10k characters                                        |
+
+The values are the peak memory of a replica process as `nvidia-smi` shows it, measured on an A100 and rounded up; detr and clip use the higher values seen in production. They are budgets, not limits. All deployments but coref need the same memory for any input. coref needs about 0.06 GB more per 1,000 characters, so the budget holds for documents of about 10k characters: a much longer document can exceed the GPU while all other deployments are busy ([#920](https://github.com/uhh-lt/dats/issues/920)).
+
+spacy and whisper (for the core artefacts) and detr and clip (for features that a new project enables) always run. quote and coref, whose features a new project does not enable, start with their first request (`min_replicas: 0`) and stop after 10 minutes without requests.
+
+To run spaCy on the CPU instead, set `spacy.device` to `cpu` and remove its `gpu_memory_gb`.
 
 ## Troubleshooting
 
