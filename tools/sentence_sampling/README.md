@@ -4,6 +4,7 @@ Scripts that draw the validation sample of sentences from a DATS project. The st
 
 1. `export_sentences.py` exports every sentence of the project through the DATS API.
 2. `draw_sample.py` draws the three samples from the export.
+3. `assign_annotators.py` assigns the drawn sentences to annotator pairs and writes the DATS import file that marks them.
 
 All files are written to `data/`, which is not committed.
 
@@ -95,12 +96,48 @@ The log records the SHA-256 of the export, of `proxy_terms.json` and of the samp
 
 `sentence_sample_project_<project_id>.csv` holds the drawn sentences, the background draw first, then proxy, then fresh, each sorted by decade, `sdoc_id` and `sentence_idx`. It holds no model labels.
 
-| Column                                            | Content                                       |
-| ------------------------------------------------- | --------------------------------------------- |
-| `draw`                                            | `background`, `proxy` or `fresh`              |
-| `sentence_uid`, `sdoc_id`, `sentence_idx`, `year` | as in the export                              |
-| `decade`                                          | first year of the decade                      |
-| `n_words`                                         | number of words, as counted for `--min_words` |
-| `contains_fresh`                                  | whether the sentence contains "fresh"         |
-| `matched_proxy_terms`                             | the proxy terms that matched, `;`-separated   |
-| `sentence_text`                                   | the sentence                                  |
+| Column                                                             | Content                                       |
+| ------------------------------------------------------------------ | --------------------------------------------- |
+| `draw`                                                             | `background`, `proxy` or `fresh`              |
+| `sentence_uid`, `sdoc_id`, `sentence_idx`, `sdoc_filename`, `year` | as in the export                              |
+| `decade`                                                           | first year of the decade                      |
+| `n_words`                                                          | number of words, as counted for `--min_words` |
+| `contains_fresh`                                                   | whether the sentence contains "fresh"         |
+| `matched_proxy_terms`                                              | the proxy terms that matched, `;`-separated   |
+| `sentence_text`                                                    | the sentence                                  |
+
+## Assign the annotators
+
+`assign_annotators.py` gives every drawn sentence to two annotators and writes a file that DATS imports to mark each sentence for both of them.
+
+Before the first run:
+
+1. Copy `annotators.example.json` to `data/annotators.json` and fill in the DATS emails. The file stays in `data/`, so the emails are not committed. The order of the annotators decides the pairs.
+2. Create the code `SELECTED` in the project (`--code_name` names another one).
+3. Add the five annotators to the project.
+
+The script checks the last two in DATS and stops with a warning if the code is missing or an annotator is not a member of the project.
+
+```bash
+DATS_PASSWORD=... python assign_annotators.py --input data/sentence_sample_project_43.csv --seed <seed> --backend_url https://dats.example.org/api/ --username me@example.org
+```
+
+### The assignment
+
+- **Pairs**: the five annotators make 10 pairs (every pair once, in the order of `data/annotators.json`: Alex-Akrish, Alex-Levin, Alex-Tobi, Alex-Goutham, Akrish-Levin, ...), and pair `b` annotates block `b`. Every sentence is annotated by exactly two people, everybody works with everybody exactly once, and everybody annotates 4 blocks.
+- **Blocks**: every draw is split at random into 10 equal parts and block `b` gets part `b` of every draw, so each block of 40 holds 10 background, 20 proxy and 10 fresh sentences. Every pair sees the same mix, so the agreement of the pairs is comparable.
+- **Numbering**: the sentences of a block are shuffled and numbered block by block (block 1 is 1-40, block 2 is 41-80, ...), so the number tells nothing about the draw.
+- **Blinding**: all sentences get the same code, whatever their draw. Only the assignment file names the draw; it is for the person who drew and the statistics, not for the annotators.
+- **Reproducibility**: `--seed` drives all shuffles; the annotation UUIDs are derived from the project, the code, the sentence and the annotator, so the same inputs give the same files, and DATS refuses to import the same annotations twice.
+
+### The output
+
+| File                                                     | Rows             | Content                                                                                                                                                                                |
+| -------------------------------------------------------- | ---------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `assignment_project_<project_id>.csv`                    | one per sentence | `number`, `block`, `annotator_1`, `annotator_2`, `draw` and the sample columns                                                                                                         |
+| `selected_sentence_annotations_project_<project_id>.csv` | two per sentence | the DATS sentence annotation import: `uuid`, `sdoc_name` (the filename of the document), `user_email`, `code_name`, `text_begin_sent` and `text_end_sent` (the `sentence_idx`), `text` |
+| `assignment_project_<project_id>.log.json`               |                  | the SHA-256 of the sample and of both files, the seed, the code, per block its numbers, pair and sentences per draw, per annotator the blocks and numbers                              |
+
+The script prints the numbers of every annotator and refuses to replace an existing assignment unless `--overwrite` is given.
+
+Import `selected_sentence_annotations_project_<project_id>.csv` in DATS under Project Settings, Import, sentence annotations. Every annotator then finds their sentences in their own annotations under the code `SELECTED`. DATS up to v1.14.0 runs the span annotation import for this file and fails; the import needs a DATS version with that fixed.

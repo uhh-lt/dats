@@ -8,10 +8,7 @@ documents that were left out and the SHA-256 of the CSV.
 
 import argparse
 import csv
-import getpass
-import hashlib
 import json
-import os
 import re
 from concurrent.futures import ThreadPoolExecutor
 from dataclasses import dataclass, field
@@ -21,6 +18,7 @@ from typing import Any
 
 from dats_api import DATSAPI
 from loguru import logger
+from sampling_utils import connect, sha256_of
 from tqdm import tqdm
 
 DATA_DIR = Path(__file__).parent / "data"
@@ -121,14 +119,6 @@ def write_csv(
     return stats
 
 
-def sha256_of(path: Path) -> str:
-    digest = hashlib.sha256()
-    with path.open("rb") as f:
-        for chunk in iter(lambda: f.read(1 << 20), b""):
-            digest.update(chunk)
-    return digest.hexdigest()
-
-
 def main() -> None:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument(
@@ -158,12 +148,7 @@ def main() -> None:
         args.output or DATA_DIR / f"sentence_export_project_{args.project_id}.csv"
     )
     manifest_path = output.with_suffix(".manifest.json")
-    password = os.environ.get("DATS_PASSWORD") or getpass.getpass(
-        f"Password for {args.username}: "
-    )
-
-    api = DATSAPI(base_url=args.backend_url, username=args.username, password=password)
-    api.login()
+    api = connect(args.backend_url, args.username)
 
     # the year key must exist, otherwise every year would silently be empty
     metadata_keys = sorted(

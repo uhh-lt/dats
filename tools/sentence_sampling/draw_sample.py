@@ -8,7 +8,6 @@ weight it are written next to the export.
 """
 
 import argparse
-import hashlib
 import json
 import platform
 import re
@@ -17,6 +16,7 @@ from pathlib import Path
 import numpy as np
 import pandas as pd
 from loguru import logger
+from sampling_utils import sha256_of
 
 DEFAULT_PROXY_TERMS = Path(__file__).parent / "proxy_terms.json"
 DEFAULT_DECADES = [1880, 1890, 1900, 1910, 1920, 1930, 1940, 1950]
@@ -28,6 +28,7 @@ OUTPUT_COLUMNS = [
     "sentence_uid",
     "sdoc_id",
     "sentence_idx",
+    "sdoc_filename",
     "year",
     "decade",
     "n_words",
@@ -35,14 +36,6 @@ OUTPUT_COLUMNS = [
     "matched_proxy_terms",
     "sentence_text",
 ]
-
-
-def sha256_of(path: Path) -> str:
-    digest = hashlib.sha256()
-    with path.open("rb") as f:
-        for chunk in iter(lambda: f.read(1 << 20), b""):
-            digest.update(chunk)
-    return digest.hexdigest()
 
 
 def term_pattern(forms: list[str]) -> str:
@@ -61,7 +54,14 @@ def load_frame(
     the decades and at least min_words words."""
     df = pd.read_csv(
         path,
-        usecols=["sentence_uid", "sdoc_id", "sentence_idx", "year", "sentence_text"],
+        usecols=[
+            "sentence_uid",
+            "sdoc_id",
+            "sentence_idx",
+            "sdoc_filename",
+            "year",
+            "sentence_text",
+        ],
         # Python strings, so that matching uses Python's re on every machine (the
         # pyarrow string type would use RE2, whose \b differs)
         dtype=object,

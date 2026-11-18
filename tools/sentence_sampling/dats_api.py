@@ -101,6 +101,15 @@ class DATSAPI:
             return r.json()
         raise DATSAPIError(f"GET {path} failed after {MAX_ATTEMPTS} attempts")
 
+    # PROJECT
+
+    def read_project_users(self, project_id: int) -> list[dict[str, Any]]:
+        """The members and virtual users of the project."""
+        return self._get(f"user/{project_id}/user")
+
+    def read_project_codes(self, project_id: int) -> list[dict[str, Any]]:
+        return self._get(f"code/project/{project_id}")
+
     # PROJECT METADATA
 
     def read_all_project_metadata(self, project_id: int) -> list[dict[str, Any]]:
