@@ -80,6 +80,7 @@ from prompt_test_utils import (
     prompt_code,
 )
 from provenance_test_utils import (
+    ProvenanceProject,
     ProvenanceProjectWithCopies,
     create_provenance_copies,
     create_provenance_project,
@@ -229,6 +230,12 @@ def empty_description_projects(
     db_session.refresh(test_project)
 
     return {"project": test_project, "target_project": target_project}
+
+
+@pytest.fixture(scope="function")
+def provenance_project(db_session, test_user, project_with_sdoc) -> ProvenanceProject:
+    """The projects described in `ProvenanceProject`."""
+    return create_provenance_project(db_session, test_user, project_with_sdoc)
 
 
 @pytest.fixture(scope="function")

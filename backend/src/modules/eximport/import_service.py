@@ -32,6 +32,9 @@ from modules.eximport.prompts.import_prompts import (
     import_prompts_to_proj,
 )
 from modules.eximport.sdocs.import_sdocs import import_sdocs_to_proj
+from modules.eximport.sent_annotations.import_sentence_annotations import (
+    import_sentence_annotations_to_proj,
+)
 from modules.eximport.span_annotations.import_span_annotations import (
     import_span_annotations_to_proj,
 )
@@ -157,7 +160,7 @@ class ImportService(metaclass=SingletonMeta):
         """Import sent annotations to a project"""
         path_to_file = self.fsr.get_dst_path_for_temp_file(payload.file_name)
         df = read_import_csv(path_to_file)
-        import_span_annotations_to_proj(db=db, df=df, project_id=payload.project_id)
+        import_sentence_annotations_to_proj(db=db, df=df, project_id=payload.project_id)
 
     def _import_whiteboards_to_proj(
         self,
