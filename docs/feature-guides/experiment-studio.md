@@ -32,6 +32,8 @@ The gold annotator stays live: its annotations can still change, and the stored 
 - runs the LLM Assistant job of the prompt's task;
 - stores its agreement with the gold annotator (see [Annotator Agreement](analysis/annotator-agreement.md)) when it finishes, for both scorings, with the time it was computed.
 
+The LLM Assistant job saves its annotations batch by batch. A run that fails or is stopped therefore keeps the annotations of the documents it finished: its virtual user annotates only part of the run's documents, and the run stores no scores. Delete such a run and start it again to compare it with the others.
+
 The runs table shows all runs side by side: run name, prompt and version, model, status (queued, started, finished or failed), the overall precision, recall and F1 and the start time. Hover an F1 for its precision, recall and counts. More columns can be shown with the column button: the F1 of every code, the virtual user, who started the run, the end time, the last update and when the scores were computed. The toolbar also searches the runs, filters every column (the status by value, the scores by a range) and changes the density. The **Scoring** selector above the table switches between **Per word** (**Per sentence** for sentence annotation) and **Exact boundaries**; its menu explains both. Click the prompt of a run to open the prompt editor at the version the run used. **Refresh all runs** next to **Start new run** recomputes the stored scores of all finished runs at once, so all runs are scored against the same state of the gold annotator.
 
 The actions of a run:
