@@ -377,29 +377,43 @@ class JobService(metaclass=SingletonMeta):
 
     def remove_jobs_by_project(self, project_id: int) -> int:
         """Delete the queued jobs of the project and those in the registries.
-        A running job is stopped (`stop_job`) instead: its worker still holds
-        it and writes its end state, which then expires with its TTL."""
-        job_ids = {
-            job_id for queue in self.queues.values() for job_id in queue.get_job_ids()
-        }
+        A queued job is deleted only once it is taken off its queue, so a job
+        a worker dequeued in the meantime is not deleted under it. A running
+        job is stopped (`stop_job`) instead: its worker still holds it and
+        writes its end state, which then expires with its TTL."""
+        removed_jobs = 0
+        for queue in self.queues.values():
+            for job in self._read_project_jobs(queue.get_job_ids(), project_id):
+                # a worker dequeued the job in the meantime: it runs, and the
+                # registries below stop it if it started already
+                if not queue.remove(job.id):
+                    continue
+                job.delete()
+                removed_jobs += 1
+
         for registries in self.registries.values():
             for registry in registries.values():
-                job_ids.update(registry.get_job_ids())
+                for job in self._read_project_jobs(registry.get_job_ids(), project_id):
+                    if job.is_started:
+                        self.stop_job(job.id)
+                        continue
+                    job.delete()
+                    removed_jobs += 1
 
-        removed_jobs = 0
+        logger.info(f"Removed {removed_jobs} jobs for project {project_id}")
+        return removed_jobs
+
+    def _read_project_jobs(
+        self, job_ids: list[str], project_id: int
+    ) -> list[rq.job.Job]:
+        """The jobs of `job_ids` that belong to the project."""
+        jobs = []
         for job_id in job_ids:
             try:
                 job = rq.job.Job.fetch(job_id, connection=self.redis_conn)
             except NoSuchJobError:
-                # the job expired and only its id was left in a registry
+                # the job was deleted or expired, only its id was left
                 continue
-            if job.meta.get("project_id") != project_id:
-                continue
-            if job.is_started:
-                self.stop_job(job.id)
-                continue
-            job.delete()
-            removed_jobs += 1
-
-        logger.info(f"Removed {removed_jobs} jobs for project {project_id}")
-        return removed_jobs
+            if job.meta.get("project_id") == project_id:
+                jobs.append(job)
+        return jobs
