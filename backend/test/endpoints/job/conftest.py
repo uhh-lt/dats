@@ -3,6 +3,7 @@ from collections.abc import Generator
 
 import pytest
 import rq
+from rq.registry import StartedJobRegistry
 
 from core.user.user_orm import UserORM
 from feature_test_utils import FeaturelessProject, create_featureless_project
@@ -97,5 +98,51 @@ def failing_job_type() -> Generator[str, None, None]:
     publishes no updates. The fixture removes the job type again."""
     job_type = "test_failing"
     register_job(job_type=job_type, input_type=JobInputBase, device="api")(_fail)
+    yield job_type
+    JobService().job_registry.pop(job_type)
+
+
+def expires_at(registry: StartedJobRegistry, job_id: str) -> float:
+    """When the entry of the job in the started registry expires, unless its
+    worker renews it (a timestamp)."""
+    entries = [
+        f"{entry_job_id}:{execution_id}"
+        for entry_job_id, execution_id in registry.get_job_and_execution_ids(
+            cleanup=False
+        )
+        if entry_job_id == job_id
+    ]
+    assert len(entries) == 1, entries
+    connection = registry.connection
+    assert connection is not None
+    score = connection.zscore(registry.key, entries[0])
+    assert score is not None
+    return float(score)
+
+
+# how long a heartbeat job runs, a few monitoring intervals of the held jobs
+HEARTBEAT_JOB_SECONDS = 3
+
+
+# module-level: RQ pickles a job's handler by reference
+def _record_heartbeats(payload: JobInputBase, job: Job) -> None:
+    registry = StartedJobRegistry(name=job.job.origin, connection=job.job.connection)
+    heartbeats = [(time.time(), expires_at(registry, job.get_id()))]
+    time.sleep(HEARTBEAT_JOB_SECONDS)
+    heartbeats.append((time.time(), expires_at(registry, job.get_id())))
+    job.job.meta["heartbeats"] = heartbeats
+    job.job.save_meta()
+
+
+@pytest.fixture(scope="function")
+def heartbeat_job_type() -> Generator[str, None, None]:
+    """A job type (`test_heartbeat`) whose job runs for `HEARTBEAT_JOB_SECONDS`
+    and stores in its meta (`heartbeats`) when its entry in the started registry
+    expires, as (now, expires at), at its start and its end. It publishes no
+    updates. The fixture removes the job type again."""
+    job_type = "test_heartbeat"
+    register_job(job_type=job_type, input_type=JobInputBase, device="api")(
+        _record_heartbeats
+    )
     yield job_type
     JobService().job_registry.pop(job_type)
