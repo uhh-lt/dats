@@ -56,11 +56,15 @@ FACT_ANSWER = '{"data": [{"sent_id": 1, "category": "FACT"}]}'
 class FakeLLM:
     """Answers every message with `FACT_ANSWER`, or fails a whole request batch
     that holds a message of a document in `failing`. A message of a document in
-    `unparseable` gets an answer that cannot be parsed. Records the documents of
-    the messages it was asked, in order."""
+    `down` fails alone because the LLM is unavailable (unreachable), one in
+    `rejected` fails alone because of the request (e.g. it exceeds the context
+    window), and one in `unparseable` gets an answer that cannot be parsed.
+    Records the documents of the messages it was asked, in order."""
 
     def __init__(self) -> None:
         self.failing: set[str] = set()
+        self.down: set[str] = set()
+        self.rejected: set[str] = set()
         self.unparseable: set[str] = set()
         self.asked: list[str] = []
 
@@ -78,15 +82,26 @@ class FakeLLM:
         self.asked.extend(documents)
         if self.failing.intersection(documents):
             raise RuntimeError("The LLM is down")
-        return [
-            LLMBatchChatResponse(raw="no answer", error="Failed to parse LLM response")
-            if document in self.unparseable
-            else LLMBatchChatResponse(
-                raw=FACT_ANSWER,
-                parsed=response_model.model_validate_json(FACT_ANSWER),
+        return [self._answer(document, response_model) for document in documents]
+
+    def _answer(
+        self, document: str, response_model: type[BaseModel]
+    ) -> LLMBatchChatResponse:
+        if document in self.down:
+            return LLMBatchChatResponse(
+                raw=None, error="LLM request failed: unreachable", unavailable=True
             )
-            for document in documents
-        ]
+        if document in self.rejected:
+            return LLMBatchChatResponse(
+                raw=None, error="LLM request failed: context window exceeded"
+            )
+        if document in self.unparseable:
+            return LLMBatchChatResponse(
+                raw="no answer", error="Failed to parse LLM response"
+            )
+        return LLMBatchChatResponse(
+            raw=FACT_ANSWER, parsed=response_model.model_validate_json(FACT_ANSWER)
+        )
 
 
 def _fake_llm(monkeypatch: pytest.MonkeyPatch) -> FakeLLM:
@@ -381,45 +396,6 @@ def test_a_retry_of_a_stopped_job_continues_after_its_committed_batches(
     ] * 3
 
 
-def test_a_retry_processes_the_documents_with_an_error_result_again(
-    client: TestClient,
-    job_prompt_project: JobPromptProject,
-    held_jobs: HeldJobs,
-    monkeypatch: pytest.MonkeyPatch,
-) -> None:
-    """The first attempt saves an error result for the example document (its
-    answer cannot be parsed) and fails at the third document; the example
-    document saved nothing, so the retry asks the LLM for it again, and for the
-    third document, and finishes with the results of all three."""
-    base = job_prompt_project["base"]
-    fact_id = base["fact_code"].id
-    fake = _fake_llm(monkeypatch)
-    fake.unparseable = {EXAMPLE}
-    fake.failing = {NO_MATCH}
-    job_id = _start_sentence_job(client, job_prompt_project)
-    held_jobs.run("llm_assistant")
-    assert _read_job(client, job_id).status == JobStatus.FAILED
-    assert _run_a_annotations(client, job_prompt_project, EXAMPLE) == []
-    fake.unparseable = set()
-    fake.failing = set()
-    fake.asked.clear()
-
-    response = client.post(f"{LLM_ASSISTANT_JOB_URL}/{job_id}/retry")
-    assert response.status_code == 200, response.text
-    held_jobs.run("llm_assistant")
-
-    job = _read_job(client, job_id)
-    assert job.status == JobStatus.FINISHED, job.status_message
-    assert fake.asked == [EXAMPLE, NO_MATCH]
-    assert _ranges(_run_a_annotations(client, job_prompt_project, EXAMPLE)) == [
-        (0, 0, fact_id)
-    ]
-    assert job.output is not None
-    assert [result.status for result in job.output.specific_task_result.results] == [
-        "finished"
-    ] * 3
-
-
 def _checkpoint_ttl(job_id: str) -> int:
     """The seconds until the job's checkpoint expires (-1: never, -2: none)."""
     job = JobService().get_job(job_id)
@@ -583,6 +559,110 @@ def test_a_job_without_documents_finishes_without_results(
     assert _results(job) == []
 
 
+def test_a_batch_for_which_the_llm_was_unavailable_fails_the_job_before_it_is_saved(
+    client: TestClient,
+    job_prompt_project: JobPromptProject,
+    held_jobs: HeldJobs,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """The LLM is unavailable for every request of the third batch (it is
+    down): the job fails with the reason before the batch is saved or recorded,
+    the first two batches keep their annotations, and a retry continues with
+    the third document."""
+    base = job_prompt_project["base"]
+    fact_id = base["fact_code"].id
+    fake = _fake_llm(monkeypatch)
+    fake.down = {NO_MATCH}
+
+    job_id = _start_sentence_job(client, job_prompt_project)
+    held_jobs.run("llm_assistant")
+
+    job = _read_job(client, job_id)
+    assert job.status == JobStatus.FAILED
+    assert job.status_message == (
+        "All 1 LLM requests of a batch of documents failed, the LLM may be "
+        "unreachable. First error: LLM request failed: unreachable"
+    )
+    assert len(JobService().get_job(job_id).read_checkpoint()) == 2
+    for document in (TARGET, EXAMPLE):
+        annotations = _run_a_annotations(client, job_prompt_project, document)
+        assert _ranges(annotations) == [(0, 0, fact_id)]
+
+    fake.down = set()
+    fake.asked.clear()
+    response = client.post(f"{LLM_ASSISTANT_JOB_URL}/{job_id}/retry")
+    assert response.status_code == 200, response.text
+    held_jobs.run("llm_assistant")
+
+    assert _read_job(client, job_id).status == JobStatus.FINISHED
+    assert fake.asked == [NO_MATCH]
+
+
+def test_a_batch_whose_requests_partly_failed_saves_an_error_result(
+    client: TestClient,
+    job_prompt_project: JobPromptProject,
+    held_jobs: HeldJobs,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """All three documents are one batch and the LLM answers no request of the
+    example document: the batch is saved with an error result for it, and the
+    job finishes."""
+    base = job_prompt_project["base"]
+    fake = _fake_llm(monkeypatch)
+    monkeypatch.setattr(llm_assistant_document_processor, "DOCUMENT_BATCH_SIZE", 3)
+    fake.down = {EXAMPLE}
+
+    job_id = _start_sentence_job(client, job_prompt_project)
+    held_jobs.run("llm_assistant")
+
+    job = _read_job(client, job_id)
+    assert job.status == JobStatus.FINISHED, job.status_message
+    assert [(sdoc_id, status) for sdoc_id, status, _ in _results(job)] == [
+        (base["target_sdoc"].id, "finished"),
+        (base["example_sdoc"].id, "error"),
+        (base["no_match_sdoc"].id, "finished"),
+    ]
+
+
+def test_a_retry_processes_the_documents_with_an_error_result_again(
+    client: TestClient,
+    job_prompt_project: JobPromptProject,
+    held_jobs: HeldJobs,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """The first attempt saves an error result for the example document (its
+    answer cannot be parsed) and fails at the third document; the example
+    document saved nothing, so the retry asks the LLM for it again, and for the
+    third document, and finishes with the results of all three."""
+    base = job_prompt_project["base"]
+    fact_id = base["fact_code"].id
+    fake = _fake_llm(monkeypatch)
+    fake.unparseable = {EXAMPLE}
+    fake.failing = {NO_MATCH}
+    job_id = _start_sentence_job(client, job_prompt_project)
+    held_jobs.run("llm_assistant")
+    assert _read_job(client, job_id).status == JobStatus.FAILED
+    assert _run_a_annotations(client, job_prompt_project, EXAMPLE) == []
+    fake.unparseable = set()
+    fake.failing = set()
+    fake.asked.clear()
+
+    response = client.post(f"{LLM_ASSISTANT_JOB_URL}/{job_id}/retry")
+    assert response.status_code == 200, response.text
+    held_jobs.run("llm_assistant")
+
+    job = _read_job(client, job_id)
+    assert job.status == JobStatus.FINISHED, job.status_message
+    assert fake.asked == [EXAMPLE, NO_MATCH]
+    assert _ranges(_run_a_annotations(client, job_prompt_project, EXAMPLE)) == [
+        (0, 0, fact_id)
+    ]
+    assert job.output is not None
+    assert [result.status for result in job.output.specific_task_result.results] == [
+        "finished"
+    ] * 3
+
+
 def test_a_timeout_while_a_document_is_processed_fails_the_job(
     client: TestClient,
     job_prompt_project: JobPromptProject,
@@ -616,3 +696,37 @@ def test_a_timeout_while_a_document_is_processed_fails_the_job(
     target = _run_a_annotations(client, job_prompt_project, TARGET)
     assert _ranges(target) == [(0, 0, fact_id)]
     assert _run_a_annotations(client, job_prompt_project, EXAMPLE) == []
+
+
+def test_a_batch_whose_requests_all_were_rejected_saves_error_results(
+    client: TestClient,
+    job_prompt_project: JobPromptProject,
+    held_jobs: HeldJobs,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """Every request of the second batch fails because of the request itself
+    (e.g. the context window), not because the LLM is unavailable: it would fail
+    on every attempt, so the batch is saved with an error result for its
+    document and the job finishes."""
+    base = job_prompt_project["base"]
+    fake = _fake_llm(monkeypatch)
+    fake.rejected = {EXAMPLE}
+
+    job_id = _start_sentence_job(client, job_prompt_project)
+    held_jobs.run("llm_assistant")
+
+    job = _read_job(client, job_id)
+    assert job.status == JobStatus.FINISHED, job.status_message
+    assert job.output is not None
+    assert [
+        (result.sdoc_id, result.status, result.status_message)
+        for result in job.output.specific_task_result.results
+    ] == [
+        (base["target_sdoc"].id, "finished", "Sentence annotation successful"),
+        (
+            base["example_sdoc"].id,
+            "error",
+            "LLM request failed: context window exceeded",
+        ),
+        (base["no_match_sdoc"].id, "finished", "Sentence annotation successful"),
+    ]

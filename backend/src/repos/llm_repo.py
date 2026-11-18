@@ -3,6 +3,7 @@ from typing import Generic, Type, TypeVar
 from uuid import uuid4
 
 import numpy as np
+import openai
 from litellm import batch_completion
 from loguru import logger
 from openai import OpenAI
@@ -26,6 +27,9 @@ class LLMBatchChatResponse(Generic[T]):
 
     Either `parsed` (the validated response model) or `error` is set.
     `raw` always contains the raw response content (or error details).
+    `unavailable` tells a failed request whose LLM could not answer it now (it
+    could not be reached, timed out or failed with a server error) from one
+    that fails on every attempt (e.g. an exceeded context window).
     """
 
     def __init__(
@@ -34,10 +38,12 @@ class LLMBatchChatResponse(Generic[T]):
         raw: str | None,
         parsed: T | None = None,
         error: str | None = None,
+        unavailable: bool = False,
     ):
         self.raw = raw
         self.parsed = parsed
         self.error = error
+        self.unavailable = unavailable
 
     @property
     def is_error(self) -> bool:
@@ -282,6 +288,17 @@ class LLMRepo(RepoBase, metaclass=SingletonMeta):
 
         return response_model.model_validate_json(msg.content)
 
+    @staticmethod
+    def is_unavailable(error: Exception) -> bool:
+        """Whether a request failed because the LLM could not answer it now: it
+        could not be reached, timed out (`openai.APIConnectionError`, which
+        litellm's errors extend) or failed with a server error (5xx). Other
+        errors (4xx, e.g. an exceeded context window) fail on every attempt."""
+        if isinstance(error, openai.APIConnectionError):
+            return True
+        status_code = getattr(error, "status_code", None)
+        return isinstance(status_code, int) and status_code >= 500
+
     def llm_batch_chat(
         self,
         model: str,
@@ -345,7 +362,9 @@ class LLMRepo(RepoBase, metaclass=SingletonMeta):
                 if capture_raw:
                     responses.append(
                         LLMBatchChatResponse(
-                            raw=None, error=f"LLM request failed: {response}"
+                            raw=None,
+                            error=f"LLM request failed: {response}",
+                            unavailable=self.is_unavailable(response),
                         )
                     )
                     continue

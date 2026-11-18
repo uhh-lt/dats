@@ -11,6 +11,7 @@ from core.doc.source_document_data_crud import crud_sdoc_data
 from core.doc.source_document_data_orm import SourceDocumentDataORM
 from modules.llm_assistant.llm_assistant_exceptions import (
     LLMAssistantBatchProcessingError,
+    LLMAssistantRequestsFailedError,
 )
 from modules.llm_assistant.strategies.llm_assistant_strategy import LLMAssistantStrategy
 from repos.db.sql_repo import SQLRepo
@@ -57,6 +58,23 @@ class LLMAssistantDocumentBatch(Generic[ResponseT]):
     missing_sdoc_ids: list[int]
 
 
+def _raise_if_all_requests_failed(
+    documents: list[LLMAssistantDocumentResponse[ResponseT]],
+) -> None:
+    """Raise `LLMAssistantRequestsFailedError` if the documents of a batch have
+    responses and the LLM was unavailable for all of them (connection errors,
+    timeouts, server errors): saving error results would burn through the
+    whole corpus. A request that fails on every attempt (e.g. an exceeded
+    context window) or an answer that cannot be parsed becomes an error result
+    of its document."""
+    responses = [item.response for document in documents for item in document.responses]
+    if not responses or not all(response.unavailable for response in responses):
+        return
+    raise LLMAssistantRequestsFailedError(
+        num_requests=len(responses), first_error=responses[0].error or "unknown"
+    )
+
+
 class LLMAssistantDocumentProcessor:
     """Generate and batch LLM requests while preserving document boundaries."""
 
@@ -88,7 +106,9 @@ class LLMAssistantDocumentProcessor:
         """Yield the documents in batches of `DOCUMENT_BATCH_SIZE`, in the order of
         `sdoc_ids`, each document with the responses to all its prompts, and the
         documents of the batch that no longer exist. The prompts of a batch are
-        sent in bounded batches of LLM requests."""
+        sent in bounded batches of LLM requests. Raises
+        `LLMAssistantRequestsFailedError` before it yields a batch whose requests
+        all failed without a response."""
         total_documents = len(sdoc_ids)
         processed_documents = 0
         completed_requests = 0
@@ -143,13 +163,15 @@ class LLMAssistantDocumentProcessor:
                     )
                 completed_requests += len(chunk)
 
+            documents = [
+                LLMAssistantDocumentResponse(
+                    sdoc_data=sdoc_data, responses=responses_by_sdoc[sdoc_data.id]
+                )
+                for sdoc_data in sdoc_datas
+            ]
+            _raise_if_all_requests_failed(documents)
             yield LLMAssistantDocumentBatch(
-                documents=[
-                    LLMAssistantDocumentResponse(
-                        sdoc_data=sdoc_data, responses=responses_by_sdoc[sdoc_data.id]
-                    )
-                    for sdoc_data in sdoc_datas
-                ],
+                documents=documents,
                 missing_sdoc_ids=[
                     sdoc_id
                     for sdoc_id in batch_sdoc_ids

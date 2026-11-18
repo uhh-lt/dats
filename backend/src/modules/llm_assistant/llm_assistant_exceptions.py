@@ -32,6 +32,19 @@ class LLMAssistantBatchProcessingError(Exception):
         self.raw_response = raw_response
 
 
+class LLMAssistantRequestsFailedError(Exception):
+    """Raised when the LLM was unavailable for every request of a batch of
+    documents (it could not be reached, timed out or failed with a server
+    error): the job fails before the batch is saved, instead of saving error
+    results for the whole corpus. A retry continues with that batch."""
+
+    def __init__(self, num_requests: int, first_error: str) -> None:
+        super().__init__(
+            f"All {num_requests} LLM requests of a batch of documents failed, "
+            f"the LLM may be unreachable. First error: {first_error}"
+        )
+
+
 @exception_handler(status.HTTP_400_BAD_REQUEST)
 class LLMAssistantDocumentsNotInProjectError(Exception):
     """Raised when an LLM Assistant job is started with documents of another
