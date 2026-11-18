@@ -22,6 +22,9 @@ import { promptQueries } from "./api/promptQueries";
 import { PromptPage } from "./PromptPage";
 import { getDocumentUnit, getErrorMessage, PROMPT_TEXT_STYLE } from "./promptUtils";
 
+// the documents the document picker lists; each loads its name, and a run may select thousands
+const MAX_LISTED_DOCUMENTS = 100;
+
 /** A stored version (with its prompt text), or an unsaved draft. */
 export type PromptPreviewSource = { versionId: number; text: string } | { draft: PromptSnapshot };
 
@@ -60,6 +63,7 @@ export function PromptPreview({ projectId, sdocIds, source, toolbarStart, varian
     [projectId, source, sdocId, messageIndex],
   );
   const preview = useQuery(promptQueries.preview(request));
+  const listedSdocIds = useMemo(() => sdocIds.slice(0, MAX_LISTED_DOCUMENTS), [sdocIds]);
   const numMessages = preview.data?.num_messages ?? 0;
 
   const handleChangeDocument = useCallback((event: ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
@@ -84,11 +88,16 @@ export function PromptPreview({ projectId, sdocIds, source, toolbarStart, varian
         {sdocIds.length === 0 ? (
           <MenuItem value="">No documents selected</MenuItem>
         ) : (
-          sdocIds.map((id) => (
+          listedSdocIds.map((id) => (
             <MenuItem key={id} value={id}>
               <SdocRenderer sdoc={id} renderName />
             </MenuItem>
           ))
+        )}
+        {sdocIds.length > listedSdocIds.length && (
+          <MenuItem disabled>
+            The first {listedSdocIds.length} of {sdocIds.length} documents
+          </MenuItem>
         )}
       </TextField>
       {isPerSentence && sdocId !== undefined && (
