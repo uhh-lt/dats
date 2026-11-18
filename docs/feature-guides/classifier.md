@@ -14,6 +14,8 @@ This opens a split-screen dashboard:
 - **Top Panel (Trained Classifiers):** A list of all models previously trained in this project, showing their name, type, targeted codes, and creation date. Here you can expand a model to view its stats, run an Evaluation, or trigger an Inference job.
 - **Bottom Panel (Job Progress):** A queue displaying currently running training/inference jobs and a history of previous jobs.
 
+In the job panel, **Abort the job** stops a started classifier job, and **Retry the job** requeues a failed or stopped job.
+
 ![Classifier View](../assets/classifier-view.png)
 
 _Manage your custom machine learning models and monitor training jobs from the Classifier Dashboard._

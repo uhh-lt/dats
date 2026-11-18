@@ -66,7 +66,7 @@ Choose the language model and how the assistant works:
 
 ### Step 4: Review the Prompt
 
-The **preview** shows exactly what the AI receives: the built-in default prompt of the task, output format and language with your selections. Built-in prompts cannot be edited; every project has a copy of each on the Prompts page (e.g. `default-span-annotation-inline-tagging-en`), which you can edit and run with **Prompt**. Pick one of the selected documents; a prompt sent sentence by sentence can step through its sentences. Guided runs are zero-shot; for few-shot examples and your own prompt texts, write a [prompt](prompts.md) and run it with **Prompt**.
+The **preview** shows exactly what the AI receives: the built-in default prompt of the task, output format and language with your selections. Built-in prompts cannot be edited; every project has a copy of each on the Prompts page (e.g. `default-span-annotation-inline-tagging-en`), which you can edit and run with **Prompt**. Pick one of the selected documents; a prompt sent sentence by sentence can step through its sentences. If more than 100 documents are selected, the preview's document selector lists only the first 100; the job still processes every selected document. Guided runs are zero-shot; for few-shot examples and your own prompt texts, write a [prompt](prompts.md) and run it with **Prompt**.
 
 For span and sentence annotation you also choose whom the assistant **annotates as**: an existing [virtual user](project-view.md#virtual-users-tab) of the project, or a new one you name here (proposed: the next free `LLM-Run<n>`). The assistant never writes into your own annotations. Use a new virtual user per run to compare runs, models or prompts with each other and with your team in the compare view and the agreement evaluation.
 
@@ -79,17 +79,21 @@ If the selected virtual user already annotated the selected documents with the s
 Click **Start!** The dialog will close, and the job will run asynchronously in the background. You are free to continue reading or analyzing other documents while the AI works.
 
 - To check the progress, simply click the Robot icon again to open the dialog and look at the **Previous LLM Assistant Jobs** list at the bottom of the welcome screen.
+- **Abort the job** stops a started job. **Retry the job** requeues a failed or stopped job.
+- The assistant saves results batch by batch, so a stop or failure does not roll back results saved by earlier batches. A retry continues from the last checkpoint and skips documents whose results were already saved as finished or partial; documents with error results are processed again.
+- A deleted document or one whose processing fails receives an error result; the other documents of its batch are still saved. If the LLM is unavailable for every request in a batch, the job fails before saving that batch and can be retried.
+- Once the job is finished, open it to see the results.
 
 ## 6\. Reviewing and Applying Results
 
 ![LLM Assistant Step 6](../assets/llm-assistant-step6.png)
 
-Because qualitative research requires human oversight, DATS **never** applies AI annotations directly to your project without your permission.
+Because qualitative research requires human oversight, annotation jobs write their suggestions into the **virtual user** you selected, never into your own annotations.
 
-1. Once a job is finished, open the LLM Assistant dialog and click **View Results** next to the completed job.
-2. You will be presented with a review screen showing the document text with all of the AI's suggestions highlighted.
-3. **Human-in-the-Loop:** You can click on any AI suggestion to modify it. You can delete an incorrect suggestion or change its assigned code.
-4. Once you are satisfied with the AI's work, click **Apply Annotations!**.
+1. Once a job is finished, open the LLM Assistant dialog and open its results from the **Previous LLM Assistant Jobs** list.
+2. The summary shows how many documents were annotated and how many annotations were created. Expand a document to see its status and annotation counts per code. Error and partial results also include error details and, when available, the raw responses of failed requests; long raw responses are truncated.
+3. Click **Open first document** to review the suggestions in the Annotation View. Use **Compare with** to select the virtual user and compare its suggestions with your own annotations.
+4. Apply the suggestions you validate to your own annotations in the comparison view.
 
 ![LLM Assistant Result](../assets/annotation-compare-view.png)
 _(Note: AI-generated annotations belong to the virtual user you chose, so they are always distinguishable from your own manual coding in the analysis views!)_
