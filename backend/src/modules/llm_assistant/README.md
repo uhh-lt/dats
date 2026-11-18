@@ -32,15 +32,17 @@ The module runs prompts (`core/prompt`, see its README) on documents. A prompt d
 
 A **task** describes **WHAT** the LLM assistant does. `LLMAssistantTask.execute()` is a final Template Method that always runs the same lifecycle:
 
-1. Initialize the job and create its execution context.
-2. Run the optional task-specific `_prepare()` hook.
-3. Ask `LLMAssistantDocumentProcessor` to generate and batch the actual LLM requests.
-4. Pass each complete document response to `_process_document()`.
+1. Initialize the job.
+2. Run the optional task-specific `_prepare()` hook in a transaction of its own, committed before the first LLM request.
+3. Ask `LLMAssistantDocumentProcessor` for the documents in batches, each document with the responses to all its LLM requests.
+4. Pass each document of a batch to `_process_document()`, in one transaction per batch, committed once its documents are done.
 5. Pass all document results to `_build_result()` and wrap them in the job output with the approach.
+
+No transaction stays open across the LLM requests of the whole job: a failure or a stop loses the batch in progress only, the earlier batches keep their annotations and reasoning memos.
 
 Concrete tasks implement `_get_response_model()`, `_process_document()` and `_build_result()`. They override `_prepare()` only when setup such as deleting prior annotations is required.
 
-`LLMAssistantDocumentProcessor` owns the batching mechanics. It loads documents incrementally and batches actual prompt requests rather than documents. A strategy may yield one or many prompts per document; responses retain their document and message (sentence/chunk) identity and are delivered to tasks only when the document is complete.
+`LLMAssistantDocumentProcessor` owns the batching mechanics. It reads the documents of a batch (`llm_assistant.document_read_batch_size`) in a short transaction of its own and sends their prompts in bounded batches of LLM requests (`llm_assistant.request_batch_size`). A strategy may yield one or many prompts per document; responses retain their document and message (sentence/chunk) identity and are delivered to tasks only when the document is complete.
 
 | Task                     | File                          | Description                          |
 | ------------------------ | ----------------------------- | ------------------------------------ |

@@ -5,7 +5,6 @@ from typing import Generic, Type, TypeVar
 
 from loguru import logger
 from pydantic import BaseModel
-from sqlalchemy.orm import Session
 
 from config import conf
 from core.doc.source_document_data_crud import crud_sdoc_data
@@ -14,10 +13,12 @@ from modules.llm_assistant.llm_assistant_exceptions import (
     LLMAssistantBatchProcessingError,
 )
 from modules.llm_assistant.strategies.llm_assistant_strategy import LLMAssistantStrategy
+from repos.db.sql_repo import SQLRepo
 from repos.llm_repo import LLMBatchChatResponse, LLMMessage, LLMRepo
 
 LLM_REQUEST_BATCH_SIZE = conf.llm_assistant.request_batch_size
-DOCUMENT_READ_BATCH_SIZE = conf.llm_assistant.document_read_batch_size
+# the documents read, processed and committed together
+DOCUMENT_BATCH_SIZE = conf.llm_assistant.document_read_batch_size
 
 ResponseT = TypeVar("ResponseT", bound=BaseModel)
 ProgressCallback = Callable[[int, int, int], None]
@@ -54,33 +55,34 @@ class LLMAssistantDocumentProcessor:
     def __init__(self, llm: LLMRepo):
         self.llm = llm
 
-    def _iter_sdoc_datas(
-        self, db: Session, sdoc_ids: list[int]
-    ) -> Iterator[SourceDocumentDataORM]:
-        """Load source-document data incrementally in bounded database batches."""
-        for start in range(0, len(sdoc_ids), DOCUMENT_READ_BATCH_SIZE):
-            yield from crud_sdoc_data.read_by_ids(
-                db=db,
-                ids=sdoc_ids[start : start + DOCUMENT_READ_BATCH_SIZE],
-            )
+    @staticmethod
+    def _read_documents(
+        sqlr: SQLRepo, sdoc_ids: list[int]
+    ) -> list[SourceDocumentDataORM]:
+        """Read the data of documents in a short transaction of its own. The
+        documents are detached with their loaded columns, so they stay readable
+        once it closed: no transaction stays open during the LLM requests."""
+        with sqlr.transaction() as db:
+            sdoc_datas = crud_sdoc_data.read_by_ids(db=db, ids=sdoc_ids)
+            db.expunge_all()
+        return sdoc_datas
 
     def process(
         self,
         *,
         model: str,
         strategy: LLMAssistantStrategy,
-        db: Session,
+        sqlr: SQLRepo,
         sdoc_ids: list[int],
         response_model: Type[ResponseT],
         on_progress: ProgressCallback,
-    ) -> Iterator[LLMAssistantDocumentResponse[ResponseT]]:
-        """Yield complete document responses from bounded batches of LLM requests."""
-        pending_work: list[LLMAssistantWorkItem] = []
-        responses_by_sdoc: dict[int, list[LLMAssistantResponseItem[ResponseT]]] = {}
-        completed_documents: list[SourceDocumentDataORM] = []
+    ) -> Iterator[list[LLMAssistantDocumentResponse[ResponseT]]]:
+        """Yield the documents in batches of `DOCUMENT_BATCH_SIZE`, in the order of
+        `sdoc_ids`, each document with the responses to all its prompts. The
+        prompts of a batch are sent in bounded batches of LLM requests."""
+        total_documents = len(sdoc_ids)
         processed_documents = 0
         completed_requests = 0
-        total_documents = len(sdoc_ids)
         submitted_batches = 0
 
         logger.info(
@@ -89,129 +91,105 @@ class LLMAssistantDocumentProcessor:
             LLM_REQUEST_BATCH_SIZE,
         )
 
-        def submit_pending_work() -> None:
-            """Submit and record the current bounded batch of LLM requests."""
-            nonlocal completed_requests, submitted_batches
-            if len(pending_work) == 0:
-                return
-
-            submitted_batches += 1
-            request_count = len(pending_work)
-            document_count = len({work.sdoc_id for work in pending_work})
-            logger.info(
-                "Submitting LLM batch {} with {} prompt(s) for {} document(s).",
-                submitted_batches,
-                request_count,
-                document_count,
+        for start in range(0, total_documents, DOCUMENT_BATCH_SIZE):
+            sdoc_datas = self._read_documents(
+                sqlr=sqlr, sdoc_ids=sdoc_ids[start : start + DOCUMENT_BATCH_SIZE]
             )
-            started_at = monotonic()
-            batch_responses = self.llm.llm_batch_chat(
-                model=model,
-                messages=[work.message for work in pending_work],
-                response_model=response_model,
-                capture_raw=True,
-            )
-            if len(batch_responses) != len(pending_work):
-                raise LLMAssistantBatchProcessingError(
-                    "The LLM returned a different number of responses than requests"
+            work: list[LLMAssistantWorkItem] = []
+            for sdoc_data in sdoc_datas:
+                prompts = list(strategy.generate_prompts(sdoc_data=sdoc_data))
+                logger.info(
+                    "Split document {} into {} prompt(s).",
+                    sdoc_data.id,
+                    len(prompts),
                 )
-
-            response_debug_entries: list[str] = []
-            for work, response in zip(pending_work, batch_responses):
-                response_debug_entries.append(
-                    f"--- Document {work.sdoc_id}, prompt chunk {work.message_id} ---\n"
-                    f"Error: {response.error or '<none>'}\n"
-                    f"Raw:\n{response.raw or '<none>'}"
-                )
-                responses_by_sdoc.setdefault(work.sdoc_id, []).append(
-                    LLMAssistantResponseItem(
-                        message_id=work.message_id,
-                        response=response,
-                    )
-                )
-            logger.debug(
-                "--- LLM responses for batch {} ---\n{}\n--- End LLM responses ---",
-                submitted_batches,
-                "\n\n".join(response_debug_entries),
-            )
-            failed_requests = sum(response.is_error for response in batch_responses)
-            logger.info(
-                "Completed LLM batch {} in {:.2f}s: {} successful, {} failed request(s).",
-                submitted_batches,
-                monotonic() - started_at,
-                request_count - failed_requests,
-                failed_requests,
-            )
-            completed_requests += request_count
-            pending_work.clear()
-            on_progress(
-                processed_documents,
-                total_documents,
-                completed_requests,
-            )
-
-        def take_completed_documents() -> list[LLMAssistantDocumentResponse[ResponseT]]:
-            """Collect responses for documents whose prompts have all been generated."""
-            nonlocal completed_documents
-            result = [
-                LLMAssistantDocumentResponse(
-                    sdoc_data=sdoc_data,
-                    responses=responses_by_sdoc.pop(sdoc_data.id, []),
-                )
-                for sdoc_data in completed_documents
-            ]
-            completed_documents = []
-            return result
-
-        def yield_completed_documents() -> Iterator[
-            LLMAssistantDocumentResponse[ResponseT]
-        ]:
-            """Yield completed documents and report progress after each is consumed."""
-            nonlocal processed_documents
-            for document_response in take_completed_documents():
-                yield document_response
-                processed_documents += 1
-                on_progress(
-                    processed_documents,
-                    total_documents,
-                    completed_requests,
-                )
-
-        for sdoc_data in self._iter_sdoc_datas(db=db, sdoc_ids=sdoc_ids):
-            prompt_count = 0
-            for message_id, prompt in enumerate(
-                strategy.generate_prompts(sdoc_data=sdoc_data)
-            ):
-                prompt_count += 1
-                pending_work.append(
+                work.extend(
                     LLMAssistantWorkItem(
-                        sdoc_id=sdoc_data.id,
-                        message_id=message_id,
-                        message=prompt,
+                        sdoc_id=sdoc_data.id, message_id=message_id, message=prompt
                     )
+                    for message_id, prompt in enumerate(prompts)
                 )
-                if len(pending_work) < LLM_REQUEST_BATCH_SIZE:
-                    continue
 
-                submit_pending_work()
-                yield from yield_completed_documents()
+            responses_by_sdoc: dict[int, list[LLMAssistantResponseItem[ResponseT]]] = {
+                sdoc_data.id: [] for sdoc_data in sdoc_datas
+            }
+            for chunk_start in range(0, len(work), LLM_REQUEST_BATCH_SIZE):
+                submitted_batches += 1
+                chunk = work[chunk_start : chunk_start + LLM_REQUEST_BATCH_SIZE]
+                responses = self._submit(
+                    model=model,
+                    work=chunk,
+                    response_model=response_model,
+                    batch_number=submitted_batches,
+                )
+                for item, response in zip(chunk, responses):
+                    responses_by_sdoc[item.sdoc_id].append(
+                        LLMAssistantResponseItem(
+                            message_id=item.message_id, response=response
+                        )
+                    )
+                completed_requests += len(chunk)
+                on_progress(processed_documents, total_documents, completed_requests)
 
-            logger.info(
-                "Split document {} into {} prompt(s).",
-                sdoc_data.id,
-                prompt_count,
-            )
-            completed_documents.append(sdoc_data)
-            if len(pending_work) > 0:
-                continue
+            yield [
+                LLMAssistantDocumentResponse(
+                    sdoc_data=sdoc_data, responses=responses_by_sdoc[sdoc_data.id]
+                )
+                for sdoc_data in sdoc_datas
+            ]
+            processed_documents += len(sdoc_datas)
+            on_progress(processed_documents, total_documents, completed_requests)
 
-            yield from yield_completed_documents()
-
-        submit_pending_work()
-        yield from yield_completed_documents()
         logger.info(
             "Finished LLM document processing: {} document(s), {} request(s), {} batch(es).",
             processed_documents,
             completed_requests,
             submitted_batches,
         )
+
+    def _submit(
+        self,
+        *,
+        model: str,
+        work: list[LLMAssistantWorkItem],
+        response_model: Type[ResponseT],
+        batch_number: int,
+    ) -> list[LLMBatchChatResponse[ResponseT]]:
+        """Send one bounded batch of LLM requests and wait for all responses."""
+        logger.info(
+            "Submitting LLM batch {} with {} prompt(s) for {} document(s).",
+            batch_number,
+            len(work),
+            len({item.sdoc_id for item in work}),
+        )
+        started_at = monotonic()
+        responses = self.llm.llm_batch_chat(
+            model=model,
+            messages=[item.message for item in work],
+            response_model=response_model,
+            capture_raw=True,
+        )
+        if len(responses) != len(work):
+            raise LLMAssistantBatchProcessingError(
+                "The LLM returned a different number of responses than requests"
+            )
+
+        logger.debug(
+            "--- LLM responses for batch {} ---\n{}\n--- End LLM responses ---",
+            batch_number,
+            "\n\n".join(
+                f"--- Document {item.sdoc_id}, prompt chunk {item.message_id} ---\n"
+                f"Error: {response.error or '<none>'}\n"
+                f"Raw:\n{response.raw or '<none>'}"
+                for item, response in zip(work, responses)
+            ),
+        )
+        failed_requests = sum(response.is_error for response in responses)
+        logger.info(
+            "Completed LLM batch {} in {:.2f}s: {} successful, {} failed request(s).",
+            batch_number,
+            monotonic() - started_at,
+            len(work) - failed_requests,
+            failed_requests,
+        )
+        return responses
