@@ -1,7 +1,7 @@
 [
-  { "name": "Alex", "email": "REPLACE-alex@example.org" },
-  { "name": "Akrish", "email": "REPLACE-akrish@example.org" },
-  { "name": "Levin", "email": "REPLACE-levin@example.org" },
-  { "name": "Tobi", "email": "REPLACE-tobi@example.org" },
-  { "name": "Goutham", "email": "REPLACE-goutham@example.org" }
+  { "name": "A", "email": "REPLACE-a@example.org" },
+  { "name": "B", "email": "REPLACE-b@example.org" },
+  { "name": "C", "email": "REPLACE-c@example.org" },
+  { "name": "D", "email": "REPLACE-d@example.org" },
+  { "name": "E", "email": "REPLACE-e@example.org" }
 ]

@@ -8,6 +8,8 @@ Scripts that draw the validation sample of sentences from a DATS project. The st
 
 All files are written to `data/`, which is not committed.
 
+[WALKTHROUGH.md](WALKTHROUGH.md) explains step by step how to run them and what to check; this README describes how they work and why.
+
 ## Installation
 
 Python 3.11 or newer:
@@ -124,7 +126,7 @@ DATS_PASSWORD=... python assign_annotators.py --input data/sentence_sample_proje
 
 ### The assignment
 
-- **Pairs**: the five annotators make 10 pairs (every pair once, in the order of `data/annotators.json`: Alex-Akrish, Alex-Levin, Alex-Tobi, Alex-Goutham, Akrish-Levin, ...), and pair `b` annotates block `b`. Every sentence is annotated by exactly two people, everybody works with everybody exactly once, and everybody annotates 4 blocks.
+- **Pairs**: the five annotators make 10 pairs (every pair once, in the order of `data/annotators.json`: A-B, A-C, A-D, A-E, B-C, ...), and pair `b` annotates block `b`. Every sentence is annotated by exactly two people, everybody works with everybody exactly once, and everybody annotates 4 blocks.
 - **Blocks**: every draw is split at random into 10 equal parts and block `b` gets part `b` of every draw, so each block of 40 holds 10 background, 20 proxy and 10 fresh sentences. Every pair sees the same mix, so the agreement of the pairs is comparable.
 - **Numbering**: the sentences of a block are shuffled and numbered block by block (block 1 is 1-40, block 2 is 41-80, ...), so the number tells nothing about the draw.
 - **Blinding**: all sentences get the same code, whatever their draw. Only the assignment file names the draw; it is for the person who drew and the statistics, not for the annotators.
