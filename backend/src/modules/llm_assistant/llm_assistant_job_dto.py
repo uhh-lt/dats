@@ -127,7 +127,10 @@ class AnnotationResult(LLMAssistantResultWithStatus):
         description="Number of the created annotations per code ID"
     )
     raw_response: str | None = Field(
-        description="Raw LLM response (only set if no annotations were suggested or an error occurred)",
+        description=(
+            "Raw LLM responses of the failed requests (only set if an error "
+            "occurred), cut after a configured number of characters"
+        ),
         default=None,
     )
 
@@ -147,7 +150,10 @@ class SentenceAnnotationResult(LLMAssistantResultWithStatus):
         description="Number of the created annotations per code ID"
     )
     raw_response: str | None = Field(
-        description="Raw LLM response (only set if no annotations were suggested or an error occurred)",
+        description=(
+            "Raw LLM responses of the failed requests (only set if an error "
+            "occurred), cut after a configured number of characters"
+        ),
         default=None,
     )
 

@@ -25,7 +25,7 @@ from modules.llm_assistant.tasks.llm_assistant_document_processor import (
 from modules.llm_assistant.tasks.llm_assistant_task import (
     LLMAssistantTask,
     LLMAssistantTaskContext,
-    aggregate_raw_responses,
+    bounded_raw_response,
     create_reasoning_memos,
 )
 
@@ -140,7 +140,6 @@ class SentenceAnnotationTask(
         sdoc_data = document.sdoc_data
         # the classified sentences of all responses, merged into ranges below
         parsed_sentences: list[ParsedSentence] = []
-        raw_responses: list[str] = []
         errors: list[tuple[str, str | None]] = []
         for response_item in document.responses:
             response = response_item.response
@@ -152,9 +151,6 @@ class SentenceAnnotationTask(
                     )
                 )
                 continue
-
-            if response.raw is not None:
-                raw_responses.append(response.raw)
 
             parsed_sentences.extend(
                 strategy.parse_result(
@@ -227,7 +223,7 @@ class SentenceAnnotationTask(
         )
 
         if errors:
-            raw_response = aggregate_raw_responses(
+            raw_response = bounded_raw_response(
                 [raw for _, raw in errors if raw is not None]
             )
             error_msg = (
@@ -241,14 +237,14 @@ class SentenceAnnotationTask(
                     status_message=f"Sentence annotation partially successful. {error_msg}",
                     sdoc_id=sdoc_data.id,
                     annotation_count_by_code_id=annotation_count_by_code_id,
-                    raw_response=raw_response or None,
+                    raw_response=raw_response,
                 )
             return SentenceAnnotationResult(
                 status="error",
                 status_message=error_msg,
                 sdoc_id=sdoc_data.id,
                 annotation_count_by_code_id={},
-                raw_response=raw_response or None,
+                raw_response=raw_response,
             )
 
         if created_annos_for_sdoc:
@@ -264,9 +260,6 @@ class SentenceAnnotationTask(
             status_message="No annotations suggested",
             sdoc_id=sdoc_data.id,
             annotation_count_by_code_id={},
-            raw_response=(
-                aggregate_raw_responses(raw_responses) if raw_responses else None
-            ),
         )
 
     def _error_result(self, *, sdoc_id: int, message: str) -> SentenceAnnotationResult:

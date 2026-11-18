@@ -282,6 +282,9 @@ class LlmAssistantConfig(BaseModel):
     few_shot_threshold: int = Field(gt=0)
     request_batch_size: int = Field(gt=0)
     document_read_batch_size: int = Field(gt=0)
+    # the characters of the raw LLM responses that the result of a failed or
+    # partially failed document keeps
+    max_raw_response_characters: int = Field(gt=0)
 
 
 class CotaConfig(BaseModel):

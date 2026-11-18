@@ -9,6 +9,7 @@ from pydantic import BaseModel
 from rq.timeouts import JobTimeoutException
 from sqlalchemy.orm import Session
 
+from config import conf
 from core.annotation.sentence_annotation_dto import SentenceAnnotationRead
 from core.annotation.span_annotation_dto import SpanAnnotationRead
 from core.memo.memo_dto import MemoCreateIntern
@@ -34,6 +35,8 @@ from repos.db.sql_repo import SQLRepo
 from repos.llm_repo import LLMRepo
 from systems.job_system.job_dto import Job
 
+# the characters of the raw LLM responses that a result keeps
+MAX_RAW_RESPONSE_CHARACTERS = conf.llm_assistant.max_raw_response_characters
 ResponseT = TypeVar("ResponseT", bound=BaseModel)
 ResultT = TypeVar("ResultT", bound=LLMAssistantResultWithStatus)
 StrategyT = TypeVar("StrategyT", bound=LLMAssistantStrategy)
@@ -68,13 +71,29 @@ class LLMAssistantTaskContext(Generic[StrategyT]):
         return self.strategy.is_fewshot
 
 
-def aggregate_raw_responses(raw_responses: list[str]) -> str:
+def _aggregate_raw_responses(raw_responses: list[str]) -> str:
     """Join multiple raw LLM responses into one user-visible value."""
     if len(raw_responses) == 1:
         return raw_responses[0]
     return "\n---\n".join(
         f"Response {i + 1} of {len(raw_responses)}:\n{raw}"
         for i, raw in enumerate(raw_responses)
+    )
+
+
+def bounded_raw_response(raw_responses: list[str]) -> str | None:
+    """The raw LLM responses of a document as one user-visible value of at most
+    `MAX_RAW_RESPONSE_CHARACTERS` characters, a longer one cut and marked as
+    truncated; None without responses. Every result is kept in the job output
+    (thousands of documents), so it must stay small."""
+    if not raw_responses:
+        return None
+    raw = _aggregate_raw_responses(raw_responses)
+    if len(raw) <= MAX_RAW_RESPONSE_CHARACTERS:
+        return raw
+    return (
+        f"{raw[:MAX_RAW_RESPONSE_CHARACTERS]}\n"
+        f"[truncated: {len(raw) - MAX_RAW_RESPONSE_CHARACTERS} more characters]"
     )
 
 

@@ -20,7 +20,7 @@ export type AnnotationResult = {
    */
   annotation_count_by_code_id: Record<string, number>;
   /**
-   * Raw LLM response (only set if no annotations were suggested or an error occurred)
+   * Raw LLM responses of the failed requests (only set if an error occurred), cut after a configured number of characters
    */
   raw_response?: string | null;
 };

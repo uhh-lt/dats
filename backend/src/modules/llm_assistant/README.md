@@ -42,6 +42,8 @@ No transaction stays open across the LLM requests of the whole job: a failure or
 
 After its commit, a batch records the results of its documents in the job's checkpoint (`Job.save_checkpoint`, see the job system README). A retry of a failed or stopped job skips the recorded documents except those with an error result (they saved nothing, so they are processed again), never runs `_prepare()` again (it would delete what the earlier attempts saved) and returns the results of all documents in the order of `sdoc_ids`. If the worker dies between the commit of a batch and its record, the retry processes that batch again and its documents get their annotations and memos twice.
 
+The annotation tasks keep the raw LLM responses of the failed requests in an error or partial result, cut after `llm_assistant.max_raw_response_characters` characters and marked as truncated (`bounded_raw_response`); a finished result keeps none, as every result stays in the job output.
+
 Concrete tasks implement `_get_response_model()`, `_process_document()`, `_error_result()` and `_build_result()`. They override `_prepare()` only when setup such as deleting prior annotations is required.
 
 `LLMAssistantDocumentProcessor` owns the batching mechanics. It reads the documents of a batch (`llm_assistant.document_read_batch_size`) in a short transaction of its own and sends their prompts in bounded batches of LLM requests (`llm_assistant.request_batch_size`). A strategy may yield one or many prompts per document; responses retain their document and message (sentence/chunk) identity and are delivered to tasks only when the document is complete.

@@ -26,7 +26,7 @@ from modules.llm_assistant.tasks.llm_assistant_document_processor import (
 from modules.llm_assistant.tasks.llm_assistant_task import (
     LLMAssistantTask,
     LLMAssistantTaskContext,
-    aggregate_raw_responses,
+    bounded_raw_response,
     create_reasoning_memos,
 )
 
@@ -194,7 +194,6 @@ class AnnotationTask(LLMAssistantTask[AnnotationStrategy, BaseModel, AnnotationR
         suggested_annotations: list[SpanAnnotationCreate] = []
         # every suggestion with its reasoning, None if the prompt requests none
         suggestions: list[tuple[SpanAnnotationCreate, str | None]] = []
-        raw_responses: list[str] = []
         errors: list[tuple[str, str | None]] = []
         document_token_map: dict[int, int] = {}
         last_character_offset = 0
@@ -213,9 +212,6 @@ class AnnotationTask(LLMAssistantTask[AnnotationStrategy, BaseModel, AnnotationR
                     )
                 )
                 continue
-
-            if response.raw is not None:
-                raw_responses.append(response.raw)
 
             parsed_spans = strategy.parse_result(
                 response.parsed,  # type: ignore
@@ -290,7 +286,7 @@ class AnnotationTask(LLMAssistantTask[AnnotationStrategy, BaseModel, AnnotationR
         )
 
         if errors:
-            raw_response = aggregate_raw_responses(
+            raw_response = bounded_raw_response(
                 [raw for _, raw in errors if raw is not None]
             )
             error_msg = (
@@ -304,14 +300,14 @@ class AnnotationTask(LLMAssistantTask[AnnotationStrategy, BaseModel, AnnotationR
                     status_message=f"Annotation partially successful. {error_msg}",
                     sdoc_id=sdoc_data.id,
                     annotation_count_by_code_id=annotation_count_by_code_id,
-                    raw_response=raw_response or None,
+                    raw_response=raw_response,
                 )
             return AnnotationResult(
                 status="error",
                 status_message=error_msg,
                 sdoc_id=sdoc_data.id,
                 annotation_count_by_code_id={},
-                raw_response=raw_response or None,
+                raw_response=raw_response,
             )
 
         if created_annos_for_sdoc:
@@ -327,9 +323,6 @@ class AnnotationTask(LLMAssistantTask[AnnotationStrategy, BaseModel, AnnotationR
             status_message="No annotations suggested",
             sdoc_id=sdoc_data.id,
             annotation_count_by_code_id={},
-            raw_response=(
-                aggregate_raw_responses(raw_responses) if raw_responses else None
-            ),
         )
 
     def _error_result(self, *, sdoc_id: int, message: str) -> AnnotationResult:
