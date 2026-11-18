@@ -47,6 +47,8 @@ tools:
   edit: false
 safe-outputs:
   report-failure-as-issue: ["!engine_driver_failure"]
+  # The highlights link the user documentation; gh-aw redacts every URL whose domain is not allowed
+  allowed-domains: [dats.science]
   needs: [prepare]
   threat-detection: {}
   update-release:
