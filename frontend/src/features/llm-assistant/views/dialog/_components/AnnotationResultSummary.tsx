@@ -4,7 +4,8 @@ import { AnnotationResult } from "@models/AnnotationResult";
 import { SentenceAnnotationResult } from "@models/SentenceAnnotationResult";
 import ExpandMoreRoundedIcon from "@mui/icons-material/ExpandMoreRounded";
 import { Accordion, AccordionDetails, AccordionSummary, Alert, Box, Chip, Stack, Typography } from "@mui/material";
-import { useMemo } from "react";
+import { useVirtualizer } from "@tanstack/react-virtual";
+import { memo, SyntheticEvent, useCallback, useMemo, useRef, useState } from "react";
 import { countAnnotations } from "../_utils/annotationResultUtils";
 
 interface AnnotationResultSummaryProps {
@@ -76,16 +77,68 @@ export function AnnotationResultSummary({ results, annotationWording }: Annotati
         </Alert>
       )}
 
-      <Box>
-        {results.map((result) => (
-          <DocumentResultAccordion key={result.sdoc_id} result={result} />
-        ))}
-      </Box>
+      <DocumentResultList results={results} />
     </Stack>
   );
 }
 
-function DocumentResultAccordion({ result }: { result: AnnotationResult | SentenceAnnotationResult }) {
+// A run may process thousands of documents: only the visible rows are mounted (and load their document).
+function DocumentResultList({ results }: { results: (AnnotationResult | SentenceAnnotationResult)[] }) {
+  // the expanded rows, kept here as a row unmounts when it scrolls out of view
+  const [expandedSdocIds, setExpandedSdocIds] = useState<Set<number>>(() => new Set());
+  const handleToggle = useCallback((sdocId: number, expanded: boolean) => {
+    setExpandedSdocIds((previous) => {
+      const next = new Set(previous);
+      if (expanded) next.add(sdocId);
+      else next.delete(sdocId);
+      return next;
+    });
+  }, []);
+
+  const parentRef = useRef<HTMLDivElement>(null);
+  // eslint-disable-next-line react-hooks/incompatible-library
+  const virtualizer = useVirtualizer({
+    count: results.length,
+    getScrollElement: () => parentRef.current,
+    estimateSize: () => 50,
+    getItemKey: (index) => results[index].sdoc_id,
+  });
+
+  const items = virtualizer.getVirtualItems();
+  return (
+    <Box ref={parentRef} sx={{ overflowY: "auto", maxHeight: 400 }}>
+      <div style={{ height: virtualizer.getTotalSize(), width: "100%", position: "relative" }}>
+        <div
+          style={{
+            position: "absolute",
+            top: 0,
+            left: 0,
+            width: "100%",
+            transform: `translateY(${items[0]?.start ?? 0}px)`,
+          }}
+        >
+          {items.map((item) => (
+            <div key={item.key} data-index={item.index} ref={virtualizer.measureElement}>
+              <DocumentResultAccordion
+                result={results[item.index]}
+                expanded={expandedSdocIds.has(results[item.index].sdoc_id)}
+                onToggle={handleToggle}
+              />
+            </div>
+          ))}
+        </div>
+      </div>
+    </Box>
+  );
+}
+
+interface DocumentResultAccordionProps {
+  result: AnnotationResult | SentenceAnnotationResult;
+  expanded: boolean;
+  onToggle: (sdocId: number, expanded: boolean) => void;
+}
+
+const DocumentResultAccordion = memo(({ result, expanded, onToggle }: DocumentResultAccordionProps) => {
   const isError = result.status === "error";
   const isPartial = result.status === "partial";
   const numAnnotations = countAnnotations(result);
@@ -100,8 +153,19 @@ function DocumentResultAccordion({ result }: { result: AnnotationResult | Senten
         : "No annotations";
   const chipColor = isError ? "error" : isPartial ? "warning" : hasAnnotations ? "success" : "default";
 
+  const handleChange = (_: SyntheticEvent, isExpanded: boolean) => {
+    onToggle(result.sdoc_id, isExpanded);
+  };
+
   return (
-    <Accordion disableGutters elevation={0} sx={{ border: "1px solid", borderColor: "divider" }}>
+    <Accordion
+      disableGutters
+      elevation={0}
+      expanded={expanded}
+      onChange={handleChange}
+      slotProps={{ transition: { unmountOnExit: true } }}
+      sx={{ border: "1px solid", borderColor: "divider" }}
+    >
       <AccordionSummary expandIcon={<ExpandMoreRoundedIcon />}>
         <Stack direction="row" spacing={1} alignItems="center" sx={{ flexGrow: 1, pr: 1 }}>
           <SdocRenderer sdoc={result.sdoc_id} renderName link renderDoctypeIcon />
@@ -140,7 +204,8 @@ function DocumentResultAccordion({ result }: { result: AnnotationResult | Senten
       </AccordionDetails>
     </Accordion>
   );
-}
+});
+DocumentResultAccordion.displayName = "DocumentResultAccordion";
 
 function SuggestedAnnotationsInfo({ result }: { result: AnnotationResult | SentenceAnnotationResult }) {
   const codes = CodeHooks.useGetAllCodesMap();
