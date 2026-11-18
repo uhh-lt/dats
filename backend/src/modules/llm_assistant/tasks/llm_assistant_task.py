@@ -1,7 +1,6 @@
 import json
 from abc import ABC, abstractmethod
 from dataclasses import dataclass
-from functools import partial
 from typing import ClassVar, Generic, TypeVar, final
 from uuid import uuid4
 
@@ -247,10 +246,9 @@ class LLMAssistantTask(
         # every document once, also if the input repeats it
         sdoc_ids = list(dict.fromkeys(payload.sdoc_ids))
         self._update_progress(
+            job=job,
             processed_documents=len(result_by_sdoc_id),
             total_documents=len(sdoc_ids),
-            completed_requests=0,
-            job=job,
         )
 
         batches = self.document_processor.process(
@@ -261,7 +259,6 @@ class LLMAssistantTask(
                 sdoc_id for sdoc_id in sdoc_ids if sdoc_id not in result_by_sdoc_id
             ],
             response_model=self._get_response_model(strategy),
-            on_progress=partial(self._update_progress, job=job),
         )
         for batch in batches:
             with sqlr.transaction() as db:
@@ -281,6 +278,11 @@ class LLMAssistantTask(
                 }
             )
             result_by_sdoc_id.update(batch_results)
+            self._update_progress(
+                job=job,
+                processed_documents=len(result_by_sdoc_id),
+                total_documents=len(sdoc_ids),
+            )
 
         results = [result_by_sdoc_id[sdoc_id] for sdoc_id in payload.sdoc_ids]
         logger.info(
@@ -327,18 +329,11 @@ class LLMAssistantTask(
         logger.info(message)
 
     def _update_progress(
-        self,
-        processed_documents: int,
-        total_documents: int,
-        completed_requests: int,
-        *,
-        job: Job,
+        self, *, job: Job, processed_documents: int, total_documents: int
     ) -> None:
-        """Report document and LLM-request progress on the job."""
-        message = (
-            f"Processed {processed_documents} of {total_documents} documents "
-            f"({completed_requests} LLM requests completed)"
-        )
+        """Report the document progress on the job, once per batch: every update
+        publishes the job to all users of the project."""
+        message = f"Processed {processed_documents} of {total_documents} documents"
         job.update(
             current_step=1,
             status_message=message,

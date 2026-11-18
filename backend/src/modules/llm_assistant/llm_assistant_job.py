@@ -68,7 +68,7 @@ def _build_strategy(db: Session, payload: LLMAssistantJobInput) -> LLMAssistantS
     router=router,
     device="api",
     result_ttl=JobTiming.NINETY_DAYS,
-    timeout=JobTiming.ONE_DAY,
+    timeout=JobTiming.ONE_WEEK,
     validate_input=validate_llm_assistant_input,
 )
 def llm_assistant(

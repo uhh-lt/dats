@@ -1,4 +1,4 @@
-from collections.abc import Callable, Iterator
+from collections.abc import Iterator
 from dataclasses import dataclass
 from time import monotonic
 from typing import Generic, Type, TypeVar
@@ -21,7 +21,6 @@ LLM_REQUEST_BATCH_SIZE = conf.llm_assistant.request_batch_size
 DOCUMENT_BATCH_SIZE = conf.llm_assistant.document_read_batch_size
 
 ResponseT = TypeVar("ResponseT", bound=BaseModel)
-ProgressCallback = Callable[[int, int, int], None]
 
 
 @dataclass(frozen=True)
@@ -75,7 +74,6 @@ class LLMAssistantDocumentProcessor:
         sqlr: SQLRepo,
         sdoc_ids: list[int],
         response_model: Type[ResponseT],
-        on_progress: ProgressCallback,
     ) -> Iterator[list[LLMAssistantDocumentResponse[ResponseT]]]:
         """Yield the documents in batches of `DOCUMENT_BATCH_SIZE`, in the order of
         `sdoc_ids`, each document with the responses to all its prompts. The
@@ -129,7 +127,6 @@ class LLMAssistantDocumentProcessor:
                         )
                     )
                 completed_requests += len(chunk)
-                on_progress(processed_documents, total_documents, completed_requests)
 
             yield [
                 LLMAssistantDocumentResponse(
@@ -138,7 +135,6 @@ class LLMAssistantDocumentProcessor:
                 for sdoc_data in sdoc_datas
             ]
             processed_documents += len(sdoc_datas)
-            on_progress(processed_documents, total_documents, completed_requests)
 
         logger.info(
             "Finished LLM document processing: {} document(s), {} request(s), {} batch(es).",

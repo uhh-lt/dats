@@ -252,6 +252,40 @@ def test_a_retry_skips_the_finished_documents_and_returns_the_results_of_all(
     ]
 
 
+def test_the_job_reports_its_progress_once_per_batch(
+    client: TestClient,
+    job_prompt_project: JobPromptProject,
+    held_jobs: HeldJobs,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """With one document per batch, the job updates its progress once before
+    the first batch and once after each batch, never per document or per LLM
+    request batch; every update publishes the job to the project's users."""
+    _fake_llm(monkeypatch)
+    messages: list[str | None] = []
+    update = Job.update
+
+    def _record_update(self: Job, status_message: str | None = None, **kwargs):
+        messages.append(status_message)
+        update(self, status_message=status_message, **kwargs)
+
+    monkeypatch.setattr(Job, "update", _record_update)
+
+    job_id = _start_sentence_job(client, job_prompt_project)
+    held_jobs.run("llm_assistant")
+
+    assert _read_job(client, job_id).status == JobStatus.FINISHED
+    assert [message for message in messages if message is not None] == [
+        "Started LLM Assistant!",
+        "Started LLMAssistantJob - Sentence Annotation, num docs: 3",
+        "Processed 0 of 3 documents",
+        "Processed 1 of 3 documents",
+        "Processed 2 of 3 documents",
+        "Processed 3 of 3 documents",
+        "Finished LLMAssistantJob successfully!",
+    ]
+
+
 def _stop_after(monkeypatch: pytest.MonkeyPatch, sdoc_id: int) -> None:
     """Stop the job (`JobService.stop_job`) once it wrote the annotations of the
     document, before its batch commits; the job waits to be interrupted."""
@@ -368,8 +402,8 @@ def test_the_checkpoint_expires_with_the_job(
     saved: int,
     ttl: int,
 ) -> None:
-    """While the job runs, its checkpoint expires a day after the job's timeout
-    (one hour); once the job ended, a day after the finish, or with the failed
+    """While the job runs, its checkpoint expires a day after the job's
+    timeout; once the job ended, a day after the finish, or with the failed
     or stopped job after RQ's failure TTL (one year). It holds the documents of
     the committed batches."""
     fake = _fake_llm(monkeypatch)
