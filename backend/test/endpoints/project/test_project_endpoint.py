@@ -1,4 +1,6 @@
+import pytest
 from fastapi.testclient import TestClient
+from rq.exceptions import NoSuchJobError
 
 from core.project.project_crud import crud_project
 from core.project.project_dto import (
@@ -8,6 +10,9 @@ from core.project.project_dto import (
 )
 from experiment_test_utils import RunUserProject
 from systems.feature_system.feature_registry import Feature, feature_registry
+from systems.job_system.job_service import JobService
+
+from .conftest import ProjectsWithJobs
 
 # ===========================================================================
 # CREATE PROJECT (/project) TESTS
@@ -75,6 +80,24 @@ def test_delete_project_with_experiments_deletes_them_and_their_run_users(
         assert client.get(f"/user/by_id/{user_id}").status_code == 404
     # the human gold annotator is no virtual user: only the membership is gone
     assert client.get(f"/user/by_id/{p['gold_annotator'].id}").status_code == 200
+
+
+def test_delete_project_removes_only_its_own_jobs(
+    client: TestClient, projects_with_jobs: ProjectsWithJobs
+):
+    """Deleting a project deletes its finished and queued jobs from Redis; the
+    jobs of another project survive."""
+    p = projects_with_jobs
+
+    response = client.delete(f"/project/{p['deleted'].id}")
+
+    assert response.status_code == 200, response.text
+    js = JobService()
+    for job_id in p["deleted_job_ids"]:
+        with pytest.raises(NoSuchJobError):
+            js.get_job(job_id)
+    for job_id in p["kept_job_ids"]:
+        assert js.get_job(job_id).get_project_id() == p["kept"].id
 
 
 def test_delete_nonexistent_project(client: TestClient):

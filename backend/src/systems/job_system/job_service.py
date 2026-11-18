@@ -8,6 +8,7 @@ from loguru import logger
 from pydantic import Field, create_model
 from redis import Redis
 from redis.exceptions import RedisError
+from rq.exceptions import NoSuchJobError
 from rq.registry import (
     BaseRegistry,
     CanceledJobRegistry,
@@ -375,12 +376,30 @@ class JobService(metaclass=SingletonMeta):
         return False
 
     def remove_jobs_by_project(self, project_id: int) -> int:
-        removed_jobs = 0
+        """Delete the queued jobs of the project and those in the registries.
+        A running job is stopped (`stop_job`) instead: its worker still holds
+        it and writes its end state, which then expires with its TTL."""
+        job_ids = {
+            job_id for queue in self.queues.values() for job_id in queue.get_job_ids()
+        }
         for registries in self.registries.values():
             for registry in registries.values():
-                for job_id in registry.get_job_ids():
-                    registry.remove(job_id, delete_job=True)
-                    removed_jobs += 1
+                job_ids.update(registry.get_job_ids())
+
+        removed_jobs = 0
+        for job_id in job_ids:
+            try:
+                job = rq.job.Job.fetch(job_id, connection=self.redis_conn)
+            except NoSuchJobError:
+                # the job expired and only its id was left in a registry
+                continue
+            if job.meta.get("project_id") != project_id:
+                continue
+            if job.is_started:
+                self.stop_job(job.id)
+                continue
+            job.delete()
+            removed_jobs += 1
 
         logger.info(f"Removed {removed_jobs} jobs for project {project_id}")
         return removed_jobs
