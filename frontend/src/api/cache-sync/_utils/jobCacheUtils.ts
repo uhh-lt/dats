@@ -35,7 +35,6 @@ import { ExportJobRead } from "@models/ExportJobRead";
 import { ImportJobRead } from "@models/ImportJobRead";
 import { ImportJobType } from "@models/ImportJobType";
 import { JobStatus } from "@models/JobStatus";
-import type { LLMAssistantJobOutput } from "@models/LLMAssistantJobOutput";
 import { LlmAssistantJobRead } from "@models/LlmAssistantJobRead";
 import { PerspectivesJobRead } from "@models/PerspectivesJobRead";
 import { TagRecommendationJobRead } from "@models/TagRecommendationJobRead";
@@ -64,7 +63,7 @@ export function handleJobUpdate(job: JobRead): void {
       break;
     case LlmAssistantJobRead.job_type.LLM_ASSISTANT:
       upsertJob(job, llmAssistantQueries.job);
-      if (job.status === JobStatus.FINISHED) handleLlmAssistantJobFinished(job);
+      if (LLM_ASSISTANT_ENDED_WITH_ANNOTATIONS.has(job.status)) handleLlmAssistantJobEnded(job);
       break;
     case ExperimentRunJobRead.job_type.EXPERIMENT_RUN:
       handleExperimentRunJobUpdate(job);
@@ -187,9 +186,11 @@ function handleImportJobFinished(job: ImportJobRead) {
   }
 }
 
-// A finished annotation LLM Assistant job stored its suggestions as annotations of the assistant user in the processed sdocs.
-function handleLlmAssistantJobFinished(job: LlmAssistantJobRead) {
-  if (job.output) invalidateAssistantAnnotations(job.output);
+// An annotation LLM Assistant job stores its suggestions as annotations of the assistant user in the processed sdocs,
+// batch by batch: a failed or stopped job keeps the annotations of the batches it saved.
+const LLM_ASSISTANT_ENDED_WITH_ANNOTATIONS = new Set([JobStatus.FINISHED, JobStatus.FAILED, JobStatus.STOPPED]);
+function handleLlmAssistantJobEnded(job: LlmAssistantJobRead) {
+  invalidateAssistantAnnotations(job.input.task_type, new Set(job.input.sdoc_ids));
 }
 
 // The job of an experiment run stores its state, the run's status, and the scores in the experiment (the job has no
@@ -198,18 +199,31 @@ function handleLlmAssistantJobFinished(job: LlmAssistantJobRead) {
 const STORED_RUN_STATUSES = new Set([JobStatus.STARTED, JobStatus.FINISHED, JobStatus.FAILED]);
 function handleExperimentRunJobUpdate(job: ExperimentRunJobRead) {
   const queryKey = experimentQueries.byProject(job.project_id).queryKey;
-  const run = Object.values(queryClient.getQueryData(queryKey) ?? {})
-    .flatMap((experiment) => experiment.runs)
-    .find((candidate) => candidate.id === job.input.run_id);
+  const experiment = Object.values(queryClient.getQueryData(queryKey) ?? {}).find((candidate) =>
+    candidate.runs.some((run) => run.id === job.input.run_id),
+  );
+  const run = experiment?.runs.find((candidate) => candidate.id === job.input.run_id);
   if (STORED_RUN_STATUSES.has(job.status) && run?.status !== job.status) {
     queryClient.invalidateQueries({ queryKey });
   }
-  if (job.status === JobStatus.FINISHED && job.output) invalidateAssistantAnnotations(job.output);
+  if (job.status === JobStatus.FINISHED && job.output) {
+    const sdocIds = new Set(job.output.specific_task_result.results.map((result) => result.sdoc_id));
+    invalidateAssistantAnnotations(job.output.task_type, sdocIds);
+    return;
+  }
+  // a failed or stopped run keeps the annotations of the batches it saved; the job input names the run only, so its
+  // documents and task come from the experiments, else all annotations are refreshed
+  if (job.status !== JobStatus.FAILED && job.status !== JobStatus.STOPPED) return;
+  if (experiment && run) {
+    invalidateAssistantAnnotations(experiment.task_type, new Set(run.sdoc_ids));
+    return;
+  }
+  queryClient.invalidateQueries({ queryKey: spanAnnotationQueries.bySdocScope() });
+  queryClient.invalidateQueries({ queryKey: sentenceAnnotationQueries.bySdocScope() });
 }
 
-function invalidateAssistantAnnotations(output: LLMAssistantJobOutput) {
-  const sdocIds = new Set(output.specific_task_result.results.map((result) => result.sdoc_id));
-  switch (output.task_type) {
+function invalidateAssistantAnnotations(taskType: TaskType, sdocIds: Set<number>) {
+  switch (taskType) {
     case TaskType.ANNOTATION:
       invalidateBySdocs(spanAnnotationQueries.bySdocScope(), sdocIds);
       break;
