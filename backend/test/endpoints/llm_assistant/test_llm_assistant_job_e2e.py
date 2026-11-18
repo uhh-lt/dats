@@ -321,8 +321,9 @@ def test_a_stop_keeps_the_earlier_batches_and_rolls_back_the_batch_in_progress(
     batch is rolled back."""
     base = job_prompt_project["base"]
     fact_id = base["fact_code"].id
+    no_match_id = base["no_match_sdoc"].id
     _fake_llm(monkeypatch)
-    _stop_after(monkeypatch, base["no_match_sdoc"].id)
+    _stop_after(monkeypatch, no_match_id)
 
     job_id = _start_sentence_job(client, job_prompt_project)
     started = time.monotonic()
@@ -336,6 +337,41 @@ def test_a_stop_keeps_the_earlier_batches_and_rolls_back_the_batch_in_progress(
         annotations = _run_a_annotations(client, job_prompt_project, document)
         assert _ranges(annotations) == [(0, 0, fact_id)]
     assert _run_a_annotations(client, job_prompt_project, NO_MATCH) == []
+
+
+def test_a_retry_of_a_stopped_job_continues_after_its_committed_batches(
+    client: TestClient,
+    job_prompt_project: JobPromptProject,
+    held_jobs: HeldJobs,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """A job stopped in its third batch can be retried: the retry asks the LLM
+    for the third document only and finishes with the results of all three."""
+    base = job_prompt_project["base"]
+    fact_id = base["fact_code"].id
+    fake = _fake_llm(monkeypatch)
+    with monkeypatch.context() as stop:
+        _stop_after(stop, base["no_match_sdoc"].id)
+        job_id = _start_sentence_job(client, job_prompt_project)
+        held_jobs.run("llm_assistant")
+    assert _read_job(client, job_id).status == JobStatus.STOPPED
+    fake.asked.clear()
+
+    response = client.post(f"{LLM_ASSISTANT_JOB_URL}/{job_id}/retry")
+    assert response.status_code == 200, response.text
+    assert response.json() is True
+    held_jobs.run("llm_assistant")
+
+    job = _read_job(client, job_id)
+    assert job.status == JobStatus.FINISHED, job.status_message
+    assert fake.asked == [NO_MATCH]
+    assert _ranges(_run_a_annotations(client, job_prompt_project, NO_MATCH)) == [
+        (0, 0, fact_id)
+    ]
+    assert job.output is not None
+    assert [result.status for result in job.output.specific_task_result.results] == [
+        "finished"
+    ] * 3
 
 
 def test_a_retry_processes_the_documents_with_an_error_result_again(

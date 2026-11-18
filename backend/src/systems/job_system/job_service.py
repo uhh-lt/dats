@@ -368,8 +368,12 @@ class JobService(metaclass=SingletonMeta):
         return True
 
     def retry_job(self, job_id: str) -> bool:
+        """Requeue a failed or stopped job: the same job with the same input,
+        which may continue from its checkpoint. Returns whether it was
+        requeued; a job in any other state is left as it is."""
         job = rq.job.Job.fetch(job_id, connection=self.redis_conn)
-        if job and job.is_failed:
+        # RQ keeps stopped jobs in the failed job registry as well
+        if job and (job.is_failed or job.is_stopped):
             job.requeue()
 
             # Push the QUEUED state to websocket clients (never raises)

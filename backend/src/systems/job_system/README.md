@@ -70,7 +70,8 @@ Key decorator arguments:
    `except Exception` in the job swallows it; transactions roll back, and code
    that records a failure (e.g. `experiment_run_job.py`) catches it
    explicitly. Either way the job runs its `failed` hook and ends as STOPPED
-   in the failed job registry; it is not retried.
+   in the failed job registry; RQ does not retry it, but
+   `JobService.retry_job` retries it like a failed job.
 5. **Checkpoint** — a job that works in batches can record what it finished
    with `job.save_checkpoint({key: value})` and read it back with
    `job.read_checkpoint()`, so a retry (`JobService.retry_job`: same job, same
