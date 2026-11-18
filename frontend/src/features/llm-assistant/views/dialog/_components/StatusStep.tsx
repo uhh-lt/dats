@@ -22,7 +22,7 @@ export const StatusStep = memo(() => {
 
   const handleNext = useCallback(() => {
     if (llmAssistantJob.data && llmAssistantJob.data.status === JobStatus.FINISHED && llmAssistantJob.data.output) {
-      dispatch(LLMAssistantActions.goToResult({ result: llmAssistantJob.data.output }));
+      dispatch(LLMAssistantActions.goToResult());
     } else {
       console.error("Job is not finished yet.");
     }
