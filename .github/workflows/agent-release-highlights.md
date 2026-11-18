@@ -103,8 +103,8 @@ Add a short, end-user friendly highlights section to the description of release 
 ## Steps
 
 1. Read release `${{ needs.prepare.outputs.tag }}` with the GitHub repository tools and take its body.
-2. Find the generated changelog: everything after the line `<!-- /dats-release-highlights -->`, or the whole body if that line is missing.
-3. If the changelog lists no pull requests, call `noop` with a short reason and stop.
+2. Find the generated changelog: everything from the line `## What's Changed` to the end of the body. Anything above that line is earlier highlights, which you replace.
+3. If the body has no `## What's Changed` line or the changelog lists no pull requests, call `noop` with a short reason and stop.
 4. For every pull request in the changelog, read its title and body and its `## 📝 Pull Request Overview` comment, when present. Read the diff only when these do not explain the user-visible effect.
 5. Classify each pull request:
    - **User-facing:** new features, changed behavior in the UI, renamed pages or concepts, and fixes users notice.
@@ -123,8 +123,6 @@ Add a short, end-user friendly highlights section to the description of release 
 - Use the vocabulary of the documentation (project, document, code, annotation, memo, ...), no implementation terms (DTO, CRUD, endpoint, ORM, slice, ...), no pull request numbers and no author names.
 
 ```markdown
-<!-- dats-release-highlights -->
-
 ## ✨ Highlights
 
 **<emoji> <benefit-oriented title>**
@@ -136,6 +134,4 @@ Add a short, end-user friendly highlights section to the description of release 
 - <one bullet summarizing the internal work>
 
 ---
-
-<!-- /dats-release-highlights -->
 ```
