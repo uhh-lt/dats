@@ -48,6 +48,15 @@ class LLMAssistantDocumentResponse(Generic[ResponseT]):
     responses: list[LLMAssistantResponseItem[ResponseT]]
 
 
+@dataclass(frozen=True)
+class LLMAssistantDocumentBatch(Generic[ResponseT]):
+    """The documents of a batch, each with its responses, and the documents of
+    the batch that no longer exist (deleted since the job started)."""
+
+    documents: list[LLMAssistantDocumentResponse[ResponseT]]
+    missing_sdoc_ids: list[int]
+
+
 class LLMAssistantDocumentProcessor:
     """Generate and batch LLM requests while preserving document boundaries."""
 
@@ -57,14 +66,15 @@ class LLMAssistantDocumentProcessor:
     @staticmethod
     def _read_documents(
         sqlr: SQLRepo, sdoc_ids: list[int]
-    ) -> list[SourceDocumentDataORM]:
-        """Read the data of documents in a short transaction of its own. The
-        documents are detached with their loaded columns, so they stay readable
-        once it closed: no transaction stays open during the LLM requests."""
+    ) -> dict[int, SourceDocumentDataORM]:
+        """Read the data of the documents that still exist, by id, in a short
+        transaction of its own. The documents are detached with their loaded
+        columns, so they stay readable once it closed: no transaction stays open
+        during the LLM requests."""
         with sqlr.transaction() as db:
-            sdoc_datas = crud_sdoc_data.read_by_ids(db=db, ids=sdoc_ids)
+            sdoc_data_by_id = crud_sdoc_data.read_existing_by_ids(db=db, ids=sdoc_ids)
             db.expunge_all()
-        return sdoc_datas
+        return sdoc_data_by_id
 
     def process(
         self,
@@ -74,10 +84,11 @@ class LLMAssistantDocumentProcessor:
         sqlr: SQLRepo,
         sdoc_ids: list[int],
         response_model: Type[ResponseT],
-    ) -> Iterator[list[LLMAssistantDocumentResponse[ResponseT]]]:
+    ) -> Iterator[LLMAssistantDocumentBatch[ResponseT]]:
         """Yield the documents in batches of `DOCUMENT_BATCH_SIZE`, in the order of
-        `sdoc_ids`, each document with the responses to all its prompts. The
-        prompts of a batch are sent in bounded batches of LLM requests."""
+        `sdoc_ids`, each document with the responses to all its prompts, and the
+        documents of the batch that no longer exist. The prompts of a batch are
+        sent in bounded batches of LLM requests."""
         total_documents = len(sdoc_ids)
         processed_documents = 0
         completed_requests = 0
@@ -90,9 +101,13 @@ class LLMAssistantDocumentProcessor:
         )
 
         for start in range(0, total_documents, DOCUMENT_BATCH_SIZE):
-            sdoc_datas = self._read_documents(
-                sqlr=sqlr, sdoc_ids=sdoc_ids[start : start + DOCUMENT_BATCH_SIZE]
-            )
+            batch_sdoc_ids = sdoc_ids[start : start + DOCUMENT_BATCH_SIZE]
+            sdoc_data_by_id = self._read_documents(sqlr=sqlr, sdoc_ids=batch_sdoc_ids)
+            sdoc_datas = [
+                sdoc_data_by_id[sdoc_id]
+                for sdoc_id in batch_sdoc_ids
+                if sdoc_id in sdoc_data_by_id
+            ]
             work: list[LLMAssistantWorkItem] = []
             for sdoc_data in sdoc_datas:
                 prompts = list(strategy.generate_prompts(sdoc_data=sdoc_data))
@@ -128,13 +143,20 @@ class LLMAssistantDocumentProcessor:
                     )
                 completed_requests += len(chunk)
 
-            yield [
-                LLMAssistantDocumentResponse(
-                    sdoc_data=sdoc_data, responses=responses_by_sdoc[sdoc_data.id]
-                )
-                for sdoc_data in sdoc_datas
-            ]
-            processed_documents += len(sdoc_datas)
+            yield LLMAssistantDocumentBatch(
+                documents=[
+                    LLMAssistantDocumentResponse(
+                        sdoc_data=sdoc_data, responses=responses_by_sdoc[sdoc_data.id]
+                    )
+                    for sdoc_data in sdoc_datas
+                ],
+                missing_sdoc_ids=[
+                    sdoc_id
+                    for sdoc_id in batch_sdoc_ids
+                    if sdoc_id not in sdoc_data_by_id
+                ],
+            )
+            processed_documents += len(batch_sdoc_ids)
 
         logger.info(
             "Finished LLM document processing: {} document(s), {} request(s), {} batch(es).",

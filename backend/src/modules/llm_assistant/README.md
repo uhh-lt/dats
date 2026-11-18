@@ -35,14 +35,14 @@ A **task** describes **WHAT** the LLM assistant does. `LLMAssistantTask.execute(
 1. Initialize the job.
 2. Run the optional task-specific `_prepare()` hook in a transaction of its own, committed before the first LLM request.
 3. Ask `LLMAssistantDocumentProcessor` for the documents in batches, each document with the responses to all its LLM requests.
-4. Pass each document of a batch to `_process_document()`, in one transaction per batch, committed once its documents are done.
-5. Pass all document results to `_build_result()` and wrap them in the job output with the approach.
+4. Pass each document of a batch to `_process_document()`, in one transaction per batch, committed once its documents are done. Each document runs in a savepoint of its own: a document that raises becomes an error result (`_error_result()`) and is rolled back, the others of its batch are still saved. A document deleted since the job started becomes an error result as well.
+5. Pass all document results to `_build_result()` and wrap them in the job output with the approach: one result per document, in the order in which `sdoc_ids` first names it.
 
 No transaction stays open across the LLM requests of the whole job: a failure or a stop loses the batch in progress only, the earlier batches keep their annotations and reasoning memos.
 
-After its commit, a batch records the results of its documents in the job's checkpoint (`Job.save_checkpoint`, see the job system README). A retry of a failed job skips the recorded documents except those with an error result (they saved nothing, so they are processed again), never runs `_prepare()` again (it would delete what the earlier attempts saved) and returns the results of all documents in the order of `sdoc_ids`. If the worker dies between the commit of a batch and its record, the retry processes that batch again and its documents get their annotations and memos twice.
+After its commit, a batch records the results of its documents in the job's checkpoint (`Job.save_checkpoint`, see the job system README). A retry of a failed or stopped job skips the recorded documents except those with an error result (they saved nothing, so they are processed again), never runs `_prepare()` again (it would delete what the earlier attempts saved) and returns the results of all documents in the order of `sdoc_ids`. If the worker dies between the commit of a batch and its record, the retry processes that batch again and its documents get their annotations and memos twice.
 
-Concrete tasks implement `_get_response_model()`, `_process_document()` and `_build_result()`. They override `_prepare()` only when setup such as deleting prior annotations is required.
+Concrete tasks implement `_get_response_model()`, `_process_document()`, `_error_result()` and `_build_result()`. They override `_prepare()` only when setup such as deleting prior annotations is required.
 
 `LLMAssistantDocumentProcessor` owns the batching mechanics. It reads the documents of a batch (`llm_assistant.document_read_batch_size`) in a short transaction of its own and sends their prompts in bounded batches of LLM requests (`llm_assistant.request_batch_size`). A strategy may yield one or many prompts per document; responses retain their document and message (sentence/chunk) identity and are delivered to tasks only when the document is complete.
 
@@ -108,7 +108,7 @@ The prompt preview is `POST /prompt/preview` in `core/prompt`.
 1. Add the task type and its spec (`core/prompt/prompt_specs.py`), its output format(s) with answer instructions (`prompt_blocks.py`) and default prompts (`prompt_defaults.py`); new projects get them as default prompts, existing projects need a data migration
 2. Create a result class in `llm_assistant_job_dto.py`
 3. Create the task class in `tasks/`, inheriting `LLMAssistantTask`
-4. Implement `_get_response_model()`, `_process_document()` and `_build_result()`
+4. Implement `_get_response_model()`, `_process_document()`, `_error_result()` and `_build_result()`
 5. Register in `tasks/task_factory.py` (`TASK_FOR_TASK_TYPE`)
 6. Create a strategy per output format and register it in `strategies/strategy_factory.py`
 

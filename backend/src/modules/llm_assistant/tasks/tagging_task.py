@@ -80,6 +80,16 @@ class TaggingTask(LLMAssistantTask[TaggingStrategy, LLMTaggingResult, TaggingRes
             reasoning=parsed_result.reasoning,
         )
 
+    def _error_result(self, *, sdoc_id: int, message: str) -> TaggingResult:
+        return TaggingResult(
+            status="error",
+            status_message=message,
+            sdoc_id=sdoc_id,
+            suggested_tag_ids=[],
+            current_tag_ids=[],
+            reasoning="",
+        )
+
     def _build_result(
         self, results: list[TaggingResult]
     ) -> TaggingLLMAssistantJobResult:

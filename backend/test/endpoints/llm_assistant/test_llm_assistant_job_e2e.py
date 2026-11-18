@@ -13,6 +13,7 @@ import rq
 from fastapi.testclient import TestClient
 from pydantic import BaseModel
 from rq.defaults import DEFAULT_FAILURE_TTL
+from rq.timeouts import JobTimeoutException
 
 from core.annotation.sentence_annotation_dto import (
     SentenceAnnotationRead,
@@ -107,19 +108,25 @@ def _fake_llm(monkeypatch: pytest.MonkeyPatch) -> FakeLLM:
     return fake
 
 
-def _start_sentence_job(client: TestClient, project: JobPromptProject) -> str:
-    """Start the ``Sentence classification`` prompt (FACT) on the target, example
-    and no-match documents, in this order, as run_a, deleting run_a's existing
-    annotations; returns the job id."""
+def _start_sentence_job(
+    client: TestClient, project: JobPromptProject, sdoc_ids: list[int] | None = None
+) -> str:
+    """Start the ``Sentence classification`` prompt (FACT) on the documents (by
+    default the target, example and no-match documents, in this order) as run_a,
+    deleting run_a's existing annotations; returns the job id."""
     base = project["base"]
     payload = LLMAssistantJobInput(
         project_id=base["project"].id,
         task_type=TaskType.SENTENCE_ANNOTATION,
-        sdoc_ids=[
-            base["target_sdoc"].id,
-            base["example_sdoc"].id,
-            base["no_match_sdoc"].id,
-        ],
+        sdoc_ids=(
+            sdoc_ids
+            if sdoc_ids is not None
+            else [
+                base["target_sdoc"].id,
+                base["example_sdoc"].id,
+                base["no_match_sdoc"].id,
+            ]
+        ),
         model="default",
         prompt_version_id=project["sentence_prompt"].versions[0].id,
         virtual_user_id=base["run_a"].id,
@@ -470,3 +477,142 @@ def test_the_checkpoint_expires_with_the_job(
     assert all(running - 60 < running_ttl <= running for running_ttl in running_ttls)
     assert len(JobService().get_job(job_id).read_checkpoint()) == saved
     assert ttl - 60 < _checkpoint_ttl(job_id) <= ttl
+
+
+def _results(job: LLMAssistantJobRead) -> list[tuple[int, str, str]]:
+    """The (sdoc id, status, status message) of the job's results, in order."""
+    assert job.output is not None
+    task_result = job.output.specific_task_result
+    assert isinstance(task_result, SentenceAnnotationLLMAssistantJobResult)
+    return [
+        (result.sdoc_id, result.status, result.status_message)
+        for result in task_result.results
+    ]
+
+
+def test_a_deleted_and_a_failing_document_become_error_results(
+    client: TestClient,
+    job_prompt_project: JobPromptProject,
+    held_jobs: HeldJobs,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """All three documents are one batch. The example document is deleted after
+    the job started, and the processing of the no-match document raises once it
+    wrote its annotation: both become error results, the no-match annotation is
+    rolled back, and the target document of the same batch is still saved."""
+    base = job_prompt_project["base"]
+    fact_id = base["fact_code"].id
+    target_id = base["target_sdoc"].id
+    example_id = base["example_sdoc"].id
+    no_match_id = base["no_match_sdoc"].id
+    fake = _fake_llm(monkeypatch)
+    monkeypatch.setattr(llm_assistant_document_processor, "DOCUMENT_BATCH_SIZE", 3)
+    process_document = SentenceAnnotationTask._process_document
+
+    def _fail_after_no_match(self, *, context, document):
+        result = process_document(self, context=context, document=document)
+        if document.sdoc_data.id == no_match_id:
+            raise RuntimeError("The processing failed")
+        return result
+
+    monkeypatch.setattr(
+        SentenceAnnotationTask, "_process_document", _fail_after_no_match
+    )
+    job_id = _start_sentence_job(client, job_prompt_project)
+    response = client.delete(f"/sdoc/{example_id}")
+    assert response.status_code == 200, response.text
+
+    held_jobs.run("llm_assistant")
+
+    job = _read_job(client, job_id)
+    assert job.status == JobStatus.FINISHED, job.status_message
+    assert fake.asked == [TARGET, NO_MATCH]
+    assert _results(job) == [
+        (target_id, "finished", "Sentence annotation successful"),
+        (example_id, "error", "The document does not exist"),
+        (no_match_id, "error", "The document could not be processed (RuntimeError)"),
+    ]
+    target = _run_a_annotations(client, job_prompt_project, TARGET)
+    assert _ranges(target) == [(0, 0, fact_id)]
+    assert _run_a_annotations(client, job_prompt_project, NO_MATCH) == []
+
+
+def test_a_repeated_document_is_processed_once_and_has_one_result(
+    client: TestClient,
+    job_prompt_project: JobPromptProject,
+    held_jobs: HeldJobs,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """The input names the target document twice: the LLM is asked for it once,
+    and the output holds one result per document, in the order in which the
+    input first names it."""
+    base = job_prompt_project["base"]
+    target_id = base["target_sdoc"].id
+    example_id = base["example_sdoc"].id
+    fake = _fake_llm(monkeypatch)
+
+    job_id = _start_sentence_job(
+        client, job_prompt_project, sdoc_ids=[target_id, example_id, target_id]
+    )
+    held_jobs.run("llm_assistant")
+
+    job = _read_job(client, job_id)
+    assert job.status == JobStatus.FINISHED, job.status_message
+    assert fake.asked == [TARGET, EXAMPLE]
+    assert [(sdoc_id, status) for sdoc_id, status, _ in _results(job)] == [
+        (target_id, "finished"),
+        (example_id, "finished"),
+    ]
+
+
+def test_a_job_without_documents_finishes_without_results(
+    client: TestClient,
+    job_prompt_project: JobPromptProject,
+    held_jobs: HeldJobs,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """A job on no documents asks the LLM nothing and finishes with no results."""
+    fake = _fake_llm(monkeypatch)
+
+    job_id = _start_sentence_job(client, job_prompt_project, sdoc_ids=[])
+    held_jobs.run("llm_assistant")
+
+    job = _read_job(client, job_id)
+    assert job.status == JobStatus.FINISHED, job.status_message
+    assert fake.asked == []
+    assert _results(job) == []
+
+
+def test_a_timeout_while_a_document_is_processed_fails_the_job(
+    client: TestClient,
+    job_prompt_project: JobPromptProject,
+    held_jobs: HeldJobs,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """The job runs out of time (RQ's `JobTimeoutException`) while the example
+    document is processed: unlike a failing document, the timeout fails the job,
+    and the first batch keeps its annotations."""
+    base = job_prompt_project["base"]
+    fact_id = base["fact_code"].id
+    example_id = base["example_sdoc"].id
+    _fake_llm(monkeypatch)
+    process_document = SentenceAnnotationTask._process_document
+
+    def _time_out_at_example(self, *, context, document):
+        if document.sdoc_data.id == example_id:
+            raise JobTimeoutException("Task exceeded maximum timeout value")
+        return process_document(self, context=context, document=document)
+
+    monkeypatch.setattr(
+        SentenceAnnotationTask, "_process_document", _time_out_at_example
+    )
+
+    job_id = _start_sentence_job(client, job_prompt_project)
+    held_jobs.run("llm_assistant")
+
+    job = _read_job(client, job_id)
+    assert job.status == JobStatus.FAILED
+    assert job.status_message == "Task exceeded maximum timeout value"
+    target = _run_a_annotations(client, job_prompt_project, TARGET)
+    assert _ranges(target) == [(0, 0, fact_id)]
+    assert _run_a_annotations(client, job_prompt_project, EXAMPLE) == []
