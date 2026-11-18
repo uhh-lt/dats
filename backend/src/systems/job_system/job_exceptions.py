@@ -22,3 +22,14 @@ class JobQueueUnavailableError(Exception):
             f"The job queue cannot be reached, so the job {job_type} was not "
             "started. Try again later."
         )
+
+
+class JobStoppedError(BaseException):
+    """Ends a job that `JobService.stop_job` stopped: raised in the job by the
+    worker that runs it, or passed to the job's failure callback by the worker
+    that killed its process. Like `KeyboardInterrupt`, it is no `Exception`, so
+    `except Exception` does not swallow the stop; a handler that must react to
+    it (e.g. to record the failure) catches it explicitly."""
+
+    def __init__(self) -> None:
+        super().__init__("The job was stopped")

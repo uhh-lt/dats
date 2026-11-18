@@ -14,6 +14,7 @@ from modules.llm_assistant.llm_assistant_job_dto import (
 )
 from repos.db.sql_repo import SQLRepo
 from systems.job_system.job_dto import Job
+from systems.job_system.job_exceptions import JobStoppedError
 from systems.job_system.job_register_decorator import register_job
 from systems.job_system.job_system_enum import JobStatus, JobTiming
 
@@ -71,7 +72,8 @@ def experiment_run(
                     status=JobStatus.FINISHED, finished=datetime.now(UTC)
                 ),
             )
-    except Exception:
+    # a stop is no `Exception`, but it ends the run as well
+    except (Exception, JobStoppedError):
         # mark the run failed, unless it was deleted meanwhile
         with sqlr.transaction() as db:
             if crud_experiment_run.exists(db=db, id=payload.run_id):

@@ -2,6 +2,7 @@ import multiprocessing as mp
 import os
 import signal
 import sys
+import threading
 from collections.abc import Iterator
 from contextlib import contextmanager
 from os import environ
@@ -21,6 +22,8 @@ from bootstrap import (
 from repos.db.sql_repo import SQLRepo
 from repos.redis_repo import RedisRepo
 from repos.repo_base import RepoBase
+from systems.job_system.job_exceptions import JobStoppedError
+from systems.job_system.job_handler import STOP_SIGNAL
 from utils.import_utils import import_by_suffix
 
 init_logging()
@@ -72,6 +75,15 @@ class DATSWorker(Worker):
     them.
     """
 
+    def prepare_execution(self, job):
+        """RQ remembers a stop (`_stopped_job_id`) until the job it stopped
+        failed. A stop that came when its job had ended already would make a
+        later failure of the job (e.g. after a retry) a stop, and the horse,
+        which inherits it, would run the failure callback twice: forget it
+        before each execution."""
+        self._stopped_job_id = None
+        return super().prepare_execution(job)
+
     def handle_work_horse_killed(self, job, retpid, ret_val, rusage):
         """RQ fails the job of a dead horse without its failure callback: run
         it here, so the job's `failed` hook runs like for any failed job."""
@@ -83,6 +95,17 @@ class DATSWorker(Worker):
                 AbandonedJobError(f"The job process died ({ret_val})"),
                 None,
             )
+
+    def handle_job_failure(self, job, queue, started_job_registry=None, exc_string=""):
+        """RQ ends a job it stopped (`JobService.stop_job`) by killing its horse,
+        without its failure callback: run it here, so the job runs its `failed`
+        hook and publishes its STOPPED state."""
+        if self._stopped_job_id == job.id:
+            with _sql_connection():
+                job.execute_failure_callback(
+                    self.death_penalty_class, JobStoppedError, JobStoppedError(), None
+                )
+        super().handle_job_failure(job, queue, started_job_registry, exc_string)
 
     def clean_registries(self):
         """The cleanup of the started jobs runs the failure callback of the jobs
@@ -103,12 +126,33 @@ class DATSWorker(Worker):
 class DATSSimpleWorker(SimpleWorker):
     """Custom simple worker (does NOT fork per job - used for CPU/API)"""
 
+    def prepare_execution(self, job):
+        """RQ remembers a stop (`_stopped_job_id`) until the job it stopped
+        failed. A stop that came when its job had ended already would make a
+        later failure of the job (e.g. after a retry) a stop: forget it before
+        each execution."""
+        self._stopped_job_id = None
+        return super().prepare_execution(job)
+
     def work(self, *args, **kwargs):
+        # the stop signal only interrupts a running job (`job_handler._stoppable`)
+        signal.signal(STOP_SIGNAL, signal.SIG_IGN)
         repos = _start_job_process()
         try:
             super().work(*args, **kwargs)
         finally:
             close_repos(repos)
+
+    def kill_horse(self, sig: signal.Signals = signal.SIGKILL) -> None:
+        """RQ stops a job (`JobService.stop_job`) by killing the horse that runs
+        it, but this worker runs its job itself: interrupt the job instead. The
+        job raises `JobStoppedError`, RQ runs its failure callback and ends it
+        as STOPPED. RQ calls this from the thread that receives the stop
+        command; the signal goes to the main thread, which runs the job, so it
+        also interrupts a blocking call."""
+        main_thread_id = threading.main_thread().ident
+        assert main_thread_id is not None
+        signal.pthread_kill(main_thread_id, STOP_SIGNAL)
 
 
 # ==============================================================================

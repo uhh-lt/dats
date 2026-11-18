@@ -58,7 +58,16 @@ Key decorator arguments:
 3. **Progress** — inside the handler, `job.update(...)`
    ([job_dto.py](job_dto.py)) writes progress (`status_message`,
    `current_step`, `steps`, `finished`) into the RQ job meta.
-4. **State** — job state lives in Redis (RQ meta), not Postgres. The REST
+4. **Stop** — `JobService.stop_job` sends RQ's stop command to the worker
+   running a started job. A forking worker (`DATSWorker`, GPU) kills the job
+   process; a simple worker (`DATSSimpleWorker`, CPU/API) runs the job itself
+   and interrupts it with a signal, which raises `JobStoppedError` in the job
+   until its handler returned. `JobStoppedError` is a `BaseException`, so no
+   `except Exception` in the job swallows it; transactions roll back, and code
+   that records a failure (e.g. `experiment_run_job.py`) catches it
+   explicitly. Either way the job runs its `failed` hook and ends as STOPPED
+   in the failed job registry; it is not retried.
+5. **State** — job state lives in Redis (RQ meta), not Postgres. The REST
    polling endpoints (`/job/...`) read it from there and stay fully
    functional — they are used by MCP/agents and as the frontend's
    initial-load and websocket-disconnected fallback.
@@ -94,8 +103,8 @@ user-visible status is conveyed through the sdoc-status polling instead.
 | Started             | `rq_job_handler`, right after the job is picked up                                          |
 | Finished (FINISHED) | `rq_job_handler`, after `handle_job_finished`, with `output_override` and `status_override` |
 | Failed (FAILED)     | `rq_job_failed` (RQ's failure callback), after `handle_job_error`, with `status_override`   |
+| Stopped (STOPPED)   | `rq_job_failed`, once the worker interrupted the job that `JobService.stop_job` stopped      |
 | Enqueued (QUEUED)   | `JobService.start_job`                                                                      |
-| Aborted (CANCELED)  | `JobService.stop_job`                                                                       |
 | Retried (QUEUED)    | `JobService.retry_job`                                                                      |
 
 Every state change emits — there is no throttling or batching.
