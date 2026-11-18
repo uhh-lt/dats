@@ -27,6 +27,7 @@ class MetadataExtractionTask(
 
     task_name = "Metadata Extraction"
     task_type = TaskType.METADATA_EXTRACTION
+    result_type = MetadataExtractionResult
 
     def _get_response_model(self, strategy: MetadataStrategy) -> type[BaseModel]:
         return strategy.get_response_model()

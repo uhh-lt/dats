@@ -41,6 +41,7 @@ class AnnotationTask(LLMAssistantTask[AnnotationStrategy, BaseModel, AnnotationR
 
     task_name = "Annotation"
     task_type = TaskType.ANNOTATION
+    result_type = AnnotationResult
 
     @staticmethod
     def _dedupe_annotations(

@@ -7,6 +7,7 @@ from types import FrameType, TracebackType
 import rq
 from loguru import logger
 from redis import Redis
+from rq.defaults import DEFAULT_FAILURE_TTL
 
 from config import conf
 from systems.job_system.cuda_utils import ensure_cuda_available
@@ -14,7 +15,7 @@ from systems.job_system.job_dto import Job, JobInputBase
 from systems.job_system.job_events import publish_job_update
 from systems.job_system.job_exceptions import JobStoppedError
 from systems.job_system.job_service import JobService
-from systems.job_system.job_system_enum import JobStatus
+from systems.job_system.job_system_enum import JobStatus, JobTiming
 from utils.gpu_utils import pin_gpu, select_gpu, set_cuda_memory_limit
 
 # Interrupts the job a worker runs in its own process (`DATSSimpleWorker`)
@@ -72,6 +73,9 @@ def rq_job_handler(jobtype: str, handler, payload: JobInputBase):
     # handler (e.g. enqueueing the job after an entry point)
     job.update(finished=datetime.now(UTC), publish=False)
     hooks.finished(jobtype, payload, output)
+    # until RQ saved the output, the job may still fail (e.g. its worker dies)
+    # and be retried: its checkpoint outlives the finish by a day
+    job.end_checkpoint(ttl=int(JobTiming.ONE_DAY))
 
     # RQ marks the job as FINISHED only after this handler returned,
     # so the final event has to carry the terminal status explicitly
@@ -101,6 +105,11 @@ def rq_job_failed(
             status_message=str(exc_value) or exc_type.__name__,
             finished=datetime.now(UTC),
             publish=False,
+        )
+        # a retry continues from the checkpoint: it expires with the failed job,
+        # also if the `failed` hook raises
+        dats_job.end_checkpoint(
+            ttl=job.failure_ttl if job.failure_ttl is not None else DEFAULT_FAILURE_TTL
         )
         JobService().hooks.failed(job.kwargs["jobtype"], job.kwargs["payload"])
     except Exception as e:

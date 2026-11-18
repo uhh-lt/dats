@@ -24,6 +24,7 @@ class TaggingTask(LLMAssistantTask[TaggingStrategy, LLMTaggingResult, TaggingRes
 
     task_name = "Document Tagging"
     task_type = TaskType.TAGGING
+    result_type = TaggingResult
 
     def _get_response_model(self, strategy: TaggingStrategy) -> type[LLMTaggingResult]:
         return LLMTaggingResult
