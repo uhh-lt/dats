@@ -202,21 +202,29 @@ function handleExperimentRunJobUpdate(job: ExperimentRunJobRead) {
 }
 
 function invalidateAssistantAnnotations(output: LLMAssistantJobOutput) {
-  const sdocIds = output.specific_task_result.results.map((result) => result.sdoc_id);
+  const sdocIds = new Set(output.specific_task_result.results.map((result) => result.sdoc_id));
   switch (output.task_type) {
     case TaskType.ANNOTATION:
-      sdocIds.forEach((sdocId) => {
-        queryClient.invalidateQueries({ queryKey: spanAnnotationQueries.bySdocOfSdocScope(sdocId) });
-      });
+      invalidateBySdocs(spanAnnotationQueries.bySdocScope(), sdocIds);
       break;
     case TaskType.SENTENCE_ANNOTATION:
-      sdocIds.forEach((sdocId) => {
-        queryClient.invalidateQueries({ queryKey: sentenceAnnotationQueries.bySdocOfSdocScope(sdocId) });
-      });
+      invalidateBySdocs(sentenceAnnotationQueries.bySdocScope(), sdocIds);
       break;
     default:
       break;
   }
+}
+
+// One invalidation for the per-sdoc queries of many sdocs (a run may process thousands): the key continues the scope
+// with the sdoc id.
+function invalidateBySdocs(bySdocScope: readonly unknown[], sdocIds: Set<number>) {
+  queryClient.invalidateQueries({
+    queryKey: bySdocScope,
+    predicate: ({ queryKey }) => {
+      const sdocId = queryKey[bySdocScope.length];
+      return typeof sdocId === "number" && sdocIds.has(sdocId);
+    },
+  });
 }
 
 // A finished classifier job may have created/updated classifiers; document
