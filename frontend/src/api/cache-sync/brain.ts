@@ -40,7 +40,7 @@ import {
   sweepPrefix,
   upsertMapItem,
 } from "./_utils/cacheWriterUtils";
-import { handleJobUpdate } from "./_utils/jobCacheUtils";
+import { handleJobUpdate, invalidateAllJobs } from "./_utils/jobCacheUtils";
 import {
   appendMemo,
   invalidateAttachedObjectMemoIds,
@@ -54,6 +54,14 @@ import { removeSdocMetadata, upsertSdocMetadata } from "./_utils/sdocMetadataCac
 import { removeSentenceAnnotation, upsertSentenceAnnotation } from "./_utils/sentenceAnnoCacheUtils";
 
 export type DATSEventSource = "mutation" | "websocket";
+
+/**
+ * The websocket (re)connected. Events pushed while no socket was open (before the first open or during a disconnect)
+ * are lost; the job queries rely on them alone (`staleTime: Infinity`), so they are refetched.
+ */
+export function handleWebsocketConnected(): void {
+  invalidateAllJobs();
+}
 
 // ── The brain ────────────────────────────────────────────────────────────────
 

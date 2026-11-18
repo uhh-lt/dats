@@ -1,6 +1,7 @@
 import { queryClient } from "@api/queryClient";
 import { codeQueries } from "@core/code/api/codeQueries";
 import { exportQueries } from "@core/export-buttons/api/exportQueries";
+import { isJobQueryKey } from "@core/job";
 import { folderQueries } from "@core/folder/api/folderQueries";
 import { memoQueries } from "@core/memo/api/memoQueries";
 import { projectMetadataQueries } from "@core/project-metadata/api/projectMetadataQueries";
@@ -96,6 +97,11 @@ export function handleJobUpdate(job: JobRead): void {
       console.warn("Unhandled job type in JOB_UPDATED:", _exhaustive);
     }
   }
+}
+
+// The websocket (re)connected: the job updates pushed while no socket was open are lost, so refetch the jobs of all types.
+export function invalidateAllJobs(): void {
+  queryClient.invalidateQueries({ predicate: ({ queryKey }) => isJobQueryKey(queryKey) });
 }
 
 // The query definitions of one job type (`<domain>Queries.job`): the single-job query and, for types that have one,

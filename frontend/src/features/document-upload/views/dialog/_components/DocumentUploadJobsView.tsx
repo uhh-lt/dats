@@ -1,4 +1,5 @@
 import { DialogSection } from "@components/DialogSection";
+import { useRefreshJobs } from "@core/job";
 import RefreshIcon from "@mui/icons-material/Refresh";
 import { IconButton, List, Stack, Tooltip, Typography } from "@mui/material";
 import { useQuery } from "@tanstack/react-query";
@@ -14,11 +15,9 @@ interface DocumentImportJobsViewProps {
 
 export const DocumentUploadJobsView = memo(({ projectId }: DocumentImportJobsViewProps) => {
   // global server state (react-query)
-  const {
-    data: crawlerJobs,
-    refetch: refetchCrawlerJobs,
-    isFetching: isCrawlerFetching,
-  } = useQuery(documentUploadQueries.job.byProject(projectId));
+  const { data: crawlerJobs } = useQuery(documentUploadQueries.job.byProject(projectId));
+  // the list and the jobs its items follow
+  const { refresh: refreshCrawlerJobs, isFetching: isCrawlerFetching } = useRefreshJobs(documentUploadQueries.job);
   const {
     data: sdocStatus,
     refetch: refetchSdocStatus,
@@ -30,7 +29,7 @@ export const DocumentUploadJobsView = memo(({ projectId }: DocumentImportJobsVie
   const allSdocStatus = useMemo(() => sdocStatus || [], [sdocStatus]);
 
   const handleRefresh = () => {
-    refetchCrawlerJobs();
+    refreshCrawlerJobs();
     refetchSdocStatus();
   };
 

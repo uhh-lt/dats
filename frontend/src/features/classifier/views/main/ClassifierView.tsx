@@ -1,8 +1,10 @@
 import { ContentContainerLayout } from "@components/content-layouts";
+import { useRefreshJobs } from "@core/job";
 import { Stack } from "@mui/material";
 import { useSuspenseQuery } from "@tanstack/react-query";
 import { getRouteApi } from "@tanstack/react-router";
 import { useMemo } from "react";
+import { classifierQueries } from "../../api/classifierQueries";
 import { ClassifierJobs } from "./_components/ClassifierJobs";
 import { ClassifierTable } from "./_components/ClassifierTable";
 
@@ -14,6 +16,9 @@ export function ClassifierView() {
   const { classifiersByProjectOptions, classifierJobsByProjectOptions } = routeApi.useRouteContext();
   const classifiersQuery = useSuspenseQuery(classifiersByProjectOptions);
   const classifierJobsQuery = useSuspenseQuery(classifierJobsByProjectOptions);
+
+  // the list and the jobs its items follow
+  const { refresh: refreshJobs, isFetching: isFetchingJobs } = useRefreshJobs(classifierQueries.job);
 
   const classifiers = useMemo(() => Object.values(classifiersQuery.data), [classifiersQuery.data]);
 
@@ -32,10 +37,8 @@ export function ClassifierView() {
           />
           <ClassifierJobs
             classifierJobs={classifierJobsQuery.data}
-            isFetching={classifierJobsQuery.isFetching}
-            onRefresh={() => {
-              void classifierJobsQuery.refetch();
-            }}
+            isFetching={isFetchingJobs}
+            onRefresh={refreshJobs}
           />
         </Stack>
       </ContentContainerLayout>
