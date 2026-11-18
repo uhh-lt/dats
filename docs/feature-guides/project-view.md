@@ -87,5 +87,5 @@ If you have previously exported a DATS project (e.g., as a backup), you can use 
 As the name implies, this tab contains destructive actions.
 
 - **Delete Project:** Click the red "Delete" button to permanently erase the project.
-- **Background jobs:** Deleting a project deletes its background jobs that are not running and marks its running jobs as canceled. Background jobs of other projects are not affected.
+- **Background jobs:** Deleting a project deletes its background jobs that are not running and stops its running jobs. Background jobs of other projects are not affected.
 - **Warning:** This operation is final and irreversible. All documents, annotations, codes, tags, memos, and the logbook associated with this project will be permanently destroyed.

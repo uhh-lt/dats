@@ -18,6 +18,10 @@ DATS connects to OpenAI-compatible LLM and embedding APIs through these base URL
 
 Each URL must start with `http://` or `https://`. Include the path required by the provider or gateway, such as `/v1`. The `LLM_PROVIDER_API_KEY` and `EMB_PROVIDER_API_KEY` settings remain separate.
 
+### LLM Assistant raw responses
+
+The backend environment variable `LLM_ASSISTANT_MAX_RAW_RESPONSE_CHARACTERS` sets the maximum number of raw-response characters retained per document result before a truncation marker is added (default: `1000`). Only the raw responses of failed requests are retained, and only for documents with an error or partial result. This limit keeps the job output of large LLM Assistant runs bounded.
+
 ### Upgrading from host and port settings
 
 The old `LLM_PROVIDER_HOST`, `LLM_PROVIDER_PORT`, `EMB_PROVIDER_HOST`, and `EMB_PROVIDER_PORT` variables are no longer read. Replace them with the two URL variables in both `.env` files before restarting DATS. For example, `LLM_PROVIDER_HOST=vllm-llm` and `LLM_PROVIDER_PORT=8000` become `LLM_PROVIDER_URL=http://vllm-llm:8000/v1`.
