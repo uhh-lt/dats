@@ -28,7 +28,6 @@ dependencies = [
     "hdbscan>=0.8.44",
     "itsdangerous>=2.2.0",
     "lightning>=2.6.5",
-    "litellm>=1.90.3",
     "loguru>=0.7.3",
     "lxml-html-clean>=0.4.5",
     "mammoth>=1.12.0",
