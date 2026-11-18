@@ -45,7 +45,7 @@ A prompt that shows at least one example makes a **few-shot** run in the LLM Ass
 
 ## Preview
 
-Switch between **Write** (the raw prompt with its blocks) and **Preview**. The preview shows the prompt exactly as the model receives it, also for unsaved changes. **Documents** selects the documents to preview (by default the documents of the examples); pick one of them next to it. A prompt sent sentence by sentence can step through the sentences; whole documents and chunks show the whole document or the first chunk. Without documents, the preview keeps the document block as it is. If the prompt breaks a rule (e.g. two document blocks), the preview shows the error instead.
+Switch between **Write** (the raw prompt with its blocks) and **Preview**. The preview shows the prompt exactly as the model receives it, also for unsaved changes. **Documents** selects the documents to preview (by default the documents of the examples); pick one of them next to it. The selector lists at most the first 100 selected documents. A prompt sent sentence by sentence can step through the sentences; whole documents and chunks show the whole document or the first chunk. Without documents, the preview keeps the document block as it is. If the prompt breaks a rule (e.g. two document blocks), the preview shows the error instead.
 
 ## Versions
 

@@ -47,7 +47,7 @@ _It is highly recommended to review these settings before initiating a large upl
 
 ## 4\. The Processing Pipeline and Upload Jobs
 
-Once you click upload, your documents appear in the **Upload Jobs** section at the bottom of the dialog.
+Once you click upload, your documents appear in the **Upload Jobs** section at the bottom of the dialog. For a URL upload, **Abort the job** stops the started crawler job, and **Retry the job** requeues a failed or stopped crawler job.
 
 You will see a progress bar for each file. Depending on the size and modality of the file, this process can take some time. Behind the scenes, DATS is running your data through a complex, multi-modal pipeline:
 
