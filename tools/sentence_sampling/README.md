@@ -41,6 +41,8 @@ DATS_PASSWORD=... python export_sentences.py --backend_url https://dats.example.
 
 Without `DATS_PASSWORD` the script asks for the password. `--year_key` (default `year`) names the metadata key of the year, `--workers` (default 4) the number of parallel requests.
 
+The year key must be a text metadata key of type NUMBER or STRING (`YYYY`). DATS stores an unset value instead of none: 0 for a number and an empty string for a string, so both count as no year. A DATE key is refused, because DATS fills an unset date with the day the value was created, which cannot be told apart from a real date.
+
 ## Draw the sample
 
 `draw_sample.py` draws three samples from the export. The draw is binding: it is run once, with a seed chosen beforehand, and its log is kept.
