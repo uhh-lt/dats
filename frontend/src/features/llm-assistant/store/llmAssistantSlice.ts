@@ -1,6 +1,5 @@
 import { DocumentUnit } from "@models/DocumentUnit";
 import { LlmAssistantJobRead } from "@models/LlmAssistantJobRead";
-import { LLMAssistantJobOutput } from "@models/LLMAssistantJobOutput";
 import { OutputFormat } from "@models/OutputFormat";
 import { PromptLanguage } from "@models/PromptLanguage";
 import { PromptSettings } from "@models/PromptSettings";
@@ -37,7 +36,6 @@ interface LLMAssistantState {
   promptVersionId?: number;
   deleteExistingAnnotations: boolean;
   jobId?: string;
-  jobResult: LLMAssistantJobOutput | null | undefined;
 }
 
 const initialState: LLMAssistantState = {
@@ -58,7 +56,6 @@ const initialState: LLMAssistantState = {
   promptVersionId: undefined,
   deleteExistingAnnotations: false,
   jobId: undefined,
-  jobResult: undefined,
 };
 
 const llmAssistantSlice = createSlice({
@@ -142,9 +139,8 @@ const llmAssistantSlice = createSlice({
       state.mode = action.payload.input.prompt_version_id ? "prompt" : "guided";
       state.promptVersionId = action.payload.input.prompt_version_id ?? undefined;
     },
-    // Step 5: Wait for the job to finish
-    goToResult: (state, action: PayloadAction<{ result: LLMAssistantJobOutput }>) => {
-      state.jobResult = action.payload.result;
+    // Step 5: The job finished -> Show its results
+    goToResult: (state) => {
       state.step = 5;
     },
     // close the dialog & reset
