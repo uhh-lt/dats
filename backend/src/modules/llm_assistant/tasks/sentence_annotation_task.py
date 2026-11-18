@@ -1,3 +1,5 @@
+from collections import Counter
+
 from loguru import logger
 
 from core.annotation.sentence_annotation_crud import crud_sentence_anno
@@ -211,7 +213,7 @@ class SentenceAnnotationTask(
             len(created_annos_for_sdoc),
             sdoc_data.id,
         )
-        created_annos_for_sdoc = create_reasoning_memos(
+        create_reasoning_memos(
             context,
             attached_object_type=AttachedObjectType.sentence_annotation,
             annotations=created_annos_for_sdoc,
@@ -219,6 +221,9 @@ class SentenceAnnotationTask(
                 self._reasonings_of(annotation, parsed_sentences)
                 for annotation in suggested_annotations
             ],
+        )
+        annotation_count_by_code_id = dict(
+            Counter(annotation.code_id for annotation in created_annos_for_sdoc)
         )
 
         if errors:
@@ -235,14 +240,14 @@ class SentenceAnnotationTask(
                     status="partial",
                     status_message=f"Sentence annotation partially successful. {error_msg}",
                     sdoc_id=sdoc_data.id,
-                    suggested_annotations=created_annos_for_sdoc,
+                    annotation_count_by_code_id=annotation_count_by_code_id,
                     raw_response=raw_response or None,
                 )
             return SentenceAnnotationResult(
                 status="error",
                 status_message=error_msg,
                 sdoc_id=sdoc_data.id,
-                suggested_annotations=[],
+                annotation_count_by_code_id={},
                 raw_response=raw_response or None,
             )
 
@@ -251,14 +256,14 @@ class SentenceAnnotationTask(
                 status="finished",
                 status_message="Sentence annotation successful",
                 sdoc_id=sdoc_data.id,
-                suggested_annotations=created_annos_for_sdoc,
+                annotation_count_by_code_id=annotation_count_by_code_id,
             )
 
         return SentenceAnnotationResult(
             status="finished",
             status_message="No annotations suggested",
             sdoc_id=sdoc_data.id,
-            suggested_annotations=[],
+            annotation_count_by_code_id={},
             raw_response=(
                 aggregate_raw_responses(raw_responses) if raw_responses else None
             ),

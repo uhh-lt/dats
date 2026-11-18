@@ -2,7 +2,6 @@
 /* istanbul ignore file */
 /* tslint:disable */
 /* eslint-disable */
-import type { SpanAnnotationRead } from "./SpanAnnotationRead";
 export type AnnotationResult = {
   /**
    * Status of the Result
@@ -17,9 +16,9 @@ export type AnnotationResult = {
    */
   sdoc_id: number;
   /**
-   * Suggested annotations
+   * Number of the created annotations per code ID
    */
-  suggested_annotations: Array<SpanAnnotationRead>;
+  annotation_count_by_code_id: Record<string, number>;
   /**
    * Raw LLM response (only set if no annotations were suggested or an error occurred)
    */

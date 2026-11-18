@@ -6,6 +6,7 @@ an external service: the tests replace
 every document as FACT, or fails for chosen documents."""
 
 import time
+from collections import Counter
 
 import pytest
 import rq
@@ -162,6 +163,11 @@ def _ranges(annotations: list[SentenceAnnotationRead]) -> list[tuple[int, int, i
     return [(a.sentence_id_start, a.sentence_id_end, a.code_id) for a in annotations]
 
 
+def _count_by_code_id(annotations: list[SentenceAnnotationRead]) -> dict[int, int]:
+    """The number of annotations per code."""
+    return dict(Counter(a.code_id for a in annotations))
+
+
 # ===========================================================================
 # LLM ASSISTANT JOB RUN TESTS
 # ===========================================================================
@@ -242,13 +248,10 @@ def test_a_retry_skips_the_finished_documents_and_returns_the_results_of_all(
     assert isinstance(task_result, SentenceAnnotationLLMAssistantJobResult)
     assert [result.sdoc_id for result in task_result.results] == sdoc_ids
     assert [result.status for result in task_result.results] == ["finished"] * 3
-    assert [
-        [annotation.id for annotation in result.suggested_annotations]
-        for result in task_result.results
-    ] == [
-        [annotation.id for annotation in saved[TARGET]],
-        [annotation.id for annotation in saved[EXAMPLE]],
-        [annotation.id for annotation in no_match],
+    assert [result.annotation_count_by_code_id for result in task_result.results] == [
+        _count_by_code_id(saved[TARGET]),
+        _count_by_code_id(saved[EXAMPLE]),
+        _count_by_code_id(no_match),
     ]
 
 

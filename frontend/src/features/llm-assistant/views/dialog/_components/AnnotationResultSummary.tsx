@@ -5,6 +5,7 @@ import { SentenceAnnotationResult } from "@models/SentenceAnnotationResult";
 import ExpandMoreRoundedIcon from "@mui/icons-material/ExpandMoreRounded";
 import { Accordion, AccordionDetails, AccordionSummary, Alert, Box, Chip, Stack, Typography } from "@mui/material";
 import { useMemo } from "react";
+import { countAnnotations } from "../_utils/annotationResultUtils";
 
 interface AnnotationResultSummaryProps {
   results: (AnnotationResult | SentenceAnnotationResult)[];
@@ -14,14 +15,13 @@ interface AnnotationResultSummaryProps {
 
 export function AnnotationResultSummary({ results, annotationWording }: AnnotationResultSummaryProps) {
   const stats = useMemo(() => {
-    const annotatedResults = results.filter((r) => r.suggested_annotations.length > 0);
+    const annotationCounts = results.map(countAnnotations);
     return {
       numDocuments: results.length,
-      numAnnotatedDocuments: annotatedResults.length,
-      numAnnotations: results.reduce((sum, r) => sum + r.suggested_annotations.length, 0),
+      numAnnotatedDocuments: annotationCounts.filter((count) => count > 0).length,
+      numAnnotations: annotationCounts.reduce((sum, count) => sum + count, 0),
       numErrors: results.filter((r) => r.status === "error").length,
       numPartial: results.filter((r) => r.status === "partial").length,
-      firstAnnotatedSdocId: annotatedResults[0]?.sdoc_id,
     };
   }, [results]);
 
@@ -88,14 +88,15 @@ export function AnnotationResultSummary({ results, annotationWording }: Annotati
 function DocumentResultAccordion({ result }: { result: AnnotationResult | SentenceAnnotationResult }) {
   const isError = result.status === "error";
   const isPartial = result.status === "partial";
-  const hasAnnotations = result.suggested_annotations.length > 0;
+  const numAnnotations = countAnnotations(result);
+  const hasAnnotations = numAnnotations > 0;
 
   const chipLabel = isError
     ? "Error"
     : isPartial
-      ? `${result.suggested_annotations.length} annotations (partial)`
+      ? `${numAnnotations} annotations (partial)`
       : hasAnnotations
-        ? `${result.suggested_annotations.length} annotations`
+        ? `${numAnnotations} annotations`
         : "No annotations";
   const chipColor = isError ? "error" : isPartial ? "warning" : hasAnnotations ? "success" : "default";
 
@@ -144,18 +145,14 @@ function DocumentResultAccordion({ result }: { result: AnnotationResult | Senten
 function SuggestedAnnotationsInfo({ result }: { result: AnnotationResult | SentenceAnnotationResult }) {
   const codes = CodeHooks.useGetAllCodesMap();
 
-  const codeId2count = useMemo(() => {
-    const map = new Map<number, number>();
-    for (const annotation of result.suggested_annotations) {
-      map.set(annotation.code_id, (map.get(annotation.code_id) ?? 0) + 1);
-    }
-    return map;
-  }, [result.suggested_annotations]);
-
   return (
     <Stack direction="row" spacing={1} flexWrap="wrap" useFlexGap>
-      {[...codeId2count.entries()].map(([codeId, count]) => (
-        <Chip key={codeId} label={`${codes.data?.[codeId]?.name ?? `Code ${codeId}`} (${count})`} size="small" />
+      {Object.entries(result.annotation_count_by_code_id).map(([codeId, count]) => (
+        <Chip
+          key={codeId}
+          label={`${codes.data?.[Number(codeId)]?.name ?? `Code ${codeId}`} (${count})`}
+          size="small"
+        />
       ))}
     </Stack>
   );

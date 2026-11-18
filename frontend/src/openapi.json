@@ -9460,11 +9460,11 @@
             "description": "Status message of the result"
           },
           "sdoc_id": { "type": "integer", "title": "Sdoc Id", "description": "ID of the source document" },
-          "suggested_annotations": {
-            "items": { "$ref": "#/components/schemas/SpanAnnotationRead" },
-            "type": "array",
-            "title": "Suggested Annotations",
-            "description": "Suggested annotations"
+          "annotation_count_by_code_id": {
+            "additionalProperties": { "type": "integer" },
+            "type": "object",
+            "title": "Annotation Count By Code Id",
+            "description": "Number of the created annotations per code ID"
           },
           "raw_response": {
             "anyOf": [{ "type": "string" }, { "type": "null" }],
@@ -9473,7 +9473,7 @@
           }
         },
         "type": "object",
-        "required": ["status", "status_message", "sdoc_id", "suggested_annotations"],
+        "required": ["status", "status_message", "sdoc_id", "annotation_count_by_code_id"],
         "title": "AnnotationResult"
       },
       "ApiKeyCreatedEvent": {
@@ -17513,11 +17513,11 @@
             "description": "Status message of the result"
           },
           "sdoc_id": { "type": "integer", "title": "Sdoc Id", "description": "ID of the source document" },
-          "suggested_annotations": {
-            "items": { "$ref": "#/components/schemas/SentenceAnnotationRead" },
-            "type": "array",
-            "title": "Suggested Annotations",
-            "description": "Suggested annotations"
+          "annotation_count_by_code_id": {
+            "additionalProperties": { "type": "integer" },
+            "type": "object",
+            "title": "Annotation Count By Code Id",
+            "description": "Number of the created annotations per code ID"
           },
           "raw_response": {
             "anyOf": [{ "type": "string" }, { "type": "null" }],
@@ -17526,7 +17526,7 @@
           }
         },
         "type": "object",
-        "required": ["status", "status_message", "sdoc_id", "suggested_annotations"],
+        "required": ["status", "status_message", "sdoc_id", "annotation_count_by_code_id"],
         "title": "SentenceAnnotationResult"
       },
       "SentenceAnnotationRow": {

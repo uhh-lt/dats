@@ -1,3 +1,5 @@
+from collections import Counter
+
 from loguru import logger
 from pydantic import BaseModel
 
@@ -274,7 +276,7 @@ class AnnotationTask(LLMAssistantTask[AnnotationStrategy, BaseModel, AnnotationR
             len(created_annos_for_sdoc),
             sdoc_data.id,
         )
-        created_annos_for_sdoc = create_reasoning_memos(
+        create_reasoning_memos(
             context,
             attached_object_type=AttachedObjectType.span_annotation,
             annotations=created_annos_for_sdoc,
@@ -282,6 +284,9 @@ class AnnotationTask(LLMAssistantTask[AnnotationStrategy, BaseModel, AnnotationR
                 self._reasonings_of(annotation, suggestions)
                 for annotation in suggested_annotations
             ],
+        )
+        annotation_count_by_code_id = dict(
+            Counter(annotation.code_id for annotation in created_annos_for_sdoc)
         )
 
         if errors:
@@ -298,14 +303,14 @@ class AnnotationTask(LLMAssistantTask[AnnotationStrategy, BaseModel, AnnotationR
                     status="partial",
                     status_message=f"Annotation partially successful. {error_msg}",
                     sdoc_id=sdoc_data.id,
-                    suggested_annotations=created_annos_for_sdoc,
+                    annotation_count_by_code_id=annotation_count_by_code_id,
                     raw_response=raw_response or None,
                 )
             return AnnotationResult(
                 status="error",
                 status_message=error_msg,
                 sdoc_id=sdoc_data.id,
-                suggested_annotations=[],
+                annotation_count_by_code_id={},
                 raw_response=raw_response or None,
             )
 
@@ -314,14 +319,14 @@ class AnnotationTask(LLMAssistantTask[AnnotationStrategy, BaseModel, AnnotationR
                 status="finished",
                 status_message="Annotation successful",
                 sdoc_id=sdoc_data.id,
-                suggested_annotations=created_annos_for_sdoc,
+                annotation_count_by_code_id=annotation_count_by_code_id,
             )
 
         return AnnotationResult(
             status="finished",
             status_message="No annotations suggested",
             sdoc_id=sdoc_data.id,
-            suggested_annotations=[],
+            annotation_count_by_code_id={},
             raw_response=(
                 aggregate_raw_responses(raw_responses) if raw_responses else None
             ),
