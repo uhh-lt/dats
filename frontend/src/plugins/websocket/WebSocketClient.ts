@@ -1,4 +1,5 @@
 /* eslint-disable boundaries/element-types */
+import { handleWebsocketConnected } from "@api/cache-sync";
 import { OpenAPI } from "@api/core/OpenAPI";
 import { WebsocketActions } from "@store/global/websocketSlice";
 import { store } from "@store/store";
@@ -36,6 +37,7 @@ class WebSocketClient {
       this.socket?.send(JSON.stringify({ token }));
       this.reconnectAttempt = 0;
       store.dispatch(WebsocketActions.setConnectionStatus("connected"));
+      handleWebsocketConnected();
     };
 
     this.socket.onmessage = (event: MessageEvent) => {

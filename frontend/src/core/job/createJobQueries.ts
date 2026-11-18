@@ -1,6 +1,6 @@
-import { queryOptions, skipToken } from "@tanstack/react-query";
+import { type QueryKey, queryOptions, skipToken } from "@tanstack/react-query";
 
-interface JobQueriesWithoutList<TJob> {
+export interface JobQueriesWithoutList<TJob> {
   all: () => readonly [string, "job"];
   byId: (jobId: string | null | undefined) => ReturnType<typeof jobById<TJob>>;
 }
@@ -18,6 +18,8 @@ const jobById = <TJob>(
   queryOptions({
     queryKey: [...scope, "detail", jobId] as const,
     queryFn: !jobId ? skipToken : () => fetchJob(jobId),
+    // kept fresh by the cache-sync code (JOB_UPDATED), useLiveJob polls while the websocket is down
+    staleTime: Infinity,
   });
 
 const jobsByProject = <TJob>(
@@ -28,6 +30,8 @@ const jobsByProject = <TJob>(
   queryOptions({
     queryKey: [...scope, projectId] as const,
     queryFn: () => fetchJobs(projectId),
+    // kept fresh by the cache-sync code, which upserts every JOB_UPDATED into the list
+    staleTime: Infinity,
   });
 
 /**
@@ -37,7 +41,8 @@ const jobsByProject = <TJob>(
  *   xQueries.job.byId(jobId)           [<domain>, "job", "detail", jobId]
  *   xQueries.job.byProject(projectId)  [<domain>, "job", "project", projectId]     (only if the domain lists its jobs)
  *
- * Every job type has this shape, so the cache-sync code can handle all of them the same way.
+ * Every job type has this shape, so the cache-sync code can handle all of them the same way. It writes every job
+ * update into both caches, so they never go stale and are not refetched when a view mounts or the window gets focus.
  * @param root the root query key of the domain, i.e. what its `all()` returns (lint checks that they match)
  */
 export function createJobQueries<TJob>(
@@ -62,3 +67,9 @@ export function createJobQueries<TJob>(
   const byProject = (projectId: number) => jobsByProject(byProjectScope(), projectId, fetchJobs);
   return { all, byId, byProjectScope, byProject };
 }
+
+/**
+ * Whether a query key belongs to the queries of a job type (`[<domain>, "job", ...]`, see createJobQueries), e.g. to
+ * refresh the jobs of all types once the websocket opened, as they may have missed updates.
+ */
+export const isJobQueryKey = (queryKey: QueryKey) => queryKey[1] === "job";

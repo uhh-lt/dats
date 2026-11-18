@@ -1,4 +1,5 @@
 import { DialogSection } from "@components/DialogSection";
+import { useRefreshJobs } from "@core/job";
 import RefreshIcon from "@mui/icons-material/Refresh";
 import { IconButton, List, Stack, Tooltip, Typography } from "@mui/material";
 import { useAppSelector } from "@store/storeHooks";
@@ -10,19 +11,14 @@ import { LLMAssistantJobListItem } from "./LLMAssistantJobListItem";
 export function LLMAssistantJobsView() {
   const projectId = useAppSelector((state) => state.project.projectId);
 
-  const {
-    data: llmAssistantJobs,
-    refetch: refetchLLMAssistantJobs,
-    isFetching: isFetchingLLMAssistantJobs,
-  } = useQuery({
+  const { data: llmAssistantJobs } = useQuery({
     ...llmAssistantQueries.job.byProject(projectId ?? 0),
     enabled: projectId !== undefined,
   });
   const allLLMAssistantJobs = useMemo(() => llmAssistantJobs || [], [llmAssistantJobs]);
 
-  const handleRefresh = () => {
-    refetchLLMAssistantJobs();
-  };
+  // the list and the jobs its items follow
+  const { refresh: handleRefresh, isFetching: isFetchingLLMAssistantJobs } = useRefreshJobs(llmAssistantQueries.job);
 
   return (
     <DialogSection

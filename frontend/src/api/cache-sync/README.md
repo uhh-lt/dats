@@ -76,6 +76,11 @@ The backend pushes `{ type, payload }` messages. The dispatcher forwards them
 verbatim; the brain handles them exactly like a mutation result. No
 per-event handler code is needed in the websocket layer.
 
+Events pushed while no websocket is open (before the first open or during a
+disconnect) are lost. Whenever it opens, `handleWebsocketConnected` refetches
+the job queries of all job types (`[<domain>, "job", ...]`), which are kept
+fresh by events only.
+
 ## The event contract is generated
 
 The set of events is not hand-maintained on the frontend. The backend declares
