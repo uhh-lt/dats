@@ -169,7 +169,7 @@ Use the [gh-aw debugging instructions](https://raw.githubusercontent.com/github/
 
 The What's New dialog shows the description of the GitHub release to every user. After creating a release, `release.yml` dispatches `agent-release-highlights`, which adds end-user friendly highlights above the generated list of pull requests. The dispatch is needed because a release created with the `GITHUB_TOKEN` triggers no `release` event.
 
-Rerunning the workflow replaces the highlights between the `dats-release-highlights` markers and keeps the list below them. To add highlights to an existing release or regenerate them:
+Rerunning the workflow replaces everything above the generated `## What's Changed` heading and keeps the list from there on. gh-aw strips HTML comments from prompts and safe outputs, so the workflow cannot use hidden markers. To add highlights to an existing release or regenerate them:
 
 ```bash
 gh aw run agent-release-highlights --raw-field tag=v1.13.0
