@@ -26,8 +26,8 @@ from modules.llm_assistant.tasks.llm_assistant_document_processor import (
 from modules.llm_assistant.tasks.llm_assistant_task import (
     LLMAssistantTask,
     LLMAssistantTaskContext,
-    bounded_raw_response,
     create_reasoning_memos,
+    failed_response_excerpt,
 )
 
 AnnotationStrategy = NERInlineTagStrategy | FuzzyGroundingStrategy
@@ -286,7 +286,7 @@ class AnnotationTask(LLMAssistantTask[AnnotationStrategy, BaseModel, AnnotationR
         )
 
         if errors:
-            raw_response = bounded_raw_response(
+            raw_response = failed_response_excerpt(
                 [raw for _, raw in errors if raw is not None]
             )
             error_msg = (

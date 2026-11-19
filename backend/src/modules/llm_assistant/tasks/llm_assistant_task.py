@@ -9,7 +9,6 @@ from pydantic import BaseModel
 from rq.timeouts import JobTimeoutException
 from sqlalchemy.orm import Session
 
-from config import conf
 from core.annotation.sentence_annotation_dto import SentenceAnnotationRead
 from core.annotation.span_annotation_dto import SpanAnnotationRead
 from core.memo.memo_dto import MemoCreateIntern
@@ -35,8 +34,9 @@ from repos.db.sql_repo import SQLRepo
 from repos.llm_repo import LLMRepo
 from systems.job_system.job_dto import Job
 
-# the characters of the raw LLM responses that a result keeps
-MAX_RAW_RESPONSE_CHARACTERS = conf.llm_assistant.max_raw_response_characters
+# the characters of the raw LLM responses of failed requests that an error or
+# partial result keeps
+FAILED_RESPONSE_EXCERPT_CHARACTERS = 1000
 ResponseT = TypeVar("ResponseT", bound=BaseModel)
 ResultT = TypeVar("ResultT", bound=LLMAssistantResultWithStatus)
 StrategyT = TypeVar("StrategyT", bound=LLMAssistantStrategy)
@@ -81,19 +81,20 @@ def _aggregate_raw_responses(raw_responses: list[str]) -> str:
     )
 
 
-def bounded_raw_response(raw_responses: list[str]) -> str | None:
-    """The raw LLM responses of a document as one user-visible value of at most
-    `MAX_RAW_RESPONSE_CHARACTERS` characters, a longer one cut and marked as
-    truncated; None without responses. Every result is kept in the job output
-    (thousands of documents), so it must stay small."""
+def failed_response_excerpt(raw_responses: list[str]) -> str | None:
+    """The raw LLM responses of the failed requests of a document as one
+    user-visible value of at most `FAILED_RESPONSE_EXCERPT_CHARACTERS` characters,
+    a longer one cut and marked as truncated; None without responses. Every
+    result is kept in the job output (thousands of documents), so it must stay
+    small."""
     if not raw_responses:
         return None
     raw = _aggregate_raw_responses(raw_responses)
-    if len(raw) <= MAX_RAW_RESPONSE_CHARACTERS:
+    if len(raw) <= FAILED_RESPONSE_EXCERPT_CHARACTERS:
         return raw
     return (
-        f"{raw[:MAX_RAW_RESPONSE_CHARACTERS]}\n"
-        f"[truncated: {len(raw) - MAX_RAW_RESPONSE_CHARACTERS} more characters]"
+        f"{raw[:FAILED_RESPONSE_EXCERPT_CHARACTERS]}\n"
+        f"[truncated: {len(raw) - FAILED_RESPONSE_EXCERPT_CHARACTERS} more characters]"
     )
 
 

@@ -1,19 +1,19 @@
-"""Unit tests for bounded_raw_response: the raw LLM responses that the result of
-a failed or partially failed document keeps.
+"""Unit tests for failed_response_excerpt: the raw LLM responses of the failed
+requests that the result of a failed or partially failed document keeps.
 
 Every result stays in the job output, which holds thousands of documents, so
-the value is cut after `MAX_RAW_RESPONSE_CHARACTERS` characters
-(`llm_assistant.max_raw_response_characters`) and marked as truncated.
+the value is cut after `FAILED_RESPONSE_EXCERPT_CHARACTERS` characters and marked
+as truncated.
 """
 
 import pytest
 
 from modules.llm_assistant.tasks.llm_assistant_task import (
-    MAX_RAW_RESPONSE_CHARACTERS,
-    bounded_raw_response,
+    FAILED_RESPONSE_EXCERPT_CHARACTERS,
+    failed_response_excerpt,
 )
 
-LIMIT = MAX_RAW_RESPONSE_CHARACTERS
+LIMIT = FAILED_RESPONSE_EXCERPT_CHARACTERS
 
 
 @pytest.mark.parametrize(
@@ -39,8 +39,8 @@ LIMIT = MAX_RAW_RESPONSE_CHARACTERS
         ),
     ],
 )
-def test_bounded_raw_response_keeps_at_most_the_configured_characters(
+def test_failed_response_excerpt_keeps_at_most_the_excerpt_characters(
     raw_responses: list[str], expected: str | None
 ) -> None:
-    """The raw responses as one value, cut after the configured length."""
-    assert bounded_raw_response(raw_responses) == expected
+    """The raw responses as one value, cut after the excerpt length."""
+    assert failed_response_excerpt(raw_responses) == expected
