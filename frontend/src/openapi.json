@@ -1,6 +1,6 @@
 {
   "openapi": "3.1.0",
-  "info": { "title": "Discourse Analysis Tool Suite API", "version": "1.14.0" },
+  "info": { "title": "Discourse Analysis Tool Suite API", "version": "1.14.1" },
   "paths": {
     "/agreement/compute": {
       "post": {
