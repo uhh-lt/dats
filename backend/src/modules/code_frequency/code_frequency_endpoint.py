@@ -3,11 +3,8 @@ from fastapi import APIRouter, Depends
 from common.dependencies import DBSession, get_current_user
 from common.doc_type_enum import DocType
 from core.auth.authz_user import AuthzUser
-from modules.code_frequency.code_frequency import (
-    find_code_frequencies,
-    find_code_occurrences,
-)
 from modules.code_frequency.code_frequency_dto import CodeFrequency, CodeOccurrence
+from modules.code_frequency.code_frequency_service import CodeFrequencyService
 
 router = APIRouter(
     prefix="/code_frequency",
@@ -35,7 +32,7 @@ def code_frequencies(
 ) -> list[CodeFrequency]:
     authz_user.assert_in_project(project_id)
 
-    return find_code_frequencies(
+    return CodeFrequencyService().compute_code_frequencies(
         db=db,
         project_id=project_id,
         code_ids=code_ids,
@@ -61,7 +58,7 @@ def code_occurrences(
 ) -> list[CodeOccurrence]:
     authz_user.assert_in_project(project_id)
 
-    return find_code_occurrences(
+    return CodeFrequencyService().compute_code_occurrences(
         db=db,
         project_id=project_id,
         user_ids=user_ids,
