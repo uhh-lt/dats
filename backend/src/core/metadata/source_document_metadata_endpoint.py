@@ -83,6 +83,25 @@ def get_by_sdoc_and_key(
     return SourceDocumentMetadataRead.model_validate(metadata_db_obj)
 
 
+@router.get(
+    "/count_sdocs_with_date_metadata/{project_id}/metadata/{date_metadata_id}",
+    response_model=tuple[int, int],
+    summary="Returns tuple[num_sdocs_with_date_metadata, num_total_sdocs].",
+)
+def count_sdocs_with_date_metadata(
+    *,
+    db: DBSession,
+    project_id: int,
+    date_metadata_id: int,
+    authz_user: AuthzUser = Depends(),
+) -> tuple[int, int]:
+    authz_user.assert_in_project(project_id)
+
+    return SourceDocumentMetadataService().count_sdocs_with_date_metadata(
+        db=db, project_id=project_id, date_metadata_id=date_metadata_id
+    )
+
+
 # --- update operations
 
 

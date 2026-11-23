@@ -6,7 +6,7 @@ from sqlalchemy.orm import Session
 
 from core.doc.source_document_orm import SourceDocumentORM
 from core.tag.tag_orm import TagORM
-from modules.analysis.analysis_dto import SampledSdocsResults
+from modules.document_sampler.document_sampler_dto import SampledSdocsResults
 from repos.db.sql_utils import aggregate_ids
 
 
