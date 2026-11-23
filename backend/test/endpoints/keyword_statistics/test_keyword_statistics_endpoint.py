@@ -3,7 +3,7 @@ from fastapi.testclient import TestClient
 from feature_test_utils import FeaturelessProject, assert_feature_disabled
 
 # ===========================================================================
-# KEYWORD STATISTICS (/statistics/keyword) TESTS
+# KEYWORD STATISTICS (/keyword_statistics/keyword) TESTS
 # ===========================================================================
 
 
@@ -11,7 +11,7 @@ def test_keyword_statistics_are_rejected_when_the_feature_is_disabled(
     client: TestClient, featureless_project: FeaturelessProject
 ):
     response = client.post(
-        "/statistics/keyword",
+        "/keyword_statistics/keyword",
         params={"project_id": featureless_project["project"].id},
         json=[featureless_project["sdoc"].id],
     )
@@ -25,7 +25,7 @@ def test_keyword_statistics_of_a_project_with_the_feature_are_computed(
     """The test project enables the features on by default; its document has no
     keywords."""
     response = client.post(
-        "/statistics/keyword",
+        "/keyword_statistics/keyword",
         params={"project_id": project_with_sdoc["project"].id},
         json=[project_with_sdoc["source_document"].id],
     )
