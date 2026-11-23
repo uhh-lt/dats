@@ -7,7 +7,7 @@ from core.auth.authz_user import AuthzUser
 from modules.eximport.import_enum import ImportJobType
 from modules.eximport.import_job_dto import ImportJobInput, ImportJobRead
 from modules.eximport.import_service import ImportJobPreparationError, ImportService
-from repos.filesystem_repo import FilesystemRepo
+from repos.filesystem.temporary_file_crud import crud_temporary_file
 from systems.job_system.job_service import JobService
 
 router = APIRouter(
@@ -15,7 +15,6 @@ router = APIRouter(
 )
 
 ims: ImportService = ImportService()
-fsr: FilesystemRepo = FilesystemRepo()
 js: JobService = JobService()
 
 
@@ -110,12 +109,12 @@ def start_import_job(
             cause=Exception("Uploaded file has no filename")
         )
 
-    # Store the uploaded file
+    # Stage the uploaded file in a temporary folder, the import job deletes it
     suffix = uploaded_file.filename.split(".")[-1]
     filename = f"import_{import_job_type}_{authz_user.user.id}_{project_id}.{suffix}"
-    filepath = fsr.get_dst_path_for_temp_file(filename)
-    filepath = fsr.store_uploaded_file(
-        uploaded_file=uploaded_file, filepath=filepath, fn=filename
+    temporary_file_id = crud_temporary_file.create()
+    crud_temporary_file.store_upload(
+        id=temporary_file_id, upload=uploaded_file, name=filename
     )
 
     # Start the import job
@@ -125,6 +124,7 @@ def start_import_job(
             import_job_type=import_job_type,
             project_id=project_id,
             user_id=authz_user.user.id,
+            temporary_file_id=temporary_file_id,
             file_name=filename,
         ),
     )

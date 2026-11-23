@@ -7,6 +7,7 @@ from loguru import logger
 from sqlalchemy.orm import Session
 
 from modules.eximport.export_exceptions import NoDataToExportError
+from modules.eximport.export_utils import write_df
 from modules.eximport.timeline_analysis.timeline_analysis_export_schema import (
     TimelineAnalysisExportCollection,
     TimelineAnalysisExportSchema,
@@ -18,12 +19,11 @@ from modules.eximport.timeline_analysis.timeline_analysis_transformations import
 from modules.timeline_analysis.timeline_analysis_crud import crud_timeline_analysis
 from modules.timeline_analysis.timeline_analysis_dto import TimelineAnalysisRead
 from modules.timeline_analysis.timeline_analysis_orm import TimelineAnalysisORM
-from repos.filesystem_repo import FilesystemRepo
 
 
 def export_selected_timeline_analyses(
     db: Session,
-    fsr: FilesystemRepo,
+    out_dir: Path,
     project_id: int,
     timeline_analysis_ids: list[int],
 ) -> Path:
@@ -32,7 +32,7 @@ def export_selected_timeline_analyses(
 
     Args:
         db: Database session
-        fsr: Filesystem repository service for file operations
+        out_dir: The scratch folder the export file is written to
         project_id: ID of the project
         timeline_analysis_ids: List of timeline analysis IDs to export
 
@@ -47,7 +47,7 @@ def export_selected_timeline_analyses(
     )
     return __export_timeline_analyses(
         db=db,
-        fsr=fsr,
+        out_dir=out_dir,
         fn=f"project_{project_id}_selected_timeline_analyses",
         timeline_analyses=timeline_analyses,
     )
@@ -55,7 +55,7 @@ def export_selected_timeline_analyses(
 
 def export_all_timeline_analyses(
     db: Session,
-    fsr: FilesystemRepo,
+    out_dir: Path,
     project_id: int,
 ) -> Path:
     """
@@ -63,7 +63,7 @@ def export_all_timeline_analyses(
 
     Args:
         db: Database session
-        fsr: Filesystem repository service for file operations
+        out_dir: The scratch folder the export file is written to
         project_id: ID of the project
 
     Returns:
@@ -77,7 +77,7 @@ def export_all_timeline_analyses(
     )
     return __export_timeline_analyses(
         db=db,
-        fsr=fsr,
+        out_dir=out_dir,
         fn=f"project_{project_id}_all_timeline_analyses",
         timeline_analyses=timeline_analyses,
     )
@@ -85,7 +85,7 @@ def export_all_timeline_analyses(
 
 def __export_timeline_analyses(
     db: Session,
-    fsr: FilesystemRepo,
+    out_dir: Path,
     fn: str,
     timeline_analyses: list[TimelineAnalysisORM],
 ) -> Path:
@@ -94,7 +94,7 @@ def __export_timeline_analyses(
 
     Args:
         db: Database session
-        fsr: Filesystem repository service for file operations
+        out_dir: The scratch folder the export file is written to
         fn: Filename for the export
         timeline_analyses: List of timeline analysis ORMs to export
 
@@ -110,7 +110,8 @@ def __export_timeline_analyses(
     export_data = __generate_export_df_for_timeline_analyses(
         db=db, timeline_analyses=timeline_analyses
     )
-    return fsr.write_df_to_temp_file(
+    return write_df(
+        out_dir=out_dir,
         df=export_data,
         fn=fn,
     )

@@ -11,15 +11,17 @@ from sqlalchemy.orm import Session
 from common.doc_type_enum import DocType
 from common.languages_enum import Language
 from common.sdoc_status_enum import SDocStatus
+from core.artefacts.audio.audio_artefact import audio_stream_path
 from core.artefacts.sentence_embeddings.sentence_embedding_crud import (
     crud_sentence_embedding,
 )
-from core.artefacts.video_utils import audio_stream_path
+from core.artefacts.thumbnail.thumbnail_file_crud import crud_thumbnail_file
 from core.doc.sdoc_elastic_crud import crud_sdoc_elastic
 from core.doc.source_document_crud import crud_sdoc
-from core.doc.source_document_dto import SourceDocumentRead
+from core.doc.source_document_file_crud import crud_sdoc_file
 from core.doc.source_document_orm import SourceDocumentORM
 from core.project.project_crud import crud_project
+from dats_test_utils import new_temporary_folder
 from job_test_utils import HeldJobs
 from modules.eximport.import_exceptions import ImportSourceDocumentsError
 from modules.eximport.project import import_project as import_project_module
@@ -42,7 +44,6 @@ from pipeline_test_utils import (
 )
 from repos.db.sql_repo import SQLRepo
 from repos.elastic.elastic_repo import ElasticSearchRepo
-from repos.filesystem_repo import FilesystemRepo
 from repos.vector.weaviate_repo import WeaviateRepo
 from systems.artefact_system.artefact_dto import ProcessingSettings
 from systems.artefact_system.artefact_registry import artefact_registry
@@ -66,14 +67,13 @@ SETTINGS = ProcessingSettings(
 
 def _round_trip(db: Session, projects: FeatureToggleEximportProjects) -> None:
     """Export the project and import the archive into the target project."""
-    fsr = FilesystemRepo()
-    archive = export_project(db=db, fsr=fsr, project_id=projects["project"].id)
-    import_dir = fsr.create_temp_dir("feature_toggle_eximport")
+    out_dir = new_temporary_folder()
+    archive = export_project(db=db, out_dir=out_dir, project_id=projects["project"].id)
+    import_dir = out_dir / "import"
     with zipfile.ZipFile(archive) as zip_file:
         zip_file.extractall(import_dir)
     import_project(
         db=db,
-        fsr=fsr,
         path_to_dir=import_dir,
         project_id=projects["target_project"].id,
     )
@@ -96,8 +96,8 @@ def _imported(
 
 def _file(sdoc: SourceDocumentORM) -> Path:
     """The path of the document's uploaded file."""
-    return FilesystemRepo().get_path_to_sdoc_file(
-        SourceDocumentRead.model_validate(sdoc), raise_if_not_exists=True
+    return crud_sdoc_file.path(
+        project_id=sdoc.project_id, id=sdoc.id, name=sdoc.filename
     )
 
 
@@ -106,9 +106,11 @@ def _export_documents(
 ) -> tuple[Path, Path]:
     """Export the documents of the project and extract the archive. Returns the
     directory to import and its data file (CSV)."""
-    fsr = FilesystemRepo()
-    archive = export_all_sdocs(db=db, fsr=fsr, project_id=projects["project"].id)
-    import_dir = fsr.create_temp_dir("feature_toggle_documents")
+    out_dir = new_temporary_folder()
+    archive = export_all_sdocs(
+        db=db, out_dir=out_dir, project_id=projects["project"].id
+    )
+    import_dir = out_dir / "import"
     with zipfile.ZipFile(archive) as zip_file:
         zip_file.extractall(import_dir)
     (data_file,) = import_dir.glob("*.csv")
@@ -306,17 +308,9 @@ def _index_entry(db: Session, sdoc: SourceDocumentORM) -> object:
 
 
 def _thumbnails(db: Session, sdoc: SourceDocumentORM) -> object:
-    """The WebP and thumbnail files that exist, and the file `repo_url` links."""
-    fsr = FilesystemRepo()
-    files = [
-        Path(fsr.generate_sdoc_filename(_file(sdoc), webp=True, thumbnail=thumbnail))
-        for thumbnail in (False, True)
-    ]
-    assert sdoc.data is not None
-    return (
-        {file.name: file.read_bytes() for file in files if file.exists()},
-        Path(sdoc.data.repo_url).name,
-    )
+    """The WebP and thumbnail files that exist."""
+    folder = crud_thumbnail_file.dir(project_id=sdoc.project_id, id=sdoc.id)
+    return {file.name: file.read_bytes() for file in sorted(folder.glob("*"))}
 
 
 def _audio_stream(db: Session, sdoc: SourceDocumentORM) -> object:
@@ -329,7 +323,12 @@ def _audio_stream(db: Session, sdoc: SourceDocumentORM) -> object:
         settings=SETTINGS,
     )
     return (
-        audio_stream_path(_file(sdoc)).read_bytes(),
+        audio_stream_path(
+            project_id=sdoc.project_id,
+            sdoc_id=sdoc.id,
+            doctype=DocType(sdoc.doctype),
+            filename=sdoc.filename,
+        ).read_bytes(),
         started["transcription"] is not None,
     )
 
@@ -373,7 +372,7 @@ def test_project_round_trip_keeps_the_data_of_each_archive_module(
     """Each imported document has the artefact data of its original: the
     embeddings of the text (one per sentence, by sentence id) and of the image,
     the word frequencies and the index entry of the text, the WebP and thumbnail
-    of the image, the thumbnail of the video (linked as `repo_url`), and the
+    of the image, the thumbnail of the video, and the
     audio stream of the video, from which the transcription can be recomputed.
     An artefact archive without a case fails."""
     projects = feature_toggle_eximport_projects

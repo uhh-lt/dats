@@ -4,6 +4,7 @@ from sqlalchemy.orm import Session
 
 from core.annotation.span_annotation_crud import crud_span_anno
 from core.user.user_crud import crud_user
+from dats_test_utils import new_temporary_folder
 from modules.eximport.import_exceptions import ImportUsersError
 from modules.eximport.span_annotations.export_span_annotations import (
     export_selected_span_annotations,
@@ -13,7 +14,6 @@ from modules.eximport.span_annotations.import_span_annotations import (
 )
 from modules.eximport.user.export_users import export_all_users
 from modules.eximport.user.import_users import import_users_to_proj
-from repos.filesystem_repo import FilesystemRepo
 from virtual_user_test_utils import VirtualUserProject
 
 # ===========================================================================
@@ -32,7 +32,9 @@ def test_export_users_lists_virtual_users_with_email(
     project = virtual_user_project["project"]
     run1, run2 = virtual_user_project["run1"], virtual_user_project["run2"]
 
-    path = export_all_users(db=db_session, fsr=FilesystemRepo(), project_id=project.id)
+    path = export_all_users(
+        db=db_session, out_dir=new_temporary_folder(), project_id=project.id
+    )
 
     df = pd.read_csv(path)
     assert dict(zip(df["email"], df["is_virtual"])) == {
@@ -51,7 +53,9 @@ def test_import_users_creates_missing_virtual_users(
     project = virtual_user_project["project"]
     run2 = virtual_user_project["run2"]
     run2_email = run2.email
-    path = export_all_users(db=db_session, fsr=FilesystemRepo(), project_id=project.id)
+    path = export_all_users(
+        db=db_session, out_dir=new_temporary_folder(), project_id=project.id
+    )
     crud_user.delete(db=db_session, id=run2.id)
     db_session.commit()
 
@@ -70,7 +74,9 @@ def test_import_users_rejects_virtual_users_of_another_project(
     another project of the same DATS instance."""
     project = virtual_user_project["project"]
     other_project = virtual_user_project["other_project"]
-    path = export_all_users(db=db_session, fsr=FilesystemRepo(), project_id=project.id)
+    path = export_all_users(
+        db=db_session, out_dir=new_temporary_folder(), project_id=project.id
+    )
 
     with pytest.raises(ImportUsersError, match="belongs to another project"):
         import_users_to_proj(
@@ -96,7 +102,9 @@ def test_import_users_rejects_invalid_users(
 ) -> None:
     """Invalid user rows are collected into an ImportUsersError."""
     project = virtual_user_project["project"]
-    path = export_all_users(db=db_session, fsr=FilesystemRepo(), project_id=project.id)
+    path = export_all_users(
+        db=db_session, out_dir=new_temporary_folder(), project_id=project.id
+    )
     df = pd.read_csv(path)
     df.loc[len(df)] = {**df.iloc[0].to_dict(), "email": email, "is_virtual": is_virtual}
 
@@ -110,7 +118,9 @@ def test_import_users_does_not_make_virtual_users_members(
     """A row of a virtual user that is not marked as virtual is rejected instead
     of adding the virtual user as a project member."""
     project = virtual_user_project["project"]
-    path = export_all_users(db=db_session, fsr=FilesystemRepo(), project_id=project.id)
+    path = export_all_users(
+        db=db_session, out_dir=new_temporary_folder(), project_id=project.id
+    )
     df = pd.read_csv(path)
     df["is_virtual"] = False
 
@@ -132,7 +142,7 @@ def test_span_annotations_of_virtual_user_survive_export_import(
     ]
     path = export_selected_span_annotations(
         db=db_session,
-        fsr=FilesystemRepo(),
+        out_dir=new_temporary_folder(),
         project_id=project.id,
         span_annotation_ids=span_ids,
     )

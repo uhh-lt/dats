@@ -4,59 +4,39 @@ from pathlib import Path
 import ffmpeg
 from loguru import logger
 from PIL import Image
-from sqlalchemy.orm import Session
 
-from core.doc.source_document_data_crud import crud_sdoc_data
-from core.doc.source_document_data_dto import SourceDocumentDataUpdate
-from core.doc.source_document_dto import SourceDocumentRead
-from repos.filesystem_repo import FilesystemRepo
-
-fsr = FilesystemRepo()
-
-
-def audio_stream_path(video_path: Path) -> Path:
-    """The file of the audio stream that `video_audio_extraction` extracts from the
-    video at `video_path`, and that `transcription` transcribes."""
-    return video_path.with_suffix(".mp3")
+from core.artefacts.audio.audio_file_crud import AUDIO_FILENAME, crud_audio_file
+from core.artefacts.thumbnail.image_thumbnail_utils import webp_bytes
+from core.artefacts.thumbnail.thumbnail_file_crud import (
+    THUMBNAIL_FILENAME,
+    crud_thumbnail_file,
+)
 
 
-def store_video_thumbnail(
-    db: Session, sdoc: SourceDocumentRead, video_path: Path
-) -> None:
-    """Write the thumbnail of the video's first frame next to the video and link
-    it as the document's `repo_url`."""
+def store_video_thumbnail(*, project_id: int, sdoc_id: int, video_path: Path) -> None:
+    """Writes the thumbnail of the video's first frame."""
     start_frame, err = (
         ffmpeg.input(video_path, ss=0)
         .output("pipe:", vframes=1, format="image2", vcodec="png")
         .run(quiet=True)
     )
-
-    thumbnail_filename = fsr.generate_sdoc_filename(
-        video_path, webp=True, thumbnail=True
-    )
     with Image.open(BytesIO(start_frame)) as im:
         im.thumbnail((256, 256))
-        im.save(
-            thumbnail_filename,
-            "WEBP",
-            quality=50,
-            lossless=True,
-            method=6,
+        crud_thumbnail_file.write(
+            project_id=project_id,
+            id=sdoc_id,
+            name=THUMBNAIL_FILENAME,
+            data=webp_bytes(im),
         )
 
-    # Store link to thumbnail in DB
-    repo_url = fsr.get_sdoc_url(sdoc=sdoc, relative=True, webp=True, thumbnail=True)
-    crud_sdoc_data.update(
-        db=db,
-        id=sdoc.id,
-        update_dto=SourceDocumentDataUpdate(repo_url=repo_url),
+
+def extract_audio_stream(*, project_id: int, sdoc_id: int, video_path: Path) -> Path:
+    """Writes the audio stream of the video document to its audio file and
+    returns its path."""
+    audio_filepath = crud_audio_file.path(
+        project_id=project_id, id=sdoc_id, name=AUDIO_FILENAME
     )
-
-
-def extract_audio_stream(video_path: Path) -> Path:
-    """Write the audio stream of the video to `audio_stream_path(video_path)` and
-    return that path."""
-    audio_filepath = audio_stream_path(video_path)
+    audio_filepath.parent.mkdir(parents=True, exist_ok=True)
 
     try:
         # convert the video to an audio stream

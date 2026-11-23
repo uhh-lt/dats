@@ -9,6 +9,7 @@ generic test data.
 
 import json
 import os
+import shutil
 import subprocess
 import sys
 import time
@@ -331,7 +332,7 @@ def create_project_with_sdoc(db: Session, test_project: ProjectORM) -> ProjectWi
     from core.doc.source_document_data_crud import crud_sdoc_data
     from core.doc.source_document_data_dto import SourceDocumentDataCreate
     from core.doc.source_document_dto import SourceDocumentCreate
-    from repos.filesystem_repo import FilesystemRepo
+    from core.doc.source_document_file_crud import crud_sdoc_file
 
     sdoc = crud_sdoc.create(
         db=db,
@@ -344,16 +345,11 @@ def create_project_with_sdoc(db: Session, test_project: ProjectORM) -> ProjectWi
         ),
     )
 
-    file_path = FilesystemRepo()._get_dst_path_for_project_sdoc_file(
-        project_id=test_project.id, filename=sdoc.filename
-    )
-    relative_file_path = os.path.relpath(file_path, FilesystemRepo().root_dir)
     sdoc_data = crud_sdoc_data.create(
         db=db,
         create_dto=SourceDocumentDataCreate(
             id=sdoc.id,
             content="This is a test document. It has two sentences.",
-            repo_url=str(relative_file_path),
             raw_html="<p>This is a test document. It has two sentences.</p>",
             html="<p><sent>This is a test document.</sent> <sent>It has two sentences.</sent></p>",
             token_starts=[0, 5, 8, 10, 15, 25, 28, 32, 36],
@@ -366,8 +362,12 @@ def create_project_with_sdoc(db: Session, test_project: ProjectORM) -> ProjectWi
     )
 
     # Write a dummy file to the filesystem for the source document
-    with open(file_path, "w") as f:
-        f.write(sdoc_data.content)
+    crud_sdoc_file.write(
+        project_id=test_project.id,
+        id=sdoc.id,
+        name=sdoc.filename,
+        data=sdoc_data.content.encode(),
+    )
 
     db.commit()
     db.refresh(test_project)
@@ -447,7 +447,6 @@ def create_text_document(
         create_dto=SourceDocumentDataCreate(
             id=sdoc.id,
             content=content,
-            repo_url=f"tests/{filename}",
             raw_html=f"<p>{content}</p>",
             html="<p>"
             + " ".join(f"<sent>{sentence}</sent>" for sentence in sentences)
@@ -518,3 +517,20 @@ def create_span_for_text(
         )
         .id,
     )
+
+
+def new_temporary_folder() -> Path:
+    """A new temporary folder (`crud_temporary_file`), e.g. the `out_dir` of an
+    export function; an import job takes a file in it by the folder's name
+    (`temporary_file_id=path.parent.name`) and deletes the folder."""
+    from repos.filesystem.temporary_file_crud import crud_temporary_file
+
+    return crud_temporary_file.dir(id=crud_temporary_file.create())
+
+
+def stage_for_import(path: Path) -> Path:
+    """A copy of the file in a new temporary folder, as the import endpoint
+    stages an upload."""
+    staged = new_temporary_folder() / path.name
+    shutil.copy2(path, staged)
+    return staged

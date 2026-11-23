@@ -13,6 +13,7 @@ from core.prompt.prompt_enum import TaskType
 from core.prompt.prompt_service import PromptService
 from core.user.user_crud import crud_user
 from core.user.user_orm import UserORM
+from dats_test_utils import new_temporary_folder, stage_for_import
 from modules.eximport.experiments.experiment_export_schema import (
     REFERENCES,
     SCORES,
@@ -27,7 +28,7 @@ from modules.eximport.import_job_dto import ImportJobInput
 from modules.eximport.import_service import ImportService
 from modules.experiment.experiment_crud import crud_experiment
 from modules.experiment.experiment_dto import ExperimentRead
-from repos.filesystem_repo import FilesystemRepo
+from repos.filesystem.filesystem_repo import FilesystemRepo
 from systems.job_system.job_system_enum import JobStatus
 
 from .conftest import (
@@ -53,6 +54,7 @@ def _export(db: Session, project_id: int, export_job_type: ExportJobType) -> Pat
     """Run an export job of a project and return the exported file."""
     output = ExportService().handle_export_job(
         db=db,
+        export_id="test-export",
         payload=ExportJobInput(
             project_id=project_id,
             export_job_type=export_job_type,
@@ -60,7 +62,7 @@ def _export(db: Session, project_id: int, export_job_type: ExportJobType) -> Pat
         ),
     )
     assert output.results_url is not None
-    return FilesystemRepo().get_dst_path_for_temp_file(Path(output.results_url).name)
+    return FilesystemRepo().root_dir / output.results_url
 
 
 def _export_experiments(db: Session, project_id: int) -> pd.DataFrame:
@@ -71,7 +73,7 @@ def _export_experiments(db: Session, project_id: int) -> pd.DataFrame:
 
 def _run_import_job(
     db: Session,
-    file_name: str,
+    staged: Path,
     project_id: int,
     user_id: int,
     import_job_type: ImportJobType,
@@ -82,7 +84,8 @@ def _run_import_job(
             project_id=project_id,
             import_job_type=import_job_type,
             user_id=user_id,
-            file_name=file_name,
+            temporary_file_id=staged.parent.name,
+            file_name=staged.name,
         ),
     )
     db.commit()
@@ -92,10 +95,9 @@ def _import_experiments(
     db: Session, df: pd.DataFrame, project_id: int, user_id: int
 ) -> None:
     """Write the data to a CSV file and run the experiment import job on it."""
-    path = FilesystemRepo().write_df_to_temp_file(
-        df=df, fn=f"project_{project_id}_experiment_import"
-    )
-    _run_import_job(db, path.name, project_id, user_id, ImportJobType.EXPERIMENTS)
+    path = new_temporary_folder() / f"project_{project_id}_experiment_import.csv"
+    df.to_csv(path, index=False)
+    _run_import_job(db, path, project_id, user_id, ImportJobType.EXPERIMENTS)
 
 
 def _experiments(db: Session, project_id: int) -> dict[str, ExperimentRead]:
@@ -196,11 +198,13 @@ def test_project_export_contains_experiments_and_runs_by_reference(
 def _restore_into_target(
     db: Session, projects: ExperimentEximportProjects, user_id: int
 ) -> None:
-    zip_path = _export(db, projects["project"].id, ExportJobType.ALL_DATA)
+    staged = stage_for_import(
+        _export(db, projects["project"].id, ExportJobType.ALL_DATA)
+    )
     ProjectService().delete_project(db=db, project_id=projects["project"].id)
     db.commit()
     _run_import_job(
-        db, zip_path.name, projects["target_project"].id, user_id, ImportJobType.PROJECT
+        db, staged, projects["target_project"].id, user_id, ImportJobType.PROJECT
     )
 
 

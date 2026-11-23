@@ -7,12 +7,15 @@ from common.doc_type_enum import DocType
 from common.languages_enum import Language
 from config import conf
 from core.doc.source_document_crud import crud_sdoc
+from core.doc.source_document_file_crud import crud_sdoc_file
 from core.doc_processing.doc_processing_dto import (
     SdocHealthColumn,
     SdocHealthResult,
     SdocHealthSort,
     SdocInitJobInput,
 )
+from core.doc_processing.entrypoints.doc_chunking_job import DocChunkingJobInput
+from dats_test_utils import ProjectWithSdoc
 from feature_test_utils import FeatureProject
 from job_test_utils import HeldJobs, unreachable_redis
 from pipeline_test_utils import (
@@ -24,7 +27,8 @@ from pipeline_test_utils import (
     started_steps,
 )
 from repos.db.sql_repo import SQLRepo
-from repos.filesystem_repo import FilesystemRepo
+from repos.filesystem.filesystem_repo import FilesystemRepo
+from repos.filesystem.temporary_file_crud import crud_temporary_file
 from repos.ray.ray_repo import RayRepo
 from systems.artefact_system.artefact_dto import ProcessingSettings
 from systems.job_system.job_system_enum import JobStatus
@@ -131,8 +135,7 @@ def test_upload_with_unsupported_file_stores_nothing(client: TestClient, test_pr
     assert response.status_code == 406, response.text
 
     # 2. no file and no source document remain
-    project_dir = FilesystemRepo().get_project_root_dir_path(project_id=test_project.id)
-    assert list(project_dir.rglob("supported.txt")) == []
+    assert list(FilesystemRepo().root_dir.rglob("supported.txt")) == []
     with SQLRepo().transaction() as db:
         sdoc = crud_sdoc.read_by_filename(
             db=db,
@@ -150,6 +153,55 @@ def test_upload_with_unsupported_file_stores_nothing(client: TestClient, test_pr
     )
     assert response.status_code == 200, response.text
     assert response.json() == 1
+
+
+def test_upload_of_an_existing_filename_fails_and_stages_nothing(
+    client: TestClient, project_with_sdoc: ProjectWithSdoc
+):
+    """A file named like a document of the project is rejected with 409 before
+    anything is staged."""
+    project = project_with_sdoc["project"]
+    filename = project_with_sdoc["source_document"].filename
+
+    response = client.post(
+        f"/docprocessing/project/{project.id}",
+        data={"settings": SETTINGS_JSON},
+        files=[("uploaded_files", (filename, b"again", "text/plain"))],
+    )
+
+    assert response.status_code == 409, response.text
+    assert filename in response.text
+    temporary_files = FilesystemRepo().root_dir / "temporary_files"
+    assert list(temporary_files.rglob(filename)) == []
+
+
+def test_upload_moves_the_staged_file_into_the_folder_of_its_document(
+    client: TestClient, test_project, held_jobs: HeldJobs
+):
+    """The upload is staged in a temporary folder; sdoc_init moves it into the
+    folder of the new document and removes the empty staging folder."""
+    response = client.post(
+        f"/docprocessing/project/{test_project.id}",
+        data={"settings": SETTINGS_JSON},
+        files=[("uploaded_files", ("note.txt", b"hello world", "text/plain"))],
+    )
+    assert response.status_code == 200, response.text
+    (chunking,) = held_jobs.inputs("doc_chunking")
+    assert isinstance(chunking, DocChunkingJobInput)
+    staging = crud_temporary_file.dir(id=chunking.temporary_file_id)
+    assert [p.name for p in staging.iterdir()] == ["note.txt"]
+
+    held_jobs.run("doc_chunking", "sdoc_init")
+
+    with SQLRepo().transaction() as db:
+        sdoc = crud_sdoc.read_by_filename(
+            db=db, project_id=test_project.id, filename="note.txt", only_finished=False
+        )
+        assert sdoc is not None
+        sdoc_id = sdoc.id
+    path = crud_sdoc_file.path(project_id=test_project.id, id=sdoc_id, name="note.txt")
+    assert path.read_bytes() == b"hello world"
+    assert not staging.exists()
 
 
 # --- HTML chunking ----------------------------------------------------------
@@ -183,7 +235,7 @@ def _upload_html_and_chunk(
     assert all(isinstance(job_input, SdocInitJobInput) for job_input in inputs)
     return sorted(
         [job_input for job_input in inputs if isinstance(job_input, SdocInitJobInput)],
-        key=lambda job_input: job_input.filepath.name,
+        key=lambda job_input: job_input.filename,
     )
 
 
@@ -223,7 +275,7 @@ def test_upload_of_html_with_page_markers_chunks_it_at_the_markers(
         client, held_jobs, test_project.id, "book.html", MARKED_HTML, pages_per_chunk
     )
 
-    assert [job_input.filepath.name for job_input in inputs] == expected_filenames
+    assert [job_input.filename for job_input in inputs] == expected_filenames
     folder_ids = {job_input.folder_id for job_input in inputs}
     assert len(folder_ids) == 1 and None not in folder_ids
 
@@ -237,7 +289,12 @@ def test_upload_of_html_with_page_markers_keeps_the_content_of_each_page(
         client, held_jobs, test_project.id, "book.html", MARKED_HTML, 2
     )
 
-    contents = [job_input.filepath.read_text(encoding="utf-8") for job_input in inputs]
+    contents = [
+        crud_temporary_file.path(
+            id=job_input.temporary_file_id, name=job_input.filename
+        ).read_text(encoding="utf-8")
+        for job_input in inputs
+    ]
     expected = [
         ["Front matter", "Page one", "Page two"],
         ["Page three", "Page four"],
@@ -257,7 +314,7 @@ def test_upload_of_html_with_page_markers_names_the_chunks_by_the_marker_numbers
         client, held_jobs, test_project.id, "journal.html", LATE_MARKED_HTML, 2
     )
 
-    assert [job_input.filepath.name for job_input in inputs] == [
+    assert [job_input.filename for job_input in inputs] == [
         "journal_pages_09-10.html",
         "journal_pages_11-11.html",
     ]
@@ -281,7 +338,7 @@ def test_upload_of_short_html_keeps_the_file_whole(
         client, held_jobs, test_project.id, "book.html", html, 10
     )
 
-    assert [(i.filepath.name, i.folder_id) for i in inputs] == [("book.html", None)]
+    assert [(i.filename, i.folder_id) for i in inputs] == [("book.html", None)]
 
 
 @pytest.mark.parametrize(
@@ -308,7 +365,9 @@ def test_upload_of_html_keeps_the_attributes_of_html_and_body_in_each_chunk(
 
     assert len(inputs) == expected_chunks
     for job_input in inputs:
-        content = job_input.filepath.read_text(encoding="utf-8")
+        content = crud_temporary_file.path(
+            id=job_input.temporary_file_id, name=job_input.filename
+        ).read_text(encoding="utf-8")
         assert '<html class="readability-watermark">' in content
         assert '<body class="journal">' in content
 
@@ -326,7 +385,7 @@ def test_upload_of_html_without_page_markers_chunks_it_by_characters(
         client, held_jobs, test_project.id, "long.html", html, 1
     )
 
-    assert [job_input.filepath.name for job_input in inputs] == [
+    assert [job_input.filename for job_input in inputs] == [
         "long_pages_1-1.html",
         "long_pages_2-2.html",
         "long_pages_3-3.html",

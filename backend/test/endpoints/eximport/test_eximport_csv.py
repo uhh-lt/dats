@@ -8,6 +8,7 @@ from core.code.code_crud import crud_code
 from core.metadata.project_metadata_crud import crud_project_meta
 from core.tag.tag_crud import crud_tag
 from core.user.user_orm import UserORM
+from dats_test_utils import new_temporary_folder
 from modules.eximport.codes.export_codes import export_all_codes
 from modules.eximport.import_enum import ImportJobType
 from modules.eximport.import_job_dto import ImportJobInput
@@ -16,7 +17,6 @@ from modules.eximport.project_metadata.export_project_metadata import (
     export_all_project_metadatas,
 )
 from modules.eximport.tags.export_tags import export_all_tags
-from repos.filesystem_repo import FilesystemRepo
 
 from .conftest import EmptyDescriptionProjects, MissingValueNamedCodes
 
@@ -36,13 +36,16 @@ def test_codes_named_like_missing_values_survive_export_import_round_trip(
     project = missing_value_named_codes["project"]
     target_project = missing_value_named_codes["target_project"]
 
-    path = export_all_codes(db=db_session, fsr=FilesystemRepo(), project_id=project.id)
+    path = export_all_codes(
+        db=db_session, out_dir=new_temporary_folder(), project_id=project.id
+    )
     ImportService().handle_import_job(
         db=db_session,
         payload=ImportJobInput(
             project_id=target_project.id,
             import_job_type=ImportJobType.CODES,
             user_id=project.users[0].id,
+            temporary_file_id=path.parent.name,
             file_name=path.name,
         ),
     )
@@ -118,13 +121,14 @@ def test_objects_without_description_survive_export_import_round_trip(
     project = empty_description_projects["project"]
     target_project = empty_description_projects["target_project"]
 
-    path = export(db=db_session, fsr=FilesystemRepo(), project_id=project.id)
+    path = export(db=db_session, out_dir=new_temporary_folder(), project_id=project.id)
     ImportService().handle_import_job(
         db=db_session,
         payload=ImportJobInput(
             project_id=target_project.id,
             import_job_type=import_job_type,
             user_id=test_user.id,
+            temporary_file_id=path.parent.name,
             file_name=path.name,
         ),
     )

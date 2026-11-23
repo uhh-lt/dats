@@ -112,7 +112,8 @@ def test_a_finished_job_fails_its_successors_if_the_queue_is_unreachable(
         "sdoc_init",
         SdocInitJobInput(
             project_id=dummy_step_projects["project"].id,
-            filepath=dummy_step_projects["upload"],
+            temporary_file_id=dummy_step_projects["upload"].parent.name,
+            filename=dummy_step_projects["upload"].name,
             doctype=DocType.text,
             folder_id=None,
             settings=SETTINGS,
@@ -174,7 +175,8 @@ def test_a_finished_step_stays_finished_if_the_queue_is_unreachable_for_its_entr
         "sdoc_init",
         SdocInitJobInput(
             project_id=dummy_step_projects["project"].id,
-            filepath=dummy_step_projects["upload"],
+            temporary_file_id=dummy_step_projects["upload"].parent.name,
+            filename=dummy_step_projects["upload"].name,
             doctype=DocType.text,
             folder_id=None,
             settings=SETTINGS,

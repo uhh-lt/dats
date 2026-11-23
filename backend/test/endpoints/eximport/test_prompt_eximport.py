@@ -1,5 +1,3 @@
-from pathlib import Path
-
 import pandas as pd
 import pytest
 from sqlalchemy.orm import Session
@@ -12,6 +10,7 @@ from core.prompt.prompt_enum import OutputFormat, PromptLanguage
 from core.prompt.prompt_service import PromptService
 from core.prompt.prompt_specs import default_prompt_name
 from core.user.user_orm import UserORM
+from dats_test_utils import new_temporary_folder
 from modules.eximport.export_enum import ExportJobType
 from modules.eximport.export_job_dto import ExportJobInput
 from modules.eximport.export_service import ExportService
@@ -25,7 +24,7 @@ from modules.eximport.prompts.prompt_export_schema import (
     SpanPromptExampleForExport,
 )
 from prompt_test_utils import PromptEximportProjects
-from repos.filesystem_repo import FilesystemRepo
+from repos.filesystem.filesystem_repo import FilesystemRepo
 
 CUSTOM_PROMPTS = {
     "Span tagging",
@@ -48,6 +47,7 @@ def _export(db: Session, project_id: int) -> pd.DataFrame:
     exported CSV as the import does."""
     output = ExportService().handle_export_job(
         db=db,
+        export_id="test-export",
         payload=ExportJobInput(
             project_id=project_id,
             export_job_type=ExportJobType.ALL_PROMPTS,
@@ -55,9 +55,7 @@ def _export(db: Session, project_id: int) -> pd.DataFrame:
         ),
     )
     assert output.results_url is not None
-    return read_import_csv(
-        FilesystemRepo().get_dst_path_for_temp_file(Path(output.results_url).name)
-    )
+    return read_import_csv(FilesystemRepo().root_dir / output.results_url)
 
 
 def _prompts(db: Session, project_id: int) -> dict[str, PromptRead]:
@@ -72,15 +70,15 @@ def _prompts(db: Session, project_id: int) -> dict[str, PromptRead]:
 
 def _import(db: Session, df: pd.DataFrame, project_id: int, user_id: int) -> None:
     """Write the data to a CSV file and run the prompt import job on it."""
-    path = FilesystemRepo().write_df_to_temp_file(
-        df=df, fn=f"project_{project_id}_prompt_import"
-    )
+    path = new_temporary_folder() / f"project_{project_id}_prompt_import.csv"
+    df.to_csv(path, index=False)
     ImportService().handle_import_job(
         db=db,
         payload=ImportJobInput(
             project_id=project_id,
             import_job_type=ImportJobType.PROMPTS,
             user_id=user_id,
+            temporary_file_id=path.parent.name,
             file_name=path.name,
         ),
     )

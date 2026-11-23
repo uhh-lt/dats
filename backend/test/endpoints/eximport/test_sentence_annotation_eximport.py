@@ -1,8 +1,7 @@
-from pathlib import Path
-
 from sqlalchemy.orm import Session
 
 from core.annotation.sentence_annotation_crud import crud_sentence_anno
+from dats_test_utils import stage_for_import
 from modules.eximport.export_enum import ExportJobType
 from modules.eximport.export_job_dto import ExportJobInput
 from modules.eximport.export_service import ExportService
@@ -10,6 +9,7 @@ from modules.eximport.import_enum import ImportJobType
 from modules.eximport.import_job_dto import ImportJobInput
 from modules.eximport.import_service import ImportService
 from provenance_test_utils import ProvenanceProject
+from repos.filesystem.filesystem_repo import FilesystemRepo
 
 # ===========================================================================
 # EXPORT / IMPORT OF SENTENCE ANNOTATIONS (modules/eximport) TESTS
@@ -60,6 +60,7 @@ def test_import_of_exported_sentence_annotations_restores_them_for_their_user(
 
     output = ExportService().handle_export_job(
         db=db_session,
+        export_id="test-export",
         payload=ExportJobInput(
             project_id=project_id,
             export_job_type=ExportJobType.ALL_SENTENCE_ANNOTATIONS,
@@ -67,6 +68,7 @@ def test_import_of_exported_sentence_annotations_restores_them_for_their_user(
         ),
     )
     assert output.results_url is not None
+    staged = stage_for_import(FilesystemRepo().root_dir / output.results_url)
     for annotation_id in annotation_ids:
         crud_sentence_anno.delete(db=db_session, id=annotation_id)
     db_session.commit()
@@ -78,7 +80,8 @@ def test_import_of_exported_sentence_annotations_restores_them_for_their_user(
             project_id=project_id,
             import_job_type=ImportJobType.SENTENCE_ANNOTATIONS,
             user_id=provenance_project["user"].id,
-            file_name=Path(output.results_url).name,
+            temporary_file_id=staged.parent.name,
+            file_name=staged.name,
         ),
     )
     db_session.commit()

@@ -19,12 +19,12 @@ from modules.eximport.cota.cota_transformations import (
     transform_training_settings_for_export,
 )
 from modules.eximport.export_exceptions import NoDataToExportError
-from repos.filesystem_repo import FilesystemRepo
+from modules.eximport.export_utils import write_df
 
 
 def export_selected_cota(
     db: Session,
-    fsr: FilesystemRepo,
+    out_dir: Path,
     project_id: int,
     cota_ids: list[int],
 ) -> Path:
@@ -33,7 +33,7 @@ def export_selected_cota(
 
     Args:
         db: Database session
-        fsr: Filesystem repository service for file operations
+        out_dir: The scratch folder the export file is written to
         project_id: ID of the project
         cota_ids: List of concept over time analysis IDs to export
 
@@ -46,7 +46,7 @@ def export_selected_cota(
     cota_analyses = crud_cota.read_by_ids(db=db, ids=cota_ids)
     return __export_cota(
         db=db,
-        fsr=fsr,
+        out_dir=out_dir,
         fn=f"project_{project_id}_selected_cota",
         cota_analyses=cota_analyses,
     )
@@ -54,7 +54,7 @@ def export_selected_cota(
 
 def export_all_cota(
     db: Session,
-    fsr: FilesystemRepo,
+    out_dir: Path,
     project_id: int,
 ) -> Path:
     """
@@ -62,7 +62,7 @@ def export_all_cota(
 
     Args:
         db: Database session
-        fsr: Filesystem repository service for file operations
+        out_dir: The scratch folder the export file is written to
         project_id: ID of the project
 
     Returns:
@@ -74,7 +74,7 @@ def export_all_cota(
     cota_analyses = crud_cota.read_by_project(db=db, project_id=project_id)
     return __export_cota(
         db=db,
-        fsr=fsr,
+        out_dir=out_dir,
         fn=f"project_{project_id}_all_cota",
         cota_analyses=cota_analyses,
     )
@@ -82,7 +82,7 @@ def export_all_cota(
 
 def __export_cota(
     db: Session,
-    fsr: FilesystemRepo,
+    out_dir: Path,
     fn: str,
     cota_analyses: list[ConceptOverTimeAnalysisORM],
 ) -> Path:
@@ -91,7 +91,7 @@ def __export_cota(
 
     Args:
         db: Database session
-        fsr: Filesystem repository service for file operations
+        out_dir: The scratch folder the export file is written to
         fn: Filename for the export
         cota_analyses: List of COTA ORMs to export
 
@@ -105,7 +105,8 @@ def __export_cota(
         raise NoDataToExportError("No concept over time analyses to export.")
 
     export_data = __generate_export_df_for_cota(db=db, cota_analyses=cota_analyses)
-    return fsr.write_df_to_temp_file(
+    return write_df(
+        out_dir=out_dir,
         df=export_data,
         fn=fn,
     )

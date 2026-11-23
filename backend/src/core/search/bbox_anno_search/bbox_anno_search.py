@@ -3,6 +3,10 @@ from sqlalchemy.orm import Session
 from common.doc_type_enum import DocType
 from core.annotation.annotation_document_orm import AnnotationDocumentORM
 from core.annotation.bbox_annotation_orm import BBoxAnnotationORM
+from core.artefacts.thumbnail.thumbnail_file_crud import (
+    IMAGE_FILENAME,
+    crud_thumbnail_file,
+)
 from core.code.code_dto import CodeRead
 from core.code.code_orm import CodeORM
 from core.doc.source_document_dto import SourceDocumentRead
@@ -13,12 +17,9 @@ from core.metadata.project_metadata_crud import crud_project_meta
 from core.metadata.project_metadata_dto import ProjectMetadataRead
 from core.search.bbox_anno_search.bbox_anno_search_columns import BBoxColumns
 from core.search.search_dto import BBoxAnnotationRow, Page, QueryRequest
-from repos.filesystem_repo import FilesystemRepo
 from systems.search_system.column_info import ColumnInfo
 from systems.search_system.grouping import GroupPage, GroupQueryRequest, GroupSummary
 from systems.search_system.search_builder import SearchBuilder
-
-repo_service = FilesystemRepo()
 
 
 def find_bbox_annotations_info(
@@ -114,11 +115,8 @@ def find_bbox_annotations(
                 y=bbox_orm.y_min,
                 width=bbox_orm.x_max - bbox_orm.x_min,
                 height=bbox_orm.y_max - bbox_orm.y_min,
-                url=repo_service.get_sdoc_url(
-                    sdoc=SourceDocumentRead.model_validate(sdoc_orm),
-                    relative=True,
-                    webp=True,
-                    thumbnail=False,
+                url=crud_thumbnail_file.url(
+                    project_id=sdoc_orm.project_id, id=sdoc_orm.id, name=IMAGE_FILENAME
                 ),
                 code=CodeRead.model_validate(code_orm),
                 sdoc=SourceDocumentRead.model_validate(sdoc_orm),

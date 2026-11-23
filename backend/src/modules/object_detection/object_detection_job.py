@@ -1,4 +1,3 @@
-from pathlib import Path
 from uuid import uuid4
 
 from loguru import logger
@@ -10,10 +9,10 @@ from core.annotation.bbox_annotation_dto import BBoxAnnotationCreateIntern
 from core.code.code_crud import crud_code
 from core.doc.source_document_crud import crud_sdoc
 from core.doc.source_document_dto import SourceDocumentRead
+from core.doc.source_document_file_crud import crud_sdoc_file
 from core.user.user_crud import SYSTEM_USER_ID
 from modules.object_detection.object_detection_artefact import OBJECT_BBOXES
 from repos.db.sql_repo import SQLRepo
-from repos.filesystem_repo import FilesystemRepo
 from repos.ray.dto.detr import DETRImageInput
 from repos.ray.ray_repo import RayRepo
 from systems.artefact_system.artefact_dto import SdocProcessingJobInput
@@ -22,7 +21,6 @@ from systems.job_system.job_dto import Job
 from systems.job_system.job_register_decorator import register_job
 from utils.image_utils import image_to_base64, load_image
 
-fsr = FilesystemRepo()
 ray = RayRepo()
 sqlr = SQLRepo()
 
@@ -31,7 +29,7 @@ LABEL_CODES = {"PERSON": "HUMAN"}
 
 
 class ObjectDetectionJobInput(SdocProcessingJobInput):
-    filepath: Path
+    filename: str
 
 
 def enrich_for_recompute(
@@ -45,12 +43,10 @@ def enrich_for_recompute(
             f"SourceDocument with {payload.sdoc_id=} is not an image!"
         )
 
-    image_path = fsr.get_path_to_sdoc_file(sdoc, raise_if_not_exists=True)
-
-    return ObjectDetectionJobInput(
-        **payload.model_dump(),
-        filepath=image_path,
-    )
+    assert crud_sdoc_file.exists(
+        project_id=sdoc.project_id, id=sdoc.id, name=sdoc.filename
+    ), f"The file of SourceDocument {sdoc.id} does not exist!"
+    return ObjectDetectionJobInput(**payload.model_dump(), filename=sdoc.filename)
 
 
 @pipeline_step(
@@ -65,9 +61,12 @@ def enrich_for_recompute(
     enricher=enrich_for_recompute,
 )
 def handle_object_detection_job(payload: ObjectDetectionJobInput, job: Job) -> None:
+    filepath = crud_sdoc_file.path(
+        project_id=payload.project_id, id=payload.sdoc_id, name=payload.filename
+    )
     # Run object detection with ray
     input = DETRImageInput(
-        base64_image=image_to_base64(load_image(payload.filepath)),
+        base64_image=image_to_base64(load_image(filepath)),
     )
     result = ray.detr_object_detection(input)
     logger.info(f"Found following objects: {result.bboxes}")

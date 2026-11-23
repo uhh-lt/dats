@@ -1,5 +1,3 @@
-from pathlib import Path
-
 from common.doc_type_enum import DocType
 from core.artefacts.image_caption.image_caption_artefact import IMAGE_CAPTION
 from core.artefacts.image_caption.image_captioning_prompt import (
@@ -10,9 +8,9 @@ from core.doc.source_document_crud import crud_sdoc
 from core.doc.source_document_data_crud import crud_sdoc_data
 from core.doc.source_document_data_dto import SourceDocumentDataUpdate
 from core.doc.source_document_dto import SourceDocumentRead
+from core.doc.source_document_file_crud import crud_sdoc_file
 from core.metadata.source_document_metadata_crud import crud_sdoc_meta
 from repos.db.sql_repo import SQLRepo
-from repos.filesystem_repo import FilesystemRepo
 from repos.llm_repo import LLMRepo
 from systems.artefact_system.artefact_dto import SdocProcessingJobInput
 from systems.artefact_system.pipeline_step_decorator import pipeline_step
@@ -20,13 +18,12 @@ from systems.job_system.job_dto import Job, JobOutputBase
 from systems.job_system.job_register_decorator import register_job
 from utils.image_utils import image_to_base64, load_image
 
-fsr = FilesystemRepo()
 llm = LLMRepo()
 sqlr = SQLRepo()
 
 
 class ImageCaptionJobInput(SdocProcessingJobInput):
-    filepath: Path
+    filename: str
 
 
 class ImageCaptionJobOutput(JobOutputBase):
@@ -45,12 +42,10 @@ def enrich_for_recompute(
             f"SourceDocument with {payload.sdoc_id=} is not an image!"
         )
 
-    image_path = fsr.get_path_to_sdoc_file(sdoc, raise_if_not_exists=True)
-
-    return ImageCaptionJobInput(
-        **payload.model_dump(),
-        filepath=image_path,
-    )
+    assert crud_sdoc_file.exists(
+        project_id=sdoc.project_id, id=sdoc.id, name=sdoc.filename
+    ), f"The file of SourceDocument {sdoc.id} does not exist!"
+    return ImageCaptionJobInput(**payload.model_dump(), filename=sdoc.filename)
 
 
 @pipeline_step(
@@ -68,7 +63,10 @@ def enrich_for_recompute(
 def handle_image_caption_job(
     payload: ImageCaptionJobInput, job: Job
 ) -> ImageCaptionJobOutput:
-    image = load_image(payload.filepath)
+    filepath = crud_sdoc_file.path(
+        project_id=payload.project_id, id=payload.sdoc_id, name=payload.filename
+    )
+    image = load_image(filepath)
     image_b64 = image_to_base64(image)
     caption, _ = llm.vlm_chat(
         model=payload.settings.model,

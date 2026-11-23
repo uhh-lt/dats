@@ -18,7 +18,7 @@ from modules.experiment.experiment_run_dto import (
     ExperimentRunLog,
     ExperimentRunRead,
 )
-from repos.filesystem_repo import FilesystemRepo
+from repos.filesystem.filesystem_repo import FilesystemRepo
 from systems.job_system.job_system_enum import JobStatus
 
 from .conftest import INVALID_MODEL, ExperimentProject
@@ -857,7 +857,7 @@ def _export(client: TestClient, run_id: int, export_format: str) -> Path:
     assert response.status_code == 200, response.text
     filename = Path(response.json()).name
     assert filename.endswith(f".{export_format}")
-    return FilesystemRepo().get_dst_path_for_temp_file(filename)
+    return FilesystemRepo().root_dir / response.json()
 
 
 def test_export_run_log_as_json_is_self_contained(

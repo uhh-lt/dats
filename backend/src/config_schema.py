@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+from datetime import timedelta
 from itertools import repeat
 from pathlib import Path
 from typing import Any, Literal
@@ -129,20 +130,11 @@ class RayConfig(BaseModel):
     port: int = Field(gt=0, lt=65536)
 
 
-class ContentServerConfig(BaseModel):
-    model_config = ConfigDict(extra="forbid")
-
-    https: bool
-    host: str = Field(min_length=1)
-    port: int = Field(gt=0, lt=65536)
-    context_path: str = Field(min_length=1)
-
-
 class FilesystemConfig(BaseModel):
     model_config = ConfigDict(extra="forbid")
 
     root_directory: Path = Field()
-    content_server: ContentServerConfig
+    temporary_ttl: timedelta = Field(gt=timedelta(0))
 
 
 class WeaviateConfig(BaseModel):

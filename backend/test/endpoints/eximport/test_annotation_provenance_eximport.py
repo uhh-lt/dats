@@ -8,6 +8,7 @@ from sqlalchemy.orm import Session
 from core.annotation.bbox_annotation_crud import crud_bbox_anno
 from core.annotation.sentence_annotation_crud import crud_sentence_anno
 from core.annotation.span_annotation_crud import crud_span_anno
+from dats_test_utils import new_temporary_folder
 from modules.eximport.bbox_annotations.export_bbox_annotations import (
     export_selected_bbox_annotations,
 )
@@ -27,7 +28,6 @@ from modules.eximport.span_annotations.import_span_annotations import (
     import_span_annotations_to_proj,
 )
 from provenance_test_utils import ANNOTATION_KINDS, AnnotationKind
-from repos.filesystem_repo import FilesystemRepo
 
 CRUD = {
     "span": crud_span_anno,
@@ -37,19 +37,22 @@ CRUD = {
 
 
 def _export(db: Session, kind: AnnotationKind, project_id: int, ids: list[int]) -> Path:
-    fsr = FilesystemRepo()
+    out_dir = new_temporary_folder()
     match kind:
         case "span":
             return export_selected_span_annotations(
-                db=db, fsr=fsr, project_id=project_id, span_annotation_ids=ids
+                db=db, out_dir=out_dir, project_id=project_id, span_annotation_ids=ids
             )
         case "sentence":
             return export_selected_sentence_annotations(
-                db=db, fsr=fsr, project_id=project_id, sentence_annotation_ids=ids
+                db=db,
+                out_dir=out_dir,
+                project_id=project_id,
+                sentence_annotation_ids=ids,
             )
         case "bbox":
             return export_selected_bbox_annotations(
-                db=db, fsr=fsr, project_id=project_id, bbox_annotation_ids=ids
+                db=db, out_dir=out_dir, project_id=project_id, bbox_annotation_ids=ids
             )
 
 

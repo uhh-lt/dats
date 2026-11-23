@@ -7,23 +7,23 @@ from sqlalchemy.orm import Session
 from core.user.user_crud import crud_user
 from core.user.user_orm import UserORM
 from modules.eximport.export_exceptions import NoDataToExportError
+from modules.eximport.export_utils import write_df
 from modules.eximport.user.user_export_schema import (
     UserExportCollection,
     UserExportSchema,
 )
-from repos.filesystem_repo import FilesystemRepo
 
 
 def export_all_users(
     db: Session,
-    fsr: FilesystemRepo,
+    out_dir: Path,
     project_id: int,
 ) -> Path:
     # the members and the virtual users of the project
     users = crud_user.read_by_project(db=db, project_id=project_id)
     return __export_users(
         db=db,
-        fsr=fsr,
+        out_dir=out_dir,
         fn=f"project_{project_id}_all_users",
         users=users,
     )
@@ -31,7 +31,7 @@ def export_all_users(
 
 def __export_users(
     db: Session,
-    fsr: FilesystemRepo,
+    out_dir: Path,
     fn: str,
     users: list[UserORM],
 ) -> Path:
@@ -39,7 +39,8 @@ def __export_users(
         raise NoDataToExportError("No users to export.")
 
     export_data = __generate_export_df_for_users(users=users)
-    return fsr.write_df_to_temp_file(
+    return write_df(
+        out_dir=out_dir,
         df=export_data,
         fn=fn,
     )

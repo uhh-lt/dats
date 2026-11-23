@@ -1,20 +1,17 @@
-from pathlib import Path
-
 import ffmpeg
 
 from common.doc_type_enum import DocType
 from core.artefacts.file_metadata.file_metadata_artefact import FILE_METADATA
 from core.doc.source_document_crud import crud_sdoc
 from core.doc.source_document_dto import SourceDocumentRead
+from core.doc.source_document_file_crud import crud_sdoc_file
 from core.metadata.source_document_metadata_crud import crud_sdoc_meta
 from repos.db.sql_repo import SQLRepo
-from repos.filesystem_repo import FilesystemRepo
 from systems.artefact_system.artefact_dto import SdocProcessingJobInput
 from systems.artefact_system.pipeline_step_decorator import pipeline_step
 from systems.job_system.job_dto import Job
 from systems.job_system.job_register_decorator import register_job
 
-fsr = FilesystemRepo()
 sqlr = SQLRepo()
 
 EXPECTED_METADATA = [
@@ -32,7 +29,7 @@ EXPECTED_METADATA = [
 
 
 class VideoMetadataExtractionJobInput(SdocProcessingJobInput):
-    filepath: Path
+    filename: str
 
 
 def enrich_for_recompute(
@@ -46,11 +43,11 @@ def enrich_for_recompute(
             f"SourceDocument with {payload.sdoc_id=} is not a video file!"
         )
 
-    video_path = fsr.get_path_to_sdoc_file(sdoc, raise_if_not_exists=True)
-
+    assert crud_sdoc_file.exists(
+        project_id=sdoc.project_id, id=sdoc.id, name=sdoc.filename
+    ), f"The file of SourceDocument {sdoc.id} does not exist!"
     return VideoMetadataExtractionJobInput(
-        **payload.model_dump(),
-        filepath=video_path,
+        **payload.model_dump(), filename=sdoc.filename
     )
 
 
@@ -67,7 +64,10 @@ def enrich_for_recompute(
 def handle_video_metadata_extraction_job(
     payload: VideoMetadataExtractionJobInput, job: Job
 ) -> None:
-    ffmpeg_probe = ffmpeg.probe(payload.filepath)
+    filepath = crud_sdoc_file.path(
+        project_id=payload.project_id, id=payload.sdoc_id, name=payload.filename
+    )
+    ffmpeg_probe = ffmpeg.probe(filepath)
 
     metadata = {}
     for k, v in ffmpeg_probe["format"].items():

@@ -102,6 +102,7 @@ def get_simple_sdoc_status_by_project_and_status(
 )
 def upload_files(
     *,
+    db: DBSession,
     project_id: int,
     settings: str = Form(..., description="ProcessingSettings as JSON string"),
     uploaded_files: list[UploadFile] = File(
@@ -118,7 +119,10 @@ def upload_files(
         raise HTTPException(status_code=400, detail=f"Invalid settings: {e}")
     authz_user.assert_in_project(project_id)
     jobs = DocProcessingService().start_preprocessing(
-        project_id=project_id, uploaded_files=uploaded_files, settings=settings_obj
+        db=db,
+        project_id=project_id,
+        uploaded_files=uploaded_files,
+        settings=settings_obj,
     )
     return len(jobs)
 

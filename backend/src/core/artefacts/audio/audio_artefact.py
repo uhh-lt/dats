@@ -2,15 +2,28 @@
 document, extracted from a video; with the archive of its file."""
 
 from collections.abc import Mapping
+from pathlib import Path
 
 from sqlalchemy.orm import Session
 
 from common.doc_type_enum import DocType
+from core.artefacts.audio.audio_file_crud import AUDIO_FILENAME, crud_audio_file
 from core.artefacts.video_utils import extract_audio_stream
-from core.doc.source_document_dto import SourceDocumentRead
+from core.doc.source_document_file_crud import crud_sdoc_file
 from core.doc.source_document_orm import SourceDocumentORM
-from repos.filesystem_repo import FilesystemRepo
 from systems.artefact_system.artefact_registry import ArtefactArchive, artefact
+
+
+def audio_stream_path(
+    *, project_id: int, sdoc_id: int, doctype: DocType, filename: str
+) -> Path:
+    """The file of the audio stream: the uploaded file of an audio document
+    (`crud_sdoc_file`), the extracted audio of a video (`crud_audio_file`)."""
+    if doctype == DocType.video:
+        return crud_audio_file.path(
+            project_id=project_id, id=sdoc_id, name=AUDIO_FILENAME
+        )
+    return crud_sdoc_file.path(project_id=project_id, id=sdoc_id, name=filename)
 
 
 class _AudioArchive(ArtefactArchive):
@@ -25,9 +38,11 @@ class _AudioArchive(ArtefactArchive):
         self, db: Session, sdoc: SourceDocumentORM, archived: Mapping[str, object]
     ) -> None:
         extract_audio_stream(
-            FilesystemRepo().get_path_to_sdoc_file(
-                SourceDocumentRead.model_validate(sdoc)
-            )
+            project_id=sdoc.project_id,
+            sdoc_id=sdoc.id,
+            video_path=crud_sdoc_file.path(
+                project_id=sdoc.project_id, id=sdoc.id, name=sdoc.filename
+            ),
         )
 
 

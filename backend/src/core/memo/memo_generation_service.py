@@ -12,11 +12,10 @@ from core.annotation.span_annotation_orm import SpanAnnotationORM
 from core.annotation.span_group_orm import SpanGroupORM
 from core.code.code_orm import CodeORM
 from core.doc.source_document_data_crud import crud_sdoc_data
-from core.doc.source_document_dto import SourceDocumentRead
+from core.doc.source_document_file_crud import crud_sdoc_file
 from core.doc.source_document_orm import SourceDocumentORM
 from core.project.project_orm import ProjectORM
 from core.tag.tag_orm import TagORM
-from repos.filesystem_repo import FilesystemRepo
 from repos.llm_repo import LLMRepo
 from utils.image_utils import image_to_base64, load_image
 
@@ -41,7 +40,6 @@ class LLMMemoResult(BaseModel):
 
 class MemoGenerationService(metaclass=SingletonMeta):
     def __new__(cls, *args, **kwargs):
-        cls.fsr: FilesystemRepo = FilesystemRepo()
         cls.llm: LLMRepo = LLMRepo()
         # Each summary function returns (is_image, summary): the text summary or
         # the base64 encoded image of the object.
@@ -91,10 +89,8 @@ class MemoGenerationService(metaclass=SingletonMeta):
             sdoc_data = crud_sdoc_data.read(db=db, id=obj.id)
             return False, "".join(sdoc_data.sentences)
         if obj.doctype == DocType.image:
-            path = self.fsr.get_path_to_sdoc_file(
-                sdoc=SourceDocumentRead.model_validate(obj),
-                webp=False,
-                thumbnail=False,
+            path = crud_sdoc_file.path(
+                project_id=obj.project_id, id=obj.id, name=obj.filename
             )
             return True, image_to_base64(load_image(path))
         raise NotImplementedError(f"Can't summarize this DocType: {obj.doctype}")
@@ -120,12 +116,9 @@ class MemoGenerationService(metaclass=SingletonMeta):
     def _summarize_bbox_anno(
         self, *, db: Session, obj: BBoxAnnotationORM
     ) -> tuple[bool, str]:
-        path = self.fsr.get_path_to_sdoc_file(
-            sdoc=SourceDocumentRead.model_validate(
-                obj.annotation_document.source_document
-            ),
-            webp=False,
-            thumbnail=False,
+        sdoc = obj.annotation_document.source_document
+        path = crud_sdoc_file.path(
+            project_id=sdoc.project_id, id=sdoc.id, name=sdoc.filename
         )
         image = load_image(path)
         cropped_image = image.crop((obj.x_min, obj.y_min, obj.x_max, obj.y_max))

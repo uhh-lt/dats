@@ -10,23 +10,23 @@ from modules.eximport.annotation_provenance_utils import (
     export_annotation_provenance,
 )
 from modules.eximport.export_exceptions import NoDataToExportError
+from modules.eximport.export_utils import write_df
 from modules.eximport.span_annotations.span_annotations_export_schema import (
     SpanAnnotationExportCollection,
     SpanAnnotationExportSchema,
 )
-from repos.filesystem_repo import FilesystemRepo
 
 
 def export_selected_span_annotations(
     db: Session,
-    fsr: FilesystemRepo,
+    out_dir: Path,
     project_id: int,
     span_annotation_ids: list[int],
 ) -> Path:
     span_annotations = crud_span_anno.read_by_ids(db=db, ids=span_annotation_ids)
     return __export_span_annotations(
         db=db,
-        fsr=fsr,
+        out_dir=out_dir,
         fn=f"project_{project_id}_selected_span_annotations",
         span_annotations=span_annotations,
     )
@@ -34,13 +34,13 @@ def export_selected_span_annotations(
 
 def export_all_span_annotations(
     db: Session,
-    fsr: FilesystemRepo,
+    out_dir: Path,
     project_id: int,
 ) -> Path:
     span_annotations = crud_span_anno.read_by_project(db=db, project_id=project_id)
     return __export_span_annotations(
         db=db,
-        fsr=fsr,
+        out_dir=out_dir,
         fn=f"project_{project_id}_all_span_annotations",
         span_annotations=span_annotations,
     )
@@ -48,7 +48,7 @@ def export_all_span_annotations(
 
 def __export_span_annotations(
     db: Session,
-    fsr: FilesystemRepo,
+    out_dir: Path,
     fn: str,
     span_annotations: list[SpanAnnotationORM],
 ) -> Path:
@@ -58,7 +58,8 @@ def __export_span_annotations(
     export_data = __generate_export_df_for_span_annotations(
         db=db, span_annotations=span_annotations
     )
-    return fsr.write_df_to_temp_file(
+    return write_df(
+        out_dir=out_dir,
         df=export_data,
         fn=fn,
     )

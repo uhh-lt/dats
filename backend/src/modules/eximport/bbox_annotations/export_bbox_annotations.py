@@ -14,19 +14,19 @@ from modules.eximport.bbox_annotations.bbox_annotations_export_schema import (
     BBoxAnnotationExportSchema,
 )
 from modules.eximport.export_exceptions import NoDataToExportError
-from repos.filesystem_repo import FilesystemRepo
+from modules.eximport.export_utils import write_df
 
 
 def export_selected_bbox_annotations(
     db: Session,
-    fsr: FilesystemRepo,
+    out_dir: Path,
     project_id: int,
     bbox_annotation_ids: list[int],
 ) -> Path:
     bbox_annotations = crud_bbox_anno.read_by_ids(db=db, ids=bbox_annotation_ids)
     return __export_bbox_annotations(
         db=db,
-        fsr=fsr,
+        out_dir=out_dir,
         fn=f"project_{project_id}_selected_bbox_annotations",
         bbox_annotations=bbox_annotations,
     )
@@ -34,13 +34,13 @@ def export_selected_bbox_annotations(
 
 def export_all_bbox_annotations(
     db: Session,
-    fsr: FilesystemRepo,
+    out_dir: Path,
     project_id: int,
 ) -> Path:
     bbox_annotations = crud_bbox_anno.read_by_project(db=db, project_id=project_id)
     return __export_bbox_annotations(
         db=db,
-        fsr=fsr,
+        out_dir=out_dir,
         fn=f"project_{project_id}_all_bbox_annotations",
         bbox_annotations=bbox_annotations,
     )
@@ -48,7 +48,7 @@ def export_all_bbox_annotations(
 
 def __export_bbox_annotations(
     db: Session,
-    fsr: FilesystemRepo,
+    out_dir: Path,
     fn: str,
     bbox_annotations: list[BBoxAnnotationORM],
 ) -> Path:
@@ -58,7 +58,8 @@ def __export_bbox_annotations(
     export_data = __generate_export_df_for_bbox_annotations(
         db=db, bbox_annotations=bbox_annotations
     )
-    return fsr.write_df_to_temp_file(
+    return write_df(
+        out_dir=out_dir,
         df=export_data,
         fn=fn,
     )
