@@ -8,6 +8,9 @@ SourceDocumentNotFoundInFilesystemError: The original file of SourceDocument 647
 
 The project doctor (`tools/project_doctor`) finds these inconsistencies and heals them, in two steps:
 
+!!! warning "File-store compatibility"
+    This version of the doctor expects the legacy `projects/<project_id>/docs/` layout. Do not run `check` or `heal` against an instance that has run migration `807bab97f373_file_store`; its file checks do not support the entity-based layout.
+
 1. `check` reads all stores, prints the issues and writes them to a JSON report. It changes nothing.
 2. `heal` takes the report and applies the fix of each issue. Without `--apply` it only shows what it would do.
 
@@ -15,7 +18,7 @@ The project doctor (`tools/project_doctor`) finds these inconsistencies and heal
 
 Run the doctor on the host of the deployment, from the checkout whose `docker/` folder runs DATS. The wrapper script starts a one-off container of the backend image with the same environment and volumes as the API (like the scripts in `bin/prod`), so it reaches all stores with the instance's own configuration.
 
-The doctor imports no DATS code, only the libraries of the backend image (SQLAlchemy, Elasticsearch, Weaviate). It therefore works with the DATS version the deployment runs, also when the checkout is newer than the deployment: copy `tools/project_doctor` into the checkout of the deployment if it is missing there. Before it touches anything, the doctor verifies that the database has every table and column it uses; on an incompatible version it stops with an error that names the missing columns.
+The doctor imports no DATS code, only the libraries of the backend image (SQLAlchemy, Elasticsearch, Weaviate). Apart from the file-store compatibility restriction above, it therefore works with the DATS version the deployment runs, also when the checkout is newer than the deployment: copy `tools/project_doctor` into the checkout of the deployment if it is missing there. Before it touches anything, the doctor verifies that the database has every table and column it uses; on an incompatible version it stops with an error that names the missing columns.
 
 ```bash
 # 1) check one project (or omit --project to check all projects and the leftovers of deleted ones)

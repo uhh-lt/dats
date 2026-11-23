@@ -34,6 +34,19 @@ feature system  ──artefacts──▶  artefact system  ──jobs──▶  
 
 An artefact is declared with `artefact(...)` in a `<name>_artefact.py` file next to the step that produces it: in `core/artefacts/<name>/` for core artefacts and on-demand artefacts that several features read (`sentence_embeddings`, `word_frequencies`), in its module otherwise. Its data is stored where it fits: a column of the document's data row, a metadata key, annotations of the system user with system codes the artefact declares, a table, a Weaviate collection, an Elasticsearch index or files. The [artefact system README](https://github.com/uhh-lt/dats/blob/main/backend/src/systems/artefact_system/README.md#the-registered-artefacts) lists every artefact with its store and the call that reads it. An artefact with a store of its own declares an archive, so the project export and import carry it.
 
+## File storage
+
+The filesystem is split into lifecycle and file access, mirroring `repos/vector`:
+
+- `FilesystemRepo` (`backend/src/repos/filesystem/filesystem_repo.py`) owns the root and project folders. Files are read and written through `FileCRUDBase` subclasses, not by constructing paths from the repository root.
+- A file CRUD lives with the core concept, artefact or module that owns its files. It declares a `folder` and an `entity` (`Crud`), or `None` for files such as exports that belong to no database row. Its files are stored at `projects/<project_id>/<folder>/<entity_id>/<filename>`. The common interface provides `dir`, `path`, `exists`, `write`, `move_in`, `url`, `delete` and `ids`.
+- File CRUDs register themselves and are discovered through their `*_file_crud.py` filenames. When deleting an entity, call `FileCRUDBase.delete_by_entity(...)` so its uploads, thumbnails, extracted audio, models and plots are removed together.
+- `crud_temporary_file` manages scratch space and upload or job handovers below `temporary_files/<uuid>/`. Use `folder()` for scratch that must be removed on success or failure. For a handover, pass the id returned by `create()` in the job payload and let the consuming job delete it.
+
+File URLs are relative to `/content/`; the frontend hooks add that prefix. Use `GET /sdoc/{sdoc_id}/urls` for the uploaded file, WebP image and thumbnail (the latter two are `null` until computed), and `GET /perspectives/aspect/{aspect_id}/map_thumbnail_url` for a perspective map thumbnail. Source document URLs are not stored in `SourceDocumentData`; derive them through the file CRUDs and these endpoints.
+
+The concrete file CRUDs and their layout are listed in [`backend/src/repos/README.md`](https://github.com/uhh-lt/dats/blob/main/backend/src/repos/README.md).
+
 ## Build a module
 
 The keyword statistics (`backend/src/modules/keyword_statistics/`) are a small, complete example: an on-demand artefact, the step that produces it, the feature that requires it and the gated endpoint that reads it.
