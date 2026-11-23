@@ -100,7 +100,7 @@ ANNOTATION_TABLES: dict[AnnotationKind, str] = {
 
 # The metadata keys a feature creates in its project when it is set up (enable,
 # project creation, import), besides the configured project metadata: the
-# keywords of Keyword Statistics (modules/statistics/keywords_artefact.py)
+# keywords of Keyword Statistics (modules/keyword_statistics/keywords_artefact.py)
 FEATURE_METADATA: dict[str, dict[tuple[str, str], str]] = {
     "keyword_statistics": {
         ("keywords", doctype): "LIST" for doctype in ("text", "image", "audio", "video")

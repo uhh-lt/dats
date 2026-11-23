@@ -36,7 +36,7 @@ An artefact is declared with `artefact(...)` in a `<name>_artefact.py` file next
 
 ## Build a module
 
-The keyword statistics (`backend/src/modules/statistics/`) are a small, complete example: an on-demand artefact, the step that produces it, the feature that requires it and the gated endpoint that reads it.
+The keyword statistics (`backend/src/modules/keyword_statistics/`) are a small, complete example: an on-demand artefact, the step that produces it, the feature that requires it and the gated endpoint that reads it.
 
 1. **The artefact** (`keywords_artefact.py`): the keywords of a document, stored in its metadata key `keywords`, which the feature creates in its project (`create_keywords_metadata`). It has no store of its own, so it needs no archive.
 
@@ -62,7 +62,7 @@ The keyword statistics (`backend/src/modules/statistics/`) are a small, complete
 
    The graph places the step after the steps that produce its inputs; nothing lists steps by hand. A step has one direct predecessor (the steps producing its inputs depend on each other) and applies to every doctype of the step it follows; the startup check rejects a step that breaks these limits.
 
-3. **The feature** (`statistics_feature.py`): it requires the on-demand artefact, so it is toggleable, and its set-up hook creates the metadata key `keywords` when a project enables it (safe to run twice).
+3. **The feature** (`keyword_statistics_feature.py`): it requires the on-demand artefact, so it is toggleable, and its set-up hook creates the metadata key `keywords` when a project enables it (safe to run twice).
 
    ```python
    KEYWORD_STATISTICS = register_feature(
@@ -75,7 +75,7 @@ The keyword statistics (`backend/src/modules/statistics/`) are a small, complete
    )
    ```
 
-4. **The endpoint gate** (`statistics_endpoint.py`): the route that reads keywords declares the feature, so a project without it gets an error instead of empty data. A gate checks that the feature is enabled, never that its data is computed.
+4. **The endpoint gate** (`keyword_statistics_endpoint.py`): the route that reads keywords declares the feature, so a project without it gets an error instead of empty data. A gate checks that the feature is enabled, never that its data is computed.
 
    ```python
    @router.post(
@@ -124,7 +124,7 @@ Then regenerate the API client (`just update-api`); the frontend reads the featu
 | `coreferences`        | on demand | `modules/coreference_resolution`     |
 | `document_embeddings` | on demand | `modules/tag_recommendation`         |
 | `image_embeddings`    | on demand | `modules/simsearch`                  |
-| `keywords`            | on demand | `modules/statistics`                 |
+| `keywords`            | on demand | `modules/keyword_statistics`         |
 | `ner_spans`           | on demand | `modules/entity_annotations`         |
 | `object_bboxes`       | on demand | `modules/object_detection`           |
 | `quotations`          | on demand | `modules/quotation_detection`        |
