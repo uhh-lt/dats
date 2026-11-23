@@ -28,7 +28,9 @@ export function SdocAudioLink({ projectId, filename }: SdocAudioLinkProps) {
                   color: "rgba(0, 0, 0, 0.666)",
                 }}
               />
-              <img style={{ marginBottom: 1.5 }} height="200" src={thumbnailUrl.data} alt="Audio thumbnail" />
+              {thumbnailUrl.data && (
+                <img style={{ marginBottom: 1.5 }} height="200" src={thumbnailUrl.data} alt="Audio thumbnail" />
+              )}
             </Box>
           </LinkLink>
         </div>

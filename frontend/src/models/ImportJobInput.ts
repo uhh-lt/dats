@@ -17,6 +17,10 @@ export type ImportJobInput = {
    */
   user_id: number;
   /**
+   * ID of the temporary folder the imported file is staged in; the import job deletes it
+   */
+  temporary_file_id: string;
+  /**
    * The name to the file that is used for the import job
    */
   file_name: string;

@@ -45,7 +45,7 @@ export const BBoxAnnotationNode = memo((props: NodeProps<BBoxAnnotationNode>) =>
   // global server state (react-query)
   const annotation = useQuery(bboxAnnotationQueries.byId(props.data.bboxAnnotationId));
   const code = CodeHooks.useGetCode(annotation.data?.code_id);
-  const sdocData = SdocHooks.useGetDocumentData(annotation.data?.sdoc_id);
+  const sdocUrls = SdocHooks.useGetURLs(annotation.data?.sdoc_id);
   const memos = useQuery(memoQueries.byAttachedObject(AttachedObjectType.BBOX_ANNOTATION, props.data.bboxAnnotationId));
 
   // effects
@@ -225,9 +225,9 @@ export const BBoxAnnotationNode = memo((props: NodeProps<BBoxAnnotationNode>) =>
               }
             />
             <CardContent className="bbox-content" style={{ padding: 2, textAlign: "center" }}>
-              {annotation.isSuccess && sdocData.isSuccess && code.data ? (
+              {annotation.isSuccess && sdocUrls.data?.image_url && code.data ? (
                 <ImageCropper
-                  imageUrl={encodeURI("/content/" + sdocData.data.repo_url)}
+                  imageUrl={sdocUrls.data.image_url}
                   x={annotation.data.x_min}
                   y={annotation.data.y_min}
                   width={annotation.data.x_max - annotation.data.x_min}
@@ -238,7 +238,7 @@ export const BBoxAnnotationNode = memo((props: NodeProps<BBoxAnnotationNode>) =>
                     border: "4px solid " + code.data.color,
                   }}
                 />
-              ) : annotation.isError || sdocData.isError ? (
+              ) : annotation.isError || sdocUrls.isError ? (
                 <Typography variant="body2">Error!</Typography>
               ) : (
                 <Typography variant="body2">Loading ...</Typography>

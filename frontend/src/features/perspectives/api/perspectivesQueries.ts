@@ -16,6 +16,7 @@ export type AspectMap = Record<number, AspectRead>;
  *   perspectivesQueries.visualization(aspectId, searchQuery, filter)  ["perspectives", "visualization", aspectId, ...]
  *   perspectivesQueries.clusterSimilarities(aspectId)                 ["perspectives", "clusterSimilarities", aspectId]
  *   perspectivesQueries.clustersBySdoc(aspectId, sdocId)              ["perspectives", "clustersBySdoc", aspectId, sdocId]
+ *   perspectivesQueries.mapThumbnailUrl(aspectId)                     ["perspectives", "mapThumbnailUrl", aspectId]
  */
 export const perspectivesQueries = {
   all: () => ["perspectives"] as const,
@@ -74,6 +75,15 @@ export const perspectivesQueries = {
       queryKey: [...perspectivesQueries.clustersBySdocScope(), aspectId, sdocId] as const,
       queryFn: !aspectId || !sdocId ? skipToken : () => PerspectivesService.getClustersForSdoc({ aspectId, sdocId }),
       staleTime: 1000 * 60 * 5,
+    }),
+
+  // the relative url of the map thumbnail of an aspect, null until it is computed
+  // (raw; the hook adds the /content/ prefix)
+  mapThumbnailUrlScope: () => [...perspectivesQueries.all(), "mapThumbnailUrl"] as const,
+  mapThumbnailUrl: (aspectId: number) =>
+    queryOptions({
+      queryKey: [...perspectivesQueries.mapThumbnailUrlScope(), aspectId] as const,
+      queryFn: () => PerspectivesService.getMapThumbnailUrl({ aspectId }),
     }),
 
   // the refinement / background job of this domain

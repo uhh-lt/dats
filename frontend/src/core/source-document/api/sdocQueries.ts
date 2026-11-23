@@ -20,7 +20,7 @@ type SdocSearchRequest = Omit<Parameters<typeof SearchService.searchSdocs>[0], "
  *   sdocQueries.data(sdocId)                 ["sdoc", "data", sdocId]
  *   sdocQueries.idByFilename(pid, filename)  ["sdoc", "idByFilename", pid, filename]
  *   sdocQueries.sameFolder(sdocId)           ["sdoc", "sameFolder", sdocId]
- *   sdocQueries.thumbnailUrl(sdocId)         ["sdoc", "thumbnailUrl", sdocId]
+ *   sdocQueries.urls(sdocId)                 ["sdoc", "urls", sdocId]
  *   sdocQueries.idsByTag(tagId)              ["sdoc", "idsByTag", tagId]
  *   sdocQueries.annotators(sdocId)           ["sdoc", "annotators", sdocId]
  *   sdocQueries.tableInfo(projectId)         ["tableInfo", "sdoc", projectId]
@@ -67,15 +67,13 @@ export const sdocQueries = {
       staleTime: Infinity,
     }),
 
-  // relative url of the thumbnail (raw; the hook adds the /content/ prefix)
-  thumbnailUrlScope: () => [...sdocQueries.all(), "thumbnailUrl"] as const,
-  thumbnailUrl: (sdocId: number | null | undefined) =>
+  // relative urls of the files: the upload, the WebP image and the thumbnail
+  // (raw; the hooks add the /content/ prefix)
+  urlsScope: () => [...sdocQueries.all(), "urls"] as const,
+  urls: (sdocId: number | null | undefined) =>
     queryOptions({
-      queryKey: [...sdocQueries.thumbnailUrlScope(), sdocId] as const,
-      queryFn: !sdocId
-        ? skipToken
-        : () => SourceDocumentService.getFileUrl({ sdocId, relative: true, webp: true, thumbnail: true }),
-      staleTime: Infinity,
+      queryKey: [...sdocQueries.urlsScope(), sdocId] as const,
+      queryFn: !sdocId ? skipToken : () => SourceDocumentService.getUrls({ sdocId }),
     }),
 
   // ids of the sdocs that carry a tag
