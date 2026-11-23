@@ -5,8 +5,8 @@ from sqlalchemy.orm import Session
 from common.doc_type_enum import DocType
 from common.languages_enum import Language
 from common.sdoc_status_enum import SDocStatus
+from core.artefacts.audio.audio_artefact import audio_stream_path
 from core.artefacts.transcript.transcription_job import TranscriptionJobInput
-from core.artefacts.video_utils import audio_stream_path
 from core.doc.source_document_crud import crud_sdoc
 from core.doc_processing.doc_processing_dto import SdocInitJobInput
 from job_test_utils import HeldJobs
@@ -55,13 +55,14 @@ RUNNABLE = {
 def _follow(
     held_jobs: HeldJobs, project_id: int, filepath: Path, doctype: DocType
 ) -> dict[str, SdocProcessingJobInput]:
-    """Upload the file and run the document creation and the runnable steps
+    """Upload the staged file and run the document creation and the runnable steps
     until none is held. Returns the enriched input of every held step job."""
     JobService().start_job(
         "sdoc_init",
         SdocInitJobInput(
             project_id=project_id,
-            filepath=filepath,
+            temporary_file_id=filepath.parent.name,
+            filename=filepath.name,
             doctype=doctype,
             folder_id=None,
             settings=SETTINGS,
@@ -104,7 +105,7 @@ def test_audio_runs_its_roots_and_transcribes_the_uploaded_file(
     transcription = held["transcription"]
     assert isinstance(transcription, TranscriptionJobInput)
     assert transcription.sdoc_id == sdoc_id
-    assert transcription.filepath.name == p["audio"].name
+    assert transcription.filename == p["audio"].name
     status = read_all_step_status(db_session, sdoc_id)
     ran = {step for step, value in status.items() if value == FINISHED}
     assert ran | set(held) == set(artefact_registry.graph().roots(DocType.audio))
@@ -128,8 +129,14 @@ def test_video_extracts_its_audio_and_transcribes_it(
     transcription = held["transcription"]
     assert isinstance(transcription, TranscriptionJobInput)
     assert transcription.sdoc_id == sdoc_id
-    assert transcription.filepath.name == audio_stream_path(p["video"]).name
-    assert transcription.filepath.exists()
+    audio = audio_stream_path(
+        project_id=p["project"].id,
+        sdoc_id=sdoc_id,
+        doctype=transcription.doctype,
+        filename=transcription.filename,
+    )
+    assert audio.name == "audio.mp3"
+    assert audio.exists()
     status = read_all_step_status(db_session, sdoc_id)
     assert status["video_audio_extraction"] == FINISHED
     assert status["video_metadata_extraction"] == FINISHED

@@ -1,3 +1,4 @@
+from core.project.export_file_crud import EXPORT_TTL
 from modules.eximport.export_job_dto import ExportJobInput, ExportJobOutput
 from repos.db.sql_repo import SQLRepo
 from systems.job_system.job_dto import Job
@@ -11,6 +12,8 @@ from systems.job_system.job_system_enum import EndpointGeneration
     output_type=ExportJobOutput,
     generate_endpoints=EndpointGeneration.MINIMAL,
     publish_updates=True,
+    # the export is deleted with the job's result (crud_export_file)
+    result_ttl=EXPORT_TTL,
 )
 def export_data(payload: ExportJobInput, job: Job) -> ExportJobOutput:
     from modules.eximport.export_service import ExportService
@@ -18,5 +21,6 @@ def export_data(payload: ExportJobInput, job: Job) -> ExportJobOutput:
     with SQLRepo().transaction() as db:
         return ExportService().handle_export_job(
             db=db,
+            export_id=job.get_id(),
             payload=payload,
         )

@@ -43,7 +43,6 @@ from modules.eximport.timeline_analysis.import_timeline_analysis import (
 )
 from modules.eximport.user.import_users import import_users_to_proj
 from modules.eximport.whiteboards.import_whiteboards import import_whiteboards_to_proj
-from repos.filesystem_repo import FilesystemRepo
 from systems.feature_system.feature_service import FeatureService
 
 # The project details are imported last, see import_project.
@@ -129,7 +128,6 @@ def __organize_import_files(import_dir: Path) -> dict[ExportEntity, Path]:
 
 def import_project(
     db: Session,
-    fsr: FilesystemRepo,
     path_to_dir: Path,
     project_id: int,
 ) -> None:
@@ -141,12 +139,9 @@ def import_project(
         if entity == ExportEntity.SDOC:
             # read zip (unzip file)
             try:
-                path_to_zip_file = fsr.get_dst_path_for_temp_file(
-                    organized_files[ExportEntity.SDOC]
-                )
-                path_to_temp_import_dir = fsr.create_temp_dir(
-                    f"import_project_{project_id}_sdocs"
-                )
+                # extracted next to the archive, in the import's temporary folder
+                path_to_zip_file = organized_files[ExportEntity.SDOC]
+                path_to_temp_import_dir = path_to_dir / "sdocs"
                 with zipfile.ZipFile(path_to_zip_file, "r") as zip_ref:
                     zip_ref.extractall(path_to_temp_import_dir)
                 logger.info("unzipped imported project")

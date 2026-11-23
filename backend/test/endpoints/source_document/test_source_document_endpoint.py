@@ -4,6 +4,7 @@ import pytest
 from fastapi.testclient import TestClient
 
 from common.doc_type_enum import DocType
+from core.artefacts.thumbnail.thumbnail_file_crud import crud_thumbnail_file
 from core.doc.folder_crud import crud_folder
 from core.doc.folder_dto import FolderCreate
 from core.doc.folder_enum import FolderType
@@ -17,11 +18,14 @@ from core.doc.source_document_dto import (
     SourceDocumentCreate,
     SourceDocumentRead,
     SourceDocumentUpdate,
+    SourceDocumentUrls,
 )
+from core.doc.source_document_file_crud import crud_sdoc_file
 from core.doc.source_document_orm import SourceDocumentORM
 from core.project.project_orm import ProjectORM
 from repos.elastic.elastic_repo import ElasticSearchRepo
-from repos.filesystem_repo import FilesystemRepo
+
+from .conftest import ProjectWithImage
 
 
 class ProjectWithSourceDocumentForTest(TypedDict):
@@ -64,7 +68,6 @@ def test_get_by_id_with_data(
     data_read = SourceDocumentDataRead.model_validate(resp.json())
 
     assert data_read.id == data.id
-    assert data_read.repo_url == data.repo_url
     assert data_read.html == data.html
 
 
@@ -96,8 +99,8 @@ def test_delete_source_document_by_id(
             project_id=sdoc.project_id,
         ),
     )
-    file_path = FilesystemRepo().get_path_to_sdoc_file(
-        sdoc=SourceDocumentRead.model_validate(sdoc)
+    file_path = crud_sdoc_file.path(
+        project_id=sdoc.project_id, id=sdoc.id, name=sdoc.filename
     )
     assert file_path.exists()
 
@@ -112,6 +115,24 @@ def test_delete_source_document_by_id(
     index_name = crud_sdoc_elastic.index.get_index_name(project_id=sdoc.project_id)
     assert not es_client.exists(index=index_name, id=str(sdoc.id))
     assert client.get(f"/folder/{folder_id}").status_code == 403
+
+
+def test_delete_image_removes_all_its_files(
+    client: TestClient, project_with_image: ProjectWithImage
+):
+    """Deleting an image removes the folders of its uploaded file and of its
+    thumbnails."""
+    image = project_with_image["image"]
+    folders = [
+        crud_sdoc_file.dir(project_id=image.project_id, id=image.id),
+        crud_thumbnail_file.dir(project_id=image.project_id, id=image.id),
+    ]
+    assert all(folder.is_dir() for folder in folders)
+
+    response = client.delete(f"/sdoc/{image.id}")
+
+    assert response.status_code == 200, response.text
+    assert [folder.exists() for folder in folders] == [False, False]
 
 
 def test_delete_source_document_by_id_short_if_not_exists(
@@ -289,36 +310,43 @@ def test_get_same_folder_sdocs_if_not_exists(
     assert response.status_code == 403, response.text
 
 
-# TODO Requires fix!
-# def test_get_file_url(
-#     client: TestClient,
-#     simple_project: ProjectORM,
-#     db_session: Session,
-#     test_user: UserRead,
-# ):
-#     sdoc = crud_sdoc.create(
-#         db=db_session,
-#         create_dto=SourceDocumentCreate(
-#             filename="sdoc.txt",
-#             name="A",
-#             doctype=DocType.text,
-#             project_id=simple_project.id,
-#             folder_id=None,
-#         ),
-#     )
+def test_get_urls_of_a_text_document(client: TestClient, project_with_sdoc):
+    """A text document has the URL of its uploaded file, and no image or
+    thumbnail."""
+    sdoc = project_with_sdoc["source_document"]
 
-#     db_session.commit()
-#     db_session.refresh(sdoc)
+    response = client.get(f"/sdoc/{sdoc.id}/urls")
 
-#     response = client.get(f"/sdoc/{sdoc.id}/url")
-#     assert response.status_code == 200, response.text
+    assert response.status_code == 200, response.text
+    assert SourceDocumentUrls.model_validate(response.json()) == SourceDocumentUrls(
+        file_url=f"projects/{sdoc.project_id}/sdoc_files/{sdoc.id}/{sdoc.filename}",
+        image_url=None,
+        thumbnail_url=None,
+    )
 
 
-def test_get_file_url_if_not_exists(
+def test_get_urls_of_an_image_with_its_thumbnails(
+    client: TestClient, project_with_image: ProjectWithImage
+):
+    """An image has the URLs of its uploaded file, its WebP and its thumbnail."""
+    image = project_with_image["image"]
+    folder = f"projects/{image.project_id}"
+
+    response = client.get(f"/sdoc/{image.id}/urls")
+
+    assert response.status_code == 200, response.text
+    assert SourceDocumentUrls.model_validate(response.json()) == SourceDocumentUrls(
+        file_url=f"{folder}/sdoc_files/{image.id}/photo.png",
+        image_url=f"{folder}/thumbnails/{image.id}/image.webp",
+        thumbnail_url=f"{folder}/thumbnails/{image.id}/thumbnail.webp",
+    )
+
+
+def test_get_urls_if_not_exists(
     client: TestClient,
 ):
     fake_id = 2000
-    response = client.get(f"/sdoc/{fake_id}/url")
+    response = client.get(f"/sdoc/{fake_id}/urls")
 
     assert response.status_code == 403, response.text
 

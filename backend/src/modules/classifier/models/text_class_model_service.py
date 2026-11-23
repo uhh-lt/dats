@@ -1,4 +1,5 @@
 from abc import ABC, abstractmethod
+from pathlib import Path
 
 from huggingface_hub import login
 from loguru import logger
@@ -35,9 +36,10 @@ class TextClassificationModelService(ABC):
 
     @abstractmethod
     def train(
-        self, db: Session, job: Job, payload: ClassifierJobInput
+        self, db: Session, job: Job, payload: ClassifierJobInput, model_dir: Path
     ) -> ClassifierJobOutput:
-        """Trains the model."""
+        """Trains the model, with its checkpoints and logs in the scratch folder
+        `model_dir`, and moves the best checkpoint into the classifier's folder."""
         pass
 
     @abstractmethod

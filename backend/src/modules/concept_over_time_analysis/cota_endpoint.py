@@ -265,11 +265,8 @@ def delete_by_id(
 ) -> COTARead:
     authz_user.assert_in_same_project_as(Crud.COTA_ANALYSIS, cota_id)
 
-    cota = crud_cota.read(db=db, id=cota_id)
-    project_id = cota.get_project_id()
-    db_obj = crud_cota.delete(db=db, id=cota_id)
-    result = COTARead.model_validate(db_obj)
-    ws.emit_to_project(DATSEvent.COTA_DELETED, result, project_id=project_id)
+    result = cotas.delete(db=db, cota_id=cota_id)
+    ws.emit_to_project(DATSEvent.COTA_DELETED, result, project_id=result.project_id)
     return result
 
 

@@ -4,6 +4,7 @@ from typing import Callable
 from sqlalchemy.orm import Session
 
 from common.singleton_meta import SingletonMeta
+from core.project.export_file_crud import crud_export_file
 from core.project.project_crud import crud_project
 from modules.eximport.bbox_annotations.export_bbox_annotations import (
     export_all_bbox_annotations,
@@ -43,13 +44,11 @@ from modules.eximport.whiteboards.export_whiteboards import (
     export_all_whiteboards,
     export_selected_whiteboards,
 )
-from repos.filesystem_repo import FilesystemRepo
+from repos.filesystem.temporary_file_crud import crud_temporary_file
 
 
 class ExportService(metaclass=SingletonMeta):
     def __new__(cls, *args, **kwargs):
-        cls.fsr: FilesystemRepo = FilesystemRepo()
-
         # map from job_type to function
         cls.export_method_for_job_type: dict[ExportJobType, Callable[..., Path]] = {
             ExportJobType.ALL_DATA: export_project,
@@ -83,8 +82,10 @@ class ExportService(metaclass=SingletonMeta):
         return super(ExportService, cls).__new__(cls)
 
     def handle_export_job(
-        self, db: Session, payload: ExportJobInput
+        self, db: Session, export_id: str, payload: ExportJobInput
     ) -> ExportJobOutput:
+        """Writes the export into the project's export `export_id` (the id of
+        the export job)."""
         # Check project exists
         crud_project.exists(
             db=db,
@@ -99,20 +100,27 @@ class ExportService(metaclass=SingletonMeta):
         if export_method is None:
             raise UnsupportedExportJobTypeError(payload.export_job_type)
 
-        # execute the export_method with the provided specific parameters
-        results_path = export_method(
-            db=db,
-            fsr=self.fsr,
-            project_id=payload.project_id,
-            **(
-                payload.specific_export_job_parameters.model_dump(
-                    exclude={"export_job_type"}
-                )
-                if payload.specific_export_job_parameters
-                else {}
-            ),
-        )
+        # execute the export_method with the provided specific parameters; its
+        # intermediate files are scratch, its result moves into the exports
+        with crud_temporary_file.folder() as out_dir:
+            results_path = export_method(
+                db=db,
+                out_dir=out_dir,
+                project_id=payload.project_id,
+                **(
+                    payload.specific_export_job_parameters.model_dump(
+                        exclude={"export_job_type"}
+                    )
+                    if payload.specific_export_job_parameters
+                    else {}
+                ),
+            )
+            crud_export_file.move_in(
+                project_id=payload.project_id, id=export_id, src=results_path
+            )
 
         return ExportJobOutput(
-            results_url=self.fsr.get_temp_file_url(results_path.name, relative=True)
+            results_url=crud_export_file.url(
+                project_id=payload.project_id, id=export_id, name=results_path.name
+            )
         )

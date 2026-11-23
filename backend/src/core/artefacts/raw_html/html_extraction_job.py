@@ -10,24 +10,23 @@ from core.artefacts.raw_html.html_cleaning_utils import clean_html
 from core.artefacts.raw_html.raw_html_artefact import RAW_HTML
 from core.doc.source_document_data_crud import crud_sdoc_data
 from core.doc.source_document_data_dto import SourceDocumentDataUpdate
-from core.doc.source_document_dto import SourceDocumentRead
+from core.doc.source_document_file_crud import crud_sdoc_file
 from core.doc_processing.doc_processing_dto import SdocInitJobInput
 from core.doc_processing.entrypoints.follower_utils import start_followers
 from repos.db.sql_repo import SQLRepo
 from repos.docling_repo import DoclingRepo
-from repos.filesystem_repo import FilesystemRepo
+from repos.filesystem.temporary_file_crud import crud_temporary_file
 from systems.artefact_system.artefact_dto import SdocProcessingJobInput
 from systems.artefact_system.pipeline_step_decorator import pipeline_step
 from systems.job_system.job_dto import Job, JobOutputBase
 from systems.job_system.job_register_decorator import register_job
 from utils.image_utils import base64_to_image
 
-fsr = FilesystemRepo()
 sqlr = SQLRepo()
 
 
 class ExtractHTMLJobInput(SdocProcessingJobInput):
-    filepath: Path
+    filename: str
     doctype: DocType
     folder_id: int | None
 
@@ -46,13 +45,15 @@ def enrich_for_recompute(
             db=db,
             id=payload.sdoc_id,
         )
-        sdoc = SourceDocumentRead.model_validate(sdoc_data.source_document)
-        filepath = fsr.get_path_to_sdoc_file(sdoc, raise_if_not_exists=True)
+        sdoc = sdoc_data.source_document
+        assert crud_sdoc_file.exists(
+            project_id=sdoc.project_id, id=sdoc.id, name=sdoc.filename
+        ), f"The file of SourceDocument {sdoc.id} does not exist!"
 
         return ExtractHTMLJobInput(
             **payload.model_dump(),
-            filepath=filepath,
-            doctype=sdoc.doctype,
+            filename=sdoc.filename,
+            doctype=DocType(sdoc.doctype),
             folder_id=sdoc.folder_id,
         )
 
@@ -71,23 +72,37 @@ def enrich_for_recompute(
 def handle_html_extraction_job(
     payload: ExtractHTMLJobInput, job: Job
 ) -> ExtractHTMLJobOutput:
-    if not payload.filepath.exists():
-        logger.error(f"File {payload.filepath} does not exist!")
-        raise Exception(f"File {payload.filepath} does not exist!")
+    filepath = crud_sdoc_file.path(
+        project_id=payload.project_id, id=payload.sdoc_id, name=payload.filename
+    )
+    if not filepath.exists():
+        logger.error(f"File {filepath} does not exist!")
+        raise Exception(f"File {filepath} does not exist!")
+
+    # the extracted images are staged in a temporary folder, the handover to
+    # the sdoc_init jobs that make them documents of their own
+    staging_id = crud_temporary_file.create()
+    image_dir = crud_temporary_file.dir(id=staging_id)
 
     # TODO: these extractions have varying compute requirements when run across
     #       multiple machines or if GPU is used for PDFs via Docling etc.
-    if payload.filepath.suffix == ".txt":
-        doc_html, extracted_images = extract_html_from_text(payload)
-    elif payload.filepath.suffix == ".docx" or payload.filepath.suffix == ".doc":
-        doc_html, extracted_images = extract_html_from_word(payload)
-    elif payload.filepath.suffix == ".pdf":
-        doc_html, extracted_images = extract_html_from_pdf(payload)
-    elif payload.filepath.suffix == ".html":
-        doc_html, extracted_images = extract_html_from_html(payload)
+    if filepath.suffix == ".txt":
+        doc_html, extracted_images = extract_html_from_text(filepath)
+    elif filepath.suffix == ".docx" or filepath.suffix == ".doc":
+        doc_html, extracted_images = extract_html_from_word(
+            payload, filepath, image_dir
+        )
+    elif filepath.suffix == ".pdf":
+        doc_html, extracted_images = extract_html_from_pdf(payload, filepath, image_dir)
+    elif filepath.suffix == ".html":
+        doc_html, extracted_images = extract_html_from_html(
+            payload, filepath, image_dir
+        )
     else:
-        logger.error(f"Unsupported file type: {payload.filepath.suffix}")
-        raise Exception(f"Unsupported file type: {payload.filepath.suffix}")
+        logger.error(f"Unsupported file type: {filepath.suffix}")
+        raise Exception(f"Unsupported file type: {filepath.suffix}")
+    if not extracted_images:
+        crud_temporary_file.delete(id=staging_id)
 
     # Clean HTML (may use readability, always uses heuristics)
     raw_html = clean_html(doc_html)
@@ -110,7 +125,8 @@ def handle_html_extraction_job(
                 "sdoc_init",
                 SdocInitJobInput(
                     project_id=payload.project_id,
-                    filepath=path,
+                    temporary_file_id=staging_id,
+                    filename=path.name,
                     folder_id=payload.folder_id,
                     doctype=DocType.image,
                     settings=payload.settings,
@@ -138,6 +154,7 @@ def __extract_html_and_images_from_html(
     html: str,
     extract_images: bool,
     filepath: Path,
+    image_dir: Path,
 ) -> tuple[str, list[Path]]:
     # Parse the HTML content
     soup = BeautifulSoup(html, "html.parser")
@@ -158,10 +175,9 @@ def __extract_html_and_images_from_html(
             base64_images[unique_filename] = base64_data
             img_tag["src"] = unique_filename  # Replace src with the filename
 
-    # Store all extracted images in the same directory as the HTML
-    output_path = filepath.parent
+    # Store all extracted images in the image folder
     for img_fn, b64_img in base64_images.items():
-        img_path = output_path / img_fn
+        img_path = image_dir / img_fn
         try:
             img = base64_to_image(b64_img)
         except Exception as e:
@@ -180,26 +196,29 @@ def __extract_html_and_images_from_html(
     return str(soup), extracted_images
 
 
-def extract_html_from_pdf(payload: ExtractHTMLJobInput) -> tuple[str, list[Path]]:
-    logger.debug(f"Extracting content as HTML from PDF {payload.filepath.name} ...")
+def extract_html_from_pdf(
+    payload: ExtractHTMLJobInput, filepath: Path, image_dir: Path
+) -> tuple[str, list[Path]]:
+    logger.debug(f"Extracting content as HTML from PDF {filepath.name} ...")
 
-    conversion_output = DoclingRepo().pdf2html(pdf_chunk=payload.filepath)
+    conversion_output = DoclingRepo().pdf2html(pdf_chunk=filepath)
     return __extract_html_and_images_from_html(
         html=conversion_output.html_content,
         extract_images=payload.settings.extract_images,
-        filepath=payload.filepath,
+        filepath=filepath,
+        image_dir=image_dir,
     )
 
 
-def extract_html_from_text(payload: ExtractHTMLJobInput) -> tuple[str, list[Path]]:
+def extract_html_from_text(filepath: Path) -> tuple[str, list[Path]]:
     """
     Convert a text file to HTML, preserving line breaks as paragraphs.
 
     Each non-empty line becomes a <p> element to maintain the original formatting.
     """
-    logger.debug(f"Extracting content as HTML from TEXT {payload.filepath.name} ...")
+    logger.debug(f"Extracting content as HTML from TEXT {filepath.name} ...")
 
-    content = payload.filepath.read_text(encoding="utf-8")
+    content = filepath.read_text(encoding="utf-8")
 
     # Split by line breaks and wrap each non-empty line in <p> tags
     lines = content.split("\n")
@@ -209,8 +228,10 @@ def extract_html_from_text(payload: ExtractHTMLJobInput) -> tuple[str, list[Path
     return html_content, []
 
 
-def extract_html_from_word(payload: ExtractHTMLJobInput) -> tuple[str, list[Path]]:
-    logger.debug(f"Extracting content as HTML from WORD {payload.filepath.name} ...")
+def extract_html_from_word(
+    payload: ExtractHTMLJobInput, filepath: Path, image_dir: Path
+) -> tuple[str, list[Path]]:
+    logger.debug(f"Extracting content as HTML from WORD {filepath.name} ...")
 
     extracted_images: list[Path] = []
 
@@ -218,7 +239,7 @@ def extract_html_from_word(payload: ExtractHTMLJobInput) -> tuple[str, list[Path
         if not payload.settings.extract_images:
             return {"src": ""}
 
-        fn = payload.filepath.parent / f"image_{str(uuid4())}"
+        fn = image_dir / f"image_{str(uuid4())}"
         if "png" in image.content_type:
             fn = fn.with_suffix(".png")
         elif "jpg" in image.content_type:
@@ -234,7 +255,7 @@ def extract_html_from_word(payload: ExtractHTMLJobInput) -> tuple[str, list[Path
             extracted_images.append(fn)
             return {"src": str(fn.name)}
 
-    with open(str(payload.filepath), "rb") as docx_file:
+    with open(str(filepath), "rb") as docx_file:
         html = mammoth.convert_to_html(
             docx_file, convert_image=mammoth.images.img_element(convert_image)
         )
@@ -246,12 +267,15 @@ def extract_html_from_word(payload: ExtractHTMLJobInput) -> tuple[str, list[Path
     return html_content, extracted_images
 
 
-def extract_html_from_html(payload: ExtractHTMLJobInput) -> tuple[str, list[Path]]:
-    logger.debug(f"Extracting content as HTML from HTML {payload.filepath.name} ...")
+def extract_html_from_html(
+    payload: ExtractHTMLJobInput, filepath: Path, image_dir: Path
+) -> tuple[str, list[Path]]:
+    logger.debug(f"Extracting content as HTML from HTML {filepath.name} ...")
 
-    content = payload.filepath.read_text(encoding="utf-8")
+    content = filepath.read_text(encoding="utf-8")
     return __extract_html_and_images_from_html(
         html=content,
         extract_images=payload.settings.extract_images,
-        filepath=payload.filepath,
+        filepath=filepath,
+        image_dir=image_dir,
     )

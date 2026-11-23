@@ -12,7 +12,8 @@ from setfit import SetFitModel, Trainer, TrainingArguments, sample_dataset
 
 from common.doc_type_enum import DocType
 from config import conf
-from repos.filesystem_repo import FilesystemRepo
+from modules.perspectives.perspectives_file_crud import crud_perspectives_model_file
+from repos.filesystem.temporary_file_crud import crud_temporary_file
 
 
 class EmbeddingModelConfig(TypedDict):
@@ -23,6 +24,7 @@ class EmbeddingModelConfig(TypedDict):
 
 class PromptEmbedderInput(BaseModel):
     project_id: int = Field(description="Project ID")
+    aspect_id: int = Field(description="ID of the Aspect whose models are used")
     model_name: str = Field(
         description="Model Name. If 'default', uses default model, otherwise a model is trained or loaded."
     )
@@ -114,10 +116,10 @@ class PromptEmbedder:
                     "Custom models are not supported for image embeddings."
                 )
 
-            model_dir = FilesystemRepo().get_model_dir(
+            model_dir = crud_perspectives_model_file.path(
                 project_id=input.project_id,
-                model_name=input.model_name,
-                model_prefix=f"prompt_embedder_{input.modality}_",
+                id=input.aspect_id,
+                name=f"prompt_embedder_{input.model_name}",
             )
             if not model_dir.exists():
                 # Train custom model
@@ -132,19 +134,16 @@ class PromptEmbedder:
                         "Training labels are required for custom model training."
                     )
 
-                checkpoint_dir = FilesystemRepo().get_model_dir(
-                    project_id=input.project_id,
-                    model_name=input.model_name,
-                    model_prefix=f"prompt_embedder_chkpt_{input.modality}_",
-                )
-                encoder = self._finetune(
-                    model_dir=model_dir,
-                    checkpoint_dir=checkpoint_dir,
-                    instruction=input.prompt,
-                    train_docs=input.train_docs,
-                    train_labels=input.train_labels,
-                    modality=input.modality,
-                )
+                # the checkpoints of the training are scratch
+                with crud_temporary_file.folder() as checkpoint_dir:
+                    encoder = self._finetune(
+                        model_dir=model_dir,
+                        checkpoint_dir=checkpoint_dir,
+                        instruction=input.prompt,
+                        train_docs=input.train_docs,
+                        train_labels=input.train_labels,
+                        modality=input.modality,
+                    )
             else:
                 # Load custom model
                 logger.info(f"Loading custom model from {model_dir} ...")

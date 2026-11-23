@@ -7,22 +7,22 @@ from sqlalchemy.orm import Session
 from core.metadata.project_metadata_orm import ProjectMetadataORM
 from core.project.project_crud import crud_project
 from modules.eximport.export_exceptions import NoDataToExportError
+from modules.eximport.export_utils import write_df
 from modules.eximport.project_metadata.project_metadata_export_schema import (
     ProjectMetadataExportCollection,
     ProjectMetadataExportSchema,
 )
-from repos.filesystem_repo import FilesystemRepo
 
 
 def export_all_project_metadatas(
     db: Session,
-    fsr: FilesystemRepo,
+    out_dir: Path,
     project_id: int,
 ) -> Path:
     project_metadatas = crud_project.read(db=db, id=project_id).metadata_
     return __export_project_metadatas(
         db=db,
-        fsr=fsr,
+        out_dir=out_dir,
         fn=f"project_{project_id}_all_project_metadatas",
         project_metadatas=project_metadatas,
     )
@@ -30,7 +30,7 @@ def export_all_project_metadatas(
 
 def __export_project_metadatas(
     db: Session,
-    fsr: FilesystemRepo,
+    out_dir: Path,
     fn: str,
     project_metadatas: list[ProjectMetadataORM],
 ) -> Path:
@@ -40,7 +40,8 @@ def __export_project_metadatas(
     export_data = __generate_export_df_for_project_metadata(
         project_metadatas=project_metadatas
     )
-    return fsr.write_df_to_temp_file(
+    return write_df(
+        out_dir=out_dir,
         df=export_data,
         fn=fn,
     )

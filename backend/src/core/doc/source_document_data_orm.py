@@ -27,7 +27,6 @@ class SourceDocumentDataORM(ORMBase):
     content: Mapped[str] = mapped_column(String, nullable=False, index=False)
     raw_html: Mapped[str] = mapped_column(String, nullable=False, index=False)
     html: Mapped[str] = mapped_column(String, nullable=False, index=False)
-    repo_url: Mapped[str] = mapped_column(String, nullable=False, index=False)
     token_starts: Mapped[list[int]] = mapped_column(
         ARRAY(Integer), nullable=False, index=False
     )

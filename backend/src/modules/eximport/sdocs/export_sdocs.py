@@ -5,17 +5,17 @@ from sqlalchemy.orm import Session
 from common.doc_type_enum import DocType
 from common.sdoc_status_enum import SDocStatus
 from core.doc.source_document_crud import crud_sdoc
-from core.doc.source_document_dto import SourceDocumentRead
+from core.doc.source_document_file_crud import crud_sdoc_file
 from core.doc.source_document_orm import SourceDocumentORM
 from core.metadata.source_document_metadata_dto import (
     SourceDocumentMetadataReadResolved,
 )
 from modules.eximport.export_exceptions import NoDataToExportError
+from modules.eximport.export_utils import write_df, write_zip
 from modules.eximport.sdocs.sdoc_export_schema import (
     SourceDocumentExportCollection,
     SourceDocumentExportSchema,
 )
-from repos.filesystem_repo import FilesystemRepo
 from systems.artefact_system.artefact_registry import artefact_registry
 from systems.artefact_system.source_document_status_rules import document_status
 from systems.artefact_system.source_document_step_status_crud import (
@@ -25,14 +25,14 @@ from systems.artefact_system.source_document_step_status_crud import (
 
 def export_selected_sdocs(
     db: Session,
-    fsr: FilesystemRepo,
+    out_dir: Path,
     project_id: int,
     sdoc_ids: list[int],
 ) -> Path:
     sdocs = crud_sdoc.read_by_ids(db=db, ids=sdoc_ids)
     return __export_sdocs(
         db=db,
-        fsr=fsr,
+        out_dir=out_dir,
         fn=f"project_{project_id}_selected_docs",
         sdocs=sdocs,
     )
@@ -40,13 +40,13 @@ def export_selected_sdocs(
 
 def export_all_sdocs(
     db: Session,
-    fsr: FilesystemRepo,
+    out_dir: Path,
     project_id: int,
 ) -> Path:
     sdocs = crud_sdoc.read_by_project(db=db, project_id=project_id, only_finished=False)
     return __export_sdocs(
         db=db,
-        fsr=fsr,
+        out_dir=out_dir,
         fn=f"project_{project_id}_all_docs",
         sdocs=sdocs,
     )
@@ -54,7 +54,7 @@ def export_all_sdocs(
 
 def __export_sdocs(
     db: Session,
-    fsr: FilesystemRepo,
+    out_dir: Path,
     fn: str,
     sdocs: list[SourceDocumentORM],
 ) -> Path:
@@ -78,9 +78,7 @@ def __export_sdocs(
 
     # 1. The source document itself (the raw file)
     sdoc_files = [
-        fsr.get_path_to_sdoc_file(
-            SourceDocumentRead.model_validate(sdoc), raise_if_not_exists=True
-        )
+        crud_sdoc_file.path(project_id=sdoc.project_id, id=sdoc.id, name=sdoc.filename)
         for sdoc in sdocs
     ]
     all_files.extend(sdoc_files)
@@ -160,10 +158,12 @@ def __export_sdocs(
     export_collection_obj = SourceDocumentExportCollection(
         source_documents=export_collection
     )
-    export_df_file = fsr.write_df_to_temp_file(
-        df=export_collection_obj.to_dataframe(), fn="document_export_data"
+    export_df_file = write_df(
+        out_dir=out_dir,
+        df=export_collection_obj.to_dataframe(),
+        fn="document_export_data",
     )
     all_files.append(export_df_file)
 
     # Create and return a zip file with all exported files
-    return fsr.write_files_to_temp_zip_file(files=all_files, fn=fn)
+    return write_zip(out_dir=out_dir, files=all_files, fn=fn)

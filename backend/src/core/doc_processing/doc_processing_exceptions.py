@@ -36,3 +36,33 @@ class StepNotPlannedError(Exception):
             f"Step '{step}' is not planned for the documents {sdoc_ids}. It belongs "
             "to a feature: enable or complete the feature that needs it to compute it."
         )
+
+
+@exception_handler(status.HTTP_409_CONFLICT)
+class SourceDocumentFilenameExistsError(Exception):
+    def __init__(self, filename: str) -> None:
+        super().__init__(
+            f"Cannot upload the file '{filename}': the project has a document "
+            "with this filename!"
+        )
+
+
+@exception_handler(status.HTTP_400_BAD_REQUEST)
+class ErroneousArchiveError(Exception):
+    def __init__(self, archive_name: str, msg: str | None = None) -> None:
+        super().__init__(
+            f"Error with Archive {archive_name}{': ' + msg if msg else ''}"
+        )
+
+
+class NoValidDocumentInArchiveError(Exception):
+    def __init__(self, archive_name: str) -> None:
+        super().__init__(
+            f"Archive extraction failed! No valid document found in {archive_name}."
+        )
+
+
+@exception_handler(status.HTTP_400_BAD_REQUEST)
+class UploadWithoutFilenameError(Exception):
+    def __init__(self) -> None:
+        super().__init__("Uploaded file has no filename!")

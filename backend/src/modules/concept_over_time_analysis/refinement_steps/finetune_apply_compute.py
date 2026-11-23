@@ -1,4 +1,3 @@
-import shutil
 from pathlib import Path
 
 import numpy as np
@@ -19,7 +18,7 @@ from modules.concept_over_time_analysis.cota_dto import (
     COTARead,
     COTASentence,
 )
-from repos.filesystem_repo import FilesystemRepo
+from modules.concept_over_time_analysis.cota_file_crud import crud_cota_file
 from repos.vector.weaviate_repo import WeaviateRepo
 
 MODEL = conf.cota.model
@@ -34,8 +33,8 @@ def finetune_apply_compute(
     # if we do not have sentence annotations, the ranking / similarities were already computed by the initial similarity search (in the first step)
     if __has_min_concept_sentence_annotations(cota=cota, search_space=search_space):
         concept_ids: list[str] = [concept.id for concept in cota.concepts]
-        model_path = FilesystemRepo().get_model_dir(
-            project_id=cota.project_id, model_name=str(cota.id), model_prefix="cota_"
+        model_path = crud_cota_file.path(
+            project_id=cota.project_id, id=cota.id, name="model"
         )
 
         # 1. train model
@@ -56,7 +55,7 @@ def finetune_apply_compute(
         )
 
         # 4. remove the model files
-        shutil.rmtree(model_path)
+        crud_cota_file.delete(project_id=cota.project_id, id=cota.id)
 
         # update search_space with the concept similarities
         for concept_id, similarities in concept_similarities.items():

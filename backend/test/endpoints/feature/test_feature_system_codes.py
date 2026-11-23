@@ -14,10 +14,10 @@ from core.code.code_orm import CodeORM
 from core.doc.source_document_crud import crud_sdoc
 from core.project.project_orm import ProjectORM
 from core.user.user_orm import UserORM
+from dats_test_utils import new_temporary_folder
 from feature_test_utils import create_project_with_features, feature_named
 from modules.eximport.project.export_project import export_project
 from modules.eximport.project.import_project import import_project
-from repos.filesystem_repo import FilesystemRepo
 from systems.artefact_system.artefact_dto import ProcessingSettings
 from systems.feature_system.feature_registry import feature_registry
 from systems.feature_system.feature_service import FeatureService
@@ -61,12 +61,12 @@ def _enable(db: Session, project_id: int, feature: str) -> None:
 
 def _round_trip(db: Session, source: ProjectORM, target: ProjectORM) -> None:
     """Export the source project and import the archive into the target."""
-    fsr = FilesystemRepo()
-    archive = export_project(db=db, fsr=fsr, project_id=source.id)
-    import_dir = fsr.create_temp_dir("system_codes_import")
+    out_dir = new_temporary_folder()
+    archive = export_project(db=db, out_dir=out_dir, project_id=source.id)
+    import_dir = out_dir / "import"
     with zipfile.ZipFile(archive) as zip_file:
         zip_file.extractall(import_dir)
-    import_project(db=db, fsr=fsr, path_to_dir=import_dir, project_id=target.id)
+    import_project(db=db, path_to_dir=import_dir, project_id=target.id)
     db.commit()
 
 

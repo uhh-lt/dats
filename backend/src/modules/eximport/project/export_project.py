@@ -12,6 +12,7 @@ from modules.eximport.codes.export_codes import export_all_codes
 from modules.eximport.cota.export_cota import export_all_cota
 from modules.eximport.experiments.export_experiments import export_all_experiments
 from modules.eximport.export_exceptions import NoDataToExportError
+from modules.eximport.export_utils import write_json, write_zip
 from modules.eximport.folder.export_folders import export_all_folders
 from modules.eximport.memos.export_memos import export_all_memos
 from modules.eximport.project.project_export_schema import (
@@ -36,19 +37,18 @@ from modules.eximport.timeline_analysis.export_timeline_analysis import (
 )
 from modules.eximport.user.export_users import export_all_users
 from modules.eximport.whiteboards.export_whiteboards import export_all_whiteboards
-from repos.filesystem_repo import FilesystemRepo
 from systems.feature_system.feature_registry import feature_registry
 
 
 def export_project(
     db: Session,
-    fsr: FilesystemRepo,
+    out_dir: Path,
     project_id: int,
 ) -> Path:
     project = crud_project.read(db=db, id=project_id)
     return __export_project(
         db=db,
-        fsr=fsr,
+        out_dir=out_dir,
         fn=f"project_{project_id}",
         project=project,
     )
@@ -56,11 +56,11 @@ def export_project(
 
 def __export_project(
     db: Session,
-    fsr: FilesystemRepo,
+    out_dir: Path,
     fn: str,
     project: ProjectORM,
 ) -> Path:
-    export_files = [__export_project_details(fsr=fsr, project=project)]
+    export_files = [__export_project_details(out_dir=out_dir, project=project)]
     for export_fn in [
         export_all_bbox_annotations,
         export_all_codes,
@@ -82,20 +82,21 @@ def __export_project(
             export_files.append(
                 export_fn(
                     db=db,
-                    fsr=fsr,
+                    out_dir=out_dir,
                     project_id=project.id,
                 )
             )
         except NoDataToExportError as e:
             logger.warning(e)
 
-    return fsr.write_files_to_temp_zip_file(
+    return write_zip(
+        out_dir=out_dir,
         files=export_files,
         fn=fn,
     )
 
 
-def __export_project_details(fsr: FilesystemRepo, project: ProjectORM) -> Path:
+def __export_project_details(out_dir: Path, project: ProjectORM) -> Path:
     logger.info("Exporting project details ...")
     export_data = ProjectDetailsExportSchema(
         title=project.title,
@@ -107,7 +108,8 @@ def __export_project_details(fsr: FilesystemRepo, project: ProjectORM) -> Path:
             if feature_registry.feature(name) is not None
         ],
     )
-    return fsr.write_json_to_temp_file(
+    return write_json(
+        out_dir=out_dir,
         json_obj=export_data.model_dump(),
         fn=f"project_{project.id}_details",
     )

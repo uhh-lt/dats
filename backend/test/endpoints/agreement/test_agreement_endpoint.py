@@ -11,7 +11,7 @@ from modules.agreement.agreement_dto import (
     AgreementTextRange,
 )
 from modules.agreement.agreement_enum import AgreementAnnotationType, AgreementScoring
-from repos.filesystem_repo import FilesystemRepo
+from repos.filesystem.filesystem_repo import FilesystemRepo
 
 from .conftest import DOCUMENT_A, AgreementProject, record_sql
 
@@ -740,7 +740,7 @@ def _export(
     assert response.status_code == 200, response.text
     filename = Path(response.json()).name
     assert filename.endswith(".csv")
-    return pd.read_csv(FilesystemRepo().get_dst_path_for_temp_file(filename))
+    return pd.read_csv(FilesystemRepo().root_dir / response.json())
 
 
 def test_export_agreement_counts_has_a_row_per_document_and_code(

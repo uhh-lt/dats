@@ -1,9 +1,8 @@
-from pathlib import Path
-
 import pytest
 import rq.job
 from fastapi.testclient import TestClient
 
+from common.doc_type_enum import DocType
 from common.languages_enum import Language
 from core.artefacts.transcript.transcription_job import (
     TranscriptionJobInput,
@@ -58,7 +57,8 @@ def _run_transcription(
             project_id=audio_project["project"].id,
             sdoc_id=audio_project["audio_document"].id,
             settings=SETTINGS,
-            filepath=Path(audio_project["audio_filepath"]),
+            doctype=DocType.audio,
+            filename=audio_project["audio_document"].filename,
         ),
         Job(
             rq.job.Job.create(

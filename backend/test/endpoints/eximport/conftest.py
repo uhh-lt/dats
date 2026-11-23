@@ -33,8 +33,8 @@ from core.doc.source_document_data_crud import crud_sdoc_data
 from core.doc.source_document_data_dto import SourceDocumentDataCreate
 from core.doc.source_document_dto import (
     SourceDocumentCreate,
-    SourceDocumentRead,
 )
+from core.doc.source_document_file_crud import crud_sdoc_file
 from core.doc.source_document_orm import SourceDocumentORM
 from core.metadata.project_metadata_crud import crud_project_meta
 from core.metadata.project_metadata_dto import ProjectMetadataCreate
@@ -86,7 +86,6 @@ from provenance_test_utils import (
     create_provenance_project,
 )
 from repos.elastic.elastic_repo import ElasticSearchRepo
-from repos.filesystem_repo import FilesystemRepo
 from repos.vector.weaviate_repo import WeaviateRepo
 from systems.job_system.job_system_enum import JobStatus
 from virtual_user_test_utils import VirtualUserProject, create_virtual_user_project
@@ -383,10 +382,12 @@ def _create_text_document_with_file(
     sdoc = create_text_document(
         db, project=project, filename=filename, name=filename, sentences=sentences
     )
-    path = FilesystemRepo()._get_dst_path_for_project_sdoc_file(
-        project_id=project.id, filename=filename
+    crud_sdoc_file.write(
+        project_id=project.id,
+        id=sdoc.id,
+        name=filename,
+        data=" ".join(sentences).encode(),
     )
-    path.write_text(" ".join(sentences))
     return sdoc
 
 
@@ -404,9 +405,10 @@ def _create_video_document_with_file(
             project_id=project.id,
         ),
     )
-    video_path = FilesystemRepo().get_path_to_sdoc_file(
-        SourceDocumentRead.model_validate(video)
+    video_path = crud_sdoc_file.path(
+        project_id=project.id, id=video.id, name=video.filename
     )
+    video_path.parent.mkdir(parents=True)
     picture = ffmpeg.input("testsrc=duration=1:size=64x64:rate=10", f="lavfi")
     tone = ffmpeg.input("sine=frequency=440:duration=1", f="lavfi")
     ffmpeg.output(
@@ -417,7 +419,6 @@ def _create_video_document_with_file(
         create_dto=SourceDocumentDataCreate(
             id=video.id,
             content="Hello world.",
-            repo_url=str(video_path.relative_to(FilesystemRepo().root_dir)),
             raw_html="<html><body><p>Hello world.</p></body></html>",
             html="<p>Hello world.</p>",
             token_starts=[0, 6],
@@ -428,9 +429,9 @@ def _create_video_document_with_file(
             token_time_ends=[400, 900],
         ),
     )
-    extract_audio_stream(video_path)
+    extract_audio_stream(project_id=project.id, sdoc_id=video.id, video_path=video_path)
     store_video_thumbnail(
-        db=db, sdoc=SourceDocumentRead.model_validate(video), video_path=video_path
+        project_id=project.id, sdoc_id=video.id, video_path=video_path
     )
     return video
 
@@ -665,8 +666,8 @@ def feature_toggle_eximport_projects(
         a 440 Hz tone, made with ffmpeg) with its raw file, the transcript "Hello
         world." (two tokens with their times, one sentence), finished
         `minimal_video_steps()`, the audio stream that video_audio_extraction
-        extracted from it, the thumbnail that video_thumbnail wrote (its
-        `repo_url` links the thumbnail) and its Elasticsearch entry; every other
+        extracted from it, the thumbnail that video_thumbnail wrote and its
+        Elasticsearch entry; every other
         step is not planned.
     - Project "Import Target" (`target_project`), which enables only keyword
       statistics, with no documents.
@@ -713,17 +714,17 @@ def feature_toggle_eximport_projects(
             project_id=project.id,
         ),
     )
-    image_path = FilesystemRepo().get_path_to_sdoc_file(
-        SourceDocumentRead.model_validate(image)
+    image_path = crud_sdoc_file.path(
+        project_id=project.id, id=image.id, name=image.filename
     )
+    image_path.parent.mkdir(parents=True)
     Image.new("RGB", (4, 4)).save(image_path, "PNG")
-    generate_thumbnails(image_path)
+    generate_thumbnails(project_id=project.id, sdoc_id=image.id, image_path=image_path)
     crud_sdoc_data.create(
         db=db_session,
         create_dto=SourceDocumentDataCreate(
             id=image.id,
             content="",
-            repo_url=str(image_path.relative_to(FilesystemRepo().root_dir)),
             raw_html="",
             html="",
             token_starts=[],

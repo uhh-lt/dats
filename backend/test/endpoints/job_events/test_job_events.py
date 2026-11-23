@@ -171,7 +171,6 @@ class TestJobUpdatedEmission:
         self, test_project: ProjectORM, test_user: UserORM
     ):
         """Jobs registered without publish_updates never emit JOB_UPDATED."""
-        from pathlib import Path
 
         from common.doc_type_enum import DocType
         from common.languages_enum import Language
@@ -180,7 +179,8 @@ class TestJobUpdatedEmission:
 
         payload = SdocInitJobInput(
             project_id=test_project.id,
-            filepath=Path("/nonexistent/file.txt"),
+            temporary_file_id="nonexistent",
+            filename="file.txt",
             doctype=DocType.text,
             folder_id=None,
             settings=ProcessingSettings(

@@ -63,6 +63,19 @@ class SourceDocumentDeleteResult(BaseModel):
     )
 
 
+class SourceDocumentUrls(BaseModel):
+    """The URLs of the files of a SourceDocument, relative to the content
+    server (`/content/`)."""
+
+    file_url: str = Field(description="URL of the uploaded file of the SourceDocument")
+    image_url: str | None = Field(
+        description="URL of the WebP image of an image SourceDocument (None until it is computed)"
+    )
+    thumbnail_url: str | None = Field(
+        description="URL of the thumbnail of an image or video SourceDocument (None until it is computed)"
+    )
+
+
 class SourceDocumentCreate(SourceDocumentBaseDTO):
     folder_id: int | None = Field(
         description="ID of the Folder this SourceDocument belongs to. If not provided, a folder with the filename of the SourceDocument will be created automatically.",

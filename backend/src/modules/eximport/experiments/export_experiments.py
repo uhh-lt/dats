@@ -19,15 +19,15 @@ from modules.eximport.experiments.experiment_export_schema import (
     ExperimentRunScoresForExport,
 )
 from modules.eximport.export_exceptions import NoDataToExportError
+from modules.eximport.export_utils import write_df
 from modules.experiment.experiment_crud import crud_experiment
 from modules.experiment.experiment_orm import ExperimentORM, ExperimentRunORM
 from modules.experiment.experiment_run_dto import ExperimentRunScores
-from repos.filesystem_repo import FilesystemRepo
 
 
 def export_all_experiments(
     db: Session,
-    fsr: FilesystemRepo,
+    out_dir: Path,
     project_id: int,
 ) -> Path:
     """
@@ -35,7 +35,7 @@ def export_all_experiments(
 
     Args:
         db: Database session
-        fsr: Filesystem repository service for file operations
+        out_dir: The scratch folder the export file is written to
         project_id: ID of the project
 
     Returns:
@@ -49,7 +49,8 @@ def export_all_experiments(
         raise NoDataToExportError("No experiments to export.")
 
     export_data = __generate_export_df_for_experiments(db=db, experiments=experiments)
-    return fsr.write_df_to_temp_file(
+    return write_df(
+        out_dir=out_dir,
         df=export_data,
         fn=f"project_{project_id}_all_experiments",
     )

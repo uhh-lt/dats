@@ -302,7 +302,6 @@ def search_project(
     from core.doc.source_document_data_crud import crud_sdoc_data
     from core.doc.source_document_data_dto import SourceDocumentDataCreate
     from core.doc.source_document_dto import SourceDocumentCreate
-    from repos.filesystem_repo import FilesystemRepo
 
     sdoc_two = crud_sdoc.create(
         db=seed_db_session,
@@ -314,16 +313,11 @@ def search_project(
             folder_id=None,
         ),
     )
-    file_path = FilesystemRepo()._get_dst_path_for_project_sdoc_file(
-        project_id=project.id, filename=sdoc_two.filename
-    )
-    relative_file_path = file_path.relative_to(FilesystemRepo().root_dir)
     crud_sdoc_data.create(
         db=seed_db_session,
         create_dto=SourceDocumentDataCreate(
             id=sdoc_two.id,
             content="Alpha beta gamma.",
-            repo_url=str(relative_file_path),
             raw_html="<p>Alpha beta gamma.</p>",
             html="<p><sent>Alpha beta gamma.</sent></p>",
             token_starts=[0, 6, 11],
@@ -334,10 +328,6 @@ def search_project(
             token_time_ends=None,
         ),
     )
-    # Write the file to disk so endpoints that build file URLs (e.g. bbox) work.
-    with open(file_path, "w") as f:
-        f.write("Alpha beta gamma.")
-
     # --- codes (Beta is a CHILD of Alpha, so CONTAINS_RECURSIVE on Alpha also
     # matches Beta-coded annotations) ---
     code_alpha = _make_code(seed_db_session, project, "Alpha", "#ff0000")

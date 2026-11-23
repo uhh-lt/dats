@@ -8,6 +8,7 @@ from common.doc_type_enum import DocType
 from common.doc_type_utils import get_doc_type, is_archive_file, mime_type_supported
 from common.singleton_meta import SingletonMeta
 from core.doc.source_document_crud import crud_sdoc
+from core.doc.source_document_file_crud import truncate_filename
 from core.doc.source_document_orm import SourceDocumentORM
 from core.doc_processing.doc_processing_dto import (
     SdocHealthColumn,
@@ -18,8 +19,10 @@ from core.doc_processing.doc_processing_dto import (
 )
 from core.doc_processing.doc_processing_exceptions import (
     NoFilesProcessedError,
+    SourceDocumentFilenameExistsError,
     StepNotPlannedError,
     UnsupportedMimeTypeError,
+    UploadWithoutFilenameError,
 )
 from core.doc_processing.entrypoints.archive_extraction_job import (
     ArchiveExtractionJobInput,
@@ -27,7 +30,7 @@ from core.doc_processing.entrypoints.archive_extraction_job import (
 from core.doc_processing.entrypoints.doc_chunking_job import (
     DocChunkingJobInput,
 )
-from repos.filesystem_repo import FilesystemRepo
+from repos.filesystem.temporary_file_crud import crud_temporary_file
 from systems.artefact_system.artefact_dto import (
     ProcessingSettings,
     SdocProcessingJobInput,
@@ -47,7 +50,6 @@ SdocPreprocessingJob = JobRead[SdocProcessingJobInput, JobOutputBase | None]
 
 class DocProcessingService(metaclass=SingletonMeta):
     def __new__(cls, *args, **kwargs):
-        cls.fsr: FilesystemRepo = FilesystemRepo()
         cls.js = JobService()
 
         return super(DocProcessingService, cls).__new__(cls)
@@ -55,22 +57,38 @@ class DocProcessingService(metaclass=SingletonMeta):
     def start_preprocessing(
         self,
         *,
+        db: Session,
         project_id: int,
         uploaded_files: list[UploadFile],
         settings: ProcessingSettings,
     ) -> list[Job]:
-        # 1. Check the mime types of all files before storing any of them,
-        # so that a rejected request leaves no files behind
+        # 1. Check the mime types and filenames of all files before storing any
+        # of them, so that a rejected request leaves no files behind. A
+        # document with the same filename fails the upload right away (later,
+        # the unique constraint of sdoc_init rejects it).
         mime_types = [
             self._get_supported_mime_type(uploaded_file=uploaded_file)
             for uploaded_file in uploaded_files
         ]
+        filenames = [
+            self._get_filename(uploaded_file=uploaded_file)
+            for uploaded_file in uploaded_files
+        ]
+        for filename in filenames:
+            if crud_sdoc.read_by_filename(
+                db=db, project_id=project_id, filename=filename, only_finished=False
+            ):
+                raise SourceDocumentFilenameExistsError(filename=filename)
 
         jobs = []
-        for uploaded_file, mime_type in zip(uploaded_files, mime_types):
-            # 2. store uploaded file
-            file_path = self.fsr.store_uploaded_file_in_project_dir(
-                project_id=project_id, uploaded_file=uploaded_file
+        for uploaded_file, mime_type, filename in zip(
+            uploaded_files, mime_types, filenames
+        ):
+            # 2. stage the uploaded file in a temporary folder, the handover
+            # to the jobs that create the documents
+            temporary_file_id = crud_temporary_file.create()
+            crud_temporary_file.store_upload(
+                id=temporary_file_id, upload=uploaded_file, name=filename
             )
 
             # 3. start correct job based on type
@@ -78,7 +96,10 @@ class DocProcessingService(metaclass=SingletonMeta):
                 job = self.js.start_job(
                     "extract_archive",
                     ArchiveExtractionJobInput(
-                        project_id=project_id, filepath=file_path, settings=settings
+                        project_id=project_id,
+                        temporary_file_id=temporary_file_id,
+                        filename=filename,
+                        settings=settings,
                     ),
                 )
                 jobs.append(job)
@@ -91,7 +112,10 @@ class DocProcessingService(metaclass=SingletonMeta):
                 job = self.js.start_job(
                     "doc_chunking",
                     DocChunkingJobInput(
-                        project_id=project_id, filepath=file_path, settings=settings
+                        project_id=project_id,
+                        temporary_file_id=temporary_file_id,
+                        filename=filename,
+                        settings=settings,
                     ),
                 )
                 jobs.append(job)
@@ -100,7 +124,8 @@ class DocProcessingService(metaclass=SingletonMeta):
                     job_type="sdoc_init",
                     payload=SdocInitJobInput(
                         project_id=project_id,
-                        filepath=file_path,
+                        temporary_file_id=temporary_file_id,
+                        filename=filename,
                         doctype=doc_type,
                         folder_id=None,
                         settings=settings,
@@ -330,3 +355,8 @@ class DocProcessingService(metaclass=SingletonMeta):
         if mime_type is None or not mime_type_supported(mime_type=mime_type):
             raise UnsupportedMimeTypeError(mime_type)
         return mime_type
+
+    def _get_filename(self, *, uploaded_file: UploadFile) -> str:
+        if not uploaded_file.filename:
+            raise UploadWithoutFilenameError()
+        return truncate_filename(uploaded_file.filename)

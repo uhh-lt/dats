@@ -1,8 +1,7 @@
-import shutil
-
 from fastapi.encoders import jsonable_encoder
 from sqlalchemy.orm import Session
 
+from common.crud_enum import Crud
 from common.doc_type_enum import DocType
 from common.meta_type_enum import MetaType
 from common.singleton_meta import SingletonMeta
@@ -19,13 +18,12 @@ from modules.concept_over_time_analysis.cota_dto import (
     COTAUpdate,
     COTAUpdateIntern,
 )
-from repos.filesystem_repo import FilesystemRepo
+from repos.filesystem.file_crud_base import FileCRUDBase
 from systems.job_system.job_service import JobService
 
 
 class COTAService(metaclass=SingletonMeta):
     def __new__(cls, *args, **kwargs):
-        cls.fsr: FilesystemRepo = FilesystemRepo()
         cls.js = JobService()
         return super(COTAService, cls).__new__(cls)
 
@@ -107,15 +105,10 @@ class COTAService(metaclass=SingletonMeta):
         # make sure that cota with cota_id exists
         db_obj = crud_cota.read(db=db, id=cota_id)
         cota = COTARead.model_validate(db_obj)
-        # delete the model directories
-        model_dir = self.fsr.get_model_dir(cota.project_id, str(cota.id))
-        if model_dir.exists():
-            shutil.rmtree(model_dir)
-        best_model_dir = self.fsr.get_model_dir(
-            cota.project_id, str(cota.id) + "-best-model"
+        # delete the models
+        FileCRUDBase.delete_by_entity(
+            Crud.COTA_ANALYSIS, project_id=cota.project_id, ids=[cota.id]
         )
-        if best_model_dir.exists():
-            shutil.rmtree(best_model_dir)
         # reset the search space & refinement job
         db_obj = crud_cota.update(
             db=db,
@@ -127,6 +120,15 @@ class COTAService(metaclass=SingletonMeta):
         )
         # return the results
         return COTARead.model_validate(db_obj)
+
+    def delete(self, *, db: Session, cota_id: int) -> COTARead:
+        """Deletes the analysis with its models."""
+        cota = COTARead.model_validate(crud_cota.read(db=db, id=cota_id))
+        crud_cota.delete(db=db, id=cota_id)
+        FileCRUDBase.delete_by_entity(
+            Crud.COTA_ANALYSIS, project_id=cota.project_id, ids=[cota.id]
+        )
+        return cota
 
     def annotate_sentences(
         self,

@@ -6,10 +6,9 @@ from loguru import logger
 
 from common.doc_type_enum import DocType
 from common.languages_enum import Language
-from core.artefacts.audio.audio_artefact import AUDIO
+from core.artefacts.audio.audio_artefact import AUDIO, audio_stream_path
 from core.artefacts.raw_html.raw_html_artefact import RAW_HTML
 from core.artefacts.transcript.transcript_artefact import TRANSCRIPT
-from core.artefacts.video_utils import audio_stream_path
 from core.doc.source_document_crud import crud_sdoc
 from core.doc.source_document_data_crud import crud_sdoc_data
 from core.doc.source_document_data_dto import (
@@ -17,20 +16,19 @@ from core.doc.source_document_data_dto import (
 )
 from core.doc.source_document_dto import SourceDocumentRead
 from repos.db.sql_repo import SQLRepo
-from repos.filesystem_repo import FilesystemRepo
 from repos.ray.ray_repo import RayRepo
 from systems.artefact_system.artefact_dto import SdocProcessingJobInput
 from systems.artefact_system.pipeline_step_decorator import pipeline_step
 from systems.job_system.job_dto import Job, JobOutputBase
 from systems.job_system.job_register_decorator import register_job
 
-fsr = FilesystemRepo()
 ray = RayRepo()
 sqlr = SQLRepo()
 
 
 class TranscriptionJobInput(SdocProcessingJobInput):
-    filepath: Path
+    doctype: DocType
+    filename: str
 
 
 class TranscriptionJobOutput(JobOutputBase):
@@ -55,17 +53,16 @@ def enrich_for_recompute(
             f"SourceDocument with {payload.sdoc_id=} is not an audio or video file!"
         )
 
-    audio_path = fsr.get_path_to_sdoc_file(sdoc, raise_if_not_exists=True)
-    if sdoc.doctype == DocType.video:
-        # the audio stream extracted by the video_audio_extraction step
-        audio_path = audio_stream_path(audio_path)
-        assert audio_path.exists(), (
-            f"The audio stream of the video with {payload.sdoc_id=} was not extracted!"
-        )
+    # of a video, the audio stream extracted by the video_audio_extraction step
+    assert audio_stream_path(
+        project_id=sdoc.project_id,
+        sdoc_id=sdoc.id,
+        doctype=sdoc.doctype,
+        filename=sdoc.filename,
+    ).exists(), f"The audio stream of SourceDocument {sdoc.id} does not exist!"
 
     return TranscriptionJobInput(
-        **payload.model_dump(),
-        filepath=audio_path,
+        **payload.model_dump(), doctype=sdoc.doctype, filename=sdoc.filename
     )
 
 
@@ -85,7 +82,13 @@ def handle_transcription_job(
     payload: TranscriptionJobInput, job: Job
 ) -> TranscriptionJobOutput:
     # convert audio file to uncompessed PCM format
-    pcm_bytes = convert_to_pcm(payload.filepath)
+    audio_path = audio_stream_path(
+        project_id=payload.project_id,
+        sdoc_id=payload.sdoc_id,
+        doctype=payload.doctype,
+        filename=payload.filename,
+    )
+    pcm_bytes = convert_to_pcm(audio_path)
 
     # generate transcription using ray
     transcription = generate_automatic_transcription(
@@ -165,7 +168,7 @@ def generate_automatic_transcription(
     if len(tokens) == 0:
         # no spoken words detected: inform user by writing informative fake data
         logger.warning(
-            f"Document {payload.sdoc_id} {payload.filepath.name} seems to contain no spoken words. Using dummy text data."
+            f"Document {payload.sdoc_id} {payload.filename} seems to contain no spoken words. Using dummy text data."
         )
         tokens = ["File", "contains", "no", "spoken", "words"]
         token_starts = [0, 5, 14, 17, 24]

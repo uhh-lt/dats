@@ -10,13 +10,6 @@ from typing import Sequence
 
 import sqlalchemy as sa
 from alembic import op
-from sqlalchemy.orm import sessionmaker
-from sqlalchemy.sql import text
-
-from common.doc_type_enum import DocType
-from core.doc.source_document_crud import crud_sdoc
-from core.doc.source_document_dto import SourceDocumentRead
-from repos.filesystem_repo import FilesystemRepo
 
 # revision identifiers, used by Alembic.
 revision: str = "970c55224a39"
@@ -26,53 +19,14 @@ depends_on: str | Sequence[str] | None = None
 
 
 def upgrade() -> None:
-    # add the column, non-nullable
+    # The URLs were computed with the old FilesystemRepo, which no longer
+    # exists; a later revision (the file store) drops the column again, so
+    # every upgrade through this revision ends without it.
     op.add_column(
-        "sourcedocumentdata", sa.Column("repo_url", sa.String(), nullable=True)
+        "sourcedocumentdata",
+        sa.Column("repo_url", sa.String(), nullable=False, server_default=""),
     )
-
-    conn = op.get_bind()
-
-    # 1. Read all existing project ids
-    projects = conn.execute(sa.text("SELECT id FROM project")).fetchall()
-    print("Found projects:", len(projects))
-
-    # 2. Read all existing Source Documents
-    db = sessionmaker(bind=conn)()
-    for row in projects:
-        proj_id = row.id
-        print("Processing project:", proj_id)
-
-        sdocs = crud_sdoc.read_by_project(
-            db=db, project_id=proj_id, only_finished=False
-        )  # type: ignore
-
-        # 3. Use the filesystem repo to get the URL of the Source Document
-        urls = []
-        for sdoc in sdocs:
-            try:
-                url = FilesystemRepo().get_sdoc_url(
-                    sdoc=SourceDocumentRead.model_validate(sdoc),
-                    relative=True,
-                    webp=sdoc.doctype == DocType.image,
-                    thumbnail=False,
-                )
-            except Exception as e:
-                print(
-                    f"Error getting URL for project {sdoc.project_id} sdoc {sdoc.id}: {e}"
-                )
-                url = ""
-            urls.append(url)
-
-        # 4. Update the repo_url field in the Source Document Data table
-        for sdoc, url in zip(sdocs, urls):
-            conn.execute(
-                text("UPDATE sourcedocumentdata SET repo_url = :url WHERE id = :id"),
-                {"url": url, "id": sdoc.id},
-            )
-
-    # change the column to non-nullable
-    op.alter_column("sourcedocumentdata", "repo_url", nullable=False)
+    op.alter_column("sourcedocumentdata", "repo_url", server_default=None)
 
 
 def downgrade() -> None:

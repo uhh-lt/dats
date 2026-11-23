@@ -1,8 +1,8 @@
 import gc
-from pathlib import Path
 
 from sqlalchemy.orm import Session
 
+from common.crud_enum import Crud
 from common.singleton_meta import SingletonMeta
 from modules.classifier.classifier_crud import crud_classifier
 from modules.classifier.classifier_dto import (
@@ -24,13 +24,13 @@ from modules.classifier.models.span_class_model_service import (
 from modules.classifier.models.text_class_model_service import (
     TextClassificationModelService,
 )
-from repos.filesystem_repo import FilesystemRepo
+from repos.filesystem.file_crud_base import FileCRUDBase
+from repos.filesystem.temporary_file_crud import crud_temporary_file
 from systems.job_system.job_dto import Job
 
 
 class ClassifierService(metaclass=SingletonMeta):
     def __new__(cls, *args, **kwargs):
-        cls.fsr: FilesystemRepo = FilesystemRepo()
         return super(ClassifierService, cls).__new__(cls)
 
     def get_model_service(
@@ -57,11 +57,13 @@ class ClassifierService(metaclass=SingletonMeta):
         db_obj = crud_classifier.read(db=db, id=classifier_id)
         c_read = ClassifierRead.model_validate(db_obj)
 
-        # delete classifier from filesystem
-        self.fsr.remove_dir(Path(db_obj.path).parent)
-
         # delete classifier from db
         crud_classifier.delete(db=db, id=classifier_id)
+
+        # delete its files
+        FileCRUDBase.delete_by_entity(
+            Crud.CLASSIFIER, project_id=c_read.project_id, ids=[classifier_id]
+        )
         return c_read
 
     def handle_classifier_job(
@@ -83,7 +85,10 @@ class ClassifierService(metaclass=SingletonMeta):
         try:
             match payload.task_type:
                 case ClassifierTask.TRAINING:
-                    result = tcs.train(db, job, payload)
+                    # checkpoints and logs go to a scratch folder, the best
+                    # checkpoint moves to the folder of the new classifier
+                    with crud_temporary_file.folder() as model_dir:
+                        result = tcs.train(db, job, payload, model_dir)
                 case ClassifierTask.EVALUATION:
                     result = tcs.eval(db, job, payload)
                 case ClassifierTask.INFERENCE:

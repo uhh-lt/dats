@@ -44,12 +44,11 @@ from modules.eximport.timeline_analysis.import_timeline_analysis import (
 )
 from modules.eximport.user.import_users import import_users_to_proj
 from modules.eximport.whiteboards.import_whiteboards import import_whiteboards_to_proj
-from repos.filesystem_repo import FilesystemRepo
+from repos.filesystem.temporary_file_crud import crud_temporary_file
 
 
 class ImportService(metaclass=SingletonMeta):
     def __new__(cls, *args, **kwargs):
-        cls.fsr: FilesystemRepo = FilesystemRepo()
         cls.import_method_for_job_type: dict[ImportJobType, Callable[..., None]] = {
             ImportJobType.TAGS: cls._import_tags_to_proj,
             ImportJobType.CODES: cls._import_codes_to_proj,
@@ -82,25 +81,41 @@ class ImportService(metaclass=SingletonMeta):
             raise_error=True,
         )
 
-        # Check if the file exists
-        if not self.fsr._temp_file_exists(filename=payload.file_name):
-            raise ImportJobPreparationError(
-                cause=FileNotFoundError(f"The file {payload.file_name} does not exist!")
+        # the staged file is deleted at the end of the import, also on failure
+        try:
+            # Check if the file exists
+            if not self._path_to_file(payload).exists():
+                raise ImportJobPreparationError(
+                    cause=FileNotFoundError(
+                        f"The file {payload.file_name} does not exist!"
+                    )
+                )
+
+            # get the import method based on the jobtype
+            import_method = self.import_method_for_job_type.get(
+                payload.import_job_type, None
             )
+            if import_method is None:
+                raise UnsupportedImportJobTypeError(payload.import_job_type)
 
-        # get the import method based on the jobtype
-        import_method = self.import_method_for_job_type.get(
-            payload.import_job_type, None
-        )
-        if import_method is None:
-            raise UnsupportedImportJobTypeError(payload.import_job_type)
+            # execute the import_method with the provided specific parameters
+            import_method(
+                self=self,
+                db=db,
+                payload=payload,
+            )
+        finally:
+            crud_temporary_file.delete(id=payload.temporary_file_id)
 
-        # execute the import_method with the provided specific parameters
-        import_method(
-            self=self,
-            db=db,
-            payload=payload,
+    def _path_to_file(self, payload: ImportJobInput) -> Path:
+        """The staged file of the import."""
+        return crud_temporary_file.path(
+            id=payload.temporary_file_id, name=payload.file_name
         )
+
+    def _unzip_dir(self, payload: ImportJobInput) -> Path:
+        """The folder the staged archive is extracted to, next to it."""
+        return crud_temporary_file.dir(id=payload.temporary_file_id) / "unzipped"
 
     def _import_codes_to_proj(
         self,
@@ -108,7 +123,7 @@ class ImportService(metaclass=SingletonMeta):
         payload: ImportJobInput,
     ) -> None:
         """Import codes to a project"""
-        path_to_file = self.fsr.get_dst_path_for_temp_file(payload.file_name)
+        path_to_file = self._path_to_file(payload)
         df = read_import_csv(path_to_file)
         import_codes_to_proj(db=db, df=df, project_id=payload.project_id)
 
@@ -118,7 +133,7 @@ class ImportService(metaclass=SingletonMeta):
         payload: ImportJobInput,
     ) -> None:
         """Import folders to a project"""
-        path_to_file = self.fsr.get_dst_path_for_temp_file(payload.file_name)
+        path_to_file = self._path_to_file(payload)
         df = read_import_csv(path_to_file)
         import_folders_to_proj(db=db, df=df, project_id=payload.project_id)
 
@@ -128,7 +143,7 @@ class ImportService(metaclass=SingletonMeta):
         payload: ImportJobInput,
     ) -> None:
         """Import tags to a project"""
-        path_to_file = self.fsr.get_dst_path_for_temp_file(payload.file_name)
+        path_to_file = self._path_to_file(payload)
         df = read_import_csv(path_to_file)
         import_tags_to_proj(db=db, df=df, project_id=payload.project_id)
 
@@ -138,7 +153,7 @@ class ImportService(metaclass=SingletonMeta):
         payload: ImportJobInput,
     ) -> None:
         """Import bbox annotations to a project"""
-        path_to_file = self.fsr.get_dst_path_for_temp_file(payload.file_name)
+        path_to_file = self._path_to_file(payload)
         df = read_import_csv(path_to_file)
         import_bbox_annotations_to_proj(db=db, df=df, project_id=payload.project_id)
 
@@ -148,7 +163,7 @@ class ImportService(metaclass=SingletonMeta):
         payload: ImportJobInput,
     ) -> None:
         """Import span annotations to a project"""
-        path_to_file = self.fsr.get_dst_path_for_temp_file(payload.file_name)
+        path_to_file = self._path_to_file(payload)
         df = read_import_csv(path_to_file)
         import_span_annotations_to_proj(db=db, df=df, project_id=payload.project_id)
 
@@ -158,7 +173,7 @@ class ImportService(metaclass=SingletonMeta):
         payload: ImportJobInput,
     ) -> None:
         """Import sent annotations to a project"""
-        path_to_file = self.fsr.get_dst_path_for_temp_file(payload.file_name)
+        path_to_file = self._path_to_file(payload)
         df = read_import_csv(path_to_file)
         import_sentence_annotations_to_proj(db=db, df=df, project_id=payload.project_id)
 
@@ -168,7 +183,7 @@ class ImportService(metaclass=SingletonMeta):
         payload: ImportJobInput,
     ) -> None:
         """Import whiteboards to a project"""
-        path_to_file = self.fsr.get_dst_path_for_temp_file(payload.file_name)
+        path_to_file = self._path_to_file(payload)
         df = read_import_csv(path_to_file)
         import_whiteboards_to_proj(db=db, df=df, project_id=payload.project_id)
 
@@ -178,7 +193,7 @@ class ImportService(metaclass=SingletonMeta):
         payload: ImportJobInput,
     ) -> None:
         """Import timeline analyses to a project"""
-        path_to_file = self.fsr.get_dst_path_for_temp_file(payload.file_name)
+        path_to_file = self._path_to_file(payload)
         df = read_import_csv(path_to_file)
         import_timeline_analysis_to_proj(db=db, df=df, project_id=payload.project_id)
 
@@ -188,7 +203,7 @@ class ImportService(metaclass=SingletonMeta):
         payload: ImportJobInput,
     ) -> None:
         """Import cota to a project"""
-        path_to_file = self.fsr.get_dst_path_for_temp_file(payload.file_name)
+        path_to_file = self._path_to_file(payload)
         df = read_import_csv(path_to_file)
         import_cota_to_proj(db=db, df=df, project_id=payload.project_id)
 
@@ -198,7 +213,7 @@ class ImportService(metaclass=SingletonMeta):
         payload: ImportJobInput,
     ) -> None:
         """Import memos to a project"""
-        path_to_file = self.fsr.get_dst_path_for_temp_file(payload.file_name)
+        path_to_file = self._path_to_file(payload)
         df = read_import_csv(path_to_file)
         import_memos_to_proj(db=db, df=df, project_id=payload.project_id)
 
@@ -208,7 +223,7 @@ class ImportService(metaclass=SingletonMeta):
         payload: ImportJobInput,
     ) -> None:
         """Import prompts to a project"""
-        path_to_file = self.fsr.get_dst_path_for_temp_file(payload.file_name)
+        path_to_file = self._path_to_file(payload)
         df = read_import_csv(path_to_file)
         import_prompts_to_proj(db=db, df=df, project_id=payload.project_id)
 
@@ -218,7 +233,7 @@ class ImportService(metaclass=SingletonMeta):
         payload: ImportJobInput,
     ) -> None:
         """Import experiments to a project"""
-        path_to_file = self.fsr.get_dst_path_for_temp_file(payload.file_name)
+        path_to_file = self._path_to_file(payload)
         df = read_import_csv(path_to_file)
         import_experiments_to_proj(db=db, df=df, project_id=payload.project_id)
 
@@ -228,7 +243,7 @@ class ImportService(metaclass=SingletonMeta):
         payload: ImportJobInput,
     ) -> None:
         """Import users annotations to a project"""
-        path_to_file = self.fsr.get_dst_path_for_temp_file(payload.file_name)
+        path_to_file = self._path_to_file(payload)
         df = read_import_csv(path_to_file)
         import_users_to_proj(db=db, df=df, project_id=payload.project_id)
 
@@ -238,7 +253,7 @@ class ImportService(metaclass=SingletonMeta):
         payload: ImportJobInput,
     ) -> None:
         """Import project metadata to a project"""
-        path_to_file = self.fsr.get_dst_path_for_temp_file(payload.file_name)
+        path_to_file = self._path_to_file(payload)
         df = read_import_csv(path_to_file)
         import_project_metadata_to_proj(db=db, df=df, project_id=payload.project_id)
 
@@ -250,10 +265,8 @@ class ImportService(metaclass=SingletonMeta):
         """Import source documents to a project"""
         # unzip file
         try:
-            path_to_zip_file = self.fsr.get_dst_path_for_temp_file(payload.file_name)
-            path_to_temp_import_dir = self.fsr.create_temp_dir(
-                f"import_user_{payload.user_id}_sdocs_{payload.project_id}"
-            )
+            path_to_zip_file = self._path_to_file(payload)
+            path_to_temp_import_dir = self._unzip_dir(payload)
             self.__unzip(
                 path_to_zip_file=path_to_zip_file, unzip_target=path_to_temp_import_dir
             )
@@ -275,10 +288,8 @@ class ImportService(metaclass=SingletonMeta):
         """Import an entire project"""
         # unzip file
         try:
-            path_to_zip_file = self.fsr.get_dst_path_for_temp_file(payload.file_name)
-            path_to_temp_import_dir = self.fsr.create_temp_dir(
-                f"import_user_{payload.user_id}_project_{payload.project_id}"
-            )
+            path_to_zip_file = self._path_to_file(payload)
+            path_to_temp_import_dir = self._unzip_dir(payload)
             self.__unzip(
                 path_to_zip_file=path_to_zip_file, unzip_target=path_to_temp_import_dir
             )
@@ -288,7 +299,6 @@ class ImportService(metaclass=SingletonMeta):
 
         import_project(
             db=db,
-            fsr=self.fsr,
             path_to_dir=path_to_temp_import_dir,
             project_id=payload.project_id,
         )

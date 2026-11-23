@@ -1,4 +1,6 @@
+import json
 from datetime import UTC, datetime
+from uuid import uuid4
 
 import pandas as pd
 from sqlalchemy import event
@@ -8,6 +10,7 @@ from common.singleton_meta import SingletonMeta
 from core.annotation.annotation_document_crud import crud_adoc
 from core.code.code_crud import crud_code
 from core.doc.source_document_crud import crud_sdoc
+from core.project.export_file_crud import crud_export_file
 from core.prompt.prompt_crud import crud_prompt
 from core.prompt.prompt_dto import PromptVersionRead
 from core.prompt.prompt_enum import TaskType
@@ -48,7 +51,6 @@ from modules.experiment.experiment_run_dto import (
     ExperimentRunScores,
     ExperimentRunUpdateIntern,
 )
-from repos.filesystem_repo import FilesystemRepo
 from systems.job_system.job_service import JobService
 from systems.job_system.job_system_enum import JobStatus
 
@@ -69,7 +71,6 @@ class ExperimentService(metaclass=SingletonMeta):
     """
 
     def __new__(cls, *args, **kwargs):
-        cls.fsr: FilesystemRepo = FilesystemRepo()
         cls.js = JobService()
         cls.pts = PromptService()
         cls.ags = AgreementService()
@@ -328,21 +329,25 @@ class ExperimentService(metaclass=SingletonMeta):
         scores if none are stored. Returns the relative URL of the file.
         """
         log = self._read_run_log(db=db, run_id=run_id)
+        project_id = crud_experiment_run.read(db=db, id=run_id).get_project_id()
         fn = f"experiment_{log.experiment_id}_run_{log.run_id}_log"
         match export_format:
             case ExperimentRunLogFormat.JSON:
-                export_file = self.fsr.write_json_to_temp_file(
-                    json_obj=log.model_dump(mode="json"), fn=fn
-                )
+                name = f"{fn}.json"
+                data = json.dumps(log.model_dump(mode="json"), indent=4).encode()
             case ExperimentRunLogFormat.CSV:
                 code_names = {
                     code.id: code.name
                     for code in crud_code.read_by_ids(db=db, ids=log.code_ids)
                 }
-                export_file = self.fsr.write_df_to_temp_file(
-                    df=self._run_log_to_df(log=log, code_names=code_names), fn=fn
-                )
-        return self.fsr.get_temp_file_url(export_file.name, relative=True)
+                name = f"{fn}.csv"
+                df = self._run_log_to_df(log=log, code_names=code_names)
+                data = df.to_csv(index=False).encode()
+        export_id = str(uuid4())
+        crud_export_file.write(
+            project_id=project_id, id=export_id, name=name, data=data
+        )
+        return crud_export_file.url(project_id=project_id, id=export_id, name=name)
 
     # HELPERS
 

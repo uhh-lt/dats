@@ -20,6 +20,7 @@ from core.prompt.prompt_orm import PromptORM
 from core.tag.tag_crud import crud_tag
 from core.user.user_crud import crud_user
 from modules.eximport.export_exceptions import NoDataToExportError
+from modules.eximport.export_utils import write_df
 from modules.eximport.prompts.prompt_export_schema import (
     PromptCodeForExport,
     PromptExampleForExport,
@@ -32,12 +33,11 @@ from modules.eximport.prompts.prompt_export_schema import (
     SentencePromptExampleForExport,
     SpanPromptExampleForExport,
 )
-from repos.filesystem_repo import FilesystemRepo
 
 
 def export_all_prompts(
     db: Session,
-    fsr: FilesystemRepo,
+    out_dir: Path,
     project_id: int,
 ) -> Path:
     """
@@ -45,7 +45,7 @@ def export_all_prompts(
 
     Args:
         db: Database session
-        fsr: Filesystem repository service for file operations
+        out_dir: The scratch folder the export file is written to
         project_id: ID of the project
 
     Returns:
@@ -59,7 +59,8 @@ def export_all_prompts(
         raise NoDataToExportError("No prompts to export.")
 
     export_data = __generate_export_df_for_prompts(db=db, prompts=prompts)
-    return fsr.write_df_to_temp_file(
+    return write_df(
+        out_dir=out_dir,
         df=export_data,
         fn=f"project_{project_id}_all_prompts",
     )

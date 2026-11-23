@@ -11,7 +11,7 @@ from core.doc_processing.entrypoints.archive_extraction_job import (
 from core.project.project_crud import crud_project
 from modules.crawler.crawler_exceptions import NoDataToCrawlError
 from repos.db.sql_repo import SQLRepo
-from repos.filesystem_repo import FilesystemRepo
+from repos.filesystem.temporary_file_crud import crud_temporary_file
 from systems.artefact_system.artefact_dto import ProcessingJobInput
 from systems.job_system.job_dto import Job, JobOutputBase
 from systems.job_system.job_exceptions import JobQueueUnavailableError
@@ -20,7 +20,9 @@ from systems.job_system.job_service import JobService
 from systems.job_system.job_system_enum import EndpointGeneration, JobTiming
 
 sqlr = SQLRepo()
-fsr: FilesystemRepo = FilesystemRepo()
+
+# the archive of the crawled pages, handed over to the archive extraction
+CRAWLED_ARCHIVE_FILENAME = "crawled_data.zip"
 
 
 class CrawlerJobInput(ProcessingJobInput):
@@ -54,36 +56,34 @@ def handle_crawler_job(payload: CrawlerJobInput, job: Job) -> CrawlerJobOutput:
             raise_error=True,
         )
 
-    # create the temporary output directories
-    output_dir = fsr.create_temp_dir()
-    image_dir = output_dir / "images"
-    image_dir.mkdir()
-
-    # # relative directories to communicate with the workers
-    output_dir = output_dir.relative_to(fsr.root_dir)
-    image_dir = image_dir.relative_to(fsr.root_dir)
-
-    # run the crawler script
-    script_env = os.environ.copy()
-    script_env["PYTHONPATH"] = os.path.join(os.getcwd(), "src")
-
-    logger.info("Starting Scrapy Crawler Script! ... ")
-    args = [
-        "python",
-        "src/modules/crawler/crawler_script.py",
-        str(output_dir),
-        str(image_dir),
-    ] + payload.urls
-    crawled_zip = subprocess.run(args, env=script_env, capture_output=True, text=True)
-    logger.info("Finished Scrapy Crawler Script! ")
-
-    # resolve relative path
-    export_zip_path = fsr.root_dir / Path(crawled_zip.stdout.strip())
-
-    # move the zip to the project to import it afterward
-    result = fsr.move_file_to_project_sdoc_files(
-        project_id=payload.project_id, src_file=export_zip_path
+    # the archive of the crawled pages is staged in a temporary folder, the
+    # handover to the archive extraction
+    staging_id = crud_temporary_file.create()
+    archive_path = crud_temporary_file.path(
+        id=staging_id, name=CRAWLED_ARCHIVE_FILENAME
     )
+
+    # the crawled pages and images are scratch
+    with crud_temporary_file.folder() as scratch:
+        output_dir = scratch / "output"
+        image_dir = scratch / "images"
+        output_dir.mkdir()
+        image_dir.mkdir()
+
+        # run the crawler script
+        script_env = os.environ.copy()
+        script_env["PYTHONPATH"] = os.path.join(os.getcwd(), "src")
+
+        logger.info("Starting Scrapy Crawler Script! ... ")
+        args = [
+            "python",
+            "src/modules/crawler/crawler_script.py",
+            str(output_dir),
+            str(image_dir),
+            str(archive_path),
+        ] + payload.urls
+        subprocess.run(args, env=script_env, capture_output=True, text=True)
+        logger.info("Finished Scrapy Crawler Script! ")
 
     # import the crawled data; a queue outage leaves the crawl finished
     try:
@@ -91,11 +91,12 @@ def handle_crawler_job(payload: CrawlerJobInput, job: Job) -> CrawlerJobOutput:
             "extract_archive",
             ArchiveExtractionJobInput(
                 project_id=payload.project_id,
-                filepath=result,
+                temporary_file_id=staging_id,
+                filename=CRAWLED_ARCHIVE_FILENAME,
                 settings=payload.settings,
             ),
         )
     except JobQueueUnavailableError as e:
         logger.error(f"Cannot start the archive extraction after the crawl: {e}")
 
-    return CrawlerJobOutput(crawled_data_zip=result)
+    return CrawlerJobOutput(crawled_data_zip=archive_path)

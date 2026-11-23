@@ -203,7 +203,6 @@ def _create_sdoc(db, project_id: int, name: str, content: str) -> SourceDocument
         create_dto=SourceDocumentDataCreate(
             id=sdoc.id,
             content=content,
-            repo_url=f"{name}.txt",
             raw_html=f"<p>{content}</p>",
             html=f"<p>{content}</p>",
             token_starts=[t.start() for t in tokens],
