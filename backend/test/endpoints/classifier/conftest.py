@@ -30,7 +30,10 @@ from core.user.user_orm import UserORM
 from modules.classifier.classifier_crud import crud_classifier
 from modules.classifier.classifier_dto import ClassifierCreate
 from modules.classifier.classifier_enum import ClassifierModel
-from repos.filesystem_repo import FilesystemRepo
+from modules.classifier.classifier_file_crud import (
+    MODEL_FILENAME,
+    crud_classifier_file,
+)
 
 # ---------------------------------------------------------------------------
 # TEXT SDOC IMPORT HELPER
@@ -104,7 +107,6 @@ def _import_text_sdocs(
 
     # 2. Build sdoc_data rows. Classifier tests read content from PostgreSQL,
     # so creating thousands of duplicate files would only add test overhead.
-    fsr = FilesystemRepo()
     data_dtos: list[SourceDocumentDataCreate] = []
     for sdoc, (_, _, content) in zip(sdocs, docs):
         sentences: list[str] | None = None
@@ -127,15 +129,10 @@ def _import_text_sdocs(
             sentence_starts = [0]
             sentence_ends = [len(content)]
 
-        file_path = fsr._get_dst_path_for_project_sdoc_file(
-            project_id=project.id, filename=sdoc.filename
-        )
-        relative_file_path = file_path.relative_to(fsr.root_dir)
         data_dtos.append(
             SourceDocumentDataCreate(
                 id=sdoc.id,
                 content=content,
-                repo_url=str(relative_file_path),
                 raw_html=f"<p>{content}</p>",
                 html=f"<p>{content}</p>",
                 token_starts=token_starts,
@@ -165,18 +162,7 @@ class PersistedClassifier(TypedDict):
 
 @pytest.fixture(scope="function")
 def persisted_classifier(db_session, test_project) -> PersistedClassifier:
-    """Persist a minimal ClassifierORM row with a dummy on-disk model dir."""
-    model_dir = Path(
-        FilesystemRepo().get_model_dir(
-            project_id=test_project.id,
-            model_name="testclf",
-            model_prefix="test_classifier_",
-        )
-    )
-    model_dir.mkdir(parents=True, exist_ok=True)
-    checkpoint = model_dir / "checkpoint.ckpt"
-    checkpoint.write_text("dummy")
-
+    """Persist a minimal ClassifierORM row with a dummy model in its folder."""
     clf = crud_classifier.create(
         db=db_session,
         create_dto=ClassifierCreate(
@@ -184,14 +170,17 @@ def persisted_classifier(db_session, test_project) -> PersistedClassifier:
             name="Test Classifier",
             base_model="test-base",
             type=ClassifierModel.SPAN,
-            path=str(checkpoint),
             labelid2classid={0: 0},
             train_params={},
             train_loss=[],
             train_data_stats=[],
         ),
     )
+    crud_classifier_file.write(
+        project_id=test_project.id, id=clf.id, name=MODEL_FILENAME, data=b"dummy"
+    )
     db_session.commit()
+    model_dir = crud_classifier_file.dir(project_id=test_project.id, id=clf.id)
     return {"classifier_id": clf.id, "model_dir": model_dir}
 
 

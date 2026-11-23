@@ -1,22 +1,19 @@
-from pathlib import Path
-
 from common.doc_type_enum import DocType
 from core.artefacts.thumbnail.thumbnail_artefact import THUMBNAIL
 from core.doc.source_document_crud import crud_sdoc
 from core.doc.source_document_dto import SourceDocumentRead
+from core.doc.source_document_file_crud import crud_sdoc_file
 from repos.db.sql_repo import SQLRepo
-from repos.filesystem_repo import FilesystemRepo
 from systems.artefact_system.artefact_dto import SdocProcessingJobInput
 from systems.artefact_system.pipeline_step_decorator import pipeline_step
 from systems.job_system.job_dto import Job
 from systems.job_system.job_register_decorator import register_job
 
-fsr = FilesystemRepo()
 sqlr = SQLRepo()
 
 
 class AudioThumbnailJobInput(SdocProcessingJobInput):
-    filepath: Path
+    filename: str
 
 
 def enrich_for_recompute(
@@ -30,12 +27,10 @@ def enrich_for_recompute(
             f"SourceDocument with {payload.sdoc_id=} is not an audio file!"
         )
 
-    audio_path = fsr.get_path_to_sdoc_file(sdoc, raise_if_not_exists=True)
-
-    return AudioThumbnailJobInput(
-        **payload.model_dump(),
-        filepath=audio_path,
-    )
+    assert crud_sdoc_file.exists(
+        project_id=sdoc.project_id, id=sdoc.id, name=sdoc.filename
+    ), f"The file of SourceDocument {sdoc.id} does not exist!"
+    return AudioThumbnailJobInput(**payload.model_dump(), filename=sdoc.filename)
 
 
 @pipeline_step(
@@ -49,33 +44,6 @@ def enrich_for_recompute(
     enricher=enrich_for_recompute,
 )
 def handle_audio_thumbnail_job(payload: AudioThumbnailJobInput, job: Job) -> None:
-    thumbnail_filename = fsr.generate_sdoc_filename(
-        payload.filepath, webp=True, thumbnail=True
-    )
-    print(thumbnail_filename)
-
-    webp_filename = fsr.generate_sdoc_filename(
-        payload.filepath, webp=True, thumbnail=False
-    )
-    print(webp_filename)
-
-    # Store link to webp image in DB
-    # with sqlr.transaction() as db:
-    #     sdoc = SourceDocumentRead.model_validate(
-    #         crud_sdoc.read(db=db, id=payload.sdoc_id)
-    #     )
-    #     repo_url = FilesystemRepo().get_sdoc_url(
-    #         sdoc=sdoc,
-    #         relative=True,
-    #         webp=True,
-    #         thumbnail=False,
-    #     )
-    #     crud_sdoc_data.update(
-    #         db=db,
-    #         id=payload.sdoc_id,
-    #         update_dto=SourceDocumentDataUpdate(repo_url=repo_url),
-    #     )
-
     # TODO: Implement correctly!
 
     # create a thumbnail from the audio file
@@ -103,3 +71,4 @@ def handle_audio_thumbnail_job(payload: AudioThumbnailJobInput, job: Job) -> Non
     # plt.axis("off")
     # plt.margins(0, 0)
     # plt.savefig(str(webp_filename), bbox_inches="tight", pad_inches=0, transparent=True)
+    pass

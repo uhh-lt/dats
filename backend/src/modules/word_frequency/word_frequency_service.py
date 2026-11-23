@@ -1,3 +1,5 @@
+from uuid import uuid4
+
 import pandas as pd
 from sqlalchemy import distinct, func
 from sqlalchemy.orm import Session
@@ -8,12 +10,12 @@ from core.artefacts.word_frequencies.word_frequency_orm import WordFrequencyORM
 from core.doc.source_document_orm import SourceDocumentORM
 from core.metadata.project_metadata_crud import crud_project_meta
 from core.metadata.project_metadata_dto import ProjectMetadataRead
+from core.project.export_file_crud import crud_export_file
 from modules.word_frequency.word_frequency_columns import WordFrequencyColumns
 from modules.word_frequency.word_frequency_dto import (
     WordFrequencyResult,
     WordFrequencyStat,
 )
-from repos.filesystem_repo import FilesystemRepo
 from systems.search_system.column_info import ColumnInfo
 from systems.search_system.filtering import Filter
 from systems.search_system.search_builder import SearchBuilder
@@ -22,7 +24,6 @@ from systems.search_system.sorting import Sort
 
 class WordFrequencyService(metaclass=SingletonMeta):
     def __new__(cls, *args, **kwargs):
-        cls.fsr: FilesystemRepo = FilesystemRepo()
         return super(WordFrequencyService, cls).__new__(cls)
 
     def word_frequency_info(
@@ -174,8 +175,12 @@ class WordFrequencyService(metaclass=SingletonMeta):
         df = pd.DataFrame(data=data)
 
         # export the data frame
-        export_file = self.fsr.write_df_to_temp_file(
-            df=df,
-            fn=f"project_{project_id}_word_frequency_export",
+        export_id = str(uuid4())
+        name = f"project_{project_id}_word_frequency_export.csv"
+        crud_export_file.write(
+            project_id=project_id,
+            id=export_id,
+            name=name,
+            data=df.to_csv(index=False).encode(),
         )
-        return self.fsr.get_temp_file_url(export_file.name, relative=True)
+        return crud_export_file.url(project_id=project_id, id=export_id, name=name)

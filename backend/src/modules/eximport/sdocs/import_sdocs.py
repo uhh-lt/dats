@@ -12,6 +12,7 @@ from core.doc.source_document_crud import crud_sdoc
 from core.doc.source_document_data_crud import crud_sdoc_data
 from core.doc.source_document_data_dto import SourceDocumentDataCreate
 from core.doc.source_document_dto import SourceDocumentCreate
+from core.doc.source_document_file_crud import crud_sdoc_file
 from core.metadata.project_metadata_orm import ProjectMetadataORM
 from core.metadata.source_document_metadata_crud import crud_sdoc_meta
 from core.metadata.source_document_metadata_dto import SourceDocumentMetadataCreate
@@ -24,7 +25,6 @@ from modules.eximport.sdocs.sdoc_export_schema import (
     SourceDocumentExportSchema,
 )
 from repos.elastic.elastic_repo import ElasticSearchRepo
-from repos.filesystem_repo import FilesystemRepo
 from systems.artefact_system.artefact_registry import artefact_registry
 from systems.artefact_system.source_document_step_status_crud import (
     crud_sdoc_step_status,
@@ -40,7 +40,6 @@ ARCHIVE_WITHOUT_STEP_STATUS = (
 )
 
 es = ElasticSearchRepo()
-fsr = FilesystemRepo()
 
 
 def archived_step_status(
@@ -223,14 +222,7 @@ def import_sdocs_to_proj(
     imported_sdoc_ids = []
     filename_to_id_map = {}
     for sdoc_export in sdoc_collection.source_documents:
-        # 1. Move the source files to the project repository
-        source_file = source_file_by_name[sdoc_export.filename]
-        repo_path = fsr.move_file_to_project_sdoc_files(
-            project_id=project_id, src_file=source_file
-        )
-        relative_url = str(repo_path.relative_to(fsr.root_dir))
-
-        # 2.1 Create the sdoc folder (if it does not already exist)
+        # 1.1 Create the sdoc folder (if it does not already exist)
         sdoc_folder = crud_folder.read_by_name_and_project(
             db=db, folder_name=sdoc_export.folder_name, project_id=project_id
         )
@@ -244,7 +236,7 @@ def import_sdocs_to_proj(
                 ),
             )
 
-        # 2.2 Create the source documents in the database
+        # 1.2 Create the source documents in the database
         sdoc_create = SourceDocumentCreate(
             filename=sdoc_export.filename,
             name=sdoc_export.name or sdoc_export.filename,
@@ -253,7 +245,7 @@ def import_sdocs_to_proj(
             folder_id=sdoc_folder.id,
         )
 
-        # 2.3 Set the status of the steps from the archive
+        # 1.3 Set the status of the steps from the archive
         step_status = archived_step_status(sdoc_export)
 
         created_sdoc = crud_sdoc.create(db=db, create_dto=sdoc_create)
@@ -272,10 +264,16 @@ def import_sdocs_to_proj(
         imported_sdoc_ids.append(created_sdoc.id)
         filename_to_id_map[created_sdoc.filename] = created_sdoc.id
 
+        # 2. Move the source file into the document's folder
+        crud_sdoc_file.move_in(
+            project_id=project_id,
+            id=created_sdoc.id,
+            src=source_file_by_name[sdoc_export.filename],
+        )
+
         # 3. Create the source document data in the database
         sdoc_data_create = SourceDocumentDataCreate(
             id=created_sdoc.id,
-            repo_url=relative_url,
             content=sdoc_export.content if sdoc_export.content else "",
             html=sdoc_export.html,
             raw_html=sdoc_export.raw_html,

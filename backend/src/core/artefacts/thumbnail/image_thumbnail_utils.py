@@ -1,30 +1,32 @@
+from io import BytesIO
 from pathlib import Path
 
 from PIL import Image
 
-from repos.filesystem_repo import FilesystemRepo
+from core.artefacts.thumbnail.thumbnail_file_crud import (
+    IMAGE_FILENAME,
+    THUMBNAIL_FILENAME,
+    crud_thumbnail_file,
+)
 
-fsr = FilesystemRepo()
+
+def webp_bytes(image: Image.Image) -> bytes:
+    """The image as lossless WebP."""
+    buffer = BytesIO()
+    image.save(buffer, "WEBP", quality=50, lossless=True, method=6)
+    return buffer.getvalue()
 
 
-def generate_thumbnails(image_path: Path):
+def generate_thumbnails(*, project_id: int, sdoc_id: int, image_path: Path) -> None:
+    """Writes the WebP and the thumbnail of the image document."""
     with Image.open(image_path) as im:
-        web_p_fn = fsr.generate_sdoc_filename(image_path, webp=True, thumbnail=False)
-        # convert to webp
-        im.save(
-            web_p_fn,
-            "WEBP",
-            quality=50,
-            lossless=True,
-            method=6,
+        crud_thumbnail_file.write(
+            project_id=project_id, id=sdoc_id, name=IMAGE_FILENAME, data=webp_bytes(im)
         )
-        # create thumbnail
-        thumbnail_fn = fsr.generate_sdoc_filename(image_path, webp=True, thumbnail=True)
         im.thumbnail((256, 256))
-        im.save(
-            thumbnail_fn,
-            "WEBP",
-            quality=50,
-            lossless=True,
-            method=6,
+        crud_thumbnail_file.write(
+            project_id=project_id,
+            id=sdoc_id,
+            name=THUMBNAIL_FILENAME,
+            data=webp_bytes(im),
         )

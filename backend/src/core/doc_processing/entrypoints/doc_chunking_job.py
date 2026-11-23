@@ -18,25 +18,19 @@ from core.doc_processing.entrypoints.html_chunking_utils import (
 )
 from core.doc_processing.entrypoints.txt_chunking_utils import split_text_into_chunks
 from repos.db.sql_repo import SQLRepo
-from repos.filesystem_exceptions import (
-    FileAlreadyExistsInFilesystemError,
-    FileDeletionNotAllowedError,
-)
-from repos.filesystem_repo import FilesystemRepo
-from repos.ray.ray_repo import RayRepo
-from systems.artefact_system.artefact_dto import ProcessingJobInput
+from repos.filesystem.temporary_file_crud import crud_temporary_file
+from systems.artefact_system.artefact_dto import ProcessingJobInput, ProcessingSettings
 from systems.job_system.job_dto import Job, JobOutputBase
 from systems.job_system.job_register_decorator import register_job
 
 CHARACTERS_PER_PAGE = conf.chunking.characters_per_page
 
 sqlr = SQLRepo()
-fsr = FilesystemRepo()
-ray = RayRepo()
 
 
 class DocChunkingJobInput(ProcessingJobInput):
-    filepath: Path
+    temporary_file_id: str
+    filename: str
 
 
 class DocChunkingJobOutput(JobOutputBase):
@@ -52,25 +46,29 @@ class DocChunkingJobOutput(JobOutputBase):
 def handle_pdf_chunking_job(
     payload: DocChunkingJobInput, job: Job
 ) -> DocChunkingJobOutput:
-    if not payload.filepath.exists():
-        logger.error(f"File {payload.filepath} does not exist!")
-        raise Exception(f"File {payload.filepath} does not exist!")
-
-    # TODO: these extractions have varying compute requirements when run
-    #       across multiple machines or using GPU
+    # the file is staged in a temporary folder; the chunks are written next to
+    # it, and a split file is removed, so sdoc_init moves out every file
+    filepath = crud_temporary_file.path(
+        id=payload.temporary_file_id, name=payload.filename
+    )
+    if not filepath.exists():
+        logger.error(f"File {filepath} does not exist!")
+        raise Exception(f"File {filepath} does not exist!")
 
     # Chunk the document
-    if payload.filepath.suffix == ".txt":
-        chunks = chunk_txt(payload)
-    elif payload.filepath.suffix == ".docx" or payload.filepath.suffix == ".doc":
-        chunks = chunk_word(payload)
-    elif payload.filepath.suffix == ".pdf":
-        chunks = chunk_pdf(payload)
-    elif payload.filepath.suffix == ".html":
-        chunks = chunk_html(payload)
+    if filepath.suffix == ".txt":
+        chunks = chunk_txt(filepath, payload.settings)
+    elif filepath.suffix == ".docx" or filepath.suffix == ".doc":
+        chunks = chunk_word(filepath)
+    elif filepath.suffix == ".pdf":
+        chunks = chunk_pdf(filepath, payload.settings)
+    elif filepath.suffix == ".html":
+        chunks = chunk_html(filepath, payload.settings)
     else:
-        logger.error(f"Unsupported file type: {payload.filepath.suffix}")
-        raise Exception(f"Unsupported file type: {payload.filepath.suffix}")
+        logger.error(f"Unsupported file type: {filepath.suffix}")
+        raise Exception(f"Unsupported file type: {filepath.suffix}")
+    if filepath not in chunks:
+        filepath.unlink()
 
     # create folder if necessary
     folder_id = None
@@ -81,7 +79,7 @@ def handle_pdf_chunking_job(
                 create_dto=FolderCreate(
                     project_id=payload.project_id,
                     folder_type=FolderType.SDOC_FOLDER,
-                    name=payload.filepath.name,
+                    name=filepath.name,
                 ),
             )
             folder_id = folder.id
@@ -95,7 +93,8 @@ def handle_pdf_chunking_job(
                 SdocInitJobInput(
                     project_id=payload.project_id,
                     doctype=DocType.text,
-                    filepath=chunk,
+                    temporary_file_id=payload.temporary_file_id,
+                    filename=chunk.name,
                     folder_id=folder_id,
                     settings=payload.settings,
                 ),
@@ -106,75 +105,43 @@ def handle_pdf_chunking_job(
     return DocChunkingJobOutput(files=chunks, folder_id=folder_id)
 
 
-def _prepare_chunk_output_path(project_id: int, output_path: Path) -> None:
-    """
-    Prepare the output path for a chunk file by removing any existing file.
-
-    Args:
-        project_id: The project ID for filesystem operations.
-        output_path: The path where the chunk will be saved.
-
-    Raises:
-        FileAlreadyExistsInFilesystemError: If the file exists and cannot be removed
-            because a SourceDocument with that filename exists in the DB.
-    """
-    if output_path.exists():
-        try:
-            fsr._safe_remove_file_from_project_dir(
-                project_id=project_id, filename=output_path.name
-            )
-        except FileDeletionNotAllowedError:
-            logger.warning(
-                f"File {output_path.name} already exists in Project {project_id} "
-                "and a SourceDocument with that filename exists in the DB. Cannot overwrite it!"
-            )
-            raise FileAlreadyExistsInFilesystemError(
-                project_id=project_id, filename=output_path.name
-            )
-
-
-def chunk_pdf(payload: DocChunkingJobInput) -> list[Path]:
+def chunk_pdf(filepath: Path, settings: ProcessingSettings) -> list[Path]:
     try:
-        src = pymupdf.open(str(payload.filepath))  # type: ignore
+        src = pymupdf.open(str(filepath))  # type: ignore
         total_pages = src.page_count
     except Exception as e:
-        msg = f"Error opening PDF {payload.filepath.name}: {e}"
+        msg = f"Error opening PDF {filepath.name}: {e}"
         logger.error(msg)
         raise RuntimeError(msg)
 
     # First, we check if the PDF needs to be split
-    num_splits = math.ceil(total_pages / payload.settings.pages_per_chunk)
+    num_splits = math.ceil(total_pages / settings.pages_per_chunk)
     if num_splits == 1:
-        logger.info(
-            f"PDF {payload.filepath.name} has {total_pages} pages; no split needed."
-        )
+        logger.info(f"PDF {filepath.name} has {total_pages} pages; no split needed.")
         src.close()
-        return [payload.filepath]
+        return [filepath]
 
     # Calculate the number of digits needed for zero-padding
     total_digits = len(str(total_pages))
 
     # If yes, we proceed to split the PDF and save the chunks to disk in the project filesystem
-    out_dir = payload.filepath.parent
+    out_dir = filepath.parent
     logger.info(
-        f"Splitting PDF {payload.filepath.name} into {num_splits} chunks of "
-        f"up to {payload.settings.pages_per_chunk} pages each. Output will be saved in {out_dir}."
+        f"Splitting PDF {filepath.name} into {num_splits} chunks of "
+        f"up to {settings.pages_per_chunk} pages each. Output will be saved in {out_dir}."
     )
 
     chunks: list[Path] = []
     for i in range(num_splits):
-        start_page = i * payload.settings.pages_per_chunk + 1
-        end_page = min((i + 1) * payload.settings.pages_per_chunk, total_pages)
+        start_page = i * settings.pages_per_chunk + 1
+        end_page = min((i + 1) * settings.pages_per_chunk, total_pages)
         # Format page range with zero-padding
         page_range_str = f"{start_page:0{total_digits}}-{end_page:0{total_digits}}"
-        output_fn = out_dir / f"{payload.filepath.stem}_pages_{page_range_str}.pdf"
+        output_fn = out_dir / f"{filepath.stem}_pages_{page_range_str}.pdf"
         try:
             # Create a new PDF for the chunk
             new_pdf = pymupdf.open()  # type: ignore
             new_pdf.insert_pdf(src, from_page=start_page - 1, to_page=end_page - 1)
-
-            # Prepare output path (remove existing file if necessary)
-            _prepare_chunk_output_path(payload.project_id, output_fn)
 
             # Save the chunk to disk
             new_pdf.save(str(output_fn))
@@ -183,13 +150,13 @@ def chunk_pdf(payload: DocChunkingJobInput) -> list[Path]:
 
             logger.debug(f"Stored chunk '{output_fn}'")
         except Exception as e:
-            msg = f"Skipping due to error creating chunk {i + 1} for PDF {payload.filepath.name}: {e}"
+            msg = f"Skipping due to error creating chunk {i + 1} for PDF {filepath.name}: {e}"
             logger.error(msg)
     src.close()
     return chunks
 
 
-def chunk_txt(payload: DocChunkingJobInput) -> list[Path]:
+def chunk_txt(filepath: Path, settings: ProcessingSettings) -> list[Path]:
     """
     Chunk a text file into smaller files based on character limits.
 
@@ -197,29 +164,30 @@ def chunk_txt(payload: DocChunkingJobInput) -> list[Path]:
     If no line breaks exist, it falls back to hard character splitting.
 
     Args:
-        payload: The job input containing the filepath and chunking settings.
+        filepath: The file to chunk.
+        settings: The processing settings with the chunk size.
 
     Returns:
         A list of paths to the chunked files. If no chunking is needed,
         returns a list containing only the original file path.
     """
-    characters_per_chunk = CHARACTERS_PER_PAGE * payload.settings.pages_per_chunk
+    characters_per_chunk = CHARACTERS_PER_PAGE * settings.pages_per_chunk
 
     # Read the text content
     try:
-        text = payload.filepath.read_text(encoding="utf-8")
+        text = filepath.read_text(encoding="utf-8")
     except Exception as e:
-        msg = f"Error reading text file {payload.filepath.name}: {e}"
+        msg = f"Error reading text file {filepath.name}: {e}"
         logger.error(msg)
         raise RuntimeError(msg)
 
     # Check if chunking is needed
     if len(text) <= characters_per_chunk:
         logger.info(
-            f"Text file {payload.filepath.name} has {len(text)} characters; "
+            f"Text file {filepath.name} has {len(text)} characters; "
             f"no split needed (limit: {characters_per_chunk})."
         )
-        return [payload.filepath]
+        return [filepath]
 
     # Split text into chunks
     text_chunks = split_text_into_chunks(text, characters_per_chunk)
@@ -227,53 +195,50 @@ def chunk_txt(payload: DocChunkingJobInput) -> list[Path]:
     # If splitting resulted in only one chunk, no need to save
     if len(text_chunks) == 1:
         logger.info(
-            f"Text file {payload.filepath.name} could not be split further; "
+            f"Text file {filepath.name} could not be split further; "
             "returning original file."
         )
-        return [payload.filepath]
+        return [filepath]
 
     # Calculate total "pages" and digits needed for zero-padding
     total_chunks = len(text_chunks)
-    total_pages = total_chunks * payload.settings.pages_per_chunk
+    total_pages = total_chunks * settings.pages_per_chunk
     total_digits = len(str(total_pages))
 
     # Save chunks to disk
-    out_dir = payload.filepath.parent
+    out_dir = filepath.parent
     logger.info(
-        f"Splitting text file {payload.filepath.name} into {total_chunks} chunks of "
+        f"Splitting text file {filepath.name} into {total_chunks} chunks of "
         f"up to {characters_per_chunk} characters each. Output will be saved in {out_dir}."
     )
 
     chunks: list[Path] = []
     for i, chunk_text in enumerate(text_chunks):
         # Calculate page range for this chunk
-        start_page = i * payload.settings.pages_per_chunk + 1
-        end_page = (i + 1) * payload.settings.pages_per_chunk
+        start_page = i * settings.pages_per_chunk + 1
+        end_page = (i + 1) * settings.pages_per_chunk
         page_range_str = f"{start_page:0{total_digits}}-{end_page:0{total_digits}}"
-        output_fn = out_dir / f"{payload.filepath.stem}_pages_{page_range_str}.txt"
+        output_fn = out_dir / f"{filepath.stem}_pages_{page_range_str}.txt"
 
         try:
-            # Prepare output path (remove existing file if necessary)
-            _prepare_chunk_output_path(payload.project_id, output_fn)
-
             # Save the chunk to disk
             output_fn.write_text(chunk_text, encoding="utf-8")
             chunks.append(output_fn)
             logger.debug(f"Stored chunk '{output_fn}'")
 
         except Exception as e:
-            msg = f"Skipping due to error creating chunk (pages {page_range_str}) for text file {payload.filepath.name}: {e}"
+            msg = f"Skipping due to error creating chunk (pages {page_range_str}) for text file {filepath.name}: {e}"
             logger.error(msg)
 
     return chunks
 
 
-def chunk_word(payload: DocChunkingJobInput) -> list[Path]:
+def chunk_word(filepath: Path) -> list[Path]:
     logger.info("word chunking not implemented")
-    return [payload.filepath]
+    return [filepath]
 
 
-def chunk_html(payload: DocChunkingJobInput) -> list[Path]:
+def chunk_html(filepath: Path, settings: ProcessingSettings) -> list[Path]:
     """
     Chunk an HTML file into smaller files.
 
@@ -284,7 +249,8 @@ def chunk_html(payload: DocChunkingJobInput) -> list[Path]:
     Either way, each chunk is valid HTML with properly opened/closed tags.
 
     Args:
-        payload: The job input containing the filepath and chunking settings.
+        filepath: The file to chunk.
+        settings: The processing settings with the chunk size.
 
     Returns:
         A list of paths to the chunked files. If no chunking is needed,
@@ -292,32 +258,30 @@ def chunk_html(payload: DocChunkingJobInput) -> list[Path]:
     """
     # Read the HTML content
     try:
-        html_content = payload.filepath.read_text(encoding="utf-8")
+        html_content = filepath.read_text(encoding="utf-8")
     except Exception as e:
-        msg = f"Error reading HTML file {payload.filepath.name}: {e}"
+        msg = f"Error reading HTML file {filepath.name}: {e}"
         logger.error(msg)
         raise RuntimeError(msg)
 
-    page_chunks = split_html_at_page_markers(
-        html_content, payload.settings.pages_per_chunk
-    )
+    page_chunks = split_html_at_page_markers(html_content, settings.pages_per_chunk)
     if page_chunks is None:
-        page_chunks = _split_html_by_characters(payload, html_content)
+        page_chunks = _split_html_by_characters(filepath, settings, html_content)
 
     # If splitting resulted in only one chunk, no need to save
     if len(page_chunks) <= 1:
         logger.info(
-            f"HTML file {payload.filepath.name} needs no split; returning original file."
+            f"HTML file {filepath.name} needs no split; returning original file."
         )
-        return [payload.filepath]
+        return [filepath]
 
     # Calculate the digits needed for zero-padding
     total_digits = len(str(max(chunk.last_page for chunk in page_chunks)))
 
     # Save chunks to disk
-    out_dir = payload.filepath.parent
+    out_dir = filepath.parent
     logger.info(
-        f"Splitting HTML file {payload.filepath.name} into {len(page_chunks)} chunks. "
+        f"Splitting HTML file {filepath.name} into {len(page_chunks)} chunks. "
         f"Output will be saved in {out_dir}."
     )
 
@@ -327,42 +291,39 @@ def chunk_html(payload: DocChunkingJobInput) -> list[Path]:
             f"{page_chunk.first_page:0{total_digits}}"
             f"-{page_chunk.last_page:0{total_digits}}"
         )
-        output_fn = out_dir / f"{payload.filepath.stem}_pages_{page_range_str}.html"
+        output_fn = out_dir / f"{filepath.stem}_pages_{page_range_str}.html"
 
         try:
-            # Prepare output path (remove existing file if necessary)
-            _prepare_chunk_output_path(payload.project_id, output_fn)
-
             # Save the chunk to disk
             output_fn.write_text(page_chunk.html, encoding="utf-8")
             chunks.append(output_fn)
             logger.debug(f"Stored chunk '{output_fn}'")
         except Exception as e:
-            msg = f"Skipping due to error creating chunk (pages {page_range_str}) for HTML file {payload.filepath.name}: {e}"
+            msg = f"Skipping due to error creating chunk (pages {page_range_str}) for HTML file {filepath.name}: {e}"
             logger.error(msg)
 
     return chunks
 
 
 def _split_html_by_characters(
-    payload: DocChunkingJobInput, html_content: str
+    filepath: Path, settings: ProcessingSettings, html_content: str
 ) -> list[PageChunk]:
     """
     Split HTML content without page markers at element boundaries, up to
     `CHARACTERS_PER_PAGE * pages_per_chunk` characters per chunk, each chunk
     counting as `pages_per_chunk` pages.
     """
-    characters_per_chunk = CHARACTERS_PER_PAGE * payload.settings.pages_per_chunk
+    characters_per_chunk = CHARACTERS_PER_PAGE * settings.pages_per_chunk
 
     # Check if chunking is needed
     if len(html_content) <= characters_per_chunk:
         logger.info(
-            f"HTML file {payload.filepath.name} has {len(html_content)} characters; "
+            f"HTML file {filepath.name} has {len(html_content)} characters; "
             f"no split needed (limit: {characters_per_chunk})."
         )
         return []
 
-    pages_per_chunk = payload.settings.pages_per_chunk
+    pages_per_chunk = settings.pages_per_chunk
     return [
         PageChunk(
             html=chunk_html,

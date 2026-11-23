@@ -242,7 +242,6 @@ class ClassifierCreate(BaseModel):
     name: str = Field(description="Name of the classifier")
     base_model: str = Field(description="Name of the base model")
     type: ClassifierModel = Field(description="Type of the classifier")
-    path: str = Field(description="Name of the classifier")
     labelid2classid: dict[int, int] = Field(
         description="Mapping from internal model label id to code/tag id, depending on ClassifierModel."
     )

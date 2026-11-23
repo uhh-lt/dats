@@ -2,6 +2,7 @@
 
 from collections.abc import Generator
 from contextlib import contextmanager
+from io import BytesIO
 from typing import Protocol, TypedDict
 
 from PIL import Image
@@ -16,7 +17,7 @@ from core.artefacts.sentence_embeddings.sentence_embedding_dto import (
 )
 from core.doc.sdoc_elastic_crud import crud_sdoc_elastic
 from core.doc.sdoc_elastic_dto import ElasticSearchDocumentCreate
-from core.doc.source_document_dto import SourceDocumentRead
+from core.doc.source_document_file_crud import crud_sdoc_file
 from core.doc.source_document_orm import SourceDocumentORM
 from core.project.project_crud import crud_project
 from core.project.project_dto import ProjectCreate
@@ -26,7 +27,6 @@ from core.user.user_orm import UserORM
 from dats_test_utils import create_text_document
 from pipeline_test_utils import artefact_named, core_steps, set_step_status
 from repos.elastic.elastic_repo import ElasticSearchRepo
-from repos.filesystem_repo import FilesystemRepo
 from repos.vector.weaviate_repo import WeaviateRepo
 from systems.feature_system.feature_registry import (
     Feature,
@@ -167,11 +167,14 @@ def _create_sdoc(
 
 def _write_image_file(sdoc: SourceDocumentORM) -> None:
     """Store a small PNG as the file of the image document."""
-    path = FilesystemRepo().get_path_to_sdoc_file(
-        SourceDocumentRead.model_validate(sdoc)
+    buffer = BytesIO()
+    Image.new("RGB", (8, 8), (255, 0, 0)).save(buffer, format="PNG")
+    crud_sdoc_file.write(
+        project_id=sdoc.project_id,
+        id=sdoc.id,
+        name=sdoc.filename,
+        data=buffer.getvalue(),
     )
-    path.parent.mkdir(parents=True, exist_ok=True)
-    Image.new("RGB", (8, 8), (255, 0, 0)).save(path, format="PNG")
 
 
 def create_feature_project(db: Session, user: UserORM) -> FeatureProject:

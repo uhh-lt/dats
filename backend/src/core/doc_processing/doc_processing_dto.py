@@ -1,4 +1,3 @@
-from pathlib import Path
 from typing import TYPE_CHECKING
 
 from pydantic import BaseModel, Field
@@ -16,7 +15,12 @@ if TYPE_CHECKING:
 
 
 class SdocInitJobInput(ProcessingJobInput):
-    filepath: Path = Field(description="Path to the file of the new SourceDocument")
+    temporary_file_id: str = Field(
+        description="ID of the temporary folder the file of the new SourceDocument is staged in"
+    )
+    filename: str = Field(
+        description="Name of the staged file, the filename of the new SourceDocument"
+    )
     doctype: DocType = Field(description="DocType of the new SourceDocument")
     folder_id: int | None = Field(
         description="ID of the folder of the new SourceDocument, if any"

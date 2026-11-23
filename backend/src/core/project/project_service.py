@@ -12,7 +12,7 @@ from core.prompt.prompt_service import PromptService
 from core.user.user_crud import SYSTEM_USER_ID, crud_user
 from core.user.user_dto import UserRead
 from repos.elastic.elastic_repo import ElasticSearchRepo
-from repos.filesystem_repo import FilesystemRepo
+from repos.filesystem.filesystem_repo import FilesystemRepo
 from repos.vector.collection_base import BaseCollection
 from repos.vector.weaviate_repo import WeaviateRepo
 from systems.feature_system.feature_registry import feature_registry
@@ -69,23 +69,20 @@ class ProjectService(metaclass=SingletonMeta):
         # 5) create the default prompts
         self.pts.create_default_prompts(db=db, project_id=project_id)
 
-        # 6) create filesystem directory structure
-        self.fsr.create_directory_structure_for_project(project_id=project_id)
-
-        # 7) create elasticsearch indices for this project
+        # 6) create elasticsearch indices for this project
         client = self.es_repo.get_client()
         crud_sdoc_elastic.index.create_index(client=client, project_id=project_id)
 
-        # 8) create weaviate tenants for this project
+        # 7) create weaviate tenants for this project
         client = self.weaviate.get_client()
         for collection in BaseCollection.all_collections():
             collection.create_tenant(client, project_id)
 
-        # 9) set up the enabled features in the complete project, as on Enable:
+        # 8) set up the enabled features in the complete project, as on Enable:
         # their system codes, then their set-up hooks
         self.fs.set_up(db=db, project_id=project_id, features=enabled_features)
 
-        # 10) re-load a fresh instance to avoid detachment
+        # 9) re-load a fresh instance to avoid detachment
         return ProjectRead.model_validate(crud_project.read(db=db, id=project_id))
 
     def delete_project(self, *, db: Session, project_id: int) -> ProjectRead:
@@ -93,7 +90,7 @@ class ProjectService(metaclass=SingletonMeta):
         result = ProjectRead.model_validate(crud_project.delete(db=db, id=project_id))
 
         # 2) delete the files from filesystem
-        self.fsr.purge_project_data(project_id=project_id)
+        self.fsr.delete_project(project_id=project_id)
 
         # 3) delete elasticsearch indices for this project
         client = self.es_repo.get_client()

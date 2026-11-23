@@ -12,6 +12,7 @@ from sqlalchemy.orm import Session
 
 from common.doc_type_enum import DocType
 from common.sdoc_status_enum import SDocStatus
+from config import conf
 from core.annotation.sentence_annotation_dto import SentenceAnnotationCreate
 from core.annotation.sentence_annotation_service import SentenceAnnotationService
 from core.annotation.span_annotation_dto import SpanAnnotationCreate
@@ -349,6 +350,32 @@ def alembic_config() -> Config:
     return config
 
 
+# the file store, which has no downgrade, and the revision before it
+FILE_STORE = "807bab97f373"
+RENAME_STEPS = "10b8dac1fdd6"
+
+
+def downgrade_from_head(db: Session, config: Config, revision: str) -> None:
+    """Migrates the database from head down to `revision`. The file store
+    cannot be downgraded: its dropped columns are added again (empty) and the
+    revision before it is stamped instead."""
+    db.commit()
+    command.downgrade(config, FILE_STORE)
+    db.execute(
+        sa.text("ALTER TABLE classifier ADD COLUMN path VARCHAR NOT NULL DEFAULT ''")
+    )
+    db.execute(
+        sa.text(
+            "ALTER TABLE sourcedocumentdata "
+            "ADD COLUMN repo_url VARCHAR NOT NULL DEFAULT ''"
+        )
+    )
+    db.commit()
+    command.stamp(config, RENAME_STEPS)
+    if revision != RENAME_STEPS:
+        command.downgrade(config, revision)
+
+
 class OldStatusDocument(TypedDict):
     sdoc_id: int
     doctype: DocType
@@ -392,7 +419,7 @@ def old_status_database(
     project_id = test_project.id
     db_session.commit()
     config = alembic_config()
-    command.downgrade(config, BEFORE_STEP_STATUS)
+    downgrade_from_head(db_session, config, BEFORE_STEP_STATUS)
     try:
         cases: dict[str, Callable[[list[str]], dict[str, int]]] = {
             "finished": lambda steps: dict.fromkeys(steps, 1),
@@ -489,7 +516,7 @@ def feature_activations_database(
     project_id = test_project.id
     db_session.commit()
     config = alembic_config()
-    command.downgrade(config, ENABLED_FEATURES)
+    downgrade_from_head(db_session, config, ENABLED_FEATURES)
     try:
         db_session.execute(
             sa.text(
@@ -524,7 +551,7 @@ def ml_job_status_database(
     sdoc_id = project_with_sdoc["source_document"].id
     db_session.commit()
     config = alembic_config()
-    command.downgrade(config, ARTEFACT_COMPUTATIONS)
+    downgrade_from_head(db_session, config, ARTEFACT_COMPUTATIONS)
     try:
         db_session.execute(
             sa.text(
@@ -670,7 +697,7 @@ def person_boxes_database(
     """
     db_session.commit()
     config = alembic_config()
-    command.downgrade(config, DROP_ML_JOB_STATUS)
+    downgrade_from_head(db_session, config, DROP_ML_JOB_STATUS)
     try:
         result: PersonBoxesDatabase = {
             "coco_project_id": 0,
@@ -703,7 +730,6 @@ def person_boxes_database(
         command.upgrade(config, "head")
 
 
-RENAME_STEPS = "10b8dac1fdd6"
 # the steps renamed by 10b8dac1fdd6, old name -> new name
 RENAMED_STEPS = {
     "extract_html": "html_extraction",
@@ -742,7 +768,7 @@ def old_step_names_database(
     sdoc_id = project_with_sdoc["source_document"].id
     db_session.commit()
     config = alembic_config()
-    command.downgrade(config, HUMAN_CODE)
+    downgrade_from_head(db_session, config, HUMAN_CODE)
     try:
         db_session.execute(
             sa.text("DELETE FROM sourcedocumentstepstatus WHERE sdoc_id = :id"),
@@ -760,6 +786,174 @@ def old_step_names_database(
             )
         db_session.commit()
         yield {**statuses, "sdoc_id": sdoc_id}
+    finally:
+        db_session.rollback()
+        db_session.close()
+        command.upgrade(config, "head")
+
+
+class OldFileLayoutDatabase(TypedDict):
+    project_dir: Path
+    sdoc_ids: dict[str, int]
+    classifier_id: int
+    cota_id: int
+    aspect_id: int
+    deleted_aspect_id: int
+
+
+def _write(path: Path, content: str) -> None:
+    path.parent.mkdir(parents=True, exist_ok=True)
+    path.write_text(content)
+
+
+@pytest.fixture(scope="function")
+def old_file_layout_database(
+    db_session: Session, test_project: ProjectORM
+) -> Generator[OldFileLayoutDatabase, None, None]:
+    """
+    This fixture migrates the database down to the revision before
+    `807bab97f373_file_store` and sets up `test_project` with its files in the
+    old layout below `projects/<id>/`. Each file holds its own old path
+    relative to the project folder. It migrates the database back to head
+    afterwards.
+
+    Documents (in the folder "migration"), by filename:
+
+    - `text.txt` (text): `docs/text.txt`
+    - `photo.png` (image): `docs/photo.png`, `docs/photo.png.webp`,
+      `docs/photo.png.thumbnail.webp`
+    - `clip.mp4` (video): `docs/clip.mp4`, `docs/clip.mp4.thumbnail.webp`,
+      and its audio stream `docs/clip.mp3`
+    - `talk.mp4` (video): `docs/talk.mp4`, its audio stream `docs/talk.mp3`,
+      whose name is the filename of the audio document below
+    - `talk.mp3` (audio): `docs/talk.mp3` (the same file)
+    - `moved.txt` (text): already moved by a previous run, at
+      `sdoc_files/<id>/moved.txt` (holds "moved before"), and still at
+      `docs/moved.txt`
+
+    Other files:
+
+    - `docs/split.pdf` and `docs/archive.zip`: no document
+    - classifier `classifier_id` with path `<root>/projects/<id>/models/
+      doc_classifier_abc/epoch=1-step=2.ckpt`: that file and
+      `models/doc_classifier_abc/train_logs/metrics.csv`
+    - concept over time analysis `cota_id`: `models/cota_<cota_id>` (a folder with
+      `weights.bin`) and `models/cota_<cota_id>-best-model` (with `weights.bin`)
+    - aspect `aspect_id`: `models/umap_aspect_<aspect_id>_default`,
+      `models/prompt_embedder_DocType.text_project_<id>_aspect_<aspect_id>_20250101_120000`
+      (a folder with `model.safetensors`), the checkpoints
+      `models/prompt_embedder_chkpt_DocType.text_project_<id>_aspect_<aspect_id>_20250101_120000`
+      and `plots/aspect_<aspect_id>_map_thumbnail.png`
+    - a deleted aspect `deleted_aspect_id` (no row):
+      `models/umap_aspect_<deleted>_default`, `plots/aspect_<deleted>_map_thumbnail.png`
+    - `dataloaders/cota_1`
+
+    Returned with the project folder, the document ids by filename and the
+    ids of the classifier, the analysis and the aspects.
+    """
+    project_id = test_project.id
+    db_session.commit()
+    config = alembic_config()
+    downgrade_from_head(db_session, config, RENAME_STEPS)
+    root = Path(conf.filesystem.root_directory)
+    project_dir = root / "projects" / str(project_id)
+    try:
+        folder_id = _insert(
+            db_session,
+            "INSERT INTO folder (name, folder_type, project_id) "
+            "VALUES ('migration', 'normal', :p) RETURNING id",
+            p=project_id,
+        )
+        sdoc_ids: dict[str, int] = {}
+        for filename, doctype in (
+            ("text.txt", "text"),
+            ("photo.png", "image"),
+            ("clip.mp4", "video"),
+            ("talk.mp4", "video"),
+            ("talk.mp3", "audio"),
+            ("moved.txt", "text"),
+        ):
+            sdoc_ids[filename] = _insert(
+                db_session,
+                "INSERT INTO sourcedocument (filename, name, doctype, project_id, "
+                "folder_id) VALUES (:f, :f, :d, :p, :folder) RETURNING id",
+                f=filename,
+                d=doctype,
+                p=project_id,
+                folder=folder_id,
+            )
+        checkpoint = project_dir / "models/doc_classifier_abc/epoch=1-step=2.ckpt"
+        classifier_id = _insert(
+            db_session,
+            "INSERT INTO classifier (name, base_model, type, path, labelid2classid, "
+            "train_params, train_loss, train_data_stats, project_id) VALUES "
+            "('c', 'bert', 'document', :path, '{}', '{}', '[]', '[]', :p) "
+            "RETURNING id",
+            path=str(checkpoint),
+            p=project_id,
+        )
+        cota_id = _insert(
+            db_session,
+            "INSERT INTO conceptovertimeanalysis (name, project_id) "
+            "VALUES ('cota', :p) RETURNING id",
+            p=project_id,
+        )
+        aspect_ids = [
+            _insert(
+                db_session,
+                "INSERT INTO aspect (name, doc_embedding_prompt, is_hierarchical, "
+                "project_id) VALUES (:name, '', false, :p) RETURNING id",
+                name=name,
+                p=project_id,
+            )
+            for name in ("aspect", "deleted")
+        ]
+        aspect_id, deleted_aspect_id = aspect_ids
+        db_session.execute(
+            sa.text("DELETE FROM aspect WHERE id = :id"), {"id": deleted_aspect_id}
+        )
+        db_session.commit()
+
+        embedder = f"project_{project_id}_aspect_{aspect_id}_20250101_120000"
+        old_files = [
+            "docs/text.txt",
+            "docs/photo.png",
+            "docs/photo.png.webp",
+            "docs/photo.png.thumbnail.webp",
+            "docs/clip.mp4",
+            "docs/clip.mp4.thumbnail.webp",
+            "docs/clip.mp3",
+            "docs/talk.mp4",
+            "docs/talk.mp3",
+            "docs/moved.txt",
+            "docs/split.pdf",
+            "docs/archive.zip",
+            "models/doc_classifier_abc/epoch=1-step=2.ckpt",
+            "models/doc_classifier_abc/train_logs/metrics.csv",
+            f"models/cota_{cota_id}/weights.bin",
+            f"models/cota_{cota_id}-best-model/weights.bin",
+            f"models/umap_aspect_{aspect_id}_default",
+            f"models/prompt_embedder_DocType.text_{embedder}/model.safetensors",
+            f"models/prompt_embedder_chkpt_DocType.text_{embedder}/step.bin",
+            f"plots/aspect_{aspect_id}_map_thumbnail.png",
+            f"models/umap_aspect_{deleted_aspect_id}_default",
+            f"plots/aspect_{deleted_aspect_id}_map_thumbnail.png",
+            "dataloaders/cota_1",
+        ]
+        for old in old_files:
+            _write(project_dir / old, old)
+        _write(
+            project_dir / f"sdoc_files/{sdoc_ids['moved.txt']}/moved.txt",
+            "moved before",
+        )
+        yield {
+            "project_dir": project_dir,
+            "sdoc_ids": sdoc_ids,
+            "classifier_id": classifier_id,
+            "cota_id": cota_id,
+            "aspect_id": aspect_id,
+            "deleted_aspect_id": deleted_aspect_id,
+        }
     finally:
         db_session.rollback()
         db_session.close()

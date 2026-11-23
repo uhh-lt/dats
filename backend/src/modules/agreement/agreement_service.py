@@ -1,4 +1,5 @@
 from typing import NamedTuple
+from uuid import uuid4
 
 import pandas as pd
 from sqlalchemy.orm import Session
@@ -10,6 +11,7 @@ from core.code.code_crud import crud_code
 from core.doc.source_document_crud import crud_sdoc
 from core.doc.source_document_data_crud import crud_sdoc_data
 from core.doc.source_document_data_orm import SourceDocumentDataORM
+from core.project.export_file_crud import crud_export_file
 from core.user.user_crud import crud_user
 from modules.agreement.agreement_dto import (
     AgreementCodeScore,
@@ -25,7 +27,6 @@ from modules.agreement.agreement_exceptions import (
     AgreementCodesNotInProjectError,
     AgreementSdocsNotInProjectError,
 )
-from repos.filesystem_repo import FilesystemRepo
 
 # A unit is identified by a pair of ints, so that all modes share one algorithm:
 # - span, exact:                 (begin, end) character offsets of the span
@@ -93,7 +94,6 @@ class AgreementService(metaclass=SingletonMeta):
     """
 
     def __new__(cls, *args, **kwargs):
-        cls.fsr: FilesystemRepo = FilesystemRepo()
         return super(AgreementService, cls).__new__(cls)
 
     def compute_agreement(
@@ -203,10 +203,15 @@ class AgreementService(metaclass=SingletonMeta):
                 "false_negatives",
             ],
         )
-        export_file = self.fsr.write_df_to_temp_file(
-            df=df, fn=f"project_{project_id}_agreement_counts"
+        export_id = str(uuid4())
+        name = f"project_{project_id}_agreement_counts.csv"
+        crud_export_file.write(
+            project_id=project_id,
+            id=export_id,
+            name=name,
+            data=df.to_csv(index=False).encode(),
         )
-        return self.fsr.get_temp_file_url(export_file.name, relative=True)
+        return crud_export_file.url(project_id=project_id, id=export_id, name=name)
 
     def read_segment_texts(
         self, *, db: Session, project_id: int, ranges: list[AgreementTextRange]

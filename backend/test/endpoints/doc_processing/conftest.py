@@ -1,5 +1,4 @@
 import base64
-import os
 import wave
 from io import BytesIO
 from pathlib import Path
@@ -14,6 +13,7 @@ from common.doc_type_enum import DocType
 from core.doc.source_document_crud import crud_sdoc
 from core.doc.source_document_data_crud import crud_sdoc_data
 from core.doc.source_document_dto import SourceDocumentCreate
+from core.doc.source_document_file_crud import crud_sdoc_file
 from core.doc.source_document_orm import SourceDocumentORM
 from core.project.project_orm import ProjectORM
 from core.user.user_orm import UserORM
@@ -28,7 +28,7 @@ from feature_test_utils import (
 )
 from pipeline_test_utils import artefact_named
 from repos.db.sql_repo import SQLRepo
-from repos.filesystem_repo import FilesystemRepo
+from repos.filesystem.temporary_file_crud import crud_temporary_file
 from systems.artefact_system.artefact_dto import SdocProcessingJobInput
 from systems.artefact_system.artefact_registry import (
     Artefact,
@@ -60,7 +60,6 @@ class AudioProject(TypedDict):
 
     project: ProjectORM
     audio_document: SourceDocumentORM
-    audio_filepath: str
 
 
 @pytest.fixture(scope="function")
@@ -69,9 +68,7 @@ def audio_project(db_session: Session, test_project: ProjectORM) -> AudioProject
     from core.doc.source_document_data_crud import crud_sdoc_data
     from core.doc.source_document_data_dto import SourceDocumentDataCreate
     from core.doc.source_document_dto import SourceDocumentCreate
-    from repos.filesystem_repo import FilesystemRepo
 
-    fsr = FilesystemRepo()
     sdoc = crud_sdoc.create(
         db=db_session,
         create_dto=SourceDocumentCreate(
@@ -83,8 +80,8 @@ def audio_project(db_session: Session, test_project: ProjectORM) -> AudioProject
         ),
     )
 
-    file_path = fsr._get_dst_path_for_project_sdoc_file(
-        project_id=test_project.id, filename=sdoc.filename
+    file_path = crud_sdoc_file.path(
+        project_id=test_project.id, id=sdoc.id, name=sdoc.filename
     )
     file_path.parent.mkdir(parents=True, exist_ok=True)
     with wave.open(str(file_path), "wb") as f:
@@ -98,7 +95,6 @@ def audio_project(db_session: Session, test_project: ProjectORM) -> AudioProject
         create_dto=SourceDocumentDataCreate(
             id=sdoc.id,
             content="",
-            repo_url=os.path.relpath(file_path, fsr.root_dir),
             raw_html="",
             html="",
             token_starts=[],
@@ -117,7 +113,6 @@ def audio_project(db_session: Session, test_project: ProjectORM) -> AudioProject
     return {
         "project": test_project,
         "audio_document": sdoc,
-        "audio_filepath": str(file_path),
     }
 
 
@@ -526,8 +521,8 @@ def dummy_step_projects(
     the test user without any feature enabled (core steps only):
 
     - "Dummy Step Project" (`project`), with no documents yet; the text file
-      `upload` (`DUMMY_UPLOAD_TEXT`, one paragraph) lies in its file directory, as an
-      upload puts it there before `sdoc_init` creates its document.
+      `upload` (`DUMMY_UPLOAD_TEXT`, one paragraph) is staged in a temporary
+      folder, as an upload stages it before `sdoc_init` creates its document.
     - "Import Target" (`target_project`), with no documents.
     """
     project = create_project_with_features(
@@ -536,10 +531,10 @@ def dummy_step_projects(
     target_project = create_project_with_features(
         db_session, test_user, title="Import Target", features=[]
     )
-    fsr = FilesystemRepo()
-    upload = fsr.move_file_to_project_sdoc_files(
-        project_id=project.id,
-        src_file=fsr.write_text_to_temp_file(DUMMY_UPLOAD_TEXT),
+    upload = crud_temporary_file.write(
+        id=crud_temporary_file.create(),
+        name="dummy_upload.txt",
+        data=DUMMY_UPLOAD_TEXT.encode(),
     )
     return {"project": project, "target_project": target_project, "upload": upload}
 
@@ -558,9 +553,9 @@ class MediaUploads(TypedDict):
 def media_uploads(db_session: Session, test_user: UserORM) -> MediaUploads:
     """
     This fixture sets up the project "Media Project" of the test user without any
-    feature enabled (core steps only) and no documents yet. Its file directory
-    holds three uploads, as an upload puts them there before `sdoc_init`
-    creates their documents:
+    feature enabled (core steps only) and no documents yet, and three uploads,
+    each staged in a temporary folder, as an upload stages them before
+    `sdoc_init` creates their documents:
 
     - `audio`: "tone.mp3", one second of a 440 Hz sine tone (made with ffmpeg)
     - `video`: "clip.mp4", one second of a test picture with the same tone
@@ -569,16 +564,16 @@ def media_uploads(db_session: Session, test_user: UserORM) -> MediaUploads:
 
     Non-obvious derived behavior:
 
-    - With `extract_images`, html_extraction of page.html stores the image next to
-      the page and starts an `sdoc_init` for it, which creates an image document.
+    - With `extract_images`, html_extraction of page.html stages the image in a
+      temporary folder and starts an `sdoc_init` for it, which creates an image
+      document.
     - The transcription (whisper) of audio and video runs on the hosted Ray
       service, so the tests only build its input.
     """
     project = create_project_with_features(
         db_session, test_user, title="Media Project", features=[]
     )
-    fsr = FilesystemRepo()
-    tmp = Path(fsr.create_temp_dir("media_uploads"))
+    tmp = crud_temporary_file.dir(id=crud_temporary_file.create())
     tone = ffmpeg.input("sine=frequency=440:duration=1", f="lavfi")
     ffmpeg.output(tone, str(tmp / "tone.mp3")).overwrite_output().run(quiet=True)
     picture = ffmpeg.input("testsrc=duration=1:size=64x64:rate=10", f="lavfi")
@@ -594,9 +589,9 @@ def media_uploads(db_session: Session, test_user: UserORM) -> MediaUploads:
     )
 
     def store(filename: str) -> Path:
-        return fsr.move_file_to_project_sdoc_files(
-            project_id=project.id, src_file=tmp / filename
-        )
+        upload = crud_temporary_file.dir(id=crud_temporary_file.create()) / filename
+        (tmp / filename).rename(upload)
+        return upload
 
     return {
         "project": project,

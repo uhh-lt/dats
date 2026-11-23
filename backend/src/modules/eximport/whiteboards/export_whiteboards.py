@@ -5,6 +5,7 @@ from loguru import logger
 from sqlalchemy.orm import Session
 
 from modules.eximport.export_exceptions import NoDataToExportError
+from modules.eximport.export_utils import write_df
 from modules.eximport.whiteboards.whiteboard_export_schema import (
     WhiteboardExportCollection,
     WhiteboardExportSchema,
@@ -15,12 +16,11 @@ from modules.eximport.whiteboards.whiteboard_transformations import (
 from modules.whiteboard.whiteboard_crud import crud_whiteboard
 from modules.whiteboard.whiteboard_dto import WhiteboardRead
 from modules.whiteboard.whiteboard_orm import WhiteboardORM
-from repos.filesystem_repo import FilesystemRepo
 
 
 def export_selected_whiteboards(
     db: Session,
-    fsr: FilesystemRepo,
+    out_dir: Path,
     project_id: int,
     whiteboard_ids: list[int],
 ) -> Path:
@@ -29,7 +29,7 @@ def export_selected_whiteboards(
 
     Args:
         db: Database session
-        fsr: Filesystem repository service for file operations
+        out_dir: The scratch folder the export file is written to
         project_id: ID of the project containing the whiteboards
         whiteboard_ids: List of whiteboard IDs to export
 
@@ -42,7 +42,7 @@ def export_selected_whiteboards(
     whiteboards = crud_whiteboard.read_by_ids(db=db, ids=whiteboard_ids)
     return __export_whiteboards(
         db=db,
-        fsr=fsr,
+        out_dir=out_dir,
         fn=f"project_{project_id}_selected_whiteboards",
         whiteboards=whiteboards,
     )
@@ -50,7 +50,7 @@ def export_selected_whiteboards(
 
 def export_all_whiteboards(
     db: Session,
-    fsr: FilesystemRepo,
+    out_dir: Path,
     project_id: int,
 ) -> Path:
     """
@@ -58,7 +58,7 @@ def export_all_whiteboards(
 
     Args:
         db: Database session
-        fsr: Filesystem repository service for file operations
+        out_dir: The scratch folder the export file is written to
         project_id: ID of the project containing the whiteboards
 
     Returns:
@@ -70,7 +70,7 @@ def export_all_whiteboards(
     whiteboards = crud_whiteboard.read_by_project(db=db, project_id=project_id)
     return __export_whiteboards(
         db=db,
-        fsr=fsr,
+        out_dir=out_dir,
         fn=f"project_{project_id}_all_whiteboards",
         whiteboards=whiteboards,
     )
@@ -78,7 +78,7 @@ def export_all_whiteboards(
 
 def __export_whiteboards(
     db: Session,
-    fsr: FilesystemRepo,
+    out_dir: Path,
     fn: str,
     whiteboards: list[WhiteboardORM],
 ) -> Path:
@@ -87,7 +87,7 @@ def __export_whiteboards(
 
     Args:
         db: Database session
-        fsr: Filesystem repository service for file operations
+        out_dir: The scratch folder the export file is written to
         fn: Base filename for the export
         whiteboards: List of whiteboards to export
 
@@ -101,7 +101,8 @@ def __export_whiteboards(
         raise NoDataToExportError("No whiteboards to export.")
 
     export_data = __generate_export_df_for_whiteboards(db=db, whiteboards=whiteboards)
-    return fsr.write_df_to_temp_file(
+    return write_df(
+        out_dir=out_dir,
         df=export_data,
         fn=fn,
     )

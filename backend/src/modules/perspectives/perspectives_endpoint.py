@@ -29,6 +29,10 @@ from modules.perspectives.cluster_embedding_dto import ClusterObjectIdentifier
 from modules.perspectives.document_aspect_crud import crud_document_aspect
 from modules.perspectives.document_cluster_crud import crud_document_cluster
 from modules.perspectives.perspectives_enum import PerspectivesJobType
+from modules.perspectives.perspectives_file_crud import (
+    MAP_THUMBNAIL_FILENAME,
+    crud_perspectives_plot_file,
+)
 from modules.perspectives.perspectives_job_dto import (
     CreateAspectParams,
     PerspectivesJobInput,
@@ -40,6 +44,7 @@ from modules.perspectives.perspectives_vis_dto import (
     PerspectivesDoc,
     PerspectivesVisualization,
 )
+from repos.filesystem.file_crud_base import FileCRUDBase
 from systems.job_system.job_dto import RUNNING_JOB_STATUS
 from systems.job_system.job_service import JobService
 from systems.job_system.job_system_enum import JobStatus
@@ -135,6 +140,29 @@ def get_by_id(
 
     db_obj = crud_aspect.read(db=db, id=aspect_id)
     return AspectRead.model_validate(db_obj)
+
+
+@router.get(
+    "/aspect/{aspect_id}/map_thumbnail_url",
+    response_model=str | None,
+    summary="Returns the URL of the map thumbnail of the Aspect (relative to /content/), None until it is computed.",
+)
+def get_map_thumbnail_url(
+    *,
+    db: DBSession,
+    aspect_id: int,
+    authz_user: AuthzUser = Depends(),
+) -> str | None:
+    authz_user.assert_in_same_project_as(Crud.ASPECT, aspect_id)
+
+    project_id = crud_aspect.read(db=db, id=aspect_id).project_id
+    if not crud_perspectives_plot_file.exists(
+        project_id=project_id, id=aspect_id, name=MAP_THUMBNAIL_FILENAME
+    ):
+        return None
+    return crud_perspectives_plot_file.url(
+        project_id=project_id, id=aspect_id, name=MAP_THUMBNAIL_FILENAME
+    )
 
 
 @router.get(
@@ -265,6 +293,7 @@ def remove_aspect_by_id(
     )
     db_obj = crud_aspect.delete(db=db, id=aspect_id)
     result = AspectRead.model_validate(db_obj)
+    FileCRUDBase.delete_by_entity(Crud.ASPECT, project_id=project_id, ids=[aspect_id])
     ws.emit_to_project(DATSEvent.ASPECT_DELETED, result, project_id=project_id)
     return result
 

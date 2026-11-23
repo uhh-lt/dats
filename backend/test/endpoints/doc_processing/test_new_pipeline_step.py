@@ -14,7 +14,7 @@ from job_test_utils import HeldJobs
 from modules.eximport.project.export_project import export_project
 from modules.eximport.project.import_project import import_project
 from pipeline_test_utils import artefact_named, read_step_status, started_steps
-from repos.filesystem_repo import FilesystemRepo
+from repos.filesystem.temporary_file_crud import crud_temporary_file
 from systems.artefact_system.artefact_dto import (
     ProcessingSettings,
     SdocProcessingJobInput,
@@ -66,7 +66,8 @@ def test_a_step_declared_once_is_planned_run_shown_exported_and_imported(
         "sdoc_init",
         SdocInitJobInput(
             project_id=p["project"].id,
-            filepath=p["upload"],
+            temporary_file_id=p["upload"].parent.name,
+            filename=p["upload"].name,
             doctype=DocType.text,
             folder_id=None,
             settings=SETTINGS,
@@ -103,17 +104,18 @@ def test_a_step_declared_once_is_planned_run_shown_exported_and_imported(
     assert [row.status[step] for row in rows] == [SDocStatus.finished]
 
     # exported and imported
-    fsr = FilesystemRepo()
-    archive = export_project(db=db_session, fsr=fsr, project_id=p["project"].id)
-    import_dir = fsr.create_temp_dir("dummy_step_eximport")
-    with zipfile.ZipFile(archive) as zip_file:
-        zip_file.extractall(import_dir)
-    import_project(
-        db=db_session,
-        fsr=fsr,
-        path_to_dir=import_dir,
-        project_id=p["target_project"].id,
-    )
+    with crud_temporary_file.folder() as out_dir:
+        archive = export_project(
+            db=db_session, out_dir=out_dir, project_id=p["project"].id
+        )
+        import_dir = out_dir / "import"
+        with zipfile.ZipFile(archive) as zip_file:
+            zip_file.extractall(import_dir)
+        import_project(
+            db=db_session,
+            path_to_dir=import_dir,
+            project_id=p["target_project"].id,
+        )
     db_session.commit()
     imported = crud_sdoc.read_by_project(
         db=db_session, project_id=p["target_project"].id, only_finished=False

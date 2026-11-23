@@ -9,6 +9,7 @@ from core.artefacts.sentence_embeddings.sentence_embedding_crud import (
 )
 from core.doc.source_document_crud import crud_sdoc
 from core.user.user_orm import UserORM
+from dats_test_utils import new_temporary_folder
 from modules.eximport.import_csv_utils import read_import_csv
 from modules.eximport.import_enum import ImportJobType
 from modules.eximport.import_exceptions import ImportSourceDocumentsError
@@ -17,7 +18,6 @@ from modules.eximport.import_service import ImportService
 from modules.eximport.sdocs.export_sdocs import export_all_sdocs
 from modules.tag_recommendation.document_embedding_crud import crud_document_embedding
 from modules.tag_recommendation.document_embedding_dto import DocumentObjectIdentifier
-from repos.filesystem_repo import FilesystemRepo
 from repos.vector.weaviate_repo import WeaviateRepo
 
 from .conftest import (
@@ -61,6 +61,7 @@ def _import_documents(
             project_id=project_id,
             import_job_type=ImportJobType.DOCUMENTS,
             user_id=user_id,
+            temporary_file_id=archive.parent.name,
             file_name=archive.name,
         ),
     )
@@ -103,7 +104,7 @@ def test_document_survives_export_import_round_trip(
     sdoc = sdoc_eximport_projects["sdoc"]
 
     archive = export_all_sdocs(
-        db=db_session, fsr=FilesystemRepo(), project_id=project.id
+        db=db_session, out_dir=new_temporary_folder(), project_id=project.id
     )
     _import_documents(db_session, archive, target_project.id, test_user.id)
     db_session.commit()
@@ -188,7 +189,9 @@ def test_document_import_rejects_expression_without_executing_it(
     target_project = sdoc_eximport_projects["target_project"]
     marker = tmp_path / "executed"
     archive = _replace_cell(
-        export_all_sdocs(db=db_session, fsr=FilesystemRepo(), project_id=project.id),
+        export_all_sdocs(
+            db=db_session, out_dir=new_temporary_folder(), project_id=project.id
+        ),
         field,
         f"[__import__('pathlib').Path({str(marker)!r}).write_text('x')]",
     )
@@ -229,7 +232,9 @@ def test_document_import_rejects_cells_that_are_no_list_literal(
     project = sdoc_eximport_projects["project"]
     target_project = sdoc_eximport_projects["target_project"]
     archive = _replace_cell(
-        export_all_sdocs(db=db_session, fsr=FilesystemRepo(), project_id=project.id),
+        export_all_sdocs(
+            db=db_session, out_dir=new_temporary_folder(), project_id=project.id
+        ),
         "token_starts",
         cell,
     )

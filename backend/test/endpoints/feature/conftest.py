@@ -11,6 +11,7 @@ from core.code.system_codes import SystemCode
 from core.doc.sdoc_elastic_crud import crud_sdoc_elastic
 from core.doc.source_document_crud import crud_sdoc
 from core.doc.source_document_dto import SourceDocumentCreate
+from core.doc.source_document_file_crud import crud_sdoc_file
 from core.doc.source_document_orm import SourceDocumentORM
 from core.metadata.project_metadata_crud import crud_project_meta
 from core.project.project_orm import ProjectORM
@@ -30,7 +31,6 @@ from feature_test_utils import (
 )
 from pipeline_test_utils import artefact_named, planned_steps
 from repos.elastic.elastic_repo import ElasticSearchRepo
-from repos.filesystem_repo import FilesystemRepo
 from repos.vector.collection_base import BaseCollection
 from repos.vector.weaviate_repo import WeaviateRepo
 from systems.artefact_system.artefact_registry import artefact, artefact_registry
@@ -504,9 +504,12 @@ def code_import_projects(db_session, test_user: UserORM) -> CodeImportProjects:
         name="persons.txt",
         sentences=sentences,
     )
-    FilesystemRepo()._get_dst_path_for_project_sdoc_file(
-        project_id=entity_spans.id, filename="persons.txt"
-    ).write_text(" ".join(sentences))
+    crud_sdoc_file.write(
+        project_id=entity_spans.id,
+        id=persons.id,
+        name="persons.txt",
+        data=" ".join(sentences).encode(),
+    )
     set_step_status(
         db_session,
         persons.id,

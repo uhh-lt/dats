@@ -26,7 +26,7 @@ from core.code.code_orm import CodeORM
 from core.doc.source_document_crud import crud_sdoc
 from core.doc.source_document_data_crud import crud_sdoc_data
 from core.doc.source_document_data_dto import SourceDocumentDataCreate
-from core.doc.source_document_dto import SourceDocumentCreate, SourceDocumentRead
+from core.doc.source_document_dto import SourceDocumentCreate
 from core.doc.source_document_orm import SourceDocumentORM
 from core.memo.memo_crud import crud_memo
 from core.memo.memo_dto import MemoCreateIntern, MemoRead
@@ -40,7 +40,6 @@ from core.user.user_crud import crud_user
 from core.user.user_dto import UserCreate
 from core.user.user_orm import UserORM
 from dats_test_utils import ProjectWithSdoc
-from repos.filesystem_repo import FilesystemRepo
 
 AnnotationKind = Literal["span", "sentence", "bbox"]
 ANNOTATION_KINDS: list[AnnotationKind] = ["span", "sentence", "bbox"]
@@ -335,7 +334,6 @@ def create_provenance_project(
         create_dto=SourceDocumentDataCreate(
             id=other_text_sdoc.id,
             content=text_sdoc_data.content,
-            repo_url=text_sdoc_data.repo_url,
             raw_html=text_sdoc_data.raw_html,
             html=text_sdoc_data.html,
             token_starts=text_sdoc_data.token_starts,
@@ -349,20 +347,12 @@ def create_provenance_project(
     image_sdoc = _create_sdoc(
         db_session, project_id=project.id, filename="image.jpg", doctype=DocType.image
     )
-    # bbox search rows link the webp version of the image, which must exist
     other_image_sdoc = _create_sdoc(
         db_session,
         project_id=project.id,
         filename="other_image.jpg",
         doctype=DocType.image,
     )
-    for sdoc in (image_sdoc, other_image_sdoc):
-        webp_path = FilesystemRepo().get_path_to_sdoc_file(
-            SourceDocumentRead.model_validate(sdoc), webp=True
-        )
-        webp_path.parent.mkdir(parents=True, exist_ok=True)
-        webp_path.write_bytes(b"")
-
     # 3) the other project
     other_project = crud_project.read(
         db=db_session,

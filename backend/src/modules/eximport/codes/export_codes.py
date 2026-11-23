@@ -11,18 +11,18 @@ from modules.eximport.codes.code_export_schema import (
     CodeExportSchema,
 )
 from modules.eximport.export_exceptions import NoDataToExportError
-from repos.filesystem_repo import FilesystemRepo
+from modules.eximport.export_utils import write_df
 
 
 def export_all_codes(
     db: Session,
-    fsr: FilesystemRepo,
+    out_dir: Path,
     project_id: int,
 ) -> Path:
     codes = crud_project.read(db=db, id=project_id).codes
     return __export_codes(
         db=db,
-        fsr=fsr,
+        out_dir=out_dir,
         fn=f"project_{project_id}_all_codes",
         codes=codes,
     )
@@ -30,7 +30,7 @@ def export_all_codes(
 
 def __export_codes(
     db: Session,
-    fsr: FilesystemRepo,
+    out_dir: Path,
     fn: str,
     codes: list[CodeORM],
 ) -> Path:
@@ -38,7 +38,8 @@ def __export_codes(
         raise NoDataToExportError("No codes to export.")
 
     export_data = __generate_export_df_for_codes(codes=codes)
-    return fsr.write_df_to_temp_file(
+    return write_df(
+        out_dir=out_dir,
         df=export_data,
         fn=fn,
     )

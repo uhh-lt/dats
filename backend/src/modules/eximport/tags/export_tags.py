@@ -7,19 +7,19 @@ from sqlalchemy.orm import Session
 from core.project.project_crud import crud_project
 from core.tag.tag_orm import TagORM
 from modules.eximport.export_exceptions import NoDataToExportError
+from modules.eximport.export_utils import write_df
 from modules.eximport.tags.tag_export_schema import TagExportCollection, TagExportSchema
-from repos.filesystem_repo import FilesystemRepo
 
 
 def export_all_tags(
     db: Session,
-    fsr: FilesystemRepo,
+    out_dir: Path,
     project_id: int,
 ) -> Path:
     tags = crud_project.read(db=db, id=project_id).tags
     return __export_tags(
         db=db,
-        fsr=fsr,
+        out_dir=out_dir,
         fn=f"project_{project_id}_all_tags",
         tags=tags,
     )
@@ -27,14 +27,15 @@ def export_all_tags(
 
 def __export_tags(
     db: Session,
-    fsr: FilesystemRepo,
+    out_dir: Path,
     fn: str,
     tags: list[TagORM],
 ) -> Path:
     if len(tags) == 0:
         raise NoDataToExportError("No tags to export.")
     export_data = __generate_export_df_for_tags(tags=tags)
-    return fsr.write_df_to_temp_file(
+    return write_df(
+        out_dir=out_dir,
         df=export_data,
         fn=fn,
     )

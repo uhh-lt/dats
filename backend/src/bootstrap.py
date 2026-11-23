@@ -7,7 +7,7 @@ workers, the setup script and the tests cannot drift apart:
 | ---------------------------- | ---------------------------------------------------------- |
 | `main.py` (API)              | init_logging, create_app                                   |
 | `worker.py` (job processes)  | init_logging, register_jobs, connect_repos, init_services  |
-| `setup.py`                   | init_logging, setup_data_stores                            |
+| `setup.py`                   | init_logging, setup_data_stores (deletes expired files)    |
 | `run_migrations.py`          | init_logging, migrate_database                             |
 | `test/conftest.py`           | register_jobs, connect_repos, init_services,               |
 |                              | delete_all_data, ensure_system_data, create_app            |
@@ -180,6 +180,7 @@ def setup_data_stores(
     if delete_existing_data:
         delete_all_data()
     ensure_system_data()
+    delete_expired_files()
 
     close_repos(repos)
 
@@ -213,22 +214,31 @@ def delete_all_data() -> None:
 
 def ensure_system_data() -> None:
     """Create the data every DATS instance needs, unless it exists: the
-    filesystem structure, the system users and the Weaviate collections.
-    Requires connected repos."""
+    system users and the Weaviate collections. Requires connected repos."""
     from repos.db.sql_repo import SQLRepo
-    from repos.filesystem_repo import FilesystemRepo
 
-    FilesystemRepo()._create_root_directory_structure(remove_if_exists=False)
     with SQLRepo().transaction() as db:
         _create_system_users(db=db)
     _create_weaviate_collections()
+
+
+def delete_expired_files() -> None:
+    """Delete the temporary files older than `filesystem.temporary_ttl` and the
+    expired exports of all projects. Requires the connected FilesystemRepo."""
+    from core.project.export_file_crud import crud_export_file
+    from repos.filesystem.filesystem_repo import FilesystemRepo
+    from repos.filesystem.temporary_file_crud import crud_temporary_file
+
+    crud_temporary_file.delete_older_than(age=conf.filesystem.temporary_ttl)
+    for project_id in FilesystemRepo().project_ids():
+        crud_export_file.delete_expired(project_id=project_id)
 
 
 def _data_store_repos(*, sql_echo: bool = False) -> list[RepoBase]:
     from repos.async_redis_repo import AsyncRedisRepo
     from repos.db.sql_repo import SQLRepo
     from repos.elastic.elastic_repo import ElasticSearchRepo
-    from repos.filesystem_repo import FilesystemRepo
+    from repos.filesystem.filesystem_repo import FilesystemRepo
     from repos.redis_repo import RedisRepo
     from repos.vector.weaviate_repo import WeaviateRepo
 
@@ -341,7 +351,6 @@ def create_app() -> FastAPI:
 
 @asynccontextmanager
 async def _lifespan(app: FastAPI) -> AsyncGenerator[None, None]:
-    from repos.filesystem_repo import FilesystemRepo
     from systems.websocket_system.websocket_service import WebsocketService
 
     logger.info(f"Worker {os.getpid()} starting Discourse Analysis Tool Suite API!")
@@ -354,7 +363,6 @@ async def _lifespan(app: FastAPI) -> AsyncGenerator[None, None]:
 
     logger.info(f"Worker {os.getpid()} stopping. Cleaning up resources...")
     await websocket_service.shutdown()
-    FilesystemRepo().purge_temporary_files()
     await aclose_repos(repos)
 
 

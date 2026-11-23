@@ -7,6 +7,11 @@ from core.annotation.sentence_annotation_crud import crud_sentence_anno
 from core.annotation.sentence_annotation_dto import SentenceAnnotationCreate
 from core.annotation.sentence_annotation_orm import SentenceAnnotationORM
 from core.annotation.sentence_annotation_service import SentenceAnnotationService
+from core.artefacts.thumbnail.thumbnail_file_crud import (
+    IMAGE_FILENAME,
+    THUMBNAIL_FILENAME,
+    crud_thumbnail_file,
+)
 from core.code.code_crud import crud_code
 from core.code.code_dto import CodeCreate
 from core.code.code_orm import CodeORM
@@ -20,6 +25,7 @@ from core.doc.source_document_data_dto import SourceDocumentDataCreate
 from core.doc.source_document_dto import (
     SourceDocumentCreate,
 )
+from core.doc.source_document_file_crud import crud_sdoc_file
 from core.doc.source_document_orm import SourceDocumentORM
 from core.project.project_orm import ProjectORM
 
@@ -64,7 +70,6 @@ def project_with_sdocs_in_same_folder(
         create_dto=SourceDocumentDataCreate(
             id=sdoc1.id,
             content="This is a test document. It has two sentences.",
-            repo_url="/fake/path/to/test_document1.txt",
             raw_html="<p>This is a test document. It has two sentences.</p>",
             html="<p><sent>This is a test document.</sent> <sent>It has two sentences.</sent></p>",
             token_starts=[0, 5, 8, 10, 15, 25, 28, 32, 36],
@@ -93,7 +98,6 @@ def project_with_sdocs_in_same_folder(
         create_dto=SourceDocumentDataCreate(
             id=sdoc2.id,
             content="This is a test document. It has two sentences.",
-            repo_url="/fake/path/to/test_document2.txt",
             raw_html="<p>This is a test document. It has two sentences.</p>",
             html="<p><sent>This is a test document.</sent> <sent>It has two sentences.</sent></p>",
             token_starts=[0, 5, 8, 10, 15, 25, 28, 32, 36],
@@ -179,3 +183,36 @@ def project_with_sentence_annotation(
         "code": code,
         "sentence_annotation": sentence_annotation,
     }
+
+
+class ProjectWithImage(TypedDict):
+    project: ProjectORM
+    image: SourceDocumentORM
+
+
+@pytest.fixture(scope="function")
+def project_with_image(db_session, test_project) -> ProjectWithImage:
+    """
+    This fixture sets up `test_project` with the image document "photo.png"
+    (`image`, no document data) and its files, as the upload and the thumbnail
+    step store them: the uploaded file "photo.png" (b"png"), and the WebP
+    `image.webp` (b"webp") and thumbnail `thumbnail.webp` (b"thumbnail").
+    """
+    image = crud_sdoc.create(
+        db=db_session,
+        create_dto=SourceDocumentCreate(
+            filename="photo.png",
+            name="photo.png",
+            doctype=DocType.image,
+            project_id=test_project.id,
+        ),
+    )
+    db_session.commit()
+    crud_sdoc_file.write(
+        project_id=test_project.id, id=image.id, name="photo.png", data=b"png"
+    )
+    for name, data in ((IMAGE_FILENAME, b"webp"), (THUMBNAIL_FILENAME, b"thumbnail")):
+        crud_thumbnail_file.write(
+            project_id=test_project.id, id=image.id, name=name, data=data
+        )
+    return {"project": test_project, "image": image}

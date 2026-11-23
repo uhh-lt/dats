@@ -7,9 +7,12 @@ from core.auth.authz_user import AuthzUser
 from core.doc.source_document_crud import crud_sdoc
 from core.doc.source_document_data_crud import crud_sdoc_data
 from core.doc.source_document_data_dto import SourceDocumentDataRead
-from core.doc.source_document_dto import SourceDocumentRead, SourceDocumentUpdate
+from core.doc.source_document_dto import (
+    SourceDocumentRead,
+    SourceDocumentUpdate,
+    SourceDocumentUrls,
+)
 from core.doc.source_document_service import SourceDocumentService
-from repos.filesystem_repo import FilesystemRepo
 from systems.websocket_system.websocket_dependency import WebsocketEmitter
 
 router = APIRouter(
@@ -83,29 +86,19 @@ def get_same_folder_sdocs(
 
 
 @router.get(
-    "/{sdoc_id}/url",
-    response_model=str,
-    summary="Returns the URL to the original file of the SourceDocument with the given ID if it exists.",
+    "/{sdoc_id}/urls",
+    response_model=SourceDocumentUrls,
+    summary="Returns the URLs of the files of the SourceDocument with the given ID (relative to /content/).",
 )
-def get_file_url(
+def get_urls(
     *,
     db: DBSession,
     sdoc_id: int,
-    relative: bool = True,
-    webp: bool = False,
-    thumbnail: bool = False,
     authz_user: AuthzUser = Depends(),
-) -> str:
+) -> SourceDocumentUrls:
     authz_user.assert_in_same_project_as(Crud.SOURCE_DOCUMENT, sdoc_id)
 
-    sdoc_db_obj = crud_sdoc.read(db=db, id=sdoc_id)
-    # TODO: FIX TYPING
-    return FilesystemRepo().get_sdoc_url(
-        sdoc=SourceDocumentRead.model_validate(sdoc_db_obj),
-        relative=relative,
-        webp=webp,
-        thumbnail=thumbnail,
-    )
+    return SourceDocumentService().read_urls(db=db, sdoc_id=sdoc_id)
 
 
 @router.get(

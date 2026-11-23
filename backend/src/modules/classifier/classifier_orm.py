@@ -36,7 +36,6 @@ class ClassifierORM(ORMBase):
     name: Mapped[str] = mapped_column(String, nullable=False, index=True)
     base_model: Mapped[str] = mapped_column(String, nullable=False, index=True)
     type: Mapped[ClassifierModel] = mapped_column(String, nullable=False, index=True)
-    path: Mapped[str] = mapped_column(String, nullable=False)
     labelid2classid: Mapped[dict[str, int]] = mapped_column(JSON, nullable=False)
 
     # TRAINING

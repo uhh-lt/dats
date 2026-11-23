@@ -8,6 +8,8 @@ Enforces the unified conventions for the three CRUD kinds in backend/src:
     *_elastic_crud.py    Elasticsearch CRUD,       base ElasticCRUDBase,   first param `client`
     *_crud.py            SQL CRUD (everything else), base SQLCRUDBase,     first param `db`
 
+File CRUDs (*_file_crud.py, base FileCRUDBase) are not checked.
+
 Rules (the rule id is printed with every violation):
 
     crud-class       Exactly one top-level class whose name starts with 'CRUD'.
@@ -28,8 +30,8 @@ Rules (the rule id is printed with every violation):
     no-read-dto      No method returns a type whose name ends with 'Read' (CRUDs return ORMs / models).
     sql-only         SQL CRUDs touch only the SQL database: no imports of other repos
                      (only repos.db.*), of weaviate / elasticsearch / redis / rq, or of
-                     *_embedding_crud, *_elastic_crud, *_collection, *_elastic_index and
-                     *_service modules. Side effects on other stores belong in a service.
+                     *_embedding_crud, *_elastic_crud, *_file_crud, *_collection,
+                     *_elastic_index and *_service modules. Side effects on other stores belong in a service.
     no-bulk          SQL CRUDs have no '*_bulk' methods: batch methods are the base
                      '_multi' methods, orchestration of API DTOs belongs in a service.
     generic-dto      SQL overrides of create / create_multi / update / update_multi take
@@ -103,6 +105,7 @@ FORBIDDEN_SQL_IMPORT_ROOTS = {"weaviate", "elasticsearch", "redis", "rq"}
 FORBIDDEN_SQL_IMPORT_SUFFIXES = (
     "_embedding_crud",
     "_elastic_crud",
+    "_file_crud",
     "_collection",
     "_elastic_index",
     "_service",
@@ -562,8 +565,12 @@ def check_file(path: Path) -> list[Violation]:
     return sorted(violations, key=lambda v: v.line)
 
 
+def is_checked_crud_file(path: Path) -> bool:
+    return path.name.endswith("_crud.py") and not path.name.endswith("_file_crud.py")
+
+
 def find_crud_files(root: Path) -> list[Path]:
-    return sorted(root.rglob("*_crud.py"))
+    return sorted(p for p in root.rglob("*_crud.py") if is_checked_crud_file(p))
 
 
 def main(argv: list[str]) -> int:
@@ -575,7 +582,7 @@ def main(argv: list[str]) -> int:
     if not paths or any(p.name == Path(__file__).name for p in paths):
         files = find_crud_files(SRC_ROOT)
     else:
-        files = [p for p in paths if p.name.endswith("_crud.py")]
+        files = [p for p in paths if is_checked_crud_file(p)]
 
     violations = [v for f in files for v in check_file(f)]
     for v in violations:

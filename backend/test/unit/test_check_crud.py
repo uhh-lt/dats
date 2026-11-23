@@ -327,7 +327,9 @@ def test_check_crud_violation_names_file_class_method_and_rule() -> None:
 @pytest.mark.parametrize(
     "import_line",
     [
-        pytest.param("from repos.filesystem_repo import FilesystemRepo", id="repo"),
+        pytest.param(
+            "from repos.filesystem.filesystem_repo import FilesystemRepo", id="repo"
+        ),
         pytest.param("from weaviate import WeaviateClient", id="weaviate"),
         pytest.param("import elasticsearch", id="elasticsearch"),
         pytest.param(
@@ -337,6 +339,11 @@ def test_check_crud_violation_names_file_class_method_and_rule() -> None:
         pytest.param(
             "from core.artefacts.sentence_embeddings.sentence_embedding_crud import crud_sentence_embedding",
             id="embedding-crud",
+        ),
+        # a file CRUD writes to another store (the filesystem)
+        pytest.param(
+            "from core.doc.source_document_file_crud import crud_sdoc_file",
+            id="file-crud",
         ),
         pytest.param(
             "from core.project.project_service import ProjectService", id="service"

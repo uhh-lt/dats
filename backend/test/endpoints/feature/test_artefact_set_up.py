@@ -11,11 +11,11 @@ from common.languages_enum import Language
 from core.code.code_crud import crud_code
 from core.project.project_orm import ProjectORM
 from core.user.user_orm import UserORM
+from dats_test_utils import new_temporary_folder
 from feature_test_utils import create_project_with_features
 from job_test_utils import HeldJobs
 from modules.eximport.project.export_project import export_project
 from modules.eximport.project.import_project import import_project
-from repos.filesystem_repo import FilesystemRepo
 from systems.artefact_system.artefact_dto import ProcessingSettings
 from systems.feature_system.feature_dto import FeatureActivation
 from systems.feature_system.feature_registry import Feature
@@ -109,13 +109,13 @@ def test_import_creates_the_codes_before_it_imports_the_archived_codes(
     they would be imported as user codes."""
     source = _project(db_session, test_user, "Import Source", [coded_feature.name])
     target = _project(db_session, test_user, "Import Target", [])
-    fsr = FilesystemRepo()
-    archive = export_project(db=db_session, fsr=fsr, project_id=source.id)
-    import_dir = fsr.create_temp_dir("set_up_import")
+    out_dir = new_temporary_folder()
+    archive = export_project(db=db_session, out_dir=out_dir, project_id=source.id)
+    import_dir = out_dir / "import"
     with zipfile.ZipFile(archive) as zip_file:
         zip_file.extractall(import_dir)
 
-    import_project(db=db_session, fsr=fsr, path_to_dir=import_dir, project_id=target.id)
+    import_project(db=db_session, path_to_dir=import_dir, project_id=target.id)
     db_session.commit()
 
     assert _codes(db_session, target.id) == dict.fromkeys(CODE_NAMES, True)
@@ -176,13 +176,13 @@ def test_import_runs_the_set_up_hook_of_the_archived_features(
         db_session, test_user, "Hook Source", [hooked_feature["feature"].name]
     )
     target = _project(db_session, test_user, "Hook Target", [])
-    fsr = FilesystemRepo()
-    archive = export_project(db=db_session, fsr=fsr, project_id=source.id)
-    import_dir = fsr.create_temp_dir("hook_import")
+    out_dir = new_temporary_folder()
+    archive = export_project(db=db_session, out_dir=out_dir, project_id=source.id)
+    import_dir = out_dir / "import"
     with zipfile.ZipFile(archive) as zip_file:
         zip_file.extractall(import_dir)
 
-    import_project(db=db_session, fsr=fsr, path_to_dir=import_dir, project_id=target.id)
+    import_project(db=db_session, path_to_dir=import_dir, project_id=target.id)
     db_session.commit()
 
     assert hooked_feature["calls"] == [

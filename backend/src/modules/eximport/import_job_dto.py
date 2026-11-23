@@ -11,6 +11,9 @@ class ImportJobInput(JobInputBase):
         description="The type of the import job (what to import)"
     )
     user_id: int = Field(description="ID of the User, who started the job.")
+    temporary_file_id: str = Field(
+        description="ID of the temporary folder the imported file is staged in; the import job deletes it"
+    )
     file_name: str = Field(
         description="The name to the file that is used for the import job"
     )

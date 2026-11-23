@@ -20,6 +20,7 @@ from weaviate import WeaviateClient
 from common.doc_type_enum import DocType
 from core.doc.source_document_crud import crud_sdoc
 from core.doc.source_document_dto import SourceDocumentRead
+from core.doc.source_document_file_crud import crud_sdoc_file
 from modules.perspectives.aspect_crud import crud_aspect
 from modules.perspectives.aspect_dto import AspectRead, AspectUpdateIntern
 from modules.perspectives.aspect_embedding_crud import crud_aspect_embedding
@@ -42,6 +43,11 @@ from modules.perspectives.document_cluster_dto import (
 )
 from modules.perspectives.document_cluster_orm import DocumentClusterORM
 from modules.perspectives.perspectives_enum import PerspectivesJobType
+from modules.perspectives.perspectives_file_crud import (
+    MAP_THUMBNAIL_FILENAME,
+    crud_perspectives_model_file,
+    crud_perspectives_plot_file,
+)
 from modules.perspectives.perspectives_job_dto import (
     AddMissingDocsToAspectParams,
     ChangeClusterParams,
@@ -61,7 +67,6 @@ from modules.perspectives.prompt_embedder import (
     PromptEmbedder,
     PromptEmbedderInput,
 )
-from repos.filesystem_repo import FilesystemRepo
 from repos.llm_repo import LLMMessage, LLMRepo
 from repos.vector.weaviate_repo import WeaviateRepo
 from systems.job_system.job_dto import Job
@@ -75,7 +80,6 @@ class PerspectivesService:
 
         self.llm: LLMRepo = LLMRepo()
         self.weaviate: WeaviateRepo = WeaviateRepo()
-        self.fsr: FilesystemRepo = FilesystemRepo()
 
         # the job handler selects the GPU by setting the current CUDA device
         self.prompt_embedder = PromptEmbedder(
@@ -274,6 +278,7 @@ class PerspectivesService:
         embedding_output = self.prompt_embedder.embed(
             input=PromptEmbedderInput(
                 project_id=project_id,
+                aspect_id=aspect_id,
                 model_name=embedding_model,
                 prompt=embedding_prompt,
                 modality=modality,
@@ -287,10 +292,8 @@ class PerspectivesService:
         )
 
         # 2. Compute the 2D coordinates
-        umap_model_path = self.fsr.get_model_dir(
-            project_id=project_id,
-            model_prefix="umap_",
-            model_name=f"aspect_{aspect_id}_{embedding_model}",
+        umap_model_path = crud_perspectives_model_file.path(
+            project_id=project_id, id=aspect_id, name=f"umap_{embedding_model}"
         )
         embeddings = np.array(embedding_output.embeddings)
 
@@ -305,6 +308,7 @@ class PerspectivesService:
             reducer = umap_model.fit(embeddings)
 
             # Store the fitted UMAP model
+            umap_model_path.parent.mkdir(parents=True, exist_ok=True)
             joblib.dump(reducer, umap_model_path)
             self._log_status_msg(
                 f"Fitted and stored new UMAP model at {umap_model_path}."
@@ -369,10 +373,10 @@ class PerspectivesService:
         figure.subplots_adjust(left=0, bottom=0, right=1, top=1, wspace=0, hspace=0)
 
         # Save the map thumbnail
-        output_path = self.fsr.get_plot_path(
-            project_id=aspect.project_id,
-            plot_name=f"aspect_{aspect_id}_map_thumbnail.png",
+        output_path = crud_perspectives_plot_file.path(
+            project_id=aspect.project_id, id=aspect_id, name=MAP_THUMBNAIL_FILENAME
         )
+        output_path.parent.mkdir(parents=True, exist_ok=True)
         plt.savefig(output_path, dpi=dpi, pad_inches=0)
         plt.close(figure)  # Close the figure to free memory
         self._log_status_msg(f"Generated map thumbnail at {output_path}")
@@ -422,8 +426,10 @@ class PerspectivesService:
                 sdoc_reads = [SourceDocumentRead.model_validate(sdoc) for sdoc in sdocs]
                 document_data = [
                     str(
-                        self.fsr.get_path_to_sdoc_file(
-                            sdoc_read, raise_if_not_exists=True
+                        crud_sdoc_file.path(
+                            project_id=sdoc_read.project_id,
+                            id=sdoc_read.id,
+                            name=sdoc_read.filename,
                         )
                     )
                     for sdoc_read in sdoc_reads
@@ -1151,6 +1157,7 @@ class PerspectivesService:
         embedding_output = self.prompt_embedder.embed(
             input=PromptEmbedderInput(
                 project_id=aspect.project_id,
+                aspect_id=aspect.id,
                 model_name=aspect.embedding_model,
                 prompt=aspect.doc_embedding_prompt,
                 modality=aspect_dto.modality,

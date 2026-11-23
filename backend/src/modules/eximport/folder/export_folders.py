@@ -8,23 +8,23 @@ from core.doc.folder_enum import FolderType
 from core.doc.folder_orm import FolderORM
 from core.project.project_crud import crud_project
 from modules.eximport.export_exceptions import NoDataToExportError
+from modules.eximport.export_utils import write_df
 from modules.eximport.folder.folder_export_schema import (
     FolderExportCollection,
     FolderExportSchema,
 )
-from repos.filesystem_repo import FilesystemRepo
 
 
 def export_all_folders(
     db: Session,
-    fsr: FilesystemRepo,
+    out_dir: Path,
     project_id: int,
 ) -> Path:
     folders = crud_project.read(db=db, id=project_id).folders
     folders = [f for f in folders if f.folder_type == FolderType.NORMAL]
     return __export_folders(
         db=db,
-        fsr=fsr,
+        out_dir=out_dir,
         fn=f"project_{project_id}_all_folders",
         folders=folders,
     )
@@ -32,7 +32,7 @@ def export_all_folders(
 
 def __export_folders(
     db: Session,
-    fsr: FilesystemRepo,
+    out_dir: Path,
     fn: str,
     folders: list[FolderORM],
 ) -> Path:
@@ -40,7 +40,8 @@ def __export_folders(
         raise NoDataToExportError("No folders to export.")
 
     export_data = __generate_export_df_for_folders(folders=folders)
-    return fsr.write_df_to_temp_file(
+    return write_df(
+        out_dir=out_dir,
         df=export_data,
         fn=fn,
     )

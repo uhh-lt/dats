@@ -69,6 +69,10 @@ from modules.classifier.classifier_exceptions import (
     EmptyEvaluationError,
     NoCheckpointError,
 )
+from modules.classifier.classifier_file_crud import (
+    MODEL_FILENAME,
+    crud_classifier_file,
+)
 from modules.classifier.models.job_progress_callback import JobProgressCallback
 from modules.classifier.models.lora_utils import build_lora_config
 from modules.classifier.models.model_utils import (
@@ -83,7 +87,6 @@ from modules.classifier.models.optimizer_utils import configure_classifier_optim
 from modules.classifier.models.text_class_model_service import (
     TextClassificationModelService,
 )
-from repos.filesystem_repo import FilesystemRepo
 from systems.job_system.job_dto import Job
 
 SQL_BATCH_SIZE = conf.postgres.batch_size
@@ -736,7 +739,7 @@ class SentClassificationModelService(TextClassificationModelService):
         }
 
     def train(
-        self, db: Session, job: Job, payload: ClassifierJobInput
+        self, db: Session, job: Job, payload: ClassifierJobInput, model_dir: Path
     ) -> ClassifierJobOutput:
         assert payload.model_type == ClassifierModel.SENTENCE, (
             "Expected SENTENCE model type!"
@@ -835,11 +838,6 @@ class SentClassificationModelService(TextClassificationModelService):
 
         # Create the Trainer
         model_name: str = str(uuid4())
-        model_dir = FilesystemRepo().get_model_dir(
-            project_id=payload.project_id,
-            model_name=model_name,
-            model_prefix="sent_classifier",
-        )
 
         log_dir = model_dir / "train_logs"
         csv_logger = CSVLogger(log_dir, name=f"sent_classifier{model_name}")
@@ -939,7 +937,6 @@ class SentClassificationModelService(TextClassificationModelService):
                 name=parameters.classifier_name,
                 base_model=parameters.base_name,
                 type=payload.model_type,
-                path=checkpoint_callback.best_model_path,
                 project_id=payload.project_id,
                 labelid2classid={v: k for k, v in codeid2labelid.items()},
                 train_data_stats=[
@@ -952,6 +949,12 @@ class SentClassificationModelService(TextClassificationModelService):
                 ],
                 train_params=parameters.get_training_settings(),
             ),
+        )
+        crud_classifier_file.move_in(
+            project_id=payload.project_id,
+            id=classifier.id,
+            src=Path(checkpoint_callback.best_model_path),
+            name=MODEL_FILENAME,
         )
         crud_classifier.link_codes(
             db=db, id=classifier.id, code_ids=[code.id for code in codes]
@@ -1059,7 +1062,11 @@ class SentClassificationModelService(TextClassificationModelService):
 
         # 3. Load the model
         job.update(current_step=3)
-        model = SentClassificationLightningModel.load_from_checkpoint(classifier.path)
+        model = SentClassificationLightningModel.load_from_checkpoint(
+            crud_classifier_file.path(
+                project_id=classifier.project_id, id=classifier.id, name=MODEL_FILENAME
+            )
+        )
         # The evaluation setting overrides the stored training setting.
         model.averaging = (
             parameters.averaging.value
@@ -1070,7 +1077,10 @@ class SentClassificationModelService(TextClassificationModelService):
 
         # 4. Eval model
         job.update(current_step=4)
-        log_dir = Path(classifier.path).parent / "eval_logs"
+        log_dir = (
+            crud_classifier_file.dir(project_id=classifier.project_id, id=classifier.id)
+            / "eval_logs"
+        )
         csv_logger = CSVLogger(log_dir, name=classifier.name)
         trainer = pl.Trainer(
             logger=csv_logger,
@@ -1207,13 +1217,18 @@ class SentClassificationModelService(TextClassificationModelService):
         # 3. Load the model
         job.update(current_step=3)
         model = SentClassificationLightningModel.load_from_checkpoint(
-            classifier.path,
+            crud_classifier_file.path(
+                project_id=classifier.project_id, id=classifier.id, name=MODEL_FILENAME
+            ),
         )
         model.eval()
 
         # 4. Predict with model
         job.update(current_step=4)
-        log_dir = Path(classifier.path).parent / "infer_logs"
+        log_dir = (
+            crud_classifier_file.dir(project_id=classifier.project_id, id=classifier.id)
+            / "infer_logs"
+        )
         csv_logger = CSVLogger(log_dir, name=classifier.name)
         trainer = pl.Trainer(
             logger=csv_logger,
