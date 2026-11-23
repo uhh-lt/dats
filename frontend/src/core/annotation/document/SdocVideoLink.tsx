@@ -28,7 +28,9 @@ export function SdocVideoLink({ projectId, filename }: SdocVideoLinkProps) {
                   color: "rgba(0, 0, 0, 0.666)",
                 }}
               />
-              <img style={{ marginBottom: 1.5 }} height="200" src={thumbnailUrl.data} alt="Tofu meatballs" />
+              {thumbnailUrl.data && (
+                <img style={{ marginBottom: 1.5 }} height="200" src={thumbnailUrl.data} alt="Tofu meatballs" />
+              )}
             </Box>
           </LinkLink>
         </div>

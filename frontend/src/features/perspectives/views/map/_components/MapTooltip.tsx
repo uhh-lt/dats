@@ -16,6 +16,7 @@ export function MapTooltip({ data }: MapTooltipProps) {
   const sdoc = SdocHooks.useGetDocument(sdocId);
 
   const sdocData = SdocHooks.useGetDocumentData(sdocId);
+  const sdocUrls = SdocHooks.useGetURLs(sdocId);
   if (data.id && data.position) {
     return (
       <Box
@@ -39,7 +40,7 @@ export function MapTooltip({ data }: MapTooltipProps) {
             )}
             {sdoc.data && sdocData.data && sdoc.data.doctype === DocType.IMAGE ? (
               <img
-                src={encodeURI("/content/" + sdocData.data.repo_url)}
+                src={sdocUrls.data?.image_url ?? undefined}
                 alt="Image Preview"
                 style={{ maxWidth: "100%", marginTop: "10px" }}
               />

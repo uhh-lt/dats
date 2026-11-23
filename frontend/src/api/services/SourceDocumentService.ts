@@ -5,6 +5,7 @@
 import type { SourceDocumentDataRead } from "@models/SourceDocumentDataRead";
 import type { SourceDocumentRead } from "@models/SourceDocumentRead";
 import type { SourceDocumentUpdate } from "@models/SourceDocumentUpdate";
+import type { SourceDocumentUrls } from "@models/SourceDocumentUrls";
 import type { CancelablePromise } from "../core/CancelablePromise";
 import { OpenAPI } from "../core/OpenAPI";
 import { request as __request } from "../core/request";
@@ -121,31 +122,16 @@ export class SourceDocumentService {
     });
   }
   /**
-   * Returns the URL to the original file of the SourceDocument with the given ID if it exists.
-   * @returns string Successful Response
+   * Returns the URLs of the files of the SourceDocument with the given ID (relative to /content/).
+   * @returns SourceDocumentUrls Successful Response
    * @throws ApiError
    */
-  public static getFileUrl({
-    sdocId,
-    relative = true,
-    webp = false,
-    thumbnail = false,
-  }: {
-    sdocId: number;
-    relative?: boolean;
-    webp?: boolean;
-    thumbnail?: boolean;
-  }): CancelablePromise<string> {
+  public static getUrls({ sdocId }: { sdocId: number }): CancelablePromise<SourceDocumentUrls> {
     return __request(OpenAPI, {
       method: "GET",
-      url: "/sdoc/{sdoc_id}/url",
+      url: "/sdoc/{sdoc_id}/urls",
       path: {
         sdoc_id: sdocId,
-      },
-      query: {
-        relative: relative,
-        webp: webp,
-        thumbnail: thumbnail,
       },
       errors: {
         422: `Validation Error`,

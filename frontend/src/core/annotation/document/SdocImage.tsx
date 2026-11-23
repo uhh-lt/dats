@@ -10,7 +10,7 @@ interface SdocImageLinkProps {
 
 export function SdocImage({ projectId, filename }: SdocImageLinkProps) {
   const sdocId = useQuery(sdocQueries.idByFilename(projectId, filename));
-  const sdocData = SdocHooks.useGetDocumentData(sdocId.data);
+  const sdocUrls = SdocHooks.useGetURLs(sdocId.data);
 
   const imageMenuRef = useRef<ImageMenuHandle>(null);
 
@@ -26,17 +26,17 @@ export function SdocImage({ projectId, filename }: SdocImageLinkProps) {
 
   return (
     <>
-      {sdocData.isSuccess ? (
+      {sdocUrls.isSuccess ? (
         <div>
           <img
-            src={encodeURI("/content/" + sdocData.data.repo_url)}
+            src={sdocUrls.data.image_url ?? undefined}
             alt="resolved"
             style={{ maxWidth: "640px", maxHeight: "480px", cursor: "pointer" }}
             onClick={openMenu}
           />
         </div>
-      ) : sdocData.isError ? (
-        <div>Error: {sdocData.error.message}</div>
+      ) : sdocUrls.isError ? (
+        <div>Error: {sdocUrls.error.message}</div>
       ) : (
         <div>Loading img...</div>
       )}

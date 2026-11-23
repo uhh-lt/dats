@@ -1,3 +1,4 @@
+import { SdocHooks } from "@core/source-document";
 import { bboxAnnotationQueries } from "@core/bbox-annotation";
 import { useFeature, Feature } from "@core/feature";
 import { useTabNavigate } from "@core/navigation";
@@ -50,6 +51,7 @@ function ImageViewerWithData({ sdocData, height, width }: ImageViewerProps & { h
 
   // global server state (react query)
   const annotations = useQuery(bboxAnnotationQueries.bySdoc(sdocData.id, visibleUserId));
+  const sdocUrls = SdocHooks.useGetURLs(sdocData.id);
 
   const annotationData = useMemo(() => {
     return (annotations.data || []).filter((bbox) => !hiddenCodeIds.includes(bbox.code_id));
@@ -118,12 +120,7 @@ function ImageViewerWithData({ sdocData, height, width }: ImageViewerProps & { h
       )}
       <svg ref={measuredRef} width="100%" height={imgContainerHeight + "px"} style={{ cursor: "move" }}>
         <g ref={gRef}>
-          <image
-            ref={imgRef}
-            href={encodeURI("/content/" + sdocData.repo_url)}
-            height={imgContainerHeight}
-            x={xCentering}
-          />
+          <image ref={imgRef} href={sdocUrls.data?.image_url ?? undefined} height={imgContainerHeight} x={xCentering} />
           <g>
             {annotationData.map((bbox) => (
               <SVGBBox

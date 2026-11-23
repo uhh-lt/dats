@@ -23,7 +23,7 @@ import { AnnotationProvenanceText } from "./AnnotationProvenanceText";
 
 export const BBoxAnnotationCard = memo(
   ({ annotation, code, onClick, cardProps }: AnnotationCardProps<BBoxAnnotationRead>) => {
-    const sdocData = SdocHooks.useGetDocumentData(annotation.sdoc_id);
+    const sdocUrls = SdocHooks.useGetURLs(annotation.sdoc_id);
 
     return (
       <Card {...cardProps}>
@@ -54,9 +54,9 @@ export const BBoxAnnotationCard = memo(
         <Divider />
         <CardActionArea onClick={onClick}>
           <CardContent sx={{ p: 1, pb: "0px !important", textAlign: "center" }}>
-            {sdocData.isSuccess ? (
+            {sdocUrls.data?.image_url ? (
               <ImageCropper
-                imageUrl={encodeURI("/content/" + sdocData.data.repo_url)}
+                imageUrl={sdocUrls.data.image_url}
                 x={annotation.x_min}
                 y={annotation.y_min}
                 width={annotation.x_max - annotation.x_min}

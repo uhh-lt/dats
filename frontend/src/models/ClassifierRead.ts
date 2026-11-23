@@ -24,10 +24,6 @@ export type ClassifierRead = {
    */
   type: ClassifierModel;
   /**
-   * Name of the classifier
-   */
-  path: string;
-  /**
    * Mapping from internal model label id to code/tag id, depending on ClassifierModel.
    */
   labelid2classid: Record<string, number>;

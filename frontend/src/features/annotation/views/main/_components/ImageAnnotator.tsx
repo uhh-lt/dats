@@ -1,3 +1,4 @@
+import { SdocHooks } from "@core/source-document";
 import { BboxAnnotationHooks, bboxAnnotationQueries } from "@core/bbox-annotation";
 import { sdocMetadataQueries } from "@core/sdoc-metadata";
 import { Button, ButtonGroup, Toolbar, Typography } from "@mui/material";
@@ -60,6 +61,7 @@ function ImageAnnotatorWithHeight({ sdocData, height }: ImageAnnotatorProps & { 
 
   // global server state (react query)
   const annotations = useQuery(bboxAnnotationQueries.bySdoc(sdocData.id, visibleUserId));
+  const sdocUrls = SdocHooks.useGetURLs(sdocData.id);
 
   // resize controller
   const resizeController = useBboxAnnotationResize(imgRef);
@@ -353,11 +355,7 @@ function ImageAnnotatorWithHeight({ sdocData, height }: ImageAnnotatorProps & { 
       >
         <g ref={gZoomRef}>
           <g ref={gDragRef} style={{ cursor: isZooming ? "move" : "crosshair" }}>
-            <image
-              ref={imgRef}
-              href={encodeURI("/content/" + sdocData.repo_url)}
-              style={{ outline: "1px solid black" }}
-            />
+            <image ref={imgRef} href={sdocUrls.data?.image_url ?? undefined} style={{ outline: "1px solid black" }} />
             <rect
               ref={rectRef}
               x={0}

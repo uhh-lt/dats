@@ -1,3 +1,4 @@
+import { SdocHooks } from "@core/source-document";
 import { SourceDocumentDataRead } from "@models/SourceDocumentDataRead";
 import { Box, Tooltip } from "@mui/material";
 import type { SyntheticEvent } from "react";
@@ -12,6 +13,9 @@ interface AudioVideoViewerProps {
 }
 
 export function AudioVideoViewer({ sdocData, width, height }: AudioVideoViewerProps) {
+  // global server state
+  const sdocUrls = SdocHooks.useGetURLs(sdocData.id);
+
   // local client state
   const [highlightedWordId, setHighlightedWordId] = useState(-1);
   const playerRef = useRef<HTMLVideoElement>(null);
@@ -65,7 +69,7 @@ export function AudioVideoViewer({ sdocData, width, height }: AudioVideoViewerPr
     <>
       <Box sx={{ display: "flex", justifyContent: "center", alignItems: "center" }}>
         <ReactPlayer
-          src={encodeURI("/content/" + sdocData.repo_url)}
+          src={sdocUrls.data?.file_url}
           controls={true}
           width={width}
           height={height}
