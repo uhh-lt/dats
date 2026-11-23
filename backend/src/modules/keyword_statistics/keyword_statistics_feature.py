@@ -1,4 +1,7 @@
-from modules.statistics.keywords_artefact import KEYWORDS, create_keywords_metadata
+from modules.keyword_statistics.keywords_artefact import (
+    KEYWORDS,
+    create_keywords_metadata,
+)
 from systems.feature_system.feature_registry import register_feature
 from systems.feature_system.feature_system_enum import FeatureArea
 

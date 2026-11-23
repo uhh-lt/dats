@@ -5,7 +5,7 @@ from core.artefacts.content.content_artefact import CONTENT
 from core.artefacts.language.language_artefact import LANGUAGE
 from core.artefacts.text_step_utils import read_stored_text
 from core.metadata.source_document_metadata_crud import crud_sdoc_meta
-from modules.statistics.keywords_artefact import (
+from modules.keyword_statistics.keywords_artefact import (
     KEYWORDS,
     KEYWORDS_METADATA_KEY,
 )

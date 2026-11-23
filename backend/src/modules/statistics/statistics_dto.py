@@ -17,16 +17,6 @@ class SpanEntityStat(SpanEntity):
     )
 
 
-class KeywordStat(BaseModel):
-    keyword: str = Field(description="The counted keyword.")
-    filtered_count: int = Field(
-        description="Number of occurrences of the keyword in the filtered collection"
-    )
-    global_count: int = Field(
-        description="Number of occurrences of the keyword in the entire collection"
-    )
-
-
 class TagStat(BaseModel):
     tag: TagRead = Field(description="The counted document tag.")
     filtered_count: int = Field(
