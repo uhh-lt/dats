@@ -6,7 +6,7 @@ paths:
 
 # Backend CRUD Pattern
 
-> **Scope**: SQL CRUDs built on `repos.db.crud_base.SQLCRUDBase`. The glob also matches `*_embedding_crud.py` (Weaviate) and `*_elastic_crud.py` (Elasticsearch). Those follow `backend-embedding-crud.instructions.md` and `backend-elastic-crud.instructions.md` instead, and the rules below do not apply to them.
+> **Scope**: SQL CRUDs built on `repos.db.crud_base.SQLCRUDBase`. The glob also matches `*_embedding_crud.py` (Weaviate) and `*_elastic_crud.py` (Elasticsearch). Those follow `backend-embedding-crud.instructions.md` and `backend-elastic-crud.instructions.md` instead, and the rules below do not apply to them. Neither do they apply to the file CRUDs (`*_file_crud.py`, built on `FileCRUDBase`, see `repos/README.md`).
 
 SQL CRUD modules are the PostgreSQL data-access layer for one ORM entity. Each file defines one `CRUD<Entity>` class on the generic [crud_base.py](backend/src/repos/db/crud_base.py) `SQLCRUDBase` and exports one module-level singleton that services, other CRUDs and endpoints import. CRUDs only read and write; they never commit or roll back. The session owner (`SQLRepo.transaction()`, used by the `DBSession` dependency and job handlers) does.
 

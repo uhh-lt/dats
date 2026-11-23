@@ -72,6 +72,7 @@ The suffix states the role of a file. Several suffixes are auto-imported by `imp
 - `*_crud.py`: SQL CRUD
 - `*_collection.py` / `*_embedding_dto.py` / `*_embedding_crud.py`: Weaviate collection, object identifier, CRUD
 - `*_elastic_index.py` / `*_elastic_dto.py` / `*_elastic_crud.py`: Elasticsearch index, documents, CRUD
+- `*_file_crud.py`: files of one kind on disk, one folder per entity (`FileCRUDBase` in `repos/filesystem`, see `repos/README.md`)
 - `*_service.py`: business logic
 - `*_endpoint.py`: one FastAPI router (auto-mounted by `bootstrap.create_app`)
 - `*_job.py`: background job handlers registered with `@register_job`
@@ -92,7 +93,7 @@ Ruff formats and lints (`backend/ruff.toml`; `just format backend`, `just lint b
 
 ## Error Handling
 
-Every exception class lives in an exceptions module: `<module>_exceptions.py` in `core/` and `modules/` (`core/auth/auth_exceptions.py`, `modules/eximport/import_exceptions.py`), `<component>_exceptions.py` next to its repo or system (`repos/db/sql_exceptions.py`, `repos/filesystem_exceptions.py`, `repos/vector/weaviate_exceptions.py`), and `common/common_exceptions.py` for shared ones (`NotFoundError`). There are no exceptions to this rule. Never define exception classes in services, CRUDs, jobs, repos or utilities, and raise a domain exception instead of a bare `Exception`. `backend/lint/check_exceptions.py` enforces this.
+Every exception class lives in an exceptions module: `<module>_exceptions.py` in `core/` and `modules/` (`core/auth/auth_exceptions.py`, `modules/eximport/import_exceptions.py`), `<component>_exceptions.py` next to its repo or system (`repos/db/sql_exceptions.py`, `repos/filesystem/filesystem_exceptions.py`, `repos/vector/weaviate_exceptions.py`), and `common/common_exceptions.py` for shared ones (`NotFoundError`). There are no exceptions to this rule. Never define exception classes in services, CRUDs, jobs, repos or utilities, and raise a domain exception instead of a bare `Exception`. `backend/lint/check_exceptions.py` enforces this.
 
 `common/exception_handler.py` maps exceptions to HTTP responses (it defines no exception classes itself). Decorating an exception class with `@exception_handler(status.HTTP_...)` registers it; `bootstrap.create_app` installs all handlers, which log the error and return its message as plain text with that status. Undecorated exceptions become HTTP 500.
 
