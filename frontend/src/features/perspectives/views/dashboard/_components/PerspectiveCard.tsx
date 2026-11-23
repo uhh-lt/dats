@@ -52,6 +52,10 @@ interface PerspectiveCardProps {
 
 export function PerspectiveCard({ aspect, title }: PerspectiveCardProps) {
   const perspectivesJob = useLiveJob(perspectivesQueries.job.byId(aspect.most_recent_job_id));
+  const mapThumbnailUrl = PerspectivesHooks.useGetMapThumbnailURL(
+    aspect.id,
+    perspectivesJob.data?.status === JobStatus.FINISHED,
+  );
   const openConfirmationDialog = useOpenConfirmationDialog();
   const { mutate: deleteMutation, isPending } = PerspectivesHooks.useDeleteAspect();
   const handleDelete: React.MouseEventHandler<HTMLButtonElement> = (event) => {
@@ -78,7 +82,7 @@ export function PerspectiveCard({ aspect, title }: PerspectiveCardProps) {
           <CardMedia
             sx={{ height: 360, width: 360, objectFit: "cover" }}
             component="img"
-            image={`/content/projects/${aspect.project_id}/plots/aspect_${aspect.id}_map_thumbnail.png`}
+            image={mapThumbnailUrl.data ?? undefined}
             title="Perspectives Map Preview"
           />
         ) : (

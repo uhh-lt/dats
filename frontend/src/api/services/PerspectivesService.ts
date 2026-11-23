@@ -120,6 +120,23 @@ export class PerspectivesService {
     });
   }
   /**
+   * Returns the URL of the map thumbnail of the Aspect (relative to /content/), None until it is computed.
+   * @returns any Successful Response
+   * @throws ApiError
+   */
+  public static getMapThumbnailUrl({ aspectId }: { aspectId: number }): CancelablePromise<string | null> {
+    return __request(OpenAPI, {
+      method: "GET",
+      url: "/perspectives/aspect/{aspect_id}/map_thumbnail_url",
+      path: {
+        aspect_id: aspectId,
+      },
+      errors: {
+        422: `Validation Error`,
+      },
+    });
+  }
+  /**
    * Returns the Document Aspect Content for the given IDs.
    * @returns string Successful Response
    * @throws ApiError

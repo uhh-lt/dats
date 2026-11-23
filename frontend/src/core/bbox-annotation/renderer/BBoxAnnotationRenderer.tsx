@@ -80,19 +80,19 @@ const BBoxAnnotationRendererWithData = memo(
 );
 
 function BBoxAnnotationContext({ bboxAnnotation }: { bboxAnnotation: BBoxAnnotationRead }) {
-  const sdocData = SdocHooks.useGetDocumentData(bboxAnnotation.sdoc_id);
+  const sdocUrls = SdocHooks.useGetURLs(bboxAnnotation.sdoc_id);
   const code = CodeHooks.useGetCode(bboxAnnotation.code_id);
 
-  if (sdocData.isLoading || code.isLoading) {
+  if (sdocUrls.isLoading || code.isLoading) {
     return <CircularProgress size={20} />;
   }
-  if (sdocData.isError) {
-    return <Typography color="error">{sdocData.error.message}</Typography>;
+  if (sdocUrls.isError) {
+    return <Typography color="error">{sdocUrls.error.message}</Typography>;
   }
   if (code.isError) {
     return <Typography color="error">{code.error.message}</Typography>;
   }
-  if (!sdocData.data || !code.data) {
+  if (!sdocUrls.data?.image_url || !code.data) {
     return null;
   }
 
@@ -103,7 +103,7 @@ function BBoxAnnotationContext({ bboxAnnotation }: { bboxAnnotation: BBoxAnnotat
 
   return (
     <ImageCropper
-      imageUrl={encodeURI(`/content/${sdocData.data.repo_url}`)}
+      imageUrl={sdocUrls.data.image_url}
       x={bboxAnnotation.x_min}
       y={bboxAnnotation.y_min}
       width={width}

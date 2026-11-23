@@ -193,11 +193,11 @@ export function SdocNode(props: NodeProps<SdocNode>) {
 }
 
 function SdocNodeImageContent({ sdoc }: { sdoc: SourceDocumentRead }) {
-  const sdocData = SdocHooks.useGetDocumentData(sdoc.id);
+  const sdocUrls = SdocHooks.useGetURLs(sdoc.id);
 
-  if (!sdocData.isSuccess) {
+  if (!sdocUrls.isSuccess) {
     return <CircularProgress />;
   }
 
-  return <CardMedia component="img" image={encodeURI("/content/" + sdocData.data?.repo_url)} alt="Thumbnail" />;
+  return <CardMedia component="img" image={sdocUrls.data.image_url ?? undefined} alt="Thumbnail" />;
 }

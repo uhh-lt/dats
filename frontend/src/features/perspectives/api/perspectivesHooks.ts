@@ -32,6 +32,14 @@ const useGetAspect = (aspectId: number | null | undefined) =>
     enabled: !!aspectId,
   });
 
+// the map thumbnail is served from /content/; enabled once the map is computed
+const useGetMapThumbnailURL = (aspectId: number, enabled: boolean) =>
+  useQuery({
+    ...perspectivesQueries.mapThumbnailUrl(aspectId),
+    select: (url) => (url === null ? null : encodeURI("/content/" + url)),
+    enabled,
+  });
+
 const useCreateAspect = () =>
   useMutation({
     mutationKey: [...perspectivesQueries.all(), "createAspect"],
@@ -164,6 +172,7 @@ const useUnlabelDocs = (aspectId: number) => {
 };
 
 export const PerspectivesHooks = {
+  useGetMapThumbnailURL,
   useGetAspect,
   useCreateAspect,
   useUpdateAspect,

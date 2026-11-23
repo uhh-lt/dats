@@ -119,7 +119,7 @@ function SdocImageRenderer({ sdocId }: { sdocId: number }) {
   // maximize
   const { isMaximized, toggleMaximize } = useDialogMaximize();
 
-  if (thumbnail.isSuccess) {
+  if (thumbnail.data) {
     return (
       <>
         <Button size="small" sx={{ padding: 0, minWidth: "0px" }} onClick={handleClickOpen}>
@@ -150,8 +150,6 @@ function SdocImageRenderer({ sdocId }: { sdocId: number }) {
     );
   } else if (thumbnail.isLoading) {
     return <CircularProgress />;
-  } else if (thumbnail.isError) {
-    return <span>Thumbnail not found</span>;
   }
-  return <></>;
+  return <span>Thumbnail not found</span>;
 }

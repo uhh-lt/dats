@@ -1,16 +1,31 @@
 import { SourceDocumentService } from "@api/services/SourceDocumentService";
 import { SourceDocumentRead } from "@models/SourceDocumentRead";
+import { SourceDocumentUrls } from "@models/SourceDocumentUrls";
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { sdocQueries } from "./sdocQueries";
 
 // SDOC QUERIES
 // The queries themselves live in sdocQueries. The hook below only derives data from them.
 
-// the thumbnail is served from /content/
+// the files are served from /content/
+const toContentUrl = (url: string | null): string | null => (url === null ? null : encodeURI("/content/" + url));
+
+// the URLs of the uploaded file, the WebP image and the thumbnail (null until computed)
+const useGetURLs = (sdocId: number | null | undefined) =>
+  useQuery({
+    ...sdocQueries.urls(sdocId),
+    select: (urls): SourceDocumentUrls => ({
+      file_url: encodeURI("/content/" + urls.file_url),
+      image_url: toContentUrl(urls.image_url),
+      thumbnail_url: toContentUrl(urls.thumbnail_url),
+    }),
+  });
+
+// the URL of the thumbnail (null until computed)
 const useGetThumbnailURL = (sdocId: number | null | undefined) =>
   useQuery({
-    ...sdocQueries.thumbnailUrl(sdocId),
-    select: (thumbnail_url) => encodeURI("/content/" + thumbnail_url),
+    ...sdocQueries.urls(sdocId),
+    select: (urls) => toContentUrl(urls.thumbnail_url),
   });
 
 // SDOC MUTATIONS
@@ -48,6 +63,7 @@ const useGetDocumentData = (sdocId: number | null | undefined) =>
   });
 
 export const SdocHooks = {
+  useGetURLs,
   useGetThumbnailURL,
   useDeleteDocuments,
   useUpdateName,
