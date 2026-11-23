@@ -5942,7 +5942,7 @@
     "/sdocmeta/count_sdocs_with_date_metadata/{project_id}/metadata/{date_metadata_id}": {
       "get": {
         "tags": ["sdocMetadata"],
-        "summary": "Returns tuple[num_sdocs_with_date_metadata, num_total_sdocs].",
+        "summary": "Returns the number of SourceDocuments with a value for the date metadata and of all SourceDocuments of the Project.",
         "operationId": "count_sdocs_with_date_metadata",
         "security": [{ "OAuth2PasswordBearer": [] }],
         "parameters": [
@@ -5962,17 +5962,7 @@
         "responses": {
           "200": {
             "description": "Successful Response",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "array",
-                  "prefixItems": [{ "type": "integer" }, { "type": "integer" }],
-                  "minItems": 2,
-                  "maxItems": 2,
-                  "title": "Response Sdocmetadata-Count Sdocs With Date Metadata"
-                }
-              }
-            }
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/DateMetadataCountResult" } } }
           },
           "422": {
             "description": "Validation Error",
@@ -12493,6 +12483,23 @@
         "description": "Bucket size used when grouping a date column."
       },
       "DateGroupBy": { "type": "string", "enum": ["YEAR", "MONTH", "DAY"], "title": "DateGroupBy" },
+      "DateMetadataCountResult": {
+        "properties": {
+          "sdocs_with_date": {
+            "type": "integer",
+            "title": "Sdocs With Date",
+            "description": "Number of SourceDocuments of the Project with a value for the date metadata"
+          },
+          "sdocs_total": {
+            "type": "integer",
+            "title": "Sdocs Total",
+            "description": "Number of all SourceDocuments of the Project"
+          }
+        },
+        "type": "object",
+        "required": ["sdocs_with_date", "sdocs_total"],
+        "title": "DateMetadataCountResult"
+      },
       "DateOperator": {
         "type": "string",
         "enum": ["DATE_EQUALS", "DATE_GT", "DATE_LT", "DATE_GTE", "DATE_LTE"],

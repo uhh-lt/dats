@@ -7,6 +7,7 @@ from core.auth.authz_user import AuthzUser
 from core.doc.source_document_crud import crud_sdoc
 from core.metadata.source_document_metadata_crud import crud_sdoc_meta
 from core.metadata.source_document_metadata_dto import (
+    DateMetadataCountResult,
     SourceDocumentMetadataRead,
     SourceDocumentMetadataUpdate,
     SourceDocumentMetadataUpdateBulk,
@@ -85,8 +86,8 @@ def get_by_sdoc_and_key(
 
 @router.get(
     "/count_sdocs_with_date_metadata/{project_id}/metadata/{date_metadata_id}",
-    response_model=tuple[int, int],
-    summary="Returns tuple[num_sdocs_with_date_metadata, num_total_sdocs].",
+    response_model=DateMetadataCountResult,
+    summary="Returns the number of SourceDocuments with a value for the date metadata and of all SourceDocuments of the Project.",
 )
 def count_sdocs_with_date_metadata(
     *,
@@ -94,7 +95,7 @@ def count_sdocs_with_date_metadata(
     project_id: int,
     date_metadata_id: int,
     authz_user: AuthzUser = Depends(),
-) -> tuple[int, int]:
+) -> DateMetadataCountResult:
     authz_user.assert_in_project(project_id)
 
     return SourceDocumentMetadataService().count_sdocs_with_date_metadata(

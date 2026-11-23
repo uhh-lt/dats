@@ -6,6 +6,7 @@ from core.doc.source_document_orm import SourceDocumentORM
 from core.metadata.metadata_exceptions import ReadOnlyMetadataError
 from core.metadata.source_document_metadata_crud import crud_sdoc_meta
 from core.metadata.source_document_metadata_dto import (
+    DateMetadataCountResult,
     SourceDocumentMetadataRead,
     SourceDocumentMetadataUpdate,
     SourceDocumentMetadataUpdateBulk,
@@ -19,14 +20,10 @@ class SourceDocumentMetadataService(metaclass=SingletonMeta):
 
     def count_sdocs_with_date_metadata(
         self, db: Session, *, project_id: int, date_metadata_id: int
-    ) -> tuple[int, int]:
+    ) -> DateMetadataCountResult:
         """
         Count the source documents of a project that have a value for the date
-        metadata key.
-
-        Returns:
-            The number of source documents with a date value and the number of
-            all source documents of the project.
+        metadata key, and all source documents of the project.
         """
         # 1) the documents with a date value
         query = (
@@ -46,7 +43,9 @@ class SourceDocumentMetadataService(metaclass=SingletonMeta):
         )
         sdocs_total = query.scalar()
 
-        return (sdocs_with_valid_date, sdocs_total)
+        return DateMetadataCountResult(
+            sdocs_with_date=sdocs_with_valid_date, sdocs_total=sdocs_total
+        )
 
     def update(
         self, db: Session, *, id: int, update_dto: SourceDocumentMetadataUpdate
