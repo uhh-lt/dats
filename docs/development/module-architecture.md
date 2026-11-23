@@ -32,7 +32,7 @@ feature system  ──artefacts──▶  artefact system  ──jobs──▶  
 
 ## Where an artefact lives
 
-An artefact is declared with `artefact(...)` in a `<name>_artefact.py` file next to the step that produces it: in `core/artefacts/<name>/` for core artefacts and on-demand artefacts that several features read (`sentence_embeddings`, `word_frequencies`), in its module otherwise. Its data is stored where it fits: a column of the document's data row, a metadata key, annotations of the system user with system codes the artefact declares, a table, a Weaviate collection, an Elasticsearch index or files. The [artefact system README](https://github.com/uhh-lt/dats/blob/main/backend/src/systems/artefact_system/README.md#the-registered-artefacts) lists every artefact with its store and the call that reads it. An artefact with a store of its own declares an archive, so the project export and import carry it.
+An artefact is declared with `artefact(...)` in a `<name>_artefact.py` file next to the step that produces it: in `core/artefacts/<name>/` for core artefacts and on-demand artefacts that several features read (`sentence_embeddings`, `word_frequencies`), in its module otherwise. It declares its store, which is the only way to its data: columns of the document's data row (`DocumentData`), metadata keys (`MetadataValue`), annotations of the system user with the system codes the store declares (`SystemSpans`, `SystemBBoxes`), or the CRUD of a store of its own (a table, a Weaviate collection, an Elasticsearch index or files). Read and write it with `ARTEFACT.store` (`CONTENT.store.read(db=db, sdoc_id=sdoc_id)`); a step writes only the stores of the artefacts it produces, and no two artefacts own the same column, key or code, which the startup check enforces. The [artefact system README](https://github.com/uhh-lt/dats/blob/main/backend/src/systems/artefact_system/README.md#the-registered-artefacts) lists every artefact with its store and the call that reads it. An artefact with a store of its own declares an archive, so the project export and import carry it.
 
 ## File storage
 
@@ -51,10 +51,12 @@ The concrete file CRUDs and their layout are listed in [`backend/src/repos/READM
 
 The keyword statistics (`backend/src/modules/keyword_statistics/`) are a small, complete example: an on-demand artefact, the step that produces it, the feature that requires it and the gated endpoint that reads it.
 
-1. **The artefact** (`keywords_artefact.py`): the keywords of a document, stored in its metadata key `keywords`, which the feature creates in its project (`create_keywords_metadata`). It has no store of its own, so it needs no archive.
+1. **The artefact** (`keywords_artefact.py`): the keywords of a document, stored in its metadata key `keywords`, which the feature creates in its project (`create_keywords_metadata`). Its step writes it and the statistics read it through its store; it has no store of its own, so it needs no archive.
 
    ```python
-   KEYWORDS = artefact("keywords", title="Keywords")
+   KEYWORDS = artefact(
+       "keywords", title="Keywords", store=MetadataValue(KEYWORDS_METADATA_KEY)
+   )
    ```
 
 2. **The step** (`keywords_job.py`): it requires the core artefacts `CONTENT` and `LANGUAGE`, produces `KEYWORDS` for every doctype, and loads its input in its enricher, so it can run after its predecessor, on recompute and in an artefact computation alike.

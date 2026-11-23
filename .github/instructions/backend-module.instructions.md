@@ -12,9 +12,12 @@ What a developer of a module or a core artefact must do; the model is explained 
 ## Artefacts
 
 - An artefact every document or several features need lives in `core/artefacts/<name>/`, an artefact only one feature reads in the folder of that feature's module, and a module never imports another module (`lint/check_layering.py`).
-- Declare an artefact once with `artefact(name, title=..., always=..., uploaded_for=..., codes=..., archive=...)` in `<name>_artefact.py` next to the step that produces it, with a short user-facing `title` ("Named entities") and `always=True` only if every document needs it whatever features its project enables.
+- Declare an artefact once with `artefact(name, title=..., store=..., always=..., uploaded_for=..., archive=...)` in `<name>_artefact.py` next to the step that produces it, with a short user-facing `title` ("Named entities") and `always=True` only if every document needs it whatever features its project enables.
+- The `store` is `DocumentData(columns...)`, `MetadataValue(keys...)`, `SystemSpans(codes..., group=...)` or `SystemBBoxes(codes...)` (`systems/artefact_system/stores/`) for data in the core entities, or the CRUD of a store of its own, and no two artefacts own the same column, key, code or span group (the startup check fails otherwise).
+- Read and write an artefact's data only through `ARTEFACT.store`, never through `crud_sdoc_data` or the metadata and annotation CRUDs, and keep the core CRUDs for code that means all metadata or all annotations of a document.
+- A step writes only through the stores of the artefacts it produces.
 - An artefact with a store of its own (a table, a Weaviate collection, an Elasticsearch index, files) needs an `ArtefactArchive` and a round-trip case in `test_feature_toggle_eximport.py`, while document data columns, metadata and annotations travel with the generic export.
-- The system code trees a project needs before the artefact is produced are `SystemCode` trees in `codes`, declared next to the artefact and never created by code.
+- The system code trees a project needs before the artefact is produced are the `SystemCode` trees of its `SystemSpans` or `SystemBBoxes` store, declared next to the artefact and never created by code.
 
 ## Pipeline Steps
 

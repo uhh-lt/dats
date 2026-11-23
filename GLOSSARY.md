@@ -50,7 +50,7 @@ A capability of DATS that a project can enable or disable, and that needs certai
 _Avoid_: Feature toggle, feature flag, module (a module holds a feature)
 
 **Artefact**:
-A named piece of data that preprocessing computes for a source document, such as its sentence embeddings. It is declared by the code that owns it, with the system codes a project needs before it is produced and, if it has a store of its own, the archive that exports and imports it.
+A named piece of data that preprocessing computes for a source document, such as its sentence embeddings. It is declared by the code that owns it, with its store, the only way to its data (columns of the document's data, metadata keys, annotations of the system user with the system codes a project needs before it is produced, or a store of its own), and, if it has a store of its own, the archive that exports and imports it. No two artefacts own the same data.
 _Avoid_: Output, result, preprocessed data
 
 **Set Up**:

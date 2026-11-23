@@ -21,6 +21,7 @@ The invariants of the two systems; `systems/artefact_system/README.md` and `syst
 - Only `crud_sdoc_step_status` (the generic reads and writes), `source_document_status_rules.py` and the planning statements of `ArtefactService` in `artefact_statements.py` touch the rows of `sourcedocumentstepstatus`, where no row means not planned.
 - The status of a document and of the steps some artefacts need are derived from the step rows in `source_document_status_rules.py` only and never stored.
 - Only the operations of `ArtefactService` write planning rows and `project.artefact_computations` and start the artefact computation job, with their SQL in `artefact_statements.py`, which only that service imports and no CRUD offers.
+- Only the `DocumentData` store (`stores/document_data_store.py`) imports `crud_sdoc_data`.
 - Only `FeatureService` writes `project.enabled_features` (its private `_update_enabled_features`, called by Enable, Disable and `add_features`), never `ProjectUpdate`.
 - Every action locks the project with `crud_project.read_locked` first, and the computation batches and the upload take the project share lock before they plan, in the lock order of the artefact system README.
 
