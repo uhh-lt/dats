@@ -2,6 +2,7 @@
 /* istanbul ignore file */
 /* tslint:disable */
 /* eslint-disable */
+import type { DateMetadataCountResult } from "@models/DateMetadataCountResult";
 import type { SourceDocumentMetadataRead } from "@models/SourceDocumentMetadataRead";
 import type { SourceDocumentMetadataUpdate } from "@models/SourceDocumentMetadataUpdate";
 import type { SourceDocumentMetadataUpdateBulk } from "@models/SourceDocumentMetadataUpdateBulk";
@@ -110,8 +111,8 @@ export class SdocMetadataService {
     });
   }
   /**
-   * Returns tuple[num_sdocs_with_date_metadata, num_total_sdocs].
-   * @returns any[] Successful Response
+   * Returns the number of SourceDocuments with a value for the date metadata and of all SourceDocuments of the Project.
+   * @returns DateMetadataCountResult Successful Response
    * @throws ApiError
    */
   public static countSdocsWithDateMetadata({
@@ -120,7 +121,7 @@ export class SdocMetadataService {
   }: {
     projectId: number;
     dateMetadataId: number;
-  }): CancelablePromise<any[]> {
+  }): CancelablePromise<DateMetadataCountResult> {
     return __request(OpenAPI, {
       method: "GET",
       url: "/sdocmeta/count_sdocs_with_date_metadata/{project_id}/metadata/{date_metadata_id}",

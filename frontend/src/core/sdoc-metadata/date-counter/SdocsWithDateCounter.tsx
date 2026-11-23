@@ -17,7 +17,7 @@ export function SdocsWithDateCounter({ projectId, dateMetadataId }: SdocsWithDat
   } else if (validDocumentsCheck.isSuccess) {
     return (
       <>
-        {validDocumentsCheck.data[0]} / {validDocumentsCheck.data[1]} documents have a valid date.
+        {validDocumentsCheck.data.sdocs_with_date} / {validDocumentsCheck.data.sdocs_total} documents have a valid date.
       </>
     );
   } else {

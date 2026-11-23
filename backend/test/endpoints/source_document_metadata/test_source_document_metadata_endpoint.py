@@ -3,6 +3,7 @@ from fastapi.testclient import TestClient
 
 from common.meta_type_enum import MetaType
 from core.metadata.source_document_metadata_dto import (
+    DateMetadataCountResult,
     SourceDocumentMetadataRead,
     SourceDocumentMetadataUpdate,
     SourceDocumentMetadataUpdateBulk,
@@ -280,3 +281,28 @@ def test_delete_by_id_if_not_exists(
     response = client.delete(f"/sdocmeta/{fake_id}")
 
     assert response.status_code == 403, response.text
+
+
+# ===========================================================================
+# COUNT SDOCS WITH DATE METADATA
+# (/sdocmeta/count_sdocs_with_date_metadata/{project_id}/metadata/{date_metadata_id})
+# TESTS
+# ===========================================================================
+
+
+def test_count_sdocs_with_date_metadata_counts_the_documents_with_a_date(
+    client: TestClient, project_with_date_metadata
+):
+    """The text document has a date for the text key "published", the image
+    document has none; both count towards all documents of the project."""
+    project_id = project_with_date_metadata["project"].id
+    metadata_id = project_with_date_metadata["date_metadata"].id
+
+    response = client.get(
+        f"/sdocmeta/count_sdocs_with_date_metadata/{project_id}/metadata/{metadata_id}"
+    )
+
+    assert response.status_code == 200, response.text
+    assert DateMetadataCountResult.model_validate(
+        response.json()
+    ) == DateMetadataCountResult(sdocs_with_date=1, sdocs_total=2)
