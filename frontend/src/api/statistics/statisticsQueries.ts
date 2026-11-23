@@ -1,3 +1,4 @@
+import { KeywordStatisticsService } from "@api/services/KeywordStatisticsService";
 import { StatisticsService } from "@api/services/StatisticsService";
 import { queryOptions, skipToken } from "@tanstack/react-query";
 
@@ -30,7 +31,7 @@ export const statisticsQueries = {
       queryKey: [...statisticsQueries.keywordStatsScope(), projectId, sdocIds, sortByGlobal] as const,
       queryFn: !sdocIds
         ? skipToken
-        : () => StatisticsService.filterKeywordStats({ projectId, requestBody: sdocIds, sortByGlobal }),
+        : () => KeywordStatisticsService.filterKeywordStats({ projectId, requestBody: sdocIds, sortByGlobal }),
       staleTime: 1000 * 60 * 5,
     }),
 

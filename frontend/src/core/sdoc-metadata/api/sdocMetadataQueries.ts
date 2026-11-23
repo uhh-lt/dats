@@ -1,4 +1,3 @@
-import { AnalysisService } from "@api/services/AnalysisService";
 import { SdocMetadataService } from "@api/services/SdocMetadataService";
 import type { SourceDocumentMetadataRead } from "@models/SourceDocumentMetadataRead";
 import { queryOptions, skipToken } from "@tanstack/react-query";
@@ -48,6 +47,6 @@ export const sdocMetadataQueries = {
   sdocCountWithDate: (projectId: number, dateMetadataId: number) =>
     queryOptions({
       queryKey: [...sdocMetadataQueries.sdocCountWithDateScope(), projectId, dateMetadataId] as const,
-      queryFn: () => AnalysisService.countSdocsWithDateMetadata({ projectId, dateMetadataId }),
+      queryFn: () => SdocMetadataService.countSdocsWithDateMetadata({ projectId, dateMetadataId }),
     }),
 };

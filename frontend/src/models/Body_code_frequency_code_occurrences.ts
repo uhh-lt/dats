@@ -3,8 +3,7 @@
 /* tslint:disable */
 /* eslint-disable */
 import type { DocType } from "./DocType";
-export type Body_analysis_code_frequencies = {
-  code_ids: Array<number>;
+export type Body_code_frequency_code_occurrences = {
   user_ids: Array<number>;
   doctypes: Array<DocType>;
 };
