@@ -19,7 +19,7 @@ from common.singleton_meta import SingletonMeta
 from modules.example.example_crud import crud_example
 from modules.example.example_dto import ExampleJobInput, ExampleJobOutput, ExampleRead
 from modules.example.example_exceptions import UnsupportedExampleJobError
-from repos.filesystem_repo import FilesystemRepo
+from repos.filesystem.filesystem_repo import FilesystemRepo
 from systems.job_system.job_dto import Job
 from systems.job_system.job_service import JobService
 
