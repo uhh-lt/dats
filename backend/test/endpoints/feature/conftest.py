@@ -34,6 +34,7 @@ from repos.elastic.elastic_repo import ElasticSearchRepo
 from repos.vector.collection_base import BaseCollection
 from repos.vector.weaviate_repo import WeaviateRepo
 from systems.artefact_system.artefact_registry import artefact, artefact_registry
+from systems.artefact_system.stores.system_annotations_store import SystemSpans
 from systems.feature_system.feature_registry import (
     Feature,
     feature_registry,
@@ -305,7 +306,7 @@ def coded_feature() -> Generator[Feature, None, None]:
         "test_coded_artefact",
         title="Test coded",
         uploaded_for={DocType.audio},
-        codes=(CODED_TREE,),
+        store=SystemSpans(CODED_TREE),
     )
     feature = register_feature(
         "test_coded_feature",
@@ -386,7 +387,7 @@ def hooked_feature() -> Generator[HookedFeature, None, None]:
         "test_hooked_artefact",
         title="Test hooked",
         uploaded_for={DocType.audio},
-        codes=(CODED_TREE,),
+        store=SystemSpans(CODED_TREE),
     )
     feature = register_feature(
         "test_hooked_feature",

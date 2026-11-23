@@ -11,7 +11,6 @@ from core.auth.refresh_token_crud import crud_refresh_token
 from core.code.code_crud import crud_code
 from core.doc.folder_crud import crud_folder
 from core.doc.source_document_crud import crud_sdoc
-from core.doc.source_document_data_crud import crud_sdoc_data
 from core.memo.memo_crud import crud_memo
 from core.memo.memo_enum import AttachedObjectType
 from core.memo.object_handle_crud import crud_object_handle
@@ -64,7 +63,6 @@ class Crud(Enum):
     PROMPT_VERSION = crud_prompt_version
     REFRESH_TOKEN = crud_refresh_token
     SENTENCE_ANNOTATION = crud_sentence_anno
-    SOURCE_DOCUMENT_DATA = crud_sdoc_data
     SOURCE_DOCUMENT_METADATA = crud_sdoc_meta
     SOURCE_DOCUMENT = crud_sdoc
     SPAN_ANNOTATION = crud_span_anno

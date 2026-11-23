@@ -11,9 +11,16 @@ from systems.artefact_system.artefact_exceptions import PipelineDeclarationError
 from systems.artefact_system.artefact_registry import (
     Artefact,
     ArtefactRegistry,
+    ArtefactStore,
     artefact_registry,
 )
 from systems.artefact_system.pipeline_graph import PipelineGraph, PipelineStep
+from systems.artefact_system.stores.document_data_store import COLUMNS, DocumentData
+from systems.artefact_system.stores.metadata_value_store import MetadataValue
+from systems.artefact_system.stores.system_annotations_store import (
+    SystemBBoxes,
+    SystemSpans,
+)
 
 # the registered artefacts, which the graphs below are built with
 register_jobs()
@@ -383,15 +390,16 @@ def test_pipeline_graph_fails_on_more_steps_than_the_feature_states_count(
 def _test_artefact(
     name: str,
     always: bool = False,
-    codes: tuple[SystemCode, ...] = (),
+    store: ArtefactStore | None = None,
 ) -> Artefact:
-    """An artefact that is not registered."""
+    """An artefact that is not registered, by default with a store that owns
+    nothing."""
     return Artefact(
         name=name,
         title=name,
         always=always,
         uploaded_for=frozenset(),
-        codes=codes,
+        store=store or DocumentData(),
         archive=None,
     )
 
@@ -440,8 +448,8 @@ def _graph_problems(
 def test_registry_check_fails_on_a_system_code_declared_differently():
     """A code name is unique in a project: two artefacts that declare the code
     `PERSON` with different descriptions are rejected; the same tree declared
-    by two artefacts is fine. The registry holds one step that produces the
-    test artefacts."""
+    by two artefacts (one with spans, one with bboxes) is fine. The registry
+    holds one step that produces the test artefacts."""
     person = SystemCode(name="PERSON", description="A person")
     tree = SystemCode(name="NAMED_ENTITY", description="Entities", children=(person,))
     other = SystemCode(
@@ -450,8 +458,8 @@ def test_registry_check_fails_on_a_system_code_declared_differently():
         children=(SystemCode(name="PERSON", description="Someone"),),
     )
     artefacts = [
-        _test_artefact("test_first", codes=(tree,)),
-        _test_artefact("test_same", codes=(tree,)),
+        _test_artefact("test_first", store=SystemSpans(tree)),
+        _test_artefact("test_same", store=SystemBBoxes(tree)),
     ]
     registry = ArtefactRegistry()
     for declared in artefacts:
@@ -459,17 +467,18 @@ def test_registry_check_fails_on_a_system_code_declared_differently():
     registry.register_step("html_extraction", _step(set(), set(artefacts), TEXT))
     registry.check()
 
-    artefacts.append(_test_artefact("test_other", codes=(other,)))
+    artefacts.append(_test_artefact("test_other", store=SystemSpans(other)))
     registry.register_artefact(artefacts[-1])
     registry.unregister_step("html_extraction")
     registry.register_step("html_extraction", _step(set(), set(artefacts), TEXT))
     with pytest.raises(PipelineDeclarationError) as exc_info:
         registry.check()
 
-    assert exc_info.value.problems == [
+    # (test_other also owns the spans of test_first, a problem of its own)
+    assert (
         "System code 'PERSON' is declared differently by two trees (at artefact "
         "'test_other': parent, description or enabled flag)."
-    ]
+    ) in exc_info.value.problems
 
 
 @pytest.mark.parametrize(
@@ -522,7 +531,7 @@ def test_registry_check_fails_on_two_trees_of_one_artefact_that_disagree(
 ):
     """The trees of one artefact are checked against each other too, as a project
     gets all of them in one set up."""
-    declared = _test_artefact("test_codes", codes=codes)
+    declared = _test_artefact("test_codes", store=SystemSpans(*codes))
     registry = ArtefactRegistry()
     registry.register_artefact(declared)
     registry.register_step("html_extraction", _step(set(), {declared}, TEXT))
@@ -540,7 +549,9 @@ def test_registry_check_lists_the_graph_and_the_code_problems_in_one_error():
     together."""
     declared = _test_artefact(
         "test_codes",
-        codes=(SystemCode("MENTION", "A mention"), SystemCode("MENTION", "Other")),
+        store=SystemSpans(
+            SystemCode("MENTION", "A mention"), SystemCode("MENTION", "Other")
+        ),
     )
     unproduced = _test_artefact("test_unproduced")
     registry = ArtefactRegistry()
@@ -705,3 +716,57 @@ def test_image_artefacts_do_not_apply_to_text(graph: PipelineGraph):
     assert not graph.applies(DocType.text, boxes)
     for doctype in DocType:
         assert graph.applies(doctype, frozenset({artefact_named("keywords")})), doctype
+
+
+# ===========================================================================
+# ARTEFACT REGISTRY: WHAT THE STORES OWN
+# ===========================================================================
+
+
+def test_registry_check_fails_on_a_column_owned_by_two_artefacts():
+    """Two artefacts whose stores own the document data column content are
+    rejected at startup."""
+    first = _test_artefact("test_first", store=DocumentData("content"))
+    second = _test_artefact("test_second", store=DocumentData("content", "html"))
+    registry = ArtefactRegistry()
+    registry.register_artefact(first)
+    registry.register_artefact(second)
+    registry.register_step("html_extraction", _step(set(), {first, second}, TEXT))
+    with pytest.raises(PipelineDeclarationError) as exc_info:
+        registry.check()
+
+    assert exc_info.value.problems == [
+        "The document data column 'content' is declared by the artefacts "
+        "'test_first' and 'test_second'."
+    ]
+
+
+def test_registry_check_fails_on_a_metadata_key_owned_by_two_artefacts():
+    """Two artefacts whose stores own the metadata key language are rejected
+    at startup."""
+    first = _test_artefact("test_first", store=MetadataValue("language"))
+    second = _test_artefact("test_second", store=MetadataValue("width", "language"))
+    registry = ArtefactRegistry()
+    registry.register_artefact(first)
+    registry.register_artefact(second)
+    registry.register_step("html_extraction", _step(set(), {first, second}, TEXT))
+    with pytest.raises(PipelineDeclarationError) as exc_info:
+        registry.check()
+
+    assert exc_info.value.problems == [
+        "The metadata key 'language' is declared by the artefacts 'test_first' "
+        "and 'test_second'."
+    ]
+
+
+def test_every_document_data_column_belongs_to_one_registered_artefact():
+    """The registered artefacts own every column of the document data row
+    together (the startup check makes the owners unique)."""
+    owned = [
+        column
+        for declared in artefact_registry.artefacts()
+        if isinstance(declared.store, DocumentData)
+        for column in declared.store.columns
+    ]
+
+    assert sorted(owned) == sorted(COLUMNS)

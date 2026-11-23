@@ -17,7 +17,6 @@ from core.doc.folder_crud import crud_folder
 from core.doc.folder_dto import FolderCreate
 from core.doc.folder_enum import FolderType
 from core.doc.source_document_crud import crud_sdoc
-from core.doc.source_document_data_crud import crud_sdoc_data
 from core.doc.source_document_data_dto import SourceDocumentDataCreate
 from core.doc.source_document_dto import SourceDocumentCreate
 from core.doc.source_document_orm import SourceDocumentORM
@@ -34,6 +33,7 @@ from modules.classifier.classifier_file_crud import (
     MODEL_FILENAME,
     crud_classifier_file,
 )
+from systems.artefact_system.stores.document_data_store import create_document_data
 
 # ---------------------------------------------------------------------------
 # TEXT SDOC IMPORT HELPER
@@ -139,13 +139,12 @@ def _import_text_sdocs(
                 token_ends=token_ends,
                 sentence_starts=sentence_starts,
                 sentence_ends=sentence_ends,
-                token_time_starts=None,
-                token_time_ends=None,
             )
         )
 
-    # 3. Bulk-create the sdoc_data rows (single flush).
-    crud_sdoc_data.create_multi(db=db_session, create_dtos=data_dtos)
+    # 3. Create the sdoc_data rows.
+    for data_dto in data_dtos:
+        create_document_data(db=db_session, create_dto=data_dto)
 
     return sdocs
 

@@ -9,7 +9,6 @@ from core.annotation.annotation_document_crud import crud_adoc
 from core.annotation.span_annotation_dto import SpanAnnotationCreateIntern
 from core.annotation.span_group_service import SpanGroupService
 from core.code.code_crud import crud_code
-from core.doc.source_document_data_crud import crud_sdoc_data
 from core.doc.source_document_orm import SourceDocumentORM
 from core.metadata.source_document_metadata_crud import crud_sdoc_meta
 from core.project.project_orm import ProjectORM
@@ -17,7 +16,7 @@ from core.user.user_crud import SYSTEM_USER_ID
 from core.user.user_orm import UserORM
 from dats_test_utils import create_text_document
 from feature_test_utils import create_project_with_features
-from pipeline_test_utils import core_steps, set_step_status
+from pipeline_test_utils import artefact_named, core_steps, set_step_status
 
 # the text of the documents of `QuotationProject`; tokens are split at
 # whitespace: Anna(0) sagte,(1) sie(2) komme(3) morgen.(4) Das(5) Wetter(6)
@@ -128,7 +127,9 @@ def quotation_project(db_session: Session, test_user: UserORM) -> QuotationProje
         )
     }
 
-    audio_data = crud_sdoc_data.read(db=db_session, id=documents["german_audio"].id)
+    audio_data = artefact_named("tokens_sentences").store.read(
+        db=db_session, sdoc_id=documents["german_audio"].id
+    )
     audio_data.sentence_ends = [
         audio_data.sentence_ends[0] - 1,
         *audio_data.sentence_ends[1:],

@@ -2,7 +2,6 @@ from sqlalchemy import select
 from sqlalchemy.orm import Session
 
 from common.doc_type_enum import DocType
-from core.doc.source_document_data_orm import SourceDocumentDataORM
 from core.doc.source_document_orm import SourceDocumentORM
 from core.tag.tag_orm import TagORM
 from modules.perspectives.cluster_orm import ClusterORM
@@ -97,7 +96,7 @@ class CRUDDocumentAspect(
             .all()
         )
 
-    def read_data_by_doctype_with_no_aspect(
+    def read_sdoc_ids_by_doctype_with_no_aspect(
         self,
         db: Session,
         *,
@@ -105,9 +104,9 @@ class CRUDDocumentAspect(
         aspect_id: int,
         tag_id: int | None,
         doctype: DocType,
-    ) -> list[SourceDocumentDataORM]:
+    ) -> list[int]:
         """
-        Read all source documents that have no aspect and are of the given type.
+        Read the ids of the source documents of the given type that have no aspect.
         This is used to find all source documents that need to be preprocessed.
 
         :param db: The database session.
@@ -115,14 +114,13 @@ class CRUDDocumentAspect(
         :param aspect_id: The ID of the aspect.
         :param tag_id: The ID of the tag.
         :param doctype: The type of the source document.
-        :return: A list of source documents of the given project that have no aspect and are of the given type.
+        :return: The ids of the source documents of the given project that have no aspect and are of the given type.
         """
         query = (
-            db.query(SourceDocumentDataORM)
-            .join(SourceDocumentORM, SourceDocumentORM.id == SourceDocumentDataORM.id)
+            db.query(SourceDocumentORM.id)
             .outerjoin(
                 DocumentAspectORM,
-                (DocumentAspectORM.sdoc_id == SourceDocumentDataORM.id)
+                (DocumentAspectORM.sdoc_id == SourceDocumentORM.id)
                 & (DocumentAspectORM.aspect_id == aspect_id),
             )
             .filter(
@@ -140,7 +138,7 @@ class CRUDDocumentAspect(
                 SourceDocumentORM.tags.any(TagORM.id == tag_id),
             )
 
-        return query.all()
+        return [sdoc_id for (sdoc_id,) in query.all()]
 
     ### UPDATE OPERATIONS ###
     # Inherited from SQLCRUDBase

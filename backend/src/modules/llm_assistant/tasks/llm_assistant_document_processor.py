@@ -7,7 +7,8 @@ from loguru import logger
 from pydantic import BaseModel
 
 from config import conf
-from core.doc.source_document_data_crud import crud_sdoc_data
+from core.artefacts.content.content_artefact import CONTENT
+from core.artefacts.tokens_sentences.tokens_sentences_artefact import TOKENS_SENTENCES
 from core.doc.source_document_data_orm import SourceDocumentDataORM
 from modules.llm_assistant.llm_assistant_exceptions import (
     LLMAssistantBatchProcessingError,
@@ -87,10 +88,12 @@ class LLMAssistantDocumentProcessor:
     ) -> dict[int, SourceDocumentDataORM]:
         """Read the data of the documents that still exist, by id, in a short
         transaction of its own. The documents are detached with their loaded
-        columns, so they stay readable once it closed: no transaction stays open
-        during the LLM requests."""
+        columns (the tokens, sentences and content), so they stay readable once it
+        closed: no transaction stays open during the LLM requests."""
         with sqlr.transaction() as db:
-            sdoc_data_by_id = crud_sdoc_data.read_existing_by_ids(db=db, ids=sdoc_ids)
+            sdoc_data_by_id = TOKENS_SENTENCES.store.read_many(
+                with_stores=[CONTENT.store], db=db, sdoc_ids=sdoc_ids
+            )
             db.expunge_all()
         return sdoc_data_by_id
 

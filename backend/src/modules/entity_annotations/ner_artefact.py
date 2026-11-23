@@ -3,6 +3,7 @@ with the code tree of their entity types."""
 
 from core.code.system_codes import SystemCode
 from systems.artefact_system.artefact_registry import artefact
+from systems.artefact_system.stores.system_annotations_store import SystemSpans
 
 # NAMED_ENTITY with its 19 entity types
 NAMED_ENTITY_CODES = SystemCode(
@@ -43,4 +44,6 @@ NAMED_ENTITY_CODES = SystemCode(
     ),
 )
 
-NER_SPANS = artefact("ner_spans", title="Named entities", codes=(NAMED_ENTITY_CODES,))
+NER_SPANS = artefact(
+    "ner_spans", title="Named entities", store=SystemSpans(NAMED_ENTITY_CODES)
+)

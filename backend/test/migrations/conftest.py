@@ -20,6 +20,9 @@ from core.annotation.span_annotation_service import SpanAnnotationService
 from core.code.code_crud import crud_code
 from core.code.code_dto import CodeCreate
 from core.code.system_codes import SystemCode
+from core.doc.source_document_crud import crud_sdoc
+from core.doc.source_document_data_dto import SourceDocumentDataCreate
+from core.doc.source_document_dto import SourceDocumentCreate
 from core.doc.source_document_orm import SourceDocumentORM
 from core.memo.memo_crud import crud_memo
 from core.memo.memo_dto import MemoCreateIntern
@@ -31,6 +34,7 @@ from core.project.project_service import ProjectService
 from core.user.user_crud import SYSTEM_USER_ID
 from core.user.user_orm import UserORM
 from dats_test_utils import ProjectWithSdoc, create_span_for_text, create_text_document
+from systems.artefact_system.stores.document_data_store import create_document_data
 
 ZEROSHOT_ID = 9990
 FEWSHOT_ID = 9991
@@ -953,6 +957,80 @@ def old_file_layout_database(
             "cota_id": cota_id,
             "aspect_id": aspect_id,
             "deleted_aspect_id": deleted_aspect_id,
+        }
+    finally:
+        db_session.rollback()
+        db_session.close()
+        command.upgrade(config, "head")
+
+
+TRANSCRIPT_WORDS = "fd0c18fab079"
+
+
+class OldTranscriptDocuments(TypedDict):
+    audio_id: int
+    video_id: int
+    text_id: int
+
+
+@pytest.fixture(scope="function")
+def old_transcript_database(
+    db_session: Session, test_project: ProjectORM
+) -> Generator[OldTranscriptDocuments, None, None]:
+    """
+    This fixture sets up three documents of `test_project` with the tokens
+    "Hello" (0-5) and "world." (6-12) and migrates the database down to the
+    revision before `fd0c18fab079_the_transcript_owns_its_words` (`807bab97f373_file_store`), where it sets
+    the token times as the transcription stored them then:
+
+    - "audio.mp3" (`audio_id`): token times 0-400 and 500-900 ms
+    - "video.mp4" (`video_id`): token times 0-400 and 500-900 ms
+    - "text.txt" (`text_id`): no token times
+
+    It migrates the database back to head afterwards.
+    """
+    ids: dict[str, int] = {}
+    for name, doctype in (
+        ("audio.mp3", DocType.audio),
+        ("video.mp4", DocType.video),
+        ("text.txt", DocType.text),
+    ):
+        sdoc = crud_sdoc.create(
+            db=db_session,
+            create_dto=SourceDocumentCreate(
+                filename=name, name=name, doctype=doctype, project_id=test_project.id
+            ),
+        )
+        create_document_data(
+            db=db_session,
+            create_dto=SourceDocumentDataCreate(
+                id=sdoc.id,
+                content="Hello world.",
+                raw_html="<p>Hello world.</p>",
+                html="<p>Hello world.</p>",
+                token_starts=[0, 6],
+                token_ends=[5, 12],
+                sentence_starts=[0],
+                sentence_ends=[12],
+            ),
+        )
+        ids[name] = sdoc.id
+    db_session.commit()
+    config = alembic_config()
+    command.downgrade(config, FILE_STORE)
+    try:
+        db_session.execute(
+            sa.text(
+                "UPDATE sourcedocumentdata SET token_time_starts = '{0,500}', "
+                "token_time_ends = '{400,900}' WHERE id IN (:audio, :video)"
+            ),
+            {"audio": ids["audio.mp3"], "video": ids["video.mp4"]},
+        )
+        db_session.commit()
+        yield {
+            "audio_id": ids["audio.mp3"],
+            "video_id": ids["video.mp4"],
+            "text_id": ids["text.txt"],
         }
     finally:
         db_session.rollback()

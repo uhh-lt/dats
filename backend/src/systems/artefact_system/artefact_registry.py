@@ -2,14 +2,14 @@
 
 An artefact is declared with `artefact(...)` in the file of its owner and
 registers when the file is imported; every step and feature file imports the
-artefacts it names. A step is declared with `@pipeline_step`. The registry
-builds the pipeline graph from the steps and checks both at startup
-(`check`)."""
+artefacts it names. An artefact names its store, the only way to its data. A
+step is declared with `@pipeline_step`. The registry builds the pipeline graph
+from the steps and checks both at startup (`check`)."""
 
 from abc import ABC, abstractmethod
 from collections.abc import Collection, Mapping
 from dataclasses import dataclass
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Generic, TypeVar
 
 from sqlalchemy.orm import Session
 
@@ -47,10 +47,32 @@ class ArtefactArchive(ABC):
         """Write the archived artefact of the imported document to its store."""
 
 
+class ArtefactStore(ABC):
+    """A store of artefacts in the core entities (document data columns,
+    metadata keys, the system user's annotations). Each artefact owns its share:
+    no two artefacts declare the same column, key or annotation set."""
+
+    @abstractmethod
+    def owned(self) -> frozenset[str]:
+        """What the store owns, one text per column, key, code or span group
+        ("document data column 'content'"); the startup check compares them."""
+
+    @property
+    def codes(self) -> tuple[SystemCode, ...]:
+        """The system code trees of the annotations the store holds."""
+        return ()
+
+
+# an `ArtefactStore` or the CRUD of a store of its own (a table, a Weaviate
+# collection, an Elasticsearch index, files)
+StoreT = TypeVar("StoreT")
+
+
 @dataclass(frozen=True, eq=False)
-class Artefact:
-    """A named piece of data that preprocessing computes for a source document.
-    Compared by identity: the registry keeps the names unique."""
+class Artefact(Generic[StoreT]):
+    """A named piece of data that preprocessing computes for a source document,
+    read and written through its store. Compared by identity: the registry
+    keeps the names unique."""
 
     name: str
     # short and user-facing, in the style of the feature titles
@@ -59,11 +81,19 @@ class Artefact:
     always: bool
     # the doctypes whose uploaded file is the artefact (no step produces it)
     uploaded_for: frozenset[DocType]
-    # the system code trees a project needs before the artefact is produced
-    codes: tuple[SystemCode, ...]
+    # the only way to the artefact's data
+    store: StoreT
     # the archive of its own store; None if the generic export of document
     # data, metadata and annotations carries it
     archive: ArtefactArchive | None
+
+    @property
+    def codes(self) -> tuple[SystemCode, ...]:
+        """The system code trees a project needs before the artefact is
+        produced: those of the annotations its store holds."""
+        if isinstance(self.store, ArtefactStore):
+            return self.store.codes
+        return ()
 
 
 class ArtefactRegistry:
@@ -146,6 +176,7 @@ class ArtefactRegistry:
         except PipelineDeclarationError as e:
             problems += e.problems
         problems += _check_system_codes(self.artefacts())
+        problems += _check_owned(self.artefacts())
         if problems:
             raise PipelineDeclarationError(problems)
 
@@ -174,6 +205,24 @@ def _check_system_codes(artefacts: list[Artefact]) -> list[str]:
     return problems
 
 
+def _check_owned(artefacts: list[Artefact]) -> list[str]:
+    """Every document data column, metadata key and annotation set belongs to
+    one artefact: two artefacts whose stores own the same fail."""
+    problems: list[str] = []
+    owners: dict[str, str] = {}
+    for artefact in artefacts:
+        if not isinstance(artefact.store, ArtefactStore):
+            continue
+        for owned in sorted(artefact.store.owned()):
+            owner = owners.setdefault(owned, artefact.name)
+            if owner != artefact.name:
+                problems.append(
+                    f"The {owned} is declared by the artefacts '{owner}' and "
+                    f"'{artefact.name}'."
+                )
+    return problems
+
+
 artefact_registry = ArtefactRegistry()
 
 
@@ -182,18 +231,18 @@ def artefact(
     *,
     title: str,
     always: bool = False,
+    store: StoreT,
     uploaded_for: Collection[DocType] = (),
-    codes: Collection[SystemCode] = (),
     archive: ArtefactArchive | None = None,
-) -> Artefact:
-    """Declare and register an artefact. Raises on a duplicate name. Returns the
-    artefact, which steps and features import."""
+) -> Artefact[StoreT]:
+    """Declare and register an artefact with its store. Raises on a duplicate
+    name. Returns the artefact, which steps and features import."""
     declared = Artefact(
         name=name,
         title=title,
         always=always,
         uploaded_for=frozenset(uploaded_for),
-        codes=tuple(codes),
+        store=store,
         archive=archive,
     )
     artefact_registry.register_artefact(declared)

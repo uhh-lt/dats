@@ -18,6 +18,7 @@ from umap import UMAP
 from weaviate import WeaviateClient
 
 from common.doc_type_enum import DocType
+from core.artefacts.content.content_artefact import CONTENT
 from core.doc.source_document_crud import crud_sdoc
 from core.doc.source_document_dto import SourceDocumentRead
 from core.doc.source_document_file_crud import crud_sdoc_file
@@ -178,16 +179,17 @@ class PerspectivesService:
         aspect_dto = AspectRead.model_validate(aspect)
 
         # 1. Find all source documents that do not have an aspect yet
-        sdoc_datas = [
-            (data.id, data.content)
-            for data in crud_document_aspect.read_data_by_doctype_with_no_aspect(
+        contents = CONTENT.store.read_many(
+            db=db,
+            sdoc_ids=crud_document_aspect.read_sdoc_ids_by_doctype_with_no_aspect(
                 db=db,
                 aspect_id=aspect_id,
                 project_id=aspect.project_id,
                 doctype=aspect_dto.modality,
                 tag_id=aspect_dto.tag_id,
-            )
-        ]
+            ),
+        )
+        sdoc_datas = [(sdoc_id, data.content) for sdoc_id, data in contents.items()]
         self._log_status_msg(
             f"Found {len(sdoc_datas)} source documents without an aspect. Modifying them..."
         )

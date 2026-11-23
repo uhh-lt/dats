@@ -30,11 +30,21 @@ class SourceDocumentDataBase(BaseModel):
     sentence_ends: list[int] = Field(
         description="End of each sentence in character offsets in content"
     )
-    token_time_starts: list[int] | None = Field(
-        description="Start times of each token in transcript", default=None
+    transcript_word_starts: list[int] | None = Field(
+        description="Start of each word of the transcript in character offsets in content",
+        default=None,
     )
-    token_time_ends: list[int] | None = Field(
-        description="End times of each token in transcript", default=None
+    transcript_word_ends: list[int] | None = Field(
+        description="End of each word of the transcript in character offsets in content",
+        default=None,
+    )
+    transcript_word_time_starts: list[int] | None = Field(
+        description="Start of each word of the transcript in the audio in milliseconds",
+        default=None,
+    )
+    transcript_word_time_ends: list[int] | None = Field(
+        description="End of each word of the transcript in the audio in milliseconds",
+        default=None,
     )
 
 
@@ -50,7 +60,7 @@ class SourceDocumentDataRead(BaseModel):
     )
     sentences: list[str] = Field(description="List of sentences in the SourceDocument")
     word_level_transcriptions: list[WordLevelTranscription] | None = Field(
-        description="word level transcriptions, with tokens, start times and end times",
+        description="The words of the transcript of an audio or video document, with their start and end times; None for other documents",
     )
 
     model_config = ConfigDict(from_attributes=True)
@@ -70,11 +80,21 @@ class SourceDocumentDataUpdate(BaseModel, UpdateDTOBase):
     sentence_ends: list[int] | None = Field(
         description="End of each sentence in character offsets in content", default=None
     )
-    token_time_starts: list[int] | None = Field(
-        description="Start times of each token in transcript", default=None
+    transcript_word_starts: list[int] | None = Field(
+        description="Start of each word of the transcript in character offsets in content",
+        default=None,
     )
-    token_time_ends: list[int] | None = Field(
-        description="End times of each token in transcript", default=None
+    transcript_word_ends: list[int] | None = Field(
+        description="End of each word of the transcript in character offsets in content",
+        default=None,
+    )
+    transcript_word_time_starts: list[int] | None = Field(
+        description="Start of each word of the transcript in the audio in milliseconds",
+        default=None,
+    )
+    transcript_word_time_ends: list[int] | None = Field(
+        description="End of each word of the transcript in the audio in milliseconds",
+        default=None,
     )
     raw_html: str | None = Field(
         description="The raw HTML content of the SourceDocument, extracted from the file and cleaned.",

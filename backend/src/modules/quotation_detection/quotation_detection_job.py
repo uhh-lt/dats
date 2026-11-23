@@ -4,17 +4,11 @@ from uuid import uuid4
 from loguru import logger
 
 from common.doc_type_enum import DocType
-from core.annotation.annotation_document_crud import crud_adoc
 from core.annotation.span_annotation_dto import SpanAnnotationCreateIntern
-from core.annotation.span_group_service import SpanGroupService
 from core.artefacts.language.language_artefact import LANGUAGE
 from core.artefacts.tokens_sentences.tokens_sentences_artefact import (
     TOKENS_SENTENCES,
 )
-from core.code.code_crud import crud_code
-from core.doc.source_document_data_crud import crud_sdoc_data
-from core.metadata.source_document_metadata_crud import crud_sdoc_meta
-from core.user.user_crud import SYSTEM_USER_ID
 from modules.quotation_detection.quotation_artefact import QUOTATIONS
 from repos.db.sql_repo import SQLRepo
 from repos.ray.dto.quote import QuoteInputDoc, QuoteJobInput, Span, Token
@@ -30,7 +24,6 @@ ray = RayRepo()
 # the quotation model handles German text documents only
 QUOTATION_DOCTYPE = DocType.text
 QUOTATION_LANGUAGE = "de"
-SPAN_GROUP_NAME = "quote"
 
 
 class _QuoteCodeIds(NamedTuple):
@@ -71,10 +64,8 @@ def enrich_for_recompute(
     payload: SdocProcessingJobInput,
 ) -> QuotationDetectionJobInput:
     with sqlr.transaction() as db:
-        sdoc_data = crud_sdoc_data.read(db=db, id=payload.sdoc_id)
-        language = crud_sdoc_meta.read_by_sdoc_and_key(
-            db=db, key="language", sdoc_id=payload.sdoc_id
-        )
+        sdoc_data = TOKENS_SENTENCES.store.read(db=db, sdoc_id=payload.sdoc_id)
+        language = LANGUAGE.store.read(db=db, sdoc_id=payload.sdoc_id)
         # the quotation model handles German text documents only; the token data
         # of other documents is never read, it may not fit the model
         if (
@@ -137,66 +128,47 @@ def handle_quotation_detection_job(
     )
 
     with sqlr.transaction() as db:
-        system_code_ids = {
-            code.name: code.id
-            for code in crud_code.read_system_codes_by_project(
-                db=db, project_id=payload.project_id
-            )
-        }
-        codes = _QuoteCodeIds(*(system_code_ids[name] for name in _QUOTE_CODE_NAMES))
-
+        store = QUOTATIONS.store
         # a skipped document keeps no quotations of an earlier run, e.g. from
-        # before its language changed; without annotation document it has none
+        # before its language changed
         if document is None or output is None:
             logger.info(
                 f"Document {payload.sdoc_id} is no German text document: "
                 "removing its quotations without detecting new ones."
             )
-            adoc = next(
-                iter(
-                    crud_adoc.read_by_user_and_sdocs(
-                        db=db, user_id=SYSTEM_USER_ID, sdoc_ids=[payload.sdoc_id]
-                    )
-                ),
-                None,
-            )
-            groups: list[list[SpanAnnotationCreateIntern]] = []
-        else:
-            adoc = crud_adoc.exists_or_create(
-                db=db, user_id=SYSTEM_USER_ID, sdoc_id=payload.sdoc_id
-            )
-            groups = [
+            store.clear(db=db, project_id=payload.project_id, sdoc_id=payload.sdoc_id)
+            return
+
+        system_code_ids = store.code_ids(db=db, project_id=payload.project_id)
+        codes = _QuoteCodeIds(*(system_code_ids[name] for name in _QUOTE_CODE_NAMES))
+        adoc_id = store.annotation_document_id(db=db, sdoc_id=payload.sdoc_id)
+        store.replace_groups(
+            db=db,
+            project_id=payload.project_id,
+            sdoc_id=payload.sdoc_id,
+            groups=[
                 [
                     *_make_span_annos(
                         payload,
                         document,
-                        adoc.id,
+                        adoc_id,
                         _get_quote_type(quote.typ, codes),
                         quote.quote,
                     ),
                     *_make_span_annos(
-                        payload, document, adoc.id, codes.frame, quote.frame
+                        payload, document, adoc_id, codes.frame, quote.frame
                     ),
                     *_make_span_annos(
-                        payload, document, adoc.id, codes.addr, quote.addressee
+                        payload, document, adoc_id, codes.addr, quote.addressee
                     ),
-                    *_make_span_annos(payload, document, adoc.id, codes.cue, quote.cue),
+                    *_make_span_annos(payload, document, adoc_id, codes.cue, quote.cue),
                     *_make_span_annos(
-                        payload, document, adoc.id, codes.speaker, quote.speaker
+                        payload, document, adoc_id, codes.speaker, quote.speaker
                     ),
                 ]
                 for doc in output.documents
                 for quote in doc.quotes
-            ]
-        if adoc is None:
-            return
-
-        SpanGroupService().replace_groups(
-            db=db,
-            annotation_document_id=adoc.id,
-            name=SPAN_GROUP_NAME,
-            code_ids=list(codes),
-            groups=groups,
+            ],
         )
 
 

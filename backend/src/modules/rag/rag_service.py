@@ -7,7 +7,7 @@ from common.singleton_meta import SingletonMeta
 from core.artefacts.sentence_embeddings.sentence_embedding_crud import (
     crud_sentence_embedding,
 )
-from core.doc.source_document_data_crud import crud_sdoc_data
+from core.artefacts.tokens_sentences.tokens_sentences_artefact import TOKENS_SENTENCES
 from modules.rag.rag_dto import ChatSessionResponse
 from repos.llm_repo import LLMRepo
 from repos.ray.dto.clip import ClipTextEmbeddingInput
@@ -53,7 +53,7 @@ class RAGService(metaclass=SingletonMeta):
 
         extracted_sentences = []
         for sdoc_id, hits in sdoc_to_hits.items():
-            sdoc_data = crud_sdoc_data.read(db=db, id=sdoc_id)
+            sdoc_data = TOKENS_SENTENCES.store.read(db=db, sdoc_id=sdoc_id)
             for hit in hits:
                 try:
                     sentence_text = sdoc_data.sentences[hit.sentence_id]

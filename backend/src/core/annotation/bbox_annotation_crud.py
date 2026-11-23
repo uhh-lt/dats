@@ -233,12 +233,28 @@ class CRUDBBoxAnnotation(
 
         return num_deletions
 
-    def delete_by_adoc(self, db: Session, *, adoc_id: int) -> list[int]:
+    def delete_by_adoc_and_codes(
+        self, db: Session, *, adoc_id: int, code_ids: list[int]
+    ) -> list[int]:
+        """
+        Delete the bbox annotations with these codes in an annotation document.
+
+        Args:
+            adoc_id: The annotation document.
+            code_ids: The codes of the bbox annotations to delete.
+
+        Returns:
+            The ids of the deleted bbox annotations.
+        """
+        if not code_ids:
+            return []
+
         # find all annotations to be removed
         ids = list(
             db.scalars(
                 select(self.model.id).where(
-                    self.model.annotation_document_id == adoc_id
+                    self.model.annotation_document_id == adoc_id,
+                    self.model.code_id.in_(code_ids),
                 )
             )
         )

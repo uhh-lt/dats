@@ -1,9 +1,6 @@
 from loguru import logger
 
 from common.doc_type_enum import DocType
-from core.artefacts.sentence_embeddings.sentence_embedding_crud import (
-    crud_sentence_embedding,
-)
 from core.artefacts.sentence_embeddings.sentence_embedding_dto import (
     SentenceObjectIdentifier,
 )
@@ -13,7 +10,6 @@ from core.artefacts.sentence_embeddings.sentence_embeddings_artefact import (
 from core.artefacts.tokens_sentences.tokens_sentences_artefact import (
     TOKENS_SENTENCES,
 )
-from core.doc.source_document_data_crud import crud_sdoc_data
 from repos.db.sql_repo import SQLRepo
 from repos.ray.dto.clip import ClipTextEmbeddingInput
 from repos.ray.ray_repo import RayRepo
@@ -34,10 +30,7 @@ def enrich_for_recompute(
     payload: SdocProcessingJobInput,
 ) -> TextSentenceEmbeddingJobInput:
     with sqlr.transaction() as db:
-        sdoc_data = crud_sdoc_data.read(
-            db=db,
-            id=payload.sdoc_id,
-        )
+        sdoc_data = TOKENS_SENTENCES.store.read(db=db, sdoc_id=payload.sdoc_id)
 
         return TextSentenceEmbeddingJobInput(
             **payload.model_dump(),
@@ -73,7 +66,7 @@ def handle_sentence_embedding_job(
             f"Adding {len(embeddings)} sentences "
             f"from SDoc {payload.sdoc_id} in project {payload.project_id} to index ..."
         )
-        crud_sentence_embedding.create_multi(
+        SENTENCE_EMBEDDINGS.store.create_multi(
             client=WeaviateRepo().get_client(),
             project_id=payload.project_id,
             ids=[

@@ -7,9 +7,10 @@ from sqlalchemy.orm import Session
 from common.singleton_meta import SingletonMeta
 from core.annotation.sentence_annotation_crud import crud_sentence_anno
 from core.annotation.span_annotation_crud import crud_span_anno
+from core.artefacts.content.content_artefact import CONTENT
+from core.artefacts.tokens_sentences.tokens_sentences_artefact import TOKENS_SENTENCES
 from core.code.code_crud import crud_code
 from core.doc.source_document_crud import crud_sdoc
-from core.doc.source_document_data_crud import crud_sdoc_data
 from core.doc.source_document_data_orm import SourceDocumentDataORM
 from core.project.export_file_crud import crud_export_file
 from core.user.user_crud import crud_user
@@ -113,8 +114,8 @@ class AgreementService(metaclass=SingletonMeta):
 
         # 3) resolve the character offsets of the segments; only the token and
         # sentence offsets are read, the texts are read on request (segment_texts)
-        offsets = crud_sdoc_data.read_offsets_by_ids(
-            db=db, ids=[segment.sdoc_id for segment in segments]
+        offsets = TOKENS_SENTENCES.store.read_many(
+            db=db, sdoc_ids=[segment.sdoc_id for segment in segments]
         )
         agreement_segments = [
             self._to_agreement_segment(
@@ -227,9 +228,13 @@ class AgreementService(metaclass=SingletonMeta):
         self._read_sdoc_names(db=db, project_id=project_id, sdoc_ids=sdoc_ids)
 
         # 2) cut the ranges out of the documents' contents
-        contents = crud_sdoc_data.read_contents_by_ids(db=db, ids=sdoc_ids)
+        contents = CONTENT.store.read_many(db=db, sdoc_ids=sdoc_ids)
         return [
-            contents.get(text_range.sdoc_id, "")[text_range.begin : text_range.end]
+            (
+                contents[text_range.sdoc_id].content
+                if text_range.sdoc_id in contents
+                else ""
+            )[text_range.begin : text_range.end]
             for text_range in ranges
         ]
 

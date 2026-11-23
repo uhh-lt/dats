@@ -5,8 +5,9 @@ from sqlalchemy.orm import Session
 from common.singleton_meta import SingletonMeta
 from core.annotation.sentence_annotation_crud import crud_sentence_anno
 from core.annotation.span_annotation_crud import crud_span_anno
+from core.artefacts.content.content_artefact import CONTENT
+from core.artefacts.tokens_sentences.tokens_sentences_artefact import TOKENS_SENTENCES
 from core.doc.source_document_crud import crud_sdoc
-from core.doc.source_document_data_crud import crud_sdoc_data
 from core.project.project_crud import crud_project
 from core.prompt.prompt_crud import crud_prompt
 from core.prompt.prompt_defaults import DEFAULT_PROMPTS
@@ -339,7 +340,9 @@ class PromptService(metaclass=SingletonMeta):
                 f"Document {request.sdoc_id} does not belong to project "
                 f"{request.project_id}."
             )
-        segments = renderer.segments(crud_sdoc_data.read(db=db, id=request.sdoc_id))
+        segments = renderer.segments(
+            TOKENS_SENTENCES.store.read(db=db, sdoc_id=request.sdoc_id)
+        )
         if request.message_index >= len(segments):
             raise InvalidPromptPreviewError(
                 f"Message {request.message_index} does not exist, document "
@@ -561,12 +564,11 @@ class PromptService(metaclass=SingletonMeta):
             ],
             project_id=project_id,
         )
-        sdoc_datas = {
-            sdoc_data.id: sdoc_data
-            for sdoc_data in crud_sdoc_data.read_by_ids(
-                db=db, ids=[annotation.sdoc_id for annotation in annotations]
-            )
-        }
+        sdoc_datas = TOKENS_SENTENCES.store.read_many(
+            with_stores=[CONTENT.store],
+            db=db,
+            sdoc_ids=[annotation.sdoc_id for annotation in annotations],
+        )
 
         # 1) the text of an annotation: the sentences it overlaps
         examples: dict[tuple[int, int, int, int], SpanPromptExample] = {}
@@ -622,22 +624,24 @@ class PromptService(metaclass=SingletonMeta):
             ],
             project_id=project_id,
         )
-        sdoc_datas = crud_sdoc_data.read_by_ids(
-            db=db, ids=[annotation.sdoc_id for annotation in annotations]
+        sdoc_datas = TOKENS_SENTENCES.store.read_many(
+            with_stores=[CONTENT.store],
+            db=db,
+            sdoc_ids=[annotation.sdoc_id for annotation in annotations],
         )
         return [
             SentencePromptExample(
                 kind=PromptExampleKind.SENTENCE,
                 code_id=annotation.code_id,
-                sdoc_id=sdoc_data.id,
+                sdoc_id=annotation.sdoc_id,
                 source_annotation_ids=[annotation.id],
                 text=" ".join(
-                    sdoc_data.sentences[
+                    sdoc_datas[annotation.sdoc_id].sentences[
                         annotation.sentence_id_start : annotation.sentence_id_end + 1
                     ]
                 ),
             )
-            for annotation, sdoc_data in zip(annotations, sdoc_datas)
+            for annotation in annotations
         ]
 
     def _assert_annotations_in_project(

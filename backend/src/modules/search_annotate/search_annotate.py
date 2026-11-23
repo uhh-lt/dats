@@ -6,8 +6,9 @@ from loguru import logger
 from sqlalchemy.orm import Session
 
 from core.annotation.span_annotation_dto import SpanAnnotationCreate
+from core.artefacts.content.content_artefact import CONTENT
+from core.artefacts.tokens_sentences.tokens_sentences_artefact import TOKENS_SENTENCES
 from core.doc.sdoc_elastic_index import SdocIndex
-from core.doc.source_document_data_crud import crud_sdoc_data
 from modules.search_annotate.search_annotate_dto import (
     PaginatedSpanAnnotationHits,
     SpanAnnotationHit,
@@ -114,12 +115,9 @@ def search_and_auto_annotate(
         )
 
     sdoc_ids = [int(hit["_id"]) for hit in hits]
-    sdoc_data_list = crud_sdoc_data.read_by_ids(db=db, ids=sdoc_ids)
-
-    # map id to data
-    id2data = {
-        sdoc_data.id: sdoc_data for sdoc_data in sdoc_data_list if sdoc_data is not None
-    }
+    id2data = TOKENS_SENTENCES.store.read_many(
+        with_stores=[CONTENT.store], db=db, sdoc_ids=sdoc_ids
+    )
 
     results = []
     logger.info("Computing highlight positions")

@@ -2,9 +2,8 @@ from common.doc_type_enum import DocType
 from common.languages_enum import Language
 from core.artefacts.content.content_artefact import CONTENT
 from core.artefacts.language.language_artefact import LANGUAGE
-from core.doc.source_document_data_crud import crud_sdoc_data
+from core.artefacts.raw_html.raw_html_artefact import RAW_HTML
 from core.doc_processing.doc_processing_exceptions import LanguageNotSupportedError
-from core.metadata.source_document_metadata_crud import crud_sdoc_meta
 from repos.db.sql_repo import SQLRepo
 from repos.ray.dto.glotlid import GlotLIDInput, GlotLIDOutput
 from repos.ray.ray_repo import RayRepo
@@ -32,14 +31,11 @@ def enrich_for_recompute(
     payload: SdocProcessingJobInput,
 ) -> TextLanguageDetectionJobInput:
     with sqlr.transaction() as db:
-        sdoc_data = crud_sdoc_data.read(
-            db=db,
-            id=payload.sdoc_id,
-        )
+        sdoc_data = CONTENT.store.read(db=db, sdoc_id=payload.sdoc_id)
 
         return TextLanguageDetectionJobInput(
             **payload.model_dump(),
-            raw_html=sdoc_data.raw_html,
+            raw_html=RAW_HTML.store.read(db=db, sdoc_id=payload.sdoc_id).raw_html,
             text=sdoc_data.content,
             doctype=DocType(sdoc_data.source_document.doctype),
         )
@@ -87,12 +83,11 @@ def handle_language_detection_job(
 
     with sqlr.transaction() as db:
         # Store language in db
-        crud_sdoc_meta.update_multi_with_doctype(
+        LANGUAGE.store.write(
             db=db,
             project_id=payload.project_id,
             sdoc_id=payload.sdoc_id,
             doctype=payload.doctype,
-            keys=["language"],
-            values=[lang],
+            values={"language": lang},
         )
     return TextLanguageDetectionJobOutput(language=lang, text=payload.text)

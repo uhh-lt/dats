@@ -6,7 +6,8 @@ from sqlalchemy.orm import Session
 
 from core.annotation.sentence_annotation_crud import crud_sentence_anno
 from core.annotation.sentence_annotation_orm import SentenceAnnotationORM
-from core.doc.source_document_data_crud import crud_sdoc_data
+from core.artefacts.content.content_artefact import CONTENT
+from core.artefacts.tokens_sentences.tokens_sentences_artefact import TOKENS_SENTENCES
 from modules.eximport.annotation_provenance_utils import (
     export_annotation_provenance,
 )
@@ -82,11 +83,9 @@ def __generate_export_df_for_sentence_annotations(
     )
 
     # find all sdoc_data
-    sdoc_data = {
-        sdoc_data.id: sdoc_data
-        for sdoc_data in crud_sdoc_data.read_by_ids(db=db, ids=list(unique_sdoc_ids))
-        if sdoc_data is not None
-    }
+    sdoc_data = TOKENS_SENTENCES.store.read_many(
+        with_stores=[CONTENT.store], db=db, sdoc_ids=list(unique_sdoc_ids)
+    )
 
     # Create annotations using our schema
     annotation_export_items = []

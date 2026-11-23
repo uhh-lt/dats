@@ -6,6 +6,7 @@ from sqlalchemy.orm import Session
 
 from common.doc_type_enum import DocType
 from core.artefacts.thumbnail.image_thumbnail_utils import generate_thumbnails
+from core.artefacts.thumbnail.thumbnail_file_crud import crud_thumbnail_file
 from core.artefacts.video_utils import store_video_thumbnail
 from core.doc.source_document_file_crud import crud_sdoc_file
 from core.doc.source_document_orm import SourceDocumentORM
@@ -38,5 +39,9 @@ class _ThumbnailArchive(ArtefactArchive):
 
 
 THUMBNAIL = artefact(
-    "thumbnail", title="Thumbnail", always=True, archive=_ThumbnailArchive()
+    "thumbnail",
+    title="Thumbnail",
+    always=True,
+    store=crud_thumbnail_file,
+    archive=_ThumbnailArchive(),
 )

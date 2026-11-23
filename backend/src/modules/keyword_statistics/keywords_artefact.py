@@ -1,4 +1,4 @@
-"""The keywords of a document, carried by its project metadata key "keywords",
+"""The keywords of a document, in its project metadata key "keywords",
 which the feature Keyword Statistics sets up (`create_keywords_metadata`)."""
 
 from sqlalchemy.orm import Session
@@ -8,10 +8,13 @@ from common.meta_type_enum import MetaType
 from core.metadata.project_metadata_crud import crud_project_meta
 from core.metadata.project_metadata_dto import ProjectMetadataCreate
 from systems.artefact_system.artefact_registry import artefact
-
-KEYWORDS = artefact("keywords", title="Keywords")
+from systems.artefact_system.stores.metadata_value_store import MetadataValue
 
 KEYWORDS_METADATA_KEY = "keywords"
+
+KEYWORDS = artefact(
+    "keywords", title="Keywords", store=MetadataValue(KEYWORDS_METADATA_KEY)
+)
 _DESCRIPTIONS = {
     DocType.text: "Keywords extracted from the document",
     DocType.image: "Keywords extracted from the image's caption",

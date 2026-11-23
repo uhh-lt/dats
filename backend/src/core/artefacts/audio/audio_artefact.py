@@ -51,5 +51,6 @@ AUDIO = artefact(
     title="Audio stream",
     always=True,
     uploaded_for={DocType.audio},
+    store=crud_audio_file,
     archive=_AudioArchive(),
 )

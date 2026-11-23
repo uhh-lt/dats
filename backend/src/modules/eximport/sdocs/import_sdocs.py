@@ -9,7 +9,6 @@ from core.doc.folder_crud import crud_folder
 from core.doc.folder_dto import FolderCreate
 from core.doc.folder_enum import FolderType
 from core.doc.source_document_crud import crud_sdoc
-from core.doc.source_document_data_crud import crud_sdoc_data
 from core.doc.source_document_data_dto import SourceDocumentDataCreate
 from core.doc.source_document_dto import SourceDocumentCreate
 from core.doc.source_document_file_crud import crud_sdoc_file
@@ -32,6 +31,7 @@ from systems.artefact_system.source_document_step_status_crud import (
 from systems.artefact_system.source_document_step_status_dto import (
     SourceDocumentStepStatusCreate,
 )
+from systems.artefact_system.stores.document_data_store import create_document_data
 
 # archives of versions before the feature toggles hold one status per document
 ARCHIVE_WITHOUT_STEP_STATUS = (
@@ -272,6 +272,7 @@ def import_sdocs_to_proj(
         )
 
         # 3. Create the source document data in the database
+        transcript = sdoc_export.token_time_starts is not None
         sdoc_data_create = SourceDocumentDataCreate(
             id=created_sdoc.id,
             content=sdoc_export.content if sdoc_export.content else "",
@@ -281,10 +282,13 @@ def import_sdocs_to_proj(
             token_ends=sdoc_export.token_ends,
             sentence_starts=sdoc_export.sentence_starts,
             sentence_ends=sdoc_export.sentence_ends,
-            token_time_starts=sdoc_export.token_time_starts,
-            token_time_ends=sdoc_export.token_time_ends,
+            # the tokens of an audio or video are the words of its transcript
+            transcript_word_starts=sdoc_export.token_starts if transcript else None,
+            transcript_word_ends=sdoc_export.token_ends if transcript else None,
+            transcript_word_time_starts=sdoc_export.token_time_starts,
+            transcript_word_time_ends=sdoc_export.token_time_ends,
         )
-        crud_sdoc_data.create(db=db, create_dto=sdoc_data_create)
+        create_document_data(db=db, create_dto=sdoc_data_create)
 
         # 4. Link the source documents with the attached data (tags, metadata)
         # Tags

@@ -7,7 +7,6 @@ from core.artefacts.raw_html.raw_html_artefact import RAW_HTML
 from core.artefacts.tokens_sentences.tokens_sentences_artefact import (
     TOKENS_SENTENCES,
 )
-from core.doc.source_document_data_crud import crud_sdoc_data
 from core.doc.source_document_data_dto import SourceDocumentDataUpdate
 from repos.db.sql_repo import SQLRepo
 from systems.artefact_system.artefact_dto import SdocProcessingJobInput
@@ -30,14 +29,11 @@ def enrich_for_recompute(
     payload: SdocProcessingJobInput,
 ) -> TextHTMLMappingJobInput:
     with sqlr.transaction() as db:
-        sdoc_data = crud_sdoc_data.read(
-            db=db,
-            id=payload.sdoc_id,
-        )
+        sdoc_data = TOKENS_SENTENCES.store.read(db=db, sdoc_id=payload.sdoc_id)
 
         return TextHTMLMappingJobInput(
             **payload.model_dump(),
-            raw_html=sdoc_data.raw_html,
+            raw_html=RAW_HTML.store.read(db=db, sdoc_id=payload.sdoc_id).raw_html,
             sentence_starts=sdoc_data.sentence_starts,
             sentence_ends=sdoc_data.sentence_ends,
             token_starts=sdoc_data.token_starts,
@@ -101,10 +97,8 @@ def handle_html_mapping_job(payload: TextHTMLMappingJobInput, job: Job) -> None:
 
     with sqlr.transaction() as db:
         # update source document data in db
-        crud_sdoc_data.update(
+        HTML.store.write(
             db=db,
-            id=payload.sdoc_id,
-            update_dto=SourceDocumentDataUpdate(
-                html=new_html.build(),
-            ),
+            sdoc_id=payload.sdoc_id,
+            update=SourceDocumentDataUpdate(html=new_html.build()),
         )

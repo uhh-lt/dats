@@ -27,8 +27,11 @@ from core.project.project_orm import ProjectORM
 from core.tag.tag_crud import crud_tag
 from core.tag.tag_dto import TagCreate
 from core.tag.tag_orm import TagORM
+from core.user.user_orm import UserORM
+from dats_test_utils import create_span_for_text, create_text_document
 from feature_test_utils import create_project_with_features
-from pipeline_test_utils import set_step_status
+from pipeline_test_utils import artefact_named, set_step_status
+from systems.artefact_system.artefact_service import ArtefactService
 
 
 @contextmanager
@@ -378,4 +381,66 @@ def step_status_project(db_session, test_project, test_user) -> StepStatusProjec
         "failed": sdocs["failed"],
         "image": sdocs["image"],
         "other_project_doc": sdocs["other_project_doc"],
+    }
+
+
+class ArtefactStoreProject(TypedDict):
+    project_id: int
+    sdoc_id: int
+    other_sdoc_id: int
+    person_code_id: int
+    user_span_id: int
+
+
+@pytest.fixture(scope="function")
+def artefact_store_project(
+    db_session: Session, test_project: ProjectORM, test_user: UserORM
+) -> ArtefactStoreProject:
+    """
+    This fixture sets up the test project with the system codes of the artefact
+    `ner_spans` (NAMED_ENTITY > PERSON, ORG, ...) and two text documents, each
+    tokenized at whitespace, with the metadata language "en":
+
+    - "anna.txt" (`sdoc_id`): "Anna sleeps." with a span annotation of
+      `test_user` on "Anna" with the code PERSON (`user_span_id`)
+    - "bob.txt" (`other_sdoc_id`): "Bob sleeps."
+
+    Non-obvious derived behavior:
+
+    - No document has annotations of the system user, so the system user has
+      no annotation document yet.
+    """
+    ArtefactService().set_up(
+        db=db_session,
+        project_id=test_project.id,
+        artefacts=frozenset({artefact_named("ner_spans")}),
+    )
+    sdoc = create_text_document(
+        db_session,
+        project=test_project,
+        filename="anna.txt",
+        name="anna.txt",
+        sentences=["Anna sleeps."],
+    )
+    other = create_text_document(
+        db_session,
+        project=test_project,
+        filename="bob.txt",
+        name="bob.txt",
+        sentences=["Bob sleeps."],
+    )
+    person = crud_code.read_by_name_and_project(
+        db=db_session, code_name="PERSON", project_id=test_project.id
+    )
+    assert person is not None
+    span = create_span_for_text(
+        db_session, sdoc=sdoc, text="Anna", code_id=person.id, user_id=test_user.id
+    )
+    db_session.commit()
+    return {
+        "project_id": test_project.id,
+        "sdoc_id": sdoc.id,
+        "other_sdoc_id": other.id,
+        "person_code_id": person.id,
+        "user_span_id": span.id,
     }

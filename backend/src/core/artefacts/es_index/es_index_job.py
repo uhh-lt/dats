@@ -1,9 +1,7 @@
 from common.doc_type_enum import DocType
 from core.artefacts.content.content_artefact import CONTENT
 from core.artefacts.es_index.es_index_artefact import ES_INDEX
-from core.doc.sdoc_elastic_crud import crud_sdoc_elastic
 from core.doc.sdoc_elastic_dto import ElasticSearchDocumentCreate
-from core.doc.source_document_data_crud import crud_sdoc_data
 from repos.db.sql_repo import SQLRepo
 from repos.elastic.elastic_repo import ElasticSearchRepo
 from systems.artefact_system.artefact_dto import SdocProcessingJobInput
@@ -23,10 +21,7 @@ def enrich_for_recompute(
     payload: SdocProcessingJobInput,
 ) -> TextESIndexJobInput:
     with sqlr.transaction() as db:
-        sdoc_data = crud_sdoc_data.read(
-            db=db,
-            id=payload.sdoc_id,
-        )
+        sdoc_data = CONTENT.store.read(db=db, sdoc_id=payload.sdoc_id)
 
         return TextESIndexJobInput(
             **payload.model_dump(),
@@ -54,7 +49,7 @@ def handle_es_index_job(payload: TextESIndexJobInput, job: Job) -> None:
         project_id=payload.project_id,
     )
 
-    crud_sdoc_elastic.create(
+    ES_INDEX.store.create(
         client=ElasticSearchRepo().get_client(),
         create_dto=esdoc,
         project_id=payload.project_id,

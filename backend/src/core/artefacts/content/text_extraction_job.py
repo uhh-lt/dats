@@ -2,7 +2,6 @@ from common.doc_type_enum import DocType
 from core.artefacts.content.content_artefact import CONTENT
 from core.artefacts.html_mapping_utils import HTMLTextMapper
 from core.artefacts.raw_html.raw_html_artefact import RAW_HTML
-from core.doc.source_document_data_crud import crud_sdoc_data
 from core.doc.source_document_data_dto import SourceDocumentDataUpdate
 from repos.db.sql_repo import SQLRepo
 from systems.artefact_system.artefact_dto import SdocProcessingJobInput
@@ -27,10 +26,7 @@ def enrich_for_recompute(
     payload: SdocProcessingJobInput,
 ) -> TextExtractionJobInput:
     with sqlr.transaction() as db:
-        sdoc_data = crud_sdoc_data.read(
-            db=db,
-            id=payload.sdoc_id,
-        )
+        sdoc_data = RAW_HTML.store.read(db=db, sdoc_id=payload.sdoc_id)
 
         return TextExtractionJobInput(
             **payload.model_dump(),
@@ -61,12 +57,10 @@ def handle_text_extraction_job(
 
     # Store text in sdoc data
     with sqlr.transaction() as db:
-        crud_sdoc_data.update(
+        CONTENT.store.write(
             db=db,
-            id=payload.sdoc_id,
-            update_dto=SourceDocumentDataUpdate(
-                content=text,
-            ),
+            sdoc_id=payload.sdoc_id,
+            update=SourceDocumentDataUpdate(content=text),
         )
 
     return TextExtractionJobOutput(text=text)

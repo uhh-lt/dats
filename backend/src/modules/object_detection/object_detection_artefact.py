@@ -4,6 +4,7 @@ super category person has the one category person)."""
 
 from core.code.system_codes import SystemCode
 from systems.artefact_system.artefact_registry import artefact
+from systems.artefact_system.stores.system_annotations_store import SystemBBoxes
 
 # the COCO 2017 super categories with their categories, and BACKGROUND
 COCO_CODES = (
@@ -170,5 +171,5 @@ COCO_CODES = (
 OBJECT_BBOXES = artefact(
     "object_bboxes",
     title="Detected objects",
-    codes=COCO_CODES,
+    store=SystemBBoxes(*COCO_CODES),
 )

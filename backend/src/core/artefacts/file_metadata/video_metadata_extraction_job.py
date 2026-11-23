@@ -5,7 +5,6 @@ from core.artefacts.file_metadata.file_metadata_artefact import FILE_METADATA
 from core.doc.source_document_crud import crud_sdoc
 from core.doc.source_document_dto import SourceDocumentRead
 from core.doc.source_document_file_crud import crud_sdoc_file
-from core.metadata.source_document_metadata_crud import crud_sdoc_meta
 from repos.db.sql_repo import SQLRepo
 from systems.artefact_system.artefact_dto import SdocProcessingJobInput
 from systems.artefact_system.pipeline_step_decorator import pipeline_step
@@ -15,8 +14,6 @@ from systems.job_system.job_register_decorator import register_job
 sqlr = SQLRepo()
 
 EXPECTED_METADATA = [
-    "language",
-    "transcription_keywords",
     "width",
     "height",
     "duration",
@@ -83,11 +80,10 @@ def handle_video_metadata_extraction_job(
 
     with sqlr.transaction() as db:
         # Store video metadata in db
-        crud_sdoc_meta.update_multi_with_doctype(
+        FILE_METADATA.store.write(
             db=db,
             project_id=payload.project_id,
             sdoc_id=payload.sdoc_id,
             doctype=DocType.video,
-            keys=list(metadata.keys()),
-            values=list(metadata.values()),
+            values=metadata,
         )

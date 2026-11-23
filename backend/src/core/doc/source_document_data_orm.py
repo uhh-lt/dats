@@ -39,10 +39,18 @@ class SourceDocumentDataORM(ORMBase):
     sentence_ends: Mapped[list[int]] = mapped_column(
         ARRAY(Integer), nullable=False, index=False
     )
-    token_time_starts: Mapped[list[int] | None] = mapped_column(
+    # the words of the transcript of an audio or video: character offsets in the
+    # content and times in the audio in milliseconds
+    transcript_word_starts: Mapped[list[int] | None] = mapped_column(
         ARRAY(Integer), index=False
     )
-    token_time_ends: Mapped[list[int] | None] = mapped_column(
+    transcript_word_ends: Mapped[list[int] | None] = mapped_column(
+        ARRAY(Integer), index=False
+    )
+    transcript_word_time_starts: Mapped[list[int] | None] = mapped_column(
+        ARRAY(Integer), index=False
+    )
+    transcript_word_time_ends: Mapped[list[int] | None] = mapped_column(
         ARRAY(Integer), index=False
     )
 
@@ -88,20 +96,23 @@ class SourceDocumentDataORM(ORMBase):
 
     @property
     def word_level_transcriptions(self) -> list[WordLevelTranscription] | None:
-        if self.token_time_starts is None or self.token_time_ends is None:
+        if (
+            self.transcript_word_starts is None
+            or self.transcript_word_ends is None
+            or self.transcript_word_time_starts is None
+            or self.transcript_word_time_ends is None
+        ):
             return None
-        else:
-            assert (
-                len(self.tokens)
-                == len(self.token_time_starts)
-                == len(self.token_time_ends)
+        return [
+            WordLevelTranscription(text=self.content[s:e], start_ms=ts, end_ms=te)
+            for s, e, ts, te in zip(
+                self.transcript_word_starts,
+                self.transcript_word_ends,
+                self.transcript_word_time_starts,
+                self.transcript_word_time_ends,
+                strict=True,
             )
-            result = []
-            for t, s, e in zip(
-                self.tokens, self.token_time_starts, self.token_time_ends
-            ):
-                result.append(WordLevelTranscription(text=t, start_ms=s, end_ms=e))
-            return result
+        ]
 
     @property
     def token_sentence_ids(self):

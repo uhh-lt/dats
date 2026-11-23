@@ -133,8 +133,8 @@ def __export_sdocs(
             token_ends=sdoc_data.token_ends,
             sentence_starts=sdoc_data.sentence_starts,
             sentence_ends=sdoc_data.sentence_ends,
-            token_time_starts=sdoc_data.token_time_starts,
-            token_time_ends=sdoc_data.token_time_ends,
+            token_time_starts=sdoc_data.transcript_word_time_starts,
+            token_time_ends=sdoc_data.transcript_word_time_ends,
             sentence_embeddings=[],
         )
 

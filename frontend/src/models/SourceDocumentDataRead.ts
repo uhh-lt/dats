@@ -29,7 +29,7 @@ export type SourceDocumentDataRead = {
    */
   sentences: Array<string>;
   /**
-   * word level transcriptions, with tokens, start times and end times
+   * The words of the transcript of an audio or video document, with their start and end times; None for other documents
    */
   word_level_transcriptions: Array<WordLevelTranscription> | null;
 };

@@ -5,11 +5,9 @@ from core.artefacts.image_caption.image_captioning_prompt import (
 )
 from core.artefacts.raw_html.raw_html_artefact import RAW_HTML
 from core.doc.source_document_crud import crud_sdoc
-from core.doc.source_document_data_crud import crud_sdoc_data
 from core.doc.source_document_data_dto import SourceDocumentDataUpdate
 from core.doc.source_document_dto import SourceDocumentRead
 from core.doc.source_document_file_crud import crud_sdoc_file
-from core.metadata.source_document_metadata_crud import crud_sdoc_meta
 from repos.db.sql_repo import SQLRepo
 from repos.llm_repo import LLMRepo
 from systems.artefact_system.artefact_dto import SdocProcessingJobInput
@@ -77,22 +75,19 @@ def handle_image_caption_job(
 
     with sqlr.transaction() as db:
         # Store caption in the database
-        crud_sdoc_meta.update_multi_with_doctype(
+        IMAGE_CAPTION.store.write(
             db=db,
             project_id=payload.project_id,
             sdoc_id=payload.sdoc_id,
             doctype=DocType.image,
-            keys=["caption"],
-            values=[caption],
+            values={"caption": caption},
         )
 
         # Store caption as raw_html in sdoc data
-        crud_sdoc_data.update(
+        RAW_HTML.store.write(
             db=db,
-            id=payload.sdoc_id,
-            update_dto=SourceDocumentDataUpdate(
-                raw_html=raw_html,
-            ),
+            sdoc_id=payload.sdoc_id,
+            update=SourceDocumentDataUpdate(raw_html=raw_html),
         )
 
     return ImageCaptionJobOutput(text=caption, raw_html=raw_html)

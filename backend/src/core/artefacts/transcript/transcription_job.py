@@ -10,7 +10,6 @@ from core.artefacts.audio.audio_artefact import AUDIO, audio_stream_path
 from core.artefacts.raw_html.raw_html_artefact import RAW_HTML
 from core.artefacts.transcript.transcript_artefact import TRANSCRIPT
 from core.doc.source_document_crud import crud_sdoc
-from core.doc.source_document_data_crud import crud_sdoc_data
 from core.doc.source_document_data_dto import (
     SourceDocumentDataUpdate,
 )
@@ -32,10 +31,10 @@ class TranscriptionJobInput(SdocProcessingJobInput):
 
 
 class TranscriptionJobOutput(JobOutputBase):
-    token_starts: list[int]
-    token_ends: list[int]
-    token_time_starts: list[int]
-    token_time_ends: list[int]
+    word_starts: list[int]
+    word_ends: list[int]
+    word_time_starts: list[int]
+    word_time_ends: list[int]
     content: str
     raw_html: str
     language: str
@@ -95,26 +94,30 @@ def handle_transcription_job(
         payload=payload, audio_bytes=pcm_bytes
     )
 
-    # store the transcription as sdoc data
+    # store the words of the transcript and its text as raw HTML, from which the
+    # step text_extraction writes the content the word offsets point into
     with sqlr.transaction() as db:
-        crud_sdoc_data.update(
+        TRANSCRIPT.store.write(
             db=db,
-            id=payload.sdoc_id,
-            update_dto=SourceDocumentDataUpdate(
-                token_starts=transcription["token_starts"],
-                token_ends=transcription["token_ends"],
-                token_time_starts=transcription["token_time_starts"],
-                token_time_ends=transcription["token_time_ends"],
-                content=transcription["content"],
-                raw_html=transcription["html"],
+            sdoc_id=payload.sdoc_id,
+            update=SourceDocumentDataUpdate(
+                transcript_word_starts=transcription["word_starts"],
+                transcript_word_ends=transcription["word_ends"],
+                transcript_word_time_starts=transcription["word_time_starts"],
+                transcript_word_time_ends=transcription["word_time_ends"],
             ),
+        )
+        RAW_HTML.store.write(
+            db=db,
+            sdoc_id=payload.sdoc_id,
+            update=SourceDocumentDataUpdate(raw_html=transcription["html"]),
         )
 
     return TranscriptionJobOutput(
-        token_starts=transcription["token_starts"],
-        token_ends=transcription["token_ends"],
-        token_time_starts=transcription["token_time_starts"],
-        token_time_ends=transcription["token_time_ends"],
+        word_starts=transcription["word_starts"],
+        word_ends=transcription["word_ends"],
+        word_time_starts=transcription["word_time_starts"],
+        word_time_ends=transcription["word_time_ends"],
         content=transcription["content"],
         raw_html=transcription["html"],
         language=transcription["language"],
@@ -147,42 +150,42 @@ def generate_automatic_transcription(
     )
     logger.info(f"Generated transcript {output}")
 
-    # Create Wordlevel Transcriptions and token info in one pass
-    tokens: list[str] = []
-    token_starts: list[int] = []
-    token_ends: list[int] = []
-    token_time_starts: list[int] = []
-    token_time_ends: list[int] = []
+    # the words with their offsets in the text and their times in one pass
+    words: list[str] = []
+    word_starts: list[int] = []
+    word_ends: list[int] = []
+    word_time_starts: list[int] = []
+    word_time_ends: list[int] = []
     current_position = 0
     for segment in output.segments:
         for word in segment.words:
             text = word.text.strip()
-            token_time_starts.append(word.start_ms)
-            token_time_ends.append(word.end_ms)
-            tokens.append(text)
+            word_time_starts.append(word.start_ms)
+            word_time_ends.append(word.end_ms)
+            words.append(text)
             current_word_length = len(text)
-            token_starts.append(current_position)
-            token_ends.append(current_position + current_word_length)
+            word_starts.append(current_position)
+            word_ends.append(current_position + current_word_length)
             current_position += current_word_length + 1
 
-    if len(tokens) == 0:
+    if len(words) == 0:
         # no spoken words detected: inform user by writing informative fake data
         logger.warning(
             f"Document {payload.sdoc_id} {payload.filename} seems to contain no spoken words. Using dummy text data."
         )
-        tokens = ["File", "contains", "no", "spoken", "words"]
-        token_starts = [0, 5, 14, 17, 24]
-        token_ends = [4, 13, 16, 23, 29]
-        token_time_starts = [0, 0, 0, 0, 0]
-        token_time_ends = token_time_starts
+        words = ["File", "contains", "no", "spoken", "words"]
+        word_starts = [0, 5, 14, 17, 24]
+        word_ends = [4, 13, 16, 23, 29]
+        word_time_starts = [0, 0, 0, 0, 0]
+        word_time_ends = word_time_starts
 
-    transcription = " ".join([token for token in tokens])
+    transcription = " ".join(words)
 
     return {
-        "token_starts": token_starts,
-        "token_ends": token_ends,
-        "token_time_starts": token_time_starts,
-        "token_time_ends": token_time_ends,
+        "word_starts": word_starts,
+        "word_ends": word_ends,
+        "word_time_starts": word_time_starts,
+        "word_time_ends": word_time_ends,
         "content": transcription,
         "html": f"<html><body><p>{transcription}</p></body></html>",
         "language": output.language,

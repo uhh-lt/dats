@@ -29,7 +29,6 @@ from core.code.code_orm import CodeORM
 from core.doc.sdoc_elastic_crud import crud_sdoc_elastic
 from core.doc.sdoc_elastic_dto import ElasticSearchDocumentCreate
 from core.doc.source_document_crud import crud_sdoc
-from core.doc.source_document_data_crud import crud_sdoc_data
 from core.doc.source_document_data_dto import SourceDocumentDataCreate
 from core.doc.source_document_dto import (
     SourceDocumentCreate,
@@ -72,7 +71,7 @@ from modules.simsearch.image_embedding_crud import crud_image_embedding
 from modules.simsearch.image_embedding_dto import ImageObjectIdentifier
 from modules.tag_recommendation.document_embedding_crud import crud_document_embedding
 from modules.tag_recommendation.document_embedding_dto import DocumentObjectIdentifier
-from pipeline_test_utils import core_steps
+from pipeline_test_utils import artefact_named, core_steps
 from prompt_test_utils import (
     PromptEximportProjects,
     create_prompt_eximport_projects,
@@ -87,6 +86,7 @@ from provenance_test_utils import (
 )
 from repos.elastic.elastic_repo import ElasticSearchRepo
 from repos.vector.weaviate_repo import WeaviateRepo
+from systems.artefact_system.stores.document_data_store import create_document_data
 from systems.job_system.job_system_enum import JobStatus
 from virtual_user_test_utils import VirtualUserProject, create_virtual_user_project
 
@@ -414,7 +414,7 @@ def _create_video_document_with_file(
     ffmpeg.output(
         picture, tone, str(video_path), pix_fmt="yuv420p"
     ).overwrite_output().run(quiet=True)
-    crud_sdoc_data.create(
+    create_document_data(
         db=db,
         create_dto=SourceDocumentDataCreate(
             id=video.id,
@@ -425,8 +425,10 @@ def _create_video_document_with_file(
             token_ends=[5, 12],
             sentence_starts=[0],
             sentence_ends=[12],
-            token_time_starts=[0, 500],
-            token_time_ends=[400, 900],
+            transcript_word_starts=[0, 6],
+            transcript_word_ends=[5, 12],
+            transcript_word_time_starts=[0, 500],
+            transcript_word_time_ends=[400, 900],
         ),
     )
     extract_audio_stream(project_id=project.id, sdoc_id=video.id, video_path=video_path)
@@ -720,7 +722,7 @@ def feature_toggle_eximport_projects(
     image_path.parent.mkdir(parents=True)
     Image.new("RGB", (4, 4)).save(image_path, "PNG")
     generate_thumbnails(project_id=project.id, sdoc_id=image.id, image_path=image_path)
-    crud_sdoc_data.create(
+    create_document_data(
         db=db_session,
         create_dto=SourceDocumentDataCreate(
             id=image.id,
@@ -731,8 +733,6 @@ def feature_toggle_eximport_projects(
             token_ends=[],
             sentence_starts=[],
             sentence_ends=[],
-            token_time_starts=None,
-            token_time_ends=None,
         ),
     )
 
@@ -767,7 +767,9 @@ def feature_toggle_eximport_projects(
                 project_id=project.id,
                 sdoc_id=sdoc.id,
                 filename=sdoc.filename,
-                content=crud_sdoc_data.read(db=db_session, id=sdoc.id).content,
+                content=artefact_named("content")
+                .store.read(db=db_session, sdoc_id=sdoc.id)
+                .content,
             ),
         )
 

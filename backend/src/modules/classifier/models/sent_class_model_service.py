@@ -33,9 +33,10 @@ from core.annotation.sentence_annotation_crud import crud_sentence_anno
 from core.annotation.sentence_annotation_dto import SentenceAnnotationCreate
 from core.annotation.sentence_annotation_orm import SentenceAnnotationORM
 from core.annotation.sentence_annotation_service import SentenceAnnotationService
+from core.artefacts.content.content_artefact import CONTENT
+from core.artefacts.tokens_sentences.tokens_sentences_artefact import TOKENS_SENTENCES
 from core.code.code_crud import crud_code
 from core.doc.source_document_crud import crud_sdoc
-from core.doc.source_document_data_crud import crud_sdoc_data
 from modules.classifier.classifier_crud import crud_classifier
 from modules.classifier.classifier_dto import (
     ClassifierClassMetrics,
@@ -613,9 +614,13 @@ class SentClassificationModelService(TextClassificationModelService):
         # Sentence models require at least one sentence per row. Filter unusable
         # documents before retrieving annotations so they cannot reach collation,
         # sequence packing, or the CRF.
-        sdoc_datas = crud_sdoc_data.read_by_ids(db=db, ids=sdoc_ids)
+        sdoc_datas = TOKENS_SENTENCES.store.read_many(
+            with_stores=[CONTENT.store], db=db, sdoc_ids=sdoc_ids
+        )
         sdocid2data = {
-            sdoc_data.id: sdoc_data for sdoc_data in sdoc_datas if sdoc_data.sentences
+            sdoc_id: sdoc_data
+            for sdoc_id, sdoc_data in sdoc_datas.items()
+            if sdoc_data.sentences
         }
         excluded_sdoc_count = len(sdoc_ids) - len(sdocid2data)
         if excluded_sdoc_count > 0:
@@ -1180,9 +1185,11 @@ class SentClassificationModelService(TextClassificationModelService):
         # 2. Create dataset
         job.update(current_step=2)
         # Get source document data
-        sdoc_datas = crud_sdoc_data.read_by_ids(db=db, ids=parameters.sdoc_ids)
+        sdoc_datas = TOKENS_SENTENCES.store.read_many(
+            with_stores=[CONTENT.store], db=db, sdoc_ids=parameters.sdoc_ids
+        )
         usable_sdoc_datas = [
-            sdoc_data for sdoc_data in sdoc_datas if sdoc_data.sentences
+            sdoc_data for sdoc_data in sdoc_datas.values() if sdoc_data.sentences
         ]
         excluded_sdoc_count = len(parameters.sdoc_ids) - len(usable_sdoc_datas)
         if excluded_sdoc_count > 0:

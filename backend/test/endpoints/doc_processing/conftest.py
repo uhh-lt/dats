@@ -11,7 +11,6 @@ from sqlalchemy.orm import Session
 
 from common.doc_type_enum import DocType
 from core.doc.source_document_crud import crud_sdoc
-from core.doc.source_document_data_crud import crud_sdoc_data
 from core.doc.source_document_dto import SourceDocumentCreate
 from core.doc.source_document_file_crud import crud_sdoc_file
 from core.doc.source_document_orm import SourceDocumentORM
@@ -36,6 +35,7 @@ from systems.artefact_system.artefact_registry import (
     artefact_registry,
 )
 from systems.artefact_system.pipeline_step_decorator import pipeline_step
+from systems.artefact_system.stores.document_data_store import DocumentData
 from systems.job_system.job_dto import Job
 from systems.job_system.job_register_decorator import register_job
 from systems.job_system.job_service import JobService
@@ -49,8 +49,9 @@ class AudioProject(TypedDict):
     - One audio document "Test Audio" (`silence.wav`): one second of silence
       (16 kHz, mono, 16 bit PCM), stored in the project's filesystem directory.
       The document is in the state right after its upload: its document data
-      exists but is empty (no content, no tokens, no token timings), so the
-      transcription is the step that fills it.
+      exists but is empty (no content, no tokens, no transcript), so the
+      transcription is the step that fills it. Its metadata exists, with the
+      language "en".
 
     Non-obvious derived behavior:
 
@@ -65,9 +66,12 @@ class AudioProject(TypedDict):
 @pytest.fixture(scope="function")
 def audio_project(db_session: Session, test_project: ProjectORM) -> AudioProject:
     from core.doc.source_document_crud import crud_sdoc
-    from core.doc.source_document_data_crud import crud_sdoc_data
     from core.doc.source_document_data_dto import SourceDocumentDataCreate
     from core.doc.source_document_dto import SourceDocumentCreate
+    from core.metadata.source_document_metadata_crud import crud_sdoc_meta
+    from systems.artefact_system.stores.document_data_store import (
+        create_document_data,
+    )
 
     sdoc = crud_sdoc.create(
         db=db_session,
@@ -90,7 +94,7 @@ def audio_project(db_session: Session, test_project: ProjectORM) -> AudioProject
         f.setframerate(16000)
         f.writeframes(b"\x00\x00" * 16000)
 
-    crud_sdoc_data.create(
+    create_document_data(
         db=db_session,
         create_dto=SourceDocumentDataCreate(
             id=sdoc.id,
@@ -101,10 +105,18 @@ def audio_project(db_session: Session, test_project: ProjectORM) -> AudioProject
             token_ends=[],
             sentence_starts=[],
             sentence_ends=[],
-            token_time_starts=None,
-            token_time_ends=None,
         ),
     )
+
+    crud_sdoc_meta.create_initial_metadata(
+        db=db_session,
+        project_id=test_project.id,
+        sdoc_id=sdoc.id,
+        doctype=DocType.audio,
+    )
+    crud_sdoc_meta.read_by_sdoc_and_key(
+        db=db_session, sdoc_id=sdoc.id, key="language"
+    ).str_value = "en"
 
     db_session.commit()
     db_session.refresh(test_project)
@@ -363,7 +375,9 @@ _DUMMY_COMPUTED: dict[int, str] = {}
 
 def _enrich_dummy(payload: SdocProcessingJobInput) -> DummyJobInput:
     with SQLRepo().transaction() as db:
-        content = crud_sdoc_data.read(db=db, id=payload.sdoc_id).content
+        content = (
+            artefact_named("content").store.read(db=db, sdoc_id=payload.sdoc_id).content
+        )
     return DummyJobInput(**payload.model_dump(), text=content)
 
 
@@ -385,7 +399,9 @@ def dummy_step() -> Generator[DummyStep, None, None]:
     its handler records it in `computed`. The fixture removes the step again.
     """
     step = "test_dummy_step"
-    test_artefact = artefact("test_dummy_artefact", title="Test dummy", always=True)
+    test_artefact = artefact(
+        "test_dummy_artefact", title="Test dummy", always=True, store=DocumentData()
+    )
 
     _DUMMY_COMPUTED.clear()
     pipeline_step(
@@ -453,7 +469,12 @@ def paired_steps() -> Generator[PairedSteps, None, None]:
     producer = "test_producer_step"
     consumer = "test_consumer_step"
     artefacts = [
-        artefact(f"test_{name}_artefact", title=f"Test {name}", always=True)
+        artefact(
+            f"test_{name}_artefact",
+            title=f"Test {name}",
+            always=True,
+            store=DocumentData(),
+        )
         for name in ("first", "second", "third")
     ]
 

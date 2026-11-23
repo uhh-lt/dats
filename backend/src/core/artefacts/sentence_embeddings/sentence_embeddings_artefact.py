@@ -64,5 +64,6 @@ class _SentenceEmbeddingArchive(ArtefactArchive):
 SENTENCE_EMBEDDINGS = artefact(
     "sentence_embeddings",
     title="Sentence embeddings",
+    store=crud_sentence_embedding,
     archive=_SentenceEmbeddingArchive(),
 )

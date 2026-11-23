@@ -4,11 +4,11 @@ from sqlalchemy import select
 from sqlalchemy.orm import Session
 
 from config import conf
+from core.artefacts.content.content_artefact import CONTENT
 from core.artefacts.sentence_embeddings.sentence_embedding_crud import (
     crud_sentence_embedding,
 )
-from core.doc.source_document_data_crud import crud_sdoc_data
-from core.doc.source_document_data_orm import SourceDocumentDataORM
+from core.artefacts.tokens_sentences.tokens_sentences_artefact import TOKENS_SENTENCES
 from core.doc.source_document_orm import SourceDocumentORM
 from core.metadata.source_document_metadata_orm import SourceDocumentMetadataORM
 from modules.concept_over_time_analysis.cota_dto import (
@@ -95,14 +95,9 @@ def __add_sentences_to_search_space(
     sdoc_ids = list(set([cota_sent.sdoc_id for cota_sent in search_space]))
 
     # get the data from the database
-    sdoc_datas = crud_sdoc_data.read_by_ids(db=db, ids=sdoc_ids)
-
-    # map the data
-    sdoc_id2sdocdata: dict[int, SourceDocumentDataORM] = {
-        sdoc_data_read.id: sdoc_data_read
-        for sdoc_data_read in sdoc_datas
-        if sdoc_data_read is not None
-    }
+    sdoc_id2sdocdata = TOKENS_SENTENCES.store.read_many(
+        with_stores=[CONTENT.store], db=db, sdoc_ids=sdoc_ids
+    )
 
     sentences = []
     for cota_sent in search_space:

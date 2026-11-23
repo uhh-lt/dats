@@ -1,14 +1,10 @@
 from uuid import uuid4
 
 from common.doc_type_enum import DocType
-from core.annotation.annotation_document_crud import crud_adoc
-from core.annotation.span_annotation_crud import crud_span_anno
 from core.annotation.span_annotation_dto import SpanAnnotationCreateIntern
 from core.artefacts.content.content_artefact import CONTENT
 from core.artefacts.language.language_artefact import LANGUAGE
 from core.artefacts.text_step_utils import read_stored_text
-from core.code.code_crud import crud_code
-from core.user.user_crud import SYSTEM_USER_ID
 from modules.entity_annotations.ner_artefact import NER_SPANS
 from repos.db.sql_repo import SQLRepo
 from repos.ray.dto.spacy import SpacyInput, SpacyPipelineOutput
@@ -20,9 +16,6 @@ from systems.job_system.job_register_decorator import register_job
 
 sqlr = SQLRepo()
 ray = RayRepo()
-
-# the system code whose children are the named entity codes
-NAMED_ENTITY_CODE = "NAMED_ENTITY"
 
 
 class NerJobInput(SdocProcessingJobInput):
@@ -52,32 +45,17 @@ def handle_named_entity_recognition_job(payload: NerJobInput, job: Job) -> None:
         SpacyInput(text=payload.text, language=payload.language)
     )
     with sqlr.transaction() as db:
-        system_codes = crud_code.read_system_codes_by_project(
-            db=db, project_id=payload.project_id
-        )
-        system_code_ids = {code.name: code.id for code in system_codes}
-        # the codes of the named entities spacy annotates
-        ner_parent_id = system_code_ids.get(NAMED_ENTITY_CODE)
-        ner_code_ids = [
-            code.id
-            for code in system_codes
-            if ner_parent_id is not None and code.parent_id == ner_parent_id
-        ]
-        adoc = crud_adoc.exists_or_create(
-            db=db, user_id=SYSTEM_USER_ID, sdoc_id=payload.sdoc_id
-        )
+        store = NER_SPANS.store
+        code_ids = store.code_ids(db=db, project_id=payload.project_id)
+        adoc_id = store.annotation_document_id(db=db, sdoc_id=payload.sdoc_id)
         # replace only the system user's named entities, keeping the annotations
         # of all users and of other automatic annotators (quotation, coreference)
-        crud_span_anno.delete_by_user_sdocs_codes(
+        store.replace(
             db=db,
-            user_id=SYSTEM_USER_ID,
-            sdoc_ids=[payload.sdoc_id],
-            code_ids=ner_code_ids,
-        )
-        crud_span_anno.create_multi(
-            db,
-            create_dtos=extract_span_annotations(
-                payload.project_id, spacy_output, system_code_ids, adoc.id
+            project_id=payload.project_id,
+            sdoc_id=payload.sdoc_id,
+            spans=extract_span_annotations(
+                payload.project_id, spacy_output, code_ids, adoc_id
             ),
         )
 

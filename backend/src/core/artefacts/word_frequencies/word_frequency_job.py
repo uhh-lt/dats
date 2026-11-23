@@ -7,7 +7,6 @@ from core.artefacts.text_step_utils import read_stored_text
 from core.artefacts.word_frequencies.word_frequencies_artefact import (
     WORD_FREQUENCIES,
 )
-from core.artefacts.word_frequencies.word_frequency_crud import crud_word_frequency
 from core.artefacts.word_frequencies.word_frequency_dto import WordFrequencyCreate
 from repos.db.sql_repo import SQLRepo
 from repos.ray.dto.spacy import SpacyInput, SpacyPipelineOutput
@@ -48,8 +47,8 @@ def handle_word_frequency_job(payload: WordFrequencyJobInput, job: Job) -> None:
         SpacyInput(text=payload.text, language=payload.language)
     )
     with sqlr.transaction() as db:
-        crud_word_frequency.delete_by_sdoc_id(db=db, sdoc_id=payload.sdoc_id)
-        crud_word_frequency.create_multi(
+        WORD_FREQUENCIES.store.delete_by_sdoc_id(db=db, sdoc_id=payload.sdoc_id)
+        WORD_FREQUENCIES.store.create_multi(
             db=db,
             create_dtos=extract_word_frequencies(payload.sdoc_id, spacy_output),
         )

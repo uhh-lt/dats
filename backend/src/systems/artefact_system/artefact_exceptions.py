@@ -18,3 +18,14 @@ class PipelineNotRegisteredError(Exception):
             "No pipeline steps are registered. Register the jobs first "
             "(bootstrap.register_jobs)."
         )
+
+
+class ForeignArtefactDataError(Exception):
+    """Raised when data is written through the store of an artefact that does
+    not own it (a document data column, a metadata key or an annotation code of
+    another artefact)."""
+
+    def __init__(self, foreign: list[str]) -> None:
+        super().__init__(
+            "The store of the artefact does not own: " + ", ".join(foreign) + "."
+        )

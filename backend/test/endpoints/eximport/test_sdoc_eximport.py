@@ -126,8 +126,10 @@ def test_document_survives_export_import_round_trip(
         "token_ends",
         "sentence_starts",
         "sentence_ends",
-        "token_time_starts",
-        "token_time_ends",
+        "transcript_word_starts",
+        "transcript_word_ends",
+        "transcript_word_time_starts",
+        "transcript_word_time_ends",
     ]:
         assert getattr(imported.data, column) == getattr(sdoc.data, column), column
     assert imported.data.sentence_starts == [0, 18]

@@ -4,7 +4,6 @@ from common.doc_type_enum import DocType
 from core.doc.source_document_crud import crud_sdoc
 from core.doc.source_document_dto import SourceDocumentRead
 from modules.simsearch.image_embedding_artefact import IMAGE_EMBEDDINGS
-from modules.simsearch.image_embedding_crud import crud_image_embedding
 from modules.simsearch.image_embedding_dto import ImageObjectIdentifier
 from modules.simsearch.image_embedding_utils import encode_image
 from repos.db.sql_repo import SQLRepo
@@ -53,7 +52,7 @@ def handle_image_embedding_job(payload: ImageEmbeddingJobInput, job: Job) -> Non
     logger.debug(
         f"Adding image SDoc {payload.sdoc_id} in Project {payload.project_id} to Weaviate ..."
     )
-    crud_image_embedding.create(
+    IMAGE_EMBEDDINGS.store.create(
         client=weaviate.get_client(),
         project_id=payload.project_id,
         id=ImageObjectIdentifier(sdoc_id=payload.sdoc_id),

@@ -1,8 +1,6 @@
 from common.doc_type_enum import DocType
 from core.artefacts.content.content_artefact import CONTENT
-from core.doc.source_document_data_crud import crud_sdoc_data
 from modules.tag_recommendation.document_embedding_artefact import DOCUMENT_EMBEDDINGS
-from modules.tag_recommendation.document_embedding_crud import crud_document_embedding
 from modules.tag_recommendation.document_embedding_dto import DocumentObjectIdentifier
 from repos.db.sql_repo import SQLRepo
 from repos.llm_repo import LLMRepo
@@ -23,10 +21,7 @@ def enrich_for_recompute(
     payload: SdocProcessingJobInput,
 ) -> TextDocumentEmbeddingJobInput:
     with sqlr.transaction() as db:
-        sdoc_data = crud_sdoc_data.read(
-            db=db,
-            id=payload.sdoc_id,
-        )
+        sdoc_data = CONTENT.store.read(db=db, sdoc_id=payload.sdoc_id)
 
         return TextDocumentEmbeddingJobInput(
             **payload.model_dump(),
@@ -50,7 +45,7 @@ def handle_document_embedding_job(
 ) -> None:
     # embed the text and replace the document's previous embedding
     embedding = LLMRepo().llm_embed([payload.text]).tolist()[0]
-    crud_document_embedding.create_multi(
+    DOCUMENT_EMBEDDINGS.store.create_multi(
         client=WeaviateRepo().get_client(),
         project_id=payload.project_id,
         ids=[DocumentObjectIdentifier(sdoc_id=payload.sdoc_id)],

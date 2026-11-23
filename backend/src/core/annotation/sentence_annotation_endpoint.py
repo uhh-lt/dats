@@ -13,9 +13,9 @@ from core.annotation.sentence_annotation_dto import (
     SentenceAnnotatorResult,
 )
 from core.annotation.sentence_annotation_service import SentenceAnnotationService
+from core.artefacts.tokens_sentences.tokens_sentences_artefact import TOKENS_SENTENCES
 from core.auth.authz_user import AuthzUser
 from core.auth.validation import Validate
-from core.doc.source_document_data_crud import crud_sdoc_data
 from systems.websocket_system.websocket_dependency import WebsocketEmitter
 
 router = APIRouter(
@@ -137,9 +137,7 @@ def get_by_sdoc_and_user(
     authz_user.assert_in_same_project_as(Crud.SOURCE_DOCUMENT, sdoc_id)
 
     # read sentences
-    sdoc_data = crud_sdoc_data.read(db=db, id=sdoc_id)
-    if sdoc_data is None:
-        raise ValueError("SourceDocument is not a text document")
+    sdoc_data = TOKENS_SENTENCES.store.read(db=db, sdoc_id=sdoc_id)
 
     # read sentence annotations
     sentence_annos = [

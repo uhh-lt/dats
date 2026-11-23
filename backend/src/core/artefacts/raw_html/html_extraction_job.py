@@ -8,7 +8,7 @@ from loguru import logger
 from common.doc_type_enum import DocType
 from core.artefacts.raw_html.html_cleaning_utils import clean_html
 from core.artefacts.raw_html.raw_html_artefact import RAW_HTML
-from core.doc.source_document_data_crud import crud_sdoc_data
+from core.doc.source_document_crud import crud_sdoc
 from core.doc.source_document_data_dto import SourceDocumentDataUpdate
 from core.doc.source_document_file_crud import crud_sdoc_file
 from core.doc_processing.doc_processing_dto import SdocInitJobInput
@@ -41,11 +41,7 @@ def enrich_for_recompute(
     payload: SdocProcessingJobInput,
 ) -> ExtractHTMLJobInput:
     with sqlr.transaction() as db:
-        sdoc_data = crud_sdoc_data.read(
-            db=db,
-            id=payload.sdoc_id,
-        )
-        sdoc = sdoc_data.source_document
+        sdoc = crud_sdoc.read(db=db, id=payload.sdoc_id)
         assert crud_sdoc_file.exists(
             project_id=sdoc.project_id, id=sdoc.id, name=sdoc.filename
         ), f"The file of SourceDocument {sdoc.id} does not exist!"
@@ -109,12 +105,10 @@ def handle_html_extraction_job(
 
     # Store HTML in sdoc data
     with sqlr.transaction() as db:
-        crud_sdoc_data.update(
+        RAW_HTML.store.write(
             db=db,
-            id=payload.sdoc_id,
-            update_dto=SourceDocumentDataUpdate(
-                raw_html=raw_html,
-            ),
+            sdoc_id=payload.sdoc_id,
+            update=SourceDocumentDataUpdate(raw_html=raw_html),
         )
 
     # the extracted images become documents of their own

@@ -3,14 +3,10 @@ from uuid import uuid4
 from loguru import logger
 
 from common.doc_type_enum import DocType
-from core.annotation.annotation_document_crud import crud_adoc
-from core.annotation.bbox_annotation_crud import crud_bbox_anno
 from core.annotation.bbox_annotation_dto import BBoxAnnotationCreateIntern
-from core.code.code_crud import crud_code
 from core.doc.source_document_crud import crud_sdoc
 from core.doc.source_document_dto import SourceDocumentRead
 from core.doc.source_document_file_crud import crud_sdoc_file
-from core.user.user_crud import SYSTEM_USER_ID
 from modules.object_detection.object_detection_artefact import OBJECT_BBOXES
 from repos.db.sql_repo import SQLRepo
 from repos.ray.dto.detr import DETRImageInput
@@ -73,18 +69,9 @@ def handle_object_detection_job(payload: ObjectDetectionJobInput, job: Job) -> N
 
     # Store bboxes in the database
     with sqlr.transaction() as trans:
-        # query required data from db
-        system_code_ids = {
-            code.name: code.id
-            for code in crud_code.read_system_codes_by_project(
-                db=trans, project_id=payload.project_id
-            )
-        }
-        adoc = crud_adoc.exists_or_create(
-            db=trans,
-            user_id=SYSTEM_USER_ID,
-            sdoc_id=payload.sdoc_id,
-        )
+        store = OBJECT_BBOXES.store
+        system_code_ids = store.code_ids(db=trans, project_id=payload.project_id)
+        adoc_id = store.annotation_document_id(db=trans, sdoc_id=payload.sdoc_id)
 
         # convert to BBoxAnnotationCreate
         create_dtos = [
@@ -96,18 +83,16 @@ def handle_object_detection_job(payload: ObjectDetectionJobInput, job: Job) -> N
                 code_id=system_code_ids[LABEL_CODES.get(box.label, box.label)],
                 uuid=str(uuid4()),
                 project_id=payload.project_id,
-                annotation_document_id=adoc.id,
+                annotation_document_id=adoc_id,
             )
             for box in result.bboxes
             if LABEL_CODES.get(box.label, box.label) in system_code_ids
         ]
 
-        # store bboxes in db
-        crud_bbox_anno.delete_by_adoc(
+        # replace the system user's boxes, keeping the boxes of all users
+        store.replace(
             db=trans,
-            adoc_id=adoc.id,
-        )
-        crud_bbox_anno.create_multi(
-            db=trans,
-            create_dtos=create_dtos,
+            project_id=payload.project_id,
+            sdoc_id=payload.sdoc_id,
+            bboxes=create_dtos,
         )

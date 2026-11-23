@@ -2,7 +2,6 @@ from loguru import logger
 
 from common.doc_type_enum import DocType
 from core.doc.source_document_crud import crud_sdoc
-from core.doc.source_document_data_crud import crud_sdoc_data
 from core.doc.source_document_data_dto import SourceDocumentDataCreate
 from core.doc.source_document_dto import SourceDocumentCreate
 from core.doc.source_document_file_crud import crud_sdoc_file
@@ -15,6 +14,7 @@ from repos.db.sql_repo import SQLRepo
 from repos.filesystem.temporary_file_crud import crud_temporary_file
 from systems.artefact_system.artefact_service import ArtefactService
 from systems.artefact_system.step_execution import start_steps
+from systems.artefact_system.stores.document_data_store import create_document_data
 from systems.feature_system.feature_service import FeatureService
 from systems.job_system.job_dto import Job
 from systems.job_system.job_register_decorator import register_job
@@ -51,7 +51,7 @@ def handle_init_sdoc_job(payload: SdocInitJobInput, job: Job) -> SdocInitJobOutp
         )
 
         # create empty sdoc data
-        crud_sdoc_data.create(
+        create_document_data(
             db=db,
             create_dto=SourceDocumentDataCreate(
                 id=sdoc_db_obj.id,

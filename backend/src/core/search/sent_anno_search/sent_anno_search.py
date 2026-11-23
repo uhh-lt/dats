@@ -3,6 +3,8 @@ from sqlalchemy.orm import Session
 from common.doc_type_enum import DocType
 from core.annotation.annotation_document_orm import AnnotationDocumentORM
 from core.annotation.sentence_annotation_orm import SentenceAnnotationORM
+from core.artefacts.content.content_artefact import CONTENT
+from core.artefacts.tokens_sentences.tokens_sentences_artefact import TOKENS_SENTENCES
 from core.code.code_dto import CodeRead
 from core.code.code_orm import CodeORM
 from core.doc.source_document_dto import SourceDocumentRead
@@ -103,6 +105,9 @@ def find_sentence_annotations(
         object_ids=[row[0] for row in result_rows],
     )
 
+    sentences = TOKENS_SENTENCES.store.read_many(
+        with_stores=[CONTENT.store], db=db, sdoc_ids=[row[5].id for row in result_rows]
+    )
     items = []
     for row in result_rows:
         sent_start = row[1]
@@ -115,7 +120,9 @@ def find_sentence_annotations(
                 code=CodeRead.model_validate(row[4]),
                 sdoc=SourceDocumentRead.model_validate(sdoc_orm),
                 tag_ids=[tag.id for tag in sdoc_orm.tags],
-                text=" ".join(sdoc_orm.data.sentences[sent_start : sent_end + 1]),
+                text=" ".join(
+                    sentences[sdoc_orm.id].sentences[sent_start : sent_end + 1]
+                ),
                 memo_ids=memo_ids_by_annotation.get(row[0], []),
                 created=row[6],
                 source_user_id=row[7],

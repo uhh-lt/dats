@@ -24,7 +24,6 @@ from core.code.code_crud import crud_code
 from core.code.code_dto import CodeCreate
 from core.code.code_orm import CodeORM
 from core.doc.source_document_crud import crud_sdoc
-from core.doc.source_document_data_crud import crud_sdoc_data
 from core.doc.source_document_data_dto import SourceDocumentDataCreate
 from core.doc.source_document_dto import SourceDocumentCreate
 from core.doc.source_document_orm import SourceDocumentORM
@@ -40,6 +39,7 @@ from core.user.user_crud import crud_user
 from core.user.user_dto import UserCreate
 from core.user.user_orm import UserORM
 from dats_test_utils import ProjectWithSdoc
+from systems.artefact_system.stores.document_data_store import create_document_data
 
 AnnotationKind = Literal["span", "sentence", "bbox"]
 ANNOTATION_KINDS: list[AnnotationKind] = ["span", "sentence", "bbox"]
@@ -329,7 +329,7 @@ def create_provenance_project(
     )
     # search rows of sentence annotations read the sentences of the document
     text_sdoc_data = project_with_sdoc["source_document_data"]
-    crud_sdoc_data.create(
+    create_document_data(
         db=db_session,
         create_dto=SourceDocumentDataCreate(
             id=other_text_sdoc.id,
@@ -340,8 +340,6 @@ def create_provenance_project(
             token_ends=text_sdoc_data.token_ends,
             sentence_starts=text_sdoc_data.sentence_starts,
             sentence_ends=text_sdoc_data.sentence_ends,
-            token_time_starts=None,
-            token_time_ends=None,
         ),
     )
     image_sdoc = _create_sdoc(

@@ -9,13 +9,14 @@ from core.annotation.annotation_document_orm import AnnotationDocumentORM
 from core.annotation.span_annotation_dto import SpanAnnotationCreate, SpanAnnotationRead
 from core.annotation.span_annotation_orm import SpanAnnotationORM
 from core.annotation.span_annotation_service import SpanAnnotationService
+from core.artefacts.content.content_artefact import CONTENT
 from core.artefacts.sentence_embeddings.sentence_embedding_crud import (
     crud_sentence_embedding,
 )
 from core.artefacts.sentence_embeddings.sentence_embedding_dto import (
     SentenceObjectIdentifier,
 )
-from core.doc.source_document_data_crud import crud_sdoc_data
+from core.artefacts.tokens_sentences.tokens_sentences_artefact import TOKENS_SENTENCES
 from core.doc.source_document_orm import SourceDocumentORM
 from modules.annoscaling.annoscaling_dto import (
     AnnoscalingResult,
@@ -44,8 +45,7 @@ class AnnoScalingService(metaclass=SingletonMeta):
         reject: list[tuple[int, int]],
     ) -> list[SpanAnnotationRead]:
         sdoc_ids = list({sdoc for sdoc, _ in accept + reject})
-        sdoc_data = crud_sdoc_data.read_by_ids(db, ids=sdoc_ids)
-        sdocs = {sdoc.id: sdoc for sdoc in sdoc_data}
+        sdocs = TOKENS_SENTENCES.store.read_many(db=db, sdoc_ids=sdoc_ids)
 
         to_create = []
 
@@ -267,9 +267,11 @@ class AnnoScalingService(metaclass=SingletonMeta):
     def __get_sentences(
         self, db: Session, sdoc_ids: Iterable[int]
     ) -> dict[int, tuple[list[int], list[int], str]]:
-        sdoc_datas = crud_sdoc_data.read_by_ids(db, ids=list(sdoc_ids))
+        sdoc_datas = TOKENS_SENTENCES.store.read_many(
+            with_stores=[CONTENT.store], db=db, sdoc_ids=list(sdoc_ids)
+        )
         result: dict[int, tuple[list[int], list[int], str]] = {}
-        for sdoc in sdoc_datas:
+        for sdoc in sdoc_datas.values():
             result[sdoc.id] = (
                 sdoc.sentence_starts,
                 sdoc.sentence_ends,

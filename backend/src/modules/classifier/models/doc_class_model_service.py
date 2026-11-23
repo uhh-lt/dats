@@ -28,8 +28,8 @@ from transformers.models.auto.modeling_auto import AutoModelForSequenceClassific
 from transformers.models.auto.tokenization_auto import AutoTokenizer
 
 from config import conf
+from core.artefacts.content.content_artefact import CONTENT
 from core.doc.source_document_crud import crud_sdoc
-from core.doc.source_document_data_crud import crud_sdoc_data
 from core.doc.source_document_data_orm import SourceDocumentDataORM
 from core.tag.tag_crud import crud_tag
 from core.tag.tag_orm import SourceDocumentTagLinkTable
@@ -556,12 +556,10 @@ class DocClassificationModelService(TextClassificationModelService):
 
         # Get source document data
         # Some documents may be erroneous and do not have data
-        sdoc_datas = crud_sdoc_data.read_by_ids(db=db, ids=sdoc_ids)
+        sdoc_datas = CONTENT.store.read_many(db=db, sdoc_ids=sdoc_ids)
         sdocid2data: dict[int, SourceDocumentDataORM | None] = {
-            sdoc_id: None for sdoc_id in sdoc_ids
+            sdoc_id: sdoc_datas.get(sdoc_id) for sdoc_id in sdoc_ids
         }
-        for sdoc_data in sdoc_datas:
-            sdocid2data[sdoc_data.id] = sdoc_data
 
         # Create a labeled dataset
         # Every source document is part of the training data
@@ -1061,10 +1059,10 @@ class DocClassificationModelService(TextClassificationModelService):
         # 2. Create dataset
         job.update(current_step=2)
         # Get source document data
-        sdoc_datas = crud_sdoc_data.read_by_ids(db=db, ids=parameters.sdoc_ids)
+        sdoc_datas = CONTENT.store.read_many(db=db, sdoc_ids=parameters.sdoc_ids)
         inference_dataset: list[InferenceDatasetRow] = [
             {"sdoc_id": sdoc_data.id, "text": sdoc_data.content}
-            for sdoc_data in sdoc_datas
+            for sdoc_data in sdoc_datas.values()
         ]
 
         hf_dataset = Dataset.from_list(inference_dataset)  # type: ignore

@@ -3,9 +3,9 @@ from fastapi import APIRouter, Depends
 from common.crud_enum import Crud
 from common.dats_event import DATSEvent
 from common.dependencies import DBSession, get_current_user
+from core.artefacts.html.html_artefact import HTML
 from core.auth.authz_user import AuthzUser
 from core.doc.source_document_crud import crud_sdoc
-from core.doc.source_document_data_crud import crud_sdoc_data
 from core.doc.source_document_data_dto import SourceDocumentDataRead
 from core.doc.source_document_dto import (
     SourceDocumentRead,
@@ -62,8 +62,10 @@ def get_by_id_with_data(
     if not only_if_finished:
         crud_sdoc.read_status(db=db, sdoc_id=sdoc_id, raise_error_on_unfinished=True)
 
-    sdoc_data = crud_sdoc_data.read(db=db, id=sdoc_id)
-    return SourceDocumentDataRead.model_validate(sdoc_data)
+    # the data row of the HTML also holds the tokens, sentences and transcript
+    return SourceDocumentDataRead.model_validate(
+        HTML.store.read(db=db, sdoc_id=sdoc_id)
+    )
 
 
 @router.get(

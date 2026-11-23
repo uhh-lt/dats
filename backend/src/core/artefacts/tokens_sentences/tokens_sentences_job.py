@@ -6,7 +6,7 @@ from core.artefacts.text_step_utils import read_stored_text
 from core.artefacts.tokens_sentences.tokens_sentences_artefact import (
     TOKENS_SENTENCES,
 )
-from core.doc.source_document_data_crud import crud_sdoc_data
+from core.artefacts.transcript.transcript_artefact import TRANSCRIPT
 from core.doc.source_document_data_dto import SourceDocumentDataUpdate
 from repos.db.sql_repo import SQLRepo
 from repos.ray.dto.spacy import SpacyInput, SpacyPipelineOutput
@@ -26,6 +26,9 @@ class SpacyJobInput(SdocProcessingJobInput):
     text: str
     language: str
     raw_html: str
+    # the words of the transcript of an audio or video, its tokens; None for
+    # other doctypes, which spaCy tokenizes
+    word_offsets: tuple[list[int], list[int]] | None
 
 
 def enrich_for_recompute(
@@ -38,7 +41,24 @@ def enrich_for_recompute(
         text=stored.text,
         raw_html=stored.raw_html,
         language=stored.language,
+        word_offsets=_read_word_offsets(payload.sdoc_id, stored.doctype),
     )
+
+
+def _read_word_offsets(
+    sdoc_id: int, doctype: DocType
+) -> tuple[list[int], list[int]] | None:
+    """The word offsets of the transcript of an audio or video, which the
+    transcription (before the content) stored."""
+    if doctype not in {DocType.audio, DocType.video}:
+        return None
+    with sqlr.transaction() as db:
+        transcript = TRANSCRIPT.store.read(db=db, sdoc_id=sdoc_id)
+        assert (
+            transcript.transcript_word_starts is not None
+            and transcript.transcript_word_ends is not None
+        ), f"The transcript of document {sdoc_id} has no words!"
+        return transcript.transcript_word_starts, transcript.transcript_word_ends
 
 
 @pipeline_step(
@@ -57,28 +77,23 @@ def handle_tokens_sentences_job(payload: SpacyJobInput, job: Job) -> None:
     )
     sdoc_data = extract_tok_sent_data(spacy_output, payload.raw_html)
 
+    # the tokens of an audio or video are the words of its transcript, so the
+    # word times fit the tokens; spaCy splits the sentences only
+    token_starts, token_ends = payload.word_offsets or (
+        sdoc_data["token_starts"],
+        sdoc_data["token_ends"],
+    )
     with sqlr.transaction() as db:
-        if payload.doctype in {DocType.text, DocType.image}:
-            crud_sdoc_data.update(
-                db=db,
-                id=payload.sdoc_id,
-                update_dto=SourceDocumentDataUpdate(
-                    token_starts=sdoc_data["token_starts"],
-                    token_ends=sdoc_data["token_ends"],
-                    sentence_starts=sdoc_data["sentence_starts"],
-                    sentence_ends=sdoc_data["sentence_ends"],
-                ),
-            )
-        else:
-            # if coming from audio or video pipeline, we are only interested in sentence splitting (tokenization already done by whisper)
-            crud_sdoc_data.update(
-                db=db,
-                id=payload.sdoc_id,
-                update_dto=SourceDocumentDataUpdate(
-                    sentence_starts=sdoc_data["sentence_starts"],
-                    sentence_ends=sdoc_data["sentence_ends"],
-                ),
-            )
+        TOKENS_SENTENCES.store.write(
+            db=db,
+            sdoc_id=payload.sdoc_id,
+            update=SourceDocumentDataUpdate(
+                token_starts=token_starts,
+                token_ends=token_ends,
+                sentence_starts=sdoc_data["sentence_starts"],
+                sentence_ends=sdoc_data["sentence_ends"],
+            ),
+        )
 
 
 def extract_tok_sent_data(

@@ -18025,7 +18025,7 @@
               { "type": "null" }
             ],
             "title": "Word Level Transcriptions",
-            "description": "word level transcriptions, with tokens, start times and end times"
+            "description": "The words of the transcript of an audio or video document, with their start and end times; None for other documents"
           }
         },
         "type": "object",

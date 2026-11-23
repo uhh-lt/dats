@@ -49,5 +49,8 @@ class _ImageEmbeddingArchive(ArtefactArchive):
 
 
 IMAGE_EMBEDDINGS = artefact(
-    "image_embeddings", title="Image embeddings", archive=_ImageEmbeddingArchive()
+    "image_embeddings",
+    title="Image embeddings",
+    store=crud_image_embedding,
+    archive=_ImageEmbeddingArchive(),
 )

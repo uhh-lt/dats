@@ -20,7 +20,6 @@ from core.doc.folder_dto import FolderCreate
 from core.doc.folder_enum import FolderType
 from core.doc.folder_orm import FolderORM
 from core.doc.source_document_crud import crud_sdoc
-from core.doc.source_document_data_crud import crud_sdoc_data
 from core.doc.source_document_data_dto import SourceDocumentDataCreate
 from core.doc.source_document_dto import (
     SourceDocumentCreate,
@@ -28,6 +27,7 @@ from core.doc.source_document_dto import (
 from core.doc.source_document_file_crud import crud_sdoc_file
 from core.doc.source_document_orm import SourceDocumentORM
 from core.project.project_orm import ProjectORM
+from systems.artefact_system.stores.document_data_store import create_document_data
 
 
 class ProjectWithSdocsInSameFolder(TypedDict):
@@ -65,7 +65,7 @@ def project_with_sdocs_in_same_folder(
         ),
     )
 
-    crud_sdoc_data.create(
+    create_document_data(
         db=db_session,
         create_dto=SourceDocumentDataCreate(
             id=sdoc1.id,
@@ -76,8 +76,6 @@ def project_with_sdocs_in_same_folder(
             token_ends=[4, 7, 9, 14, 23, 27, 31, 35, 45],
             sentence_starts=[0, 25],
             sentence_ends=[24, 46],
-            token_time_starts=None,
-            token_time_ends=None,
         ),
     )
 
@@ -93,7 +91,7 @@ def project_with_sdocs_in_same_folder(
         ),
     )
 
-    crud_sdoc_data.create(
+    create_document_data(
         db=db_session,
         create_dto=SourceDocumentDataCreate(
             id=sdoc2.id,
@@ -104,8 +102,6 @@ def project_with_sdocs_in_same_folder(
             token_ends=[4, 7, 9, 14, 23, 27, 31, 35, 45],
             sentence_starts=[0, 25],
             sentence_ends=[24, 46],
-            token_time_starts=None,
-            token_time_ends=None,
         ),
     )
 

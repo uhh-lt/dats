@@ -22,7 +22,6 @@ from core.code.code_crud import crud_code
 from core.code.code_dto import CodeCreate
 from core.code.code_orm import CodeORM
 from core.doc.source_document_crud import crud_sdoc
-from core.doc.source_document_data_crud import crud_sdoc_data
 from core.doc.source_document_data_dto import SourceDocumentDataCreate
 from core.doc.source_document_dto import SourceDocumentCreate
 from core.doc.source_document_orm import SourceDocumentORM
@@ -32,6 +31,7 @@ from core.project.project_service import ProjectService
 from core.user.user_crud import crud_user
 from core.user.user_dto import UserCreate
 from core.user.user_orm import UserORM
+from systems.artefact_system.stores.document_data_store import create_document_data
 
 
 @contextmanager
@@ -198,7 +198,7 @@ def _create_sdoc(db, project_id: int, name: str, content: str) -> SourceDocument
     )
     tokens = list(re.finditer(r"\w+", content))
     sentences = list(re.finditer(r"[^.]+\.", content))
-    crud_sdoc_data.create(
+    create_document_data(
         db=db,
         create_dto=SourceDocumentDataCreate(
             id=sdoc.id,
@@ -212,8 +212,6 @@ def _create_sdoc(db, project_id: int, name: str, content: str) -> SourceDocument
                 s.start() + (s.group().startswith(" ")) for s in sentences
             ],
             sentence_ends=[s.end() for s in sentences],
-            token_time_starts=None,
-            token_time_ends=None,
         ),
     )
     return sdoc

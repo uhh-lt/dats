@@ -2,10 +2,10 @@ from sqlalchemy.orm import Session
 
 from common.crud_enum import Crud
 from common.singleton_meta import SingletonMeta
+from core.artefacts.thumbnail.thumbnail_artefact import THUMBNAIL
 from core.artefacts.thumbnail.thumbnail_file_crud import (
     IMAGE_FILENAME,
     THUMBNAIL_FILENAME,
-    crud_thumbnail_file,
 )
 from core.doc.folder_crud import crud_folder
 from core.doc.folder_dto import FolderRead
@@ -38,11 +38,11 @@ class SourceDocumentService(metaclass=SingletonMeta):
         sdoc = crud_sdoc.read(db=db, id=sdoc_id)
 
         def thumbnail_url(name: str) -> str | None:
-            if not crud_thumbnail_file.exists(
+            if not THUMBNAIL.store.exists(
                 project_id=sdoc.project_id, id=sdoc.id, name=name
             ):
                 return None
-            return crud_thumbnail_file.url(
+            return THUMBNAIL.store.url(
                 project_id=sdoc.project_id, id=sdoc.id, name=name
             )
 

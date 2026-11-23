@@ -10,7 +10,6 @@ from core.annotation.span_annotation_dto import SpanAnnotationCreateIntern
 from core.annotation.span_group_service import SpanGroupService
 from core.code.code_crud import crud_code
 from core.code.code_orm import CodeORM
-from core.doc.source_document_data_crud import crud_sdoc_data
 from core.doc.source_document_orm import SourceDocumentORM
 from core.metadata.source_document_metadata_crud import crud_sdoc_meta
 from core.project.project_orm import ProjectORM
@@ -100,7 +99,7 @@ def _store_earlier_mentions(
 ) -> None:
     """Store the words (single tokens) as MENTION spans of the system user in one
     span group "coref", as a run of the step does."""
-    data = crud_sdoc_data.read(db=db, id=sdoc.id)
+    data = artefact_named("tokens_sentences").store.read(db=db, sdoc_id=sdoc.id)
     adoc = crud_adoc.exists_or_create(db=db, user_id=SYSTEM_USER_ID, sdoc_id=sdoc.id)
     spans = []
     for word in words:

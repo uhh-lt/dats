@@ -329,10 +329,12 @@ def create_test_project(db: Session, test_user: UserORM) -> ProjectORM:
 def create_project_with_sdoc(db: Session, test_project: ProjectORM) -> ProjectWithSdoc:
     """Create a source document (with data + file) in the test project."""
     from core.doc.source_document_crud import crud_sdoc
-    from core.doc.source_document_data_crud import crud_sdoc_data
     from core.doc.source_document_data_dto import SourceDocumentDataCreate
     from core.doc.source_document_dto import SourceDocumentCreate
     from core.doc.source_document_file_crud import crud_sdoc_file
+    from systems.artefact_system.stores.document_data_store import (
+        create_document_data,
+    )
 
     sdoc = crud_sdoc.create(
         db=db,
@@ -345,7 +347,7 @@ def create_project_with_sdoc(db: Session, test_project: ProjectORM) -> ProjectWi
         ),
     )
 
-    sdoc_data = crud_sdoc_data.create(
+    sdoc_data = create_document_data(
         db=db,
         create_dto=SourceDocumentDataCreate(
             id=sdoc.id,
@@ -356,8 +358,6 @@ def create_project_with_sdoc(db: Session, test_project: ProjectORM) -> ProjectWi
             token_ends=[4, 7, 9, 14, 23, 27, 31, 35, 45],
             sentence_starts=[0, 25],
             sentence_ends=[24, 46],
-            token_time_starts=None,
-            token_time_ends=None,
         ),
     )
 
@@ -426,10 +426,12 @@ def create_text_document(
     document, or a document of another doctype with this text (e.g. the
     caption of an image)."""
     from core.doc.source_document_crud import crud_sdoc
-    from core.doc.source_document_data_crud import crud_sdoc_data
     from core.doc.source_document_data_dto import SourceDocumentDataCreate
     from core.doc.source_document_dto import SourceDocumentCreate
     from core.metadata.source_document_metadata_crud import crud_sdoc_meta
+    from systems.artefact_system.stores.document_data_store import (
+        create_document_data,
+    )
 
     content, sentence_starts, sentence_ends = _offsets(sentences)
     token_starts, token_ends = _token_offsets(content)
@@ -442,7 +444,7 @@ def create_text_document(
             project_id=project.id,
         ),
     )
-    crud_sdoc_data.create(
+    create_document_data(
         db=db,
         create_dto=SourceDocumentDataCreate(
             id=sdoc.id,
@@ -455,8 +457,6 @@ def create_text_document(
             token_ends=token_ends,
             sentence_starts=sentence_starts,
             sentence_ends=sentence_ends,
-            token_time_starts=None,
-            token_time_ends=None,
         ),
     )
     if initialize_metadata:
@@ -485,9 +485,9 @@ def create_span_for_text(
     from core.annotation.span_annotation_crud import crud_span_anno
     from core.annotation.span_annotation_dto import SpanAnnotationCreate
     from core.annotation.span_annotation_service import SpanAnnotationService
-    from core.doc.source_document_data_crud import crud_sdoc_data
+    from pipeline_test_utils import artefact_named
 
-    data = crud_sdoc_data.read(db=db, id=sdoc.id)
+    data = artefact_named("tokens_sentences").store.read(db=db, sdoc_id=sdoc.id)
     begin = data.content.index(text)
     end = begin + len(text)
     begin_token = next(

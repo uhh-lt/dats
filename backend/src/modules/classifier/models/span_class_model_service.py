@@ -33,9 +33,10 @@ from core.annotation.span_annotation_crud import crud_span_anno
 from core.annotation.span_annotation_dto import SpanAnnotationCreate
 from core.annotation.span_annotation_orm import SpanAnnotationORM
 from core.annotation.span_annotation_service import SpanAnnotationService
+from core.artefacts.content.content_artefact import CONTENT
+from core.artefacts.tokens_sentences.tokens_sentences_artefact import TOKENS_SENTENCES
 from core.code.code_crud import crud_code
 from core.doc.source_document_crud import crud_sdoc
-from core.doc.source_document_data_crud import crud_sdoc_data
 from modules.classifier.classifier_crud import crud_classifier
 from modules.classifier.classifier_dto import (
     ClassifierClassMetrics,
@@ -471,8 +472,9 @@ class SpanClassificationModelService(TextClassificationModelService):
         unannotated_sdocs = sorted(set(sdoc_ids) - included_sdoc_ids)
 
         # Get source document data
-        sdoc_datas = crud_sdoc_data.read_by_ids(db=db, ids=sdoc_ids)
-        sdocid2data = {sdoc_data.id: sdoc_data for sdoc_data in sdoc_datas}
+        sdocid2data = TOKENS_SENTENCES.store.read_many(
+            with_stores=[CONTENT.store], db=db, sdoc_ids=sdoc_ids
+        )
 
         # Overlay annotations onto all-O token labels.
         dataset: list[DatasetRow] = []
@@ -1184,11 +1186,12 @@ class SpanClassificationModelService(TextClassificationModelService):
         # 2. Create dataset
         job.update(current_step=2)
         # Get source document data
-        sdoc_datas = crud_sdoc_data.read_by_ids(db=db, ids=parameters.sdoc_ids)
-        sdoc_id2data = {sdoc_data.id: sdoc_data for sdoc_data in sdoc_datas}
+        sdoc_id2data = TOKENS_SENTENCES.store.read_many(
+            with_stores=[CONTENT.store], db=db, sdoc_ids=parameters.sdoc_ids
+        )
         inference_dataset: list[InferenceDatasetRow] = [
             {"sdoc_id": sdoc_data.id, "words": sdoc_data.tokens}
-            for sdoc_data in sdoc_datas
+            for sdoc_data in sdoc_id2data.values()
         ]
         # Construct a tokenized huggingface dataset. Long documents are split
         # into overlapping chunks (return_overflowing_tokens) so that no tokens
@@ -1197,7 +1200,7 @@ class SpanClassificationModelService(TextClassificationModelService):
         chunk_meta: list[tuple[int, list[int | None]]] = []
         # Number of words per sdoc, to size the merged prediction arrays.
         sdoc_id2num_words: dict[int, int] = {
-            sdoc_data.id: len(sdoc_data.tokens) for sdoc_data in sdoc_datas
+            sdoc_data.id: len(sdoc_data.tokens) for sdoc_data in sdoc_id2data.values()
         }
 
         def tokenize_for_inference(examples):

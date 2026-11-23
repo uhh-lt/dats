@@ -51,5 +51,6 @@ class _DocumentEmbeddingArchive(ArtefactArchive):
 DOCUMENT_EMBEDDINGS = artefact(
     "document_embeddings",
     title="Document embeddings",
+    store=crud_document_embedding,
     archive=_DocumentEmbeddingArchive(),
 )

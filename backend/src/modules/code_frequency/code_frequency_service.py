@@ -8,10 +8,10 @@ from core.annotation.bbox_annotation_orm import BBoxAnnotationORM
 from core.annotation.sentence_annotation_orm import SentenceAnnotationORM
 from core.annotation.span_annotation_orm import SpanAnnotationORM
 from core.annotation.span_text_orm import SpanTextORM
+from core.artefacts.content.content_artefact import CONTENT
+from core.artefacts.tokens_sentences.tokens_sentences_artefact import TOKENS_SENTENCES
 from core.code.code_dto import CodeRead
 from core.code.code_orm import CodeORM
-from core.doc.source_document_data_dto import SourceDocumentDataRead
-from core.doc.source_document_data_orm import SourceDocumentDataORM
 from core.doc.source_document_dto import SourceDocumentRead
 from core.doc.source_document_orm import SourceDocumentORM
 from core.project.project_crud import crud_project
@@ -189,15 +189,10 @@ class CodeFrequencyService(metaclass=SingletonMeta):
         query = (
             db.query(
                 SourceDocumentORM,
-                SourceDocumentDataORM,
                 SentenceAnnotationORM.sentence_id_start,
                 SentenceAnnotationORM.sentence_id_end,
                 CodeORM,
                 func.count().label("count"),
-            )
-            .join(
-                SourceDocumentDataORM,
-                SourceDocumentDataORM.id == SourceDocumentORM.id,
             )
             .join(
                 AnnotationDocumentORM,
@@ -221,21 +216,22 @@ class CodeFrequencyService(metaclass=SingletonMeta):
         )
         query = query.group_by(
             SourceDocumentORM.id,
-            SourceDocumentDataORM.id,
             SentenceAnnotationORM.sentence_id_start,
             SentenceAnnotationORM.sentence_id_end,
             CodeORM.id,
         )
         res = query.all()
+        sentences = TOKENS_SENTENCES.store.read_many(
+            with_stores=[CONTENT.store], db=db, sdoc_ids=[x[0].id for x in res]
+        )
         sent_code_occurrences: list[CodeOccurrence] = []
         for x in res:
             sdoc = SourceDocumentRead.model_validate(x[0])
-            sdata = SourceDocumentDataRead.model_validate(x[1])
-            sent_start = x[2]
-            sent_end = x[3]
-            code = CodeRead.model_validate(x[4])
-            count = x[5]
-            text = " ".join(sdata.sentences[sent_start : sent_end + 1])
+            sent_start = x[1]
+            sent_end = x[2]
+            code = CodeRead.model_validate(x[3])
+            count = x[4]
+            text = " ".join(sentences[sdoc.id].sentences[sent_start : sent_end + 1])
             sent_code_occurrences.append(
                 CodeOccurrence(
                     sdoc=sdoc,

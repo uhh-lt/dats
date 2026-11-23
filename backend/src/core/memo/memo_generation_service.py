@@ -10,8 +10,8 @@ from core.annotation.bbox_annotation_orm import BBoxAnnotationORM
 from core.annotation.sentence_annotation_orm import SentenceAnnotationORM
 from core.annotation.span_annotation_orm import SpanAnnotationORM
 from core.annotation.span_group_orm import SpanGroupORM
+from core.artefacts.tokens_sentences.tokens_sentences_artefact import TOKENS_SENTENCES
 from core.code.code_orm import CodeORM
-from core.doc.source_document_data_crud import crud_sdoc_data
 from core.doc.source_document_file_crud import crud_sdoc_file
 from core.doc.source_document_orm import SourceDocumentORM
 from core.project.project_orm import ProjectORM
@@ -86,7 +86,7 @@ class MemoGenerationService(metaclass=SingletonMeta):
         self, *, db: Session, obj: SourceDocumentORM
     ) -> tuple[bool, str]:
         if obj.doctype == DocType.text:
-            sdoc_data = crud_sdoc_data.read(db=db, id=obj.id)
+            sdoc_data = TOKENS_SENTENCES.store.read(db=db, sdoc_id=obj.id)
             return False, "".join(sdoc_data.sentences)
         if obj.doctype == DocType.image:
             path = crud_sdoc_file.path(
@@ -127,8 +127,8 @@ class MemoGenerationService(metaclass=SingletonMeta):
     def _summarize_sent_anno(
         self, *, db: Session, obj: SentenceAnnotationORM
     ) -> tuple[bool, str]:
-        sdoc_data = crud_sdoc_data.read(
-            db=db, id=obj.annotation_document.source_document_id
+        sdoc_data = TOKENS_SENTENCES.store.read(
+            db=db, sdoc_id=obj.annotation_document.source_document_id
         )
         return (
             False,
