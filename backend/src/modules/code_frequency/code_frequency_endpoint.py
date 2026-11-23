@@ -3,25 +3,20 @@ from fastapi import APIRouter, Depends
 from common.dependencies import DBSession, get_current_user
 from common.doc_type_enum import DocType
 from core.auth.authz_user import AuthzUser
-from modules.analysis.analysis_dto import (
-    CodeFrequency,
-    CodeOccurrence,
-    SampledSdocsResults,
-)
-from modules.analysis.code_frequency import (
+from modules.code_frequency.code_frequency import (
     find_code_frequencies,
     find_code_occurrences,
 )
-from modules.analysis.count_metadata import (
-    compute_num_sdocs_with_date_metadata,
-)
-from modules.analysis.document_sampler import document_sampler_by_tags
+from modules.code_frequency.code_frequency_dto import CodeFrequency, CodeOccurrence
 
 router = APIRouter(
-    prefix="/analysis",
+    prefix="/code_frequency",
     dependencies=[Depends(get_current_user)],
-    tags=["analysis"],
+    tags=["code_frequency"],
 )
+
+
+# --- other operations
 
 
 @router.post(
@@ -73,45 +68,4 @@ def code_occurrences(
         code_id=code_id,
         doctypes=doctypes,
         return_children=return_children,
-    )
-
-
-@router.get(
-    "/count_sdocs_with_date_metadata/{project_id}/metadata/{date_metadata_id}",
-    response_model=tuple[int, int],
-    summary="Returns tuple[num_sdocs_with_date_metadata, num_total_sdocs].",
-)
-def count_sdocs_with_date_metadata(
-    *,
-    db: DBSession,
-    project_id: int,
-    date_metadata_id: int,
-    authz_user: AuthzUser = Depends(),
-) -> tuple[int, int]:
-    authz_user.assert_in_project(project_id)
-
-    return compute_num_sdocs_with_date_metadata(
-        db=db,
-        project_id=project_id,
-        date_metadata_id=date_metadata_id,
-    )
-
-
-@router.post(
-    "/sample_sdocs_by_tags",
-    response_model=list[SampledSdocsResults],
-    summary="Sample & Aggregate Source Documents by tags.",
-)
-def sample_sdocs_by_tags(
-    *,
-    db: DBSession,
-    project_id: int,
-    tag_groups: list[list[int]],
-    n: int,
-    frac: float,
-    authz_user: AuthzUser = Depends(),
-) -> list[SampledSdocsResults]:
-    authz_user.assert_in_project(project_id)
-    return document_sampler_by_tags(
-        db=db, project_id=project_id, tag_ids=tag_groups, n=n, frac=frac
     )

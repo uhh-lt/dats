@@ -14,7 +14,7 @@ from core.doc.source_document_data_orm import SourceDocumentDataORM
 from core.doc.source_document_dto import SourceDocumentRead
 from core.doc.source_document_orm import SourceDocumentORM
 from core.project.project_crud import crud_project
-from modules.analysis.analysis_dto import CodeFrequency, CodeOccurrence
+from modules.code_frequency.code_frequency_dto import CodeFrequency, CodeOccurrence
 
 
 def __find_code_children(
