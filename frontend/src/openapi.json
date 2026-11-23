@@ -112,183 +112,6 @@
         }
       }
     },
-    "/analysis/code_frequencies": {
-      "post": {
-        "tags": ["analysis"],
-        "summary": "Returns all SourceDocument IDs that match the query parameters.",
-        "operationId": "code_frequencies",
-        "security": [{ "OAuth2PasswordBearer": [] }],
-        "parameters": [
-          {
-            "name": "project_id",
-            "in": "query",
-            "required": true,
-            "schema": { "type": "integer", "title": "Project Id" }
-          }
-        ],
-        "requestBody": {
-          "required": true,
-          "content": {
-            "application/json": { "schema": { "$ref": "#/components/schemas/Body_analysis-code_frequencies" } }
-          }
-        },
-        "responses": {
-          "200": {
-            "description": "Successful Response",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "array",
-                  "items": { "$ref": "#/components/schemas/CodeFrequency" },
-                  "title": "Response Analysis-Code Frequencies"
-                }
-              }
-            }
-          },
-          "422": {
-            "description": "Validation Error",
-            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/HTTPValidationError" } } }
-          }
-        }
-      }
-    },
-    "/analysis/code_occurrences": {
-      "post": {
-        "tags": ["analysis"],
-        "summary": "Returns all SourceDocument IDs that match the query parameters.",
-        "operationId": "code_occurrences",
-        "security": [{ "OAuth2PasswordBearer": [] }],
-        "parameters": [
-          {
-            "name": "project_id",
-            "in": "query",
-            "required": true,
-            "schema": { "type": "integer", "title": "Project Id" }
-          },
-          { "name": "code_id", "in": "query", "required": true, "schema": { "type": "integer", "title": "Code Id" } },
-          {
-            "name": "return_children",
-            "in": "query",
-            "required": true,
-            "schema": { "type": "boolean", "title": "Return Children" }
-          }
-        ],
-        "requestBody": {
-          "required": true,
-          "content": {
-            "application/json": { "schema": { "$ref": "#/components/schemas/Body_analysis-code_occurrences" } }
-          }
-        },
-        "responses": {
-          "200": {
-            "description": "Successful Response",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "array",
-                  "items": { "$ref": "#/components/schemas/CodeOccurrence" },
-                  "title": "Response Analysis-Code Occurrences"
-                }
-              }
-            }
-          },
-          "422": {
-            "description": "Validation Error",
-            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/HTTPValidationError" } } }
-          }
-        }
-      }
-    },
-    "/analysis/count_sdocs_with_date_metadata/{project_id}/metadata/{date_metadata_id}": {
-      "get": {
-        "tags": ["analysis"],
-        "summary": "Returns tuple[num_sdocs_with_date_metadata, num_total_sdocs].",
-        "operationId": "count_sdocs_with_date_metadata",
-        "security": [{ "OAuth2PasswordBearer": [] }],
-        "parameters": [
-          {
-            "name": "project_id",
-            "in": "path",
-            "required": true,
-            "schema": { "type": "integer", "title": "Project Id" }
-          },
-          {
-            "name": "date_metadata_id",
-            "in": "path",
-            "required": true,
-            "schema": { "type": "integer", "title": "Date Metadata Id" }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "Successful Response",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "array",
-                  "prefixItems": [{ "type": "integer" }, { "type": "integer" }],
-                  "minItems": 2,
-                  "maxItems": 2,
-                  "title": "Response Analysis-Count Sdocs With Date Metadata"
-                }
-              }
-            }
-          },
-          "422": {
-            "description": "Validation Error",
-            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/HTTPValidationError" } } }
-          }
-        }
-      }
-    },
-    "/analysis/sample_sdocs_by_tags": {
-      "post": {
-        "tags": ["analysis"],
-        "summary": "Sample & Aggregate Source Documents by tags.",
-        "operationId": "sample_sdocs_by_tags",
-        "security": [{ "OAuth2PasswordBearer": [] }],
-        "parameters": [
-          {
-            "name": "project_id",
-            "in": "query",
-            "required": true,
-            "schema": { "type": "integer", "title": "Project Id" }
-          },
-          { "name": "n", "in": "query", "required": true, "schema": { "type": "integer", "title": "N" } },
-          { "name": "frac", "in": "query", "required": true, "schema": { "type": "number", "title": "Frac" } }
-        ],
-        "requestBody": {
-          "required": true,
-          "content": {
-            "application/json": {
-              "schema": {
-                "type": "array",
-                "items": { "type": "array", "items": { "type": "integer" } },
-                "title": "Tag Groups"
-              }
-            }
-          }
-        },
-        "responses": {
-          "200": {
-            "description": "Successful Response",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "array",
-                  "items": { "$ref": "#/components/schemas/SampledSdocsResults" },
-                  "title": "Response Analysis-Sample Sdocs By Tags"
-                }
-              }
-            }
-          },
-          "422": {
-            "description": "Validation Error",
-            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/HTTPValidationError" } } }
-          }
-        }
-      }
-    },
     "/annoscaling/suggest": {
       "post": {
         "tags": ["annoscaling"],
@@ -1238,6 +1061,93 @@
         "security": [{ "OAuth2PasswordBearer": [] }]
       }
     },
+    "/code_frequency/code_frequencies": {
+      "post": {
+        "tags": ["code_frequency"],
+        "summary": "Returns all SourceDocument IDs that match the query parameters.",
+        "operationId": "code_frequencies",
+        "security": [{ "OAuth2PasswordBearer": [] }],
+        "parameters": [
+          {
+            "name": "project_id",
+            "in": "query",
+            "required": true,
+            "schema": { "type": "integer", "title": "Project Id" }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": { "schema": { "$ref": "#/components/schemas/Body_code_frequency-code_frequencies" } }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": { "$ref": "#/components/schemas/CodeFrequency" },
+                  "title": "Response Code Frequency-Code Frequencies"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/HTTPValidationError" } } }
+          }
+        }
+      }
+    },
+    "/code_frequency/code_occurrences": {
+      "post": {
+        "tags": ["code_frequency"],
+        "summary": "Returns all SourceDocument IDs that match the query parameters.",
+        "operationId": "code_occurrences",
+        "security": [{ "OAuth2PasswordBearer": [] }],
+        "parameters": [
+          {
+            "name": "project_id",
+            "in": "query",
+            "required": true,
+            "schema": { "type": "integer", "title": "Project Id" }
+          },
+          { "name": "code_id", "in": "query", "required": true, "schema": { "type": "integer", "title": "Code Id" } },
+          {
+            "name": "return_children",
+            "in": "query",
+            "required": true,
+            "schema": { "type": "boolean", "title": "Return Children" }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": { "schema": { "$ref": "#/components/schemas/Body_code_frequency-code_occurrences" } }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": { "$ref": "#/components/schemas/CodeOccurrence" },
+                  "title": "Response Code Frequency-Code Occurrences"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/HTTPValidationError" } } }
+          }
+        }
+      }
+    },
     "/cota": {
       "put": {
         "tags": ["conceptOverTimeAnalysis"],
@@ -1742,6 +1652,54 @@
             "content": {
               "application/json": {
                 "schema": { "type": "integer", "title": "Response Docprocessing-Recompute Processing Step" }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/HTTPValidationError" } } }
+          }
+        }
+      }
+    },
+    "/document_sampler/sample_sdocs_by_tags": {
+      "post": {
+        "tags": ["document_sampler"],
+        "summary": "Sample & Aggregate Source Documents by tags.",
+        "operationId": "sample_sdocs_by_tags",
+        "security": [{ "OAuth2PasswordBearer": [] }],
+        "parameters": [
+          {
+            "name": "project_id",
+            "in": "query",
+            "required": true,
+            "schema": { "type": "integer", "title": "Project Id" }
+          },
+          { "name": "n", "in": "query", "required": true, "schema": { "type": "integer", "title": "N" } },
+          { "name": "frac", "in": "query", "required": true, "schema": { "type": "number", "title": "Frac" } }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "array",
+                "items": { "type": "array", "items": { "type": "integer" } },
+                "title": "Tag Groups"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": { "$ref": "#/components/schemas/SampledSdocsResults" },
+                  "title": "Response Document Sampler-Sample Sdocs By Tags"
+                }
               }
             }
           },
@@ -2819,6 +2777,58 @@
                   "type": "array",
                   "items": { "$ref": "#/components/schemas/TagRecommendationJobRead" },
                   "title": "Response Job-Get Tag Recommendation Jobs By Project"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/HTTPValidationError" } } }
+          }
+        }
+      }
+    },
+    "/keyword_statistics/keyword": {
+      "post": {
+        "tags": ["keyword_statistics"],
+        "summary": "Returns KeywordStats for the given SourceDocuments.",
+        "operationId": "filter_keyword_stats",
+        "security": [{ "OAuth2PasswordBearer": [] }],
+        "parameters": [
+          {
+            "name": "project_id",
+            "in": "query",
+            "required": true,
+            "schema": { "type": "integer", "title": "Project Id" }
+          },
+          {
+            "name": "sort_by_global",
+            "in": "query",
+            "required": false,
+            "schema": { "type": "boolean", "default": false, "title": "Sort By Global" }
+          },
+          {
+            "name": "top_k",
+            "in": "query",
+            "required": false,
+            "schema": { "type": "integer", "default": 20, "title": "Top K" }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": { "schema": { "type": "array", "items": { "type": "integer" }, "title": "Sdoc Ids" } }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": { "$ref": "#/components/schemas/KeywordStat" },
+                  "title": "Response Keyword Statistics-Filter Keyword Stats"
                 }
               }
             }
@@ -5929,6 +5939,48 @@
         }
       }
     },
+    "/sdocmeta/count_sdocs_with_date_metadata/{project_id}/metadata/{date_metadata_id}": {
+      "get": {
+        "tags": ["sdocMetadata"],
+        "summary": "Returns tuple[num_sdocs_with_date_metadata, num_total_sdocs].",
+        "operationId": "count_sdocs_with_date_metadata",
+        "security": [{ "OAuth2PasswordBearer": [] }],
+        "parameters": [
+          {
+            "name": "project_id",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "integer", "title": "Project Id" }
+          },
+          {
+            "name": "date_metadata_id",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "integer", "title": "Date Metadata Id" }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "prefixItems": [{ "type": "integer" }, { "type": "integer" }],
+                  "minItems": 2,
+                  "maxItems": 2,
+                  "title": "Response Sdocmetadata-Count Sdocs With Date Metadata"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/HTTPValidationError" } } }
+          }
+        }
+      }
+    },
     "/sdocmeta/bulk/update": {
       "patch": {
         "tags": ["sdocMetadata"],
@@ -6651,58 +6703,6 @@
                   "type": "array",
                   "items": { "$ref": "#/components/schemas/SpanEntityStat" },
                   "title": "Response Statistics-Filter Code Stats"
-                }
-              }
-            }
-          },
-          "422": {
-            "description": "Validation Error",
-            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/HTTPValidationError" } } }
-          }
-        }
-      }
-    },
-    "/statistics/keyword": {
-      "post": {
-        "tags": ["statistics"],
-        "summary": "Returns KeywordStats for the given SourceDocuments.",
-        "operationId": "filter_keyword_stats",
-        "security": [{ "OAuth2PasswordBearer": [] }],
-        "parameters": [
-          {
-            "name": "project_id",
-            "in": "query",
-            "required": true,
-            "schema": { "type": "integer", "title": "Project Id" }
-          },
-          {
-            "name": "sort_by_global",
-            "in": "query",
-            "required": false,
-            "schema": { "type": "boolean", "default": false, "title": "Sort By Global" }
-          },
-          {
-            "name": "top_k",
-            "in": "query",
-            "required": false,
-            "schema": { "type": "integer", "default": 20, "title": "Top K" }
-          }
-        ],
-        "requestBody": {
-          "required": true,
-          "content": {
-            "application/json": { "schema": { "type": "array", "items": { "type": "integer" }, "title": "Sdoc Ids" } }
-          }
-        },
-        "responses": {
-          "200": {
-            "description": "Successful Response",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "array",
-                  "items": { "$ref": "#/components/schemas/KeywordStat" },
-                  "title": "Response Statistics-Filter Keyword Stats"
                 }
               }
             }
@@ -10251,25 +10251,6 @@
         "required": ["payload"],
         "title": "BboxAnnotationUpdatedEvent"
       },
-      "Body_analysis-code_frequencies": {
-        "properties": {
-          "code_ids": { "items": { "type": "integer" }, "type": "array", "title": "Code Ids" },
-          "user_ids": { "items": { "type": "integer" }, "type": "array", "title": "User Ids" },
-          "doctypes": { "items": { "$ref": "#/components/schemas/DocType" }, "type": "array", "title": "Doctypes" }
-        },
-        "type": "object",
-        "required": ["code_ids", "user_ids", "doctypes"],
-        "title": "Body_analysis-code_frequencies"
-      },
-      "Body_analysis-code_occurrences": {
-        "properties": {
-          "user_ids": { "items": { "type": "integer" }, "type": "array", "title": "User Ids" },
-          "doctypes": { "items": { "$ref": "#/components/schemas/DocType" }, "type": "array", "title": "Doctypes" }
-        },
-        "type": "object",
-        "required": ["user_ids", "doctypes"],
-        "title": "Body_analysis-code_occurrences"
-      },
       "Body_authentication-login": {
         "properties": {
           "grant_type": {
@@ -10289,6 +10270,25 @@
         "type": "object",
         "required": ["username", "password"],
         "title": "Body_authentication-login"
+      },
+      "Body_code_frequency-code_frequencies": {
+        "properties": {
+          "code_ids": { "items": { "type": "integer" }, "type": "array", "title": "Code Ids" },
+          "user_ids": { "items": { "type": "integer" }, "type": "array", "title": "User Ids" },
+          "doctypes": { "items": { "$ref": "#/components/schemas/DocType" }, "type": "array", "title": "Doctypes" }
+        },
+        "type": "object",
+        "required": ["code_ids", "user_ids", "doctypes"],
+        "title": "Body_code_frequency-code_frequencies"
+      },
+      "Body_code_frequency-code_occurrences": {
+        "properties": {
+          "user_ids": { "items": { "type": "integer" }, "type": "array", "title": "User Ids" },
+          "doctypes": { "items": { "$ref": "#/components/schemas/DocType" }, "type": "array", "title": "Doctypes" }
+        },
+        "type": "object",
+        "required": ["user_ids", "doctypes"],
+        "title": "Body_code_frequency-code_occurrences"
       },
       "Body_docprocessing-recompute_processing_step": {
         "properties": {

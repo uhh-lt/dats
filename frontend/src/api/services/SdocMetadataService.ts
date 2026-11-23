@@ -110,6 +110,30 @@ export class SdocMetadataService {
     });
   }
   /**
+   * Returns tuple[num_sdocs_with_date_metadata, num_total_sdocs].
+   * @returns any[] Successful Response
+   * @throws ApiError
+   */
+  public static countSdocsWithDateMetadata({
+    projectId,
+    dateMetadataId,
+  }: {
+    projectId: number;
+    dateMetadataId: number;
+  }): CancelablePromise<any[]> {
+    return __request(OpenAPI, {
+      method: "GET",
+      url: "/sdocmeta/count_sdocs_with_date_metadata/{project_id}/metadata/{date_metadata_id}",
+      path: {
+        project_id: projectId,
+        date_metadata_id: dateMetadataId,
+      },
+      errors: {
+        422: `Validation Error`,
+      },
+    });
+  }
+  /**
    * Updates multiple metadata objects at once.
    * @returns SourceDocumentMetadataRead Successful Response
    * @throws ApiError
