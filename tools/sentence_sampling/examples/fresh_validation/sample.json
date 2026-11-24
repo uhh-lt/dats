@@ -1,0 +1,14 @@
+{
+  "decades": [1880, 1890, 1900, 1910, 1920, 1930, 1940],
+  "min_words": 5,
+  "draws": [
+    { "name": "background", "n": 100 },
+    {
+      "name": "proxy",
+      "n": 200,
+      "terms": "proxy_terms.json",
+      "exclude": ["fresh"]
+    },
+    { "name": "fresh", "n": 100, "substring": "fresh" }
+  ]
+}

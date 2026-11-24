@@ -1,0 +1,9 @@
+{
+  "refrigerate": ["refrigerate", "refrigerates", "refrigerated", "refrigerating", "refrigeration"],
+  "chill": ["chill", "chills", "chilled", "chilling"],
+  "cool": ["cool", "cools", "cooled", "cooling"],
+  "refrigerator": ["refrigerator", "refrigerators"],
+  "icebox": ["icebox", "iceboxes", "ice box", "ice boxes"],
+  "cooler": ["cooler", "coolers"],
+  "cold-store": ["cold store", "cold stores", "cold storage"]
+}

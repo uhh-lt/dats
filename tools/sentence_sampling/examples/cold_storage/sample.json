@@ -1,0 +1,8 @@
+{
+  "decades": [1880, 1890, 1900, 1910, 1920, 1930, 1940],
+  "min_words": 5,
+  "draws": [
+    { "name": "cooling", "n": 200, "terms": "cooling_terms.json" },
+    { "name": "freezing", "n": 200, "terms": "freezing_terms.json" }
+  ]
+}

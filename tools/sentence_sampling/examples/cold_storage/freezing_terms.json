@@ -1,0 +1,5 @@
+{
+  "freeze": ["freeze", "freezes", "freezing", "froze", "frozen"],
+  "thaw": ["thaw", "thaws", "thawed", "thawing"],
+  "freezer": ["freezer", "freezers"]
+}

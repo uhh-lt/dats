@@ -20,11 +20,9 @@ from typing import Any
 import numpy as np
 import pandas as pd
 from loguru import logger
-from sampling_utils import connect, sha256_of
+from sampling_utils import DEFAULT_DATA_DIR, connect, sha256_of
 
-DEFAULT_ANNOTATORS = Path(__file__).parent / "data" / "annotators.json"
 DEFAULT_CODE_NAME = "SELECTED"
-DRAWS = ["background", "proxy", "fresh"]
 # fixed, so that the same assignment always gives the same annotation UUIDs
 UUID_NAMESPACE = uuid.uuid5(uuid.NAMESPACE_URL, "dats/tools/sentence_sampling")
 ASSIGNMENT_COLUMNS = [
@@ -98,12 +96,12 @@ def check_dats(
 
 
 def build_blocks(
-    sample: pd.DataFrame, n_blocks: int, rng: np.random.Generator
+    sample: pd.DataFrame, draws: list[str], n_blocks: int, rng: np.random.Generator
 ) -> pd.DataFrame:
     """Splits every draw at random into n_blocks equal parts, gives part b of every
     draw to block b, shuffles every block and numbers the sentences block by block."""
     parts = []
-    for draw in DRAWS:
+    for draw in draws:
         rows = sample[sample["draw"] == draw]
         if len(rows) % n_blocks != 0:
             raise SystemExit(
@@ -136,12 +134,16 @@ def number_ranges(numbers: list[int]) -> str:
 def main() -> None:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument(
-        "--input", type=Path, required=True, help="the CSV of draw_sample.py"
+        "--data_dir",
+        type=Path,
+        default=DEFAULT_DATA_DIR,
+        help="the folder with the sample and annotators.json, which receives the "
+        "assignment",
     )
+    parser.add_argument("--project_id", type=int, required=True)
     parser.add_argument(
         "--seed", type=int, required=True, help="the seed of the assignment, log it"
     )
-    parser.add_argument("--annotators", type=Path, default=DEFAULT_ANNOTATORS)
     parser.add_argument("--code_name", default=DEFAULT_CODE_NAME)
     parser.add_argument(
         "--backend_url",
@@ -155,25 +157,30 @@ def main() -> None:
     args = parser.parse_args()
 
     # the sample must be the one its log describes
-    sample_log = json.loads(args.input.with_suffix(".log.json").read_text())
-    input_sha256 = sha256_of(args.input)
+    data_dir: Path = args.data_dir
+    project_id: int = args.project_id
+    sample_path = data_dir / f"sentence_sample_project_{project_id}.csv"
+    sample_log = json.loads(sample_path.with_suffix(".log.json").read_text())
+    input_sha256 = sha256_of(sample_path)
     if input_sha256 != sample_log["sample_sha256"]:
-        raise SystemExit(f"{args.input} does not match the SHA-256 of its log")
-    project_id: int = sample_log["project_id"]
+        raise SystemExit(f"{sample_path} does not match the SHA-256 of its log")
+    # the draws in their order
+    draws = list(sample_log["draws"])
 
-    data_dir = args.input.parent
     assignment_path = data_dir / f"assignment_project_{project_id}.csv"
     import_path = data_dir / f"selected_sentence_annotations_project_{project_id}.csv"
     log_path = assignment_path.with_suffix(".log.json")
     if not args.overwrite and (assignment_path.exists() or import_path.exists()):
         raise SystemExit(f"{assignment_path} exists; pass --overwrite to assign again")
 
-    annotators = load_annotators(args.annotators)
+    annotators = load_annotators(data_dir / "annotators.json")
     pairs = list(itertools.combinations(annotators, 2))
     check_dats(args.backend_url, args.username, project_id, args.code_name, annotators)
 
-    sample = pd.read_csv(args.input, keep_default_na=False)
-    assignment = build_blocks(sample, len(pairs), np.random.default_rng(args.seed))
+    sample = pd.read_csv(sample_path, keep_default_na=False)
+    assignment = build_blocks(
+        sample, draws, len(pairs), np.random.default_rng(args.seed)
+    )
     assignment["annotator_1"] = [pairs[b - 1][0]["name"] for b in assignment["block"]]
     assignment["annotator_2"] = [pairs[b - 1][1]["name"] for b in assignment["block"]]
     assignment = assignment[ASSIGNMENT_COLUMNS]
@@ -200,7 +207,6 @@ def main() -> None:
                 }
             )
 
-    data_dir.mkdir(parents=True, exist_ok=True)
     assignment.to_csv(assignment_path, index=False, lineterminator="\n")
     pd.DataFrame(import_rows, columns=IMPORT_COLUMNS).to_csv(
         import_path, index=False, lineterminator="\n"
@@ -214,7 +220,7 @@ def main() -> None:
                 "block": block,
                 "numbers": number_ranges(rows["number"].tolist()),
                 "annotators": [first["name"], second["name"]],
-                "per_draw": {d: int((rows["draw"] == d).sum()) for d in DRAWS},
+                "per_draw": {d: int((rows["draw"] == d).sum()) for d in draws},
             }
         )
     annotators_log = {}
@@ -234,7 +240,7 @@ def main() -> None:
         )
 
     log = {
-        "input_file": args.input.name,
+        "input_file": sample_path.name,
         "input_sha256": input_sha256,
         "project_id": project_id,
         "seed": args.seed,
