@@ -40,7 +40,7 @@ The actions of a run:
 
 - **Agreement evaluation** opens the [Annotator Agreement](analysis/annotator-agreement.md) analysis with the gold annotator, the run's virtual user, the experiment's codes and the run's documents preselected.
 - **Recompute the scores** refreshes the stored agreement of this run, e.g. after the gold annotator changed annotations. To compare runs side by side, prefer **Refresh all runs**.
-- **Download the run log** exports it as JSON or CSV: experiment, run name, virtual user, prompt name, the version with its full content (text, codes, tags, metadata fields, examples, settings), model, documents, user, start and end time and the stored scores. The CSV has one row per stored score (all codes and every code, for each scoring). The export is also available through the API (`POST /experiment/run/{run_id}/export_log`).
+- **Download the run log** exports it as JSON or CSV: experiment, run name, virtual user, prompt name, the version with its full content (text, codes, tags, metadata fields, examples, settings), model, documents, user, start and end time and the stored scores. The CSV has one row per stored score (all codes and every code, for each scoring). The export is also available through the API (`POST /projects/{project_id}/experiments/runs/{run_id}/export-log`).
 - **Open all comparison views** opens the comparison view of the gold annotator and the run in one tab per document.
 - **Delete** deletes the run's virtual user with all its annotations.
 

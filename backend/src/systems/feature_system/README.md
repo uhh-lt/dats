@@ -30,7 +30,7 @@ WORD_FREQUENCY = register_feature(
 
 A feature requires artefacts only, never another feature, and exists only if it requires an artefact outside the core preprocessing pipeline: enabling it means more processing. Core declares no feature and checks no toggle.
 
-Gated routes and jobs import the object (`require_feature(WORD_FREQUENCY)`). The startup check rejects an unregistered artefact and a feature that requires only core artefacts, all problems in one error.
+Gated routes and jobs import the object (`project_router("/word-frequencies", ..., feature=WORD_FREQUENCY)`). The startup check rejects an unregistered artefact and a feature that requires only core artefacts, all problems in one error.
 
 Names: a name a request names is read strictly (`FeatureService.read_by_name`: an unknown name answers 404, for the three actions and for `ProjectCreate.enabled_features`); a stored name is read tolerantly (an unregistered name is ignored and dropped at the next write of the enabled features).
 

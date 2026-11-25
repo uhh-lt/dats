@@ -7,8 +7,4 @@ export type COTACreate = {
    * Name of the ConceptOverTimeAnalysis
    */
   name: string;
-  /**
-   * Project the ConceptOverTimeAnalysis belongs to
-   */
-  project_id: number;
 };

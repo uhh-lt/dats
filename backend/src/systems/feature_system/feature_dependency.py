@@ -1,24 +1,21 @@
-"""FastAPI dependencies that gate the routes of a feature: a request to a route
-of a feature that is disabled in the project fails with 403.
+"""FastAPI dependency that gates the routes of a feature not yet under
+`/projects/{project_id}` (a project router takes the feature itself): a request
+to a route of a feature that is disabled in the project fails with 403.
 
 - `require_feature(FEATURE)`: for routes with a `project_id` path or query
   parameter.
-- `require_feature_of(FEATURE, Crud.Y, "y_id")`: for routes that identify an
-  object of the project by a path parameter.
 
 `FEATURE` is the object `register_feature` returned, imported from the
 module's `*_feature.py`. Routes that carry the project id in the request body call
 `FeatureService().assert_enabled(...)` after their authorization check instead.
-Both dependencies check the project membership first, so a non-member never
+The dependency checks the project membership first, so a non-member never
 learns which features a project enables.
 """
 
 from typing import Callable
 
-from fastapi import Depends, Request
-from fastapi.exceptions import RequestValidationError
+from fastapi import Depends
 
-from common.crud_enum import Crud
 from common.dependencies import DBSession
 from core.auth.authz_user import AuthzUser
 from systems.feature_system.feature_registry import Feature
@@ -33,41 +30,6 @@ def require_feature(feature: Feature) -> Callable[..., None]:
         db: DBSession,
         authz_user: AuthzUser = Depends(),
     ) -> None:
-        authz_user.assert_in_project(project_id)
-        FeatureService().assert_enabled(db=db, project_id=project_id, feature=feature)
-
-    return check_feature_enabled
-
-
-def require_feature_of(
-    feature: Feature, crud: Crud, id_param: str
-) -> Callable[..., None]:
-    """Gate a route that identifies an object by the integer path parameter
-    `id_param`, e.g. `/cota/{cota_id}`. The object's project must enable the
-    feature."""
-
-    def check_feature_enabled(
-        request: Request,
-        db: DBSession,
-        authz_user: AuthzUser = Depends(),
-    ) -> None:
-        raw_id = request.path_params[id_param]
-        try:
-            object_id = int(raw_id)
-        except ValueError:
-            # the route's own validation would report it, but this runs first
-            raise RequestValidationError(
-                [
-                    {
-                        "type": "int_parsing",
-                        "loc": ("path", id_param),
-                        "msg": "Input should be a valid integer, unable to parse string as an integer",
-                        "input": raw_id,
-                    }
-                ]
-            )
-        orm_object = authz_user.read_crud(crud, object_id)
-        project_id = orm_object.get_project_id()
         authz_user.assert_in_project(project_id)
         FeatureService().assert_enabled(db=db, project_id=project_id, feature=feature)
 

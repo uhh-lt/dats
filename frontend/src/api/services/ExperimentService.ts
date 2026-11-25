@@ -16,12 +16,38 @@ export class ExperimentService {
    * @returns ExperimentRead Successful Response
    * @throws ApiError
    */
-  public static create({ requestBody }: { requestBody: ExperimentCreate }): CancelablePromise<ExperimentRead> {
+  public static create({
+    projectId,
+    requestBody,
+  }: {
+    projectId: number;
+    requestBody: ExperimentCreate;
+  }): CancelablePromise<ExperimentRead> {
     return __request(OpenAPI, {
       method: "PUT",
-      url: "/experiment",
+      url: "/projects/{project_id}/experiments",
+      path: {
+        project_id: projectId,
+      },
       body: requestBody,
       mediaType: "application/json",
+      errors: {
+        422: `Validation Error`,
+      },
+    });
+  }
+  /**
+   * Returns all experiments of the project with their runs, newest first
+   * @returns ExperimentRead Successful Response
+   * @throws ApiError
+   */
+  public static getByProject({ projectId }: { projectId: number }): CancelablePromise<Array<ExperimentRead>> {
+    return __request(OpenAPI, {
+      method: "GET",
+      url: "/projects/{project_id}/experiments",
+      path: {
+        project_id: projectId,
+      },
       errors: {
         422: `Validation Error`,
       },
@@ -32,10 +58,19 @@ export class ExperimentService {
    * @returns ExperimentRead Successful Response
    * @throws ApiError
    */
-  public static createRun({ requestBody }: { requestBody: ExperimentRunCreate }): CancelablePromise<ExperimentRead> {
+  public static createRun({
+    projectId,
+    requestBody,
+  }: {
+    projectId: number;
+    requestBody: ExperimentRunCreate;
+  }): CancelablePromise<ExperimentRead> {
     return __request(OpenAPI, {
       method: "PUT",
-      url: "/experiment/run",
+      url: "/projects/{project_id}/experiments/runs",
+      path: {
+        project_id: projectId,
+      },
       body: requestBody,
       mediaType: "application/json",
       errors: {
@@ -48,11 +83,18 @@ export class ExperimentService {
    * @returns ExperimentRead Successful Response
    * @throws ApiError
    */
-  public static getById({ experimentId }: { experimentId: number }): CancelablePromise<ExperimentRead> {
+  public static getById({
+    projectId,
+    experimentId,
+  }: {
+    projectId: number;
+    experimentId: number;
+  }): CancelablePromise<ExperimentRead> {
     return __request(OpenAPI, {
       method: "GET",
-      url: "/experiment/{experiment_id}",
+      url: "/projects/{project_id}/experiments/{experiment_id}",
       path: {
+        project_id: projectId,
         experiment_id: experimentId,
       },
       errors: {
@@ -66,16 +108,19 @@ export class ExperimentService {
    * @throws ApiError
    */
   public static updateById({
+    projectId,
     experimentId,
     requestBody,
   }: {
+    projectId: number;
     experimentId: number;
     requestBody: ExperimentUpdate;
   }): CancelablePromise<ExperimentRead> {
     return __request(OpenAPI, {
       method: "PATCH",
-      url: "/experiment/{experiment_id}",
+      url: "/projects/{project_id}/experiments/{experiment_id}",
       path: {
+        project_id: projectId,
         experiment_id: experimentId,
       },
       body: requestBody,
@@ -90,29 +135,19 @@ export class ExperimentService {
    * @returns ExperimentRead Successful Response
    * @throws ApiError
    */
-  public static deleteById({ experimentId }: { experimentId: number }): CancelablePromise<ExperimentRead> {
+  public static deleteById({
+    projectId,
+    experimentId,
+  }: {
+    projectId: number;
+    experimentId: number;
+  }): CancelablePromise<ExperimentRead> {
     return __request(OpenAPI, {
       method: "DELETE",
-      url: "/experiment/{experiment_id}",
-      path: {
-        experiment_id: experimentId,
-      },
-      errors: {
-        422: `Validation Error`,
-      },
-    });
-  }
-  /**
-   * Returns all experiments of the project with their runs, newest first
-   * @returns ExperimentRead Successful Response
-   * @throws ApiError
-   */
-  public static getByProject({ projectId }: { projectId: number }): CancelablePromise<Array<ExperimentRead>> {
-    return __request(OpenAPI, {
-      method: "GET",
-      url: "/experiment/project/{project_id}",
+      url: "/projects/{project_id}/experiments/{experiment_id}",
       path: {
         project_id: projectId,
+        experiment_id: experimentId,
       },
       errors: {
         422: `Validation Error`,
@@ -124,11 +159,18 @@ export class ExperimentService {
    * @returns ExperimentRead Successful Response
    * @throws ApiError
    */
-  public static refreshRunScores({ runId }: { runId: number }): CancelablePromise<ExperimentRead> {
+  public static refreshRunScores({
+    projectId,
+    runId,
+  }: {
+    projectId: number;
+    runId: number;
+  }): CancelablePromise<ExperimentRead> {
     return __request(OpenAPI, {
       method: "PATCH",
-      url: "/experiment/run/{run_id}/scores",
+      url: "/projects/{project_id}/experiments/runs/{run_id}/scores",
       path: {
+        project_id: projectId,
         run_id: runId,
       },
       errors: {
@@ -141,11 +183,18 @@ export class ExperimentService {
    * @returns ExperimentRead Successful Response
    * @throws ApiError
    */
-  public static refreshAllRunScores({ experimentId }: { experimentId: number }): CancelablePromise<ExperimentRead> {
+  public static refreshAllRunScores({
+    projectId,
+    experimentId,
+  }: {
+    projectId: number;
+    experimentId: number;
+  }): CancelablePromise<ExperimentRead> {
     return __request(OpenAPI, {
       method: "PATCH",
-      url: "/experiment/{experiment_id}/scores",
+      url: "/projects/{project_id}/experiments/{experiment_id}/scores",
       path: {
+        project_id: projectId,
         experiment_id: experimentId,
       },
       errors: {
@@ -158,11 +207,18 @@ export class ExperimentService {
    * @returns ExperimentRead Successful Response
    * @throws ApiError
    */
-  public static deleteRun({ runId }: { runId: number }): CancelablePromise<ExperimentRead> {
+  public static deleteRun({
+    projectId,
+    runId,
+  }: {
+    projectId: number;
+    runId: number;
+  }): CancelablePromise<ExperimentRead> {
     return __request(OpenAPI, {
       method: "DELETE",
-      url: "/experiment/run/{run_id}",
+      url: "/projects/{project_id}/experiments/runs/{run_id}",
       path: {
+        project_id: projectId,
         run_id: runId,
       },
       errors: {
@@ -176,16 +232,19 @@ export class ExperimentService {
    * @throws ApiError
    */
   public static exportRunLog({
+    projectId,
     runId,
     exportFormat,
   }: {
+    projectId: number;
     runId: number;
     exportFormat: ExperimentRunLogFormat;
   }): CancelablePromise<string> {
     return __request(OpenAPI, {
       method: "POST",
-      url: "/experiment/run/{run_id}/export_log",
+      url: "/projects/{project_id}/experiments/runs/{run_id}/export-log",
       path: {
+        project_id: projectId,
         run_id: runId,
       },
       query: {

@@ -4,7 +4,7 @@
 /* eslint-disable */
 import type { COTACreate } from "@models/COTACreate";
 import type { COTARead } from "@models/COTARead";
-import type { COTARefinementJobInput } from "@models/COTARefinementJobInput";
+import type { COTARefinementHyperparameters } from "@models/COTARefinementHyperparameters";
 import type { COTASentenceID } from "@models/COTASentenceID";
 import type { COTAUpdate } from "@models/COTAUpdate";
 import type { CancelablePromise } from "../core/CancelablePromise";
@@ -17,12 +17,39 @@ export class ConceptOverTimeAnalysisService {
    * @returns COTARead Successful Response
    * @throws ApiError
    */
-  public static create({ requestBody }: { requestBody: COTACreate }): CancelablePromise<COTARead> {
+  public static create({
+    projectId,
+    requestBody,
+  }: {
+    projectId: number;
+    requestBody: COTACreate;
+  }): CancelablePromise<COTARead> {
     return __request(OpenAPI, {
       method: "PUT",
-      url: "/cota",
+      url: "/projects/{project_id}/concept-over-time-analyses",
+      path: {
+        project_id: projectId,
+      },
       body: requestBody,
       mediaType: "application/json",
+      errors: {
+        422: `Validation Error`,
+      },
+    });
+  }
+  /**
+   * Returns COTAs of the Project
+   * Returns the COTAs of the Project
+   * @returns COTARead Successful Response
+   * @throws ApiError
+   */
+  public static getByProject({ projectId }: { projectId: number }): CancelablePromise<Array<COTARead>> {
+    return __request(OpenAPI, {
+      method: "GET",
+      url: "/projects/{project_id}/concept-over-time-analyses",
+      path: {
+        project_id: projectId,
+      },
       errors: {
         422: `Validation Error`,
       },
@@ -33,11 +60,18 @@ export class ConceptOverTimeAnalysisService {
    * @returns COTARead Successful Response
    * @throws ApiError
    */
-  public static duplicateById({ cotaId }: { cotaId: number }): CancelablePromise<COTARead> {
+  public static duplicateById({
+    projectId,
+    cotaId,
+  }: {
+    projectId: number;
+    cotaId: number;
+  }): CancelablePromise<COTARead> {
     return __request(OpenAPI, {
       method: "PUT",
-      url: "/cota/duplicate/{cota_id}",
+      url: "/projects/{project_id}/concept-over-time-analyses/{cota_id}/duplicate",
       path: {
+        project_id: projectId,
         cota_id: cotaId,
       },
       errors: {
@@ -51,11 +85,12 @@ export class ConceptOverTimeAnalysisService {
    * @returns COTARead Successful Response
    * @throws ApiError
    */
-  public static getById({ cotaId }: { cotaId: number }): CancelablePromise<COTARead> {
+  public static getById({ projectId, cotaId }: { projectId: number; cotaId: number }): CancelablePromise<COTARead> {
     return __request(OpenAPI, {
       method: "GET",
-      url: "/cota/{cota_id}",
+      url: "/projects/{project_id}/concept-over-time-analyses/{cota_id}",
       path: {
+        project_id: projectId,
         cota_id: cotaId,
       },
       errors: {
@@ -70,16 +105,19 @@ export class ConceptOverTimeAnalysisService {
    * @throws ApiError
    */
   public static updateById({
+    projectId,
     cotaId,
     requestBody,
   }: {
+    projectId: number;
     cotaId: number;
     requestBody: COTAUpdate;
   }): CancelablePromise<COTARead> {
     return __request(OpenAPI, {
       method: "PATCH",
-      url: "/cota/{cota_id}",
+      url: "/projects/{project_id}/concept-over-time-analyses/{cota_id}",
       path: {
+        project_id: projectId,
         cota_id: cotaId,
       },
       body: requestBody,
@@ -95,30 +133,13 @@ export class ConceptOverTimeAnalysisService {
    * @returns COTARead Successful Response
    * @throws ApiError
    */
-  public static deleteById({ cotaId }: { cotaId: number }): CancelablePromise<COTARead> {
+  public static deleteById({ projectId, cotaId }: { projectId: number; cotaId: number }): CancelablePromise<COTARead> {
     return __request(OpenAPI, {
       method: "DELETE",
-      url: "/cota/{cota_id}",
-      path: {
-        cota_id: cotaId,
-      },
-      errors: {
-        422: `Validation Error`,
-      },
-    });
-  }
-  /**
-   * Returns COTAs of the Project
-   * Returns the COTA of the Project with the given ID if it exists
-   * @returns COTARead Successful Response
-   * @throws ApiError
-   */
-  public static getByProject({ projectId }: { projectId: number }): CancelablePromise<Array<COTARead>> {
-    return __request(OpenAPI, {
-      method: "GET",
-      url: "/cota/project/{project_id}",
+      url: "/projects/{project_id}/concept-over-time-analyses/{cota_id}",
       path: {
         project_id: projectId,
+        cota_id: cotaId,
       },
       errors: {
         422: `Validation Error`,
@@ -131,18 +152,21 @@ export class ConceptOverTimeAnalysisService {
    * @throws ApiError
    */
   public static annotateCotaSentence({
+    projectId,
     cotaId,
     requestBody,
     conceptId,
   }: {
+    projectId: number;
     cotaId: number;
     requestBody: Array<COTASentenceID>;
     conceptId?: string | null;
   }): CancelablePromise<COTARead> {
     return __request(OpenAPI, {
       method: "PATCH",
-      url: "/cota/annotate/{cota_id}",
+      url: "/projects/{project_id}/concept-over-time-analyses/{cota_id}/annotate",
       path: {
+        project_id: projectId,
         cota_id: cotaId,
       },
       query: {
@@ -161,16 +185,19 @@ export class ConceptOverTimeAnalysisService {
    * @throws ApiError
    */
   public static removeCotaSentence({
+    projectId,
     cotaId,
     requestBody,
   }: {
+    projectId: number;
     cotaId: number;
     requestBody: Array<COTASentenceID>;
   }): CancelablePromise<COTARead> {
     return __request(OpenAPI, {
       method: "PATCH",
-      url: "/cota/remove/{cota_id}",
+      url: "/projects/{project_id}/concept-over-time-analyses/{cota_id}/remove",
       path: {
+        project_id: projectId,
         cota_id: cotaId,
       },
       body: requestBody,
@@ -186,11 +213,12 @@ export class ConceptOverTimeAnalysisService {
    * @returns COTARead Successful Response
    * @throws ApiError
    */
-  public static resetCota({ cotaId }: { cotaId: number }): CancelablePromise<COTARead> {
+  public static resetCota({ projectId, cotaId }: { projectId: number; cotaId: number }): CancelablePromise<COTARead> {
     return __request(OpenAPI, {
       method: "PATCH",
-      url: "/cota/reset/{cota_id}",
+      url: "/projects/{project_id}/concept-over-time-analyses/{cota_id}/reset",
       path: {
+        project_id: projectId,
         cota_id: cotaId,
       },
       errors: {
@@ -200,14 +228,26 @@ export class ConceptOverTimeAnalysisService {
   }
   /**
    * Refines the ConceptOverTimeAnalysis
-   * Refines the ConceptOverTimeAnalysis with the given ID if it exists
+   * Starts the refinement job of the ConceptOverTimeAnalysis with the given ID; read the job at /jobs/cota-refinement
    * @returns COTARead Successful Response
    * @throws ApiError
    */
-  public static refineCota({ requestBody }: { requestBody: COTARefinementJobInput }): CancelablePromise<COTARead> {
+  public static refineCota({
+    projectId,
+    cotaId,
+    requestBody,
+  }: {
+    projectId: number;
+    cotaId: number;
+    requestBody: COTARefinementHyperparameters;
+  }): CancelablePromise<COTARead> {
     return __request(OpenAPI, {
       method: "POST",
-      url: "/cota/refine",
+      url: "/projects/{project_id}/concept-over-time-analyses/{cota_id}/refine",
+      path: {
+        project_id: projectId,
+        cota_id: cotaId,
+      },
       body: requestBody,
       mediaType: "application/json",
       errors: {

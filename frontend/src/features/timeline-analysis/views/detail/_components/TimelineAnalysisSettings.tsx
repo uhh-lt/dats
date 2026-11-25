@@ -86,6 +86,7 @@ function TimelineAnalysisSettingsContent({
   const updateTimelineAnalysisMutation = TimelineAnalysisHooks.useUpdateTimelineAnalysis();
   const handleGroupByChange = (event: ChangeEvent<HTMLInputElement>) => {
     updateTimelineAnalysisMutation.mutate({
+      projectId: timelineAnalysis.project_id,
       timelineAnalysisId: timelineAnalysis.id,
       requestBody: {
         settings: {
@@ -98,6 +99,7 @@ function TimelineAnalysisSettingsContent({
   const handleChangeMetadataId = (event: ChangeEvent<HTMLInputElement>) => {
     const value = parseInt(event.target.value);
     updateTimelineAnalysisMutation.mutate({
+      projectId: timelineAnalysis.project_id,
       timelineAnalysisId: timelineAnalysis.id,
       requestBody: {
         settings: {
@@ -110,6 +112,7 @@ function TimelineAnalysisSettingsContent({
   const handleAnnotationAggregationTypeChange = (event: ChangeEvent<HTMLInputElement>) => {
     if (timelineAnalysis.timeline_analysis_type === TimelineAnalysisType.DOCUMENT) return;
     updateTimelineAnalysisMutation.mutate({
+      projectId: timelineAnalysis.project_id,
       timelineAnalysisId: timelineAnalysis.id,
       requestBody: {
         settings: {

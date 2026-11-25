@@ -37,10 +37,13 @@ def experiment_run(
     gold annotator. The run keeps the state of its job, which expires."""
     # 1) mark the run as started and build its LLM Assistant input
     with sqlr.transaction() as db:
-        if not crud_experiment_run.exists(db=db, id=payload.run_id):
+        if not crud_experiment_run.exists(
+            db=db, project_id=payload.project_id, id=payload.run_id
+        ):
             return None  # the run was deleted before the job started
         run = crud_experiment_run.update(
             db=db,
+            project_id=payload.project_id,
             id=payload.run_id,
             update_dto=ExperimentRunUpdateIntern(
                 status=JobStatus.STARTED,
@@ -49,7 +52,7 @@ def experiment_run(
             ),
         )
         llm_payload = LLMAssistantJobInput(
-            project_id=run.experiment.project_id,
+            project_id=payload.project_id,
             task_type=TaskType(run.experiment.task_type),
             sdoc_ids=run.sdoc_ids,
             model=run.model,
@@ -64,9 +67,12 @@ def experiment_run(
         # 3) store the agreement with the gold annotator and mark the run finished
         job.update(status_message="Computing the agreement with the gold annotator")
         with sqlr.transaction() as db:
-            ExperimentService().store_run_scores(db=db, run_id=payload.run_id)
+            ExperimentService().store_run_scores(
+                db=db, project_id=payload.project_id, run_id=payload.run_id
+            )
             crud_experiment_run.update(
                 db=db,
+                project_id=payload.project_id,
                 id=payload.run_id,
                 update_dto=ExperimentRunUpdateIntern(
                     status=JobStatus.FINISHED, finished=datetime.now(UTC)
@@ -76,9 +82,12 @@ def experiment_run(
     except (Exception, JobStoppedError):
         # mark the run failed, unless it was deleted meanwhile
         with sqlr.transaction() as db:
-            if crud_experiment_run.exists(db=db, id=payload.run_id):
+            if crud_experiment_run.exists(
+                db=db, project_id=payload.project_id, id=payload.run_id
+            ):
                 crud_experiment_run.update(
                     db=db,
+                    project_id=payload.project_id,
                     id=payload.run_id,
                     update_dto=ExperimentRunUpdateIntern(
                         status=JobStatus.FAILED, finished=datetime.now(UTC)

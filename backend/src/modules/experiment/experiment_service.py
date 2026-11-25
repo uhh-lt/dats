@@ -79,27 +79,35 @@ class ExperimentService(metaclass=SingletonMeta):
     # CREATE
 
     def create_experiment(
-        self, *, db: Session, create_dto: ExperimentCreate
+        self, *, db: Session, project_id: int, create_dto: ExperimentCreate
     ) -> ExperimentRead:
         self._assert_valid_selection(
             db=db,
-            project_id=create_dto.project_id,
+            project_id=project_id,
             sdoc_ids=create_dto.sdoc_ids,
             code_ids=create_dto.code_ids,
             gold_user_id=create_dto.gold_user_id,
         )
         db_obj = crud_experiment.create(
             db=db,
+            project_id=project_id,
             create_dto=ExperimentCreateIntern(
                 **create_dto.model_dump(exclude={"sdoc_ids", "code_ids"}),
                 sdoc_ids=list(dict.fromkeys(create_dto.sdoc_ids)),
                 code_ids=list(dict.fromkeys(create_dto.code_ids)),
             ),
         )
-        return self._read_experiment(db=db, experiment_id=db_obj.id)
+        return self._read_experiment(
+            db=db, project_id=project_id, experiment_id=db_obj.id
+        )
 
     def create_run(
-        self, *, db: Session, create_dto: ExperimentRunCreate, user_id: int
+        self,
+        *,
+        db: Session,
+        project_id: int,
+        create_dto: ExperimentRunCreate,
+        user_id: int,
     ) -> ExperimentRunCreated:
         """Create a run with its virtual user and start its job.
 
@@ -107,7 +115,9 @@ class ExperimentService(metaclass=SingletonMeta):
         the run and writes into its virtual user.
         """
         # 1) check that the experiment has a gold annotator and the prompt version fits
-        experiment = crud_experiment.read(db=db, id=create_dto.experiment_id)
+        experiment = crud_experiment.read(
+            db=db, project_id=project_id, id=create_dto.experiment_id
+        )
         self._assert_gold_annotator(experiment=experiment)
         self._assert_eligible_prompt_version(
             db=db, experiment=experiment, prompt_version_id=create_dto.prompt_version_id
@@ -116,7 +126,7 @@ class ExperimentService(metaclass=SingletonMeta):
         # 2) create the virtual user of the run (names are unique per project)
         virtual_user = crud_user.create_virtual_user(
             db=db,
-            project_id=experiment.project_id,
+            project_id=project_id,
             name=self._run_user_name(
                 experiment_name=experiment.name, run_name=create_dto.name
             ),
@@ -125,8 +135,8 @@ class ExperimentService(metaclass=SingletonMeta):
         # 3) create the run
         run = crud_experiment_run.create(
             db=db,
+            project_id=project_id,
             create_dto=ExperimentRunCreateIntern(
-                project_id=experiment.project_id,
                 experiment_id=experiment.id,
                 name=create_dto.name,
                 prompt_version_id=create_dto.prompt_version_id,
@@ -140,9 +150,7 @@ class ExperimentService(metaclass=SingletonMeta):
         db.expire(experiment, ["runs"])
 
         # 4) start the job after the commit
-        job_input = ExperimentRunJobInput(
-            project_id=experiment.project_id, run_id=run.id
-        )
+        job_input = ExperimentRunJobInput(project_id=project_id, run_id=run.id)
         event.listen(
             db,
             "after_commit",
@@ -153,15 +161,19 @@ class ExperimentService(metaclass=SingletonMeta):
         )
 
         return ExperimentRunCreated(
-            experiment=self._read_experiment(db=db, experiment_id=experiment.id),
+            experiment=self._read_experiment(
+                db=db, project_id=project_id, experiment_id=experiment.id
+            ),
             run=ExperimentRunRead.model_validate(run),
             virtual_user=UserRead.model_validate(virtual_user),
         )
 
     # READ (the log of a run is read by its export)
 
-    def _read_run_log(self, *, db: Session, run_id: int) -> ExperimentRunLog:
-        run = crud_experiment_run.read(db=db, id=run_id)
+    def _read_run_log(
+        self, *, db: Session, project_id: int, run_id: int
+    ) -> ExperimentRunLog:
+        run = crud_experiment_run.read(db=db, project_id=project_id, id=run_id)
         experiment = run.experiment
         version = crud_prompt_version.read(db=db, id=run.prompt_version_id)
         user_ids = [
@@ -206,11 +218,18 @@ class ExperimentService(metaclass=SingletonMeta):
     # UPDATE
 
     def update_experiment(
-        self, *, db: Session, experiment_id: int, update_dto: ExperimentUpdate
+        self,
+        *,
+        db: Session,
+        project_id: int,
+        experiment_id: int,
+        update_dto: ExperimentUpdate,
     ) -> ExperimentUpdated:
         """Rename an experiment and the virtual users of its runs. Its documents,
         codes, task and gold annotator are fixed when it is created."""
-        experiment = crud_experiment.read(db=db, id=experiment_id)
+        experiment = crud_experiment.read(
+            db=db, project_id=project_id, id=experiment_id
+        )
 
         # 1) rename the virtual users of the runs (names are unique per project)
         virtual_user_ids: list[int] = []
@@ -230,44 +249,58 @@ class ExperimentService(metaclass=SingletonMeta):
             )
 
         # 2) rename the experiment
-        crud_experiment.update(db=db, id=experiment_id, update_dto=update_dto)
+        crud_experiment.update(
+            db=db, project_id=project_id, id=experiment_id, update_dto=update_dto
+        )
         return ExperimentUpdated(
-            experiment=self._read_experiment(db=db, experiment_id=experiment_id),
+            experiment=self._read_experiment(
+                db=db, project_id=project_id, experiment_id=experiment_id
+            ),
             virtual_users=[
                 UserRead.model_validate(user)
                 for user in crud_user.read_by_ids(db=db, ids=virtual_user_ids)
             ],
         )
 
-    def refresh_run_scores(self, *, db: Session, run_id: int) -> ExperimentRead:
+    def refresh_run_scores(
+        self, *, db: Session, project_id: int, run_id: int
+    ) -> ExperimentRead:
         """Recompute the stored agreement of a run, e.g. after the gold annotator
         changed annotations. Refused if the gold annotator was deleted."""
-        run = crud_experiment_run.read(db=db, id=run_id)
+        run = crud_experiment_run.read(db=db, project_id=project_id, id=run_id)
         gold_user_id = self._assert_gold_annotator(experiment=run.experiment)
         self._store_scores(db=db, run=run, gold_user_id=gold_user_id)
-        return self._read_experiment(db=db, experiment_id=run.experiment_id)
+        return self._read_experiment(
+            db=db, project_id=project_id, experiment_id=run.experiment_id
+        )
 
     def refresh_all_run_scores(
-        self, *, db: Session, experiment_id: int
+        self, *, db: Session, project_id: int, experiment_id: int
     ) -> ExperimentRead:
         """Recompute the stored agreement of all finished runs of an experiment at
         once, so that all runs are scored against the same state of the gold
         annotator. Refused if the gold annotator was deleted."""
-        experiment = crud_experiment.read(db=db, id=experiment_id)
+        experiment = crud_experiment.read(
+            db=db, project_id=project_id, id=experiment_id
+        )
         gold_user_id = self._assert_gold_annotator(experiment=experiment)
         for run in experiment.runs:
             if run.status == JobStatus.FINISHED:
                 self._store_scores(db=db, run=run, gold_user_id=gold_user_id)
-        return self._read_experiment(db=db, experiment_id=experiment_id)
+        return self._read_experiment(
+            db=db, project_id=project_id, experiment_id=experiment_id
+        )
 
     # DELETE
 
     def delete_experiment(
-        self, *, db: Session, experiment_id: int
+        self, *, db: Session, project_id: int, experiment_id: int
     ) -> ExperimentDeleted:
         """Delete an experiment with all its runs and their virtual users, including
         their annotations."""
-        experiment = crud_experiment.read(db=db, id=experiment_id)
+        experiment = crud_experiment.read(
+            db=db, project_id=project_id, id=experiment_id
+        )
         virtual_user_ids = [run.virtual_user_id for run in experiment.runs]
         result = ExperimentDeleted(
             experiment=ExperimentRead.model_validate(experiment),
@@ -279,14 +312,16 @@ class ExperimentService(metaclass=SingletonMeta):
         for run in experiment.runs:
             self._stop_job(run=run)
         # 1) delete the experiment with its runs (cascade), which release their users
-        crud_experiment.delete(db=db, id=experiment_id)
+        crud_experiment.delete(db=db, project_id=project_id, id=experiment_id)
         # 2) delete the virtual users of the runs with all their annotations
         crud_user.delete_multi(db=db, ids=virtual_user_ids)
         return result
 
-    def delete_run(self, *, db: Session, run_id: int) -> ExperimentRunDeleted:
+    def delete_run(
+        self, *, db: Session, project_id: int, run_id: int
+    ) -> ExperimentRunDeleted:
         """Delete a run together with its virtual user and its annotations."""
-        run = crud_experiment_run.read(db=db, id=run_id)
+        run = crud_experiment_run.read(db=db, project_id=project_id, id=run_id)
         run_dto = ExperimentRunRead.model_validate(run)
         virtual_user = UserRead.model_validate(
             crud_user.read(db=db, id=run.virtual_user_id)
@@ -294,23 +329,27 @@ class ExperimentService(metaclass=SingletonMeta):
         experiment = run.experiment
         self._stop_job(run=run)
         # 1) delete the run, which releases its virtual user
-        crud_experiment_run.delete(db=db, id=run_id)
+        crud_experiment_run.delete(db=db, project_id=project_id, id=run_id)
         # 2) delete the virtual user of the run with all its annotations
         crud_user.delete(db=db, id=virtual_user.id)
         db.expire(experiment, ["runs"])
         return ExperimentRunDeleted(
-            experiment=self._read_experiment(db=db, experiment_id=experiment.id),
+            experiment=self._read_experiment(
+                db=db, project_id=project_id, experiment_id=experiment.id
+            ),
             run=run_dto,
             virtual_user=virtual_user,
         )
 
     # JOB
 
-    def store_run_scores(self, *, db: Session, run_id: int) -> ExperimentRunRead:
+    def store_run_scores(
+        self, *, db: Session, project_id: int, run_id: int
+    ) -> ExperimentRunRead:
         """Compute and store the agreement of a run with the gold annotator, called
         when the run's job finished. If the gold annotator was deleted during the
         run, the run keeps no scores."""
-        run = crud_experiment_run.read(db=db, id=run_id)
+        run = crud_experiment_run.read(db=db, project_id=project_id, id=run_id)
         gold_user_id = run.experiment.gold_user_id
         if gold_user_id is None:
             return ExperimentRunRead.model_validate(run)
@@ -321,7 +360,12 @@ class ExperimentService(metaclass=SingletonMeta):
     # EXPORT
 
     def export_run_log(
-        self, *, db: Session, run_id: int, export_format: ExperimentRunLogFormat
+        self,
+        *,
+        db: Session,
+        project_id: int,
+        run_id: int,
+        export_format: ExperimentRunLogFormat,
     ) -> str:
         """Export the log of a run as JSON or CSV.
 
@@ -329,8 +373,7 @@ class ExperimentService(metaclass=SingletonMeta):
         scoring) with the run's configuration in every row, or one row without
         scores if none are stored. Returns the relative URL of the file.
         """
-        log = self._read_run_log(db=db, run_id=run_id)
-        project_id = crud_experiment_run.read(db=db, id=run_id).get_project_id()
+        log = self._read_run_log(db=db, project_id=project_id, run_id=run_id)
         fn = f"experiment_{log.experiment_id}_run_{log.run_id}_log"
         match export_format:
             case ExperimentRunLogFormat.JSON:
@@ -357,9 +400,11 @@ class ExperimentService(metaclass=SingletonMeta):
     def _run_user_name(self, *, experiment_name: str, run_name: str) -> str:
         return f"{experiment_name}-{run_name}"
 
-    def _read_experiment(self, *, db: Session, experiment_id: int) -> ExperimentRead:
+    def _read_experiment(
+        self, *, db: Session, project_id: int, experiment_id: int
+    ) -> ExperimentRead:
         return ExperimentRead.model_validate(
-            crud_experiment.read(db=db, id=experiment_id)
+            crud_experiment.read(db=db, project_id=project_id, id=experiment_id)
         )
 
     def _assert_valid_selection(
@@ -371,25 +416,13 @@ class ExperimentService(metaclass=SingletonMeta):
         code_ids: list[int],
         gold_user_id: int,
     ) -> None:
-        """Check that the documents, codes and the gold annotator belong to the
-        project, and that the gold annotator annotated every document."""
+        """Check that the documents and codes exist in the project (404 otherwise),
+        that the gold annotator is an annotator of the project and that it annotated
+        every document. The experiment stores the documents and codes as id lists,
+        which no foreign key checks."""
         # 1) documents and codes of the project
-        sdocs = crud_sdoc.read_existing_by_ids(
-            db=db, project_id=project_id, ids=sdoc_ids
-        )
-        foreign_sdoc_ids = [sdoc_id for sdoc_id in sdoc_ids if sdoc_id not in sdocs]
-        if foreign_sdoc_ids:
-            raise ExperimentInvalidSelectionError(
-                f"the documents {foreign_sdoc_ids} do not belong to project {project_id}"
-            )
-        codes = crud_code.read_existing_by_ids(
-            db=db, project_id=project_id, ids=code_ids
-        )
-        foreign_code_ids = [code_id for code_id in code_ids if code_id not in codes]
-        if foreign_code_ids:
-            raise ExperimentInvalidSelectionError(
-                f"the codes {foreign_code_ids} do not belong to project {project_id}"
-            )
+        crud_sdoc.read_by_ids(db=db, project_id=project_id, ids=sdoc_ids)
+        crud_code.read_by_ids(db=db, project_id=project_id, ids=code_ids)
 
         # 2) an annotator of the project, human or virtual
         annotator_ids = {
@@ -478,6 +511,7 @@ class ExperimentService(metaclass=SingletonMeta):
             )
         return crud_experiment_run.update(
             db=db,
+            project_id=run.project_id,
             id=run.id,
             update_dto=ExperimentRunUpdateIntern(
                 scores=scores, scores_computed=datetime.now(UTC)

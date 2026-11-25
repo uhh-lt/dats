@@ -12,8 +12,4 @@ export type TimelineAnalysisCreate = {
    * The type of the TimelineAnalysis
    */
   timeline_analysis_type: TimelineAnalysisType;
-  /**
-   * Project the TimelineAnalysis belongs to
-   */
-  project_id: number;
 };

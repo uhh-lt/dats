@@ -15,6 +15,7 @@ from core.metadata.project_metadata_orm import ProjectMetadataORM
 from core.metadata.source_document_metadata_crud import crud_sdoc_meta
 from core.project.project_orm import ProjectORM
 from core.user.user_orm import UserORM
+from feature_test_utils import create_project_with_features
 
 
 class TimelineProject(TypedDict):
@@ -87,3 +88,14 @@ def timeline_project(
     db_session.commit()
 
     return {"project": test_project, "published_field": published_field}
+
+
+@pytest.fixture(scope="function")
+def other_project(db_session: Session, test_user: UserORM) -> ProjectORM:
+    """
+    This fixture sets up the project "Other Project" of the test user, without
+    features, documents or timeline analyses.
+    """
+    return create_project_with_features(
+        db_session, test_user, title="Other Project", features=[]
+    )

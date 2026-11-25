@@ -33,6 +33,11 @@ PATH_IDS: dict[str, Callable[[TenantRows], int]] = {
     "project_metadata_id": lambda rows: rows["project_metadata"].id,
     "sdoc_metadata_id": lambda rows: rows["sdoc_metadata"].id,
     "memo_id": lambda rows: rows["memo"].id,
+    "whiteboard_id": lambda rows: rows["whiteboard"].id,
+    "timeline_analysis_id": lambda rows: rows["timeline_analysis"].id,
+    "cota_id": lambda rows: rows["cota"].id,
+    "experiment_id": lambda rows: rows["experiment"].id,
+    "run_id": lambda rows: rows["experiment_run"].id,
 }
 
 # a valid body (with ids of the path's project) for the routes with a path id and a
@@ -66,6 +71,27 @@ BODIES: dict[str, Callable[[TenantRows], Any]] = {
         lambda rows: {"description": "changed"}
     ),
     "PATCH /projects/{project_id}/memos/{memo_id}": (lambda rows: {"title": "x"}),
+    "PATCH /projects/{project_id}/whiteboards/{whiteboard_id}": (
+        lambda rows: {"title": "renamed"}
+    ),
+    "PATCH /projects/{project_id}/timeline-analyses/{timeline_analysis_id}": (
+        lambda rows: {"name": "renamed"}
+    ),
+    "PATCH /projects/{project_id}/concept-over-time-analyses/{cota_id}": (
+        lambda rows: {"name": "renamed"}
+    ),
+    "PATCH /projects/{project_id}/concept-over-time-analyses/{cota_id}/annotate": (
+        lambda rows: []
+    ),
+    "PATCH /projects/{project_id}/concept-over-time-analyses/{cota_id}/remove": (
+        lambda rows: []
+    ),
+    "POST /projects/{project_id}/concept-over-time-analyses/{cota_id}/refine": (
+        lambda rows: {}
+    ),
+    "PATCH /projects/{project_id}/experiments/{experiment_id}": (
+        lambda rows: {"name": "renamed"}
+    ),
     "PATCH /projects/{project_id}/source-document-metadata/{sdoc_metadata_id}": (
         lambda rows: {
             "str_value": "changed",
@@ -75,6 +101,13 @@ BODIES: dict[str, Callable[[TenantRows], Any]] = {
             "list_value": None,
         }
     ),
+}
+
+# the required query parameters of the routes with a path id, by "<METHOD> <path>"
+QUERIES: dict[str, dict[str, str]] = {
+    "POST /projects/{project_id}/experiments/runs/{run_id}/export-log": {
+        "export_format": "json"
+    },
 }
 
 # per annotation route group: the fixture row of its resource, the id field of its
@@ -136,8 +169,8 @@ def _path_id(
 
 def test_every_project_route_is_covered(client: TestClient) -> None:
     """Every path id of a project route is in PATH_IDS, and every route with a path
-    id and a body has a body in BODIES, so a new route is covered by the tests
-    below."""
+    id and a body or a required query parameter has them in BODIES and QUERIES, so
+    a new route is covered by the tests below."""
     routes = _project_routes(client)
     assert routes, "no route under /projects/{project_id}"
     for method, route in routes:
@@ -149,6 +182,15 @@ def test_every_project_route_is_covered(client: TestClient) -> None:
             assert f"{method} {route.path}" in BODIES, (
                 f"{method} {route.path}: add a body to BODIES"
             )
+        required_queries = [
+            param.name
+            for param in route.dependant.query_params
+            if param.field_info.is_required()
+        ]
+        if _path_params(route) and required_queries:
+            assert set(required_queries) <= set(
+                QUERIES.get(f"{method} {route.path}", {})
+            ), f"{method} {route.path}: add {required_queries} to QUERIES"
 
 
 def test_path_id_of_another_project_is_not_found(
@@ -175,7 +217,10 @@ def test_path_id_of_another_project_is_not_found(
             }
             url = route.path.format(project_id=own["project"].id, **values)
             response = client.request(
-                method, url, json=body(own) if body is not None else None
+                method,
+                url,
+                params=QUERIES.get(f"{method} {route.path}"),
+                json=body(own) if body is not None else None,
             )
             if response.status_code != 404:
                 failures.append(

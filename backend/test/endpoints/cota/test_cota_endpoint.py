@@ -5,15 +5,81 @@ from feature_test_utils import assert_feature_disabled, feature_named
 from modules.concept_over_time_analysis.cota_dto import (
     COTACreate,
     COTARead,
-    COTARefinementJobInput,
+    COTARefinementHyperparameters,
 )
 from pipeline_test_utils import artefact_named
 from systems.feature_system.feature_registry import feature_registry
 
 from .conftest import ProjectWithCota
 
+
+def _url(project_id: int, path: str = "") -> str:
+    """The URL of the concept over time analysis routes of the project."""
+    return f"/projects/{project_id}/concept-over-time-analyses{path}"
+
+
 # ===========================================================================
-# UPDATE COTA (/cota/{cota_id}) TESTS
+# GET COTA (/projects/{project_id}/concept-over-time-analyses/{cota_id}) TESTS
+# ===========================================================================
+
+
+@pytest.mark.parametrize(
+    "method,path",
+    [
+        # every route with the analysis in the path
+        pytest.param("GET", "", id="get"),
+        pytest.param("PUT", "/duplicate", id="duplicate"),
+        pytest.param("PATCH", "", id="update"),
+        pytest.param("PATCH", "/annotate", id="annotate"),
+        pytest.param("PATCH", "/remove", id="remove"),
+        pytest.param("PATCH", "/reset", id="reset"),
+        pytest.param("POST", "/refine", id="refine"),
+        pytest.param("DELETE", "", id="delete"),
+    ],
+)
+def test_cota_of_another_project_is_not_found(
+    client: TestClient,
+    project_with_cota: ProjectWithCota,
+    embedded_cota,
+    method: str,
+    path: str,
+):
+    """An analysis of another project of the user (with the feature) answers 404
+    on every route of the test project and stays unchanged."""
+    project_id = project_with_cota["project"].id
+    other_project, other_cota = embedded_cota
+    bodies = {
+        "PATCH ": {"name": "renamed"},
+        "PATCH /annotate": [],
+        "PATCH /remove": [],
+        "POST /refine": COTARefinementHyperparameters().model_dump(mode="json"),
+    }
+
+    response = client.request(
+        method,
+        _url(project_id, f"/{other_cota.id}{path}"),
+        json=bodies.get(f"{method} {path}"),
+    )
+
+    assert response.status_code == 404, response.text
+    response = client.get(_url(other_project["project"].id, f"/{other_cota.id}"))
+    assert COTARead.model_validate(response.json()).name == "Embedded COTA"
+
+
+def test_get_cotas_lists_the_analyses_of_the_project(
+    client: TestClient, project_with_cota: ProjectWithCota, embedded_cota
+):
+    """The list holds the analyses of the path's project only."""
+    response = client.get(_url(project_with_cota["project"].id))
+
+    assert response.status_code == 200, response.text
+    assert [COTARead.model_validate(c) for c in response.json()] == [
+        project_with_cota["cota"]
+    ]
+
+
+# ===========================================================================
+# UPDATE COTA (/projects/{project_id}/concept-over-time-analyses/{cota_id}) TESTS
 # ===========================================================================
 
 
@@ -33,11 +99,12 @@ def test_update_cota_rejects_empty_or_null_update(
 ) -> None:
     """An empty update or an explicit null for a NOT NULL field is a 422, and the COTA is unchanged."""
     cota = project_with_cota["cota"]
+    project_id = project_with_cota["project"].id
 
-    response = client.patch(f"/cota/{cota.id}", json=payload)
+    response = client.patch(_url(project_id, f"/{cota.id}"), json=payload)
 
     assert response.status_code == 422, response.text
-    response = client.get(f"/cota/{cota.id}")
+    response = client.get(_url(project_id, f"/{cota.id}"))
     assert response.status_code == 200, response.text
     assert COTARead.model_validate(response.json()).name == "Test COTA"
 
@@ -45,28 +112,33 @@ def test_update_cota_rejects_empty_or_null_update(
 def test_update_cota_name(client: TestClient, project_with_cota) -> None:
     """Updating only the name renames the COTA."""
     cota = project_with_cota["cota"]
+    project_id = project_with_cota["project"].id
 
-    response = client.patch(f"/cota/{cota.id}", json={"name": "Renamed COTA"})
+    response = client.patch(
+        _url(project_id, f"/{cota.id}"), json={"name": "Renamed COTA"}
+    )
 
     assert response.status_code == 200, response.text
     assert COTARead.model_validate(response.json()).name == "Renamed COTA"
 
 
 # ===========================================================================
-# GATING (all /cota routes) TESTS
+# GATING (all /projects/{project_id}/concept-over-time-analyses routes) TESTS
 # ===========================================================================
-# A project without concepts over time rejects every route of the module,
-# whether it names the project, the analysis or carries the project in the body.
+# A project without concepts over time rejects every route of the module, from the
+# project router (see also endpoints/feature/test_feature_gating.py).
 
 
 @pytest.mark.parametrize(
     "method,path",
     [
-        pytest.param("GET", "/cota/{cota_id}", id="get-by-id"),
-        pytest.param("GET", "/cota/project/{project_id}", id="get-by-project"),
-        pytest.param("PUT", "/cota/duplicate/{cota_id}", id="duplicate"),
-        pytest.param("PATCH", "/cota/reset/{cota_id}", id="reset"),
-        pytest.param("DELETE", "/cota/{cota_id}", id="delete"),
+        pytest.param("PUT", "", id="create"),
+        pytest.param("GET", "", id="get-by-project"),
+        pytest.param("GET", "/{cota_id}", id="get-by-id"),
+        pytest.param("PUT", "/{cota_id}/duplicate", id="duplicate"),
+        pytest.param("PATCH", "/{cota_id}/reset", id="reset"),
+        pytest.param("POST", "/{cota_id}/refine", id="refine"),
+        pytest.param("DELETE", "/{cota_id}", id="delete"),
     ],
 )
 def test_cota_routes_are_rejected_when_concepts_over_time_is_disabled(
@@ -76,41 +148,25 @@ def test_cota_routes_are_rejected_when_concepts_over_time_is_disabled(
     path: str,
 ):
     p = featureless_project_with_cota
-    url = path.format(cota_id=p["cota"].id, project_id=p["project"].id)
+    bodies = {
+        "PUT ": COTACreate(name="New COTA").model_dump(),
+        "POST /{cota_id}/refine": COTARefinementHyperparameters().model_dump(),
+    }
 
-    response = client.request(method, url)
-
-    assert_feature_disabled(response, "concepts_over_time")
-
-
-def test_create_cota_is_rejected_when_concepts_over_time_is_disabled(
-    client: TestClient, featureless_project_with_cota: ProjectWithCota
-):
-    """The project of a new analysis comes from the request body."""
-    create = COTACreate(
-        name="New COTA", project_id=featureless_project_with_cota["project"].id
+    response = client.request(
+        method,
+        _url(p["project"].id, path.format(cota_id=p["cota"].id)),
+        json=bodies.get(f"{method} {path}"),
     )
 
-    response = client.put("/cota", json=create.model_dump())
-
     assert_feature_disabled(response, "concepts_over_time")
 
 
-def test_refine_cota_is_rejected_when_concepts_over_time_is_disabled(
-    client: TestClient, featureless_project_with_cota: ProjectWithCota
+def test_cota_route_with_a_non_integer_id_is_a_validation_error(
+    client: TestClient, project_with_cota: ProjectWithCota
 ):
-    p = featureless_project_with_cota
-    payload = COTARefinementJobInput(project_id=p["project"].id, cota_id=p["cota"].id)
-
-    response = client.post("/cota/refine", json=payload.model_dump(mode="json"))
-
-    assert_feature_disabled(response, "concepts_over_time")
-
-
-def test_cota_route_with_a_non_integer_id_is_a_validation_error(client: TestClient):
-    """The gate reads the analysis by the path parameter: an id that is no
-    integer is rejected with 422 like on any other route, not with 500."""
-    response = client.get("/cota/abc")
+    """An id that is no integer is rejected with 422, not with 500."""
+    response = client.get(_url(project_with_cota["project"].id, "/abc"))
 
     assert response.status_code == 422, response.text
     assert "cota_id" in response.text

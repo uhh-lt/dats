@@ -39,7 +39,9 @@ def export_selected_whiteboards(
     Raises:
         NoDataToExportError: If no whiteboards are found to export
     """
-    whiteboards = crud_whiteboard.read_by_ids(db=db, ids=whiteboard_ids)
+    whiteboards = crud_whiteboard.read_by_ids(
+        db=db, project_id=project_id, ids=whiteboard_ids
+    )
     return __export_whiteboards(
         db=db,
         out_dir=out_dir,

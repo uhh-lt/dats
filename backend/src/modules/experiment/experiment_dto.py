@@ -26,7 +26,6 @@ class ExperimentBaseDTO(BaseModel):
 
 # Properties for creation
 class ExperimentCreate(ExperimentBaseDTO):
-    project_id: int = Field(description="Project the experiment belongs to")
     gold_user_id: int = Field(
         description=(
             "ID of the gold annotator, who must have annotated every document "
@@ -42,7 +41,6 @@ class ExperimentCreate(ExperimentBaseDTO):
 
 
 class ExperimentCreateIntern(ExperimentBaseDTO):
-    project_id: int = Field(description="Project the experiment belongs to")
     gold_user_id: int | None = Field(
         description="ID of the gold annotator, None if it was deleted (import)"
     )

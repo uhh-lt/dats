@@ -49,10 +49,9 @@ export function CotaControl({ cota }: CotaControlProps) {
   const refineCota = CotaHooks.useRefineCota();
   const handleRefineCota = () => {
     refineCota.mutate({
-      requestBody: {
-        cota_id: cota.id,
-        project_id: cota.project_id,
-      },
+      projectId: cota.project_id,
+      cotaId: cota.id,
+      requestBody: {},
     });
   };
 
@@ -63,6 +62,7 @@ export function CotaControl({ cota }: CotaControlProps) {
       text: `Do you really want to reset the analysis "${cota.name}"? This action cannot be undone! It will reset the search space and delete all sentence annotations.`,
       onAccept: () => {
         resetCota.mutate({
+          projectId: cota.project_id,
           cotaId: cota.id,
         });
       },
@@ -82,6 +82,7 @@ export function CotaControl({ cota }: CotaControlProps) {
   const handleApplyTrainingSettings = (trainingSettings: COTATrainingSettings) => {
     updateCota.mutate(
       {
+        projectId: cota.project_id,
         cotaId: cota.id,
         requestBody: {
           training_settings: trainingSettings,

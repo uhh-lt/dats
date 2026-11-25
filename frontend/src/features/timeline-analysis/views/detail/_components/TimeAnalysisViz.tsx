@@ -40,6 +40,7 @@ export function TimelineAnalysisViz({ timelineAnalysis }: TimelineAnalysisVizPro
   const recomputeMutation = TimelineAnalysisHooks.useRecomputeTimelineAnalysis();
   const recomputeTimelineAnalysis = () => {
     recomputeMutation.mutate({
+      projectId: timelineAnalysis.project_id,
       timelineAnalysisId: timelineAnalysis.id,
     });
   };

@@ -28,6 +28,7 @@ export function CotaTimelineSettings({ cota }: CotaSettingsProps) {
   const updateCota = CotaHooks.useUpdateCota();
   const handleChangeMetadataId = (event: ChangeEvent<HTMLInputElement>) => {
     updateCota.mutate({
+      projectId: cota.project_id,
       cotaId: cota.id,
       requestBody: {
         ...cota,
@@ -41,6 +42,7 @@ export function CotaTimelineSettings({ cota }: CotaSettingsProps) {
 
   const handleChangeGroupBy = (event: ChangeEvent<HTMLInputElement>) => {
     updateCota.mutate({
+      projectId: cota.project_id,
       cotaId: cota.id,
       requestBody: {
         ...cota,
@@ -55,6 +57,7 @@ export function CotaTimelineSettings({ cota }: CotaSettingsProps) {
   const handleChangeThreshold = (event: FocusEvent<HTMLInputElement>) => {
     if (event.target.value.trim() === "") return;
     updateCota.mutate({
+      projectId: cota.project_id,
       cotaId: cota.id,
       requestBody: {
         ...cota,

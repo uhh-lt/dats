@@ -43,6 +43,7 @@ export function WhiteboardDashboardView() {
   // CRUD actions
   const handleDuplicateClick = (row: MRT_Row<AnalysisDashboardRow>) => {
     duplicateWhiteboard({
+      projectId,
       whiteboardId: row.original.id,
     });
   };
@@ -53,6 +54,7 @@ export function WhiteboardDashboardView() {
       text: `Do you really want to remove the whiteboard ${row.original.id}? This action cannot be undone!`,
       onAccept: () => {
         deleteWhiteboard({
+          projectId,
           whiteboardId: row.original.id,
         });
       },
@@ -64,8 +66,8 @@ export function WhiteboardDashboardView() {
     ({ values, table }) => {
       createWhiteboard(
         {
+          projectId,
           requestBody: {
-            project_id: projectId,
             title: values.title,
           },
         },
@@ -87,6 +89,7 @@ export function WhiteboardDashboardView() {
     }
     updateWhiteboard(
       {
+        projectId,
         whiteboardId: row.original.id,
         requestBody: {
           title: values.title,

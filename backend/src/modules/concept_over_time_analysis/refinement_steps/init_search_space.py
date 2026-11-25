@@ -38,6 +38,7 @@ def init_search_space(db: Session, cota: COTARead) -> list[COTASentence]:
     # add the date to the search space
     search_space = __add_dates_to_search_space(
         db=db,
+        project_id=cota.project_id,
         date_metadata_id=cota.timeline_settings.date_metadata_id,
         search_space=search_space,
     )
@@ -130,7 +131,10 @@ def __add_sentences_to_search_space(
 
 
 def __add_dates_to_search_space(
-    db: Session, date_metadata_id: int | None, search_space: list[COTASentence]
+    db: Session,
+    project_id: int,
+    date_metadata_id: int | None,
+    search_space: list[COTASentence],
 ) -> list[COTASentence]:
     sdoc_ids = list(set([cota_sent.sdoc_id for cota_sent in search_space]))
 
@@ -148,6 +152,7 @@ def __add_dates_to_search_space(
                 )
                 .join(SourceDocumentORM.metadata_)
                 .where(
+                    SourceDocumentORM.project_id == project_id,
                     SourceDocumentORM.id.in_(batch_ids),
                     SourceDocumentMetadataORM.project_metadata_id == date_metadata_id,
                     SourceDocumentMetadataORM.date_value.is_not(None),

@@ -508,8 +508,10 @@ def test_delete_source_user_keeps_source_code_of_copy(
 # annotator keeps its experiments without one (ON DELETE SET NULL).
 
 
-def _get_experiment(client: TestClient, experiment_id: int) -> ExperimentRead:
-    response = client.get(f"/experiment/{experiment_id}")
+def _get_experiment(
+    client: TestClient, project_id: int, experiment_id: int
+) -> ExperimentRead:
+    response = client.get(f"/projects/{project_id}/experiments/{experiment_id}")
     assert response.status_code == 200, response.text
     return ExperimentRead.model_validate(response.json())
 
@@ -549,7 +551,9 @@ def test_delete_virtual_user_of_an_experiment_run_is_a_conflict(
     experiment_id = run_user_project[experiment_key].id  # type: ignore[literal-required]
     run_id = run_user_project[run_key].id  # type: ignore[literal-required]
     user_id = run_user_project[user_key].id  # type: ignore[literal-required]
-    runs_before = _get_experiment(client, experiment_id).runs
+    runs_before = _get_experiment(
+        client, run_user_project["project"].id, experiment_id
+    ).runs
 
     response = client.delete(f"/user/{user_id}")
 
@@ -557,7 +561,9 @@ def test_delete_virtual_user_of_an_experiment_run_is_a_conflict(
     assert "still in use" in response.text
     assert "experimentrun" not in response.text
     assert client.get(f"/user/by_id/{user_id}").status_code == 200
-    runs_after = _get_experiment(client, experiment_id).runs
+    runs_after = _get_experiment(
+        client, run_user_project["project"].id, experiment_id
+    ).runs
     assert runs_after == runs_before
     assert run_id in {run.id for run in runs_after}
 
@@ -592,13 +598,13 @@ def test_delete_virtual_gold_annotator_keeps_experiment_runs_and_scores(
         p[key].id  # type: ignore[literal-required]
         for key in ("virtual_gold_run_user", "second_run_user", "failed_run_user")
     ]
-    before = _get_experiment(client, experiment_id)
+    before = _get_experiment(client, run_user_project["project"].id, experiment_id)
     assert before.gold_user_id == group_standard_id
 
     response = client.delete(f"/user/{group_standard_id}")
 
     assert response.status_code == 200, response.text
-    after = _get_experiment(client, experiment_id)
+    after = _get_experiment(client, run_user_project["project"].id, experiment_id)
     assert after.gold_user_id is None
     assert after.runs == before.runs
     baseline = next(run for run in after.runs if run.id == p["virtual_gold_run"].id)
@@ -606,7 +612,9 @@ def test_delete_virtual_gold_annotator_keeps_experiment_runs_and_scores(
     for user_id in run_user_ids:
         assert client.get(f"/user/by_id/{user_id}").status_code == 200
     # the experiment of the human gold annotator is unaffected
-    human_gold = _get_experiment(client, p["human_gold_experiment"].id)
+    human_gold = _get_experiment(
+        client, run_user_project["project"].id, p["human_gold_experiment"].id
+    )
     assert human_gold.gold_user_id == p["gold_annotator"].id
 
 
@@ -619,14 +627,14 @@ def test_delete_me_as_gold_annotator_keeps_experiment_runs_and_scores(
     p = run_user_project
     experiment_id = p["human_gold_experiment"].id
     run_user_id = p["human_gold_run_user"].id
-    before = _get_experiment(client, experiment_id)
+    before = _get_experiment(client, run_user_project["project"].id, experiment_id)
     assert before.gold_user_id == p["gold_annotator"].id
     gold_client = create_user_client(app_client, p["gold_annotator"])
 
     response = gold_client.delete("/user/")
 
     assert response.status_code == 200, response.text
-    after = _get_experiment(client, experiment_id)
+    after = _get_experiment(client, run_user_project["project"].id, experiment_id)
     assert after.gold_user_id is None
     assert after.runs == before.runs
     assert len(after.runs[0].scores) > 0

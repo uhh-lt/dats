@@ -74,8 +74,13 @@ def test_delete_project_with_experiments_deletes_them_and_their_run_users(
     assert response.status_code == 200, response.text
     assert response.json()["id"] == project_id
     for experiment_id in experiment_ids:
-        # deleted objects are indistinguishable from unauthorized ones
-        assert client.get(f"/experiment/{experiment_id}").status_code == 403
+        # the project is gone, so the user is no member of it any more
+        assert (
+            client.get(
+                f"/projects/{project_id}/experiments/{experiment_id}"
+            ).status_code
+            == 403
+        )
     for user_id in virtual_user_ids:
         assert client.get(f"/user/by_id/{user_id}").status_code == 404
     # the human gold annotator is no virtual user: only the membership is gone

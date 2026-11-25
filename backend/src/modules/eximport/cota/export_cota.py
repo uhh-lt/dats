@@ -43,7 +43,7 @@ def export_selected_cota(
     Raises:
         NoDataToExportError: If no COTA analyses are found
     """
-    cota_analyses = crud_cota.read_by_ids(db=db, ids=cota_ids)
+    cota_analyses = crud_cota.read_by_ids(db=db, project_id=project_id, ids=cota_ids)
     return __export_cota(
         db=db,
         out_dir=out_dir,

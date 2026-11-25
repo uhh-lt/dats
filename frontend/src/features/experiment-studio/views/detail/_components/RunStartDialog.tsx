@@ -63,6 +63,7 @@ export function RunStartDialog({ projectId, experiment, onRunStarted }: RunStart
       if (data.promptVersionId === "") return;
       createRunMutation(
         {
+          projectId,
           requestBody: {
             experiment_id: experiment.id,
             name: runName,
@@ -79,7 +80,7 @@ export function RunStartDialog({ projectId, experiment, onRunStarted }: RunStart
         },
       );
     },
-    [createRunMutation, experiment.id, handleClose, onRunStarted],
+    [createRunMutation, experiment.id, handleClose, onRunStarted, projectId],
   );
   const handleError: SubmitErrorHandler<RunStartValues> = (data) => console.error(data);
 

@@ -15,15 +15,37 @@ export class TimelineAnalysisService {
    * @throws ApiError
    */
   public static create({
+    projectId,
     requestBody,
   }: {
+    projectId: number;
     requestBody: TimelineAnalysisCreate;
   }): CancelablePromise<TimelineAnalysisRead> {
     return __request(OpenAPI, {
       method: "PUT",
-      url: "/timelineAnalysis",
+      url: "/projects/{project_id}/timeline-analyses",
+      path: {
+        project_id: projectId,
+      },
       body: requestBody,
       mediaType: "application/json",
+      errors: {
+        422: `Validation Error`,
+      },
+    });
+  }
+  /**
+   * Returns the TimelineAnalyses of the Project
+   * @returns TimelineAnalysisRead Successful Response
+   * @throws ApiError
+   */
+  public static getByProject({ projectId }: { projectId: number }): CancelablePromise<Array<TimelineAnalysisRead>> {
+    return __request(OpenAPI, {
+      method: "GET",
+      url: "/projects/{project_id}/timeline-analyses",
+      path: {
+        project_id: projectId,
+      },
       errors: {
         422: `Validation Error`,
       },
@@ -35,14 +57,17 @@ export class TimelineAnalysisService {
    * @throws ApiError
    */
   public static duplicateById({
+    projectId,
     timelineAnalysisId,
   }: {
+    projectId: number;
     timelineAnalysisId: number;
   }): CancelablePromise<TimelineAnalysisRead> {
     return __request(OpenAPI, {
       method: "PUT",
-      url: "/timelineAnalysis/duplicate/{timeline_analysis_id}",
+      url: "/projects/{project_id}/timeline-analyses/{timeline_analysis_id}/duplicate",
       path: {
+        project_id: projectId,
         timeline_analysis_id: timelineAnalysisId,
       },
       errors: {
@@ -56,14 +81,17 @@ export class TimelineAnalysisService {
    * @throws ApiError
    */
   public static getById({
+    projectId,
     timelineAnalysisId,
   }: {
+    projectId: number;
     timelineAnalysisId: number;
   }): CancelablePromise<TimelineAnalysisRead> {
     return __request(OpenAPI, {
       method: "GET",
-      url: "/timelineAnalysis/{timeline_analysis_id}",
+      url: "/projects/{project_id}/timeline-analyses/{timeline_analysis_id}",
       path: {
+        project_id: projectId,
         timeline_analysis_id: timelineAnalysisId,
       },
       errors: {
@@ -77,16 +105,19 @@ export class TimelineAnalysisService {
    * @throws ApiError
    */
   public static updateById({
+    projectId,
     timelineAnalysisId,
     requestBody,
   }: {
+    projectId: number;
     timelineAnalysisId: number;
     requestBody: TimelineAnalysisUpdate;
   }): CancelablePromise<TimelineAnalysisRead> {
     return __request(OpenAPI, {
       method: "PATCH",
-      url: "/timelineAnalysis/{timeline_analysis_id}",
+      url: "/projects/{project_id}/timeline-analyses/{timeline_analysis_id}",
       path: {
+        project_id: projectId,
         timeline_analysis_id: timelineAnalysisId,
       },
       body: requestBody,
@@ -102,32 +133,18 @@ export class TimelineAnalysisService {
    * @throws ApiError
    */
   public static deleteById({
+    projectId,
     timelineAnalysisId,
   }: {
+    projectId: number;
     timelineAnalysisId: number;
   }): CancelablePromise<TimelineAnalysisRead> {
     return __request(OpenAPI, {
       method: "DELETE",
-      url: "/timelineAnalysis/{timeline_analysis_id}",
-      path: {
-        timeline_analysis_id: timelineAnalysisId,
-      },
-      errors: {
-        422: `Validation Error`,
-      },
-    });
-  }
-  /**
-   * Returns the TimelineAnalysis of the Project with the given ID if it exists
-   * @returns TimelineAnalysisRead Successful Response
-   * @throws ApiError
-   */
-  public static getByProject({ projectId }: { projectId: number }): CancelablePromise<Array<TimelineAnalysisRead>> {
-    return __request(OpenAPI, {
-      method: "GET",
-      url: "/timelineAnalysis/project/{project_id}",
+      url: "/projects/{project_id}/timeline-analyses/{timeline_analysis_id}",
       path: {
         project_id: projectId,
+        timeline_analysis_id: timelineAnalysisId,
       },
       errors: {
         422: `Validation Error`,
@@ -140,14 +157,17 @@ export class TimelineAnalysisService {
    * @throws ApiError
    */
   public static recomputeById({
+    projectId,
     timelineAnalysisId,
   }: {
+    projectId: number;
     timelineAnalysisId: number;
   }): CancelablePromise<TimelineAnalysisRead> {
     return __request(OpenAPI, {
       method: "PATCH",
-      url: "/timelineAnalysis/recompute/{timeline_analysis_id}",
+      url: "/projects/{project_id}/timeline-analyses/{timeline_analysis_id}/recompute",
       path: {
+        project_id: projectId,
         timeline_analysis_id: timelineAnalysisId,
       },
       errors: {

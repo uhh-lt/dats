@@ -113,7 +113,9 @@ def _export_and_delete_experiments(db: Session, project_id: int) -> pd.DataFrame
     the virtual users of the runs), so that the import creates them again."""
     df = _export_experiments(db, project_id)
     crud_experiment.delete_multi(
-        db=db, ids=[e.id for e in _experiments(db, project_id).values()]
+        db=db,
+        project_id=project_id,
+        ids=[e.id for e in _experiments(db, project_id).values()],
     )
     db.commit()
     return df

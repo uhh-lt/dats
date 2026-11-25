@@ -195,9 +195,9 @@ def _create_experiment(
 ) -> ExperimentORM:
     return crud_experiment.create(
         db=db,
+        project_id=project.id,
         create_dto=ExperimentCreateIntern(
             name=name,
-            project_id=project.id,
             task_type=TaskType.ANNOTATION,
             sdoc_ids=[sdoc.id for sdoc in sdocs],
             code_ids=[code.id for code in codes],
@@ -339,8 +339,8 @@ def experiment_project(
     )
     run = crud_experiment_run.create(
         db=db,
+        project_id=experiment_with_run.project_id,
         create_dto=ExperimentRunCreateIntern(
-            project_id=experiment_with_run.project_id,
             experiment_id=experiment_with_run.id,
             name="Baseline",
             prompt_version_id=span_prompt.versions[0].id,

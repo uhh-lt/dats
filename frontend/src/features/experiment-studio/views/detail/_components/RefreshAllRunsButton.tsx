@@ -16,8 +16,8 @@ interface RefreshAllRunsButtonProps {
 export function RefreshAllRunsButton({ experiment }: RefreshAllRunsButtonProps) {
   const { mutate: refreshAllMutation, isPending } = ExperimentHooks.useRefreshAllRunScores();
   const handleRefreshAll = useCallback(
-    () => refreshAllMutation({ experimentId: experiment.id }),
-    [experiment.id, refreshAllMutation],
+    () => refreshAllMutation({ projectId: experiment.project_id, experimentId: experiment.id }),
+    [experiment.id, experiment.project_id, refreshAllMutation],
   );
 
   const hasGoldAnnotator = experiment.gold_user_id !== null;

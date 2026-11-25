@@ -51,7 +51,10 @@ export function RunActions({ projectId, experiment, run, scoring, onDeleted }: R
   // scores and log
   const { mutate: refreshScoresMutation, isPending: isRefreshing } = ExperimentHooks.useRefreshRunScores();
   const { mutate: exportLogMutation, isPending: isExporting } = ExperimentHooks.useExportRunLog();
-  const handleRefresh = useCallback(() => refreshScoresMutation({ runId: run.id }), [refreshScoresMutation, run.id]);
+  const handleRefresh = useCallback(
+    () => refreshScoresMutation({ projectId, runId: run.id }),
+    [projectId, refreshScoresMutation, run.id],
+  );
   const [logMenuAnchor, setLogMenuAnchor] = useState<HTMLElement | null>(null);
   const handleOpenLogMenu = useCallback((event: MouseEvent<HTMLElement>) => setLogMenuAnchor(event.currentTarget), []);
   const handleCloseLogMenu = useCallback(() => setLogMenuAnchor(null), []);
@@ -59,11 +62,11 @@ export function RunActions({ projectId, experiment, run, scoring, onDeleted }: R
     (exportFormat: ExperimentRunLogFormat) => {
       setLogMenuAnchor(null);
       exportLogMutation(
-        { runId: run.id, exportFormat },
+        { projectId, runId: run.id, exportFormat },
         { onSuccess: (url) => downloadFile(encodeURI("/content/" + url)) },
       );
     },
-    [exportLogMutation, run.id],
+    [exportLogMutation, projectId, run.id],
   );
 
   // deletion
@@ -75,11 +78,11 @@ export function RunActions({ projectId, experiment, run, scoring, onDeleted }: R
         `Do you really want to delete run ${run.name}? Its virtual user is deleted with all its annotations. ` +
         "This action cannot be undone!",
       onAccept: () => {
-        deleteRunMutation({ runId: run.id });
+        deleteRunMutation({ projectId, runId: run.id });
         onDeleted();
       },
     });
-  }, [deleteRunMutation, onDeleted, openConfirmationDialog, run.id, run.name]);
+  }, [deleteRunMutation, onDeleted, openConfirmationDialog, projectId, run.id, run.name]);
 
   // clicks on the actions must not expand the run
   const handleStopPropagation = useCallback((event: MouseEvent) => event.stopPropagation(), []);

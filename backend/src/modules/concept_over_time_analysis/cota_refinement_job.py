@@ -46,7 +46,9 @@ def cota_refinement(payload: COTARefinementJobInput, job: Job) -> None:
 
     with sqlr.transaction() as db:
         # Make sure the cota exists!
-        db_obj = crud_cota.read(db=db, id=payload.cota_id)
+        db_obj = crud_cota.read(
+            db=db, project_id=payload.project_id, id=payload.cota_id
+        )
         cota = COTARead.model_validate(db_obj)
 
         # Make sure there are at least two concepts
@@ -65,6 +67,7 @@ def cota_refinement(payload: COTARefinementJobInput, job: Job) -> None:
         job.update(current_step=2)
         crud_cota.update(
             db=db,
+            project_id=payload.project_id,
             id=cota.id,
             update_dto=COTAUpdateIntern(search_space=jsonable_encoder(search_space)),
         )

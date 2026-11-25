@@ -6,11 +6,11 @@ from modules.timeline_analysis.timeline_analysis_dto import (
 )
 from modules.timeline_analysis.timeline_analysis_enum import TimelineAnalysisType
 from modules.timeline_analysis.timeline_analysis_orm import TimelineAnalysisORM
-from repos.db.crud_base import SQLCRUDBase
+from repos.db.project_crud_base import ProjectCRUDBase
 
 
 class CRUDTimelineAnalysis(
-    SQLCRUDBase[
+    ProjectCRUDBase[
         TimelineAnalysisORM, TimelineAnalysisCreateIntern, TimelineAnalysisUpdateIntern
     ]
 ):
@@ -31,13 +31,13 @@ class CRUDTimelineAnalysis(
     ### OTHER OPERATIONS ###
 
     def duplicate_by_id(
-        self, db: Session, *, timeline_analysis_id: int, user_id: int
+        self, db: Session, *, project_id: int, timeline_analysis_id: int
     ) -> TimelineAnalysisORM:
-        db_obj = self.read(db=db, id=timeline_analysis_id)
+        db_obj = self.read(db=db, project_id=project_id, id=timeline_analysis_id)
         return self.create(
             db=db,
+            project_id=project_id,
             create_dto=TimelineAnalysisCreateIntern(
-                project_id=db_obj.project_id,
                 name=db_obj.name + " (Copy)",
                 concepts=db_obj.concepts,
                 settings=db_obj.settings,

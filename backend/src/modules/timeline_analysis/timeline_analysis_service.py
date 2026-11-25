@@ -53,7 +53,12 @@ class TimelineAnalysisService(metaclass=SingletonMeta):
         return super(TimelineAnalysisService, cls).__new__(cls)
 
     def update_timeline_analysis(
-        self, *, db: Session, id: int, update_dto: TimelineAnalysisUpdate
+        self,
+        *,
+        db: Session,
+        project_id: int,
+        id: int,
+        update_dto: TimelineAnalysisUpdate,
     ) -> TimelineAnalysisRead:
         # update everything except the concepts
         update_data = update_dto.model_dump(
@@ -64,12 +69,13 @@ class TimelineAnalysisService(metaclass=SingletonMeta):
         if update_data:
             db_obj = crud_timeline_analysis.update(
                 db,
+                project_id=project_id,
                 id=id,
                 update_dto=TimelineAnalysisUpdateIntern(**update_data),
             )
         else:
             # only the concepts are updated
-            db_obj = crud_timeline_analysis.read(db, id=id)
+            db_obj = crud_timeline_analysis.read(db, project_id=project_id, id=id)
         ta = TimelineAnalysisRead.model_validate(db_obj)
 
         # check if we even need to update concepts
@@ -138,6 +144,7 @@ class TimelineAnalysisService(metaclass=SingletonMeta):
         # update the concepts
         db_obj = crud_timeline_analysis.update(
             db,
+            project_id=project_id,
             id=id,
             update_dto=TimelineAnalysisUpdateIntern(
                 concepts=jsonable_encoder(list(new_concepts.values())),
@@ -146,12 +153,9 @@ class TimelineAnalysisService(metaclass=SingletonMeta):
         return TimelineAnalysisRead.model_validate(db_obj)
 
     def recompute_timeline_analysis(
-        self, *, db: Session, id: int
+        self, *, db: Session, project_id: int, id: int
     ) -> TimelineAnalysisRead:
-        db_obj = crud_timeline_analysis.read(
-            db,
-            id=id,
-        )
+        db_obj = crud_timeline_analysis.read(db, project_id=project_id, id=id)
         ta = TimelineAnalysisRead.model_validate(db_obj)
 
         # compute new results
@@ -168,6 +172,7 @@ class TimelineAnalysisService(metaclass=SingletonMeta):
         # update the concepts
         db_obj = crud_timeline_analysis.update(
             db,
+            project_id=project_id,
             id=id,
             update_dto=TimelineAnalysisUpdateIntern(
                 concepts=jsonable_encoder(list(concepts.values())),
@@ -263,15 +268,17 @@ class TimelineAnalysisService(metaclass=SingletonMeta):
                 func.max(SourceDocumentMetadataORM.date_value),
             )
             .filter(
+                SourceDocumentMetadataORM.project_id == timeline_analysis.project_id,
                 SourceDocumentMetadataORM.project_metadata_id
                 == timeline_analysis.settings.date_metadata_id,
                 SourceDocumentMetadataORM.date_value.isnot(None),
             )
             .one()
         )
-        if len(date_results) == 0:
-            return []
         earliest_date, latest_date = date_results
+        # no document of the project has a date of the metadata
+        if earliest_date is None or latest_date is None:
+            return []
 
         # create a date range from earliest to latest (used for x-axis)
         parse_str = "%Y"
@@ -287,7 +294,7 @@ class TimelineAnalysisService(metaclass=SingletonMeta):
             .strftime(parse_str)
             .to_list()
         )
-        date_list.append(datetime.strftime(date_results[-1], parse_str))
+        date_list.append(datetime.strftime(latest_date, parse_str))
         date_list = sorted(list(set(date_list)))
 
         # create the result, mapping dates to sdoc counts

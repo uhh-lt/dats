@@ -5,11 +5,11 @@ from modules.whiteboard.whiteboard_dto import (
     WhiteboardUpdateIntern,
 )
 from modules.whiteboard.whiteboard_orm import WhiteboardORM
-from repos.db.crud_base import SQLCRUDBase
+from repos.db.project_crud_base import ProjectCRUDBase
 
 
 class CRUDWhiteboard(
-    SQLCRUDBase[WhiteboardORM, WhiteboardCreateIntern, WhiteboardUpdateIntern]
+    ProjectCRUDBase[WhiteboardORM, WhiteboardCreateIntern, WhiteboardUpdateIntern]
 ):
     ### READ OPERATIONS ###
 
@@ -29,13 +29,14 @@ class CRUDWhiteboard(
         self,
         db: Session,
         *,
+        project_id: int,
         whiteboard_id: int,
     ) -> WhiteboardORM:
-        db_obj = self.read(db=db, id=whiteboard_id)
+        db_obj = self.read(db=db, project_id=project_id, id=whiteboard_id)
         return self.create(
             db=db,
+            project_id=project_id,
             create_dto=WhiteboardCreateIntern(
-                project_id=db_obj.project_id,
                 title=db_obj.title + " (Copy)",
                 content=db_obj.content,
             ),
