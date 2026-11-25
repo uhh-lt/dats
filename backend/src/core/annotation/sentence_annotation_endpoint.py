@@ -1,9 +1,8 @@
-from fastapi import APIRouter, Depends, Query
-from loguru import logger
+from fastapi import Body, Depends, Query
 
-from common.crud_enum import Crud
 from common.dats_event import DATSEvent
-from common.dependencies import DBSession, get_current_user
+from common.dependencies import DBSession
+from common.project_router import project_router
 from core.annotation.sentence_annotation_crud import crud_sentence_anno
 from core.annotation.sentence_annotation_dto import (
     SentenceAnnotationCreate,
@@ -14,15 +13,9 @@ from core.annotation.sentence_annotation_dto import (
 )
 from core.annotation.sentence_annotation_service import SentenceAnnotationService
 from core.auth.authz_user import AuthzUser
-from core.auth.validation import Validate
-from core.doc.source_document_data_crud import crud_sdoc_data
 from systems.websocket_system.websocket_dependency import WebsocketEmitter
 
-router = APIRouter(
-    prefix="/sentence",
-    dependencies=[Depends(get_current_user)],
-    tags=["sentenceAnnotation", "mcp"],
-)
+router = project_router("/sentence-annotations", tags=["sentenceAnnotation", "mcp"])
 
 
 # --- create operations
@@ -36,6 +29,7 @@ router = APIRouter(
 def create_sentence_annotation(
     *,
     db: DBSession,
+    project_id: int,
     sentence_annotation: SentenceAnnotationCreate,
     user_id: int | None = Query(
         default=None,
@@ -44,61 +38,49 @@ def create_sentence_annotation(
     authz_user: AuthzUser = Depends(),
     ws: WebsocketEmitter = Depends(),
 ) -> SentenceAnnotationRead:
-    authz_user.assert_in_same_project_as(
-        Crud.SOURCE_DOCUMENT, sentence_annotation.sdoc_id
-    )
-    authz_user.assert_in_same_project_as(Crud.CODE, sentence_annotation.code_id)
-    annotation_user_id = authz_user.assert_can_annotate_as(
-        user_id, [sentence_annotation.sdoc_id]
-    )
+    annotation_user_id = authz_user.assert_can_annotate_as(user_id, project_id)
 
     result = SentenceAnnotationService().create(
-        db=db, user_id=annotation_user_id, create_dto=sentence_annotation
+        db=db,
+        project_id=project_id,
+        user_id=annotation_user_id,
+        create_dto=sentence_annotation,
     )
     ws.emit_to_project(
-        DATSEvent.SENTENCE_ANNOTATION_CREATED,
-        result,
-        project_id=result.project_id,
+        DATSEvent.SENTENCE_ANNOTATION_CREATED, result, project_id=project_id
     )
     return result
 
 
 @router.put(
-    "/bulk/create",
+    "/bulk",
     response_model=list[SentenceAnnotationRead],
     summary="Creates SentenceAnnotations in Bulk",
 )
 def create_sentence_annotations_bulk(
     *,
     db: DBSession,
+    project_id: int,
     sentence_annotations: list[SentenceAnnotationCreate],
     user_id: int | None = Query(
         default=None,
         description="The current user (default) or a virtual user of the project",
     ),
     authz_user: AuthzUser = Depends(),
-    validate: Validate = Depends(),
     ws: WebsocketEmitter = Depends(),
 ) -> list[SentenceAnnotationRead]:
-    for sa in sentence_annotations:
-        authz_user.assert_in_same_project_as(Crud.CODE, sa.code_id)
-        authz_user.assert_in_same_project_as(Crud.SOURCE_DOCUMENT, sa.sdoc_id)
-        validate.validate_objects_in_same_project(
-            [
-                (Crud.CODE, sa.code_id),
-                (Crud.SOURCE_DOCUMENT, sa.sdoc_id),
-            ]
-        )
-
-    annotation_user_id = authz_user.assert_can_annotate_as(
-        user_id, [sa.sdoc_id for sa in sentence_annotations]
-    )
+    annotation_user_id = authz_user.assert_can_annotate_as(user_id, project_id)
 
     results = SentenceAnnotationService().create_multi(
-        db=db, user_id=annotation_user_id, create_dtos=sentence_annotations
+        db=db,
+        project_id=project_id,
+        user_id=annotation_user_id,
+        create_dtos=sentence_annotations,
     )
     if results:
-        ws.emit_dtos_to_projects(DATSEvent.SENTENCE_ANNOTATION_CREATED_BATCH, results)
+        ws.emit_to_project(
+            DATSEvent.SENTENCE_ANNOTATION_CREATED_BATCH, results, project_id=project_id
+        )
     return results
 
 
@@ -106,230 +88,183 @@ def create_sentence_annotations_bulk(
 
 
 @router.get(
-    "/{sentence_anno_id}",
+    "",
+    response_model=list[SentenceAnnotationRead],
+    summary=(
+        "Returns the SentenceAnnotations of the User, optionally only those in the "
+        "SourceDocument or with the Code"
+    ),
+)
+def get_sentence_annotations(
+    *,
+    db: DBSession,
+    project_id: int,
+    user_id: int,
+    sdoc_id: int | None = None,
+    code_id: int | None = None,
+) -> list[SentenceAnnotationRead]:
+    db_objs = crud_sentence_anno.read_by_user(
+        db=db, project_id=project_id, user_id=user_id, sdoc_id=sdoc_id, code_id=code_id
+    )
+    return [SentenceAnnotationRead.model_validate(db_obj) for db_obj in db_objs]
+
+
+@router.get(
+    "/by-sentence",
+    response_model=SentenceAnnotatorResult,
+    summary=(
+        "Returns the SentenceAnnotations of the User in the SourceDocument, grouped "
+        "by sentence"
+    ),
+)
+def get_sentence_annotations_by_sentence(
+    *,
+    db: DBSession,
+    project_id: int,
+    user_id: int,
+    sdoc_id: int,
+) -> SentenceAnnotatorResult:
+    return SentenceAnnotationService().read_by_sentence(
+        db=db, project_id=project_id, user_id=user_id, sdoc_id=sdoc_id
+    )
+
+
+@router.get(
+    "/{sentence_annotation_id}",
     response_model=SentenceAnnotationRead,
     summary="Returns the SentenceAnnotation with the given ID.",
 )
 def get_by_id(
     *,
     db: DBSession,
-    sentence_anno_id: int,
-    authz_user: AuthzUser = Depends(),
+    project_id: int,
+    sentence_annotation_id: int,
 ) -> SentenceAnnotationRead:
-    authz_user.assert_in_same_project_as(Crud.SENTENCE_ANNOTATION, sentence_anno_id)
-
-    db_obj = crud_sentence_anno.read(db=db, id=sentence_anno_id)
+    db_obj = crud_sentence_anno.read(
+        db=db, project_id=project_id, id=sentence_annotation_id
+    )
     return SentenceAnnotationRead.model_validate(db_obj)
-
-
-@router.get(
-    "/sdoc/{sdoc_id}/user/{user_id}",
-    response_model=SentenceAnnotatorResult,
-    summary="Returns all SentenceAnnotations of the User for the SourceDocument",
-)
-def get_by_sdoc_and_user(
-    *,
-    db: DBSession,
-    sdoc_id: int,
-    user_id: int,
-    authz_user: AuthzUser = Depends(),
-) -> SentenceAnnotatorResult:
-    authz_user.assert_in_same_project_as(Crud.SOURCE_DOCUMENT, sdoc_id)
-
-    # read sentences
-    sdoc_data = crud_sdoc_data.read(db=db, id=sdoc_id)
-    if sdoc_data is None:
-        raise ValueError("SourceDocument is not a text document")
-
-    # read sentence annotations
-    sentence_annos = [
-        SentenceAnnotationRead.model_validate(sent_anno)
-        for sent_anno in crud_sentence_anno.read_by_users_and_sdoc(
-            db=db, user_ids=[user_id], sdoc_id=sdoc_id
-        )
-    ]
-
-    # build result object: sentence_id -> [sentence_annotations]
-    result: dict[int, list[SentenceAnnotationRead]] = {
-        idx: [] for idx in range(len(sdoc_data.sentences))
-    }
-    for sent_anno in sentence_annos:
-        for sent_idx in range(
-            sent_anno.sentence_id_start, sent_anno.sentence_id_end + 1
-        ):
-            if sent_idx >= len(result):
-                logger.warning(f"Invalid sentence index {sent_idx} for sdoc {sdoc_id}")
-                continue
-            result[sent_idx].append(sent_anno)
-
-    return SentenceAnnotatorResult(
-        sentence_annotations=result,
-    )
-
-
-@router.get(
-    "/code/{code_id}/user",
-    response_model=list[SentenceAnnotationRead],
-    summary=("Returns SentenceAnnotations with the given Code of the logged-in User"),
-)
-def get_by_user_code(
-    *,
-    db: DBSession,
-    code_id: int,
-    authz_user: AuthzUser = Depends(),
-) -> list[SentenceAnnotationRead]:
-    authz_user.assert_in_same_project_as(Crud.CODE, code_id)
-
-    db_objs = crud_sentence_anno.read_by_code_and_user(
-        db=db, code_id=code_id, user_id=authz_user.user.id
-    )
-    return [SentenceAnnotationRead.model_validate(db_obj) for db_obj in db_objs]
 
 
 # --- update operations
 
 
 @router.patch(
-    "/{sentence_anno_id}",
+    "/bulk",
+    response_model=list[SentenceAnnotationRead],
+    summary="Updates SentenceAnnotations in Bulk",
+)
+def update_sentence_annotations_bulk(
+    *,
+    db: DBSession,
+    project_id: int,
+    sentence_annotations: list[SentenceAnnotationUpdateBulk],
+    ws: WebsocketEmitter = Depends(),
+) -> list[SentenceAnnotationRead]:
+    results = SentenceAnnotationService().update_multi(
+        db=db, project_id=project_id, update_dtos=sentence_annotations
+    )
+    if results:
+        ws.emit_to_project(
+            DATSEvent.SENTENCE_ANNOTATION_UPDATED_BATCH, results, project_id=project_id
+        )
+    return results
+
+
+@router.patch(
+    "/{sentence_annotation_id}",
     response_model=SentenceAnnotationRead,
     summary="Updates the SentenceAnnotation with the given ID.",
 )
 def update_by_id(
     *,
     db: DBSession,
-    sentence_anno_id: int,
-    sentence_annotation_anno: SentenceAnnotationUpdate,
-    authz_user: AuthzUser = Depends(),
-    validate: Validate = Depends(),
+    project_id: int,
+    sentence_annotation_id: int,
+    sentence_annotation: SentenceAnnotationUpdate,
     ws: WebsocketEmitter = Depends(),
 ) -> SentenceAnnotationRead:
-    authz_user.assert_in_same_project_as(Crud.SENTENCE_ANNOTATION, sentence_anno_id)
-    if sentence_annotation_anno.code_id is not None:
-        authz_user.assert_in_same_project_as(
-            Crud.CODE, sentence_annotation_anno.code_id
-        )
-        validate.validate_objects_in_same_project(
-            [
-                (Crud.SENTENCE_ANNOTATION, sentence_anno_id),
-                (Crud.CODE, sentence_annotation_anno.code_id),
-            ]
-        )
-
-    db_obj = crud_sentence_anno.update(
-        db=db, id=sentence_anno_id, update_dto=sentence_annotation_anno
+    result = SentenceAnnotationService().update(
+        db=db,
+        project_id=project_id,
+        id=sentence_annotation_id,
+        update_dto=sentence_annotation,
     )
-    result = SentenceAnnotationRead.model_validate(db_obj)
     ws.emit_to_project(
-        DATSEvent.SENTENCE_ANNOTATION_UPDATED,
-        result,
-        project_id=db_obj.get_project_id(),
+        DATSEvent.SENTENCE_ANNOTATION_UPDATED, result, project_id=project_id
     )
     return result
-
-
-@router.patch(
-    "/bulk/update",
-    response_model=list[SentenceAnnotationRead],
-    summary="Updates SentenceAnnotation in Bulk",
-)
-def update_sentence_annotations_bulk(
-    *,
-    db: DBSession,
-    sent_annos: list[SentenceAnnotationUpdateBulk],
-    authz_user: AuthzUser = Depends(),
-    validate: Validate = Depends(),
-    ws: WebsocketEmitter = Depends(),
-) -> list[SentenceAnnotationRead]:
-    for sent_anno in sent_annos:
-        authz_user.assert_in_same_project_as(Crud.CODE, sent_anno.code_id)
-        authz_user.assert_in_same_project_as(
-            Crud.SENTENCE_ANNOTATION, sent_anno.sentence_annotation_id
-        )
-        validate.validate_objects_in_same_project(
-            [
-                (Crud.CODE, sent_anno.code_id),
-                (Crud.SENTENCE_ANNOTATION, sent_anno.sentence_annotation_id),
-            ]
-        )
-
-    results = SentenceAnnotationService().update_multi(db=db, update_dtos=sent_annos)
-    if results:
-        ws.emit_dtos_to_projects(DATSEvent.SENTENCE_ANNOTATION_UPDATED_BATCH, results)
-    return results
 
 
 # --- delete operations
 
 
 @router.delete(
-    "/{sentence_anno_id}",
-    response_model=SentenceAnnotationRead,
-    summary="Deletes the SentenceAnnotation with the given ID.",
-)
-def delete_by_id(
-    *,
-    db: DBSession,
-    sentence_anno_id: int,
-    authz_user: AuthzUser = Depends(),
-    ws: WebsocketEmitter = Depends(),
-) -> SentenceAnnotationRead:
-    authz_user.assert_in_same_project_as(Crud.SENTENCE_ANNOTATION, sentence_anno_id)
-
-    db_obj = crud_sentence_anno.read(db=db, id=sentence_anno_id)
-    sentence_anno_read = SentenceAnnotationRead.model_validate(db_obj)
-    project_id = db_obj.get_project_id()
-
-    crud_sentence_anno.delete(db=db, id=sentence_anno_id)
-    ws.emit_to_project(
-        DATSEvent.SENTENCE_ANNOTATION_DELETED,
-        sentence_anno_read,
-        project_id=project_id,
-    )
-    return sentence_anno_read
-
-
-@router.delete(
-    "/bulk/delete",
+    "/bulk",
     response_model=list[SentenceAnnotationRead],
     summary="Deletes all SentenceAnnotations with the given IDs.",
 )
 def delete_sentence_annotations_bulk(
     *,
     db: DBSession,
-    sentence_anno_ids: list[int],
-    authz_user: AuthzUser = Depends(),
+    project_id: int,
+    sentence_annotation_ids: list[int],
     ws: WebsocketEmitter = Depends(),
 ) -> list[SentenceAnnotationRead]:
-    authz_user.assert_in_same_project_as_many(
-        Crud.SENTENCE_ANNOTATION, sentence_anno_ids
+    results = SentenceAnnotationService().delete_multi(
+        db=db, project_id=project_id, ids=sentence_annotation_ids
     )
-
-    results = SentenceAnnotationService().delete_multi(db=db, ids=sentence_anno_ids)
     if results:
-        ws.emit_dtos_to_projects(DATSEvent.SENTENCE_ANNOTATION_DELETED_BATCH, results)
+        ws.emit_to_project(
+            DATSEvent.SENTENCE_ANNOTATION_DELETED_BATCH, results, project_id=project_id
+        )
     return results
+
+
+@router.delete(
+    "/{sentence_annotation_id}",
+    response_model=SentenceAnnotationRead,
+    summary="Deletes the SentenceAnnotation with the given ID.",
+)
+def delete_by_id(
+    *,
+    db: DBSession,
+    project_id: int,
+    sentence_annotation_id: int,
+    ws: WebsocketEmitter = Depends(),
+) -> SentenceAnnotationRead:
+    result = SentenceAnnotationService().delete_multi(
+        db=db, project_id=project_id, ids=[sentence_annotation_id]
+    )[0]
+    ws.emit_to_project(
+        DATSEvent.SENTENCE_ANNOTATION_DELETED, result, project_id=project_id
+    )
+    return result
 
 
 # --- other operations
 
 
 @router.post(
-    "/count_annotations/{user_id}",
+    "/count",
     response_model=dict[int, int],
     summary=(
-        "Counts the SentenceAnnotations of the User (by user_id) per Codes (by class_ids) in Documents (by sdoc_ids)"
+        "Counts the SentenceAnnotations of the User per Code (by code_ids) in the "
+        "SourceDocuments (by sdoc_ids)"
     ),
 )
 def count_annotations(
     *,
     db: DBSession,
+    project_id: int,
     user_id: int,
-    sdoc_ids: list[int],
-    class_ids: list[int],
-    authz_user: AuthzUser = Depends(),
+    sdoc_ids: list[int] = Body(description="The SourceDocuments to count in"),
+    code_ids: list[int] = Body(description="The Codes to count"),
 ) -> dict[int, int]:
-    authz_user.assert_in_same_project_as_many(Crud.SOURCE_DOCUMENT, sdoc_ids)
-
     return crud_sentence_anno.count_by_codes_and_sdocs_and_user(
-        db=db, code_ids=class_ids, sdoc_ids=sdoc_ids, user_id=user_id
+        db=db,
+        project_id=project_id,
+        code_ids=code_ids,
+        sdoc_ids=sdoc_ids,
+        user_id=user_id,
     )

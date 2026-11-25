@@ -95,7 +95,6 @@ def handle_object_detection_job(payload: ObjectDetectionJobInput, job: Job) -> N
                 y_max=box.y_max,
                 code_id=system_code_ids[LABEL_CODES.get(box.label, box.label)],
                 uuid=str(uuid4()),
-                project_id=payload.project_id,
                 annotation_document_id=adoc.id,
             )
             for box in result.bboxes
@@ -105,9 +104,11 @@ def handle_object_detection_job(payload: ObjectDetectionJobInput, job: Job) -> N
         # store bboxes in db
         crud_bbox_anno.delete_by_adoc(
             db=trans,
+            project_id=payload.project_id,
             adoc_id=adoc.id,
         )
         crud_bbox_anno.create_multi(
             db=trans,
+            project_id=payload.project_id,
             create_dtos=create_dtos,
         )

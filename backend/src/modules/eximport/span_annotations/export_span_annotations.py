@@ -23,10 +23,13 @@ def export_selected_span_annotations(
     project_id: int,
     span_annotation_ids: list[int],
 ) -> Path:
-    span_annotations = crud_span_anno.read_by_ids(db=db, ids=span_annotation_ids)
+    span_annotations = crud_span_anno.read_by_ids(
+        db=db, project_id=project_id, ids=span_annotation_ids
+    )
     return __export_span_annotations(
         db=db,
         out_dir=out_dir,
+        project_id=project_id,
         fn=f"project_{project_id}_selected_span_annotations",
         span_annotations=span_annotations,
     )
@@ -41,6 +44,7 @@ def export_all_span_annotations(
     return __export_span_annotations(
         db=db,
         out_dir=out_dir,
+        project_id=project_id,
         fn=f"project_{project_id}_all_span_annotations",
         span_annotations=span_annotations,
     )
@@ -49,6 +53,7 @@ def export_all_span_annotations(
 def __export_span_annotations(
     db: Session,
     out_dir: Path,
+    project_id: int,
     fn: str,
     span_annotations: list[SpanAnnotationORM],
 ) -> Path:
@@ -56,7 +61,7 @@ def __export_span_annotations(
         raise NoDataToExportError("No span annotations to export.")
 
     export_data = __generate_export_df_for_span_annotations(
-        db=db, span_annotations=span_annotations
+        db=db, project_id=project_id, span_annotations=span_annotations
     )
     return write_df(
         out_dir=out_dir,
@@ -67,13 +72,14 @@ def __export_span_annotations(
 
 def __generate_export_df_for_span_annotations(
     db: Session,
+    project_id: int,
     span_annotations: list[SpanAnnotationORM],
 ) -> pd.DataFrame:
     logger.info(f"Exporting {len(span_annotations)} Span Annotations ...")
 
     annotation_export_items = []
     provenances = export_annotation_provenance(
-        db=db, crud=crud_span_anno, annotations=span_annotations
+        db=db, crud=crud_span_anno, project_id=project_id, annotations=span_annotations
     )
     for span, provenance in zip(span_annotations, provenances):
         sdoc = span.annotation_document.source_document

@@ -76,6 +76,7 @@ export const MemoWorkspaceSidebar = memo(({ projectId, scope }: MemoWorkspaceSid
   const handleCreateProjectMemo = useCallback(() => {
     createMemo.mutate(
       {
+        projectId,
         attachedObjectId: projectId,
         attachedObjectType: AttachedObjectType.PROJECT,
         requestBody: { title: "Untitled", content: "", content_json: "" },

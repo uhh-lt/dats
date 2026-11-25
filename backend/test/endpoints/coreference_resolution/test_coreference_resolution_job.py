@@ -74,9 +74,14 @@ def _groups(client: TestClient, sdoc_id: int) -> list[SpanGroupWithAnnotationsRe
     return [SpanGroupWithAnnotationsRead.model_validate(g) for g in response.json()]
 
 
-def _spans(client: TestClient, sdoc_id: int) -> list[SpanAnnotationRead]:
+def _spans(
+    client: TestClient, project_id: int, sdoc_id: int
+) -> list[SpanAnnotationRead]:
     """The span annotations of the system user in the document."""
-    response = client.get(f"/span/sdoc/{sdoc_id}/user/{SYSTEM_USER_ID}")
+    response = client.get(
+        f"/projects/{project_id}/span-annotations",
+        params={"user_id": SYSTEM_USER_ID, "sdoc_id": sdoc_id},
+    )
     assert response.status_code == 200, response.text
     return [SpanAnnotationRead.model_validate(s) for s in response.json()]
 
@@ -246,7 +251,10 @@ def test_recompute_replaces_the_mentions_and_groups(
     held_jobs.run(STEP)
 
     assert _texts(_groups(client, sdoc_id)) == [["Anna", "Sie"]]
-    assert sorted(span.text for span in _spans(client, sdoc_id)) == ["Anna", "Sie"]
+    assert sorted(span.text for span in _spans(client, p["project"].id, sdoc_id)) == [
+        "Anna",
+        "Sie",
+    ]
 
 
 def test_recompute_clears_a_document_that_is_no_longer_german(
@@ -270,7 +278,7 @@ def test_recompute_clears_a_document_that_is_no_longer_german(
     assert calls == []
     assert read_step_status(db_session, sdoc_id, STEP) == 1
     assert _groups(client, sdoc_id) == []
-    assert _spans(client, sdoc_id) == []
+    assert _spans(client, p["project"].id, sdoc_id) == []
 
 
 # ===========================================================================

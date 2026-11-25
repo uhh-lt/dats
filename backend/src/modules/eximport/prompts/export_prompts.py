@@ -58,7 +58,9 @@ def export_all_prompts(
     if len(prompts) == 0:
         raise NoDataToExportError("No prompts to export.")
 
-    export_data = __generate_export_df_for_prompts(db=db, prompts=prompts)
+    export_data = __generate_export_df_for_prompts(
+        db=db, project_id=project_id, prompts=prompts
+    )
     return write_df(
         out_dir=out_dir,
         df=export_data,
@@ -67,7 +69,7 @@ def export_all_prompts(
 
 
 def __generate_export_df_for_prompts(
-    db: Session, prompts: list[PromptORM]
+    db: Session, project_id: int, prompts: list[PromptORM]
 ) -> pd.DataFrame:
     logger.info(f"Exporting {len(prompts)} Prompts ...")
 
@@ -76,7 +78,7 @@ def __generate_export_df_for_prompts(
         for prompt in prompts
         for version in prompt.versions
     ]
-    references = _References.read(db=db, versions=versions)
+    references = _References.read(db=db, project_id=project_id, versions=versions)
 
     export_items: list[PromptExportSchema] = []
     for prompt in prompts:
@@ -127,7 +129,9 @@ class _References:
         self.user_email = user_email
 
     @classmethod
-    def read(cls, db: Session, *, versions: list[PromptVersionRead]) -> "_References":
+    def read(
+        cls, db: Session, *, project_id: int, versions: list[PromptVersionRead]
+    ) -> "_References":
         examples = [example for version in versions for example in version.examples]
         code_ids = [code.code_id for version in versions for code in version.codes]
         for example in examples:
@@ -184,13 +188,13 @@ class _References:
             span_uuid={
                 id: span.uuid
                 for id, span in crud_span_anno.read_existing_by_ids(
-                    db=db, ids=span_ids
+                    db=db, project_id=project_id, ids=span_ids
                 ).items()
             },
             sentence_uuid={
                 id: sentence.uuid
                 for id, sentence in crud_sentence_anno.read_existing_by_ids(
-                    db=db, ids=sentence_ids
+                    db=db, project_id=project_id, ids=sentence_ids
                 ).items()
             },
             user_email={

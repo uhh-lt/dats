@@ -167,9 +167,11 @@ def _create_sentence_annotation(
 ) -> SentenceAnnotationORM:
     return crud_sentence_anno.read(
         db=db,
+        project_id=sdoc.project_id,
         id=SentenceAnnotationService()
         .create(
             db=db,
+            project_id=sdoc.project_id,
             user_id=user_id,
             create_dto=SentenceAnnotationCreate(
                 sdoc_id=sdoc.id,

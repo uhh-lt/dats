@@ -436,7 +436,9 @@ class TimelineAnalysisService(metaclass=SingletonMeta):
                 sent_anno_ids = [
                     data_id for row in result for data_id in row["data_ids"]
                 ]
-                sent_annos = crud_sentence_anno.read_by_ids(db=db, ids=sent_anno_ids)
+                sent_annos = crud_sentence_anno.read_by_ids(
+                    db=db, project_id=project_id, ids=sent_anno_ids
+                )
                 sent_annos2num_sents = {
                     sent_anno.id: sent_anno.sentence_id_end
                     - sent_anno.sentence_id_start
@@ -548,7 +550,9 @@ class TimelineAnalysisService(metaclass=SingletonMeta):
                 span_anno_ids = [
                     data_id for row in result for data_id in row["data_ids"]
                 ]
-                span_annos = crud_span_anno.read_by_ids(db=db, ids=span_anno_ids)
+                span_annos = crud_span_anno.read_by_ids(
+                    db=db, project_id=project_id, ids=span_anno_ids
+                )
                 span_anno_num_words = {
                     span_anno.id: span_anno.end_token - span_anno.begin_token
                     for span_anno in span_annos

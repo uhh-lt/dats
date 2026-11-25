@@ -6,6 +6,7 @@ import { MemoRead } from "@models/MemoRead";
 import ArrowBackIcon from "@mui/icons-material/ArrowBack";
 import { Box, Button, CircularProgress, Stack } from "@mui/material";
 import { useQuery } from "@tanstack/react-query";
+import { useParams } from "@tanstack/react-router";
 import { memo, useCallback, useState } from "react";
 
 interface DocumentMemosProps {
@@ -47,7 +48,8 @@ interface DocumentMemoListProps {
 
 function DocumentMemoList({ sdocId, onClick }: DocumentMemoListProps) {
   const { user } = useAuth();
-  const memos = useQuery(memoQueries.byAttachedObject(AttachedObjectType.SOURCE_DOCUMENT, sdocId));
+  const projectId = useParams({ strict: false, select: (params) => params.projectId });
+  const memos = useQuery(memoQueries.byAttachedObject(projectId, AttachedObjectType.SOURCE_DOCUMENT, sdocId));
 
   const handleSelectMemo = useCallback(
     (memoId: number) => {
@@ -61,9 +63,10 @@ function DocumentMemoList({ sdocId, onClick }: DocumentMemoListProps) {
   const { mutate: createMemoMutation, isPending } = MemoHooks.useCreateMemo();
 
   const handleAddMemo = useCallback(() => {
-    if (!user) return;
+    if (!user || projectId === undefined) return;
     createMemoMutation(
       {
+        projectId,
         attachedObjectId: sdocId,
         attachedObjectType: AttachedObjectType.SOURCE_DOCUMENT,
         requestBody: {
@@ -74,7 +77,7 @@ function DocumentMemoList({ sdocId, onClick }: DocumentMemoListProps) {
       },
       { onSuccess: onClick },
     );
-  }, [user, sdocId, createMemoMutation, onClick]);
+  }, [user, projectId, sdocId, createMemoMutation, onClick]);
 
   return (
     <Box p={1}>

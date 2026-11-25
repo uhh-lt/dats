@@ -16,9 +16,11 @@ export class BboxAnnotationService {
    * @throws ApiError
    */
   public static createBboxAnnotation({
+    projectId,
     requestBody,
     userId,
   }: {
+    projectId: number;
     requestBody: BBoxAnnotationCreate;
     /**
      * The current user (default) or a virtual user of the project
@@ -27,7 +29,10 @@ export class BboxAnnotationService {
   }): CancelablePromise<BBoxAnnotationRead> {
     return __request(OpenAPI, {
       method: "PUT",
-      url: "/bbox",
+      url: "/projects/{project_id}/bbox-annotations",
+      path: {
+        project_id: projectId,
+      },
       query: {
         user_id: userId,
       },
@@ -39,16 +44,55 @@ export class BboxAnnotationService {
     });
   }
   /**
+   * Returns the BBoxAnnotations of the User, optionally only those in the SourceDocument or with the Code
+   * @returns BBoxAnnotationRead Successful Response
+   * @throws ApiError
+   */
+  public static getBboxAnnotations({
+    projectId,
+    userId,
+    sdocId,
+    codeId,
+  }: {
+    projectId: number;
+    userId: number;
+    sdocId?: number | null;
+    codeId?: number | null;
+  }): CancelablePromise<Array<BBoxAnnotationRead>> {
+    return __request(OpenAPI, {
+      method: "GET",
+      url: "/projects/{project_id}/bbox-annotations",
+      path: {
+        project_id: projectId,
+      },
+      query: {
+        user_id: userId,
+        sdoc_id: sdocId,
+        code_id: codeId,
+      },
+      errors: {
+        422: `Validation Error`,
+      },
+    });
+  }
+  /**
    * Returns the BBoxAnnotation with the given ID.
    * @returns BBoxAnnotationRead Successful Response
    * @throws ApiError
    */
-  public static getById({ bboxId }: { bboxId: number }): CancelablePromise<BBoxAnnotationRead> {
+  public static getById({
+    projectId,
+    bboxAnnotationId,
+  }: {
+    projectId: number;
+    bboxAnnotationId: number;
+  }): CancelablePromise<BBoxAnnotationRead> {
     return __request(OpenAPI, {
       method: "GET",
-      url: "/bbox/{bbox_id}",
+      url: "/projects/{project_id}/bbox-annotations/{bbox_annotation_id}",
       path: {
-        bbox_id: bboxId,
+        project_id: projectId,
+        bbox_annotation_id: bboxAnnotationId,
       },
       errors: {
         422: `Validation Error`,
@@ -61,17 +105,20 @@ export class BboxAnnotationService {
    * @throws ApiError
    */
   public static updateById({
-    bboxId,
+    projectId,
+    bboxAnnotationId,
     requestBody,
   }: {
-    bboxId: number;
+    projectId: number;
+    bboxAnnotationId: number;
     requestBody: BBoxAnnotationUpdate;
   }): CancelablePromise<BBoxAnnotationRead> {
     return __request(OpenAPI, {
       method: "PATCH",
-      url: "/bbox/{bbox_id}",
+      url: "/projects/{project_id}/bbox-annotations/{bbox_annotation_id}",
       path: {
-        bbox_id: bboxId,
+        project_id: projectId,
+        bbox_annotation_id: bboxAnnotationId,
       },
       body: requestBody,
       mediaType: "application/json",
@@ -85,12 +132,19 @@ export class BboxAnnotationService {
    * @returns BBoxAnnotationRead Successful Response
    * @throws ApiError
    */
-  public static deleteById({ bboxId }: { bboxId: number }): CancelablePromise<BBoxAnnotationRead> {
+  public static deleteById({
+    projectId,
+    bboxAnnotationId,
+  }: {
+    projectId: number;
+    bboxAnnotationId: number;
+  }): CancelablePromise<BBoxAnnotationRead> {
     return __request(OpenAPI, {
       method: "DELETE",
-      url: "/bbox/{bbox_id}",
+      url: "/projects/{project_id}/bbox-annotations/{bbox_annotation_id}",
       path: {
-        bbox_id: bboxId,
+        project_id: projectId,
+        bbox_annotation_id: bboxAnnotationId,
       },
       errors: {
         422: `Validation Error`,
@@ -98,59 +152,23 @@ export class BboxAnnotationService {
     });
   }
   /**
-   * Returns all BBoxAnnotations of the User for the SourceDocument
-   * @returns BBoxAnnotationRead Successful Response
-   * @throws ApiError
-   */
-  public static getBySdocAndUser({
-    sdocId,
-    userId,
-  }: {
-    sdocId: number;
-    userId: number;
-  }): CancelablePromise<Array<BBoxAnnotationRead>> {
-    return __request(OpenAPI, {
-      method: "GET",
-      url: "/bbox/sdoc/{sdoc_id}/user/{user_id}",
-      path: {
-        sdoc_id: sdocId,
-        user_id: userId,
-      },
-      errors: {
-        422: `Validation Error`,
-      },
-    });
-  }
-  /**
-   * Returns BBoxAnnotations with the given Code of the logged-in User
-   * @returns BBoxAnnotationRead Successful Response
-   * @throws ApiError
-   */
-  public static getByUserCode({ codeId }: { codeId: number }): CancelablePromise<Array<BBoxAnnotationRead>> {
-    return __request(OpenAPI, {
-      method: "GET",
-      url: "/bbox/code/{code_id}/user",
-      path: {
-        code_id: codeId,
-      },
-      errors: {
-        422: `Validation Error`,
-      },
-    });
-  }
-  /**
-   * Updates BBoxAnnotation in Bulk
+   * Updates BBoxAnnotations in Bulk
    * @returns BBoxAnnotationRead Successful Response
    * @throws ApiError
    */
   public static updateBboxAnnotationsBulk({
+    projectId,
     requestBody,
   }: {
+    projectId: number;
     requestBody: Array<BBoxAnnotationUpdateBulk>;
   }): CancelablePromise<Array<BBoxAnnotationRead>> {
     return __request(OpenAPI, {
       method: "PATCH",
-      url: "/bbox/bulk/update",
+      url: "/projects/{project_id}/bbox-annotations/bulk",
+      path: {
+        project_id: projectId,
+      },
       body: requestBody,
       mediaType: "application/json",
       errors: {
@@ -164,13 +182,18 @@ export class BboxAnnotationService {
    * @throws ApiError
    */
   public static deleteBboxAnnotationsBulk({
+    projectId,
     requestBody,
   }: {
+    projectId: number;
     requestBody: Array<number>;
   }): CancelablePromise<Array<BBoxAnnotationRead>> {
     return __request(OpenAPI, {
       method: "DELETE",
-      url: "/bbox/bulk/delete",
+      url: "/projects/{project_id}/bbox-annotations/bulk",
+      path: {
+        project_id: projectId,
+      },
       body: requestBody,
       mediaType: "application/json",
       errors: {

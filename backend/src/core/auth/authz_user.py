@@ -90,21 +90,20 @@ class AuthzUser:
     def assert_is_same_user(self, other_user_id: int):
         self.assert_true(self.user.id == other_user_id)
 
-    def assert_can_annotate_as(self, user_id: int | None, sdoc_ids: list[int]) -> int:
+    def assert_can_annotate_as(self, user_id: int | None, project_id: int) -> int:
         """
-        The user that new annotations of the documents belong to: the current user
-        (`user_id` None or the own id) or a virtual user of the documents' project.
-        Other users' annotations are read-only.
+        The user that new annotations in the project belong to: the current user
+        (`user_id` None or the own id) or a virtual user of the project. Other users'
+        annotations are read-only.
         """
         if user_id is None or user_id == self.user.id:
             return self.user.id
 
         # only virtual users have a project
         user_project_id = self.read_crud(Crud.USER, user_id).get_project_id()
-        sdocs = Crud.SOURCE_DOCUMENT.value.read_by_ids(db=self.db, ids=sdoc_ids)
         self.assert_true(
-            {sdoc.project_id for sdoc in sdocs} == {user_project_id},
-            f"User {user_id} must be a virtual user of the documents' project",
+            user_project_id == project_id,
+            f"User {user_id} must be a virtual user of project {project_id}",
         )
         return user_id
 

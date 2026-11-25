@@ -503,9 +503,11 @@ def create_span_for_text(
     )
     return crud_span_anno.read(
         db=db,
+        project_id=sdoc.project_id,
         id=SpanAnnotationService()
         .create(
             db=db,
+            project_id=sdoc.project_id,
             user_id=user_id,
             create_dto=SpanAnnotationCreate(
                 sdoc_id=sdoc.id,

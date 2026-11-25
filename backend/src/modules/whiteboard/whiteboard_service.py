@@ -67,7 +67,9 @@ class WhiteboardService(metaclass=SingletonMeta):
                     ]
                     result.span_annotations = [
                         SpanAnnotationRead.model_validate(sa)
-                        for sa in crud_span_anno.read_by_ids(db=db, ids=span_ids)
+                        for sa in crud_span_anno.read_by_ids(
+                            db=db, project_id=whiteboard.project_id, ids=span_ids
+                        )
                     ]
                 case WhiteboardNodeType.SENTENCE_ANNOTATION:
                     sent_ids = [
@@ -78,7 +80,9 @@ class WhiteboardService(metaclass=SingletonMeta):
                     ]
                     result.sent_annotations = [
                         SentenceAnnotationRead.model_validate(sa)
-                        for sa in crud_sentence_anno.read_by_ids(db=db, ids=sent_ids)
+                        for sa in crud_sentence_anno.read_by_ids(
+                            db=db, project_id=whiteboard.project_id, ids=sent_ids
+                        )
                     ]
                 case WhiteboardNodeType.BBOX_ANNOTATION:
                     bbox_ids = [
@@ -89,7 +93,9 @@ class WhiteboardService(metaclass=SingletonMeta):
                     ]
                     result.bbox_annotations = [
                         BBoxAnnotationRead.model_validate(b)
-                        for b in crud_bbox_anno.read_by_ids(db=db, ids=bbox_ids)
+                        for b in crud_bbox_anno.read_by_ids(
+                            db=db, project_id=whiteboard.project_id, ids=bbox_ids
+                        )
                     ]
                 case WhiteboardNodeType.MEMO:
                     memo_ids = [

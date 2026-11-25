@@ -32,7 +32,7 @@ export function useComputeTokenData({
   annotationOverride?: SpanAnnotationRead;
   pendingAnnotations?: SpanAnnotationRead[];
 }) {
-  const annotations = useQuery(spanAnnotationQueries.bySdoc(sdocData.id, userId));
+  const annotations = useQuery(spanAnnotationQueries.bySdoc(sdocData.project_id, sdocData.id, userId));
   const tokenData = useTokenData(sdocData);
 
   // Three-layer memoization to avoid rebuilding the full maps on every mousemove during resize:

@@ -28,6 +28,7 @@ import {
   isSdocBBoxAnnotationEdge,
 } from "../../_utils/whiteboardUtils";
 import { BaseCardNode } from "./BaseCardNode";
+import { WhiteboardRouteAPI } from "../../_hooks/whiteboardRouteAPI";
 
 export type BBoxAnnotationNode = Node<BBoxAnnotationNodeData, WhiteboardNodeType.BBOX_ANNOTATION>;
 export const BBoxAnnotationNode = memo((props: NodeProps<BBoxAnnotationNode>) => {
@@ -43,10 +44,13 @@ export const BBoxAnnotationNode = memo((props: NodeProps<BBoxAnnotationNode>) =>
   const readonly = !props.isConnectable;
 
   // global server state (react-query)
-  const annotation = useQuery(bboxAnnotationQueries.byId(props.data.bboxAnnotationId));
+  const projectId = WhiteboardRouteAPI.useParams({ select: (params) => params.projectId });
+  const annotation = useQuery(bboxAnnotationQueries.byId(projectId, props.data.bboxAnnotationId));
   const code = CodeHooks.useGetCode(annotation.data?.code_id);
   const sdocUrls = SdocHooks.useGetURLs(annotation.data?.sdoc_id);
-  const memos = useQuery(memoQueries.byAttachedObject(AttachedObjectType.BBOX_ANNOTATION, props.data.bboxAnnotationId));
+  const memos = useQuery(
+    memoQueries.byAttachedObject(projectId, AttachedObjectType.BBOX_ANNOTATION, props.data.bboxAnnotationId),
+  );
 
   // effects
   useEffect(() => {

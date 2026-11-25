@@ -1,8 +1,8 @@
-from fastapi import APIRouter, Depends, Query
+from fastapi import Body, Depends, Query
 
-from common.crud_enum import Crud
 from common.dats_event import DATSEvent
-from common.dependencies import DBSession, get_current_user
+from common.dependencies import DBSession
+from common.project_router import project_router
 from core.annotation.span_annotation_crud import crud_span_anno
 from core.annotation.span_annotation_dto import (
     SpanAnnotationCreate,
@@ -14,14 +14,9 @@ from core.annotation.span_annotation_dto import (
 from core.annotation.span_annotation_service import SpanAnnotationService
 from core.annotation.span_group_dto import SpanGroupRead
 from core.auth.authz_user import AuthzUser
-from core.auth.validation import Validate
 from systems.websocket_system.websocket_dependency import WebsocketEmitter
 
-router = APIRouter(
-    prefix="/span",
-    dependencies=[Depends(get_current_user)],
-    tags=["spanAnnotation", "mcp"],
-)
+router = project_router("/span-annotations", tags=["spanAnnotation", "mcp"])
 
 
 # --- create operations
@@ -35,244 +30,171 @@ router = APIRouter(
 def create_span_annotation(
     *,
     db: DBSession,
+    project_id: int,
     span: SpanAnnotationCreate,
     user_id: int | None = Query(
         default=None,
         description="The current user (default) or a virtual user of the project",
     ),
     authz_user: AuthzUser = Depends(),
-    validate: Validate = Depends(),
     ws: WebsocketEmitter = Depends(),
 ) -> SpanAnnotationRead:
-    authz_user.assert_in_same_project_as(Crud.CODE, span.code_id)
-    authz_user.assert_in_same_project_as(Crud.SOURCE_DOCUMENT, span.sdoc_id)
-    validate.validate_objects_in_same_project(
-        [
-            (Crud.CODE, span.code_id),
-            (Crud.SOURCE_DOCUMENT, span.sdoc_id),
-        ]
-    )
-    annotation_user_id = authz_user.assert_can_annotate_as(user_id, [span.sdoc_id])
+    annotation_user_id = authz_user.assert_can_annotate_as(user_id, project_id)
 
     result = SpanAnnotationService().create(
-        db=db, user_id=annotation_user_id, create_dto=span
+        db=db, project_id=project_id, user_id=annotation_user_id, create_dto=span
     )
-    ws.emit_to_project(
-        DATSEvent.SPAN_ANNOTATION_CREATED,
-        result,
-        project_id=result.project_id,
-    )
+    ws.emit_to_project(DATSEvent.SPAN_ANNOTATION_CREATED, result, project_id=project_id)
     return result
 
 
 @router.put(
-    "/bulk/create",
+    "/bulk",
     response_model=list[SpanAnnotationRead],
     summary="Creates SpanAnnotations in Bulk",
 )
 def create_span_annotations_bulk(
     *,
     db: DBSession,
+    project_id: int,
     spans: list[SpanAnnotationCreate],
     user_id: int | None = Query(
         default=None,
         description="The current user (default) or a virtual user of the project",
     ),
     authz_user: AuthzUser = Depends(),
-    validate: Validate = Depends(),
     ws: WebsocketEmitter = Depends(),
 ) -> list[SpanAnnotationRead]:
-    for span in spans:
-        authz_user.assert_in_same_project_as(Crud.CODE, span.code_id)
-        authz_user.assert_in_same_project_as(Crud.SOURCE_DOCUMENT, span.sdoc_id)
-        validate.validate_objects_in_same_project(
-            [
-                (Crud.CODE, span.code_id),
-                (Crud.SOURCE_DOCUMENT, span.sdoc_id),
-            ]
-        )
-
-    annotation_user_id = authz_user.assert_can_annotate_as(
-        user_id, [span.sdoc_id for span in spans]
-    )
+    annotation_user_id = authz_user.assert_can_annotate_as(user_id, project_id)
 
     results = SpanAnnotationService().create_multi(
-        db=db, user_id=annotation_user_id, create_dtos=spans
+        db=db, project_id=project_id, user_id=annotation_user_id, create_dtos=spans
     )
     if results:
-        ws.emit_dtos_to_projects(DATSEvent.SPAN_ANNOTATION_CREATED_BATCH, results)
+        ws.emit_to_project(
+            DATSEvent.SPAN_ANNOTATION_CREATED_BATCH, results, project_id=project_id
+        )
     return results
+
+
+@router.put(
+    "/{span_annotation_id}/span-groups/{span_group_id}",
+    response_model=SpanAnnotationRead,
+    summary="Adds the SpanAnnotation to the SpanGroup",
+)
+def add_to_span_group(
+    *,
+    db: DBSession,
+    project_id: int,
+    span_annotation_id: int,
+    span_group_id: int,
+    ws: WebsocketEmitter = Depends(),
+) -> SpanAnnotationRead:
+    db_obj = crud_span_anno.add_to_span_group(
+        db=db, project_id=project_id, span_id=span_annotation_id, group_id=span_group_id
+    )
+    result = SpanAnnotationRead.model_validate(db_obj)
+    ws.emit_to_project(DATSEvent.SPAN_ANNOTATION_UPDATED, result, project_id=project_id)
+    return result
 
 
 # --- read operations
 
 
 @router.get(
-    "/{span_id}",
+    "",
+    response_model=list[SpanAnnotationRead],
+    summary=(
+        "Returns the SpanAnnotations of the User, optionally only those in the "
+        "SourceDocument or with the Code"
+    ),
+)
+def get_span_annotations(
+    *,
+    db: DBSession,
+    project_id: int,
+    user_id: int,
+    sdoc_id: int | None = None,
+    code_id: int | None = None,
+) -> list[SpanAnnotationRead]:
+    db_objs = crud_span_anno.read_by_user(
+        db=db, project_id=project_id, user_id=user_id, sdoc_id=sdoc_id, code_id=code_id
+    )
+    return [SpanAnnotationRead.model_validate(db_obj) for db_obj in db_objs]
+
+
+@router.get(
+    "/{span_annotation_id}",
     response_model=SpanAnnotationRead,
     summary="Returns the SpanAnnotation with the given ID.",
 )
 def get_by_id(
     *,
     db: DBSession,
-    span_id: int,
-    authz_user: AuthzUser = Depends(),
+    project_id: int,
+    span_annotation_id: int,
 ) -> SpanAnnotationRead:
-    authz_user.assert_in_same_project_as(Crud.SPAN_ANNOTATION, span_id)
-
-    db_obj = crud_span_anno.read(db=db, id=span_id)
+    db_obj = crud_span_anno.read(db=db, project_id=project_id, id=span_annotation_id)
     return SpanAnnotationRead.model_validate(db_obj)
 
 
 @router.get(
-    "/sdoc/{sdoc_id}/user/{user_id}",
-    response_model=list[SpanAnnotationRead],
-    summary="Returns all SpanAnnotations of the User for the SourceDocument",
-)
-def get_by_sdoc_and_user(
-    *,
-    db: DBSession,
-    sdoc_id: int,
-    user_id: int,
-    authz_user: AuthzUser = Depends(),
-) -> list[SpanAnnotationRead]:
-    authz_user.assert_in_same_project_as(Crud.SOURCE_DOCUMENT, sdoc_id)
-
-    spans = crud_span_anno.read_by_user_and_sdoc(
-        db=db, user_id=user_id, sdoc_id=sdoc_id
-    )
-    return [SpanAnnotationRead.model_validate(span) for span in spans]
-
-
-@router.get(
-    "/{span_id}/groups",
+    "/{span_annotation_id}/span-groups",
     response_model=list[SpanGroupRead],
-    summary="Returns all SpanGroups that contain the the SpanAnnotation.",
+    summary="Returns all SpanGroups that contain the SpanAnnotation.",
 )
-def get_all_groups(
+def get_span_groups(
     *,
     db: DBSession,
-    span_id: int,
-    authz_user: AuthzUser = Depends(),
+    project_id: int,
+    span_annotation_id: int,
 ) -> list[SpanGroupRead]:
-    authz_user.assert_in_same_project_as(Crud.SPAN_ANNOTATION, span_id)
-
-    span_db_obj = crud_span_anno.read(db=db, id=span_id)
-    return [
-        SpanGroupRead.model_validate(span_group_db_obj)
-        for span_group_db_obj in span_db_obj.span_groups
-    ]
-
-
-@router.get(
-    "/code/{code_id}/user",
-    response_model=list[SpanAnnotationRead],
-    summary=("Returns SpanAnnotations with the given Code of the logged-in User"),
-)
-def get_by_user_code(
-    *,
-    db: DBSession,
-    code_id: int,
-    authz_user: AuthzUser = Depends(),
-) -> list[SpanAnnotationRead]:
-    authz_user.assert_in_same_project_as(Crud.CODE, code_id)
-
-    db_objs = crud_span_anno.read_by_code_and_user(
-        db=db, code_id=code_id, user_id=authz_user.user.id
-    )
-    return [SpanAnnotationRead.model_validate(db_obj) for db_obj in db_objs]
+    db_obj = crud_span_anno.read(db=db, project_id=project_id, id=span_annotation_id)
+    return [SpanGroupRead.model_validate(group) for group in db_obj.span_groups]
 
 
 # --- update operations
 
 
 @router.patch(
-    "/{span_id}",
-    response_model=SpanAnnotationRead,
-    summary="Updates the SpanAnnotation with the given ID.",
-)
-def update_by_id(
-    *,
-    db: DBSession,
-    span_id: int,
-    span_anno: SpanAnnotationUpdate,
-    authz_user: AuthzUser = Depends(),
-    validate: Validate = Depends(),
-    ws: WebsocketEmitter = Depends(),
-) -> SpanAnnotationRead:
-    authz_user.assert_in_same_project_as(Crud.SPAN_ANNOTATION, span_id)
-    if span_anno.code_id is not None:
-        authz_user.assert_in_same_project_as(Crud.CODE, span_anno.code_id)
-        validate.validate_objects_in_same_project(
-            [(Crud.SPAN_ANNOTATION, span_id), (Crud.CODE, span_anno.code_id)]
-        )
-
-    db_obj = crud_span_anno.update(db=db, id=span_id, update_dto=span_anno)
-    result = SpanAnnotationRead.model_validate(db_obj)
-    ws.emit_to_project(
-        DATSEvent.SPAN_ANNOTATION_UPDATED,
-        result,
-        project_id=db_obj.get_project_id(),
-    )
-    return result
-
-
-@router.patch(
-    "/bulk/update",
+    "/bulk",
     response_model=list[SpanAnnotationRead],
     summary="Updates SpanAnnotations in Bulk",
 )
 def update_span_annotations_bulk(
     *,
     db: DBSession,
+    project_id: int,
     spans: list[SpanAnnotationUpdateBulk],
-    authz_user: AuthzUser = Depends(),
-    validate: Validate = Depends(),
     ws: WebsocketEmitter = Depends(),
 ) -> list[SpanAnnotationRead]:
-    for span in spans:
-        authz_user.assert_in_same_project_as(Crud.CODE, span.code_id)
-        authz_user.assert_in_same_project_as(
-            Crud.SPAN_ANNOTATION, span.span_annotation_id
-        )
-        validate.validate_objects_in_same_project(
-            [
-                (Crud.CODE, span.code_id),
-                (Crud.SPAN_ANNOTATION, span.span_annotation_id),
-            ]
-        )
-
-    results = SpanAnnotationService().update_multi(db=db, update_dtos=spans)
+    results = SpanAnnotationService().update_multi(
+        db=db, project_id=project_id, update_dtos=spans
+    )
     if results:
-        ws.emit_dtos_to_projects(DATSEvent.SPAN_ANNOTATION_UPDATED_BATCH, results)
+        ws.emit_to_project(
+            DATSEvent.SPAN_ANNOTATION_UPDATED_BATCH, results, project_id=project_id
+        )
     return results
 
 
 @router.patch(
-    "/{span_id}/group/{group_id}",
+    "/{span_annotation_id}",
     response_model=SpanAnnotationRead,
-    summary="Adds the SpanAnnotation to the SpanGroup",
+    summary="Updates the SpanAnnotation with the given ID.",
 )
-def add_to_group(
+def update_by_id(
     *,
     db: DBSession,
-    span_id: int,
-    group_id: int,
-    authz_user: AuthzUser = Depends(),
+    project_id: int,
+    span_annotation_id: int,
+    span_anno: SpanAnnotationUpdate,
     ws: WebsocketEmitter = Depends(),
 ) -> SpanAnnotationRead:
-    authz_user.assert_in_same_project_as(Crud.SPAN_ANNOTATION, span_id)
-    authz_user.assert_in_same_project_as(Crud.SPAN_GROUP, group_id)
-
-    sdoc_db_obj = crud_span_anno.add_to_span_group(
-        db=db, span_id=span_id, group_id=group_id
+    result = SpanAnnotationService().update(
+        db=db, project_id=project_id, id=span_annotation_id, update_dto=span_anno
     )
-    result = SpanAnnotationRead.model_validate(sdoc_db_obj)
-    ws.emit_to_project(
-        DATSEvent.SPAN_ANNOTATION_UPDATED,
-        result,
-        project_id=sdoc_db_obj.get_project_id(),
-    )
+    ws.emit_to_project(DATSEvent.SPAN_ANNOTATION_UPDATED, result, project_id=project_id)
     return result
 
 
@@ -280,100 +202,84 @@ def add_to_group(
 
 
 @router.delete(
-    "/{span_id}",
-    response_model=SpanAnnotationDeleted,
-    summary="Deletes the SpanAnnotation with the given ID.",
-)
-def delete_by_id(
-    *,
-    db: DBSession,
-    span_id: int,
-    authz_user: AuthzUser = Depends(),
-    ws: WebsocketEmitter = Depends(),
-) -> SpanAnnotationDeleted:
-    authz_user.assert_in_same_project_as(Crud.SPAN_ANNOTATION, span_id)
-
-    db_obj = crud_span_anno.read(db=db, id=span_id)
-    anno_read = SpanAnnotationDeleted.model_validate(db_obj)
-    project_id = db_obj.get_project_id()
-
-    crud_span_anno.delete(db=db, id=span_id)
-    ws.emit_to_project(
-        DATSEvent.SPAN_ANNOTATION_DELETED,
-        anno_read,
-        project_id=project_id,
-    )
-    return anno_read
-
-
-@router.delete(
-    "/bulk/delete",
+    "/bulk",
     response_model=list[SpanAnnotationDeleted],
     summary="Deletes all SpanAnnotations with the given IDs.",
 )
 def delete_span_annotations_bulk(
     *,
     db: DBSession,
-    span_anno_ids: list[int],
-    authz_user: AuthzUser = Depends(),
+    project_id: int,
+    span_annotation_ids: list[int],
     ws: WebsocketEmitter = Depends(),
 ) -> list[SpanAnnotationDeleted]:
-    authz_user.assert_in_same_project_as_many(Crud.SPAN_ANNOTATION, span_anno_ids)
-
-    results = SpanAnnotationService().delete_multi(db=db, ids=span_anno_ids)
+    results = SpanAnnotationService().delete_multi(
+        db=db, project_id=project_id, ids=span_annotation_ids
+    )
     if results:
-        ws.emit_dtos_to_projects(DATSEvent.SPAN_ANNOTATION_DELETED_BATCH, results)
+        ws.emit_to_project(
+            DATSEvent.SPAN_ANNOTATION_DELETED_BATCH, results, project_id=project_id
+        )
     return results
 
 
 @router.delete(
-    "/{span_id}/groups",
+    "/{span_annotation_id}",
     response_model=SpanAnnotationDeleted,
-    summary="Removes the SpanAnnotation from all SpanGroups",
+    summary="Deletes the SpanAnnotation with the given ID.",
 )
-def remove_from_all_groups(
+def delete_by_id(
     *,
     db: DBSession,
-    span_id: int,
-    authz_user: AuthzUser = Depends(),
+    project_id: int,
+    span_annotation_id: int,
     ws: WebsocketEmitter = Depends(),
 ) -> SpanAnnotationDeleted:
-    authz_user.assert_in_same_project_as(Crud.SPAN_ANNOTATION, span_id)
-
-    span_db_obj = crud_span_anno.remove_from_all_span_groups(db=db, span_id=span_id)
-    ws.emit_to_project(
-        DATSEvent.SPAN_ANNOTATION_UPDATED,
-        SpanAnnotationRead.model_validate(span_db_obj),
-        project_id=span_db_obj.get_project_id(),
-    )
-    return SpanAnnotationDeleted.model_validate(span_db_obj)
+    result = SpanAnnotationService().delete_multi(
+        db=db, project_id=project_id, ids=[span_annotation_id]
+    )[0]
+    ws.emit_to_project(DATSEvent.SPAN_ANNOTATION_DELETED, result, project_id=project_id)
+    return result
 
 
 @router.delete(
-    "/{span_id}/group/{group_id}",
+    "/{span_annotation_id}/span-groups",
+    response_model=SpanAnnotationRead,
+    summary="Removes the SpanAnnotation from all SpanGroups",
+)
+def remove_from_all_span_groups(
+    *,
+    db: DBSession,
+    project_id: int,
+    span_annotation_id: int,
+    ws: WebsocketEmitter = Depends(),
+) -> SpanAnnotationRead:
+    db_obj = crud_span_anno.remove_from_all_span_groups(
+        db=db, project_id=project_id, span_id=span_annotation_id
+    )
+    result = SpanAnnotationRead.model_validate(db_obj)
+    ws.emit_to_project(DATSEvent.SPAN_ANNOTATION_UPDATED, result, project_id=project_id)
+    return result
+
+
+@router.delete(
+    "/{span_annotation_id}/span-groups/{span_group_id}",
     response_model=SpanAnnotationRead,
     summary="Removes the SpanAnnotation from the SpanGroup",
 )
-def remove_from_group(
+def remove_from_span_group(
     *,
     db: DBSession,
-    span_id: int,
-    group_id: int,
-    authz_user: AuthzUser = Depends(),
+    project_id: int,
+    span_annotation_id: int,
+    span_group_id: int,
     ws: WebsocketEmitter = Depends(),
 ) -> SpanAnnotationRead:
-    authz_user.assert_in_same_project_as(Crud.SPAN_ANNOTATION, span_id)
-    authz_user.assert_in_same_project_as(Crud.SPAN_GROUP, group_id)
-
-    sdoc_db_obj = crud_span_anno.remove_from_span_group(
-        db=db, span_id=span_id, group_id=group_id
+    db_obj = crud_span_anno.remove_from_span_group(
+        db=db, project_id=project_id, span_id=span_annotation_id, group_id=span_group_id
     )
-    result = SpanAnnotationRead.model_validate(sdoc_db_obj)
-    ws.emit_to_project(
-        DATSEvent.SPAN_ANNOTATION_UPDATED,
-        result,
-        project_id=sdoc_db_obj.get_project_id(),
-    )
+    result = SpanAnnotationRead.model_validate(db_obj)
+    ws.emit_to_project(DATSEvent.SPAN_ANNOTATION_UPDATED, result, project_id=project_id)
     return result
 
 
@@ -381,22 +287,25 @@ def remove_from_group(
 
 
 @router.post(
-    "/count_annotations/{user_id}",
+    "/count",
     response_model=dict[int, int],
     summary=(
-        "Counts the SpanAnnotations of the User (by user_id) per Codes (by class_ids) in Documents (by sdoc_ids)"
+        "Counts the SpanAnnotations of the User per Code (by code_ids) in the "
+        "SourceDocuments (by sdoc_ids)"
     ),
 )
 def count_annotations(
     *,
     db: DBSession,
+    project_id: int,
     user_id: int,
-    sdoc_ids: list[int],
-    class_ids: list[int],
-    authz_user: AuthzUser = Depends(),
+    sdoc_ids: list[int] = Body(description="The SourceDocuments to count in"),
+    code_ids: list[int] = Body(description="The Codes to count"),
 ) -> dict[int, int]:
-    authz_user.assert_in_same_project_as_many(Crud.SOURCE_DOCUMENT, sdoc_ids)
-
     return crud_span_anno.count_by_codes_and_sdocs_and_user(
-        db=db, code_ids=class_ids, sdoc_ids=sdoc_ids, user_id=user_id
+        db=db,
+        project_id=project_id,
+        code_ids=code_ids,
+        sdoc_ids=sdoc_ids,
+        user_id=user_id,
     )

@@ -10,40 +10,46 @@ import type { SentenceAnnotationRead } from "@models/SentenceAnnotationRead";
 // adding it to newly covered sentences and removing it from sentences it no
 // longer covers.
 export function upsertSentenceAnnotation(anno: SentenceAnnotationRead): void {
-  queryClient.setQueryData(sentenceAnnotationQueries.bySdoc(anno.sdoc_id, anno.user_id).queryKey, (old) => {
-    if (!old) return old;
-    const sentAnnos = { ...old.sentence_annotations };
-    Object.keys(sentAnnos).forEach((key) => {
-      const sentenceId = Number(key);
-      const coversSentence = anno.sentence_id_start <= sentenceId && sentenceId <= anno.sentence_id_end;
-      const isListed = sentAnnos[sentenceId].some((a) => a.id === anno.id);
-      if (coversSentence && !isListed) {
-        sentAnnos[sentenceId] = [...sentAnnos[sentenceId], anno];
-      } else if (!coversSentence && isListed) {
-        sentAnnos[sentenceId] = sentAnnos[sentenceId].filter((a) => a.id !== anno.id);
-      } else if (isListed) {
-        sentAnnos[sentenceId] = sentAnnos[sentenceId].map((a) => (a.id === anno.id ? anno : a));
+  queryClient.setQueryData(
+    sentenceAnnotationQueries.bySdoc(anno.project_id, anno.sdoc_id, anno.user_id).queryKey,
+    (old) => {
+      if (!old) return old;
+      const sentAnnos = { ...old.sentence_annotations };
+      Object.keys(sentAnnos).forEach((key) => {
+        const sentenceId = Number(key);
+        const coversSentence = anno.sentence_id_start <= sentenceId && sentenceId <= anno.sentence_id_end;
+        const isListed = sentAnnos[sentenceId].some((a) => a.id === anno.id);
+        if (coversSentence && !isListed) {
+          sentAnnos[sentenceId] = [...sentAnnos[sentenceId], anno];
+        } else if (!coversSentence && isListed) {
+          sentAnnos[sentenceId] = sentAnnos[sentenceId].filter((a) => a.id !== anno.id);
+        } else if (isListed) {
+          sentAnnos[sentenceId] = sentAnnos[sentenceId].map((a) => (a.id === anno.id ? anno : a));
+        }
+      });
+      // Ensure newly covered sentences that had no entry yet are created.
+      for (let sentenceId = anno.sentence_id_start; sentenceId <= anno.sentence_id_end; sentenceId++) {
+        if (!sentAnnos[sentenceId]) {
+          sentAnnos[sentenceId] = [anno];
+        }
       }
-    });
-    // Ensure newly covered sentences that had no entry yet are created.
-    for (let sentenceId = anno.sentence_id_start; sentenceId <= anno.sentence_id_end; sentenceId++) {
-      if (!sentAnnos[sentenceId]) {
-        sentAnnos[sentenceId] = [anno];
-      }
-    }
-    return { sentence_annotations: sentAnnos };
-  });
+      return { sentence_annotations: sentAnnos };
+    },
+  );
 }
 
 // Remove a sentence annotation from every sentence bucket in the grouped cache.
 export function removeSentenceAnnotation(anno: SentenceAnnotationRead): void {
-  queryClient.setQueryData(sentenceAnnotationQueries.bySdoc(anno.sdoc_id, anno.user_id).queryKey, (old) => {
-    if (!old) return old;
-    const sentAnnos = { ...old.sentence_annotations };
-    for (let sentenceId = anno.sentence_id_start; sentenceId <= anno.sentence_id_end; sentenceId++) {
-      if (!sentAnnos[sentenceId]) continue;
-      sentAnnos[sentenceId] = sentAnnos[sentenceId].filter((a) => a.id !== anno.id);
-    }
-    return { sentence_annotations: sentAnnos };
-  });
+  queryClient.setQueryData(
+    sentenceAnnotationQueries.bySdoc(anno.project_id, anno.sdoc_id, anno.user_id).queryKey,
+    (old) => {
+      if (!old) return old;
+      const sentAnnos = { ...old.sentence_annotations };
+      for (let sentenceId = anno.sentence_id_start; sentenceId <= anno.sentence_id_end; sentenceId++) {
+        if (!sentAnnos[sentenceId]) continue;
+        sentAnnos[sentenceId] = sentAnnos[sentenceId].filter((a) => a.id !== anno.id);
+      }
+      return { sentence_annotations: sentAnnos };
+    },
+  );
 }

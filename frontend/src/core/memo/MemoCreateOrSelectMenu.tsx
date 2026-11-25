@@ -4,6 +4,7 @@ import { MemoRead } from "@models/MemoRead";
 import AddIcon from "@mui/icons-material/Add";
 import { Box, ListItemIcon, ListItemText, Menu, MenuItem, Typography } from "@mui/material";
 import { useQuery } from "@tanstack/react-query";
+import { useParams } from "@tanstack/react-router";
 import { memo, MouseEvent, ReactNode, useCallback, useState } from "react";
 import { memoQueries } from "./api/memoQueries";
 import { useOpenMemoDialog } from "./dialog/useOpenMemoDialog";
@@ -32,11 +33,12 @@ export const MemoCreateOrSelectMenu = memo(
     renderTrigger,
   }: MemoCreateOrSelectMenuProps) => {
     const [anchorEl, setAnchorEl] = useState<HTMLElement | null>(null);
+    const projectId = useParams({ strict: false, select: (params) => params.projectId });
     const {
       data: memos,
       isFetching,
       refetch,
-    } = useQuery({ ...memoQueries.byAttachedObject(attachedObjectType, attachedObjectId), enabled: false });
+    } = useQuery({ ...memoQueries.byAttachedObject(projectId, attachedObjectType, attachedObjectId), enabled: false });
     const openMemoDialog = useOpenMemoDialog();
 
     const handleOpen = useCallback(

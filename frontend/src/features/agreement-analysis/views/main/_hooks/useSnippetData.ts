@@ -5,6 +5,7 @@ import { AgreementAnnotationType } from "@models/AgreementAnnotationType";
 import { SentenceAnnotationRead } from "@models/SentenceAnnotationRead";
 import { SentenceAnnotatorResult } from "@models/SentenceAnnotatorResult";
 import { useQuery } from "@tanstack/react-query";
+import { AgreementAnalysisRouteAPI } from "./agreementAnalysisRouteAPI";
 
 const uniqueSentenceAnnotations = (result: SentenceAnnotatorResult): SentenceAnnotationRead[] => {
   const byId = new Map<number, SentenceAnnotationRead>();
@@ -20,10 +21,11 @@ const uniqueSentenceAnnotations = (result: SentenceAnnotatorResult): SentenceAnn
  */
 export function useSnippetData(sdocId: number, annotationType: AgreementAnnotationType, userId: number) {
   const isSpan = annotationType === AgreementAnnotationType.SPAN;
+  const projectId = AgreementAnalysisRouteAPI.useParams({ select: (params) => params.projectId });
   const sdocData = useQuery(sdocQueries.data(sdocId));
-  const spanAnnotations = useQuery(spanAnnotationQueries.bySdoc(isSpan ? sdocId : undefined, userId));
+  const spanAnnotations = useQuery(spanAnnotationQueries.bySdoc(projectId, isSpan ? sdocId : undefined, userId));
   const sentenceAnnotations = useQuery({
-    ...sentenceAnnotationQueries.bySdoc(isSpan ? undefined : sdocId, userId),
+    ...sentenceAnnotationQueries.bySdoc(projectId, isSpan ? undefined : sdocId, userId),
     select: uniqueSentenceAnnotations,
   });
   const annotations = isSpan ? spanAnnotations : sentenceAnnotations;

@@ -59,9 +59,11 @@ def project_with_span_annotation(
     # Create a span annotation
     span_annotation = crud_span_anno.read(
         db=db_session,
+        project_id=project.id,
         id=SpanAnnotationService()
         .create(
             db=db_session,
+            project_id=project.id,
             user_id=test_user.id,
             create_dto=SpanAnnotationCreate(
                 span_text="This is a test",
@@ -124,9 +126,11 @@ def project_with_span_annotations_for_bulk_test(
     # Create a second span annotation
     span_annotation2 = crud_span_anno.read(
         db=db_session,
+        project_id=project.id,
         id=SpanAnnotationService()
         .create(
             db=db_session,
+            project_id=project.id,
             user_id=test_user.id,
             create_dto=SpanAnnotationCreate(
                 span_text="two sentences",
@@ -174,9 +178,11 @@ def project_with_span_annotations_for_count_test(
     # Create a second span annotation
     span_annotation2 = crud_span_anno.read(
         db=db_session,
+        project_id=project.id,
         id=SpanAnnotationService()
         .create(
             db=db_session,
+            project_id=project.id,
             user_id=test_user.id,
             create_dto=SpanAnnotationCreate(
                 span_text="two sentences",

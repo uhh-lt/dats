@@ -200,7 +200,8 @@ def _run_a_span_annotations(
     """The span annotations of run A in the target document."""
     base = project["base"]
     response = client.get(
-        f"/span/sdoc/{base['target_sdoc'].id}/user/{base['run_a'].id}"
+        f"/projects/{base['project'].id}/span-annotations",
+        params={"user_id": base["run_a"].id, "sdoc_id": base["target_sdoc"].id},
     )
     assert response.status_code == 200, response.text
     return TypeAdapter(list[SpanAnnotationRead]).validate_python(response.json())
@@ -213,7 +214,8 @@ def _run_a_sentence_annotations(
     sentence."""
     base = project["base"]
     response = client.get(
-        f"/sentence/sdoc/{base['target_sdoc'].id}/user/{base['run_a'].id}"
+        f"/projects/{base['project'].id}/sentence-annotations/by-sentence",
+        params={"user_id": base["run_a"].id, "sdoc_id": base["target_sdoc"].id},
     )
     assert response.status_code == 200, response.text
     result = SentenceAnnotatorResult.model_validate(response.json())
@@ -361,9 +363,10 @@ def test_span_annotation_job_covers_all_formats_units_and_approaches(
     ]
     assert suggestions == [("Alice", base["person_code"].id, assistant_user_id)]
     assert result.annotation_count_by_code_id == {base["person_code"].id: 1}
-    run_a_alice = client.get(f"/span/{run_a_alice_id}")
-    assert run_a_alice.status_code == 403, run_a_alice.text  # deleted
-    run_b_alice = client.get(f"/span/{run_b_alice_id}")
+    spans_url = f"/projects/{base['project'].id}/span-annotations"
+    run_a_alice = client.get(f"{spans_url}/{run_a_alice_id}")
+    assert run_a_alice.status_code == 404, run_a_alice.text  # deleted
+    run_b_alice = client.get(f"{spans_url}/{run_b_alice_id}")
     assert run_b_alice.status_code == 200, run_b_alice.text
 
 
@@ -501,7 +504,8 @@ def test_annotation_job_stores_a_reasoning_memo_per_annotation_only_when_request
     assert result.annotation_count_by_code_id == _count_by_code_id(annotations)
     for annotation in annotations:
         response = client.get(
-            f"/memo/attached_obj/{attached_object_type.value}/to/{annotation.id}"
+            f"/memo/attached_obj/{attached_object_type.value}/to/{annotation.id}",
+            params={"project_id": base["project"].id},
         )
         assert response.status_code == 200, response.text
         memos = [MemoRead.model_validate(memo) for memo in response.json()]

@@ -107,6 +107,7 @@ class SourceDocumentTagLinkTable(ORMBase):
 - **Primary key**: `id: Mapped[int] = mapped_column(Integer, primary_key=True, index=True)`. Variations that are allowed:
   - Dependent 1:1 tables use the parent FK as their `id` (`SourceDocumentDataORM`).
   - Association tables use a composite primary key made of their FKs, with no `id` column.
+  - Tables keyed by their project (#928, `span_annotation_orm.py`) declare `PrimaryKeyConstraint("project_id", "id", name="<table>_pkey")` in `__table_args__`, `id` as `mapped_column(Integer, autoincrement=True, index=True)` and `project_id` without its own index; Alembic does not detect the key change, so the migration adds `drop_constraint`/`create_primary_key` by hand.
 - **Timestamps**: always `DateTime(timezone=True)`. `created` uses `server_default=func.now()` and `index=True`. `updated` also sets `onupdate=func.current_timestamp()`.
 - **Defaults**: use `server_default` (a string, or `text(...)` for JSONB), so the default also lands in the migration. Python-side `default=` appears only for booleans in the perspectives module.
 - **Enums**: store an enum as `String` or `Integer`, annotated with the enum type (`folder_type: Mapped[FolderType] = mapped_column(String, ...)`). The column holds the member value (`"sdoc_folder"`). Never use a native `Enum(...)` column type.

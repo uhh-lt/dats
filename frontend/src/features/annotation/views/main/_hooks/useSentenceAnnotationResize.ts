@@ -147,6 +147,7 @@ export function useSentenceAnnotationResize(sentenceCount: number | undefined) {
       resizeStateRef.current = undefined;
       updateSentenceAnnotation(
         {
+          projectId: currentState.originalAnnotation.project_id,
           sentenceAnnoToUpdate: currentState.originalAnnotation,
           update: {
             sentence_id_start: currentState.previewAnnotation.sentence_id_start,

@@ -16,6 +16,7 @@ def _copy_spans(
     with count_queries(db) as queries:
         copies = SpanAnnotationService().create_multi(
             db=db,
+            project_id=fixture["project_id"],
             user_id=fixture["user_id"],
             create_dtos=[
                 SpanAnnotationCreate(

@@ -159,7 +159,9 @@ def test_span_annotations_of_virtual_user_survive_export_import(
     )
     db_session.commit()
 
-    imported = crud_span_anno.read_by_ids(db=db_session, ids=imported_ids)
+    imported = crud_span_anno.read_by_ids(
+        db=db_session, project_id=project.id, ids=imported_ids
+    )
     owners = sorted((span.text, span.user_id) for span in imported)
     assert owners == sorted(
         [("Alpha", run1.id), ("Delta", run1.id), ("Alpha", user.id)]

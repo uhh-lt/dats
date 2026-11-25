@@ -69,6 +69,7 @@ def test_add_memo_to_attached_object(
     response = client.put(
         "/memo",
         params={
+            "project_id": memo_project["project"].id,
             "attached_object_id": attached_object.id,
             "attached_object_type": object_type.value,
         },
@@ -98,6 +99,7 @@ def test_add_memo_allows_multiple_memos_per_user_per_object(
     response = client.put(
         "/memo",
         params={
+            "project_id": memo_project["project"].id,
             "attached_object_id": code.id,
             "attached_object_type": AttachedObjectType.code.value,
         },
@@ -110,17 +112,60 @@ def test_add_memo_allows_multiple_memos_per_user_per_object(
     assert memo.attached_object_id == code.id
 
 
-def test_add_memo_to_nonexistent_object_returns_403(client: TestClient):
-    """A nonexistent attached object is indistinguishable from an unauthorized one -> 403."""
+def test_add_memo_to_nonexistent_object_returns_404(
+    client: TestClient, memo_project: MemoProjectState
+):
+    """A nonexistent attached object does not exist in the project -> 404."""
     response = client.put(
         "/memo",
         params={
+            "project_id": memo_project["project"].id,
             "attached_object_id": 99999,
             "attached_object_type": AttachedObjectType.code.value,
         },
         json=_create_payload("Should fail"),
     )
-    assert response.status_code == 403, response.text
+    assert response.status_code == 404, response.text
+
+
+@pytest.mark.parametrize(
+    "project_key,expected_status",
+    [
+        # `user` is a member, but the object does not exist in that project
+        pytest.param("other_project", 404, id="object-of-another-project"),
+        # `user` is no member of the project
+        pytest.param("foreign_project", 403, id="non-member-project"),
+    ],
+)
+@pytest.mark.parametrize(
+    "object_type",
+    list(ATTACHABLE),
+    ids=lambda t: t.value,
+)
+def test_add_memo_in_another_project_is_rejected(
+    client: TestClient,
+    memo_project: MemoProjectState,
+    object_type: AttachedObjectType,
+    project_key: str,
+    expected_status: int,
+):
+    """An object of the fixture project cannot get a memo through another
+    project: 404 in a project of the user, 403 in a project the user is no
+    member of."""
+    attached_object = memo_project[ATTACHABLE[object_type]]
+    project = memo_project[project_key]  # type: ignore[literal-required]
+
+    response = client.put(
+        "/memo",
+        params={
+            "project_id": project.id,
+            "attached_object_id": attached_object.id,
+            "attached_object_type": object_type.value,
+        },
+        json=_create_payload("Should fail"),
+    )
+
+    assert response.status_code == expected_status, response.text
 
 
 # ===========================================================================
@@ -218,7 +263,8 @@ def test_get_memos_by_attached_object_returns_all_object_memos(
     attached_object = memo_project[ATTACHABLE[object_type]]
 
     response = client.get(
-        f"/memo/attached_obj/{object_type.value}/to/{attached_object.id}"
+        f"/memo/attached_obj/{object_type.value}/to/{attached_object.id}",
+        params={"project_id": memo_project["project"].id},
     )
 
     assert response.status_code == 200, response.text
@@ -241,7 +287,8 @@ def test_get_memos_by_attached_object_marks_requesting_user_favorites(
     code = memo_project["code"]
 
     response = client.get(
-        f"/memo/attached_obj/{AttachedObjectType.code.value}/to/{code.id}"
+        f"/memo/attached_obj/{AttachedObjectType.code.value}/to/{code.id}",
+        params={"project_id": memo_project["project"].id},
     )
 
     assert response.status_code == 200, response.text
@@ -253,12 +300,50 @@ def test_get_memos_by_attached_object_marks_requesting_user_favorites(
     assert by_title["Other Code Memo"].is_favorite is False
 
 
-def test_get_memos_by_attached_object_not_existing(client: TestClient):
-    """A nonexistent attached object is indistinguishable from an unauthorized one -> 403."""
+def test_get_memos_by_attached_object_not_existing(
+    client: TestClient, memo_project: MemoProjectState
+):
+    """A nonexistent attached object does not exist in the project -> 404."""
     response = client.get(
-        f"/memo/attached_obj/{AttachedObjectType.code.value}/to/99999"
+        f"/memo/attached_obj/{AttachedObjectType.code.value}/to/99999",
+        params={"project_id": memo_project["project"].id},
     )
-    assert response.status_code == 403, response.text
+    assert response.status_code == 404, response.text
+
+
+@pytest.mark.parametrize(
+    "project_key,expected_status",
+    [
+        # `user` is a member, but the object does not exist in that project
+        pytest.param("other_project", 404, id="object-of-another-project"),
+        # `user` is no member of the project
+        pytest.param("foreign_project", 403, id="non-member-project"),
+    ],
+)
+@pytest.mark.parametrize(
+    "object_type",
+    list(ATTACHABLE),
+    ids=lambda t: t.value,
+)
+def test_get_memos_by_attached_object_in_another_project_is_rejected(
+    client: TestClient,
+    memo_project: MemoProjectState,
+    object_type: AttachedObjectType,
+    project_key: str,
+    expected_status: int,
+):
+    """The memos of an object of the fixture project cannot be listed through
+    another project: 404 in a project of the user, 403 in a project the user is
+    no member of."""
+    attached_object = memo_project[ATTACHABLE[object_type]]
+    project = memo_project[project_key]  # type: ignore[literal-required]
+
+    response = client.get(
+        f"/memo/attached_obj/{object_type.value}/to/{attached_object.id}",
+        params={"project_id": project.id},
+    )
+
+    assert response.status_code == expected_status, response.text
 
 
 # ===========================================================================

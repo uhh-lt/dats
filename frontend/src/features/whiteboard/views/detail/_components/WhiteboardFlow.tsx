@@ -242,6 +242,7 @@ export function WhiteboardFlow({ whiteboard }: WhiteboardFlowProps) {
         if (isCodeNode(sourceNode) && isSpanAnnotationNode(targetNode)) {
           const mutation = updateSpanAnnotationMutation.mutate;
           mutation({
+            projectId: whiteboard.project_id,
             spanAnnotationToUpdate: targetNode.data.spanAnnotationId,
             requestBody: {
               code_id: sourceNode.data.codeId,
@@ -253,6 +254,7 @@ export function WhiteboardFlow({ whiteboard }: WhiteboardFlowProps) {
         if (isCodeNode(sourceNode) && isSentenceAnnotationNode(targetNode)) {
           const mutation = updateSentenceAnnotationMutation.mutate;
           mutation({
+            projectId: whiteboard.project_id,
             sentenceAnnoToUpdate: targetNode.data.sentenceAnnotationId,
             update: {
               code_id: sourceNode.data.codeId,
@@ -264,6 +266,7 @@ export function WhiteboardFlow({ whiteboard }: WhiteboardFlowProps) {
         if (isCodeNode(sourceNode) && isBBoxAnnotationNode(targetNode)) {
           const mutation = updateBBoxAnnotationMutation.mutate;
           mutation({
+            projectId: whiteboard.project_id,
             bboxToUpdate: targetNode.data.bboxAnnotationId,
             requestBody: {
               code_id: sourceNode.data.codeId,
@@ -282,6 +285,7 @@ export function WhiteboardFlow({ whiteboard }: WhiteboardFlowProps) {
       updateBBoxAnnotationMutation.mutate,
       updateSentenceAnnotationMutation.mutate,
       setEdges,
+      whiteboard.project_id,
     ],
   );
 

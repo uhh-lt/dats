@@ -2,17 +2,42 @@ from uuid import uuid4
 
 from sqlalchemy.orm import Session
 
+from common.crud_enum import attached_object_type_to_memo_crud
 from common.singleton_meta import SingletonMeta
 from core.memo.memo_crud import crud_memo
 from core.memo.memo_dto import MemoCreateIntern, MemoRead, MemoUpdate, MemoUpdateBulk
 from core.memo.memo_enum import AttachedObjectType
+from core.memo.memo_generation_service import MemoObject
 from core.memo.memo_utils import get_memo_read_dtos_from_orms
 from core.memo.object_handle_crud import crud_object_handle
+from repos.db.project_crud_base import ProjectCRUDBase
+from repos.db.sql_utils import assert_in_project
 
 
 class MemoService(metaclass=SingletonMeta):
     def __new__(cls, *args, **kwargs):
         return super(MemoService, cls).__new__(cls)
+
+    def read_attached_object(
+        self,
+        db: Session,
+        *,
+        project_id: int,
+        attached_object_type: AttachedObjectType,
+        attached_object_id: int,
+    ) -> MemoObject:
+        """
+        The object of the project a memo is attached to.
+
+        Raises:
+            NoSuchElementError: If the object does not exist in the project.
+        """
+        crud = attached_object_type_to_memo_crud[attached_object_type].value
+        if isinstance(crud, ProjectCRUDBase):
+            return crud.read(db=db, project_id=project_id, id=attached_object_id)
+        db_obj = crud.read(db=db, id=attached_object_id)
+        assert_in_project([db_obj], project_id=project_id)
+        return db_obj
 
     def create_multi_for_attached_objects(
         self,

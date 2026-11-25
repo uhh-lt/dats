@@ -25,11 +25,12 @@ def export_selected_sentence_annotations(
     sentence_annotation_ids: list[int],
 ) -> Path:
     sentence_annotations = crud_sentence_anno.read_by_ids(
-        db=db, ids=sentence_annotation_ids
+        db=db, project_id=project_id, ids=sentence_annotation_ids
     )
     return __export_sentence_annotations(
         db=db,
         out_dir=out_dir,
+        project_id=project_id,
         fn=f"project_{project_id}_selected_sentence_annotations",
         sentence_annotations=sentence_annotations,
     )
@@ -46,6 +47,7 @@ def export_all_sentence_annotations(
     return __export_sentence_annotations(
         db=db,
         out_dir=out_dir,
+        project_id=project_id,
         fn=f"project_{project_id}_all_sentence_annotations",
         sentence_annotations=sentence_annotations,
     )
@@ -54,6 +56,7 @@ def export_all_sentence_annotations(
 def __export_sentence_annotations(
     db: Session,
     out_dir: Path,
+    project_id: int,
     fn: str,
     sentence_annotations: list[SentenceAnnotationORM],
 ) -> Path:
@@ -61,7 +64,7 @@ def __export_sentence_annotations(
         raise NoDataToExportError("No sentence annotations to export.")
 
     export_data = __generate_export_df_for_sentence_annotations(
-        db=db, sentence_annotations=sentence_annotations
+        db=db, project_id=project_id, sentence_annotations=sentence_annotations
     )
     return write_df(
         out_dir=out_dir,
@@ -72,6 +75,7 @@ def __export_sentence_annotations(
 
 def __generate_export_df_for_sentence_annotations(
     db: Session,
+    project_id: int,
     sentence_annotations: list[SentenceAnnotationORM],
 ) -> pd.DataFrame:
     logger.info(f"Exporting {len(sentence_annotations)} Sentence Annotations ...")
@@ -91,7 +95,10 @@ def __generate_export_df_for_sentence_annotations(
     # Create annotations using our schema
     annotation_export_items = []
     provenances = export_annotation_provenance(
-        db=db, crud=crud_sentence_anno, annotations=sentence_annotations
+        db=db,
+        crud=crud_sentence_anno,
+        project_id=project_id,
+        annotations=sentence_annotations,
     )
     for sent_annotation, provenance in zip(sentence_annotations, provenances):
         sdoc = sent_annotation.annotation_document.source_document

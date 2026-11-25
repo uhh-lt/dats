@@ -126,8 +126,10 @@ class MemoProjectState(TypedDict):
       the favorite endpoints authorize FIRST (`assert_in_same_project_as`), so
       a nonexistent memo id yields 403. `update_by_id` and `delete_by_id` READ
       the memo first, so a nonexistent memo id yields 404 (NoSuchElementError).
-      Create/list resolve the ATTACHED object first, so a nonexistent
-      attached-object id yields 404.
+      Create/list take the project as `project_id`: a project `user` is not a
+      member of (`foreign_project`) yields 403, an attached object that does
+      not exist in that project (a nonexistent id, or an object of the fixture
+      project read within `other_project`) yields 404.
     """
 
     project: ProjectORM
@@ -206,9 +208,11 @@ def memo_project(
     # Annotations on the sdoc (span, sentence, bbox), all coded with `code`.
     span_annotation = crud_span_anno.read(
         db=db_session,
+        project_id=project.id,
         id=SpanAnnotationService()
         .create(
             db=db_session,
+            project_id=project.id,
             user_id=test_user.id,
             create_dto=SpanAnnotationCreate(
                 begin=0,
@@ -224,9 +228,11 @@ def memo_project(
     )
     sentence_annotation = crud_sentence_anno.read(
         db=db_session,
+        project_id=project.id,
         id=SentenceAnnotationService()
         .create(
             db=db_session,
+            project_id=project.id,
             user_id=test_user.id,
             create_dto=SentenceAnnotationCreate(
                 sentence_id_start=0,
@@ -239,9 +245,11 @@ def memo_project(
     )
     bbox_annotation = crud_bbox_anno.read(
         db=db_session,
+        project_id=project.id,
         id=BBoxAnnotationService()
         .create(
             db=db_session,
+            project_id=project.id,
             user_id=test_user.id,
             create_dto=BBoxAnnotationCreate(
                 x_min=0,

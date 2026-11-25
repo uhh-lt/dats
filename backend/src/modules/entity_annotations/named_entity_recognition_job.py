@@ -70,20 +70,21 @@ def handle_named_entity_recognition_job(payload: NerJobInput, job: Job) -> None:
         # of all users and of other automatic annotators (quotation, coreference)
         crud_span_anno.delete_by_user_sdocs_codes(
             db=db,
+            project_id=payload.project_id,
             user_id=SYSTEM_USER_ID,
             sdoc_ids=[payload.sdoc_id],
             code_ids=ner_code_ids,
         )
         crud_span_anno.create_multi(
             db,
+            project_id=payload.project_id,
             create_dtos=extract_span_annotations(
-                payload.project_id, spacy_output, system_code_ids, adoc.id
+                spacy_output, system_code_ids, adoc.id
             ),
         )
 
 
 def extract_span_annotations(
-    project_id: int,
     spacy_output: SpacyPipelineOutput,
     system_code_ids: dict[str, int],
     adoc_id: int,
@@ -99,7 +100,6 @@ def extract_span_annotations(
             SpanAnnotationCreateIntern(
                 begin=ne.start_char,
                 begin_token=ne.start_token,
-                project_id=project_id,
                 uuid=str(uuid4()),
                 code_id=system_code_ids[code_name],
                 annotation_document_id=adoc_id,

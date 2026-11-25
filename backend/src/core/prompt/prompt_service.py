@@ -556,12 +556,8 @@ class PromptService(metaclass=SingletonMeta):
     def _create_span_examples(
         self, *, db: Session, project_id: int, annotation_ids: list[int]
     ) -> list[PromptExample]:
-        annotations = crud_span_anno.read_by_ids(db=db, ids=annotation_ids)
-        self._assert_annotations_in_project(
-            annotation_ids=[
-                a.id for a in annotations if a.get_project_id() != project_id
-            ],
-            project_id=project_id,
+        annotations = crud_span_anno.read_by_ids(
+            db=db, project_id=project_id, ids=annotation_ids
         )
         sdoc_datas = {
             sdoc_data.id: sdoc_data
@@ -617,12 +613,8 @@ class PromptService(metaclass=SingletonMeta):
     def _create_sentence_examples(
         self, *, db: Session, project_id: int, annotation_ids: list[int]
     ) -> list[PromptExample]:
-        annotations = crud_sentence_anno.read_by_ids(db=db, ids=annotation_ids)
-        self._assert_annotations_in_project(
-            annotation_ids=[
-                a.id for a in annotations if a.get_project_id() != project_id
-            ],
-            project_id=project_id,
+        annotations = crud_sentence_anno.read_by_ids(
+            db=db, project_id=project_id, ids=annotation_ids
         )
         sdoc_datas = crud_sdoc_data.read_by_ids(
             db=db, ids=[annotation.sdoc_id for annotation in annotations]
@@ -641,12 +633,3 @@ class PromptService(metaclass=SingletonMeta):
             )
             for annotation, sdoc_data in zip(annotations, sdoc_datas)
         ]
-
-    def _assert_annotations_in_project(
-        self, *, annotation_ids: list[int], project_id: int
-    ) -> None:
-        if annotation_ids:
-            raise InvalidPromptExampleError(
-                f"The annotations {annotation_ids} do not belong to project "
-                f"{project_id}."
-            )

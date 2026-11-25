@@ -116,7 +116,7 @@ def handle_coreference_resolution_job(
             ).id
             groups = [
                 [
-                    _mention_span(payload, text, adoc_id, mention.id, start, end)
+                    _mention_span(text, adoc_id, mention.id, start, end)
                     for start, end in cluster
                 ]
                 for cluster in clusters
@@ -149,7 +149,6 @@ def _predict_clusters(
 
 
 def _mention_span(
-    payload: CoreferenceResolutionJobInput,
     text: CorefText,
     adoc_id: int,
     code_id: int,
@@ -160,7 +159,6 @@ def _mention_span(
     begin_char = text.token_character_offsets[start][0]
     end_char = text.token_character_offsets[end][1]
     return SpanAnnotationCreateIntern(
-        project_id=payload.project_id,
         uuid=str(uuid4()),
         begin_token=start,
         end_token=end + 1,

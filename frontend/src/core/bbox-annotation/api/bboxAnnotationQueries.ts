@@ -7,12 +7,15 @@ import { infiniteQueryOptions, queryOptions, skipToken } from "@tanstack/react-q
 /**
  * Query factory for bounding box annotations.
  *
- *   bboxAnnotationQueries.all()                   ["bboxAnnotation"]
- *   bboxAnnotationQueries.byId(bboxId)            ["bboxAnnotation", "detail", bboxId]
- *   bboxAnnotationQueries.byUserCode(codeId)      ["bboxAnnotation", "userCode", codeId]
- *   bboxAnnotationQueries.bySdoc(sdocId, userId)  ["bboxAnnotation", "sdoc", sdocId, userId]
- *   bboxAnnotationQueries.tableInfo(projectId)    ["tableInfo", "bbox", projectId]
- *   bboxAnnotationQueries.search(request)         ["bboxAnnotation", "search", request]
+ *   bboxAnnotationQueries.all()                                  ["bboxAnnotation"]
+ *   bboxAnnotationQueries.byId(projectId, bboxId)                ["bboxAnnotation", "detail", bboxId, projectId]
+ *   bboxAnnotationQueries.byUserCode(projectId, codeId, userId)  ["bboxAnnotation", "userCode", codeId, userId, projectId]
+ *   bboxAnnotationQueries.bySdoc(projectId, sdocId, userId)      ["bboxAnnotation", "sdoc", sdocId, userId, projectId]
+ *   bboxAnnotationQueries.tableInfo(projectId)                   ["tableInfo", "bbox", projectId]
+ *   bboxAnnotationQueries.search(request)                        ["bboxAnnotation", "search", request]
+ *
+ * The routes need the project, but the ids already determine it: the project comes last in the keys, so the prefixes
+ * by id (byUserCodeOfCodeScope) cover it.
  */
 export const bboxAnnotationQueries = {
   all: () => ["bboxAnnotation"] as const,
@@ -21,25 +24,44 @@ export const bboxAnnotationQueries = {
   optimisticMutationScope: () => [...bboxAnnotationQueries.all(), "optimistic"] as const,
 
   byIdScope: () => [...bboxAnnotationQueries.all(), "detail"] as const,
-  byId: (bboxId: number | null | undefined) =>
+  byId: (projectId: number | null | undefined, bboxId: number | null | undefined) =>
     queryOptions({
-      queryKey: [...bboxAnnotationQueries.byIdScope(), bboxId] as const,
-      queryFn: !bboxId ? skipToken : () => BboxAnnotationService.getById({ bboxId }),
+      queryKey: [...bboxAnnotationQueries.byIdScope(), bboxId, projectId] as const,
+      queryFn:
+        !projectId || !bboxId
+          ? skipToken
+          : () => BboxAnnotationService.getById({ projectId, bboxAnnotationId: bboxId }),
       staleTime: 1000 * 60 * 5,
     }),
 
   byUserCodeScope: () => [...bboxAnnotationQueries.all(), "userCode"] as const,
-  byUserCode: (codeId: number | null | undefined) =>
+  // prefix of all bbox annotation queries of one code (any user), for invalidation
+  byUserCodeOfCodeScope: (codeId: number) => [...bboxAnnotationQueries.byUserCodeScope(), codeId] as const,
+  byUserCode: (
+    projectId: number | null | undefined,
+    codeId: number | null | undefined,
+    userId: number | null | undefined,
+  ) =>
     queryOptions({
-      queryKey: [...bboxAnnotationQueries.byUserCodeScope(), codeId] as const,
-      queryFn: !codeId ? skipToken : () => BboxAnnotationService.getByUserCode({ codeId }),
+      queryKey: [...bboxAnnotationQueries.byUserCodeScope(), codeId, userId, projectId] as const,
+      queryFn:
+        !projectId || !codeId || !userId
+          ? skipToken
+          : () => BboxAnnotationService.getBboxAnnotations({ projectId, userId, codeId }),
     }),
 
   bySdocScope: () => [...bboxAnnotationQueries.all(), "sdoc"] as const,
-  bySdoc: (sdocId: number | null | undefined, userId: number | null | undefined) =>
+  bySdoc: (
+    projectId: number | null | undefined,
+    sdocId: number | null | undefined,
+    userId: number | null | undefined,
+  ) =>
     queryOptions({
-      queryKey: [...bboxAnnotationQueries.bySdocScope(), sdocId, userId] as const,
-      queryFn: !sdocId || !userId ? skipToken : () => BboxAnnotationService.getBySdocAndUser({ sdocId, userId }),
+      queryKey: [...bboxAnnotationQueries.bySdocScope(), sdocId, userId, projectId] as const,
+      queryFn:
+        !projectId || !sdocId || !userId
+          ? skipToken
+          : () => BboxAnnotationService.getBboxAnnotations({ projectId, userId, sdocId }),
     }),
   // the column infos of the bbox annotation filter table
   tableInfo: (projectId: number) =>

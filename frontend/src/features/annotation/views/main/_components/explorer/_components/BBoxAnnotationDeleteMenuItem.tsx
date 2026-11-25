@@ -3,6 +3,7 @@ import { BboxAnnotationHooks } from "@core/bbox-annotation";
 import { useOpenConfirmationDialog } from "@core/notification";
 import { ListItemIcon, ListItemText, MenuItem, MenuItemProps } from "@mui/material";
 import { MouseEventHandler, useCallback } from "react";
+import { AnnotationRouteAPI } from "../../../_hooks/annotationRouteAPI";
 
 interface BBoxAnnotationDeleteMenuItemProps {
   annotationId: number;
@@ -16,6 +17,7 @@ export function BBoxAnnotationDeleteMenuItem({
 }: BBoxAnnotationDeleteMenuItemProps & MenuItemProps) {
   // event handlers
   const openConfirmationDialog = useOpenConfirmationDialog();
+  const projectId = AnnotationRouteAPI.useParams({ select: (params) => params.projectId });
   const deleteMutation = BboxAnnotationHooks.useDeleteBBoxAnnotation();
   const handleClick: MouseEventHandler<HTMLLIElement> = useCallback(
     (event) => {
@@ -24,13 +26,13 @@ export function BBoxAnnotationDeleteMenuItem({
       openConfirmationDialog({
         text: `Do you really want to remove the BBoxAnnotation ${annotationId}? You can reassign it later!`,
         onAccept: () => {
-          deleteMutation.mutate({ bboxToDelete: annotationId });
+          deleteMutation.mutate({ projectId, bboxToDelete: annotationId });
         },
       });
 
       if (onClick) onClick();
     },
-    [annotationId, deleteMutation, onClick, openConfirmationDialog],
+    [annotationId, deleteMutation, onClick, openConfirmationDialog, projectId],
   );
 
   return (

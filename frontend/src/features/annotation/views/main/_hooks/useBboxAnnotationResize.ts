@@ -207,6 +207,7 @@ export function useBboxAnnotationResize(imageRef: RefObject<SVGImageElement | nu
       resizeStateRef.current = undefined;
       updateBBoxAnnotation(
         {
+          projectId: state.originalAnnotation.project_id,
           bboxToUpdate: state.originalAnnotation,
           requestBody: {
             x_min: state.previewAnnotation.x_min,

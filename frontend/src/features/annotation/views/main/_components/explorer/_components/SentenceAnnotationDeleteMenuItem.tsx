@@ -3,6 +3,7 @@ import { SentenceAnnotationHooks } from "@core/sentence-annotation";
 import DeleteIcon from "@mui/icons-material/Delete";
 import { ListItemIcon, ListItemText, MenuItem, MenuItemProps } from "@mui/material";
 import { MouseEventHandler } from "react";
+import { AnnotationRouteAPI } from "../../../_hooks/annotationRouteAPI";
 
 interface SentenceAnnotationDeleteMenuItemProps {
   annotationId: number;
@@ -14,6 +15,7 @@ export function SentenceAnnotationDeleteMenuItem({
   onClick,
   ...props
 }: SentenceAnnotationDeleteMenuItemProps & MenuItemProps) {
+  const projectId = AnnotationRouteAPI.useParams({ select: (params) => params.projectId });
   const deleteMutation = SentenceAnnotationHooks.useDeleteSentenceAnnotation();
   const openConfirmationDialog = useOpenConfirmationDialog();
   const handleClick: MouseEventHandler<HTMLLIElement> = (event) => {
@@ -22,7 +24,7 @@ export function SentenceAnnotationDeleteMenuItem({
     openConfirmationDialog({
       text: `Do you really want to remove the SentenceAnnotation ${annotationId}? You can reassign it later!`,
       onAccept: () => {
-        deleteMutation.mutate(annotationId);
+        deleteMutation.mutate({ projectId, sentAnnoToDelete: annotationId });
       },
     });
 

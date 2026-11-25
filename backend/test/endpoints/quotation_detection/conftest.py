@@ -149,7 +149,6 @@ def quotation_project(db_session: Session, test_user: UserORM) -> QuotationProje
         groups=[
             [
                 SpanAnnotationCreateIntern(
-                    project_id=project.id,
                     uuid=str(uuid4()),
                     begin_token=0,
                     end_token=1,

@@ -18,7 +18,7 @@ class AnnotationCRUD(Protocol):
     """The reads of crud_span_anno, crud_sentence_anno and crud_bbox_anno used here."""
 
     def read_by_ids(
-        self, db: Session, *, ids: list[int]
+        self, db: Session, *, project_id: int, ids: list[int]
     ) -> Sequence[AnnotationORM]: ...
 
     def read_by_project_and_uuids(
@@ -50,6 +50,7 @@ def export_annotation_provenance(
     db: Session,
     *,
     crud: AnnotationCRUD,
+    project_id: int,
     annotations: Sequence[AnnotationORM],
 ) -> list[AnnotationProvenanceExportSchema]:
     """
@@ -58,6 +59,7 @@ def export_annotation_provenance(
 
     Args:
         crud: The CRUD of the annotations' type.
+        project_id: The project of the annotations.
         annotations: The exported annotations.
 
     Returns:
@@ -76,7 +78,9 @@ def export_annotation_provenance(
     uuid_by_id.update(
         {
             source.id: source.uuid
-            for source in crud.read_by_ids(db=db, ids=missing_source_ids)
+            for source in crud.read_by_ids(
+                db=db, project_id=project_id, ids=missing_source_ids
+            )
         }
     )
 

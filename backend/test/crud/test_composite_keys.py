@@ -162,14 +162,17 @@ def test_classifier_link_to_another_project_fails(
 def test_span_annotation_joins_no_span_group_of_another_project(
     db_session: Session, two_tenants: TwoTenants
 ):
-    """add_to_span_group writes the link in the project of the span annotation,
-    so a span group of another project violates its foreign key."""
+    """add_to_span_group links within the project of the span annotation, so the
+    composite foreign key of the link rejects a span group of another project."""
     own, foreign = two_tenants["own"], two_tenants["foreign"]
 
     _assert_foreign_key_violation(
         db_session,
         lambda: crud_span_anno.add_to_span_group(
-            db=db_session, span_id=own["span"].id, group_id=foreign["span_group"].id
+            db=db_session,
+            project_id=own["project"].id,
+            span_id=own["span"].id,
+            group_id=foreign["span_group"].id,
         ),
     )
 

@@ -2,7 +2,7 @@ from uuid import uuid4
 
 from fastapi import APIRouter, Depends
 
-from common.crud_enum import Crud, attached_object_type_to_memo_crud
+from common.crud_enum import Crud
 from common.dats_event import DATSEvent
 from common.dependencies import DBSession, get_current_user
 from core.auth.authz_user import AuthzUser
@@ -23,7 +23,6 @@ from core.memo.memo_utils import (
     get_memo_read_dtos_from_orms,
     get_object_memos,
 )
-from repos.db.sql_exceptions import NoSuchElementError
 from systems.websocket_system.websocket_dependency import WebsocketEmitter
 
 router = APIRouter(
@@ -42,27 +41,20 @@ router = APIRouter(
 def create_memo(
     *,
     db: DBSession,
+    project_id: int,
     attached_object_id: int,
     attached_object_type: AttachedObjectType,
     memo: MemoCreate,
     authz_user: AuthzUser = Depends(),
     ws: WebsocketEmitter = Depends(),
 ) -> MemoRead:
-    crud = attached_object_type_to_memo_crud.get(attached_object_type)
-    if crud is None:
-        raise ValueError("Invalid attached_object_type")
-
-    # get project id of the attached object
-    try:
-        attached_object = crud.value.read(db=db, id=attached_object_id)
-    except NoSuchElementError:
-        authz_user.deny_access("Attached object does not exist")
-    project_id = attached_object.get_project_id()
-    if project_id is None:
-        raise ValueError("Attached object has no project")
-
-    # check if user is authorized to add memo to the attached object
-    authz_user.assert_in_project(project_id=project_id)
+    authz_user.assert_in_project(project_id)
+    MemoService().read_attached_object(
+        db=db,
+        project_id=project_id,
+        attached_object_type=attached_object_type,
+        attached_object_id=attached_object_id,
+    )
 
     db_obj = crud_memo.create_for_attached_object(
         db=db,
@@ -135,25 +127,18 @@ def get_by_id(
 def get_memos_by_attached_object_id(
     *,
     db: DBSession,
+    project_id: int,
     attached_obj_id: int,
     attached_obj_type: AttachedObjectType,
     authz_user: AuthzUser = Depends(),
 ) -> list[MemoRead]:
-    crud = attached_object_type_to_memo_crud.get(attached_obj_type)
-    if crud is None:
-        raise ValueError("Invalid attached_object_type")
-
-    # get project id of the attached object
-    try:
-        attached_object = crud.value.read(db=db, id=attached_obj_id)
-    except NoSuchElementError:
-        authz_user.deny_access("Attached object does not exist")
-    project_id = attached_object.get_project_id()
-    if project_id is None:
-        raise ValueError("Attached object has no project")
-
-    # check if user is authorized to get memo from the attached object
-    authz_user.assert_in_project(project_id=project_id)
+    authz_user.assert_in_project(project_id)
+    attached_object = MemoService().read_attached_object(
+        db=db,
+        project_id=project_id,
+        attached_object_type=attached_obj_type,
+        attached_object_id=attached_obj_id,
+    )
 
     return get_object_memos(db_obj=attached_object, db=db, user_id=authz_user.user.id)
 
@@ -299,24 +284,19 @@ def delete_memos_bulk(
 def generate_memo_suggestion(
     *,
     db: DBSession,
+    project_id: int,
     attached_obj_id: int,
     attached_obj_type: AttachedObjectType,
     model: str,
     authz_user: AuthzUser = Depends(),
 ) -> str:
-    crud = attached_object_type_to_memo_crud.get(attached_obj_type)
-    if crud is None:
-        raise ValueError("Invalid attached_object_type")
-
-    try:
-        attached_object = crud.value.read(db=db, id=attached_obj_id)
-    except NoSuchElementError:
-        authz_user.deny_access("Attached object does not exist")
-    project_id = attached_object.get_project_id()
-    if project_id is None:
-        raise ValueError("Attached object has no project")
-
-    authz_user.assert_in_project(project_id=project_id)
+    authz_user.assert_in_project(project_id)
+    attached_object = MemoService().read_attached_object(
+        db=db,
+        project_id=project_id,
+        attached_object_type=attached_obj_type,
+        attached_object_id=attached_obj_id,
+    )
 
     return MemoGenerationService().generate_memo_suggestion(
         db=db, obj=attached_object, model=model

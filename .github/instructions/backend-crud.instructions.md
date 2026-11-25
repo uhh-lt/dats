@@ -119,6 +119,7 @@ A CRUD with no custom methods is just `class CRUDAspect(SQLCRUDBase[...]):` + `p
 
 ## Variations
 
+- **Project key** (`span_annotation_crud`, `sentence_annotation_crud`, `bbox_annotation_crud`): a table with the primary key `(project_id, id)` extends `ProjectCRUDBase` (`repos/db/project_crud_base.py`), whose base methods take `project_id` plus plain ids (`crud_span_anno.read(db=db, project_id=project_id, id=anno_id)`) and whose create DTOs carry no `project_id`. Overrides keep these signatures, and custom methods that read or write by id take `project_id` too.
 - **Composite primary key** (`document_aspect_crud`, `document_cluster_crud`, `word_frequency_crud`): pass the key type as the fourth generic parameter, in key column order: `SQLCRUDBase[DocumentAspectORM, DocumentAspectCreate, DocumentAspectUpdate, tuple[int, int]]` for `(sdoc_id, aspect_id)`. The base builds every id filter from the model's primary key (`tuple_(...).in_(ids)`), so `read`, `read_by_ids`, `update_multi`, `delete_multi` and `exists` take these tuples and need no override. The parameter defaults to `int` (a single `id` column).
 
 ## Examples

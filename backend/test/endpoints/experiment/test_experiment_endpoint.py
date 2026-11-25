@@ -735,8 +735,9 @@ def test_delete_experiment_deletes_its_runs_virtual_users_and_their_annotations(
 
     assert client.get(f"/experiment/{experiment_id}").status_code == 403
     assert client.get(f"/user/by_id/{run_user_id}").status_code == 404
-    assert client.get(f"/span/{run_anna_id}").status_code == 403
-    gold_response = client.get(f"/span/{p['gold_anna'].id}")
+    spans_url = f"/projects/{p['project'].id}/span-annotations"
+    assert client.get(f"{spans_url}/{run_anna_id}").status_code == 404
+    gold_response = client.get(f"{spans_url}/{p['gold_anna'].id}")
     assert gold_response.status_code == 200, gold_response.text
     assert _get_experiment(client, p["experiment"].id).runs == []
 
@@ -754,7 +755,12 @@ def test_delete_experiment_deletes_all_run_users_and_leaves_no_virtual_user_behi
 
     assert response.status_code == 200, response.text
     assert client.get(f"/experiment/{experiment_id}").status_code == 403
-    assert client.get(f"/span/{span_id}").status_code == 403
+    assert (
+        client.get(
+            f"/projects/{p['project'].id}/span-annotations/{span_id}"
+        ).status_code
+        == 404
+    )
     assert _virtual_user_names(client, p["project"].id) == {
         "Group Standard",
         "HumanGold-Baseline",
@@ -806,8 +812,9 @@ def test_delete_run_deletes_its_virtual_user_and_annotations(
     assert result.id == experiment_id
     assert result.runs == []
     assert client.get(f"/user/by_id/{run_user_id}").status_code == 404
-    assert client.get(f"/span/{run_met_id}").status_code == 403
-    assert client.get(f"/span/{p['gold_bob'].id}").status_code == 200
+    spans_url = f"/projects/{p['project'].id}/span-annotations"
+    assert client.get(f"{spans_url}/{run_met_id}").status_code == 404
+    assert client.get(f"{spans_url}/{p['gold_bob'].id}").status_code == 200
     assert _get_experiment(client, result.id).runs == []
 
 
@@ -826,7 +833,12 @@ def test_delete_run_deletes_only_its_own_run_user(
     assert response.status_code == 200, response.text
     result = ExperimentRead.model_validate(response.json())
     assert [run.name for run in result.runs] == ["Baseline", "Broken"]
-    assert client.get(f"/span/{baseline_span_id}").status_code == 200
+    assert (
+        client.get(
+            f"/projects/{p['project'].id}/span-annotations/{baseline_span_id}"
+        ).status_code
+        == 200
+    )
     assert _virtual_user_names(client, p["project"].id) == {
         "Group Standard",
         "HumanGold-Baseline",

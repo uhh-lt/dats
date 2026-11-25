@@ -1,14 +1,19 @@
+from typing import Literal
+
 import pytest
 from fastapi.testclient import TestClient
 
+from composite_keys_test_utils import TwoTenants
 from core.annotation.sentence_annotation_dto import (
     SentenceAnnotationCreate,
     SentenceAnnotationRead,
     SentenceAnnotationUpdate,
     SentenceAnnotatorResult,
 )
+from core.project.project_orm import ProjectORM
 from core.user.user_dto import UserRead
 from provenance_test_utils import (
+    annotation_route,
     create_payload,
     get_annotation,
     get_memos,
@@ -17,7 +22,17 @@ from provenance_test_utils import (
 from virtual_user_test_utils import VirtualUserProject
 
 
+def _route(project_id: int) -> str:
+    return annotation_route("sentence", project_id)
+
+
+# ===========================================================================
+# CREATE SENTENCE ANNOTATION (PUT /projects/{project_id}/sentence-annotations) TESTS
+# ===========================================================================
+
+
 def test_add_sentence_annotation(client: TestClient, project_with_sdoc_and_code):
+    project = project_with_sdoc_and_code["project"]
     sdoc = project_with_sdoc_and_code["source_document"]
     code = project_with_sdoc_and_code["code"]
 
@@ -27,7 +42,7 @@ def test_add_sentence_annotation(client: TestClient, project_with_sdoc_and_code)
         code_id=code.id,
         sdoc_id=sdoc.id,
     )
-    response = client.put("/sentence", json=payload.model_dump())
+    response = client.put(_route(project.id), json=payload.model_dump())
 
     assert response.status_code == 200, response.text
     sentence = SentenceAnnotationRead.model_validate(response.json())
@@ -38,23 +53,82 @@ def test_add_sentence_annotation(client: TestClient, project_with_sdoc_and_code)
 
 
 def test_add_sentence_annotation_attached_not_existing(
-    client: TestClient,
+    client: TestClient, test_project: ProjectORM
 ):
+    """A document that does not exist is not found (404): the annotation document
+    of the user cannot be created."""
     payload = SentenceAnnotationCreate(
         sentence_id_start=0,
         sentence_id_end=0,
         code_id=9999,
         sdoc_id=9999,
     )
-    resp = client.put("/sentence", json=payload.model_dump())
+    resp = client.put(_route(test_project.id), json=payload.model_dump())
+
+    assert resp.status_code == 404, resp.text
+
+
+@pytest.mark.parametrize(
+    "code_tenant,sdoc_tenant",
+    [
+        # the code belongs to the other project, the document to the path's
+        pytest.param("foreign", "own", id="code-of-other-project"),
+        # the document belongs to the other project, the code to the path's
+        pytest.param("own", "foreign", id="sdoc-of-other-project"),
+    ],
+)
+def test_create_sentence_annotation_with_id_of_other_project_is_a_conflict(
+    client: TestClient,
+    two_tenants: TwoTenants,
+    code_tenant: Literal["own", "foreign"],
+    sdoc_tenant: Literal["own", "foreign"],
+):
+    """A code or document of another project of the user in the create body is
+    rejected by the composite foreign keys (409), and nothing is created."""
+    own = two_tenants["own"]
+    payload = SentenceAnnotationCreate(
+        sentence_id_start=0,
+        sentence_id_end=0,
+        code_id=two_tenants[code_tenant]["code"].id,
+        sdoc_id=two_tenants[sdoc_tenant]["sdoc"].id,
+    )
+
+    resp = client.put(_route(own["project"].id), json=payload.model_dump())
+
+    assert resp.status_code == 409, resp.text
+    assert get_user_annotation_ids(
+        client, "sentence", own["project"].id, own["sdoc"].id, own["adoc"].user_id
+    ) == {own["sentence"].id}
+
+
+def test_create_sentence_annotation_in_project_of_others_is_forbidden(
+    client: TestClient, virtual_user_project: VirtualUserProject
+):
+    """The user is no member of the project in the path."""
+    payload = SentenceAnnotationCreate(
+        sentence_id_start=0,
+        sentence_id_end=0,
+        code_id=virtual_user_project["code"].id,
+        sdoc_id=virtual_user_project["other_sdoc"].id,
+    )
+
+    resp = client.put(
+        _route(virtual_user_project["other_project"].id), json=payload.model_dump()
+    )
 
     assert resp.status_code == 403, resp.text
+
+
+# ===========================================================================
+# BULK CREATE SENTENCE ANNOTATIONS (PUT /projects/{project_id}/sentence-annotations/bulk) TESTS
+# ===========================================================================
 
 
 def test_add_sentence_annotations_bulk(
     client: TestClient,
     project_with_sdoc_and_code,
 ):
+    project = project_with_sdoc_and_code["project"]
     sdoc = project_with_sdoc_and_code["source_document"]
     code = project_with_sdoc_and_code["code"]
 
@@ -66,7 +140,7 @@ def test_add_sentence_annotations_bulk(
             sentence_id_start=3, sentence_id_end=4, code_id=code.id, sdoc_id=sdoc.id
         ).model_dump(),
     ]
-    response = client.put("/sentence/bulk/create", json=payload)
+    response = client.put(_route(project.id) + "/bulk", json=payload)
 
     assert response.status_code == 200, response.text
     items = [SentenceAnnotationRead.model_validate(x) for x in response.json()]
@@ -77,47 +151,107 @@ def test_add_sentence_annotations_bulk(
 
 
 def test_add_sentence_annotione_bulk_if_not_exists(
-    client: TestClient,
+    client: TestClient, test_project: ProjectORM
 ):
+    """A document that does not exist is not found (404): the annotation document
+    of the user cannot be created."""
     payload = SentenceAnnotationCreate(
         sentence_id_start=0,
         sentence_id_end=0,
         code_id=9999,
         sdoc_id=9999,
     )
-    resp = client.put("/sentence/bulk/create", json=[payload.model_dump()])
+    resp = client.put(_route(test_project.id) + "/bulk", json=[payload.model_dump()])
 
-    assert resp.status_code == 403, resp.text
+    assert resp.status_code == 404, resp.text
 
 
-def test_get_sentence_annotation_endpoint_by_id(
+# ===========================================================================
+# GET SENTENCE ANNOTATIONS (GET /projects/{project_id}/sentence-annotations) TESTS
+# ===========================================================================
+
+
+def test_get_sentence_annotations_by_user_and_sdoc(
     client: TestClient,
-    project_with_sentence_annotation,
+    project_with_multiple_sentence_annotations,
+    test_user: UserRead,
 ):
-    sdoc = project_with_sentence_annotation["source_document"]
-    code = project_with_sentence_annotation["code"]
-    sa = project_with_sentence_annotation["sentence_annotation"]
+    """The `sdoc_id` filter returns the user's annotations in the document."""
+    project = project_with_multiple_sentence_annotations["project"]
+    sdoc = project_with_multiple_sentence_annotations["source_document"]
+    annotations = project_with_multiple_sentence_annotations["sentence_annotations"]
 
-    resp = client.get(f"/sentence/{sa.id}")
+    resp = client.get(
+        _route(project.id), params={"user_id": test_user.id, "sdoc_id": sdoc.id}
+    )
 
     assert resp.status_code == 200, resp.text
-    sentence_read = SentenceAnnotationRead.model_validate(resp.json())
-    assert sentence_read.id == sa.id
-    assert sentence_read.code_id == code.id
-    assert sentence_read.sdoc_id == sdoc.id
-    assert sentence_read.sentence_id_start == sa.sentence_id_start
-    assert sentence_read.sentence_id_end == sa.sentence_id_end
+    items = [SentenceAnnotationRead.model_validate(x) for x in resp.json()]
+    assert {x.id for x in items} == {sa.id for sa in annotations}
 
 
-def test_get_sentence_annotation_by_id_if_not_exists(client: TestClient):
-    payload = SentenceAnnotationCreate(
-        sentence_id_start=1,
-        sentence_id_end=2,
-        code_id=9999,
-        sdoc_id=9999,
+def test_get_by_user_code(
+    client: TestClient,
+    project_with_multiple_sentence_annotations,
+    test_user: UserRead,
+):
+    """The `code_id` filter returns the user's annotations with the code."""
+    project = project_with_multiple_sentence_annotations["project"]
+    code = project_with_multiple_sentence_annotations["code"]
+    annotations = project_with_multiple_sentence_annotations["sentence_annotations"]
+
+    resp = client.get(
+        _route(project.id), params={"user_id": test_user.id, "code_id": code.id}
     )
-    response = client.get(f"/sentence/{payload.code_id}")
-    assert response.status_code == 403, response.text
+
+    assert resp.status_code == 200, resp.text
+    items = [SentenceAnnotationRead.model_validate(x) for x in resp.json()]
+    assert len(items) == len(annotations)
+    assert all(x.code_id == code.id for x in items)
+
+
+def test_get_by_user_code_if_not_exists(
+    client: TestClient, test_project: ProjectORM, test_user: UserRead
+):
+    """A filter by a code that does not exist matches nothing."""
+    response = client.get(
+        _route(test_project.id), params={"user_id": test_user.id, "code_id": 1000}
+    )
+
+    assert response.status_code == 200, response.text
+    assert response.json() == []
+
+
+@pytest.mark.parametrize(
+    "filter_key",
+    [
+        # the document filter names the other project's document
+        pytest.param("sdoc_id", id="sdoc-of-other-project"),
+        # the code filter names the other project's code
+        pytest.param("code_id", id="code-of-other-project"),
+    ],
+)
+def test_get_sentence_annotations_filter_of_other_project_matches_nothing(
+    client: TestClient, two_tenants: TwoTenants, filter_key: str
+):
+    """A filter id of another project matches no annotation of the path's project,
+    although the user annotated it in the other project."""
+    own = two_tenants["own"]
+    foreign = two_tenants["foreign"]
+    value = foreign["sdoc"].id if filter_key == "sdoc_id" else foreign["code"].id
+
+    resp = client.get(
+        _route(own["project"].id),
+        params={"user_id": own["adoc"].user_id, filter_key: value},
+    )
+
+    assert resp.status_code == 200, resp.text
+    assert resp.json() == []
+
+
+# ===========================================================================
+# GET BY SENTENCE (GET /projects/{project_id}/sentence-annotations/by-sentence) TESTS
+# ===========================================================================
 
 
 def test_get_by_sdoc_and_user(
@@ -125,11 +259,15 @@ def test_get_by_sdoc_and_user(
     project_with_sentence_annotation,
     test_user: UserRead,
 ):
+    project = project_with_sentence_annotation["project"]
     sdoc = project_with_sentence_annotation["source_document"]
     code = project_with_sentence_annotation["code"]
     sa = project_with_sentence_annotation["sentence_annotation"]
 
-    resp = client.get(f"/sentence/sdoc/{sdoc.id}/user/{test_user.id}")
+    resp = client.get(
+        _route(project.id) + "/by-sentence",
+        params={"user_id": test_user.id, "sdoc_id": sdoc.id},
+    )
 
     assert resp.status_code == 200, resp.text
     data = SentenceAnnotatorResult.model_validate(resp.json())
@@ -147,27 +285,115 @@ def test_get_by_sdoc_and_user(
 
 
 def test_get_by_sdoc_and_user_both_ids_not_exist(
-    client: TestClient,
+    client: TestClient, test_project: ProjectORM
 ):
-    non_existing_sdoc_id = 99999
-    non_existing_user_id = 99999
+    """A document that does not exist is not found."""
     resp = client.get(
-        f"/sentence/sdoc/{non_existing_sdoc_id}/user/{non_existing_user_id}"
+        _route(test_project.id) + "/by-sentence",
+        params={"user_id": 99999, "sdoc_id": 99999},
     )
 
-    assert resp.status_code == 403, resp.text
+    assert resp.status_code == 404, resp.text
+
+
+def test_get_by_sentence_of_sdoc_of_other_project_is_not_found(
+    client: TestClient, two_tenants: TwoTenants
+):
+    """A document of another project of the user is not found in the path's
+    project."""
+    own = two_tenants["own"]
+    foreign = two_tenants["foreign"]
+
+    resp = client.get(
+        _route(own["project"].id) + "/by-sentence",
+        params={"user_id": own["adoc"].user_id, "sdoc_id": foreign["sdoc"].id},
+    )
+
+    assert resp.status_code == 404, resp.text
+
+
+# ===========================================================================
+# GET SENTENCE ANNOTATION (GET /projects/{project_id}/sentence-annotations/{sentence_annotation_id}) TESTS
+# ===========================================================================
+
+
+def test_get_sentence_annotation_endpoint_by_id(
+    client: TestClient,
+    project_with_sentence_annotation,
+):
+    project = project_with_sentence_annotation["project"]
+    sdoc = project_with_sentence_annotation["source_document"]
+    code = project_with_sentence_annotation["code"]
+    sa = project_with_sentence_annotation["sentence_annotation"]
+
+    resp = client.get(f"{_route(project.id)}/{sa.id}")
+
+    assert resp.status_code == 200, resp.text
+    sentence_read = SentenceAnnotationRead.model_validate(resp.json())
+    assert sentence_read.id == sa.id
+    assert sentence_read.code_id == code.id
+    assert sentence_read.sdoc_id == sdoc.id
+    assert sentence_read.sentence_id_start == sa.sentence_id_start
+    assert sentence_read.sentence_id_end == sa.sentence_id_end
+
+
+def test_get_sentence_annotation_by_id_if_not_exists(
+    client: TestClient, test_project: ProjectORM
+):
+    response = client.get(f"{_route(test_project.id)}/9999")
+    assert response.status_code == 404, response.text
+
+
+@pytest.mark.parametrize(
+    "method,body",
+    [
+        # read the other project's annotation
+        pytest.param("GET", None, id="get"),
+        # change the other project's annotation
+        pytest.param(
+            "PATCH", {"sentence_id_start": 0, "sentence_id_end": 1}, id="patch"
+        ),
+        # delete the other project's annotation
+        pytest.param("DELETE", None, id="delete"),
+    ],
+)
+def test_sentence_annotation_id_of_other_project_is_not_found(
+    client: TestClient, two_tenants: TwoTenants, method: str, body: dict | None
+):
+    """An annotation of another project of the user is not found under the path's
+    project, and stays unchanged in its own project."""
+    own = two_tenants["own"]
+    foreign = two_tenants["foreign"]
+    foreign_sentence = foreign["sentence"]
+
+    resp = client.request(
+        method, f"{_route(own['project'].id)}/{foreign_sentence.id}", json=body
+    )
+
+    assert resp.status_code == 404, resp.text
+    foreign_resp = client.get(f"{_route(foreign['project'].id)}/{foreign_sentence.id}")
+    assert foreign_resp.status_code == 200, foreign_resp.text
+    unchanged = SentenceAnnotationRead.model_validate(foreign_resp.json())
+    assert unchanged.sentence_id_start == foreign_sentence.sentence_id_start
+    assert unchanged.sentence_id_end == foreign_sentence.sentence_id_end
+
+
+# ===========================================================================
+# UPDATE SENTENCE ANNOTATION (PATCH /projects/{project_id}/sentence-annotations/{sentence_annotation_id}) TESTS
+# ===========================================================================
 
 
 def test_update_sentence_annotation_code(
     client: TestClient,
     project_with_sentence_annotation,
 ):
+    project = project_with_sentence_annotation["project"]
     sdoc = project_with_sentence_annotation["source_document"]
     code2 = project_with_sentence_annotation["code2"]
     sent_anno = project_with_sentence_annotation["sentence_annotation"]
 
     payload = {"code_id": code2.id}
-    resp = client.patch(f"/sentence/{sent_anno.id}", json=payload)
+    resp = client.patch(f"{_route(project.id)}/{sent_anno.id}", json=payload)
 
     assert resp.status_code == 200, resp.text
     updated = SentenceAnnotationRead.model_validate(resp.json())
@@ -176,15 +402,18 @@ def test_update_sentence_annotation_code(
     assert updated.code_id == payload["code_id"]
 
 
-def test_update_sentence_annotation_by_id_if_not_exists(client: TestClient):
-    non_existing_sentence_anno_id = 9999
-    payload = SentenceAnnotationUpdate(code_id=1)
+def test_update_sentence_annotation_by_id_if_not_exists(
+    client: TestClient, project_with_sdoc_and_code
+):
+    project = project_with_sdoc_and_code["project"]
+    code = project_with_sdoc_and_code["code"]
+    payload = SentenceAnnotationUpdate(code_id=code.id)
     resp = client.patch(
-        f"/sentence/{non_existing_sentence_anno_id}",
+        f"{_route(project.id)}/9999",
         json=payload.model_dump(exclude_none=True),
     )
 
-    assert resp.status_code == 403, resp.text
+    assert resp.status_code == 404, resp.text
 
 
 def test_resize_sentence_annotation(
@@ -192,13 +421,14 @@ def test_resize_sentence_annotation(
     db_session,
     project_with_sentence_annotation,
 ) -> None:
+    project = project_with_sentence_annotation["project"]
     sent_anno = project_with_sentence_annotation["sentence_annotation"]
     payload = {
         "sentence_id_start": 0,
         "sentence_id_end": 1,
     }
 
-    resp = client.patch(f"/sentence/{sent_anno.id}", json=payload)
+    resp = client.patch(f"{_route(project.id)}/{sent_anno.id}", json=payload)
 
     assert resp.status_code == 200, resp.text
     updated = SentenceAnnotationRead.model_validate(resp.json())
@@ -216,6 +446,7 @@ def test_resize_sentence_annotation_and_update_code(
     client: TestClient,
     project_with_multiple_sentence_annotations_and_new_code,
 ) -> None:
+    project = project_with_multiple_sentence_annotations_and_new_code["project"]
     sent_anno = project_with_multiple_sentence_annotations_and_new_code[
         "sentence_annotations"
     ][0]
@@ -226,7 +457,7 @@ def test_resize_sentence_annotation_and_update_code(
         "sentence_id_end": 1,
     }
 
-    resp = client.patch(f"/sentence/{sent_anno.id}", json=payload)
+    resp = client.patch(f"{_route(project.id)}/{sent_anno.id}", json=payload)
 
     assert resp.status_code == 200, resp.text
     updated = SentenceAnnotationRead.model_validate(resp.json())
@@ -260,27 +491,30 @@ def test_resize_sentence_annotation_rejects_invalid_payload(
     project_with_sentence_annotation,
     payload,
 ) -> None:
+    project = project_with_sentence_annotation["project"]
     sent_anno = project_with_sentence_annotation["sentence_annotation"]
 
-    resp = client.patch(f"/sentence/{sent_anno.id}", json=payload)
+    resp = client.patch(f"{_route(project.id)}/{sent_anno.id}", json=payload)
 
     assert resp.status_code == 422, resp.text
 
 
-def test_resize_sentence_annotation_if_not_exists(client: TestClient) -> None:
-    non_existing_sentence_anno_id = 9999
+def test_resize_sentence_annotation_if_not_exists(
+    client: TestClient, test_project: ProjectORM
+) -> None:
     payload = {
         "sentence_id_start": 0,
         "sentence_id_end": 1,
     }
 
-    resp = client.patch(
-        f"/sentence/{non_existing_sentence_anno_id}",
-        json=payload,
-    )
+    resp = client.patch(f"{_route(test_project.id)}/9999", json=payload)
 
-    assert resp.status_code == 403, resp.text
+    assert resp.status_code == 404, resp.text
 
+
+# ===========================================================================
+# BULK UPDATE SENTENCE ANNOTATIONS (PATCH /projects/{project_id}/sentence-annotations/bulk) TESTS
+# ===========================================================================
 
 testdata_bulk = [
     pytest.param({"target": "sa1", "code_mode": "new"}, id="update_sa1_new_code"),
@@ -296,6 +530,7 @@ def test_update_sent_anno_annotations_bulk_parametrized(
     project_with_multiple_sentence_annotations_and_new_code,
     params: dict,
 ):
+    project = project_with_multiple_sentence_annotations_and_new_code["project"]
     sdoc = project_with_multiple_sentence_annotations_and_new_code["source_document"]
     old_code = project_with_multiple_sentence_annotations_and_new_code["code"]
     new_code = project_with_multiple_sentence_annotations_and_new_code["new_code"]
@@ -309,7 +544,7 @@ def test_update_sent_anno_annotations_bulk_parametrized(
         original_anno = sa2
     target_code_id = new_code.id if params["code_mode"] == "new" else old_code.id
     payload = {"sentence_annotation_id": original_anno.id, "code_id": target_code_id}
-    resp = client.patch("/sentence/bulk/update", json=[payload])
+    resp = client.patch(_route(project.id) + "/bulk", json=[payload])
 
     assert resp.status_code == 200, resp.text
     updated = SentenceAnnotationRead.model_validate(resp.json()[0])
@@ -328,28 +563,35 @@ def test_update_sent_anno_annotations_bulk_not_exists(
     client: TestClient,
     project_with_multiple_sentence_annotations,
 ):
+    """One annotation that does not exist fails the whole batch."""
+    project = project_with_multiple_sentence_annotations["project"]
     code = project_with_multiple_sentence_annotations["code"]
     sa = project_with_multiple_sentence_annotations["sentence_annotations"][0]
 
-    non_existsing_id = 6666
     payload = [
         {"sentence_annotation_id": sa.id, "code_id": code.id},
-        {"sentence_annotation_id": non_existsing_id, "code_id": code.id},
+        {"sentence_annotation_id": 6666, "code_id": code.id},
     ]
-    resp = client.patch("/sentence/bulk/update", json=payload)
+    resp = client.patch(_route(project.id) + "/bulk", json=payload)
 
-    assert resp.status_code == 403, resp.text
+    assert resp.status_code == 404, resp.text
+
+
+# ===========================================================================
+# DELETE SENTENCE ANNOTATION (DELETE /projects/{project_id}/sentence-annotations/{sentence_annotation_id}) TESTS
+# ===========================================================================
 
 
 def test_delete_sentence_annotation_by_id(
     client: TestClient,
     project_with_sentence_annotation,
 ):
+    project = project_with_sentence_annotation["project"]
     sdoc = project_with_sentence_annotation["source_document"]
     code = project_with_sentence_annotation["code"]
     sa = project_with_sentence_annotation["sentence_annotation"]
 
-    resp = client.delete(f"/sentence/{sa.id}")
+    resp = client.delete(f"{_route(project.id)}/{sa.id}")
 
     assert resp.status_code == 200, resp.text
     sentence_read = SentenceAnnotationRead.model_validate(resp.json())
@@ -360,64 +602,57 @@ def test_delete_sentence_annotation_by_id(
     assert sentence_read.sentence_id_end == sa.sentence_id_end
 
 
-def test_delete_sentence_annotation_by_id_not_exists(client: TestClient):
-    resp = client.delete("/sentence/999999")
+def test_delete_sentence_annotation_by_id_not_exists(
+    client: TestClient, test_project: ProjectORM
+):
+    resp = client.delete(f"{_route(test_project.id)}/999999")
 
-    assert resp.status_code == 403, resp.text
+    assert resp.status_code == 404, resp.text
 
 
-def delete_bulk_by_id(
+# ===========================================================================
+# BULK DELETE SENTENCE ANNOTATIONS (DELETE /projects/{project_id}/sentence-annotations/bulk) TESTS
+# ===========================================================================
+
+
+def test_delete_sentence_annotations_bulk(
     client: TestClient,
     project_with_multiple_sentence_annotations,
+    test_user: UserRead,
 ):
+    """The annotations are deleted and returned in the order of the request."""
+    project = project_with_multiple_sentence_annotations["project"]
+    sdoc = project_with_multiple_sentence_annotations["source_document"]
     annotations = project_with_multiple_sentence_annotations["sentence_annotations"]
+    ids = [sa.id for sa in reversed(annotations)]
 
-    resp = client.request(
-        "DELETE", "/sentence/bulk/delete", json=[sa.id for sa in annotations]
-    )
+    resp = client.request("DELETE", _route(project.id) + "/bulk", json=ids)
 
     assert resp.status_code == 200, resp.text
-    assert len(resp.json()) == len(annotations)
+    deleted = [SentenceAnnotationRead.model_validate(x) for x in resp.json()]
+    assert [x.id for x in deleted] == ids
+    assert (
+        get_user_annotation_ids(client, "sentence", project.id, sdoc.id, test_user.id)
+        == set()
+    )
 
 
 def test_delete_bulk_by_id_if_not_exists(
     client: TestClient,
     project_with_multiple_sentence_annotations,
 ):
-    not_existsing_id = 6666
+    """One annotation that does not exist fails the whole batch."""
+    project = project_with_multiple_sentence_annotations["project"]
     sa = project_with_multiple_sentence_annotations["sentence_annotations"][0]
 
-    resp = client.request(
-        "DELETE",
-        "/sentence/bulk/delete",
-        json=[sa.id, not_existsing_id],
-    )
+    resp = client.request("DELETE", _route(project.id) + "/bulk", json=[sa.id, 6666])
 
-    assert resp.status_code == 403, resp.text
+    assert resp.status_code == 404, resp.text
 
 
-def test_get_by_user_code(
-    client: TestClient,
-    project_with_multiple_sentence_annotations,
-):
-    code = project_with_multiple_sentence_annotations["code"]
-    annotations = project_with_multiple_sentence_annotations["sentence_annotations"]
-
-    resp = client.get(f"/sentence/code/{code.id}/user")
-
-    assert resp.status_code == 200, resp.text
-    items = [SentenceAnnotationRead.model_validate(x) for x in resp.json()]
-    assert len(items) == len(annotations)
-    assert all(x.code_id == code.id for x in items)
-
-
-def test_get_by_user_code_if_not_exists(
-    client: TestClient,
-):
-    not_existsing_id = 1000
-    response = client.get(f"/code/{not_existsing_id}/user")
-
-    assert response.status_code == 404, response.text
+# ===========================================================================
+# COUNT SENTENCE ANNOTATIONS (POST /projects/{project_id}/sentence-annotations/count) TESTS
+# ===========================================================================
 
 
 def test_count_annotations(
@@ -425,29 +660,55 @@ def test_count_annotations(
     project_with_multiple_sentence_annotations,
     test_user: UserRead,
 ):
+    project = project_with_multiple_sentence_annotations["project"]
     sdoc = project_with_multiple_sentence_annotations["source_document"]
     code = project_with_multiple_sentence_annotations["code"]
     annotations = project_with_multiple_sentence_annotations["sentence_annotations"]
 
-    payload = {"sdoc_ids": [sdoc.id], "class_ids": [code.id]}
-    resp = client.post(f"/sentence/count_annotations/{test_user.id}", json=payload)
+    resp = client.post(
+        _route(project.id) + "/count",
+        params={"user_id": test_user.id},
+        json={"sdoc_ids": [sdoc.id], "code_ids": [code.id]},
+    )
 
     assert resp.status_code == 200, resp.text
-    data = resp.json()
-    assert data.get(str(code.id)) == len(annotations)
+    assert resp.json() == {str(code.id): len(annotations)}
 
 
-def test_count_annotation_if_not_exists(client: TestClient):
-    not_existing_id = 2000
-    payload = {"sdoc_ids": [not_existing_id], "class_ids": [not_existing_id]}
+def test_count_annotation_if_not_exists(
+    client: TestClient, test_project: ProjectORM, test_user: UserRead
+):
+    """Documents and codes that do not exist match nothing."""
+    resp = client.post(
+        _route(test_project.id) + "/count",
+        params={"user_id": test_user.id},
+        json={"sdoc_ids": [2000], "code_ids": [2000]},
+    )
 
-    resp = client.post(f"/sentence/count_annotations/{not_existing_id}", json=payload)
+    assert resp.status_code == 200, resp.text
+    assert resp.json() == {}
 
-    assert resp.status_code == 403, resp.text
+
+def test_count_annotations_of_other_project_match_nothing(
+    client: TestClient, two_tenants: TwoTenants
+):
+    """The document and code of another project match nothing in the path's
+    project, although the user annotated them there."""
+    own = two_tenants["own"]
+    foreign = two_tenants["foreign"]
+
+    resp = client.post(
+        _route(own["project"].id) + "/count",
+        params={"user_id": own["adoc"].user_id},
+        json={"sdoc_ids": [foreign["sdoc"].id], "code_ids": [foreign["code"].id]},
+    )
+
+    assert resp.status_code == 200, resp.text
+    assert resp.json() == {}
 
 
 # ===========================================================================
-# CREATE SENTENCE ANNOTATION (/sentence) TESTS: PROVENANCE
+# CREATE SENTENCE ANNOTATION (PUT /projects/{project_id}/sentence-annotations) TESTS: PROVENANCE
 # ===========================================================================
 # --- A. single copies record their provenance --------------------------------------
 
@@ -466,7 +727,7 @@ def test_create_copy_records_source_annotation_user_and_code(
         source_annotation_id=annotations["source_id"],
     )
 
-    response = client.put("/sentence", json=payload)
+    response = client.put(_route(provenance_project["project"].id), json=payload)
 
     assert response.status_code == 200, response.text
     copy = SentenceAnnotationRead.model_validate(response.json())
@@ -482,7 +743,9 @@ def test_create_copy_is_created_after_its_source(
 ) -> None:
     """The copy time is the copy's own `created`, not the source's."""
     annotations = provenance_project["sentence"]
-    source = get_annotation(client, "sentence", annotations["source_id"])
+    source = get_annotation(
+        client, "sentence", provenance_project["project"].id, annotations["source_id"]
+    )
     payload = create_payload(
         "sentence",
         sdoc_id=annotations["sdoc_id"],
@@ -491,7 +754,7 @@ def test_create_copy_is_created_after_its_source(
         source_annotation_id=annotations["source_id"],
     )
 
-    response = client.put("/sentence", json=payload)
+    response = client.put(_route(provenance_project["project"].id), json=payload)
 
     assert response.status_code == 200, response.text
     copy = SentenceAnnotationRead.model_validate(response.json())
@@ -514,11 +777,13 @@ def test_create_copy_copies_memos_of_source_with_their_authors(
         source_annotation_id=annotations["source_id"],
     )
 
-    response = client.put("/sentence", json=payload)
+    response = client.put(_route(provenance_project["project"].id), json=payload)
 
     assert response.status_code == 200, response.text
     copy = SentenceAnnotationRead.model_validate(response.json())
-    copied_memos = get_memos(client, "sentence", copy.id)
+    copied_memos = get_memos(
+        client, "sentence", provenance_project["project"].id, copy.id
+    )
     assert sorted(copy.memo_ids) == sorted(memo.id for memo in copied_memos)
     assert {
         (memo.title, memo.icon, memo.content, memo.content_json, memo.user_id)
@@ -530,7 +795,13 @@ def test_create_copy_copies_memos_of_source_with_their_authors(
     assert not {memo.id for memo in copied_memos} & {memo.id for memo in source_memos}
     assert all(memo.attached_object_id == copy.id for memo in copied_memos)
     assert {
-        memo.id for memo in get_memos(client, "sentence", annotations["source_id"])
+        memo.id
+        for memo in get_memos(
+            client,
+            "sentence",
+            provenance_project["project"].id,
+            annotations["source_id"],
+        )
     } == {memo.id for memo in source_memos}
 
 
@@ -547,7 +818,7 @@ def test_create_copy_of_source_without_memos_has_no_memos(
         source_annotation_id=annotations["source_plain_id"],
     )
 
-    response = client.put("/sentence", json=payload)
+    response = client.put(_route(provenance_project["project"].id), json=payload)
 
     assert response.status_code == 200, response.text
     copy = SentenceAnnotationRead.model_validate(response.json())
@@ -567,7 +838,7 @@ def test_create_own_annotation_has_no_provenance(
         position=2,
     )
 
-    response = client.put("/sentence", json=payload)
+    response = client.put(_route(provenance_project["project"].id), json=payload)
 
     assert response.status_code == 200, response.text
     annotation = SentenceAnnotationRead.model_validate(response.json())
@@ -592,7 +863,7 @@ def test_create_copy_of_own_annotation_is_recorded(
         source_annotation_id=own_id,
     )
 
-    response = client.put("/sentence", json=payload)
+    response = client.put(_route(project["project"].id), json=payload)
 
     assert response.status_code == 200, response.text
     copy = SentenceAnnotationRead.model_validate(response.json())
@@ -617,7 +888,7 @@ def test_create_copy_ignores_client_sent_source_user_and_code(
     payload["source_user_id"] = provenance_project["user"].id
     payload["source_code_id"] = provenance_project["code_b"].id
 
-    response = client.put("/sentence", json=payload)
+    response = client.put(_route(provenance_project["project"].id), json=payload)
 
     assert response.status_code == 200, response.text
     copy = SentenceAnnotationRead.model_validate(response.json())
@@ -626,29 +897,18 @@ def test_create_copy_ignores_client_sent_source_user_and_code(
 
 
 # --- B. invalid sources ---------------------------------------------------------------
-# A source must annotate the same document of the same project (HTTP 400); a single
-# copy of a source that does not exist is not found (HTTP 404), because nothing is
-# left to create. Nothing is created in either case.
+# A source must annotate the same document (HTTP 400); a single copy of a source that
+# does not exist in the project of the path is not found (HTTP 404), because nothing
+# is left to create. Nothing is created in either case.
 
 
-@pytest.mark.parametrize(
-    "source_key,expected_status",
-    [
-        # the source annotates another document of the same project
-        pytest.param("other_sdoc_source_id", 400, id="other-document"),
-        # the source belongs to another project of the same user
-        pytest.param("other_project_source_id", 400, id="other-project"),
-    ],
-)
-def test_create_copy_of_invalid_source_is_rejected(
-    client: TestClient,
-    provenance_project,
-    source_key: str,
-    expected_status: int,
+def test_create_copy_of_source_on_other_document_is_rejected(
+    client: TestClient, provenance_project
 ) -> None:
-    """A copy of a source from another document or project is rejected."""
+    """A copy of a source on another document of the project is rejected."""
+    project_id = provenance_project["project"].id
     annotations = provenance_project["sentence"]
-    source_id = annotations[source_key]
+    source_id = annotations["other_sdoc_source_id"]
     payload = create_payload(
         "sentence",
         sdoc_id=annotations["sdoc_id"],
@@ -657,45 +917,64 @@ def test_create_copy_of_invalid_source_is_rejected(
         source_annotation_id=source_id,
     )
 
-    response = client.put("/sentence", json=payload)
+    response = client.put(_route(project_id), json=payload)
 
-    assert response.status_code == expected_status, response.text
+    assert response.status_code == 400, response.text
     assert f"Annotation {source_id} cannot be copied" in response.text
     assert (
         get_user_annotation_ids(
-            client, "sentence", annotations["sdoc_id"], provenance_project["user"].id
+            client,
+            "sentence",
+            project_id,
+            annotations["sdoc_id"],
+            provenance_project["user"].id,
         )
         == set()
     )
 
 
-def test_create_copy_of_nonexistent_source_is_not_found(
-    client: TestClient, provenance_project
+@pytest.mark.parametrize(
+    "source_key",
+    [
+        # the source was deleted (e.g. after the comparison was opened)
+        pytest.param(None, id="nonexistent"),
+        # the source belongs to another project of the same user
+        pytest.param("other_project_source_id", id="other-project"),
+    ],
+)
+def test_create_copy_of_source_outside_the_project_is_not_found(
+    client: TestClient, provenance_project, source_key: str | None
 ) -> None:
-    """A single copy of a source that does not exist (e.g. deleted after the
-    comparison was opened) is skipped, so the request fails with 404."""
+    """A single copy of a source that does not exist in the project of the path is
+    skipped, so the request fails with 404."""
+    project_id = provenance_project["project"].id
     annotations = provenance_project["sentence"]
+    source_id = annotations[source_key] if source_key else 999_999
     payload = create_payload(
         "sentence",
         sdoc_id=annotations["sdoc_id"],
         code_id=provenance_project["code_a"].id,
         position=0,
-        source_annotation_id=999_999,
+        source_annotation_id=source_id,
     )
 
-    response = client.put("/sentence", json=payload)
+    response = client.put(_route(project_id), json=payload)
 
     assert response.status_code == 404, response.text
     assert (
         get_user_annotation_ids(
-            client, "sentence", annotations["sdoc_id"], provenance_project["user"].id
+            client,
+            "sentence",
+            project_id,
+            annotations["sdoc_id"],
+            provenance_project["user"].id,
         )
         == set()
     )
 
 
 # ===========================================================================
-# CREATE SENTENCE ANNOTATION (/sentence) TESTS: VIRTUAL USERS
+# CREATE SENTENCE ANNOTATION (PUT /projects/{project_id}/sentence-annotations) TESTS: VIRTUAL USERS
 # ===========================================================================
 
 
@@ -706,7 +985,7 @@ def test_create_sentence_annotation_as_virtual_user(
     run2 = virtual_user_project["run2"]
 
     response = client.put(
-        "/sentence",
+        _route(virtual_user_project["project"].id),
         params={"user_id": run2.id},
         json=SentenceAnnotationCreate(
             sdoc_id=virtual_user_project["sdoc"].id,
@@ -721,7 +1000,7 @@ def test_create_sentence_annotation_as_virtual_user(
 
 
 # ===========================================================================
-# BULK CREATE SENTENCE ANNOTATIONS (/sentence/bulk/create) TESTS: PROVENANCE
+# BULK CREATE SENTENCE ANNOTATIONS (PUT /projects/{project_id}/sentence-annotations/bulk) TESTS: PROVENANCE
 # ===========================================================================
 def test_create_bulk_records_provenance_of_every_copy(
     client: TestClient, provenance_project
@@ -751,7 +1030,9 @@ def test_create_bulk_records_provenance_of_every_copy(
         ),
     ]
 
-    response = client.put("/sentence/bulk/create", json=payload)
+    response = client.put(
+        _route(provenance_project["project"].id) + "/bulk", json=payload
+    )
 
     assert response.status_code == 200, response.text
     results = [SentenceAnnotationRead.model_validate(item) for item in response.json()]
@@ -789,7 +1070,9 @@ def test_create_bulk_copies_of_same_source_each_get_memo_copies(
         ]
     ]
 
-    response = client.put("/sentence/bulk/create", json=payload)
+    response = client.put(
+        _route(provenance_project["project"].id) + "/bulk", json=payload
+    )
 
     assert response.status_code == 200, response.text
     results = [SentenceAnnotationRead.model_validate(item) for item in response.json()]
@@ -825,7 +1108,9 @@ def test_create_bulk_skips_copies_of_nonexistent_sources(
         ),
     ]
 
-    response = client.put("/sentence/bulk/create", json=payload)
+    response = client.put(
+        _route(provenance_project["project"].id) + "/bulk", json=payload
+    )
 
     assert response.status_code == 200, response.text
     results = [SentenceAnnotationRead.model_validate(item) for item in response.json()]
@@ -834,7 +1119,11 @@ def test_create_bulk_skips_copies_of_nonexistent_sources(
         None,
     ]
     assert get_user_annotation_ids(
-        client, "sentence", annotations["sdoc_id"], provenance_project["user"].id
+        client,
+        "sentence",
+        provenance_project["project"].id,
+        annotations["sdoc_id"],
+        provenance_project["user"].id,
     ) == {result.id for result in results}
 
 
@@ -861,19 +1150,25 @@ def test_create_bulk_with_one_invalid_source_creates_nothing(
         ),
     ]
 
-    response = client.put("/sentence/bulk/create", json=payload)
+    response = client.put(
+        _route(provenance_project["project"].id) + "/bulk", json=payload
+    )
 
     assert response.status_code == 400, response.text
     assert (
         get_user_annotation_ids(
-            client, "sentence", annotations["sdoc_id"], provenance_project["user"].id
+            client,
+            "sentence",
+            provenance_project["project"].id,
+            annotations["sdoc_id"],
+            provenance_project["user"].id,
         )
         == set()
     )
 
 
 # ===========================================================================
-# DELETE SENTENCE ANNOTATION (/sentence/{sentence_anno_id}) TESTS: PROVENANCE
+# DELETE SENTENCE ANNOTATION (DELETE /projects/{project_id}/sentence-annotations/{sentence_annotation_id}) TESTS: PROVENANCE
 # ===========================================================================
 # The provenance columns are ON DELETE SET NULL: deleting the source annotation, its
 # user or its code clears only that column of the copy and keeps the rest.
@@ -887,10 +1182,12 @@ def test_delete_source_annotation_keeps_source_user_and_code_of_copy(
     project = provenance_project_with_copies
     copy_id = project["sentence_copies"]["copy_id"]
 
-    response = client.delete(f"/sentence/{project['sentence']['source_id']}")
+    response = client.delete(
+        f"{_route(project['project'].id)}/{project['sentence']['source_id']}"
+    )
 
     assert response.status_code == 200, response.text
-    copy = get_annotation(client, "sentence", copy_id)
+    copy = get_annotation(client, "sentence", project["project"].id, copy_id)
     assert copy.source_annotation_id is None
     assert copy.source_user_id == project["assistant"].id
     assert copy.source_code_id == project["code_a"].id

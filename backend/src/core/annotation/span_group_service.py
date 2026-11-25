@@ -62,11 +62,13 @@ class SpanGroupService(metaclass=SingletonMeta):
         Raises:
             NoSuchElementError: If the span group does not exist.
         """
-        crud_span_group.exists(db=db, id=id, raise_error=True)
+        group = crud_span_group.read(db=db, id=id)
         span_ids = crud_span_group.read_span_annotation_ids(db=db, ids=[id])[id]
         return [
             SpanAnnotationRead.model_validate(span)
-            for span in crud_span_anno.read_by_ids(db=db, ids=span_ids)
+            for span in crud_span_anno.read_by_ids(
+                db=db, project_id=group.project_id, ids=span_ids
+            )
         ]
 
     def read_with_annotations_by_user_and_sdoc(
@@ -85,6 +87,10 @@ class SpanGroupService(metaclass=SingletonMeta):
         groups = crud_span_group.read_by_user_and_sdoc(
             db=db, user_id=user_id, sdoc_id=sdoc_id
         )
+        if not groups:
+            return []
+        # the groups of one document belong to its project
+        project_id = groups[0].project_id
 
         # the spans through crud_span_anno, which eager-loads what their DTO reads
         span_ids_by_group = crud_span_group.read_span_annotation_ids(
@@ -94,6 +100,7 @@ class SpanGroupService(metaclass=SingletonMeta):
             span.id: SpanAnnotationRead.model_validate(span)
             for span in crud_span_anno.read_by_ids(
                 db=db,
+                project_id=project_id,
                 ids=[id for ids in span_ids_by_group.values() for id in ids],
             )
         }
@@ -144,17 +151,23 @@ class SpanGroupService(metaclass=SingletonMeta):
                 f"{annotation_document_id} or have none of the codes {code_ids}."
             )
 
+        project_id = crud_adoc.read_by_id(db=db, id=annotation_document_id).project_id
+
         # 1) delete the span annotations with these codes and the groups of that name
         crud_span_anno.delete_by_adoc_and_codes(
-            db=db, adoc_id=annotation_document_id, code_ids=code_ids
+            db=db,
+            project_id=project_id,
+            adoc_id=annotation_document_id,
+            code_ids=code_ids,
         )
         crud_span_group.delete_by_adoc_and_name(
             db=db, annotation_document_id=annotation_document_id, name=name
         )
 
         # 2) create the span annotations and one span group per inner list
-        db_spans = iter(crud_span_anno.create_multi(db=db, create_dtos=spans))
-        project_id = crud_adoc.read_by_id(db=db, id=annotation_document_id).project_id
+        db_spans = iter(
+            crud_span_anno.create_multi(db=db, project_id=project_id, create_dtos=spans)
+        )
         db_groups = crud_span_group.create_multi(
             db=db,
             create_dtos=[

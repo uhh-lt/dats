@@ -411,8 +411,10 @@ def test_delete_virtual_user_deletes_its_annotations(
     assert response.status_code == 200, response.text
     assert UserRead.model_validate(response.json()).id == run1.id
     for span_id in span_ids:
-        # deleted objects are indistinguishable from unauthorized ones
-        assert client.get(f"/span/{span_id}").status_code == 403
+        assert (
+            client.get(f"/projects/{project.id}/span-annotations/{span_id}").status_code
+            == 404
+        )
     assert run1.id not in client.get(f"/sdoc/{sdoc.id}/annotators").json()
     user_ids = [u["id"] for u in client.get(f"/user/{project.id}/user").json()]
     assert run1.id not in user_ids
@@ -431,7 +433,9 @@ def test_delete_virtual_user_keeps_provenance_of_copies(
     response = client.delete(f"/user/{run1.id}")
 
     assert response.status_code == 200, response.text
-    span_response = client.get(f"/span/{copy_id}")
+    span_response = client.get(
+        f"/projects/{virtual_user_project['project'].id}/span-annotations/{copy_id}"
+    )
     assert span_response.status_code == 200, span_response.text
     span = SpanAnnotationRead.model_validate(span_response.json())
     assert span.source_annotation_id is None
@@ -486,7 +490,7 @@ def test_delete_source_user_keeps_source_code_of_copy(
     response = assistant_client.delete("/user/")
 
     assert response.status_code == 200, response.text
-    copy = get_annotation(client, kind, copy_id)
+    copy = get_annotation(client, kind, project["project"].id, copy_id)
     assert copy.source_annotation_id is None
     assert copy.source_user_id is None
     assert copy.source_code_id == project["code_a"].id
@@ -563,7 +567,11 @@ def test_delete_virtual_user_of_an_experiment_run_keeps_its_annotations(
     response = client.delete(f"/user/{user_id}")
 
     assert response.status_code == 409, response.text
-    assert client.get(f"/span/{span_id}").status_code == 200
+    project_id = run_user_project["project"].id
+    assert (
+        client.get(f"/projects/{project_id}/span-annotations/{span_id}").status_code
+        == 200
+    )
 
 
 def test_delete_virtual_gold_annotator_keeps_experiment_runs_and_scores(

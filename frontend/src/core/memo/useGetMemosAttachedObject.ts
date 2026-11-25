@@ -14,6 +14,7 @@ import { SourceDocumentRead } from "@models/SourceDocumentRead";
 import { SpanAnnotationRead } from "@models/SpanAnnotationRead";
 import { TagRead } from "@models/TagRead";
 import { useQuery } from "@tanstack/react-query";
+import { useParams } from "@tanstack/react-router";
 
 export type MemosAttachedObject =
   | TagRead
@@ -45,15 +46,20 @@ export const useGetMemosAttachedObject = (
   type: AttachedObjectType | undefined,
   id: number | undefined,
 ): MemosAttachedObjectQuery => {
+  const projectId = useParams({ strict: false, select: (params) => params.projectId });
   // Pass the id only when the type matches, otherwise pass undefined to disable the query
   const tagQuery = TagHooks.useGetTag(type === AttachedObjectType.TAG ? id : undefined);
   const codeQuery = CodeHooks.useGetCode(type === AttachedObjectType.CODE ? id : undefined);
   const projectQuery = ProjectHooks.useGetProject(type === AttachedObjectType.PROJECT ? id : undefined);
   const sdocQuery = SdocHooks.useGetDocument(type === AttachedObjectType.SOURCE_DOCUMENT ? id : undefined);
-  const spanQuery = useQuery(spanAnnotationQueries.byId(type === AttachedObjectType.SPAN_ANNOTATION ? id : undefined));
-  const bboxQuery = useQuery(bboxAnnotationQueries.byId(type === AttachedObjectType.BBOX_ANNOTATION ? id : undefined));
+  const spanQuery = useQuery(
+    spanAnnotationQueries.byId(projectId, type === AttachedObjectType.SPAN_ANNOTATION ? id : undefined),
+  );
+  const bboxQuery = useQuery(
+    bboxAnnotationQueries.byId(projectId, type === AttachedObjectType.BBOX_ANNOTATION ? id : undefined),
+  );
   const sentenceQuery = useQuery(
-    sentenceAnnotationQueries.byId(type === AttachedObjectType.SENTENCE_ANNOTATION ? id : undefined),
+    sentenceAnnotationQueries.byId(projectId, type === AttachedObjectType.SENTENCE_ANNOTATION ? id : undefined),
   );
 
   switch (type) {

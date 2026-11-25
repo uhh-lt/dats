@@ -154,6 +154,7 @@ export function useSpanAnnotationResize(tokenData: IToken[] | undefined) {
       resizeStateRef.current = undefined;
       updateSpanAnnotation(
         {
+          projectId: currentState.originalAnnotation.project_id,
           spanAnnotationToUpdate: currentState.originalAnnotation,
           requestBody: {
             begin: currentState.previewAnnotation.begin,

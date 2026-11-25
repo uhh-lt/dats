@@ -75,10 +75,13 @@ def _export_and_delete_copy(
     """Export only the copy (not its source), delete the copy and return the
     exported rows and the copy's uuid."""
     crud = CRUD[kind]
-    copy = crud.read(db=db_session, id=project[f"{kind}_copies"]["copy_id"])
+    project_id = project["project"].id
+    copy = crud.read(
+        db=db_session, project_id=project_id, id=project[f"{kind}_copies"]["copy_id"]
+    )
     copy_uuid = copy.uuid
-    path = _export(db_session, kind, project["project"].id, [copy.id])
-    crud.delete(db=db_session, id=copy.id)
+    path = _export(db_session, kind, project_id, [copy.id])
+    crud.delete(db=db_session, project_id=project_id, id=copy.id)
     db_session.commit()
     return pd.read_csv(path), copy_uuid
 
@@ -93,7 +96,9 @@ def test_export_writes_provenance_by_uuid_email_and_name(
     crud = CRUD[kind]
     copy_id = project[f"{kind}_copies"]["copy_id"]
     own_id = project[f"{kind}_copies"]["own_id"]
-    source = crud.read(db=db_session, id=project[kind]["source_id"])
+    source = crud.read(
+        db=db_session, project_id=project["project"].id, id=project[kind]["source_id"]
+    )
 
     path = _export(db_session, kind, project["project"].id, [copy_id, own_id])
 

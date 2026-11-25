@@ -400,9 +400,11 @@ def search_project(
     span_annotations = [
         crud_span_anno.read(
             db=seed_db_session,
+            project_id=project.id,
             id=SpanAnnotationService()
             .create(
                 db=seed_db_session,
+                project_id=project.id,
                 user_id=test_user.id,
                 create_dto=SpanAnnotationCreate(
                     begin=0,
@@ -418,9 +420,11 @@ def search_project(
         ),
         crud_span_anno.read(
             db=seed_db_session,
+            project_id=project.id,
             id=SpanAnnotationService()
             .create(
                 db=seed_db_session,
+                project_id=project.id,
                 user_id=other_user.id,
                 create_dto=SpanAnnotationCreate(
                     begin=5,
@@ -440,9 +444,11 @@ def search_project(
     sentence_annotations = [
         crud_sentence_anno.read(
             db=seed_db_session,
+            project_id=project.id,
             id=SentenceAnnotationService()
             .create(
                 db=seed_db_session,
+                project_id=project.id,
                 user_id=test_user.id,
                 create_dto=SentenceAnnotationCreate(
                     sentence_id_start=0,
@@ -455,9 +461,11 @@ def search_project(
         ),
         crud_sentence_anno.read(
             db=seed_db_session,
+            project_id=project.id,
             id=SentenceAnnotationService()
             .create(
                 db=seed_db_session,
+                project_id=project.id,
                 user_id=other_user.id,
                 create_dto=SentenceAnnotationCreate(
                     sentence_id_start=0,
@@ -474,9 +482,11 @@ def search_project(
     bbox_annotations = [
         crud_bbox_anno.read(
             db=seed_db_session,
+            project_id=project.id,
             id=BBoxAnnotationService()
             .create(
                 db=seed_db_session,
+                project_id=project.id,
                 user_id=test_user.id,
                 create_dto=BBoxAnnotationCreate(
                     x_min=0,
@@ -491,9 +501,11 @@ def search_project(
         ),
         crud_bbox_anno.read(
             db=seed_db_session,
+            project_id=project.id,
             id=BBoxAnnotationService()
             .create(
                 db=seed_db_session,
+                project_id=project.id,
                 user_id=test_user.id,
                 create_dto=BBoxAnnotationCreate(
                     x_min=20,

@@ -1,6 +1,11 @@
-from sqlalchemy import Integer, func
+from collections.abc import Sequence
+
+from sqlalchemy import Integer, func, inspect
 from sqlalchemy.dialects.postgresql import ARRAY, array_agg
 from sqlalchemy.orm import InstrumentedAttribute
+
+from repos.db.orm_base import ORMBase
+from repos.db.sql_exceptions import NoSuchElementError
 
 
 def aggregate_ids(column: InstrumentedAttribute, label: str):
@@ -22,3 +27,22 @@ def aggregate_two_ids(
         None,
         type_=ARRAY(Integer),
     ).label(label)
+
+
+def assert_in_project(db_objs: Sequence[ORMBase], *, project_id: int) -> None:
+    """
+    For reads of the tables whose CRUD does not take the project yet: an object of
+    another project does not exist within the project of a request. Writes leave
+    the references in their body to the composite foreign keys instead.
+
+    Raises:
+        NoSuchElementError: For the first object of another project.
+    """
+    for db_obj in db_objs:
+        if db_obj.get_project_id() != project_id:
+            identity = inspect(db_obj).identity
+            raise NoSuchElementError(
+                type(db_obj),
+                project_id=project_id,
+                id=identity[0] if identity else None,
+            )

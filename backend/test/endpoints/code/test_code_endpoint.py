@@ -324,7 +324,7 @@ def test_delete_source_code_keeps_source_user_of_copy(
     response = client.delete(f"/code/{project['code_a'].id}")
 
     assert response.status_code == 200, response.text
-    copy = get_annotation(client, kind, copy_id)
+    copy = get_annotation(client, kind, project["project"].id, copy_id)
     assert copy.code_id == project["code_b"].id
     assert copy.source_annotation_id is None
     assert copy.source_user_id == project["assistant"].id

@@ -30,17 +30,6 @@ interface InferenceSettings {
   keepExisting: boolean;
 }
 
-const useCountBySdocsAndUser = (model: ClassifierModel) => {
-  switch (model) {
-    case ClassifierModel.DOCUMENT:
-      return TagHooks.useCountBySdocsAndUser;
-    case ClassifierModel.SENTENCE:
-      return SentenceAnnotationHooks.useCountBySdocsAndUser;
-    case ClassifierModel.SPAN:
-      return SpanAnnotationHooks.useCountBySdocsAndUser;
-  }
-};
-
 export function InferenceSettingsStep() {
   // dialog state
   const model = useAppSelector((state) => state.classifier.context.model);
@@ -69,17 +58,42 @@ export function InferenceSettingsStep() {
   const countUserId = isAnnotationModel ? virtualUserId : user?.id;
 
   // count existing classes by that user
-  const { mutate: countMutation, data: countData, isSuccess, isError, isPending } = useCountBySdocsAndUser(model!)();
+  const { mutate: countTags, ...tagCount } = TagHooks.useCountBySdocsAndUser();
+  const { mutate: countSentenceAnnotations, ...sentenceAnnotationCount } =
+    SentenceAnnotationHooks.useCountBySdocsAndUser();
+  const { mutate: countSpanAnnotations, ...spanAnnotationCount } = SpanAnnotationHooks.useCountBySdocsAndUser();
+  const {
+    data: countData,
+    isSuccess,
+    isError,
+    isPending,
+  } = model === ClassifierModel.DOCUMENT
+    ? tagCount
+    : model === ClassifierModel.SENTENCE
+      ? sentenceAnnotationCount
+      : spanAnnotationCount;
   useEffect(() => {
     if (countUserId === undefined) return;
-    countMutation({
-      userId: countUserId,
-      requestBody: {
-        sdoc_ids: sdocIds,
-        class_ids: classIds,
-      },
-    });
-  }, [countMutation, countUserId, sdocIds, classIds]);
+    switch (model) {
+      case ClassifierModel.DOCUMENT:
+        countTags({ userId: countUserId, requestBody: { sdoc_ids: sdocIds, class_ids: classIds } });
+        break;
+      case ClassifierModel.SENTENCE:
+        countSentenceAnnotations({
+          projectId,
+          userId: countUserId,
+          requestBody: { sdoc_ids: sdocIds, code_ids: classIds },
+        });
+        break;
+      case ClassifierModel.SPAN:
+        countSpanAnnotations({
+          projectId,
+          userId: countUserId,
+          requestBody: { sdoc_ids: sdocIds, code_ids: classIds },
+        });
+        break;
+    }
+  }, [countTags, countSentenceAnnotations, countSpanAnnotations, model, projectId, countUserId, sdocIds, classIds]);
 
   // form state
   const { control, getValues, handleSubmit } = useForm<InferenceSettings>({

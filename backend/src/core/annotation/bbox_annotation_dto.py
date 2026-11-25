@@ -16,7 +16,6 @@ class BBoxAnnotationBaseDTO(BaseModel):
 
 # Properties for creation
 class BBoxAnnotationCreateIntern(BBoxAnnotationBaseDTO):
-    project_id: int = Field(description="Project the BBoxAnnotation belongs to")
     uuid: str = Field(description="UUID of the BBoxAnnotation")
     code_id: int = Field(description="Code the BBoxAnnotation refers to")
     annotation_document_id: int = Field(

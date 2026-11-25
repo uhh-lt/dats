@@ -2,6 +2,7 @@ from typing import TypedDict
 
 import pytest
 
+from composite_keys_test_utils import TwoTenants, create_two_tenants
 from core.annotation.sentence_annotation_crud import crud_sentence_anno
 from core.annotation.sentence_annotation_dto import SentenceAnnotationCreate
 from core.annotation.sentence_annotation_orm import SentenceAnnotationORM
@@ -91,9 +92,11 @@ def project_with_sentence_annotation(
     # Create a sentence annotation
     sentence_annotation = crud_sentence_anno.read(
         db=db_session,
+        project_id=project.id,
         id=SentenceAnnotationService()
         .create(
             db=db_session,
+            project_id=project.id,
             user_id=test_user.id,
             create_dto=SentenceAnnotationCreate(
                 sentence_id_start=0,
@@ -139,10 +142,12 @@ def project_with_multiple_sentence_annotations(
     # Create multiple (2) sentence annotations
     [sentence_anno1, sentence_anno2] = crud_sentence_anno.read_by_ids(
         db=db_session,
+        project_id=project.id,
         ids=[
             dto.id
             for dto in SentenceAnnotationService().create_multi(
                 db=db_session,
+                project_id=project.id,
                 user_id=test_user.id,
                 create_dtos=[
                     SentenceAnnotationCreate(
@@ -244,3 +249,10 @@ def virtual_user_project(
 ) -> VirtualUserProject:
     """The projects described in `VirtualUserProject`."""
     return create_virtual_user_project(db_session, test_user, test_project)
+
+
+@pytest.fixture(scope="function")
+def two_tenants(db_session, test_user, test_project) -> TwoTenants:
+    """The rows of every project-owned table in the test project and in "Foreign
+    Project" (composite_keys_test_utils.TwoTenants and TenantRows list them)."""
+    return create_two_tenants(db_session, user=test_user, project=test_project)

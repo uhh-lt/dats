@@ -123,12 +123,16 @@ export const SentenceAnnotationComparison = memo(
         text: `Do you really want to remove the SentenceAnnotation ${annotation.id}? You can reassign it later!`,
         type: "DELETE",
         onAccept: () => {
-          deleteMutation.mutate(annotation as SentenceAnnotationRead);
+          deleteMutation.mutate({
+            projectId: sdocData.project_id,
+            sentAnnoToDelete: annotation as SentenceAnnotationRead,
+          });
         },
       });
     };
     const handleCodeSelectorEditCode = (annotation: Annotation, codeId: number) => {
       updateMutation.mutate({
+        projectId: sdocData.project_id,
         sentenceAnnoToUpdate: annotation as SentenceAnnotationRead,
         update: {
           code_id: codeId,
@@ -139,7 +143,7 @@ export const SentenceAnnotationComparison = memo(
       const pending = toPendingSentenceAnnotation(requestBody, editableUserId, sdocData.project_id);
       setPendingAnnotations((prev) => [...prev, pending]);
       createMutation.mutate(
-        { requestBody, userId: editableUserId },
+        { projectId: sdocData.project_id, requestBody, userId: editableUserId },
         {
           onSuccess,
           onSettled: () => {
@@ -243,6 +247,7 @@ export const SentenceAnnotationComparison = memo(
       }
 
       createBulkMutation.mutate({
+        projectId: sdocData.project_id,
         userId: editableUserId,
         requestBody: newAnnotations.map(toCopyCreate),
       });
@@ -282,19 +287,20 @@ export const SentenceAnnotationComparison = memo(
         return;
       }
 
-      deleteBulkMutation.mutate(sameAnnotations);
+      deleteBulkMutation.mutate({ projectId: sdocData.project_id, sentAnnosToDelete: sameAnnotations });
     };
 
     // single processing events
     const handleApplyAnnotation = (annotation: SentenceAnnotationRead) => {
       createMutation.mutate({
+        projectId: sdocData.project_id,
         userId: editableUserId,
         requestBody: toCopyCreate(annotation),
       });
     };
 
     const handleRevertAnnotation = (annotation: SentenceAnnotationRead) => {
-      deleteMutation.mutate(annotation);
+      deleteMutation.mutate({ projectId: sdocData.project_id, sentAnnoToDelete: annotation });
     };
 
     // event handlers

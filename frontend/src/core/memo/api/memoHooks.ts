@@ -67,12 +67,13 @@ const useRecordRecentMemo = () =>
   });
 
 const useGetObjectMemos = (
+  projectId: number,
   attachedObjType: AttachedObjectType,
   attachedObjId: number | null | undefined,
   options?: { enabled?: boolean },
 ) =>
   useQuery({
-    ...memoQueries.byAttachedObject(attachedObjType, attachedObjId),
+    ...memoQueries.byAttachedObject(projectId, attachedObjType, attachedObjId),
     enabled: options?.enabled ?? true,
   });
 

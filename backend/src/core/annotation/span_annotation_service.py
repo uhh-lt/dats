@@ -18,7 +18,6 @@ from core.annotation.span_annotation_dto import (
     SpanAnnotationUpdateBulk,
 )
 from core.annotation.span_annotation_orm import SpanAnnotationORM
-from core.doc.source_document_crud import crud_sdoc
 from core.memo.memo_enum import AttachedObjectType
 from repos.db.sql_exceptions import NoSuchElementError
 
@@ -28,7 +27,12 @@ class SpanAnnotationService(metaclass=SingletonMeta):
         return super(SpanAnnotationService, cls).__new__(cls)
 
     def create(
-        self, db: Session, *, user_id: int, create_dto: SpanAnnotationCreate
+        self,
+        db: Session,
+        *,
+        project_id: int,
+        user_id: int,
+        create_dto: SpanAnnotationCreate,
     ) -> SpanAnnotationRead:
         """
         Like `create_multi`, for one annotation.
@@ -37,16 +41,25 @@ class SpanAnnotationService(metaclass=SingletonMeta):
             NoSuchElementError: If the annotation is a copy of an annotation that does
                 not exist.
         """
-        results = self.create_multi(db=db, user_id=user_id, create_dtos=[create_dto])
+        results = self.create_multi(
+            db=db, project_id=project_id, user_id=user_id, create_dtos=[create_dto]
+        )
         if not results:
             # the copy was skipped because its source annotation does not exist
             raise NoSuchElementError(
-                SpanAnnotationORM, id=create_dto.source_annotation_id
+                SpanAnnotationORM,
+                project_id=project_id,
+                id=create_dto.source_annotation_id,
             )
         return results[0]
 
     def create_multi(
-        self, db: Session, *, user_id: int, create_dtos: list[SpanAnnotationCreate]
+        self,
+        db: Session,
+        *,
+        project_id: int,
+        user_id: int,
+        create_dtos: list[SpanAnnotationCreate],
     ) -> list[SpanAnnotationRead]:
         """
         Create span annotations of a user, creating missing annotation documents.
@@ -59,6 +72,7 @@ class SpanAnnotationService(metaclass=SingletonMeta):
         constant number of queries.
 
         Args:
+            project_id: The project of the annotations.
             user_id: The user the annotations belong to.
             create_dtos: The annotations to create.
 
@@ -73,22 +87,15 @@ class SpanAnnotationService(metaclass=SingletonMeta):
         if not create_dtos:
             return []
 
-        # 1) find the project of every affected source document
-        sdoc_ids = list(dict.fromkeys(create_dto.sdoc_id for create_dto in create_dtos))
-        project_id_by_sdoc_id = {
-            sdoc.id: sdoc.project_id
-            for sdoc in crud_sdoc.read_by_ids(db=db, ids=sdoc_ids)
-        }
-
-        # 2) read the annotations that are copied, skipping copies of deleted ones
+        # 1) read the annotations that are copied, skipping copies of deleted ones
         annotations = read_annotation_sources(
             db=db,
             crud=crud_span_anno,
+            project_id=project_id,
             create_dtos=create_dtos,
-            project_id_by_sdoc_id=project_id_by_sdoc_id,
         )
 
-        # 3) find or create the user's annotation document of every source document
+        # 2) find or create the user's annotation document of every source document
         adoc_by_sdoc_id = crud_adoc.exists_or_create_multi(
             db=db,
             user_id=user_id,
@@ -97,12 +104,12 @@ class SpanAnnotationService(metaclass=SingletonMeta):
             ),
         )
 
-        # 4) create the annotations, with the provenance of the copies
+        # 3) create the annotations, with the provenance of the copies
         db_objs = crud_span_anno.create_multi(
             db=db,
+            project_id=project_id,
             create_dtos=[
                 SpanAnnotationCreateIntern(
-                    project_id=project_id_by_sdoc_id[create_dto.sdoc_id],
                     uuid=str(uuid4()),
                     begin=create_dto.begin,
                     end=create_dto.end,
@@ -119,7 +126,7 @@ class SpanAnnotationService(metaclass=SingletonMeta):
             ],
         )
 
-        # 5) copy the memos of the source annotations onto their copies
+        # 4) copy the memos of the source annotations onto their copies
         copy_annotation_source_memos(
             db=db,
             attached_object_type=AttachedObjectType.span_annotation,
@@ -127,16 +134,23 @@ class SpanAnnotationService(metaclass=SingletonMeta):
             copies=db_objs,
         )
 
-        # 6) read them back with their relationships for the DTOs
-        return self._to_read_dtos(db=db, ids=[db_obj.id for db_obj in db_objs])
+        # 5) read them back with their relationships for the DTOs
+        return self._to_read_dtos(
+            db=db, project_id=project_id, ids=[db_obj.id for db_obj in db_objs]
+        )
 
     def update_multi(
-        self, db: Session, *, update_dtos: list[SpanAnnotationUpdateBulk]
+        self,
+        db: Session,
+        *,
+        project_id: int,
+        update_dtos: list[SpanAnnotationUpdateBulk],
     ) -> list[SpanAnnotationRead]:
         """
         Change the code of span annotations, each identified by its id.
 
         Args:
+            project_id: The project of the annotations.
             update_dtos: The annotations to update. Must not repeat an id.
 
         Returns:
@@ -144,21 +158,39 @@ class SpanAnnotationService(metaclass=SingletonMeta):
         """
         db_objs = crud_span_anno.update_multi(
             db=db,
+            project_id=project_id,
             ids=[update_dto.span_annotation_id for update_dto in update_dtos],
             update_dtos=[
                 SpanAnnotationUpdate(code_id=update_dto.code_id)
                 for update_dto in update_dtos
             ],
         )
-        return self._to_read_dtos(db=db, ids=[db_obj.id for db_obj in db_objs])
+        return self._to_read_dtos(
+            db=db, project_id=project_id, ids=[db_obj.id for db_obj in db_objs]
+        )
+
+    def update(
+        self, db: Session, *, project_id: int, id: int, update_dto: SpanAnnotationUpdate
+    ) -> SpanAnnotationRead:
+        """
+        Update an annotation of the project.
+
+        Returns:
+            The updated annotation.
+        """
+        db_obj = crud_span_anno.update(
+            db=db, project_id=project_id, id=id, update_dto=update_dto
+        )
+        return self._to_read_dtos(db=db, project_id=project_id, ids=[db_obj.id])[0]
 
     def delete_multi(
-        self, db: Session, *, ids: list[int]
+        self, db: Session, *, project_id: int, ids: list[int]
     ) -> list[SpanAnnotationDeleted]:
         """
         Delete span annotations.
 
         Args:
+            project_id: The project of the annotations.
             ids: The annotations to delete.
 
         Returns:
@@ -168,17 +200,23 @@ class SpanAnnotationService(metaclass=SingletonMeta):
         # 1) snapshot the annotations before they are deleted
         deleted = [
             SpanAnnotationDeleted.model_validate(db_obj)
-            for db_obj in crud_span_anno.read_by_ids(db=db, ids=ids)
+            for db_obj in crud_span_anno.read_by_ids(
+                db=db, project_id=project_id, ids=ids
+            )
         ]
 
         # 2) delete them
-        crud_span_anno.delete_multi(db=db, ids=ids)
+        crud_span_anno.delete_multi(db=db, project_id=project_id, ids=ids)
 
         return deleted
 
-    def _to_read_dtos(self, db: Session, *, ids: list[int]) -> list[SpanAnnotationRead]:
+    def _to_read_dtos(
+        self, db: Session, *, project_id: int, ids: list[int]
+    ) -> list[SpanAnnotationRead]:
         """Read DTOs of the given annotations, re-read with eager loading."""
         return [
             SpanAnnotationRead.model_validate(db_obj)
-            for db_obj in crud_span_anno.read_by_ids(db=db, ids=ids)
+            for db_obj in crud_span_anno.read_by_ids(
+                db=db, project_id=project_id, ids=ids
+            )
         ]

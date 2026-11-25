@@ -108,7 +108,6 @@ def _store_earlier_mentions(
         token = data.token_starts.index(begin)
         spans.append(
             SpanAnnotationCreateIntern(
-                project_id=sdoc.project_id,
                 uuid=str(uuid4()),
                 begin_token=token,
                 end_token=token + 1,

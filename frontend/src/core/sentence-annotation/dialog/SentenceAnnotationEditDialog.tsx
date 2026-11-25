@@ -38,6 +38,7 @@ export function SentenceAnnotationEditDialog({ projectId }: SentenceAnnotationEd
 
     updateAnnotationBulkMutation(
       {
+        projectId,
         requestBody: dialogData.annotationIds.map((annotation) => ({
           sentence_annotation_id: annotation,
           code_id: selectedCodeId,
@@ -50,7 +51,7 @@ export function SentenceAnnotationEditDialog({ projectId }: SentenceAnnotationEd
         },
       },
     );
-  }, [selectedCodeId, dialogData, updateAnnotationBulkMutation, handleClose, onSuccess]);
+  }, [selectedCodeId, dialogData, updateAnnotationBulkMutation, projectId, handleClose, onSuccess]);
 
   // maximize
   const { isMaximized, toggleMaximize } = useDialogMaximize();

@@ -33,7 +33,7 @@ from modules.whiteboard.whiteboard_enum import WhiteboardNodeType
 
 
 def transform_content_for_export(
-    db: Session, content: WhiteboardContent
+    db: Session, project_id: int, content: WhiteboardContent
 ) -> WhiteboardContentForExport:
     """
     Transform whiteboard content for export.
@@ -42,6 +42,7 @@ def transform_content_for_export(
 
     Args:
         db: Database session
+        project_id: ID of the project of the whiteboard
         content: WhiteboardContent
 
     Returns:
@@ -62,7 +63,9 @@ def transform_content_for_export(
     transformed_nodes: list[WhiteboardNodeForExport] = []
     for node_type, nodes in node_type_groups.items():
         transformed_nodes.extend(
-            transform_nodes_for_export(db=db, node_type=node_type, nodes=nodes)
+            transform_nodes_for_export(
+                db=db, project_id=project_id, node_type=node_type, nodes=nodes
+            )
         )
 
     # 3. Create the transformed content
@@ -82,7 +85,10 @@ def transform_content_for_export(
 
 
 def transform_nodes_for_export(
-    db: Session, node_type: WhiteboardNodeType, nodes: list[WhiteboardNode]
+    db: Session,
+    project_id: int,
+    node_type: WhiteboardNodeType,
+    nodes: list[WhiteboardNode],
 ) -> list[WhiteboardNodeForExport]:
     """
     Transform nodes of a specific type for export.
@@ -97,6 +103,7 @@ def transform_nodes_for_export(
 
     Args:
         db: Database session for resolving IDs
+        project_id: ID of the project of the whiteboard
         node_type: The type of nodes to transform
         nodes: The list of nodes to transform
 
@@ -222,7 +229,7 @@ def transform_nodes_for_export(
                 span_annotation_ids.append(node.data.spanAnnotationId)
 
             span_annotations = crud_span_anno.read_by_ids(
-                db=db, ids=span_annotation_ids
+                db=db, project_id=project_id, ids=span_annotation_ids
             )
             span_annotation_id_to_uuid: dict[int, str] = {
                 sa.id: sa.uuid for sa in span_annotations
@@ -261,7 +268,7 @@ def transform_nodes_for_export(
                 sentence_annotation_ids.append(node.data.sentenceAnnotationId)
 
             sentence_annotations = crud_sentence_anno.read_by_ids(
-                db=db, ids=sentence_annotation_ids
+                db=db, project_id=project_id, ids=sentence_annotation_ids
             )
             sentence_annotation_id_to_uuid: dict[int, str] = {
                 sa.id: sa.uuid for sa in sentence_annotations
@@ -300,7 +307,7 @@ def transform_nodes_for_export(
                 bbox_annotation_ids.append(node.data.bboxAnnotationId)
 
             bbox_annotations = crud_bbox_anno.read_by_ids(
-                db=db, ids=bbox_annotation_ids
+                db=db, project_id=project_id, ids=bbox_annotation_ids
             )
             bbox_annotation_id_to_uuid: dict[int, str] = {
                 ba.id: ba.uuid for ba in bbox_annotations

@@ -178,6 +178,7 @@ export const SpanAnnotationComparison = memo(({ sdocData, ...props }: SpanAnnota
   const handleApplyAnnotation = useCallback(
     (annotation: SpanAnnotationRead) => {
       createMutation.mutate({
+        projectId: sdocData.project_id,
         requestBody: {
           sdoc_id: annotation.sdoc_id,
           code_id: annotation.code_id,
@@ -192,14 +193,14 @@ export const SpanAnnotationComparison = memo(({ sdocData, ...props }: SpanAnnota
         userId: editableUserId,
       });
     },
-    [createMutation, editableUserId],
+    [createMutation, editableUserId, sdocData.project_id],
   );
 
   const handleRevertAnnotation = useCallback(
     (annotation: SpanAnnotationRead) => {
-      deleteMutation.mutate({ spanAnnotationToDelete: annotation });
+      deleteMutation.mutate({ projectId: sdocData.project_id, spanAnnotationToDelete: annotation });
     },
-    [deleteMutation],
+    [deleteMutation, sdocData.project_id],
   );
 
   // Bulk annotation actions
@@ -227,7 +228,7 @@ export const SpanAnnotationComparison = memo(({ sdocData, ...props }: SpanAnnota
       source_annotation_id: anno.id,
     }));
 
-    createBulkMutation.mutate({ requestBody: toCreate, userId: editableUserId });
+    createBulkMutation.mutate({ projectId: sdocData.project_id, requestBody: toCreate, userId: editableUserId });
   };
 
   const handleRevertAll = () => {
@@ -243,7 +244,7 @@ export const SpanAnnotationComparison = memo(({ sdocData, ...props }: SpanAnnota
     if (matchingAnnotations.length === 0) return;
 
     const idsToDelete = matchingAnnotations.map((anno) => anno.id);
-    deleteBulkMutation.mutate({ requestBody: idsToDelete });
+    deleteBulkMutation.mutate({ projectId: sdocData.project_id, requestBody: idsToDelete });
   };
 
   // Menu click handler (right-click on a token) for editing a side's annotations.
@@ -401,13 +402,17 @@ export const SpanAnnotationComparison = memo(({ sdocData, ...props }: SpanAnnota
       text: `Do you really want to remove the SpanAnnotation ${annotation.id}? You can reassign it later!`,
       type: "DELETE",
       onAccept: () => {
-        deleteMutation.mutate({ spanAnnotationToDelete: annotation as SpanAnnotationRead });
+        deleteMutation.mutate({
+          projectId: sdocData.project_id,
+          spanAnnotationToDelete: annotation as SpanAnnotationRead,
+        });
       },
     });
   };
 
   const handleCodeSelectorEditCode = (annotation: Annotation, codeId: number) => {
     updateMutation.mutate({
+      projectId: sdocData.project_id,
       spanAnnotationToUpdate: annotation as SpanAnnotationRead,
       requestBody: {
         code_id: codeId,
@@ -429,7 +434,7 @@ export const SpanAnnotationComparison = memo(({ sdocData, ...props }: SpanAnnota
     };
     setPendingAnnotations((prev) => [...prev, { ...pending, code_id: codeId }]);
     createMutation.mutate(
-      { requestBody, userId: editableUserId },
+      { projectId: sdocData.project_id, requestBody, userId: editableUserId },
       {
         onSuccess,
         // remove the pending preview once the real annotation is in the cache (or the request failed)

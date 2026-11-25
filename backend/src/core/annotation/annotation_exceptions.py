@@ -7,7 +7,7 @@ from common.exception_handler import exception_handler
 class AnnotationSourceError(Exception):
     """
     Raised when an annotation is copied from an annotation that does not annotate the
-    same source document of the same project.
+    same source document.
     """
 
     def __init__(self, source_annotation_id: int, sdoc_id: int) -> None:

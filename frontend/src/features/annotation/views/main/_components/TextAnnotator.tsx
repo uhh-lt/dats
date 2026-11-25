@@ -212,12 +212,16 @@ export function TextAnnotator({ sdocData }: TextAnnotatorProps) {
       text: `Do you really want to remove the SpanAnnotation ${annotation.id}? You can reassign it later!`,
       type: "DELETE",
       onAccept: () => {
-        deleteMutation.mutate({ spanAnnotationToDelete: annotation as SpanAnnotationRead });
+        deleteMutation.mutate({
+          projectId: sdocData.project_id,
+          spanAnnotationToDelete: annotation as SpanAnnotationRead,
+        });
       },
     });
   };
   const handleCodeSelectorEditCode = (annotation: Annotation, codeId: number) => {
     updateMutation.mutate({
+      projectId: sdocData.project_id,
       spanAnnotationToUpdate: annotation as SpanAnnotationRead,
       requestBody: {
         code_id: codeId,
@@ -238,7 +242,7 @@ export function TextAnnotator({ sdocData }: TextAnnotatorProps) {
     };
     setPendingAnnotations((prev) => [...prev, { ...pending, code_id: codeId }]);
     createMutation.mutate(
-      { requestBody, userId: visibleUserId },
+      { projectId: sdocData.project_id, requestBody, userId: visibleUserId },
       {
         onSuccess,
         // remove the pending preview once the real annotation is in the cache (or the request failed)

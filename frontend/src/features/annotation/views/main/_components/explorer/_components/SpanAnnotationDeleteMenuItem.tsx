@@ -3,6 +3,7 @@ import { SpanAnnotationHooks } from "@core/span-annotation";
 import DeleteIcon from "@mui/icons-material/Delete";
 import { ListItemIcon, ListItemText, MenuItem, MenuItemProps } from "@mui/material";
 import { MouseEventHandler } from "react";
+import { AnnotationRouteAPI } from "../../../_hooks/annotationRouteAPI";
 
 interface SpanAnnotationDeleteMenuItemProps {
   annotationId: number;
@@ -14,6 +15,7 @@ export function SpanAnnotationDeleteMenuItem({
   onClick,
   ...props
 }: SpanAnnotationDeleteMenuItemProps & MenuItemProps) {
+  const projectId = AnnotationRouteAPI.useParams({ select: (params) => params.projectId });
   const deleteMutation = SpanAnnotationHooks.useDeleteSpanAnnotation();
   const openConfirmationDialog = useOpenConfirmationDialog();
   const handleClick: MouseEventHandler = (event) => {
@@ -23,7 +25,7 @@ export function SpanAnnotationDeleteMenuItem({
       text: `Do you really want to remove the SpanAnnotation ${annotationId}? You can reassign it later!`,
       type: "DELETE",
       onAccept: () => {
-        deleteMutation.mutate({ spanAnnotationToDelete: annotationId });
+        deleteMutation.mutate({ projectId, spanAnnotationToDelete: annotationId });
       },
     });
 

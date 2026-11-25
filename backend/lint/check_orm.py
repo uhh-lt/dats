@@ -17,7 +17,8 @@ Rules (the rule id is printed with every violation):
                        allowed on a Mapped[T | None] column; "NO ACTION" only with
                        deferrable=True, initially="IMMEDIATE").
     fk-index           Every column with a ForeignKey(...) passes index=True, except the
-                       first primary key column, which the primary key index covers.
+                       first primary key column (also of a PrimaryKeyConstraint in
+                       __table_args__), which the primary key index covers.
     tz-datetime        DateTime columns are DateTime(timezone=True).
     no-native-enum     No native Enum(...) / ENUM(...) column type; store enums as String
                        or Integer annotated with the enum type.
@@ -236,7 +237,26 @@ def check_column(
 
 
 def _first_primary_key_column(node: ast.ClassDef) -> str | None:
-    """The attribute of the first mapped_column(..., primary_key=True) of the class."""
+    """The first column of a PrimaryKeyConstraint(...) in __table_args__, else the
+    attribute of the first mapped_column(..., primary_key=True) of the class."""
+    for stmt in node.body:
+        if (
+            isinstance(stmt, ast.Assign)
+            and any(
+                isinstance(t, ast.Name) and t.id == "__table_args__"
+                for t in stmt.targets
+            )
+            and isinstance(stmt.value, ast.Tuple)
+        ):
+            for arg in stmt.value.elts:
+                if (
+                    isinstance(arg, ast.Call)
+                    and call_name(arg) == "PrimaryKeyConstraint"
+                    and arg.args
+                    and isinstance(arg.args[0], ast.Constant)
+                    and isinstance(arg.args[0].value, str)
+                ):
+                    return arg.args[0].value
     for stmt in node.body:
         if not isinstance(stmt, ast.AnnAssign) or not isinstance(stmt.target, ast.Name):
             continue

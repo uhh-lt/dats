@@ -30,7 +30,6 @@ def _spans(
     [i, i + 1)."""
     return [
         SpanAnnotationCreateIntern(
-            project_id=fixture["project_id"],
             uuid=str(uuid4()),
             begin=i,
             end=i + 1,

@@ -9,13 +9,15 @@ from core.annotation.sentence_annotation_dto import (
     SentenceAnnotationUpdate,
 )
 from core.annotation.sentence_annotation_orm import SentenceAnnotationORM
+from core.code.code_orm import CodeORM
 from core.doc.source_document_orm import SourceDocumentORM
 from core.memo.object_handle_orm import ObjectHandleORM
-from repos.db.crud_base import BATCH_SIZE, SQLCRUDBase
+from repos.db.crud_base import BATCH_SIZE
+from repos.db.project_crud_base import ProjectCRUDBase
 
 
 class CRUDSentenceAnnotation(
-    SQLCRUDBase[
+    ProjectCRUDBase[
         SentenceAnnotationORM, SentenceAnnotationCreateIntern, SentenceAnnotationUpdate
     ]
 ):
@@ -25,9 +27,12 @@ class CRUDSentenceAnnotation(
         self,
         db: Session,
         *,
+        project_id: int,
         create_dtos: list[SentenceAnnotationCreateIntern],
     ) -> list[SentenceAnnotationORM]:
-        db_objs = super().create_multi(db=db, create_dtos=create_dtos)
+        db_objs = super().create_multi(
+            db=db, project_id=project_id, create_dtos=create_dtos
+        )
 
         # update all affected annotation documents' timestamp
         adoc_ids = list(
@@ -111,62 +116,45 @@ class CRUDSentenceAnnotation(
             )
         return db_objs
 
-    def read_by_user_and_sdoc(
+    def read_by_user(
         self,
         db: Session,
         *,
+        project_id: int,
         user_id: int,
-        sdoc_id: int,
+        sdoc_id: int | None = None,
+        code_id: int | None = None,
+        exclude_disabled_codes: bool = True,
     ) -> list[SentenceAnnotationORM]:
+        """
+        Read the sentence annotations of a user in the project, optionally only
+        those in a document or with a code.
+
+        Args:
+            project_id: The project of the annotations.
+            user_id: The user the annotations belong to.
+            sdoc_id: Only the annotations in this document.
+            code_id: Only the annotations with this code.
+            exclude_disabled_codes: Leave out the annotations with a disabled code.
+
+        Returns:
+            The matching annotations.
+        """
         query = (
             db.query(self.model)
             .options(*self._load_options())
             .join(self.model.annotation_document)
             .where(
+                self.model.project_id == project_id,
                 AnnotationDocumentORM.user_id == user_id,
-                AnnotationDocumentORM.source_document_id == sdoc_id,
             )
         )
-
-        return query.all()
-
-    def read_by_users_and_sdoc(
-        self,
-        db: Session,
-        *,
-        user_ids: list[int],
-        sdoc_id: int,
-    ) -> list[SentenceAnnotationORM]:
-        if not user_ids:
-            return []
-
-        db_objs: list[SentenceAnnotationORM] = []
-        for i in range(0, len(user_ids), BATCH_SIZE):
-            batch_user_ids = user_ids[i : i + BATCH_SIZE]
-            query = (
-                db.query(self.model)
-                .options(*self._load_options())
-                .join(self.model.annotation_document)
-                .where(
-                    AnnotationDocumentORM.user_id.in_(batch_user_ids),
-                    AnnotationDocumentORM.source_document_id == sdoc_id,
-                )
-            )
-            db_objs.extend(query.all())
-        return db_objs
-
-    def read_by_code_and_user(
-        self, db: Session, *, code_id: int, user_id: int
-    ) -> list[SentenceAnnotationORM]:
-        query = (
-            db.query(self.model)
-            .options(*self._load_options())
-            .join(self.model.annotation_document)
-            .filter(
-                self.model.code_id == code_id, AnnotationDocumentORM.user_id == user_id
-            )
-        )
-
+        if sdoc_id is not None:
+            query = query.where(AnnotationDocumentORM.source_document_id == sdoc_id)
+        if code_id is not None:
+            query = query.where(self.model.code_id == code_id)
+        if exclude_disabled_codes:
+            query = query.join(self.model.code).where(CodeORM.enabled == True)  # noqa: E712
         return query.all()
 
     def read_by_code(self, db: Session, *, code_id: int) -> list[SentenceAnnotationORM]:
@@ -222,10 +210,13 @@ class CRUDSentenceAnnotation(
         self,
         db: Session,
         *,
+        project_id: int,
         ids: list[int],
         update_dtos: list[SentenceAnnotationUpdate],
     ) -> list[SentenceAnnotationORM]:
-        annos = super().update_multi(db=db, ids=ids, update_dtos=update_dtos)
+        annos = super().update_multi(
+            db=db, project_id=project_id, ids=ids, update_dtos=update_dtos
+        )
 
         # update the annotation documents' timestamp
         crud_adoc.update_timestamps(
@@ -236,55 +227,23 @@ class CRUDSentenceAnnotation(
 
     ### DELETE OPERATIONS ###
 
-    def delete_multi(self, db: Session, *, ids: list[int]) -> int:
-        adoc_ids = self._read_adoc_ids(db=db, ids=ids)
-        num_deletions = super().delete_multi(db=db, ids=ids)
+    def delete_multi(self, db: Session, *, project_id: int, ids: list[int]) -> int:
+        adoc_ids = self._read_adoc_ids(db=db, project_id=project_id, ids=ids)
+        num_deletions = super().delete_multi(db=db, project_id=project_id, ids=ids)
 
         # update the annotation documents' timestamp
         crud_adoc.update_timestamps(db=db, ids=adoc_ids)
 
         return num_deletions
 
-    def delete_by_sdoc(
+    def delete_by_user_sdocs_codes(
         self,
         db: Session,
         *,
-        sdoc_id: int,
-    ) -> int:
-        # 1. find all affected annotation ids
-        anno_ids = (
-            db.query(self.model.id)
-            .join(self.model.annotation_document)
-            .filter(AnnotationDocumentORM.source_document_id == sdoc_id)
-            .all()
-        )
-        anno_ids = [anno_id_tuple[0] for anno_id_tuple in anno_ids]
-
-        # 2. delete the annotations
-        num_deletions = self.delete_multi(
-            db=db,
-            ids=anno_ids,
-        )
-
-        return num_deletions
-
-    def delete_by_adoc(self, db: Session, *, adoc_id: int) -> list[int]:
-        # find all annotations to be removed
-        ids = list(
-            db.scalars(
-                select(self.model.id).where(
-                    self.model.annotation_document_id == adoc_id
-                )
-            )
-        )
-
-        # delete them (updates the annotation document's timestamp)
-        self.delete_multi(db=db, ids=ids)
-
-        return ids
-
-    def delete_by_user_sdocs_codes(
-        self, db: Session, *, user_id: int, sdoc_ids: list[int], code_ids: list[int]
+        project_id: int,
+        user_id: int,
+        sdoc_ids: list[int],
+        code_ids: list[int],
     ) -> list[int]:
         if not sdoc_ids or not code_ids:
             return []
@@ -297,6 +256,7 @@ class CRUDSentenceAnnotation(
                 db.query(self.model.id)
                 .join(self.model.annotation_document)
                 .filter(
+                    self.model.project_id == project_id,
                     AnnotationDocumentORM.source_document_id.in_(batch_sdoc_ids),
                     AnnotationDocumentORM.user_id == user_id,
                     self.model.code_id.in_(code_ids),
@@ -305,7 +265,7 @@ class CRUDSentenceAnnotation(
             anno_ids.extend(row[0] for row in query.all())
 
         # delete them (updates the annotation documents' timestamp)
-        self.delete_multi(db=db, ids=anno_ids)
+        self.delete_multi(db=db, project_id=project_id, ids=anno_ids)
 
         return anno_ids
 
@@ -315,6 +275,7 @@ class CRUDSentenceAnnotation(
         self,
         db: Session,
         *,
+        project_id: int,
         code_ids: list[int],
         sdoc_ids: list[int],
         user_id: int,
@@ -329,6 +290,7 @@ class CRUDSentenceAnnotation(
                 db.query(self.model.code_id, func.count(self.model.id))
                 .join(self.model.annotation_document)
                 .where(
+                    self.model.project_id == project_id,
                     self.model.code_id.in_(code_ids),
                     AnnotationDocumentORM.source_document_id.in_(batch_sdoc_ids),
                     AnnotationDocumentORM.user_id == user_id,
@@ -348,7 +310,9 @@ class CRUDSentenceAnnotation(
             ),  # memo_ids
         ]
 
-    def _read_adoc_ids(self, db: Session, *, ids: list[int]) -> list[int]:
+    def _read_adoc_ids(
+        self, db: Session, *, project_id: int, ids: list[int]
+    ) -> list[int]:
         """Read the distinct annotation document ids of the given annotations."""
         adoc_ids: set[int] = set()
         unique_ids = list(dict.fromkeys(ids))
@@ -357,7 +321,8 @@ class CRUDSentenceAnnotation(
             adoc_ids.update(
                 db.scalars(
                     select(self.model.annotation_document_id).where(
-                        self.model.id.in_(batch_ids)
+                        self.model.project_id == project_id,
+                        self.model.id.in_(batch_ids),
                     )
                 )
             )

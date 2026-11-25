@@ -75,7 +75,7 @@ export function invalidateAttachedObjectMemoIds(
  */
 export function invalidateCopiedAnnotationMemos(
   attachedObjectType: AttachedObjectType,
-  annotations: { id: number; source_annotation_id: number | null; memo_ids: number[] }[],
+  annotations: { id: number; project_id: number; source_annotation_id: number | null; memo_ids: number[] }[],
 ): void {
   const copiesWithMemos = annotations.filter(
     (annotation) => annotation.source_annotation_id !== null && annotation.memo_ids.length > 0,
@@ -83,7 +83,7 @@ export function invalidateCopiedAnnotationMemos(
   if (copiesWithMemos.length === 0) return;
   copiesWithMemos.forEach((annotation) =>
     queryClient.invalidateQueries({
-      queryKey: memoQueries.byAttachedObject(attachedObjectType, annotation.id).queryKey,
+      queryKey: memoQueries.byAttachedObject(annotation.project_id, attachedObjectType, annotation.id).queryKey,
     }),
   );
   invalidateMemoWorkspace();
@@ -92,7 +92,7 @@ export function invalidateCopiedAnnotationMemos(
 export function writeMemo(memo: MemoRead): void {
   setSingle(memoQueries.byId(memo.id).queryKey, memo);
   queryClient.setQueryData(
-    memoQueries.byAttachedObject(memo.attached_object_type, memo.attached_object_id).queryKey,
+    memoQueries.byAttachedObject(memo.project_id, memo.attached_object_type, memo.attached_object_id).queryKey,
     (old) => (old ? old.map((m) => (m.id === memo.id ? memo : m)) : old),
   );
 }
@@ -100,7 +100,7 @@ export function writeMemo(memo: MemoRead): void {
 export function appendMemo(memo: MemoRead): void {
   setSingle(memoQueries.byId(memo.id).queryKey, memo);
   queryClient.setQueryData(
-    memoQueries.byAttachedObject(memo.attached_object_type, memo.attached_object_id).queryKey,
+    memoQueries.byAttachedObject(memo.project_id, memo.attached_object_type, memo.attached_object_id).queryKey,
     (old) => (old ? [...old, memo] : old),
   );
 }
@@ -108,7 +108,7 @@ export function appendMemo(memo: MemoRead): void {
 export function removeMemo(memo: MemoRead): void {
   removeSingle(memoQueries.byId(memo.id).queryKey);
   queryClient.setQueryData(
-    memoQueries.byAttachedObject(memo.attached_object_type, memo.attached_object_id).queryKey,
+    memoQueries.byAttachedObject(memo.project_id, memo.attached_object_type, memo.attached_object_id).queryKey,
     (old) => (old ? old.filter((m) => m.id !== memo.id) : old),
   );
   invalidateAttachedObjectMemoIds(memo.attached_object_type, memo.attached_object_id);

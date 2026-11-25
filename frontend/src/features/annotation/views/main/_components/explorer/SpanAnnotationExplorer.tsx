@@ -10,9 +10,10 @@ const filterByText = (text: string) => (annotation: SpanAnnotationRead) => annot
 
 export function SpanAnnotationExplorer({ sdocId }: { sdocId: number }) {
   // data
+  const projectId = AnnotationRouteAPI.useParams({ select: (params) => params.projectId });
   const { visibleUserId, compareWithUserId } = AnnotationRouteAPI.useSearch();
-  const annotationsLeft = useQuery(spanAnnotationQueries.bySdoc(sdocId, visibleUserId));
-  const annotationsRight = useQuery(spanAnnotationQueries.bySdoc(sdocId, compareWithUserId));
+  const annotationsLeft = useQuery(spanAnnotationQueries.bySdoc(projectId, sdocId, visibleUserId));
+  const annotationsRight = useQuery(spanAnnotationQueries.bySdoc(projectId, sdocId, compareWithUserId));
 
   const combinedAnnotations = useMemo(() => {
     const leftData = annotationsLeft.data || [];

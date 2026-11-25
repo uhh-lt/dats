@@ -1,8 +1,8 @@
-from fastapi import APIRouter, Depends, Query
+from fastapi import Depends, Query
 
-from common.crud_enum import Crud
 from common.dats_event import DATSEvent
-from common.dependencies import DBSession, get_current_user
+from common.dependencies import DBSession
+from common.project_router import project_router
 from core.annotation.bbox_annotation_crud import crud_bbox_anno
 from core.annotation.bbox_annotation_dto import (
     BBoxAnnotationCreate,
@@ -12,14 +12,9 @@ from core.annotation.bbox_annotation_dto import (
 )
 from core.annotation.bbox_annotation_service import BBoxAnnotationService
 from core.auth.authz_user import AuthzUser
-from core.auth.validation import Validate
 from systems.websocket_system.websocket_dependency import WebsocketEmitter
 
-router = APIRouter(
-    prefix="/bbox",
-    dependencies=[Depends(get_current_user)],
-    tags=["bboxAnnotation", "mcp"],
-)
+router = project_router("/bbox-annotations", tags=["bboxAnnotation", "mcp"])
 
 
 # --- create operations
@@ -33,6 +28,7 @@ router = APIRouter(
 def create_bbox_annotation(
     *,
     db: DBSession,
+    project_id: int,
     bbox: BBoxAnnotationCreate,
     user_id: int | None = Query(
         default=None,
@@ -41,18 +37,12 @@ def create_bbox_annotation(
     authz_user: AuthzUser = Depends(),
     ws: WebsocketEmitter = Depends(),
 ) -> BBoxAnnotationRead:
-    authz_user.assert_in_same_project_as(Crud.SOURCE_DOCUMENT, bbox.sdoc_id)
-    authz_user.assert_in_same_project_as(Crud.CODE, bbox.code_id)
-    annotation_user_id = authz_user.assert_can_annotate_as(user_id, [bbox.sdoc_id])
+    annotation_user_id = authz_user.assert_can_annotate_as(user_id, project_id)
 
     result = BBoxAnnotationService().create(
-        db=db, user_id=annotation_user_id, create_dto=bbox
+        db=db, project_id=project_id, user_id=annotation_user_id, create_dto=bbox
     )
-    ws.emit_to_project(
-        DATSEvent.BBOX_ANNOTATION_CREATED,
-        result,
-        project_id=result.project_id,
-    )
+    ws.emit_to_project(DATSEvent.BBOX_ANNOTATION_CREATED, result, project_id=project_id)
     return result
 
 
@@ -60,171 +50,126 @@ def create_bbox_annotation(
 
 
 @router.get(
-    "/{bbox_id}",
+    "",
+    response_model=list[BBoxAnnotationRead],
+    summary=(
+        "Returns the BBoxAnnotations of the User, optionally only those in the "
+        "SourceDocument or with the Code"
+    ),
+)
+def get_bbox_annotations(
+    *,
+    db: DBSession,
+    project_id: int,
+    user_id: int,
+    sdoc_id: int | None = None,
+    code_id: int | None = None,
+) -> list[BBoxAnnotationRead]:
+    db_objs = crud_bbox_anno.read_by_user(
+        db=db, project_id=project_id, user_id=user_id, sdoc_id=sdoc_id, code_id=code_id
+    )
+    return [BBoxAnnotationRead.model_validate(db_obj) for db_obj in db_objs]
+
+
+@router.get(
+    "/{bbox_annotation_id}",
     response_model=BBoxAnnotationRead,
     summary="Returns the BBoxAnnotation with the given ID.",
 )
 def get_by_id(
     *,
     db: DBSession,
-    bbox_id: int,
-    authz_user: AuthzUser = Depends(),
+    project_id: int,
+    bbox_annotation_id: int,
 ) -> BBoxAnnotationRead:
-    authz_user.assert_in_same_project_as(Crud.BBOX_ANNOTATION, bbox_id)
-
-    db_obj = crud_bbox_anno.read(db=db, id=bbox_id)
+    db_obj = crud_bbox_anno.read(db=db, project_id=project_id, id=bbox_annotation_id)
     return BBoxAnnotationRead.model_validate(db_obj)
-
-
-@router.get(
-    "/sdoc/{sdoc_id}/user/{user_id}",
-    response_model=list[BBoxAnnotationRead],
-    summary="Returns all BBoxAnnotations of the User for the SourceDocument",
-)
-def get_by_sdoc_and_user(
-    *,
-    db: DBSession,
-    sdoc_id: int,
-    user_id: int,
-    authz_user: AuthzUser = Depends(),
-) -> list[BBoxAnnotationRead]:
-    authz_user.assert_in_same_project_as(Crud.SOURCE_DOCUMENT, sdoc_id)
-
-    bboxes = crud_bbox_anno.read_by_user_and_sdoc(
-        db=db, user_id=user_id, sdoc_id=sdoc_id
-    )
-    return [BBoxAnnotationRead.model_validate(bbox) for bbox in bboxes]
-
-
-@router.get(
-    "/code/{code_id}/user",
-    response_model=list[BBoxAnnotationRead],
-    summary=("Returns BBoxAnnotations with the given Code of the logged-in User"),
-)
-def get_by_user_code(
-    *,
-    db: DBSession,
-    code_id: int,
-    authz_user: AuthzUser = Depends(),
-) -> list[BBoxAnnotationRead]:
-    authz_user.assert_in_same_project_as(Crud.CODE, code_id)
-
-    db_objs = crud_bbox_anno.read_by_code_and_user(
-        db=db, code_id=code_id, user_id=authz_user.user.id
-    )
-    return [BBoxAnnotationRead.model_validate(db_obj) for db_obj in db_objs]
 
 
 # --- update operations
 
 
 @router.patch(
-    "/{bbox_id}",
+    "/bulk",
+    response_model=list[BBoxAnnotationRead],
+    summary="Updates BBoxAnnotations in Bulk",
+)
+def update_bbox_annotations_bulk(
+    *,
+    db: DBSession,
+    project_id: int,
+    bbox_annos: list[BBoxAnnotationUpdateBulk],
+    ws: WebsocketEmitter = Depends(),
+) -> list[BBoxAnnotationRead]:
+    results = BBoxAnnotationService().update_multi(
+        db=db, project_id=project_id, update_dtos=bbox_annos
+    )
+    if results:
+        ws.emit_to_project(
+            DATSEvent.BBOX_ANNOTATION_UPDATED_BATCH, results, project_id=project_id
+        )
+    return results
+
+
+@router.patch(
+    "/{bbox_annotation_id}",
     response_model=BBoxAnnotationRead,
     summary="Updates the BBoxAnnotation with the given ID.",
 )
 def update_by_id(
     *,
     db: DBSession,
-    bbox_id: int,
+    project_id: int,
+    bbox_annotation_id: int,
     bbox_anno: BBoxAnnotationUpdate,
-    authz_user: AuthzUser = Depends(),
-    validate: Validate = Depends(),
     ws: WebsocketEmitter = Depends(),
 ) -> BBoxAnnotationRead:
-    authz_user.assert_in_same_project_as(Crud.BBOX_ANNOTATION, bbox_id)
-    if bbox_anno.code_id is not None:
-        authz_user.assert_in_same_project_as(Crud.CODE, bbox_anno.code_id)
-        validate.validate_objects_in_same_project(
-            [(Crud.BBOX_ANNOTATION, bbox_id), (Crud.CODE, bbox_anno.code_id)]
-        )
-
-    db_obj = crud_bbox_anno.update(db=db, id=bbox_id, update_dto=bbox_anno)
-    result = BBoxAnnotationRead.model_validate(db_obj)
-    ws.emit_to_project(
-        DATSEvent.BBOX_ANNOTATION_UPDATED,
-        result,
-        project_id=db_obj.get_project_id(),
+    result = BBoxAnnotationService().update(
+        db=db, project_id=project_id, id=bbox_annotation_id, update_dto=bbox_anno
     )
+    ws.emit_to_project(DATSEvent.BBOX_ANNOTATION_UPDATED, result, project_id=project_id)
     return result
-
-
-@router.patch(
-    "/bulk/update",
-    response_model=list[BBoxAnnotationRead],
-    summary="Updates BBoxAnnotation in Bulk",
-)
-def update_bbox_annotations_bulk(
-    *,
-    db: DBSession,
-    bbox_annos: list[BBoxAnnotationUpdateBulk],
-    authz_user: AuthzUser = Depends(),
-    validate: Validate = Depends(),
-    ws: WebsocketEmitter = Depends(),
-) -> list[BBoxAnnotationRead]:
-    for bbox_anno in bbox_annos:
-        authz_user.assert_in_same_project_as(Crud.CODE, bbox_anno.code_id)
-        authz_user.assert_in_same_project_as(
-            Crud.BBOX_ANNOTATION, bbox_anno.bbox_annotation_id
-        )
-        validate.validate_objects_in_same_project(
-            [
-                (Crud.CODE, bbox_anno.code_id),
-                (Crud.BBOX_ANNOTATION, bbox_anno.bbox_annotation_id),
-            ]
-        )
-
-    results = BBoxAnnotationService().update_multi(db=db, update_dtos=bbox_annos)
-    if results:
-        ws.emit_dtos_to_projects(DATSEvent.BBOX_ANNOTATION_UPDATED_BATCH, results)
-    return results
 
 
 # --- delete operations
 
 
 @router.delete(
-    "/{bbox_id}",
-    response_model=BBoxAnnotationRead,
-    summary="Deletes the BBoxAnnotation with the given ID.",
-)
-def delete_by_id(
-    *,
-    db: DBSession,
-    bbox_id: int,
-    authz_user: AuthzUser = Depends(),
-    ws: WebsocketEmitter = Depends(),
-) -> BBoxAnnotationRead:
-    authz_user.assert_in_same_project_as(Crud.BBOX_ANNOTATION, bbox_id)
-
-    db_obj = crud_bbox_anno.read(db=db, id=bbox_id)
-    bbox_read = BBoxAnnotationRead.model_validate(db_obj)
-    project_id = db_obj.get_project_id()
-
-    crud_bbox_anno.delete(db=db, id=bbox_id)
-    ws.emit_to_project(
-        DATSEvent.BBOX_ANNOTATION_DELETED,
-        bbox_read,
-        project_id=project_id,
-    )
-    return bbox_read
-
-
-@router.delete(
-    "/bulk/delete",
+    "/bulk",
     response_model=list[BBoxAnnotationRead],
     summary="Deletes all BBoxAnnotations with the given IDs.",
 )
 def delete_bbox_annotations_bulk(
     *,
     db: DBSession,
-    bbox_anno_ids: list[int],
-    authz_user: AuthzUser = Depends(),
+    project_id: int,
+    bbox_annotation_ids: list[int],
     ws: WebsocketEmitter = Depends(),
 ) -> list[BBoxAnnotationRead]:
-    authz_user.assert_in_same_project_as_many(Crud.BBOX_ANNOTATION, bbox_anno_ids)
-
-    results = BBoxAnnotationService().delete_multi(db=db, ids=bbox_anno_ids)
+    results = BBoxAnnotationService().delete_multi(
+        db=db, project_id=project_id, ids=bbox_annotation_ids
+    )
     if results:
-        ws.emit_dtos_to_projects(DATSEvent.BBOX_ANNOTATION_DELETED_BATCH, results)
+        ws.emit_to_project(
+            DATSEvent.BBOX_ANNOTATION_DELETED_BATCH, results, project_id=project_id
+        )
     return results
+
+
+@router.delete(
+    "/{bbox_annotation_id}",
+    response_model=BBoxAnnotationRead,
+    summary="Deletes the BBoxAnnotation with the given ID.",
+)
+def delete_by_id(
+    *,
+    db: DBSession,
+    project_id: int,
+    bbox_annotation_id: int,
+    ws: WebsocketEmitter = Depends(),
+) -> BBoxAnnotationRead:
+    result = BBoxAnnotationService().delete_multi(
+        db=db, project_id=project_id, ids=[bbox_annotation_id]
+    )[0]
+    ws.emit_to_project(DATSEvent.BBOX_ANNOTATION_DELETED, result, project_id=project_id)
+    return result

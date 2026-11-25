@@ -124,6 +124,7 @@ def create_virtual_user_project(
         SpanAnnotationService()
         .create(
             db=db_session,
+            project_id=project.id,
             user_id=test_user.id,
             create_dto=SpanAnnotationCreate(
                 sdoc_id=sdoc.id,
@@ -197,7 +198,9 @@ def create_virtual_user_project(
         "other_sdoc": other_sdoc,
         "run1_alpha": run1_alpha,
         "run1_delta": run1_delta,
-        "user_alpha_copy": crud_span_anno.read(db=db_session, id=user_alpha_copy_id),
+        "user_alpha_copy": crud_span_anno.read(
+            db=db_session, project_id=project.id, id=user_alpha_copy_id
+        ),
         "user_api_key": api_keys[test_user.id],
         "run1_api_key": api_keys[run1.id],
     }

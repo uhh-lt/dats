@@ -21,8 +21,8 @@ def _import_provenance(
     """Import the provenance "copy i is a copy of source i", where the sources are
     already in the project and not part of the import. Returns the number of
     SELECT statements."""
-    copies = crud_span_anno.read_by_ids(db=db, ids=copy_ids)
-    sources = crud_span_anno.read_by_ids(db=db, ids=source_ids)
+    copies = crud_span_anno.read_by_ids(db=db, project_id=project_id, ids=copy_ids)
+    sources = crud_span_anno.read_by_ids(db=db, project_id=project_id, ids=source_ids)
 
     selects = 0
 
@@ -49,7 +49,9 @@ def _import_provenance(
 
     assert [
         copy.source_annotation_id
-        for copy in crud_span_anno.read_by_ids(db=db, ids=copy_ids)
+        for copy in crud_span_anno.read_by_ids(
+            db=db, project_id=project_id, ids=copy_ids
+        )
     ] == source_ids
     return selects
 
