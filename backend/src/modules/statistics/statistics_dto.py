@@ -25,18 +25,3 @@ class TagStat(BaseModel):
     global_count: int = Field(
         description="Number of occurrences of the document tag in all documents"
     )
-
-
-class SpanEntityStatsQueryParameters(BaseModel):
-    project_id: int = Field(
-        description="The ID of the Project the SourceDocuments have to belong to."
-    )
-    sdoc_ids: set[int] = Field(
-        description="List of IDs of SourceDocuments the stats are computed for."
-    )
-
-
-class TagStatsQueryParameters(BaseModel):
-    sdoc_ids: set[int] = Field(
-        description="List of IDs of SourceDocuments the stats are computed for."
-    )

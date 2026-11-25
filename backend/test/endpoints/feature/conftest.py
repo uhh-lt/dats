@@ -18,10 +18,12 @@ from core.project.project_orm import ProjectORM
 from core.user.user_orm import UserORM
 from dats_test_utils import create_span_for_text, create_text_document
 from feature_test_utils import (
+    FeaturelessProject,
     FeatureProject,
     PartlyProject,
     _create_sdoc,
     create_feature_project,
+    create_featureless_project,
     create_partly_project,
     create_project_with_features,
     feature_named,
@@ -47,6 +49,19 @@ from systems.feature_system.feature_system_enum import FeatureArea
 def feature_project(db_session, test_user: UserORM) -> FeatureProject:
     """The project described in `FeatureProject`."""
     return create_feature_project(db_session, test_user)
+
+
+@pytest.fixture(scope="function")
+def featureless_project(db_session, test_user: UserORM) -> FeaturelessProject:
+    """
+    This fixture sets up the following project, in addition to `test_project`
+    (which enables the features that are on by default):
+
+    - project: "Featureless Project" of `test_user`, without any enabled feature
+    - sdoc: text document "text_done.txt" in it, with the steps of a project
+      without features finished
+    """
+    return create_featureless_project(db_session, test_user)
 
 
 @pytest.fixture(scope="function")

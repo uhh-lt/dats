@@ -1,7 +1,5 @@
-from fastapi import APIRouter, Depends
-
-from common.dependencies import DBSession, get_current_user
-from core.auth.authz_user import AuthzUser
+from common.dependencies import DBSession
+from common.project_router import project_router
 from modules.agreement.agreement_dto import (
     AgreementParams,
     AgreementResult,
@@ -9,11 +7,7 @@ from modules.agreement.agreement_dto import (
 )
 from modules.agreement.agreement_service import AgreementService
 
-router = APIRouter(
-    prefix="/agreement",
-    dependencies=[Depends(get_current_user)],
-    tags=["agreement"],
-)
+router = project_router("/agreement", tags=["agreement"])
 
 
 # --- other operations
@@ -29,17 +23,14 @@ def compute_agreement(
     db: DBSession,
     project_id: int,
     params: AgreementParams,
-    authz_user: AuthzUser = Depends(),
 ) -> AgreementResult:
-    authz_user.assert_in_project(project_id)
-
     return AgreementService().compute_agreement(
         db=db, project_id=project_id, params=params
     )
 
 
 @router.post(
-    "/export_counts",
+    "/export-counts",
     response_model=str,
     summary="Export the raw agreement counts (TP, FP, FN) per document and code as CSV.",
 )
@@ -48,15 +39,12 @@ def export_agreement_counts(
     db: DBSession,
     project_id: int,
     params: AgreementParams,
-    authz_user: AuthzUser = Depends(),
 ) -> str:
-    authz_user.assert_in_project(project_id)
-
     return AgreementService().export_counts(db=db, project_id=project_id, params=params)
 
 
 @router.post(
-    "/segment_texts",
+    "/segment-texts",
     response_model=list[str],
     summary="Returns the texts of segments (character ranges of documents), in the order of the request.",
 )
@@ -65,10 +53,7 @@ def get_segment_texts(
     db: DBSession,
     project_id: int,
     ranges: list[AgreementTextRange],
-    authz_user: AuthzUser = Depends(),
 ) -> list[str]:
-    authz_user.assert_in_project(project_id)
-
     return AgreementService().read_segment_texts(
         db=db, project_id=project_id, ranges=ranges
     )

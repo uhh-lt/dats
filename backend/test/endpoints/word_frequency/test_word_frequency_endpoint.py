@@ -1,46 +1,70 @@
 from fastapi.testclient import TestClient
 
+from composite_keys_test_utils import TwoTenants
 from feature_test_utils import FeaturelessProject, assert_feature_disabled
+from modules.word_frequency.word_frequency_dto import WordFrequencyRead
 
 EMPTY_FILTER = {"id": "root", "logic_operator": "and", "items": []}
 
 # ===========================================================================
-# WORD FREQUENCY INFO (/word_frequency/info/{project_id}) TESTS
+# WORD FREQUENCY INFO (/projects/{project_id}/word-frequencies/info) TESTS
 # ===========================================================================
 
 
 def test_info_is_rejected_when_word_frequency_is_disabled(
     client: TestClient, featureless_project: FeaturelessProject
 ):
-    response = client.get(f"/word_frequency/info/{featureless_project['project'].id}")
+    response = client.get(
+        f"/projects/{featureless_project['project'].id}/word-frequencies/info"
+    )
 
     assert_feature_disabled(response, "word_frequency")
 
 
 # ===========================================================================
-# DOCUMENT WORD FREQUENCIES (/word_frequency/sdoc/{sdoc_id}?project_id=) TESTS
+# DOCUMENT WORD FREQUENCIES (/projects/{project_id}/word-frequencies?sdoc_id=) TESTS
 # ===========================================================================
 
 
 def test_sdoc_word_frequencies_are_rejected_when_word_frequency_is_disabled(
     client: TestClient, featureless_project: FeaturelessProject
 ):
-    """The feature is checked in the project of the query."""
+    """The feature is checked in the project of the path."""
     response = client.get(
-        f"/word_frequency/sdoc/{featureless_project['sdoc'].id}",
-        params={"project_id": featureless_project["project"].id},
+        f"/projects/{featureless_project['project'].id}/word-frequencies",
+        params={"sdoc_id": featureless_project["sdoc"].id},
     )
 
     assert_feature_disabled(response, "word_frequency")
 
 
 def test_sdoc_word_frequencies_of_a_project_with_word_frequency_are_returned(
-    client: TestClient, project_with_sdoc
+    client: TestClient, tenants: TwoTenants
 ):
-    """The test project enables the features on by default; its document has none."""
+    """The test project enables word frequency by default; its document "doc_<p>"
+    counts the word "word" once."""
+    own = tenants["own"]
+
     response = client.get(
-        f"/word_frequency/sdoc/{project_with_sdoc['source_document'].id}",
-        params={"project_id": project_with_sdoc["source_document"].project_id},
+        f"/projects/{own['project'].id}/word-frequencies",
+        params={"sdoc_id": own["sdoc"].id},
+    )
+
+    assert response.status_code == 200, response.text
+    assert [WordFrequencyRead.model_validate(wf) for wf in response.json()] == [
+        WordFrequencyRead(sdoc_id=own["sdoc"].id, word="word", count=1)
+    ]
+
+
+def test_sdoc_word_frequencies_of_a_document_of_another_project_match_nothing(
+    client: TestClient, tenants: TwoTenants
+):
+    """The document filter is matched within the path's project only."""
+    own, foreign = tenants["own"], tenants["foreign"]
+
+    response = client.get(
+        f"/projects/{own['project'].id}/word-frequencies",
+        params={"sdoc_id": foreign["sdoc"].id},
     )
 
     assert response.status_code == 200, response.text
@@ -48,7 +72,7 @@ def test_sdoc_word_frequencies_of_a_project_with_word_frequency_are_returned(
 
 
 # ===========================================================================
-# WORD FREQUENCY ANALYSIS (/word_frequency/analysis, /export) TESTS
+# WORD FREQUENCY ANALYSIS (/projects/{project_id}/word-frequencies/analysis, /export) TESTS
 # ===========================================================================
 
 
@@ -56,12 +80,8 @@ def test_analysis_is_rejected_when_word_frequency_is_disabled(
     client: TestClient, featureless_project: FeaturelessProject
 ):
     response = client.post(
-        "/word_frequency/analysis",
-        params={
-            "project_id": featureless_project["project"].id,
-            "page": 0,
-            "page_size": 10,
-        },
+        f"/projects/{featureless_project['project'].id}/word-frequencies/analysis",
+        params={"page": 0, "page_size": 10},
         json={"filter": EMPTY_FILTER, "sorts": []},
     )
 
@@ -72,8 +92,7 @@ def test_export_is_rejected_when_word_frequency_is_disabled(
     client: TestClient, featureless_project: FeaturelessProject
 ):
     response = client.post(
-        "/word_frequency/export",
-        params={"project_id": featureless_project["project"].id},
+        f"/projects/{featureless_project['project'].id}/word-frequencies/export",
         json={"filter": EMPTY_FILTER, "sorts": []},
     )
 

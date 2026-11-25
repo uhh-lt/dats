@@ -1,11 +1,10 @@
-from sqlalchemy import func
+from sqlalchemy import and_, func
 from sqlalchemy.orm import Session
 
 from common.singleton_meta import SingletonMeta
 from core.annotation.annotation_document_orm import AnnotationDocumentORM
 from core.annotation.span_annotation_orm import SpanAnnotationORM
 from core.annotation.span_text_orm import SpanTextORM
-from core.code.code_crud import crud_code
 from core.tag.tag_orm import SourceDocumentTagLinkTable, TagORM
 from modules.statistics.statistics_dto import SpanEntityStat, TagStat
 
@@ -23,13 +22,16 @@ class StatisticsService(metaclass=SingletonMeta):
             db.query(TagORM, count)
             .join(
                 SourceDocumentTagLinkTable,
-                SourceDocumentTagLinkTable.tag_id == TagORM.id,
+                and_(
+                    SourceDocumentTagLinkTable.project_id == TagORM.project_id,
+                    SourceDocumentTagLinkTable.tag_id == TagORM.id,
+                ),
             )
             .filter(
                 SourceDocumentTagLinkTable.project_id == project_id,
                 SourceDocumentTagLinkTable.source_document_id.in_(list(sdoc_ids)),
             )
-            .group_by(TagORM.id)
+            .group_by(TagORM.project_id, TagORM.id)
             .order_by(count.desc())
             .limit(top_k)
         )
@@ -40,7 +42,10 @@ class StatisticsService(metaclass=SingletonMeta):
         count = func.count().label("count")
         query = (
             db.query(SourceDocumentTagLinkTable.tag_id, count)
-            .filter(SourceDocumentTagLinkTable.tag_id.in_(tag_ids))
+            .filter(
+                SourceDocumentTagLinkTable.project_id == project_id,
+                SourceDocumentTagLinkTable.tag_id.in_(tag_ids),
+            )
             .group_by(SourceDocumentTagLinkTable.tag_id)
             .order_by(func.array_position(tag_ids, SourceDocumentTagLinkTable.tag_id))
         )
@@ -62,12 +67,9 @@ class StatisticsService(metaclass=SingletonMeta):
     ) -> list[SpanEntityStat]:
         """
         The most frequent span texts of the code in the documents, with their
-        frequency in all documents of the project.
-
-        Raises:
-            NoSuchElementError: If the code does not exist in the project.
+        frequency in all documents of the project. A code of another project
+        matches nothing.
         """
-        crud_code.read(db=db, project_id=project_id, id=code_id)
 
         # code statistics for the sdoc_ids
         count = func.count(AnnotationDocumentORM.source_document_id.distinct()).label(

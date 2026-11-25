@@ -1,6 +1,13 @@
+from collections.abc import Generator
+from typing import Any
+
 import pytest
+from fastapi.testclient import TestClient
 
 from composite_keys_test_utils import TwoTenants, create_two_tenants
+from core.user.user_crud import crud_user
+from core.user.user_dto import UserCreate
+from dats_test_utils import create_user_client
 from job_test_utils import store_job
 from systems.job_system.job_dto import JobInputBase
 from systems.job_system.job_service import JobService
@@ -51,3 +58,22 @@ def tenant_jobs(tenants: TwoTenants) -> TenantJobs:
         }
         for tenant in ("own", "foreign")
     }
+
+
+@pytest.fixture(scope="function")
+def non_member_client(app_client, db_session) -> Generator[TestClient, Any, None]:
+    """A client authenticated as "nonmember@dats.org", a user who is not a
+    member of the test project."""
+    user = crud_user.create(
+        db=db_session,
+        create_dto=UserCreate(
+            first_name="Non",
+            last_name="Member",
+            email="nonmember@dats.org",
+            password="NonPassword123",
+        ),
+    )
+    db_session.commit()
+    client = create_user_client(app_client, user)
+    yield client
+    client.close()

@@ -1,23 +1,17 @@
-from fastapi import APIRouter, Depends
-
-from common.dependencies import DBSession, get_current_user
+from common.dependencies import DBSession
 from common.doc_type_enum import DocType
-from core.auth.authz_user import AuthzUser
+from common.project_router import project_router
 from modules.code_frequency.code_frequency_dto import CodeFrequency, CodeOccurrence
 from modules.code_frequency.code_frequency_service import CodeFrequencyService
 
-router = APIRouter(
-    prefix="/code_frequency",
-    dependencies=[Depends(get_current_user)],
-    tags=["code_frequency"],
-)
+router = project_router("/code-frequency", tags=["code_frequency"])
 
 
 # --- other operations
 
 
 @router.post(
-    "/code_frequencies",
+    "/frequencies",
     response_model=list[CodeFrequency],
     summary="Returns all SourceDocument IDs that match the query parameters.",
 )
@@ -28,9 +22,7 @@ def code_frequencies(
     code_ids: list[int],
     user_ids: list[int],
     doctypes: list[DocType],
-    authz_user: AuthzUser = Depends(),
 ) -> list[CodeFrequency]:
-    authz_user.assert_in_project(project_id)
 
     return CodeFrequencyService().compute_code_frequencies(
         db=db,
@@ -42,7 +34,7 @@ def code_frequencies(
 
 
 @router.post(
-    "/code_occurrences",
+    "/occurrences",
     response_model=list[CodeOccurrence],
     summary="Returns all SourceDocument IDs that match the query parameters.",
 )
@@ -54,9 +46,7 @@ def code_occurrences(
     code_id: int,
     return_children: bool,
     doctypes: list[DocType],
-    authz_user: AuthzUser = Depends(),
 ) -> list[CodeOccurrence]:
-    authz_user.assert_in_project(project_id)
 
     return CodeFrequencyService().compute_code_occurrences(
         db=db,
