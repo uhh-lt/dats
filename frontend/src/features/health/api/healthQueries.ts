@@ -9,17 +9,17 @@ type SdocHealthSearchRequest = Omit<Parameters<typeof DocprocessingService.searc
  * Query factory for the sdoc health view.
  *
  *   healthQueries.all()                    ["health"]
- *   healthQueries.columns(doctype)         ["health", "columns", doctype]
+ *   healthQueries.columns(projectId, doctype) ["health", "columns", doctype, projectId]
  *   healthQueries.search(request)          ["health", "search", request]
  */
 export const healthQueries = {
   all: () => ["health"] as const,
 
   columnsScope: () => [...healthQueries.all(), "columns"] as const,
-  columns: (doctype: DocType) =>
+  columns: (projectId: number, doctype: DocType) =>
     queryOptions({
-      queryKey: [...healthQueries.columnsScope(), doctype] as const,
-      queryFn: () => DocprocessingService.getSearchColumnsByDoctype({ doctype }),
+      queryKey: [...healthQueries.columnsScope(), doctype, projectId] as const,
+      queryFn: () => DocprocessingService.getSearchColumnsByDoctype({ projectId, doctype }),
       staleTime: Infinity,
     }),
 

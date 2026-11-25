@@ -20,14 +20,19 @@ export class DocprocessingService {
    * @throws ApiError
    */
   public static getSearchColumnsByDoctype({
+    projectId,
     doctype,
   }: {
+    projectId: number;
     doctype: DocType;
   }): CancelablePromise<Array<SdocHealthColumn>> {
     return __request(OpenAPI, {
       method: "GET",
-      url: "/docprocessing/searchColumns/{doctype}",
+      url: "/projects/{project_id}/doc-processing/columns",
       path: {
+        project_id: projectId,
+      },
+      query: {
         doctype: doctype,
       },
       errors: {
@@ -55,7 +60,7 @@ export class DocprocessingService {
   }): CancelablePromise<SdocHealthResult> {
     return __request(OpenAPI, {
       method: "POST",
-      url: "/docprocessing/project/{project_id}/search",
+      url: "/projects/{project_id}/doc-processing/search",
       path: {
         project_id: projectId,
       },
@@ -85,9 +90,11 @@ export class DocprocessingService {
   }): CancelablePromise<Array<SourceDocumentStatusSimple>> {
     return __request(OpenAPI, {
       method: "GET",
-      url: "/docprocessing/project/{project_id}/status/{status}/simple",
+      url: "/projects/{project_id}/doc-processing/status",
       path: {
         project_id: projectId,
+      },
+      query: {
         status: status,
       },
       errors: {
@@ -109,7 +116,7 @@ export class DocprocessingService {
   }): CancelablePromise<number> {
     return __request(OpenAPI, {
       method: "POST",
-      url: "/docprocessing/project/{project_id}",
+      url: "/projects/{project_id}/doc-processing/upload",
       path: {
         project_id: projectId,
       },
@@ -136,7 +143,7 @@ export class DocprocessingService {
   }): CancelablePromise<string> {
     return __request(OpenAPI, {
       method: "POST",
-      url: "/docprocessing/project/{project_id}/retry",
+      url: "/projects/{project_id}/doc-processing/retry",
       path: {
         project_id: projectId,
       },
@@ -166,7 +173,7 @@ export class DocprocessingService {
   }): CancelablePromise<number> {
     return __request(OpenAPI, {
       method: "POST",
-      url: "/docprocessing/project/{project_id}/recompute",
+      url: "/projects/{project_id}/doc-processing/recompute",
       path: {
         project_id: projectId,
       },

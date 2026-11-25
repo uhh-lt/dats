@@ -108,7 +108,7 @@ export function AgreementSegmentList({ result, codeIds, isOutdated, onRecompute 
   }, [segments]);
   const sdocIds = useMemo(() => Array.from(new Set(result?.segments.map((s) => s.sdoc_id) ?? [])), [result]);
   const sdocNames = useQueries({
-    queries: sdocIds.map((sdocId) => sdocQueries.byId(sdocId)),
+    queries: sdocIds.map((sdocId) => sdocQueries.byId(projectId, sdocId)),
     combine: combineSdocNames,
   });
 

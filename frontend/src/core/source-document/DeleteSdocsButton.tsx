@@ -3,6 +3,7 @@ import DeleteIcon from "@mui/icons-material/Delete";
 import { IconButtonProps } from "@mui/material";
 import IconButton from "@mui/material/IconButton";
 import Tooltip from "@mui/material/Tooltip";
+import { useAppSelector } from "@store/storeHooks";
 import { memo, useCallback } from "react";
 import { SdocHooks } from "./api/sdocHooks";
 
@@ -13,6 +14,7 @@ interface DeleteSdocsButtonProps {
 
 export const DeleteSdocsButton = memo(({ sdocIds, onDeleted, ...props }: DeleteSdocsButtonProps & IconButtonProps) => {
   // mutations
+  const projectId = useAppSelector((state) => state.project.projectId);
   const { mutate: deleteDocuments } = SdocHooks.useDeleteDocuments();
 
   // ui events
@@ -24,8 +26,10 @@ export const DeleteSdocsButton = memo(({ sdocIds, onDeleted, ...props }: DeleteS
       )}? This action cannot be undone and  will remove all annotations as well as memos associated with this document!`,
       type: "DELETE",
       onAccept: () => {
+        if (!projectId) return;
         deleteDocuments(
           {
+            projectId,
             sdocIds: sdocIds,
           },
           {
@@ -36,7 +40,7 @@ export const DeleteSdocsButton = memo(({ sdocIds, onDeleted, ...props }: DeleteS
         );
       },
     });
-  }, [deleteDocuments, onDeleted, openConfirmationDialog, sdocIds]);
+  }, [deleteDocuments, onDeleted, openConfirmationDialog, projectId, sdocIds]);
 
   return (
     <Tooltip title="Delete">

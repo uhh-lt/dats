@@ -18,13 +18,13 @@ export type SourceDocumentStatusSimple = {
    */
   doctype: DocType;
   /**
-   * Project the SourceDocument belongs to
-   */
-  project_id: number;
-  /**
    * ID of the SourceDocument
    */
   id: number;
+  /**
+   * Project the SourceDocument belongs to
+   */
+  project_id: number;
   /**
    * Number of finished jobs
    */

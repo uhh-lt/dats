@@ -1,6 +1,7 @@
 import { UserRenderer } from "@core/user";
 import { UserRead } from "@models/UserRead";
 import { Stack } from "@mui/material";
+import { useAppSelector } from "@store/storeHooks";
 import { useQuery } from "@tanstack/react-query";
 import { Fragment, memo } from "react";
 import { sdocQueries } from "../api/sdocQueries";
@@ -17,7 +18,8 @@ export const SdocAnnotatorsRenderer = memo((props: SdocAnnotatorsRendererProps) 
 });
 
 const SdocAnnotatorsRendererWithoutData = memo(({ sdocId }: { sdocId: number }) => {
-  const annotators = useQuery(sdocQueries.annotators(sdocId));
+  const projectId = useAppSelector((state) => state.project.projectId);
+  const annotators = useQuery(sdocQueries.annotators(projectId, sdocId));
 
   if (annotators.isSuccess) {
     return <SdocAnnotatorsRendererWithData annotators={annotators.data} />;

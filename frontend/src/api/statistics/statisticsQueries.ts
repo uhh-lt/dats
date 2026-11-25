@@ -42,10 +42,12 @@ export const statisticsQueries = {
     }),
 
   tagStatsScope: () => [...statisticsQueries.all(), "tag"] as const,
-  tagStats: (sdocIds: number[] | null | undefined, sortByGlobal: boolean | undefined) =>
+  tagStats: (projectId: number, sdocIds: number[] | null | undefined, sortByGlobal: boolean | undefined) =>
     queryOptions({
-      queryKey: [...statisticsQueries.tagStatsScope(), sdocIds, sortByGlobal] as const,
-      queryFn: !sdocIds ? skipToken : () => StatisticsService.filterTagStats({ requestBody: sdocIds, sortByGlobal }),
+      queryKey: [...statisticsQueries.tagStatsScope(), projectId, sdocIds, sortByGlobal] as const,
+      queryFn: !sdocIds
+        ? skipToken
+        : () => StatisticsService.filterTagStats({ projectId, requestBody: sdocIds, sortByGlobal }),
       staleTime: 1000 * 60 * 5,
     }),
 };

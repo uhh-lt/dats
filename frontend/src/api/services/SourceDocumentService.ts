@@ -2,6 +2,7 @@
 /* istanbul ignore file */
 /* tslint:disable */
 /* eslint-disable */
+import type { SDocStatus } from "@models/SDocStatus";
 import type { SourceDocumentDataRead } from "@models/SourceDocumentDataRead";
 import type { SourceDocumentRead } from "@models/SourceDocumentRead";
 import type { SourceDocumentUpdate } from "@models/SourceDocumentUpdate";
@@ -11,21 +12,79 @@ import { OpenAPI } from "../core/OpenAPI";
 import { request as __request } from "../core/request";
 export class SourceDocumentService {
   /**
+   * Returns the number of SourceDocuments of the Project, optionally only those with the given status
+   * @returns number Successful Response
+   * @throws ApiError
+   */
+  public static countSdocs({
+    projectId,
+    status,
+  }: {
+    projectId: number;
+    status?: SDocStatus | null;
+  }): CancelablePromise<number> {
+    return __request(OpenAPI, {
+      method: "GET",
+      url: "/projects/{project_id}/source-documents/count",
+      path: {
+        project_id: projectId,
+      },
+      query: {
+        status: status,
+      },
+      errors: {
+        422: `Validation Error`,
+      },
+    });
+  }
+  /**
+   * Returns the ID of the SourceDocument of the Project with the given filename
+   * @returns number Successful Response
+   * @throws ApiError
+   */
+  public static resolveFilename({
+    projectId,
+    filename,
+    onlyFinished = true,
+  }: {
+    projectId: number;
+    filename: string;
+    onlyFinished?: boolean;
+  }): CancelablePromise<number> {
+    return __request(OpenAPI, {
+      method: "GET",
+      url: "/projects/{project_id}/source-documents/by-filename",
+      path: {
+        project_id: projectId,
+      },
+      query: {
+        filename: filename,
+        only_finished: onlyFinished,
+      },
+      errors: {
+        422: `Validation Error`,
+      },
+    });
+  }
+  /**
    * Returns the SourceDocument with the given ID if it exists
    * @returns SourceDocumentRead Successful Response
    * @throws ApiError
    */
   public static getById({
+    projectId,
     sdocId,
     onlyIfFinished = true,
   }: {
+    projectId: number;
     sdocId: number;
     onlyIfFinished?: boolean;
   }): CancelablePromise<SourceDocumentRead> {
     return __request(OpenAPI, {
       method: "GET",
-      url: "/sdoc/{sdoc_id}",
+      url: "/projects/{project_id}/source-documents/{sdoc_id}",
       path: {
+        project_id: projectId,
         sdoc_id: sdocId,
       },
       query: {
@@ -42,16 +101,19 @@ export class SourceDocumentService {
    * @throws ApiError
    */
   public static updateById({
+    projectId,
     sdocId,
     requestBody,
   }: {
+    projectId: number;
     sdocId: number;
     requestBody: SourceDocumentUpdate;
   }): CancelablePromise<SourceDocumentRead> {
     return __request(OpenAPI, {
       method: "PATCH",
-      url: "/sdoc/{sdoc_id}",
+      url: "/projects/{project_id}/source-documents/{sdoc_id}",
       path: {
+        project_id: projectId,
         sdoc_id: sdocId,
       },
       body: requestBody,
@@ -66,11 +128,18 @@ export class SourceDocumentService {
    * @returns SourceDocumentRead Successful Response
    * @throws ApiError
    */
-  public static deleteById({ sdocId }: { sdocId: number }): CancelablePromise<SourceDocumentRead> {
+  public static deleteById({
+    projectId,
+    sdocId,
+  }: {
+    projectId: number;
+    sdocId: number;
+  }): CancelablePromise<SourceDocumentRead> {
     return __request(OpenAPI, {
       method: "DELETE",
-      url: "/sdoc/{sdoc_id}",
+      url: "/projects/{project_id}/source-documents/{sdoc_id}",
       path: {
+        project_id: projectId,
         sdoc_id: sdocId,
       },
       errors: {
@@ -79,21 +148,24 @@ export class SourceDocumentService {
     });
   }
   /**
-   * Returns the SourceDocumentData with the given ID if it exists
+   * Returns the SourceDocumentData of the SourceDocument with the given ID if it exists
    * @returns SourceDocumentDataRead Successful Response
    * @throws ApiError
    */
   public static getByIdWithData({
+    projectId,
     sdocId,
     onlyIfFinished = true,
   }: {
+    projectId: number;
     sdocId: number;
     onlyIfFinished?: boolean;
   }): CancelablePromise<SourceDocumentDataRead> {
     return __request(OpenAPI, {
       method: "GET",
-      url: "/sdoc/data/{sdoc_id}",
+      url: "/projects/{project_id}/source-documents/{sdoc_id}/data",
       path: {
+        project_id: projectId,
         sdoc_id: sdocId,
       },
       query: {
@@ -109,11 +181,18 @@ export class SourceDocumentService {
    * @returns number Successful Response
    * @throws ApiError
    */
-  public static getSameFolderSdocs({ sdocId }: { sdocId: number }): CancelablePromise<Array<number>> {
+  public static getSameFolderSdocs({
+    projectId,
+    sdocId,
+  }: {
+    projectId: number;
+    sdocId: number;
+  }): CancelablePromise<Array<number>> {
     return __request(OpenAPI, {
       method: "GET",
-      url: "/sdoc/{sdoc_id}/same_folder",
+      url: "/projects/{project_id}/source-documents/{sdoc_id}/same-folder",
       path: {
+        project_id: projectId,
         sdoc_id: sdocId,
       },
       errors: {
@@ -126,11 +205,18 @@ export class SourceDocumentService {
    * @returns SourceDocumentUrls Successful Response
    * @throws ApiError
    */
-  public static getUrls({ sdocId }: { sdocId: number }): CancelablePromise<SourceDocumentUrls> {
+  public static getUrls({
+    projectId,
+    sdocId,
+  }: {
+    projectId: number;
+    sdocId: number;
+  }): CancelablePromise<SourceDocumentUrls> {
     return __request(OpenAPI, {
       method: "GET",
-      url: "/sdoc/{sdoc_id}/urls",
+      url: "/projects/{project_id}/source-documents/{sdoc_id}/urls",
       path: {
+        project_id: projectId,
         sdoc_id: sdocId,
       },
       errors: {
@@ -143,11 +229,18 @@ export class SourceDocumentService {
    * @returns number Successful Response
    * @throws ApiError
    */
-  public static getAnnotators({ sdocId }: { sdocId: number }): CancelablePromise<Array<number>> {
+  public static getAnnotators({
+    projectId,
+    sdocId,
+  }: {
+    projectId: number;
+    sdocId: number;
+  }): CancelablePromise<Array<number>> {
     return __request(OpenAPI, {
       method: "GET",
-      url: "/sdoc/{sdoc_id}/annotators",
+      url: "/projects/{project_id}/source-documents/{sdoc_id}/annotators",
       path: {
+        project_id: projectId,
         sdoc_id: sdocId,
       },
       errors: {
@@ -161,13 +254,18 @@ export class SourceDocumentService {
    * @throws ApiError
    */
   public static deleteSdocsBulk({
+    projectId,
     requestBody,
   }: {
+    projectId: number;
     requestBody: Array<number>;
   }): CancelablePromise<Array<SourceDocumentRead>> {
     return __request(OpenAPI, {
       method: "DELETE",
-      url: "/sdoc/bulk/delete",
+      url: "/projects/{project_id}/source-documents/bulk",
+      path: {
+        project_id: projectId,
+      },
       body: requestBody,
       mediaType: "application/json",
       errors: {

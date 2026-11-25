@@ -1508,14 +1508,20 @@
         }
       }
     },
-    "/docprocessing/searchColumns/{doctype}": {
+    "/projects/{project_id}/doc-processing/columns": {
       "get": {
         "tags": ["docprocessing"],
         "summary": "Get all columns (the pipeline steps) for the given document type, with whether each is a core step",
         "operationId": "get_search_columns_by_doctype",
         "security": [{ "OAuth2PasswordBearer": [] }],
         "parameters": [
-          { "name": "doctype", "in": "path", "required": true, "schema": { "$ref": "#/components/schemas/DocType" } }
+          {
+            "name": "project_id",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "integer", "title": "Project Id" }
+          },
+          { "name": "doctype", "in": "query", "required": true, "schema": { "$ref": "#/components/schemas/DocType" } }
         ],
         "responses": {
           "200": {
@@ -1537,7 +1543,7 @@
         }
       }
     },
-    "/docprocessing/project/{project_id}/search": {
+    "/projects/{project_id}/doc-processing/search": {
       "post": {
         "tags": ["docprocessing"],
         "summary": "Get all SourceDocumentStatusDetailed for the Project with the given ID by status",
@@ -1583,7 +1589,7 @@
         }
       }
     },
-    "/docprocessing/project/{project_id}/status/{status}/simple": {
+    "/projects/{project_id}/doc-processing/status": {
       "get": {
         "tags": ["docprocessing"],
         "summary": "Get all SourceDocumentStatusSimple for the Project with the given ID by status",
@@ -1596,7 +1602,7 @@
             "required": true,
             "schema": { "type": "integer", "title": "Project Id" }
           },
-          { "name": "status", "in": "path", "required": true, "schema": { "$ref": "#/components/schemas/SDocStatus" } }
+          { "name": "status", "in": "query", "required": true, "schema": { "$ref": "#/components/schemas/SDocStatus" } }
         ],
         "responses": {
           "200": {
@@ -1618,7 +1624,7 @@
         }
       }
     },
-    "/docprocessing/project/{project_id}": {
+    "/projects/{project_id}/doc-processing/upload": {
       "post": {
         "tags": ["docprocessing"],
         "summary": "Uploads one or multiple files to the Project with the given ID if it exists",
@@ -1652,7 +1658,7 @@
         }
       }
     },
-    "/docprocessing/project/{project_id}/retry": {
+    "/projects/{project_id}/doc-processing/retry": {
       "post": {
         "tags": ["docprocessing"],
         "summary": "Retries doc processing jobs for SourceDocuments in the given Project and document type",
@@ -1689,7 +1695,7 @@
         }
       }
     },
-    "/docprocessing/project/{project_id}/recompute": {
+    "/projects/{project_id}/doc-processing/recompute": {
       "post": {
         "tags": ["docprocessing"],
         "summary": "Recomputes the processing step for all SourceDocuments in the Project",
@@ -2919,6 +2925,12 @@
         "security": [{ "OAuth2PasswordBearer": [] }],
         "parameters": [
           {
+            "name": "project_id",
+            "in": "query",
+            "required": true,
+            "schema": { "type": "integer", "title": "Project Id" }
+          },
+          {
             "name": "task_type",
             "in": "query",
             "required": true,
@@ -3961,41 +3973,6 @@
         }
       }
     },
-    "/project/{project_id}/resolve_filename/{filename}": {
-      "get": {
-        "tags": ["project"],
-        "summary": "Returns the Id of the SourceDocument identified by project_id and filename if it exists",
-        "operationId": "resolve_filename",
-        "security": [{ "OAuth2PasswordBearer": [] }],
-        "parameters": [
-          {
-            "name": "project_id",
-            "in": "path",
-            "required": true,
-            "schema": { "type": "integer", "title": "Project Id" }
-          },
-          { "name": "filename", "in": "path", "required": true, "schema": { "type": "string", "title": "Filename" } },
-          {
-            "name": "only_finished",
-            "in": "query",
-            "required": false,
-            "schema": { "type": "boolean", "default": true, "title": "Only Finished" }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "Successful Response",
-            "content": {
-              "application/json": { "schema": { "type": "integer", "title": "Response Project-Resolve Filename" } }
-            }
-          },
-          "422": {
-            "description": "Validation Error",
-            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/HTTPValidationError" } } }
-          }
-        }
-      }
-    },
     "/project/user/projects": {
       "get": {
         "tags": ["project"],
@@ -4016,37 +3993,6 @@
           }
         },
         "security": [{ "OAuth2PasswordBearer": [] }]
-      }
-    },
-    "/project/{project_id}/sdoc/status/{status}": {
-      "get": {
-        "tags": ["project"],
-        "summary": "Returns count of SourceDocuments with the given status in the given project.",
-        "operationId": "count_sdocs_with_status",
-        "security": [{ "OAuth2PasswordBearer": [] }],
-        "parameters": [
-          {
-            "name": "project_id",
-            "in": "path",
-            "required": true,
-            "schema": { "type": "integer", "title": "Project Id" }
-          },
-          { "name": "status", "in": "path", "required": true, "schema": { "$ref": "#/components/schemas/SDocStatus" } }
-        ],
-        "responses": {
-          "200": {
-            "description": "Successful Response",
-            "content": {
-              "application/json": {
-                "schema": { "type": "integer", "title": "Response Project-Count Sdocs With Status" }
-              }
-            }
-          },
-          "422": {
-            "description": "Validation Error",
-            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/HTTPValidationError" } } }
-          }
-        }
       }
     },
     "/projmeta": {
@@ -5755,13 +5701,93 @@
         }
       }
     },
-    "/sdoc/{sdoc_id}": {
+    "/projects/{project_id}/source-documents/count": {
+      "get": {
+        "tags": ["sourceDocument"],
+        "summary": "Returns the number of SourceDocuments of the Project, optionally only those with the given status",
+        "operationId": "count_sdocs",
+        "security": [{ "OAuth2PasswordBearer": [] }],
+        "parameters": [
+          {
+            "name": "project_id",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "integer", "title": "Project Id" }
+          },
+          {
+            "name": "status",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [{ "$ref": "#/components/schemas/SDocStatus" }, { "type": "null" }],
+              "title": "Status"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": { "schema": { "type": "integer", "title": "Response Sourcedocument-Count Sdocs" } }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/HTTPValidationError" } } }
+          }
+        }
+      }
+    },
+    "/projects/{project_id}/source-documents/by-filename": {
+      "get": {
+        "tags": ["sourceDocument"],
+        "summary": "Returns the ID of the SourceDocument of the Project with the given filename",
+        "operationId": "resolve_filename",
+        "security": [{ "OAuth2PasswordBearer": [] }],
+        "parameters": [
+          {
+            "name": "project_id",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "integer", "title": "Project Id" }
+          },
+          { "name": "filename", "in": "query", "required": true, "schema": { "type": "string", "title": "Filename" } },
+          {
+            "name": "only_finished",
+            "in": "query",
+            "required": false,
+            "schema": { "type": "boolean", "default": true, "title": "Only Finished" }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": { "type": "integer", "title": "Response Sourcedocument-Resolve Filename" }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/HTTPValidationError" } } }
+          }
+        }
+      }
+    },
+    "/projects/{project_id}/source-documents/{sdoc_id}": {
       "get": {
         "tags": ["sourceDocument"],
         "summary": "Returns the SourceDocument with the given ID if it exists",
         "operationId": "get_by_id",
         "security": [{ "OAuth2PasswordBearer": [] }],
         "parameters": [
+          {
+            "name": "project_id",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "integer", "title": "Project Id" }
+          },
           { "name": "sdoc_id", "in": "path", "required": true, "schema": { "type": "integer", "title": "Sdoc Id" } },
           {
             "name": "only_if_finished",
@@ -5787,6 +5813,12 @@
         "operationId": "update_by_id",
         "security": [{ "OAuth2PasswordBearer": [] }],
         "parameters": [
+          {
+            "name": "project_id",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "integer", "title": "Project Id" }
+          },
           { "name": "sdoc_id", "in": "path", "required": true, "schema": { "type": "integer", "title": "Sdoc Id" } }
         ],
         "requestBody": {
@@ -5810,6 +5842,12 @@
         "operationId": "delete_by_id",
         "security": [{ "OAuth2PasswordBearer": [] }],
         "parameters": [
+          {
+            "name": "project_id",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "integer", "title": "Project Id" }
+          },
           { "name": "sdoc_id", "in": "path", "required": true, "schema": { "type": "integer", "title": "Sdoc Id" } }
         ],
         "responses": {
@@ -5824,13 +5862,19 @@
         }
       }
     },
-    "/sdoc/data/{sdoc_id}": {
+    "/projects/{project_id}/source-documents/{sdoc_id}/data": {
       "get": {
         "tags": ["sourceDocument"],
-        "summary": "Returns the SourceDocumentData with the given ID if it exists",
+        "summary": "Returns the SourceDocumentData of the SourceDocument with the given ID if it exists",
         "operationId": "get_by_id_with_data",
         "security": [{ "OAuth2PasswordBearer": [] }],
         "parameters": [
+          {
+            "name": "project_id",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "integer", "title": "Project Id" }
+          },
           { "name": "sdoc_id", "in": "path", "required": true, "schema": { "type": "integer", "title": "Sdoc Id" } },
           {
             "name": "only_if_finished",
@@ -5851,13 +5895,19 @@
         }
       }
     },
-    "/sdoc/{sdoc_id}/same_folder": {
+    "/projects/{project_id}/source-documents/{sdoc_id}/same-folder": {
       "get": {
         "tags": ["sourceDocument"],
         "summary": "Returns the ids of SourceDocuments in the same folder as the SourceDocument with the given id.",
         "operationId": "get_same_folder_sdocs",
         "security": [{ "OAuth2PasswordBearer": [] }],
         "parameters": [
+          {
+            "name": "project_id",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "integer", "title": "Project Id" }
+          },
           { "name": "sdoc_id", "in": "path", "required": true, "schema": { "type": "integer", "title": "Sdoc Id" } }
         ],
         "responses": {
@@ -5880,13 +5930,19 @@
         }
       }
     },
-    "/sdoc/{sdoc_id}/urls": {
+    "/projects/{project_id}/source-documents/{sdoc_id}/urls": {
       "get": {
         "tags": ["sourceDocument"],
         "summary": "Returns the URLs of the files of the SourceDocument with the given ID (relative to /content/).",
         "operationId": "get_urls",
         "security": [{ "OAuth2PasswordBearer": [] }],
         "parameters": [
+          {
+            "name": "project_id",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "integer", "title": "Project Id" }
+          },
           { "name": "sdoc_id", "in": "path", "required": true, "schema": { "type": "integer", "title": "Sdoc Id" } }
         ],
         "responses": {
@@ -5901,13 +5957,19 @@
         }
       }
     },
-    "/sdoc/{sdoc_id}/annotators": {
+    "/projects/{project_id}/source-documents/{sdoc_id}/annotators": {
       "get": {
         "tags": ["sourceDocument"],
         "summary": "Returns IDs of users that annotated that SourceDocument.",
         "operationId": "get_annotators",
         "security": [{ "OAuth2PasswordBearer": [] }],
         "parameters": [
+          {
+            "name": "project_id",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "integer", "title": "Project Id" }
+          },
           { "name": "sdoc_id", "in": "path", "required": true, "schema": { "type": "integer", "title": "Sdoc Id" } }
         ],
         "responses": {
@@ -5930,16 +5992,25 @@
         }
       }
     },
-    "/sdoc/bulk/delete": {
+    "/projects/{project_id}/source-documents/bulk": {
       "delete": {
         "tags": ["sourceDocument"],
         "summary": "Removes all SourceDocuments with the given IDs if they exist",
         "operationId": "delete_sdocs_bulk",
+        "security": [{ "OAuth2PasswordBearer": [] }],
+        "parameters": [
+          {
+            "name": "project_id",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "integer", "title": "Project Id" }
+          }
+        ],
         "requestBody": {
+          "required": true,
           "content": {
-            "application/json": { "schema": { "items": { "type": "integer" }, "type": "array", "title": "Sdoc Ids" } }
-          },
-          "required": true
+            "application/json": { "schema": { "type": "array", "items": { "type": "integer" }, "title": "Sdoc Ids" } }
+          }
         },
         "responses": {
           "200": {
@@ -5947,8 +6018,8 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "items": { "$ref": "#/components/schemas/SourceDocumentRead" },
                   "type": "array",
+                  "items": { "$ref": "#/components/schemas/SourceDocumentRead" },
                   "title": "Response Sourcedocument-Delete Sdocs Bulk"
                 }
               }
@@ -5958,8 +6029,7 @@
             "description": "Validation Error",
             "content": { "application/json": { "schema": { "$ref": "#/components/schemas/HTTPValidationError" } } }
           }
-        },
-        "security": [{ "OAuth2PasswordBearer": [] }]
+        }
       }
     },
     "/sdocmeta/{metadata_id}": {
@@ -6055,7 +6125,13 @@
         "operationId": "get_by_sdoc",
         "security": [{ "OAuth2PasswordBearer": [] }],
         "parameters": [
-          { "name": "sdoc_id", "in": "path", "required": true, "schema": { "type": "integer", "title": "Sdoc Id" } }
+          { "name": "sdoc_id", "in": "path", "required": true, "schema": { "type": "integer", "title": "Sdoc Id" } },
+          {
+            "name": "project_id",
+            "in": "query",
+            "required": true,
+            "schema": { "type": "integer", "title": "Project Id" }
+          }
         ],
         "responses": {
           "200": {
@@ -6090,6 +6166,12 @@
             "in": "path",
             "required": true,
             "schema": { "type": "string", "title": "Metadata Key" }
+          },
+          {
+            "name": "project_id",
+            "in": "query",
+            "required": true,
+            "schema": { "type": "integer", "title": "Project Id" }
           }
         ],
         "responses": {
@@ -6949,6 +7031,12 @@
         "operationId": "filter_tag_stats",
         "security": [{ "OAuth2PasswordBearer": [] }],
         "parameters": [
+          {
+            "name": "project_id",
+            "in": "query",
+            "required": true,
+            "schema": { "type": "integer", "title": "Project Id" }
+          },
           {
             "name": "sort_by_global",
             "in": "query",
@@ -8128,7 +8216,13 @@
         "operationId": "get_word_frequencies",
         "security": [{ "OAuth2PasswordBearer": [] }],
         "parameters": [
-          { "name": "sdoc_id", "in": "path", "required": true, "schema": { "type": "integer", "title": "Sdoc Id" } }
+          { "name": "sdoc_id", "in": "path", "required": true, "schema": { "type": "integer", "title": "Sdoc Id" } },
+          {
+            "name": "project_id",
+            "in": "query",
+            "required": true,
+            "schema": { "type": "integer", "title": "Project Id" }
+          }
         ],
         "responses": {
           "200": {
@@ -18528,12 +18622,12 @@
             "description": "User-defined name of the document (default is the filename)"
           },
           "doctype": { "$ref": "#/components/schemas/DocType", "description": "DOCTYPE of the SourceDocument" },
+          "id": { "type": "integer", "title": "Id", "description": "ID of the SourceDocument" },
           "project_id": {
             "type": "integer",
             "title": "Project Id",
             "description": "Project the SourceDocument belongs to"
           },
-          "id": { "type": "integer", "title": "Id", "description": "ID of the SourceDocument" },
           "created": {
             "type": "string",
             "format": "date-time",
@@ -18559,7 +18653,7 @@
           }
         },
         "type": "object",
-        "required": ["filename", "name", "doctype", "project_id", "id", "created", "updated", "folder_id"],
+        "required": ["filename", "name", "doctype", "id", "project_id", "created", "updated", "folder_id"],
         "title": "SourceDocumentRead"
       },
       "SourceDocumentStatusSimple": {
@@ -18576,12 +18670,12 @@
             "description": "User-defined name of the document (default is the filename)"
           },
           "doctype": { "$ref": "#/components/schemas/DocType", "description": "DOCTYPE of the SourceDocument" },
+          "id": { "type": "integer", "title": "Id", "description": "ID of the SourceDocument" },
           "project_id": {
             "type": "integer",
             "title": "Project Id",
             "description": "Project the SourceDocument belongs to"
           },
-          "id": { "type": "integer", "title": "Id", "description": "ID of the SourceDocument" },
           "processed_jobs": { "type": "integer", "title": "Processed Jobs", "description": "Number of finished jobs" },
           "total_jobs": { "type": "integer", "title": "Total Jobs", "description": "Number of planned jobs" },
           "processed_status": {
@@ -18594,8 +18688,8 @@
           "filename",
           "name",
           "doctype",
-          "project_id",
           "id",
+          "project_id",
           "processed_jobs",
           "total_jobs",
           "processed_status"

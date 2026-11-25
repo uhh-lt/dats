@@ -16,10 +16,12 @@ export class LlmAssistantService {
    * @throws ApiError
    */
   public static countExistingAssistantAnnotations({
+    projectId,
     taskType,
     virtualUserId,
     requestBody,
   }: {
+    projectId: number;
     taskType: TaskType;
     virtualUserId: number;
     requestBody: Body_llm_assistant_count_existing_assistant_annotations;
@@ -28,6 +30,7 @@ export class LlmAssistantService {
       method: "POST",
       url: "/llm_assistant/count_existing_assistant_annotations",
       query: {
+        project_id: projectId,
         task_type: taskType,
         virtual_user_id: virtualUserId,
       },

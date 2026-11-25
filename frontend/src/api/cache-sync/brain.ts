@@ -385,15 +385,15 @@ export function handleDATSEvent(event: DATSEvent, source: DATSEventSource): void
 
     // ── Source documents ────────────────────────────────────────────────────
     case "SDOC_UPDATED":
-      setSingle(sdocQueries.byId(event.payload.id).queryKey, event.payload);
+      setSingle(sdocQueries.byId(event.payload.project_id, event.payload.id).queryKey, event.payload);
       queryClient.invalidateQueries({ queryKey: sdocQueries.searchScope() });
       break;
     case "SDOC_DELETED":
-      removeSingle(sdocQueries.byId(event.payload.id).queryKey);
+      removeSingle(sdocQueries.byId(event.payload.project_id, event.payload.id).queryKey);
       queryClient.invalidateQueries({ queryKey: sdocQueries.searchScope() });
       break;
     case "SDOC_DELETED_BATCH":
-      event.payload.forEach((sdoc) => removeSingle(sdocQueries.byId(sdoc.id).queryKey));
+      event.payload.forEach((sdoc) => removeSingle(sdocQueries.byId(sdoc.project_id, sdoc.id).queryKey));
       queryClient.invalidateQueries({ queryKey: sdocQueries.searchScope() });
       break;
 

@@ -17,13 +17,13 @@ export type SourceDocumentRead = {
    */
   doctype: DocType;
   /**
-   * Project the SourceDocument belongs to
-   */
-  project_id: number;
-  /**
    * ID of the SourceDocument
    */
   id: number;
+  /**
+   * Project the SourceDocument belongs to
+   */
+  project_id: number;
   /**
    * The created timestamp of the SourceDocument
    */

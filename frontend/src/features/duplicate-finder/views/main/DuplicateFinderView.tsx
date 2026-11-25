@@ -74,6 +74,7 @@ export function DuplicateFinderView() {
   const handleDeleteClick = (sdocIds: number[]) => {
     deleteDocumentsMutation.mutate(
       {
+        projectId,
         sdocIds: sdocIds,
       },
       {
