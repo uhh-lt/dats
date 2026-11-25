@@ -498,7 +498,9 @@ def test_a_deleted_and_a_failing_document_become_error_results(
         SentenceAnnotationTask, "_process_document", _fail_after_no_match
     )
     job_id = _start_sentence_job(client, job_prompt_project)
-    response = client.delete(f"/sdoc/{example_id}")
+    response = client.delete(
+        f"/projects/{base['project'].id}/source-documents/{example_id}"
+    )
     assert response.status_code == 200, response.text
 
     held_jobs.run("llm_assistant")
@@ -751,7 +753,9 @@ def test_a_job_whose_document_was_deleted_can_be_retried(
     job_id = _start_sentence_job(client, job_prompt_project)
     held_jobs.run("llm_assistant")
     assert _read_job(client, job_id).status == JobStatus.FAILED
-    response = client.delete(f"/sdoc/{no_match_id}")
+    response = client.delete(
+        f"/projects/{base['project'].id}/source-documents/{no_match_id}"
+    )
     assert response.status_code == 200, response.text
     fake.failing = set()
 

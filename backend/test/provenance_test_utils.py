@@ -282,11 +282,11 @@ def _create_sdoc(
 ) -> SourceDocumentORM:
     return crud_sdoc.create(
         db=db_session,
+        project_id=project_id,
         create_dto=SourceDocumentCreate(
             filename=filename,
             name=filename,
             doctype=doctype,
-            project_id=project_id,
             folder_id=None,
         ),
     )
@@ -341,9 +341,9 @@ def create_provenance_project(
     text_sdoc_data = project_with_sdoc["source_document_data"]
     crud_sdoc_data.create(
         db=db_session,
+        project_id=other_text_sdoc.project_id,
         create_dto=SourceDocumentDataCreate(
             id=other_text_sdoc.id,
-            project_id=other_text_sdoc.project_id,
             content=text_sdoc_data.content,
             raw_html=text_sdoc_data.raw_html,
             html=text_sdoc_data.html,

@@ -1,6 +1,3 @@
-from fastapi import status
-
-from common.exception_handler import exception_handler
 from core.prompt.prompt_enum import TaskType
 
 
@@ -42,15 +39,4 @@ class LLMAssistantRequestsFailedError(Exception):
         super().__init__(
             f"All {num_requests} LLM requests of a batch of documents failed, "
             f"the LLM may be unreachable. First error: {first_error}"
-        )
-
-
-@exception_handler(status.HTTP_400_BAD_REQUEST)
-class LLMAssistantDocumentsNotInProjectError(Exception):
-    """Raised when an LLM Assistant job is started with documents of another
-    project (or documents that do not exist)."""
-
-    def __init__(self, project_id: int, sdoc_ids: list[int]) -> None:
-        super().__init__(
-            f"The source documents {sdoc_ids} do not belong to project {project_id}."
         )

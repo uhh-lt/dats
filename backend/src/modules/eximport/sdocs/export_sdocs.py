@@ -29,7 +29,7 @@ def export_selected_sdocs(
     project_id: int,
     sdoc_ids: list[int],
 ) -> Path:
-    sdocs = crud_sdoc.read_by_ids(db=db, ids=sdoc_ids)
+    sdocs = crud_sdoc.read_by_ids(db=db, project_id=project_id, ids=sdoc_ids)
     return __export_sdocs(
         db=db,
         out_dir=out_dir,

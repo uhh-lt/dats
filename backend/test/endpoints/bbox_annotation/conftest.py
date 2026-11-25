@@ -49,11 +49,11 @@ class ProjectWithBBoxAnnotation(TypedDict):
 def _create_image(db_session, *, project_id: int, name: str) -> SourceDocumentORM:
     return crud_sdoc.create(
         db=db_session,
+        project_id=project_id,
         create_dto=SourceDocumentCreate(
             filename=f"{name}.jpg",
             name=name,
             doctype=DocType.image,
-            project_id=project_id,
             folder_id=None,
         ),
     )

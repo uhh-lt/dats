@@ -37,7 +37,7 @@ def enrich_for_recompute(
 ) -> ObjectDetectionJobInput:
     with sqlr.transaction() as db:
         sdoc = SourceDocumentRead.model_validate(
-            crud_sdoc.read(db=db, id=payload.sdoc_id)
+            crud_sdoc.read(db=db, project_id=payload.project_id, id=payload.sdoc_id)
         )
         assert sdoc.doctype == DocType.image, (
             f"SourceDocument with {payload.sdoc_id=} is not an image!"
@@ -82,6 +82,7 @@ def handle_object_detection_job(payload: ObjectDetectionJobInput, job: Job) -> N
         }
         adoc = crud_adoc.exists_or_create(
             db=trans,
+            project_id=payload.project_id,
             user_id=SYSTEM_USER_ID,
             sdoc_id=payload.sdoc_id,
         )

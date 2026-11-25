@@ -415,7 +415,12 @@ def test_delete_virtual_user_deletes_its_annotations(
             client.get(f"/projects/{project.id}/span-annotations/{span_id}").status_code
             == 404
         )
-    assert run1.id not in client.get(f"/sdoc/{sdoc.id}/annotators").json()
+    assert (
+        run1.id
+        not in client.get(
+            f"/projects/{project.id}/source-documents/{sdoc.id}/annotators"
+        ).json()
+    )
     user_ids = [u["id"] for u in client.get(f"/user/{project.id}/user").json()]
     assert run1.id not in user_ids
 

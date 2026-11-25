@@ -35,10 +35,12 @@ class SourceDocumentService(metaclass=SingletonMeta):
         cls.weaviate = WeaviateRepo()
         return super(SourceDocumentService, cls).__new__(cls)
 
-    def read_urls(self, *, db: Session, sdoc_id: int) -> SourceDocumentUrls:
+    def read_urls(
+        self, *, db: Session, project_id: int, sdoc_id: int
+    ) -> SourceDocumentUrls:
         """The URLs of the uploaded file, the web image and the thumbnail
         (None if they do not exist)."""
-        sdoc = crud_sdoc.read(db=db, id=sdoc_id)
+        sdoc = crud_sdoc.read(db=db, project_id=project_id, id=sdoc_id)
 
         def url(crud: FileCRUDBase, name: str) -> str | None:
             if not crud.exists(project_id=sdoc.project_id, id=sdoc.id, name=name):
@@ -53,26 +55,26 @@ class SourceDocumentService(metaclass=SingletonMeta):
             thumbnail_url=url(crud_thumbnail_file, THUMBNAIL_FILENAME),
         )
 
-    def delete(self, *, db: Session, sdoc_id: int) -> SourceDocumentDeleteResult:
-        return self.delete_multi(db=db, sdoc_ids=[sdoc_id])
-
     def delete_multi(
-        self, *, db: Session, sdoc_ids: list[int]
+        self, *, db: Session, project_id: int, sdoc_ids: list[int]
     ) -> SourceDocumentDeleteResult:
-        """Deletes the SourceDocuments with their files, Elasticsearch documents
-        and Weaviate objects, and their SDOC_FOLDERs that are empty afterwards.
-        Raises NoSuchElementError if an ID does not exist."""
+        """Deletes the SourceDocuments of the project with their files,
+        Elasticsearch documents and Weaviate objects, and their SDOC_FOLDERs that
+        are empty afterwards. Raises NoSuchElementError if an ID does not exist in
+        the project."""
         if not sdoc_ids:
             return SourceDocumentDeleteResult(sdocs=[], folders=[])
 
         # 1) read the documents (raises if one does not exist)
         sdocs = [
             SourceDocumentRead.model_validate(sdoc)
-            for sdoc in crud_sdoc.read_by_ids(db=db, ids=sdoc_ids)
+            for sdoc in crud_sdoc.read_by_ids(
+                db=db, project_id=project_id, ids=sdoc_ids
+            )
         ]
 
         # 2) delete the documents and all connected rows via cascading delete
-        crud_sdoc.delete_multi(db=db, ids=sdoc_ids)
+        crud_sdoc.delete_multi(db=db, project_id=project_id, ids=sdoc_ids)
 
         # 3) delete the SDOC_FOLDERs that are empty now (an SDOC_FOLDER may hold
         #    further documents, e.g. chunks of the same file, then it stays)
@@ -84,21 +86,17 @@ class SourceDocumentService(metaclass=SingletonMeta):
         ]
         crud_folder.delete_multi(db=db, ids=[folder.id for folder in folders])
 
-        # 4) delete the files, Elasticsearch documents and Weaviate objects per
-        #    project: the folders of the documents in every file CRUD
-        ids_by_project: dict[int, list[int]] = {}
-        for sdoc in sdocs:
-            ids_by_project.setdefault(sdoc.project_id, []).append(sdoc.id)
-        es_client = self.es_repo.get_client()
+        # 4) delete the files (the folders of the documents in every file CRUD),
+        #    Elasticsearch documents and Weaviate objects
+        ids = [sdoc.id for sdoc in sdocs]
+        FileCRUDBase.delete_by_entity(
+            Crud.SOURCE_DOCUMENT, project_id=project_id, ids=ids
+        )
+        crud_sdoc_elastic.delete_multi(
+            client=self.es_repo.get_client(), project_id=project_id, ids=ids
+        )
         weaviate_client = self.weaviate.get_client()
-        for project_id, ids in ids_by_project.items():
-            FileCRUDBase.delete_by_entity(
-                Crud.SOURCE_DOCUMENT, project_id=project_id, ids=ids
-            )
-            crud_sdoc_elastic.delete_multi(
-                client=es_client, project_id=project_id, ids=ids
-            )
-            for collection in BaseCollection.all_collections():
-                collection.delete_by_sdoc_ids(weaviate_client, project_id, ids)
+        for collection in BaseCollection.all_collections():
+            collection.delete_by_sdoc_ids(weaviate_client, project_id, ids)
 
         return SourceDocumentDeleteResult(sdocs=sdocs, folders=folders)

@@ -49,7 +49,9 @@ def test_get_by_sdoc(
     pm = project_with_sdoc_and_projmeta_and_sdocmeta["project_metadata"]
     sm = project_with_sdoc_and_projmeta_and_sdocmeta["source_document_metadata"]
 
-    resp = client.get(f"/sdocmeta/sdoc/{sdoc.id}")
+    resp = client.get(
+        f"/sdocmeta/sdoc/{sdoc.id}", params={"project_id": sdoc.project_id}
+    )
 
     assert resp.status_code == 200, resp.text
     items = [SourceDocumentMetadataRead.model_validate(x) for x in resp.json()]
@@ -65,13 +67,14 @@ def test_get_by_sdoc(
     assert got.list_value == sm.list_value
 
 
-def test_get_by_sdoc_if_not_exists(
-    client: TestClient,
-):
+def test_get_by_sdoc_if_not_exists(client: TestClient, test_project):
+    """A document that does not exist in the project is not found (404)."""
     fake_id = 3000
-    resp = client.get(f"/sdocmeta/sdoc/{fake_id}")
+    resp = client.get(
+        f"/sdocmeta/sdoc/{fake_id}", params={"project_id": test_project.id}
+    )
 
-    assert resp.status_code == 403, resp.text
+    assert resp.status_code == 404, resp.text
 
 
 def test_get_by_sdoc_and_key(
@@ -82,7 +85,10 @@ def test_get_by_sdoc_and_key(
     pm = project_with_sdoc_and_projmeta_and_sdocmeta["project_metadata"]
     sm = project_with_sdoc_and_projmeta_and_sdocmeta["source_document_metadata"]
 
-    resp = client.get(f"/sdocmeta/sdoc/{sdoc.id}/metadata/{pm.key}")
+    resp = client.get(
+        f"/sdocmeta/sdoc/{sdoc.id}/metadata/{pm.key}",
+        params={"project_id": sdoc.project_id},
+    )
 
     assert resp.status_code == 200, resp.text
     body = SourceDocumentMetadataRead.model_validate(resp.json())
@@ -100,7 +106,10 @@ def test_get_by_sdoc_and_key_if_not_exists(client: TestClient, project_with_sdoc
     sdoc = project_with_sdoc["source_document"]
 
     non_existing_key = "random-key"
-    resp = client.get(f"/sdocmeta/sdoc/{sdoc.id}/metadata/{non_existing_key}")
+    resp = client.get(
+        f"/sdocmeta/sdoc/{sdoc.id}/metadata/{non_existing_key}",
+        params={"project_id": sdoc.project_id},
+    )
 
     assert resp.status_code == 404, resp.text
 

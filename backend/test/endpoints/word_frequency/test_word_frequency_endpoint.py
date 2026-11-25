@@ -18,15 +18,18 @@ def test_info_is_rejected_when_word_frequency_is_disabled(
 
 
 # ===========================================================================
-# DOCUMENT WORD FREQUENCIES (/word_frequency/sdoc/{sdoc_id}) TESTS
+# DOCUMENT WORD FREQUENCIES (/word_frequency/sdoc/{sdoc_id}?project_id=) TESTS
 # ===========================================================================
 
 
 def test_sdoc_word_frequencies_are_rejected_when_word_frequency_is_disabled(
     client: TestClient, featureless_project: FeaturelessProject
 ):
-    """The project is resolved from the document."""
-    response = client.get(f"/word_frequency/sdoc/{featureless_project['sdoc'].id}")
+    """The feature is checked in the project of the query."""
+    response = client.get(
+        f"/word_frequency/sdoc/{featureless_project['sdoc'].id}",
+        params={"project_id": featureless_project["project"].id},
+    )
 
     assert_feature_disabled(response, "word_frequency")
 
@@ -36,7 +39,8 @@ def test_sdoc_word_frequencies_of_a_project_with_word_frequency_are_returned(
 ):
     """The test project enables the features on by default; its document has none."""
     response = client.get(
-        f"/word_frequency/sdoc/{project_with_sdoc['source_document'].id}"
+        f"/word_frequency/sdoc/{project_with_sdoc['source_document'].id}",
+        params={"project_id": project_with_sdoc["source_document"].project_id},
     )
 
     assert response.status_code == 200, response.text

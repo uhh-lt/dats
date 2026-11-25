@@ -15,6 +15,7 @@ from core.doc_processing.doc_processing_dto import (
     SdocInitJobInput,
 )
 from core.doc_processing.entrypoints.doc_chunking_job import DocChunkingJobInput
+from core.project.project_orm import ProjectORM
 from dats_test_utils import ProjectWithSdoc
 from feature_test_utils import FeatureProject
 from job_test_utils import HeldJobs, unreachable_redis
@@ -90,7 +91,7 @@ NESTED_MARKED_HTML = (
 )
 
 # ===========================================================================
-# UPLOAD (/docprocessing/project/{project_id}) TESTS
+# UPLOAD (/projects/{project_id}/doc-processing/upload) TESTS
 # ===========================================================================
 
 
@@ -110,7 +111,7 @@ def test_upload_file_to_project(client: TestClient, test_project):
         ("uploaded_files", ("test.txt", file_content, "text/plain")),
     ]
     response = client.post(
-        f"/docprocessing/project/{test_project.id}",
+        f"/projects/{test_project.id}/doc-processing/upload",
         data={"settings": SETTINGS_JSON},
         files=files,
     )
@@ -128,7 +129,7 @@ def test_upload_with_unsupported_file_stores_nothing(client: TestClient, test_pr
 
     # 1. the request with an unsupported file is rejected as a whole
     response = client.post(
-        f"/docprocessing/project/{test_project.id}",
+        f"/projects/{test_project.id}/doc-processing/upload",
         data={"settings": SETTINGS_JSON},
         files=[supported, unsupported],
     )
@@ -147,7 +148,7 @@ def test_upload_with_unsupported_file_stores_nothing(client: TestClient, test_pr
 
     # 3. uploading the supported file again succeeds
     response = client.post(
-        f"/docprocessing/project/{test_project.id}",
+        f"/projects/{test_project.id}/doc-processing/upload",
         data={"settings": SETTINGS_JSON},
         files=[supported],
     )
@@ -164,7 +165,7 @@ def test_upload_of_an_existing_filename_fails_and_stages_nothing(
     filename = project_with_sdoc["source_document"].filename
 
     response = client.post(
-        f"/docprocessing/project/{project.id}",
+        f"/projects/{project.id}/doc-processing/upload",
         data={"settings": SETTINGS_JSON},
         files=[("uploaded_files", (filename, b"again", "text/plain"))],
     )
@@ -181,7 +182,7 @@ def test_upload_moves_the_staged_file_into_the_folder_of_its_document(
     """The upload is staged in a temporary folder; sdoc_init moves it into the
     folder of the new document and removes the empty staging folder."""
     response = client.post(
-        f"/docprocessing/project/{test_project.id}",
+        f"/projects/{test_project.id}/doc-processing/upload",
         data={"settings": SETTINGS_JSON},
         files=[("uploaded_files", ("note.txt", b"hello world", "text/plain"))],
     )
@@ -223,7 +224,7 @@ def _upload_html_and_chunk(
     the sdoc_init jobs it started, in the order of the chunks."""
     settings = SETTINGS.model_copy(update={"pages_per_chunk": pages_per_chunk})
     response = client.post(
-        f"/docprocessing/project/{project_id}",
+        f"/projects/{project_id}/doc-processing/upload",
         data={"settings": settings.model_dump_json()},
         files=[("uploaded_files", (filename, html.encode("utf-8"), "text/html"))],
     )
@@ -393,7 +394,7 @@ def test_upload_of_html_without_page_markers_chunks_it_by_characters(
 
 
 # ===========================================================================
-# SEARCH SDOC HEALTH (/docprocessing/project/{project_id}/search) TESTS
+# SEARCH SDOC HEALTH (/projects/{project_id}/doc-processing/search) TESTS
 # ===========================================================================
 
 
@@ -437,7 +438,7 @@ def test_search_sdoc_health_sorts_by_the_status_of_a_step_or_a_column(
     (documents without the step last) or a column, then by name; the total
     counts all text documents."""
     response = client.post(
-        f"/docprocessing/project/{feature_project['project'].id}/search",
+        f"/projects/{feature_project['project'].id}/doc-processing/search",
         params={"doctype": DocType.text.value, "page": 0, "page_size": page_size},
         json=[
             SdocHealthSort(column=column, direction=direction).model_dump()
@@ -458,7 +459,7 @@ def test_search_sdoc_health_ignores_the_row_of_an_unregistered_step(
     health view shows the registered steps of the document only and answers as
     usual."""
     response = client.post(
-        f"/docprocessing/project/{removed_step_project['project'].id}/search",
+        f"/projects/{removed_step_project['project'].id}/doc-processing/search",
         params={"doctype": DocType.text.value, "page": 0, "page_size": 10},
         json=[],
     )
@@ -470,7 +471,7 @@ def test_search_sdoc_health_ignores_the_row_of_an_unregistered_step(
 
 
 # ===========================================================================
-# SEARCH COLUMNS (/docprocessing/searchColumns/{doctype}) TESTS
+# SEARCH COLUMNS (/projects/{project_id}/doc-processing/columns) TESTS
 # ===========================================================================
 
 
@@ -488,12 +489,15 @@ def test_search_sdoc_health_ignores_the_row_of_an_unregistered_step(
     ],
 )
 def test_search_columns_lists_the_pipeline_steps_of_the_doctype_in_order(
-    client: TestClient, doctype: DocType
+    client: TestClient, test_project: ProjectORM, doctype: DocType
 ):
     """The steps per doctype are derived from the requires/produces/doctypes
     declarations of the jobs, in pipeline order; the core steps (those of a
     project without features, es_index among them) are flagged."""
-    response = client.get(f"/docprocessing/searchColumns/{doctype.value}")
+    response = client.get(
+        f"/projects/{test_project.id}/doc-processing/columns",
+        params={"doctype": doctype.value},
+    )
 
     assert response.status_code == 200, response.text
     columns = [SdocHealthColumn.model_validate(c) for c in response.json()]
@@ -503,12 +507,15 @@ def test_search_columns_lists_the_pipeline_steps_of_the_doctype_in_order(
 
 
 def test_search_columns_are_titled_by_the_artefacts_their_steps_produce(
-    client: TestClient,
+    client: TestClient, test_project: ProjectORM
 ):
     """A column is titled by the titles of the artefacts its step produces, not
     by the step name: the step tokens_sentences shows "Tokens and sentences",
     es_index the title of the artefact es_index."""
-    response = client.get(f"/docprocessing/searchColumns/{DocType.text.value}")
+    response = client.get(
+        f"/projects/{test_project.id}/doc-processing/columns",
+        params={"doctype": DocType.text.value},
+    )
 
     assert response.status_code == 200, response.text
     titles = {
@@ -521,7 +528,7 @@ def test_search_columns_are_titled_by_the_artefacts_their_steps_produce(
 
 
 # ===========================================================================
-# RETRY (/docprocessing/project/{project_id}/retry) TESTS
+# RETRY (/projects/{project_id}/doc-processing/retry) TESTS
 # ===========================================================================
 
 
@@ -543,7 +550,7 @@ def test_retry_requeues_a_failed_step_job_which_runs(
     assert read_step_status(db_session, sdoc_id, "text_extraction") == -100
 
     response = client.post(
-        f"/docprocessing/project/{p['project'].id}/retry",
+        f"/projects/{p['project'].id}/doc-processing/retry",
         params={"doctype": DocType.text.value},
         json=[sdoc_id],
     )
@@ -557,13 +564,13 @@ def test_retry_requeues_a_failed_step_job_which_runs(
 
 
 # ===========================================================================
-# RECOMPUTE (/docprocessing/project/{project_id}/recompute) TESTS
+# RECOMPUTE (/projects/{project_id}/doc-processing/recompute) TESTS
 # ===========================================================================
 
 
 def _recompute(client: TestClient, project_id: int, step: str, sdoc_ids: list[int]):
     return client.post(
-        f"/docprocessing/project/{project_id}/recompute",
+        f"/projects/{project_id}/doc-processing/recompute",
         params={"processing_step": step},
         json={"sdoc_ids": sdoc_ids, "settings": SETTINGS.model_dump(mode="json")},
     )

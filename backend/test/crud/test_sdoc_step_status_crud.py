@@ -168,7 +168,7 @@ def test_deleting_a_document_deletes_its_step_statuses(
     p = step_status_project
     sdoc_id = p["done"].id
 
-    crud_sdoc.delete(db=db_session, id=sdoc_id)
+    crud_sdoc.delete(db=db_session, project_id=p["project"].id, id=sdoc_id)
     db_session.commit()
 
     assert crud_sdoc_step_status.read_by_sdocs(db=db_session, sdoc_ids=[sdoc_id]) == {
@@ -205,6 +205,11 @@ def test_the_overall_status_is_derived_from_the_step_statuses(
             db=db_session, project_id=project_id, status=status
         ) == len(sdoc_ids), status
         for sdoc_id in sdoc_ids:
-            assert crud_sdoc.read_status(db=db_session, sdoc_id=sdoc_id) == status
+            assert (
+                crud_sdoc.read_status(
+                    db=db_session, project_id=project_id, sdoc_id=sdoc_id
+                )
+                == status
+            )
     finished = crud_sdoc.read_by_project(db=db_session, project_id=project_id)
     assert {s.id for s in finished} == expected[SDocStatus.finished]

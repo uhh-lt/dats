@@ -133,7 +133,7 @@ def import_span_annotations_to_proj(
         adoc_id_by_sdoc_id: dict[int, int] = {}
         for sdoc_id in sdoc_ids:
             adoc_id_by_sdoc_id[sdoc_id] = crud_adoc.exists_or_create(
-                db=db, user_id=user.id, sdoc_id=sdoc_id
+                db=db, project_id=project_id, user_id=user.id, sdoc_id=sdoc_id
             ).id
 
         created_annotations.extend(annotations)

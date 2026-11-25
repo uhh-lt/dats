@@ -134,11 +134,11 @@ def test_delete_folder_deletes_sdocs_of_all_subfolders(
     for folder_key in ("parent", "grandchild"):
         sdoc = crud_sdoc.create(
             db=db_session,
+            project_id=project.id,
             create_dto=SourceDocumentCreate(
                 filename=f"{folder_key}.txt",
                 name=folder_key,
                 doctype=DocType.text,
-                project_id=project.id,
                 folder_id=project_with_nested_folders[folder_key].id,
             ),
         )
@@ -152,7 +152,10 @@ def test_delete_folder_deletes_sdocs_of_all_subfolders(
 
     assert response.status_code == 200, response.text
     for sdoc_id in sdoc_ids:
-        assert client.get(f"/sdoc/{sdoc_id}").status_code == 403
+        assert (
+            client.get(f"/projects/{project.id}/source-documents/{sdoc_id}").status_code
+            == 404
+        )
     assert client.get(f"/folder/{grandchild_id}").status_code == 403
 
 
@@ -160,11 +163,11 @@ def test_delete_sdoc_folder(client: TestClient, db_session, test_project):
     """Deleting an SDOC_FOLDER deletes its document and the folder itself."""
     sdoc = crud_sdoc.create(
         db=db_session,
+        project_id=test_project.id,
         create_dto=SourceDocumentCreate(
             filename="sdoc_folder_document.txt",
             name="SDOC Folder Document",
             doctype=DocType.text,
-            project_id=test_project.id,
         ),
     )
     db_session.commit()
@@ -176,7 +179,12 @@ def test_delete_sdoc_folder(client: TestClient, db_session, test_project):
     deleted = FolderRead.model_validate(response.json())
     assert deleted.id == folder_id
     assert deleted.folder_type == FolderType.SDOC_FOLDER
-    assert client.get(f"/sdoc/{sdoc.id}").status_code == 403
+    assert (
+        client.get(
+            f"/projects/{test_project.id}/source-documents/{sdoc.id}"
+        ).status_code
+        == 404
+    )
     assert client.get(f"/folder/{folder_id}").status_code == 403
 
 

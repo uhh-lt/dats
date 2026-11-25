@@ -26,12 +26,14 @@ class SimSearchService(metaclass=SingletonMeta):
         cls.weaviate = WeaviateRepo()
         return super(SimSearchService, cls).__new__(cls)
 
-    def _encode_query(self, db: Session, query: str | int) -> np.ndarray:
+    def _encode_query(
+        self, db: Session, project_id: int, query: str | int
+    ) -> np.ndarray:
         """The CLIP embedding of the query: the image of a document id (an int or
-        a string of digits), else the text."""
+        a string of digits) of the project, else the text."""
         if isinstance(query, int) or query.isdigit():
             sdoc = SourceDocumentRead.model_validate(
-                crud_sdoc.read(db=db, id=int(query))
+                crud_sdoc.read(db=db, project_id=project_id, id=int(query))
             )
             if sdoc.doctype != DocType.image:
                 raise QueryDocumentNotAnImageError(sdoc.id)
@@ -56,7 +58,9 @@ class SimSearchService(metaclass=SingletonMeta):
         )
         results = crud_sentence_embedding.search_near_vector_in_sdoc_ids(
             client=self.weaviate.get_client(),
-            vector=self._encode_query(db=db, query=query).tolist(),
+            vector=self._encode_query(
+                db=db, project_id=project_id, query=query
+            ).tolist(),
             project_id=project_id,
             k=top_k,
             threshold=threshold,
@@ -87,7 +91,9 @@ class SimSearchService(metaclass=SingletonMeta):
         )
         results = crud_image_embedding.search_near_vector_in_sdoc_ids(
             client=self.weaviate.get_client(),
-            vector=self._encode_query(db=db, query=query).tolist(),
+            vector=self._encode_query(
+                db=db, project_id=project_id, query=query
+            ).tolist(),
             project_id=project_id,
             k=top_k,
             threshold=threshold,

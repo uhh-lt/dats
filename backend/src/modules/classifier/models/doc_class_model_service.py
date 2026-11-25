@@ -558,7 +558,9 @@ class DocClassificationModelService(TextClassificationModelService):
 
         # Get source document data
         # Some documents may be erroneous and do not have data
-        sdoc_datas = crud_sdoc_data.read_by_ids(db=db, ids=sdoc_ids)
+        sdoc_datas = crud_sdoc_data.read_by_ids(
+            db=db, project_id=project_id, ids=sdoc_ids
+        )
         sdocid2data: dict[int, SourceDocumentDataORM | None] = {
             sdoc_id: None for sdoc_id in sdoc_ids
         }
@@ -1066,7 +1068,9 @@ class DocClassificationModelService(TextClassificationModelService):
         # 2. Create dataset
         job.update(current_step=2)
         # Get source document data
-        sdoc_datas = crud_sdoc_data.read_by_ids(db=db, ids=parameters.sdoc_ids)
+        sdoc_datas = crud_sdoc_data.read_by_ids(
+            db=db, project_id=classifier.project_id, ids=parameters.sdoc_ids
+        )
         inference_dataset: list[InferenceDatasetRow] = [
             {"sdoc_id": sdoc_data.id, "text": sdoc_data.content}
             for sdoc_data in sdoc_datas

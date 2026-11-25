@@ -29,6 +29,7 @@ def enrich_for_recompute(
     with sqlr.transaction() as db:
         sdoc_data = crud_sdoc_data.read(
             db=db,
+            project_id=payload.project_id,
             id=payload.sdoc_id,
         )
 
@@ -63,6 +64,7 @@ def handle_text_extraction_job(
     with sqlr.transaction() as db:
         crud_sdoc_data.update(
             db=db,
+            project_id=payload.project_id,
             id=payload.sdoc_id,
             update_dto=SourceDocumentDataUpdate(
                 content=text,

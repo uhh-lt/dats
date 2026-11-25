@@ -83,14 +83,16 @@ class LLMAssistantDocumentProcessor:
 
     @staticmethod
     def _read_documents(
-        sqlr: SQLRepo, sdoc_ids: list[int]
+        sqlr: SQLRepo, project_id: int, sdoc_ids: list[int]
     ) -> dict[int, SourceDocumentDataORM]:
-        """Read the data of the documents that still exist, by id, in a short
+        """Read the data of the documents that still exist in the project, by id, in a short
         transaction of its own. The documents are detached with their loaded
         columns, so they stay readable once it closed: no transaction stays open
         during the LLM requests."""
         with sqlr.transaction() as db:
-            sdoc_data_by_id = crud_sdoc_data.read_existing_by_ids(db=db, ids=sdoc_ids)
+            sdoc_data_by_id = crud_sdoc_data.read_existing_by_ids(
+                db=db, project_id=project_id, ids=sdoc_ids
+            )
             db.expunge_all()
         return sdoc_data_by_id
 
@@ -100,12 +102,13 @@ class LLMAssistantDocumentProcessor:
         model: str,
         strategy: LLMAssistantStrategy,
         sqlr: SQLRepo,
+        project_id: int,
         sdoc_ids: list[int],
         response_model: Type[ResponseT],
     ) -> Iterator[LLMAssistantDocumentBatch[ResponseT]]:
         """Yield the documents in batches of `DOCUMENT_BATCH_SIZE`, in the order of
         `sdoc_ids`, each document with the responses to all its prompts, and the
-        documents of the batch that no longer exist. The prompts of a batch are
+        documents of the batch that no longer exist in the project. The prompts of a batch are
         sent in bounded batches of LLM requests. Raises
         `LLMAssistantRequestsFailedError` before it yields a batch whose requests
         all failed without a response."""
@@ -122,7 +125,9 @@ class LLMAssistantDocumentProcessor:
 
         for start in range(0, total_documents, DOCUMENT_BATCH_SIZE):
             batch_sdoc_ids = sdoc_ids[start : start + DOCUMENT_BATCH_SIZE]
-            sdoc_data_by_id = self._read_documents(sqlr=sqlr, sdoc_ids=batch_sdoc_ids)
+            sdoc_data_by_id = self._read_documents(
+                sqlr=sqlr, project_id=project_id, sdoc_ids=batch_sdoc_ids
+            )
             sdoc_datas = [
                 sdoc_data_by_id[sdoc_id]
                 for sdoc_id in batch_sdoc_ids

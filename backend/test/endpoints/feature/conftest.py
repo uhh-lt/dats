@@ -233,11 +233,11 @@ def activation_project(db_session, test_user: UserORM) -> ActivationProject:
     )
     no_data = crud_sdoc.create(
         db=db_session,
+        project_id=project.id,
         create_dto=SourceDocumentCreate(
             filename="no_data.txt",
             name="no_data.txt",
             doctype=DocType.text,
-            project_id=project.id,
         ),
     )
     set_step_status(db_session, no_data.id, dict.fromkeys(minimal_text_steps(), 1))

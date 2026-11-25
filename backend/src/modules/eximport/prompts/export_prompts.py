@@ -184,7 +184,7 @@ class _References:
             sdoc_filename={
                 id: sdoc.filename
                 for id, sdoc in crud_sdoc.read_existing_by_ids(
-                    db=db, ids=sdoc_ids
+                    db=db, project_id=project_id, ids=sdoc_ids
                 ).items()
             },
             span_uuid={

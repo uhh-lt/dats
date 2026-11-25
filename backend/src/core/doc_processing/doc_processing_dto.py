@@ -35,6 +35,7 @@ class SdocInitJobOutput(JobOutputBase):
 
 class SourceDocumentStatusSimple(SourceDocumentBaseDTO):
     id: int = Field(description="ID of the SourceDocument")
+    project_id: int = Field(description="Project the SourceDocument belongs to")
     processed_jobs: int = Field(description="Number of finished jobs")
     total_jobs: int = Field(description="Number of planned jobs")
     processed_status: SDocStatus = Field(

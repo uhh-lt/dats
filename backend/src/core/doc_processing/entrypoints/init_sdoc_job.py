@@ -36,10 +36,11 @@ def handle_init_sdoc_job(payload: SdocInitJobInput, job: Job) -> SdocInitJobOutp
             filename=payload.filename,
             name=payload.filename,
             doctype=payload.doctype,
-            project_id=payload.project_id,
             folder_id=payload.folder_id,
         )
-        sdoc_db_obj = crud_sdoc.create(db=db, create_dto=create_dto)
+        sdoc_db_obj = crud_sdoc.create(
+            db=db, project_id=payload.project_id, create_dto=create_dto
+        )
 
         # plan the steps of the core artefacts and of the project's artefact
         # demand, read under the project share lock
@@ -53,9 +54,9 @@ def handle_init_sdoc_job(payload: SdocInitJobInput, job: Job) -> SdocInitJobOutp
         # create empty sdoc data
         crud_sdoc_data.create(
             db=db,
+            project_id=sdoc_db_obj.project_id,
             create_dto=SourceDocumentDataCreate(
                 id=sdoc_db_obj.id,
-                project_id=sdoc_db_obj.project_id,
                 content="",
                 raw_html="",
                 html="",

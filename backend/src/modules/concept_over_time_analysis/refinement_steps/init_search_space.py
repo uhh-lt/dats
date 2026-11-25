@@ -31,7 +31,9 @@ def init_search_space(db: Session, cota: COTARead) -> list[COTASentence]:
     search_space = __build_search_space(db=db, cota=cota)
 
     # add the sentences to the search space
-    search_space = __add_sentences_to_search_space(db=db, search_space=search_space)
+    search_space = __add_sentences_to_search_space(
+        db=db, project_id=cota.project_id, search_space=search_space
+    )
 
     # add the date to the search space
     search_space = __add_dates_to_search_space(
@@ -90,12 +92,13 @@ def __build_search_space(db: Session, cota: COTARead) -> list[COTASentence]:
 
 def __add_sentences_to_search_space(
     db: Session,
+    project_id: int,
     search_space: list[COTASentence],
 ) -> list[COTASentence]:
     sdoc_ids = list(set([cota_sent.sdoc_id for cota_sent in search_space]))
 
     # get the data from the database
-    sdoc_datas = crud_sdoc_data.read_by_ids(db=db, ids=sdoc_ids)
+    sdoc_datas = crud_sdoc_data.read_by_ids(db=db, project_id=project_id, ids=sdoc_ids)
 
     # map the data
     sdoc_id2sdocdata: dict[int, SourceDocumentDataORM] = {

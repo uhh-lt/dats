@@ -305,19 +305,19 @@ def search_project(
 
     sdoc_two = crud_sdoc.create(
         db=seed_db_session,
+        project_id=project.id,
         create_dto=SourceDocumentCreate(
             filename="second_document.txt",
             name="Second Document",
             doctype=DocType.text,
-            project_id=project.id,
             folder_id=None,
         ),
     )
     crud_sdoc_data.create(
         db=seed_db_session,
+        project_id=sdoc_two.project_id,
         create_dto=SourceDocumentDataCreate(
             id=sdoc_two.id,
-            project_id=sdoc_two.project_id,
             content="Alpha beta gamma.",
             raw_html="<p>Alpha beta gamma.</p>",
             html="<p><sent>Alpha beta gamma.</sent></p>",

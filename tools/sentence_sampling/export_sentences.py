@@ -69,8 +69,8 @@ def parse_year(metadata: dict[str, Any] | None) -> int | None:
 def fetch_document(
     api: DATSAPI, sdoc: dict[str, Any], year_key: str
 ) -> ExportedDocument:
-    data = api.read_sdoc_data(sdoc["id"])
-    metadata = api.read_sdoc_metadata_by_key(sdoc["id"], year_key)
+    data = api.read_sdoc_data(sdoc["project_id"], sdoc["id"])
+    metadata = api.read_sdoc_metadata_by_key(sdoc["project_id"], sdoc["id"], year_key)
     return ExportedDocument(
         sdoc=sdoc, sentences=data["sentences"], year=parse_year(metadata)
     )

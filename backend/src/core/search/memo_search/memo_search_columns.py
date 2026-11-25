@@ -6,6 +6,7 @@ from core.annotation.span_group_crud import crud_span_group
 from core.annotation.span_group_orm import SpanGroupORM
 from core.code.code_crud import crud_code
 from core.code.code_orm import CodeORM
+from core.doc.source_document_crud import crud_sdoc
 from core.doc.source_document_orm import SourceDocumentORM
 from core.memo.memo_enum import AttachedObjectType
 from core.memo.memo_orm import MemoFavoriteLinkTable, MemoORM
@@ -348,7 +349,7 @@ class MemoColumns(str, AbstractColumns):
             case Crud.TAG:
                 return crud_tag.read(db=db, project_id=project_id, id=object_id).name
             case Crud.SOURCE_DOCUMENT:
-                return crud.value.read(db=db, id=object_id).name
+                return crud_sdoc.read(db=db, project_id=project_id, id=object_id).name
             case Crud.PROJECT:
                 return crud.value.read(db=db, id=object_id).title
             case Crud.SPAN_ANNOTATION | Crud.SENTENCE_ANNOTATION | Crud.BBOX_ANNOTATION:
@@ -381,7 +382,7 @@ class MemoColumns(str, AbstractColumns):
                 # Annotations have no name; they round-trip by their stringified id.
                 return int(name)
             case Crud.SOURCE_DOCUMENT:
-                found = crud.value.read_by_name(db, name=name, project_id=project_id)  # type: ignore
+                found = crud_sdoc.read_by_name(db, name=name, project_id=project_id)
             case Crud.CODE:
                 found = crud_code.read_by_name_and_project(
                     db, code_name=name, project_id=project_id

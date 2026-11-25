@@ -53,7 +53,7 @@ class RAGService(metaclass=SingletonMeta):
 
         extracted_sentences = []
         for sdoc_id, hits in sdoc_to_hits.items():
-            sdoc_data = crud_sdoc_data.read(db=db, id=sdoc_id)
+            sdoc_data = crud_sdoc_data.read(db=db, project_id=project_id, id=sdoc_id)
             for hit in hits:
                 try:
                     sentence_text = sdoc_data.sentences[hit.sentence_id]

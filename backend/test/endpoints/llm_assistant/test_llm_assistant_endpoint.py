@@ -44,6 +44,7 @@ def test_count_existing_assistant_annotations_separates_task_and_virtual_user(
     response = client.post(
         COUNT_ANNOTATIONS_URL,
         params={
+            "project_id": llm_assistant_project["project"].id,
             "task_type": task_type.value,
             "virtual_user_id": annotator.id,
         },
@@ -76,6 +77,7 @@ def test_count_existing_assistant_annotations_returns_empty_for_other_tasks(
     response = client.post(
         COUNT_ANNOTATIONS_URL,
         params={
+            "project_id": llm_assistant_project["project"].id,
             "task_type": task_type.value,
             "virtual_user_id": llm_assistant_project["run_a"].id,
         },
@@ -96,6 +98,7 @@ def test_count_existing_assistant_annotations_includes_explicit_zero_counts(
     response = client.post(
         COUNT_ANNOTATIONS_URL,
         params={
+            "project_id": llm_assistant_project["project"].id,
             "task_type": TaskType.ANNOTATION.value,
             "virtual_user_id": llm_assistant_project["run_a"].id,
         },
@@ -138,6 +141,7 @@ def test_count_existing_assistant_annotations_includes_explicit_zero_counts(
 )
 def test_count_existing_assistant_annotations_rejects_malformed_id_lists(
     client: TestClient,
+    llm_assistant_project: LLMAssistantProject,
     body_update: dict[str, object],
     expected_fragment: str,
 ) -> None:
@@ -147,6 +151,7 @@ def test_count_existing_assistant_annotations_rejects_malformed_id_lists(
     response = client.post(
         COUNT_ANNOTATIONS_URL,
         params={
+            "project_id": llm_assistant_project["project"].id,
             "task_type": TaskType.ANNOTATION.value,
             "virtual_user_id": 1,
         },
@@ -160,10 +165,12 @@ def test_count_existing_assistant_annotations_rejects_foreign_objects(
     client: TestClient,
     llm_assistant_project: LLMAssistantProject,
 ) -> None:
-    """Annotation counts must not reveal data belonging to another project."""
+    """Annotation counts must not reveal data of a project the user is no member
+    of (403)."""
     response = client.post(
         COUNT_ANNOTATIONS_URL,
         params={
+            "project_id": llm_assistant_project["foreign_project"].id,
             "task_type": TaskType.ANNOTATION.value,
             "virtual_user_id": llm_assistant_project["foreign_run"].id,
         },
@@ -183,6 +190,7 @@ def test_count_existing_assistant_annotations_rejects_foreign_virtual_user(
     response = client.post(
         COUNT_ANNOTATIONS_URL,
         params={
+            "project_id": llm_assistant_project["project"].id,
             "task_type": TaskType.ANNOTATION.value,
             "virtual_user_id": llm_assistant_project["foreign_run"].id,
         },

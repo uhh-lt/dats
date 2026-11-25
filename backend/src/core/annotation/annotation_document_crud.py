@@ -1,6 +1,6 @@
 import datetime
 
-from sqlalchemy import literal, select, update
+from sqlalchemy import update
 from sqlalchemy.dialects.postgresql import insert
 from sqlalchemy.orm import Session
 
@@ -9,10 +9,8 @@ from core.annotation.annotation_document_dto import (
     AnnotationDocumentUpdate,
 )
 from core.annotation.annotation_document_orm import AnnotationDocumentORM
-from core.doc.source_document_orm import SourceDocumentORM
 from repos.db.crud_base import BATCH_SIZE
 from repos.db.project_crud_base import ProjectCRUDBase
-from repos.db.sql_exceptions import NoSuchElementError
 
 
 class CRUDAnnotationDocument(
@@ -88,32 +86,38 @@ class CRUDAnnotationDocument(
         self,
         db: Session,
         *,
+        project_id: int,
         user_id: int,
         sdoc_id: int,
     ) -> AnnotationDocumentORM:
-        return self.exists_or_create_multi(db=db, user_id=user_id, sdoc_ids=[sdoc_id])[
-            sdoc_id
-        ]
+        return self.exists_or_create_multi(
+            db=db, project_id=project_id, user_id=user_id, sdoc_ids=[sdoc_id]
+        )[sdoc_id]
 
     def exists_or_create_multi(
         self,
         db: Session,
         *,
+        project_id: int,
         user_id: int,
         sdoc_ids: list[int],
     ) -> dict[int, AnnotationDocumentORM]:
         """Return annotation documents for a user, creating missing rows in bulk.
 
-        Each annotation document belongs to the project of its source document, so a
-        caller that writes a row of its own project referencing one of another
-        project fails at the composite foreign key (409).
+        The rows are created in the project, so a document of another project (or
+        one that does not exist) fails at the composite foreign key (409).
 
         Concurrent jobs (e.g. object detection and spacy of the same image) create the
         same annotation document, so a check-then-insert would race. ON CONFLICT DO
         NOTHING waits for the other transaction and skips the row if it committed.
 
-        Raises:
-            NoSuchElementError: If a source document does not exist.
+        Args:
+            project_id: The project of the documents.
+            user_id: The user of the annotation documents.
+            sdoc_ids: The documents. Duplicates are allowed.
+
+        Returns:
+            The annotation document by document id.
         """
         if not sdoc_ids:
             return {}
@@ -124,13 +128,15 @@ class CRUDAnnotationDocument(
             batch_ids = unique_sdoc_ids[i : i + BATCH_SIZE]
             db.execute(
                 insert(self.model)
-                .from_select(
-                    ["user_id", "source_document_id", "project_id"],
-                    select(
-                        literal(user_id),
-                        SourceDocumentORM.id,
-                        SourceDocumentORM.project_id,
-                    ).where(SourceDocumentORM.id.in_(batch_ids)),
+                .values(
+                    [
+                        {
+                            "project_id": project_id,
+                            "user_id": user_id,
+                            "source_document_id": sdoc_id,
+                        }
+                        for sdoc_id in batch_ids
+                    ]
                 )
                 .on_conflict_do_nothing(
                     index_elements=[
@@ -142,6 +148,7 @@ class CRUDAnnotationDocument(
             annotation_documents.extend(
                 db.query(self.model)
                 .filter(
+                    self.model.project_id == project_id,
                     self.model.user_id == user_id,
                     self.model.source_document_id.in_(batch_ids),
                 )
@@ -149,14 +156,10 @@ class CRUDAnnotationDocument(
             )
         db.flush()
 
-        adoc_by_sdoc_id = {
+        return {
             annotation_document.source_document_id: annotation_document
             for annotation_document in annotation_documents
         }
-        missing_sdoc_ids = [id for id in unique_sdoc_ids if id not in adoc_by_sdoc_id]
-        if missing_sdoc_ids:
-            raise NoSuchElementError(SourceDocumentORM, ids=missing_sdoc_ids)
-        return adoc_by_sdoc_id
 
 
 crud_adoc = CRUDAnnotationDocument(AnnotationDocumentORM)

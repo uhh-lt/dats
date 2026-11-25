@@ -241,14 +241,15 @@ def import_sdocs_to_proj(
             filename=sdoc_export.filename,
             name=sdoc_export.name or sdoc_export.filename,
             doctype=DocType(sdoc_export.doctype),
-            project_id=project_id,
             folder_id=sdoc_folder.id,
         )
 
         # 1.3 Set the status of the steps from the archive
         step_status = archived_step_status(sdoc_export)
 
-        created_sdoc = crud_sdoc.create(db=db, create_dto=sdoc_create)
+        created_sdoc = crud_sdoc.create(
+            db=db, project_id=project_id, create_dto=sdoc_create
+        )
         crud_sdoc_step_status.create_multi(
             db=db,
             create_dtos=[
@@ -275,7 +276,6 @@ def import_sdocs_to_proj(
         # 3. Create the source document data in the database
         sdoc_data_create = SourceDocumentDataCreate(
             id=created_sdoc.id,
-            project_id=created_sdoc.project_id,
             content=sdoc_export.content if sdoc_export.content else "",
             html=sdoc_export.html,
             raw_html=sdoc_export.raw_html,
@@ -286,7 +286,7 @@ def import_sdocs_to_proj(
             token_time_starts=sdoc_export.token_time_starts,
             token_time_ends=sdoc_export.token_time_ends,
         )
-        crud_sdoc_data.create(db=db, create_dto=sdoc_data_create)
+        crud_sdoc_data.create(db=db, project_id=project_id, create_dto=sdoc_data_create)
 
         # 4. Link the source documents with the attached data (tags, metadata)
         # Tags

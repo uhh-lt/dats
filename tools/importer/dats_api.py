@@ -129,7 +129,7 @@ class DATSAPI:
 
         r = requests.get(
             self.BASE_PATH
-            + f"docprocessing/project/{project_id}/status/{status}/simple",
+            + f"projects/{project_id}/doc-processing/status?status={status}",
             headers={"Authorization": f"Bearer {self.access_token}"},
         )
         r.raise_for_status()
@@ -143,7 +143,8 @@ class DATSAPI:
         try:
             r = requests.get(
                 self.BASE_PATH
-                + f"project/{proj_id}/resolve_filename/{quote(filename)}?only_finished=false",
+                + f"projects/{proj_id}/source-documents/by-filename"
+                + f"?filename={quote(filename)}&only_finished=false",
                 headers={"Authorization": f"Bearer {self.access_token}"},
             )
             if r.status_code != 200:
@@ -307,7 +308,7 @@ class DATSAPI:
         # upload files
         if len(files) > 0:
             r = requests.post(
-                self.BASE_PATH + f"docprocessing/project/{proj_id}",
+                self.BASE_PATH + f"projects/{proj_id}/doc-processing/upload",
                 files=files,
                 data=data,
                 headers={"Authorization": f"Bearer {self.access_token}"},
@@ -319,9 +320,9 @@ class DATSAPI:
             logger.info("No files to upload!")
             return None
 
-    def set_sdoc_name(self, sdoc_id: int, name: str):
+    def set_sdoc_name(self, proj_id: int, sdoc_id: int, name: str):
         r = requests.patch(
-            self.BASE_PATH + f"sdoc/{sdoc_id}",
+            self.BASE_PATH + f"projects/{proj_id}/source-documents/{sdoc_id}",
             data=json.dumps({"name": name}),
             headers={
                 "Authorization": f"Bearer {self.access_token}",
@@ -331,9 +332,9 @@ class DATSAPI:
         r.raise_for_status()
         logger.info(f"Set SDoc {sdoc_id} Name to {name}!")
 
-    def get_sdoc_data(self, sdoc_id: int) -> dict[str, Any]:
+    def get_sdoc_data(self, proj_id: int, sdoc_id: int) -> dict[str, Any]:
         r = requests.get(
-            self.BASE_PATH + f"sdoc/data/{sdoc_id}",
+            self.BASE_PATH + f"projects/{proj_id}/source-documents/{sdoc_id}/data",
             headers={"Authorization": f"Bearer {self.access_token}"},
         )
         r.raise_for_status()
@@ -434,9 +435,10 @@ class DATSAPI:
         r.raise_for_status()
         return r.json()
 
-    def read_sdoc_metadata_by_key(self, sdoc_id: int, key: str):
+    def read_sdoc_metadata_by_key(self, proj_id: int, sdoc_id: int, key: str):
         r = requests.get(
-            self.BASE_PATH + f"sdocmeta/sdoc/{sdoc_id}/metadata/{key}",
+            self.BASE_PATH
+            + f"sdocmeta/sdoc/{sdoc_id}/metadata/{key}?project_id={proj_id}",
             headers={"Authorization": f"Bearer {self.access_token}"},
         )
         r.raise_for_status()
@@ -444,12 +446,15 @@ class DATSAPI:
 
     def update_sdoc_metadata(
         self,
+        proj_id: int,
         sdoc_id: int,
         key: str,
         value: str | int | bool | list[str],
         metatype: str,
     ):
-        sdoc_metadata = self.read_sdoc_metadata_by_key(sdoc_id=sdoc_id, key=key)
+        sdoc_metadata = self.read_sdoc_metadata_by_key(
+            proj_id=proj_id, sdoc_id=sdoc_id, key=key
+        )
 
         r = requests.patch(
             self.BASE_PATH + f"sdocmeta/{sdoc_metadata['id']}",
@@ -470,9 +475,9 @@ class DATSAPI:
         r.raise_for_status()
         return r.json()
 
-    def delete_sdoc_by_id(self, sdoc_id: int):
+    def delete_sdoc_by_id(self, proj_id: int, sdoc_id: int):
         r = requests.delete(
-            self.BASE_PATH + f"sdoc/{sdoc_id}",
+            self.BASE_PATH + f"projects/{proj_id}/source-documents/{sdoc_id}",
             headers={"Authorization": f"Bearer {self.access_token}"},
         )
         r.raise_for_status()
@@ -592,6 +597,7 @@ if __name__ == "__main__":
     # update sdoc metadata
     for sdoc_id in sdoc_ids:
         sdoc_metadata = dats.update_sdoc_metadata(
+            proj_id=project["id"],
             sdoc_id=sdoc_id,
             value=f"meine id ist {sdoc_id}",
             key="sdoc_id",

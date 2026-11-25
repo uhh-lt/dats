@@ -398,11 +398,11 @@ def _create_video_document_with_file(
     transcript, and the audio stream and thumbnail its steps write."""
     video = crud_sdoc.create(
         db=db,
+        project_id=project.id,
         create_dto=SourceDocumentCreate(
             filename="clip.mp4",
             name="clip.mp4",
             doctype=DocType.video,
-            project_id=project.id,
         ),
     )
     video_path = crud_sdoc_file.path(
@@ -416,9 +416,9 @@ def _create_video_document_with_file(
     ).overwrite_output().run(quiet=True)
     crud_sdoc_data.create(
         db=db,
+        project_id=video.project_id,
         create_dto=SourceDocumentDataCreate(
             id=video.id,
-            project_id=video.project_id,
             content="Hello world.",
             raw_html="<html><body><p>Hello world.</p></body></html>",
             html="<p>Hello world.</p>",
@@ -709,11 +709,11 @@ def feature_toggle_eximport_projects(
 
     image = crud_sdoc.create(
         db=db_session,
+        project_id=project.id,
         create_dto=SourceDocumentCreate(
             filename="image.png",
             name="image.png",
             doctype=DocType.image,
-            project_id=project.id,
         ),
     )
     image_path = crud_sdoc_file.path(
@@ -724,9 +724,9 @@ def feature_toggle_eximport_projects(
     generate_thumbnails(project_id=project.id, sdoc_id=image.id, image_path=image_path)
     crud_sdoc_data.create(
         db=db_session,
+        project_id=image.project_id,
         create_dto=SourceDocumentDataCreate(
             id=image.id,
-            project_id=image.project_id,
             content="",
             raw_html="",
             html="",
@@ -772,7 +772,9 @@ def feature_toggle_eximport_projects(
                 project_id=project.id,
                 sdoc_id=sdoc.id,
                 filename=sdoc.filename,
-                content=crud_sdoc_data.read(db=db_session, id=sdoc.id).content,
+                content=crud_sdoc_data.read(
+                    db=db_session, project_id=project.id, id=sdoc.id
+                ).content,
             ),
         )
 

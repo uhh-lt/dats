@@ -122,13 +122,18 @@ class DATSAPI:
     ) -> list[dict[str, Any]]:
         """All documents of the project with the document status
         (-100 erroneous, 0 processing, 1 finished)."""
-        return self._get(f"docprocessing/project/{project_id}/status/{status}/simple")
+        return self._get(
+            f"projects/{project_id}/doc-processing/status?status={status}"
+        )
 
-    def read_sdoc_data(self, sdoc_id: int) -> dict[str, Any]:
-        return self._get(f"sdoc/data/{sdoc_id}")
+    def read_sdoc_data(self, project_id: int, sdoc_id: int) -> dict[str, Any]:
+        return self._get(f"projects/{project_id}/source-documents/{sdoc_id}/data")
 
     def read_sdoc_metadata_by_key(
-        self, sdoc_id: int, key: str
+        self, project_id: int, sdoc_id: int, key: str
     ) -> dict[str, Any] | None:
         """The metadata value of the document, None if it has none for the key."""
-        return self._get(f"sdocmeta/sdoc/{sdoc_id}/metadata/{key}", allow_404=True)
+        return self._get(
+            f"sdocmeta/sdoc/{sdoc_id}/metadata/{key}?project_id={project_id}",
+            allow_404=True,
+        )

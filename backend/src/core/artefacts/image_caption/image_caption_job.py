@@ -36,7 +36,7 @@ def enrich_for_recompute(
 ) -> ImageCaptionJobInput:
     with sqlr.transaction() as db:
         sdoc = SourceDocumentRead.model_validate(
-            crud_sdoc.read(db=db, id=payload.sdoc_id)
+            crud_sdoc.read(db=db, project_id=payload.project_id, id=payload.sdoc_id)
         )
         assert sdoc.doctype == DocType.image, (
             f"SourceDocument with {payload.sdoc_id=} is not an image!"
@@ -89,6 +89,7 @@ def handle_image_caption_job(
         # Store caption as raw_html in sdoc data
         crud_sdoc_data.update(
             db=db,
+            project_id=payload.project_id,
             id=payload.sdoc_id,
             update_dto=SourceDocumentDataUpdate(
                 raw_html=raw_html,

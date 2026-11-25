@@ -110,7 +110,9 @@ class WhiteboardService(metaclass=SingletonMeta):
                     ]
                     result.sdocs = [
                         SourceDocumentRead.model_validate(s)
-                        for s in crud_sdoc.read_by_ids(db=db, ids=sdoc_ids)
+                        for s in crud_sdoc.read_by_ids(
+                            db=db, project_id=whiteboard.project_id, ids=sdoc_ids
+                        )
                     ]
                 case WhiteboardNodeType.CODE:
                     if len(nodes) > 0:

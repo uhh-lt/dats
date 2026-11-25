@@ -741,7 +741,7 @@ def test_job_start_rejects_documents_outside_the_project(
     sdoc_key: str | None,
 ) -> None:
     """A member of the job's project cannot run the assistant on documents that do
-    not belong to the project: the start returns HTTP 400 and no job is
+    not exist in the project: the start returns HTTP 404 and no job is
     enqueued."""
     base = job_prompt_project["base"]
     sdoc_id = base["foreign_sdoc"].id if sdoc_key else 999_999
@@ -751,8 +751,7 @@ def test_job_start_rejects_documents_outside_the_project(
 
     response = client.post(LLM_ASSISTANT_JOB_URL, json=payload.model_dump(mode="json"))
 
-    assert response.status_code == 400, response.text
-    assert f"The source documents [{sdoc_id}] do not belong to project" in response.text
+    assert response.status_code == 404, response.text
     list_response = client.get(f"{LLM_ASSISTANT_JOB_URL}/project/{base['project'].id}")
     assert list_response.status_code == 200, list_response.text
     assert list_response.json() == []

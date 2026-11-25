@@ -24,7 +24,6 @@ from modules.agreement.agreement_dto import (
 from modules.agreement.agreement_enum import AgreementAnnotationType, AgreementScoring
 from modules.agreement.agreement_exceptions import (
     AgreementAnnotatorsNotInProjectError,
-    AgreementSdocsNotInProjectError,
 )
 
 # A unit is identified by a pair of ints, so that all modes share one algorithm:
@@ -113,7 +112,7 @@ class AgreementService(metaclass=SingletonMeta):
         # 3) resolve the character offsets of the segments; only the token and
         # sentence offsets are read, the texts are read on request (segment_texts)
         offsets = crud_sdoc_data.read_offsets_by_ids(
-            db=db, ids=[segment.sdoc_id for segment in segments]
+            db=db, project_id=project_id, ids=[segment.sdoc_id for segment in segments]
         )
         agreement_segments = [
             self._to_agreement_segment(
@@ -226,7 +225,9 @@ class AgreementService(metaclass=SingletonMeta):
         self._read_sdoc_names(db=db, project_id=project_id, sdoc_ids=sdoc_ids)
 
         # 2) cut the ranges out of the documents' contents
-        contents = crud_sdoc_data.read_contents_by_ids(db=db, ids=sdoc_ids)
+        contents = crud_sdoc_data.read_contents_by_ids(
+            db=db, project_id=project_id, ids=sdoc_ids
+        )
         return [
             contents.get(text_range.sdoc_id, "")[text_range.begin : text_range.end]
             for text_range in ranges
@@ -235,12 +236,8 @@ class AgreementService(metaclass=SingletonMeta):
     def _read_sdoc_names(
         self, *, db: Session, project_id: int, sdoc_ids: list[int]
     ) -> dict[int, str]:
-        sdocs = crud_sdoc.read_by_ids(db=db, ids=sdoc_ids)  # raises NoSuchElementError
-        foreign = [sdoc.id for sdoc in sdocs if sdoc.project_id != project_id]
-        if foreign:
-            raise AgreementSdocsNotInProjectError(
-                project_id=project_id, sdoc_ids=foreign
-            )
+        # raises NoSuchElementError for a document of another project
+        sdocs = crud_sdoc.read_by_ids(db=db, project_id=project_id, ids=sdoc_ids)
         return {sdoc.id: sdoc.name for sdoc in sdocs}
 
     def _read_annotator_names(

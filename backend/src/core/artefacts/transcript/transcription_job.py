@@ -47,7 +47,7 @@ def enrich_for_recompute(
 ) -> TranscriptionJobInput:
     with sqlr.transaction() as db:
         sdoc = SourceDocumentRead.model_validate(
-            crud_sdoc.read(db=db, id=payload.sdoc_id)
+            crud_sdoc.read(db=db, project_id=payload.project_id, id=payload.sdoc_id)
         )
         assert sdoc.doctype in {DocType.audio, DocType.video}, (
             f"SourceDocument with {payload.sdoc_id=} is not an audio or video file!"
@@ -99,6 +99,7 @@ def handle_transcription_job(
     with sqlr.transaction() as db:
         crud_sdoc_data.update(
             db=db,
+            project_id=payload.project_id,
             id=payload.sdoc_id,
             update_dto=SourceDocumentDataUpdate(
                 token_starts=transcription["token_starts"],

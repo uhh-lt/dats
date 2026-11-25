@@ -188,11 +188,11 @@ def _create_sdoc(db, project_id: int, name: str, content: str) -> SourceDocument
     """A text document whose tokens are its words and whose sentences end with '.'."""
     sdoc = crud_sdoc.create(
         db=db,
+        project_id=project_id,
         create_dto=SourceDocumentCreate(
             filename=f"{name}.txt",
             name=name,
             doctype=DocType.text,
-            project_id=project_id,
             folder_id=None,
         ),
     )
@@ -200,9 +200,9 @@ def _create_sdoc(db, project_id: int, name: str, content: str) -> SourceDocument
     sentences = list(re.finditer(r"[^.]+\.", content))
     crud_sdoc_data.create(
         db=db,
+        project_id=sdoc.project_id,
         create_dto=SourceDocumentDataCreate(
             id=sdoc.id,
-            project_id=sdoc.project_id,
             content=content,
             raw_html=f"<p>{content}</p>",
             html=f"<p>{content}</p>",

@@ -114,7 +114,9 @@ def search_and_auto_annotate(
         )
 
     sdoc_ids = [int(hit["_id"]) for hit in hits]
-    sdoc_data_list = crud_sdoc_data.read_by_ids(db=db, ids=sdoc_ids)
+    sdoc_data_list = crud_sdoc_data.read_by_ids(
+        db=db, project_id=project_id, ids=sdoc_ids
+    )
 
     # map id to data
     id2data = {

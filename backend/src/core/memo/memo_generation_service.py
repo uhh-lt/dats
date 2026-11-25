@@ -86,7 +86,7 @@ class MemoGenerationService(metaclass=SingletonMeta):
         self, *, db: Session, obj: SourceDocumentORM
     ) -> tuple[bool, str]:
         if obj.doctype == DocType.text:
-            sdoc_data = crud_sdoc_data.read(db=db, id=obj.id)
+            sdoc_data = crud_sdoc_data.read(db=db, project_id=obj.project_id, id=obj.id)
             return False, "".join(sdoc_data.sentences)
         if obj.doctype == DocType.image:
             path = crud_sdoc_file.path(
@@ -128,7 +128,9 @@ class MemoGenerationService(metaclass=SingletonMeta):
         self, *, db: Session, obj: SentenceAnnotationORM
     ) -> tuple[bool, str]:
         sdoc_data = crud_sdoc_data.read(
-            db=db, id=obj.annotation_document.source_document_id
+            db=db,
+            project_id=obj.project_id,
+            id=obj.annotation_document.source_document_id,
         )
         return (
             False,

@@ -34,10 +34,14 @@ class ProjectWithSourceDocumentForTest(TypedDict):
     source_document: SourceDocumentORM
 
 
+def _url(project_id: int, path: str = "") -> str:
+    return f"/projects/{project_id}/source-documents{path}"
+
+
 def test_get_source_document_by_id(client: TestClient, project_with_sdoc):
     sdoc = project_with_sdoc["source_document"]
 
-    response = client.get(f"/sdoc/{sdoc.id}")
+    response = client.get(_url(sdoc.project_id, f"/{sdoc.id}"))
 
     assert response.status_code == 200, response.text
     data = SourceDocumentRead.model_validate(response.json())
@@ -48,13 +52,17 @@ def test_get_source_document_by_id(client: TestClient, project_with_sdoc):
     assert data.doctype == sdoc.doctype
 
 
-def test_get_source_document_by_id_if_not_exists(
-    client: TestClient,
+def test_get_source_document_of_another_project_is_not_found(
+    client: TestClient, project_with_sdoc, foreign_project_with_sdoc
 ):
-    not_existsing_id = 2000
-    response = client.get(f"/sdoc/{not_existsing_id}")
+    """A document of another project of the user is not found in the project of
+    the path (404)."""
+    project = project_with_sdoc["project"]
+    foreign = foreign_project_with_sdoc["source_document"]
 
-    assert response.status_code == 403, response.text
+    response = client.get(_url(project.id, f"/{foreign.id}"))
+
+    assert response.status_code == 404, response.text
 
 
 def test_get_by_id_with_data(
@@ -64,7 +72,7 @@ def test_get_by_id_with_data(
     sdoc = project_with_sdoc["source_document"]
     data = project_with_sdoc["source_document_data"]
 
-    resp = client.get(f"/sdoc/data/{sdoc.id}")
+    resp = client.get(_url(sdoc.project_id, f"/{sdoc.id}/data"))
     assert resp.status_code == 200, resp.text
     data_read = SourceDocumentDataRead.model_validate(resp.json())
 
@@ -72,13 +80,16 @@ def test_get_by_id_with_data(
     assert data_read.html == data.html
 
 
-def test_get_by_id_with_data_if_not_exsisit(
-    client: TestClient,
+def test_get_data_of_another_project_is_not_found(
+    client: TestClient, project_with_sdoc, foreign_project_with_sdoc
 ):
-    non_existing_sdoc_id = 2000
-    resp = client.get(f"/sdoc/data/{non_existing_sdoc_id}")
+    """The data of a document of another project is not found (404)."""
+    project = project_with_sdoc["project"]
+    foreign = foreign_project_with_sdoc["source_document"]
 
-    assert resp.status_code == 403, resp.text
+    resp = client.get(_url(project.id, f"/{foreign.id}/data"))
+
+    assert resp.status_code == 404, resp.text
 
 
 def test_delete_source_document_by_id(
@@ -105,13 +116,13 @@ def test_delete_source_document_by_id(
     )
     assert file_path.exists()
 
-    response = client.delete(f"/sdoc/{sdoc.id}")
+    response = client.delete(_url(sdoc.project_id, f"/{sdoc.id}"))
 
     assert response.status_code == 200, response.text
     deleted = SourceDocumentRead.model_validate(response.json())
     assert deleted.id == sdoc.id
     assert deleted.project_id == sdoc.project_id
-    assert client.get(f"/sdoc/{sdoc.id}").status_code == 403
+    assert client.get(_url(sdoc.project_id, f"/{sdoc.id}")).status_code == 404
     assert not file_path.exists()
     index_name = crud_sdoc_elastic.index.get_index_name(project_id=sdoc.project_id)
     assert not es_client.exists(index=index_name, id=str(sdoc.id))
@@ -131,19 +142,23 @@ def test_delete_image_removes_all_its_files(
     ]
     assert all(folder.is_dir() for folder in folders)
 
-    response = client.delete(f"/sdoc/{image.id}")
+    response = client.delete(_url(image.project_id, f"/{image.id}"))
 
     assert response.status_code == 200, response.text
     assert [folder.exists() for folder in folders] == [False, False, False]
 
 
-def test_delete_source_document_by_id_short_if_not_exists(
-    client: TestClient,
+def test_delete_source_document_of_another_project_is_not_found(
+    client: TestClient, project_with_sdoc, foreign_project_with_sdoc
 ):
-    fake_id = 3000
-    response = client.delete(f"/sdoc/{fake_id}")
+    """Deleting a document of another project answers 404 and keeps it."""
+    project = project_with_sdoc["project"]
+    foreign = foreign_project_with_sdoc["source_document"]
 
-    assert response.status_code == 403, response.text
+    response = client.delete(_url(project.id, f"/{foreign.id}"))
+
+    assert response.status_code == 404, response.text
+    assert client.get(_url(foreign.project_id, f"/{foreign.id}")).status_code == 200
 
 
 def test_delete_sdocs_bulk(client: TestClient, project_with_sdocs_in_same_folder):
@@ -152,13 +167,15 @@ def test_delete_sdocs_bulk(client: TestClient, project_with_sdocs_in_same_folder
     sdocs = project_with_sdocs_in_same_folder["source_documents"]
     sdoc_ids = [sdoc.id for sdoc in sdocs]
 
-    response = client.request("DELETE", "/sdoc/bulk/delete", json=sdoc_ids)
+    response = client.request(
+        "DELETE", _url(sdocs[0].project_id, "/bulk"), json=sdoc_ids
+    )
 
     assert response.status_code == 200, response.text
     deleted = [SourceDocumentRead.model_validate(r) for r in response.json()]
     assert sorted(d.id for d in deleted) == sorted(sdoc_ids)
     for sdoc_id in sdoc_ids:
-        assert client.get(f"/sdoc/{sdoc_id}").status_code == 403
+        assert client.get(_url(sdocs[0].project_id, f"/{sdoc_id}")).status_code == 404
     # the SDOC_FOLDER of both documents is empty now and deleted as well
     folder = project_with_sdocs_in_same_folder["folder"]
     assert client.get(f"/folder/{folder.id}").status_code == 403
@@ -171,11 +188,13 @@ def test_delete_sdoc_keeps_sdoc_folder_with_other_sdocs(
     sdoc, other_sdoc = project_with_sdocs_in_same_folder["source_documents"]
     folder = project_with_sdocs_in_same_folder["folder"]
 
-    response = client.delete(f"/sdoc/{sdoc.id}")
+    response = client.delete(_url(sdoc.project_id, f"/{sdoc.id}"))
 
     assert response.status_code == 200, response.text
     assert client.get(f"/folder/{folder.id}").status_code == 200
-    assert client.get(f"/sdoc/{other_sdoc.id}").status_code == 200
+    assert (
+        client.get(_url(other_sdoc.project_id, f"/{other_sdoc.id}")).status_code == 200
+    )
 
 
 def test_delete_sdoc_keeps_empty_normal_folder(
@@ -193,44 +212,46 @@ def test_delete_sdoc_keeps_empty_normal_folder(
     )
     sdoc = crud_sdoc.create(
         db=db_session,
+        project_id=test_project.id,
         create_dto=SourceDocumentCreate(
             filename="normal_folder_document.txt",
             name="Normal Folder Document",
             doctype=DocType.text,
-            project_id=test_project.id,
             folder_id=folder.id,
         ),
     )
     db_session.commit()
 
-    response = client.request("DELETE", "/sdoc/bulk/delete", json=[sdoc.id])
+    response = client.request("DELETE", _url(test_project.id, "/bulk"), json=[sdoc.id])
 
     assert response.status_code == 200, response.text
-    assert client.get(f"/sdoc/{sdoc.id}").status_code == 403
+    assert client.get(_url(sdoc.project_id, f"/{sdoc.id}")).status_code == 404
     assert client.get(f"/folder/{folder.id}").status_code == 200
 
 
-def test_delete_sdocs_bulk_if_not_exists(
-    client: TestClient,
+def test_delete_sdocs_bulk_if_not_exists(client: TestClient, test_project):
+    """An id that does not exist in the project is not found (404)."""
+    response = client.request("DELETE", _url(test_project.id, "/bulk"), json=[999999])
+
+    assert response.status_code == 404, response.text
+
+
+def test_delete_sdocs_bulk_rejects_batch_with_a_document_of_another_project(
+    client: TestClient, project_with_sdoc, foreign_project_with_sdoc
 ):
-    """assert_in_same_project_as_many authorizes first, so an unknown id -> 403."""
-    response = client.request("DELETE", "/sdoc/bulk/delete", json=[999999])
-
-    assert response.status_code == 403, response.text
-
-
-def test_delete_sdocs_bulk_rejects_batch_with_unknown_id(
-    client: TestClient, project_with_sdoc
-):
-    """All-or-nothing: an unknown id in the batch rejects the whole request (403)
-    and deletes nothing."""
+    """All-or-nothing: a document of another project in the batch rejects the
+    whole request (404) and deletes nothing."""
     sdoc = project_with_sdoc["source_document"]
+    foreign = foreign_project_with_sdoc["source_document"]
 
-    response = client.request("DELETE", "/sdoc/bulk/delete", json=[sdoc.id, 999999])
+    response = client.request(
+        "DELETE", _url(sdoc.project_id, "/bulk"), json=[sdoc.id, foreign.id]
+    )
 
-    assert response.status_code == 403, response.text
+    assert response.status_code == 404, response.text
+    assert client.get(_url(foreign.project_id, f"/{foreign.id}")).status_code == 200
     # All-or-nothing: the valid sdoc must NOT have been deleted.
-    assert client.get(f"/sdoc/{sdoc.id}").status_code == 200
+    assert client.get(_url(sdoc.project_id, f"/{sdoc.id}")).status_code == 200
 
 
 testdata_sdoc_update = [
@@ -247,7 +268,7 @@ def test_update_sdoc_parametrized(
     sdoc = project_with_sdoc["source_document"]
 
     resp = client.patch(
-        f"/sdoc/{sdoc.id}",
+        _url(sdoc.project_id, f"/{sdoc.id}"),
         json=payload,
     )
 
@@ -259,57 +280,79 @@ def test_update_sdoc_parametrized(
     assert updated.doctype == sdoc.doctype
 
 
-def test_update_sdoc_if_not_exists(
-    client: TestClient,
+def test_update_sdoc_of_another_project_is_not_found(
+    client: TestClient, project_with_sdoc, foreign_project_with_sdoc
 ):
-    fake_id = 2000
-    payload = SourceDocumentUpdate(
-        name="New Name",
-    )
+    """Updating a document of another project answers 404."""
+    project = project_with_sdoc["project"]
+    foreign = foreign_project_with_sdoc["source_document"]
+    payload = SourceDocumentUpdate(name="New Name")
+
     resp = client.patch(
-        f"/sdoc/{fake_id}",
+        _url(project.id, f"/{foreign.id}"),
         json=payload.model_dump(exclude_none=True),
     )
 
-    assert resp.status_code == 403, resp.text
+    assert resp.status_code == 404, resp.text
+
+
+def test_update_sdoc_into_a_folder_of_another_project_is_a_conflict(
+    client: TestClient, project_with_sdoc, foreign_project_with_sdoc
+):
+    """Moving a document into a folder of another project is rejected by the
+    composite foreign key (409)."""
+    sdoc = project_with_sdoc["source_document"]
+    foreign = foreign_project_with_sdoc["source_document"]
+
+    resp = client.patch(
+        _url(sdoc.project_id, f"/{sdoc.id}"),
+        json=SourceDocumentUpdate(folder_id=foreign.folder_id).model_dump(
+            exclude_unset=True
+        ),
+    )
+
+    assert resp.status_code == 409, resp.text
 
 
 def test_update_sdoc_cannot_write_step_statuses(client: TestClient, project_with_sdoc):
     """The step statuses are no fields of the update: a status next to the name
-    is ignored, so the finished document stays readable (GET /sdoc rejects
+    is ignored, so the finished document stays readable (GET rejects
     unfinished documents), and a status alone is an empty update (422)."""
     sdoc = project_with_sdoc["source_document"]
 
     with_name = client.patch(
-        f"/sdoc/{sdoc.id}", json={"name": "Renamed", "tokens_sentences": -100}
+        _url(sdoc.project_id, f"/{sdoc.id}"),
+        json={"name": "Renamed", "tokens_sentences": -100},
     )
-    status_only = client.patch(f"/sdoc/{sdoc.id}", json={"tokens_sentences": -100})
+    status_only = client.patch(
+        _url(sdoc.project_id, f"/{sdoc.id}"), json={"tokens_sentences": -100}
+    )
 
     assert with_name.status_code == 200, with_name.text
     assert status_only.status_code == 422, status_only.text
-    assert client.get(f"/sdoc/{sdoc.id}").status_code == 200
+    assert client.get(_url(sdoc.project_id, f"/{sdoc.id}")).status_code == 200
 
 
 def test_get_same_folder_sdocs(client: TestClient, project_with_sdocs_in_same_folder):
     sdoc = project_with_sdocs_in_same_folder["source_documents"][0]
     sdoc_2 = project_with_sdocs_in_same_folder["source_documents"][1]
 
-    resp = client.get(f"/sdoc/{sdoc.id}/same_folder")
+    resp = client.get(_url(sdoc.project_id, f"/{sdoc.id}/same-folder"))
     assert resp.status_code == 200, resp.text
 
     ids = resp.json()
     assert ids == [sdoc.id, sdoc_2.id]
 
 
-def test_get_same_folder_sdocs_if_not_exists(
-    client: TestClient,
+def test_get_same_folder_sdocs_of_another_project_is_not_found(
+    client: TestClient, project_with_sdoc, foreign_project_with_sdoc
 ):
-    fake_id = 2000
-    response = client.get(
-        f"/sdoc/{fake_id}/same_folder",
-    )
+    project = project_with_sdoc["project"]
+    foreign = foreign_project_with_sdoc["source_document"]
 
-    assert response.status_code == 403, response.text
+    response = client.get(_url(project.id, f"/{foreign.id}/same-folder"))
+
+    assert response.status_code == 404, response.text
 
 
 def test_get_urls_of_a_text_document(client: TestClient, project_with_sdoc):
@@ -317,7 +360,7 @@ def test_get_urls_of_a_text_document(client: TestClient, project_with_sdoc):
     thumbnail."""
     sdoc = project_with_sdoc["source_document"]
 
-    response = client.get(f"/sdoc/{sdoc.id}/urls")
+    response = client.get(_url(sdoc.project_id, f"/{sdoc.id}/urls"))
 
     assert response.status_code == 200, response.text
     assert SourceDocumentUrls.model_validate(response.json()) == SourceDocumentUrls(
@@ -335,7 +378,7 @@ def test_get_urls_of_an_image_with_its_thumbnails(
     image = project_with_image["image"]
     folder = f"projects/{image.project_id}"
 
-    response = client.get(f"/sdoc/{image.id}/urls")
+    response = client.get(_url(image.project_id, f"/{image.id}/urls"))
 
     assert response.status_code == 200, response.text
     assert SourceDocumentUrls.model_validate(response.json()) == SourceDocumentUrls(
@@ -345,13 +388,15 @@ def test_get_urls_of_an_image_with_its_thumbnails(
     )
 
 
-def test_get_urls_if_not_exists(
-    client: TestClient,
+def test_get_urls_of_another_project_is_not_found(
+    client: TestClient, project_with_sdoc, foreign_project_with_sdoc
 ):
-    fake_id = 2000
-    response = client.get(f"/sdoc/{fake_id}/urls")
+    project = project_with_sdoc["project"]
+    foreign = foreign_project_with_sdoc["source_document"]
 
-    assert response.status_code == 403, response.text
+    response = client.get(_url(project.id, f"/{foreign.id}/urls"))
+
+    assert response.status_code == 404, response.text
 
 
 def test_get_annotators_id(
@@ -359,7 +404,7 @@ def test_get_annotators_id(
 ):
     sdoc = project_with_sentence_annotation["source_document"]
 
-    resp = client.get(f"/sdoc/{sdoc.id}/annotators")
+    resp = client.get(_url(sdoc.project_id, f"/{sdoc.id}/annotators"))
 
     assert resp.status_code == 200, resp.text
     assert test_user.id in resp.json()
@@ -371,14 +416,70 @@ def test_get_annotators_empty_when_no_annotations(
 ):
     sdoc = project_with_sdoc["source_document"]
 
-    resp = client.get(f"/sdoc/{sdoc.id}/annotators")
+    resp = client.get(_url(sdoc.project_id, f"/{sdoc.id}/annotators"))
 
     assert resp.status_code == 200, resp.text
     assert resp.json() == []
 
 
-def test_get_annotators_if_not_exists(client: TestClient):
-    fake_id = 2000
-    resp = client.get(f"/sdoc/{fake_id}/annotators")
+def test_get_annotators_of_another_project_is_not_found(
+    client: TestClient, project_with_sdoc, foreign_project_with_sdoc
+):
+    project = project_with_sdoc["project"]
+    foreign = foreign_project_with_sdoc["source_document"]
 
-    assert resp.status_code == 403, resp.text
+    resp = client.get(_url(project.id, f"/{foreign.id}/annotators"))
+
+    assert resp.status_code == 404, resp.text
+
+
+# ===========================================================================
+# COUNT (/projects/{project_id}/source-documents/count) TESTS
+# ===========================================================================
+
+
+def test_count_sdocs_counts_the_documents_of_the_project(
+    client: TestClient, project_with_sdoc, foreign_project_with_sdoc
+):
+    """The count covers the documents of the path's project only; the document of
+    `project_with_sdoc` has no planned steps, so it counts as finished."""
+    project = project_with_sdoc["project"]
+
+    all_response = client.get(_url(project.id, "/count"))
+    finished = client.get(_url(project.id, "/count"), params={"status": 1})
+
+    assert all_response.status_code == 200, all_response.text
+    assert all_response.json() == 1
+    assert finished.status_code == 200, finished.text
+    assert finished.json() == 1
+
+
+# ===========================================================================
+# BY FILENAME (/projects/{project_id}/source-documents/by-filename) TESTS
+# ===========================================================================
+
+
+def test_resolve_filename_returns_the_id_of_the_document(
+    client: TestClient, project_with_sdoc
+):
+    sdoc = project_with_sdoc["source_document"]
+
+    response = client.get(
+        _url(sdoc.project_id, "/by-filename"), params={"filename": sdoc.filename}
+    )
+
+    assert response.status_code == 200, response.text
+    assert response.json() == sdoc.id
+
+
+def test_resolve_filename_matches_no_document_of_another_project(
+    client: TestClient, test_project, foreign_project_with_sdoc
+):
+    """The filename of a document of another project matches nothing (404)."""
+    foreign = foreign_project_with_sdoc["source_document"]
+
+    response = client.get(
+        _url(test_project.id, "/by-filename"), params={"filename": foreign.filename}
+    )
+
+    assert response.status_code == 404, response.text

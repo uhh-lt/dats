@@ -6,6 +6,7 @@ from sqlalchemy import (
     ForeignKey,
     ForeignKeyConstraint,
     Integer,
+    PrimaryKeyConstraint,
     String,
     UniqueConstraint,
     func,
@@ -36,7 +37,8 @@ if TYPE_CHECKING:
 
 
 class SourceDocumentORM(ORMBase):
-    id: Mapped[int] = mapped_column(Integer, primary_key=True, index=True)
+    # the primary key is (project_id, id), see __table_args__
+    id: Mapped[int] = mapped_column(Integer, autoincrement=True, index=True)
     filename: Mapped[str] = mapped_column(String, nullable=False, index=True)
     name: Mapped[str] = mapped_column(
         String(collation="natsort"), nullable=False, index=True
@@ -74,7 +76,6 @@ class SourceDocumentORM(ORMBase):
         Integer,
         ForeignKey("project.id", ondelete="CASCADE"),
         nullable=False,
-        index=True,
     )
     project: Mapped["ProjectORM"] = relationship(
         "ProjectORM", back_populates="source_documents"
@@ -170,6 +171,7 @@ class SourceDocumentORM(ORMBase):
         return [memo.id for memo in self.object_handle.attached_memos]
 
     __table_args__ = (
+        PrimaryKeyConstraint("project_id", "id", name="sourcedocument_pkey"),
         UniqueConstraint(
             "project_id", "filename", name="UC_unique_filename_in_project"
         ),
@@ -181,6 +183,3 @@ class SourceDocumentORM(ORMBase):
             name="FK_sourcedocument_folder_id",
         ),
     )
-
-    def get_project_id(self) -> int:
-        return self.project_id

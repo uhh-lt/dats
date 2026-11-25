@@ -129,7 +129,7 @@ def transform_nodes_for_export(
                 assert isinstance(node.data, SdocNodeData), "Expected SdocNodeData type"
                 sdoc_ids.append(node.data.sdocId)
 
-            sdocs = crud_sdoc.read_by_ids(db=db, ids=sdoc_ids)
+            sdocs = crud_sdoc.read_by_ids(db=db, project_id=project_id, ids=sdoc_ids)
             sdoc_id_to_name: dict[int, str] = {sdoc.id: sdoc.filename for sdoc in sdocs}
 
             for node in nodes:

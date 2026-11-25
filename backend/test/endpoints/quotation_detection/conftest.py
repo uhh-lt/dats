@@ -128,14 +128,21 @@ def quotation_project(db_session: Session, test_user: UserORM) -> QuotationProje
         )
     }
 
-    audio_data = crud_sdoc_data.read(db=db_session, id=documents["german_audio"].id)
+    audio_data = crud_sdoc_data.read(
+        db=db_session,
+        project_id=documents["german_audio"].project_id,
+        id=documents["german_audio"].id,
+    )
     audio_data.sentence_ends = [
         audio_data.sentence_ends[0] - 1,
         *audio_data.sentence_ends[1:],
     ]
 
     adoc = crud_adoc.exists_or_create(
-        db=db_session, user_id=SYSTEM_USER_ID, sdoc_id=documents["was_german"].id
+        db=db_session,
+        project_id=documents["was_german"].project_id,
+        user_id=SYSTEM_USER_ID,
+        sdoc_id=documents["was_german"].id,
     )
     direct = crud_code.read_by_name_and_project(
         db=db_session, code_name="DIRECT", project_id=project.id

@@ -154,7 +154,12 @@ def test_enable_feature_lets_other_transactions_reference_the_locked_documents(
         try:
             with SQLRepo().transaction() as db:
                 db.execute(text("SET LOCAL lock_timeout = '1500ms'"))
-                crud_adoc.exists_or_create(db=db, user_id=test_user.id, sdoc_id=sdoc_id)
+                crud_adoc.exists_or_create(
+                    db=db,
+                    project_id=planning_projects["project"].id,
+                    user_id=test_user.id,
+                    sdoc_id=sdoc_id,
+                )
         except Exception as e:
             errors.append(e)
 

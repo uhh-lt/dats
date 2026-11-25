@@ -44,7 +44,7 @@ class AnnoScalingService(metaclass=SingletonMeta):
         reject: list[tuple[int, int]],
     ) -> list[SpanAnnotationRead]:
         sdoc_ids = list({sdoc for sdoc, _ in accept + reject})
-        sdoc_data = crud_sdoc_data.read_by_ids(db, ids=sdoc_ids)
+        sdoc_data = crud_sdoc_data.read_by_ids(db, project_id=project_id, ids=sdoc_ids)
         sdocs = {sdoc.id: sdoc for sdoc in sdoc_data}
 
         to_create = []
@@ -187,7 +187,9 @@ class AnnoScalingService(metaclass=SingletonMeta):
         start_time = perf_counter_ns()
         # takes 2ms (small project)
         sdoc_sentences = self.__get_sentences(
-            db=db, sdoc_ids={id for _, _, id in occurrences + rejections}
+            db=db,
+            project_id=project_id,
+            sdoc_ids={id for _, _, id in occurrences + rejections},
         )
         end_time = perf_counter_ns()
         print("it took", end_time - start_time, "ns to get sentences from the DB")
@@ -208,7 +210,7 @@ class AnnoScalingService(metaclass=SingletonMeta):
             "it took", end_time - start_time, "ns to get similar sentences from index"
         )
         sim_doc_sentences = self.__get_sentences(
-            db=db, sdoc_ids={hit.sdoc_id for hit in hits}
+            db=db, project_id=project_id, sdoc_ids={hit.sdoc_id for hit in hits}
         )
 
         results = []
@@ -265,9 +267,11 @@ class AnnoScalingService(metaclass=SingletonMeta):
         return [(r[0], r[1], r[2]) for r in res]
 
     def __get_sentences(
-        self, db: Session, sdoc_ids: Iterable[int]
+        self, db: Session, project_id: int, sdoc_ids: Iterable[int]
     ) -> dict[int, tuple[list[int], list[int], str]]:
-        sdoc_datas = crud_sdoc_data.read_by_ids(db, ids=list(sdoc_ids))
+        sdoc_datas = crud_sdoc_data.read_by_ids(
+            db, project_id=project_id, ids=list(sdoc_ids)
+        )
         result: dict[int, tuple[list[int], list[int], str]] = {}
         for sdoc in sdoc_datas:
             result[sdoc.id] = (

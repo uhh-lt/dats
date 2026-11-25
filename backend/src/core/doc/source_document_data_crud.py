@@ -6,11 +6,12 @@ from core.doc.source_document_data_dto import (
     SourceDocumentDataUpdate,
 )
 from core.doc.source_document_data_orm import SourceDocumentDataORM
-from repos.db.crud_base import BATCH_SIZE, SQLCRUDBase
+from repos.db.crud_base import BATCH_SIZE
+from repos.db.project_crud_base import ProjectCRUDBase
 
 
 class CRUDSourceDocumentData(
-    SQLCRUDBase[
+    ProjectCRUDBase[
         SourceDocumentDataORM,
         SourceDocumentDataCreate,
         SourceDocumentDataUpdate,
@@ -19,19 +20,20 @@ class CRUDSourceDocumentData(
     ### READ OPERATIONS ###
 
     def read_offsets_by_ids(
-        self, db: Session, *, ids: list[int]
+        self, db: Session, *, project_id: int, ids: list[int]
     ) -> dict[int, SourceDocumentDataORM]:
         """
         Read the token and sentence offsets of documents, without their texts
         (content, html, raw html), in batches of `BATCH_SIZE`.
 
         Args:
+            project_id: The project of the source documents.
             ids: The IDs of the source documents.
 
         Returns:
             The document data by source document ID, with only `token_starts`,
             `token_ends`, `sentence_starts` and `sentence_ends` loaded. Documents
-            without data have no entry.
+            without data or of another project have no entry.
         """
         if not ids:
             return {}
@@ -50,21 +52,28 @@ class CRUDSourceDocumentData(
                         self.model.sentence_ends,
                     )
                 )
-                .filter(self.model.id.in_(batch_ids))
+                .filter(
+                    self.model.project_id == project_id,
+                    self.model.id.in_(batch_ids),
+                )
                 .all()
             ):
                 db_objs[db_obj.id] = db_obj
         return db_objs
 
-    def read_contents_by_ids(self, db: Session, *, ids: list[int]) -> dict[int, str]:
+    def read_contents_by_ids(
+        self, db: Session, *, project_id: int, ids: list[int]
+    ) -> dict[int, str]:
         """
         Read the plain text content of documents, in batches of `BATCH_SIZE`.
 
         Args:
+            project_id: The project of the source documents.
             ids: The IDs of the source documents.
 
         Returns:
-            The content by source document ID. Documents without data have no entry.
+            The content by source document ID. Documents without data or of
+            another project have no entry.
         """
         if not ids:
             return {}
@@ -75,7 +84,8 @@ class CRUDSourceDocumentData(
             batch_ids = unique_ids[i : i + BATCH_SIZE]
             for id, content in db.execute(
                 select(self.model.id, self.model.content).where(
-                    self.model.id.in_(batch_ids)
+                    self.model.project_id == project_id,
+                    self.model.id.in_(batch_ids),
                 )
             ):
                 contents[id] = content

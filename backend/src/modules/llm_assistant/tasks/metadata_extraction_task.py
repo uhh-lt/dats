@@ -45,7 +45,9 @@ class MetadataExtractionTask(
         current_metadata = [
             SourceDocumentMetadataReadResolved.model_validate(metadata)
             for metadata in crud_sdoc.read(
-                db=context.db, id=document.sdoc_data.id
+                db=context.db,
+                project_id=document.sdoc_data.project_id,
+                id=document.sdoc_data.id,
             ).metadata_
             if metadata.project_metadata_id in project_metadata_ids
         ]

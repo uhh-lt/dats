@@ -219,7 +219,7 @@ def find_sdocs(
     sdoc_ids = [hit.id for hit in data.hits]
 
     # 1. the sdoc itself
-    sdoc_db_objs = crud_sdoc.read_by_ids(db=db, ids=sdoc_ids)
+    sdoc_db_objs = crud_sdoc.read_by_ids(db=db, project_id=project_id, ids=sdoc_ids)
     sdocs = {sdoc.id: SourceDocumentRead.model_validate(sdoc) for sdoc in sdoc_db_objs}
 
     # 2. the sdoc folders
@@ -227,10 +227,12 @@ def find_sdocs(
     folders = crud_folder.read_by_ids(db=db, ids=list(OrderedDict.fromkeys(folder_ids)))
 
     # 3. the annotators
-    annotators = crud_sdoc.read_annotators(db=db, sdoc_ids=sdoc_ids)
+    annotators = crud_sdoc.read_annotators(
+        db=db, project_id=project_id, sdoc_ids=sdoc_ids
+    )
 
     # 4. the tags
-    tags = crud_sdoc.read_tags(db=db, sdoc_ids=sdoc_ids)
+    tags = crud_sdoc.read_tags(db=db, project_id=project_id, sdoc_ids=sdoc_ids)
 
     # construct the nested result object
     hierarchical_hits: list[HierarchicalElasticSearchHit] = []

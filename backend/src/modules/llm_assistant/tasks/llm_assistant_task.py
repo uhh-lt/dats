@@ -257,6 +257,7 @@ class LLMAssistantTask(
             model=payload.model,
             strategy=strategy,
             sqlr=sqlr,
+            project_id=payload.project_id,
             sdoc_ids=[
                 sdoc_id for sdoc_id in sdoc_ids if sdoc_id not in result_by_sdoc_id
             ],
