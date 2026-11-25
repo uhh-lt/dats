@@ -26,13 +26,13 @@ def project_with_code(db_session, test_project) -> ProjectWithCode:
     # Create a code in the project
     code = crud_code.create(
         db=db_session,
+        project_id=test_project.id,
         create_dto=CodeCreate(
             name="Test Code",
             color="Red",
             description="Test code for retrieval",
             parent_id=None,
             enabled=True,
-            project_id=test_project.id,
             is_system=False,
         ),
     )
@@ -58,13 +58,13 @@ def project_with_parent_and_child_code(
     # Create parent code
     parent_code = crud_code.create(
         db=db_session,
+        project_id=test_project.id,
         create_dto=CodeCreate(
             name="Parent Code",
             color="Blue",
             description="Parent code for testing",
             parent_id=None,
             enabled=True,
-            project_id=test_project.id,
             is_system=False,
         ),
     )
@@ -73,13 +73,13 @@ def project_with_parent_and_child_code(
     # Create child code
     code = crud_code.create(
         db=db_session,
+        project_id=test_project.id,
         create_dto=CodeCreate(
             name="Child Code",
             color="Green",
             description="Child code for testing",
             parent_id=parent_code.id,
             enabled=True,
-            project_id=test_project.id,
             is_system=False,
         ),
     )
@@ -105,13 +105,13 @@ def project_with_code_hierarchy(db_session, test_project) -> ProjectWithCodeHier
     # Create grandparent code
     grandparent_code = crud_code.create(
         db=db_session,
+        project_id=test_project.id,
         create_dto=CodeCreate(
             name="Grandparent Code",
             color="Blue",
             description="Grandparent code for testing",
             parent_id=None,
             enabled=True,
-            project_id=test_project.id,
             is_system=False,
         ),
     )
@@ -120,13 +120,13 @@ def project_with_code_hierarchy(db_session, test_project) -> ProjectWithCodeHier
     # Create parent code
     parent_code = crud_code.create(
         db=db_session,
+        project_id=test_project.id,
         create_dto=CodeCreate(
             name="Parent Code",
             color="Green",
             description="Parent code for testing",
             parent_id=grandparent_code.id,
             enabled=True,
-            project_id=test_project.id,
             is_system=False,
         ),
     )
@@ -135,13 +135,13 @@ def project_with_code_hierarchy(db_session, test_project) -> ProjectWithCodeHier
     # Create child code
     child_code = crud_code.create(
         db=db_session,
+        project_id=test_project.id,
         create_dto=CodeCreate(
             name="Child Code",
             color="Red",
             description="Child code for testing",
             parent_id=parent_code.id,
             enabled=True,
-            project_id=test_project.id,
             is_system=False,
         ),
     )

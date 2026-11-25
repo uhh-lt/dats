@@ -152,13 +152,13 @@ def _make_code(
 ) -> CodeORM:
     return crud_code.create(
         db=db_session,
+        project_id=project.id,
         create_dto=CodeCreate(
             name=name,
             color=color,
             description=f"{name} code",
             parent_id=parent_id,
             enabled=True,
-            project_id=project.id,
             is_system=False,
         ),
     )
@@ -342,29 +342,35 @@ def search_project(
     # sdocs, while plain CONTAINS on "Important" matches only sdoc_one. ---
     tag = crud_tag.create(
         db=seed_db_session,
+        project_id=project.id,
         create_dto=TagCreate(
             name="Important",
             color="#0000ff",
             description="Important tag",
             parent_id=None,
-            project_id=project.id,
         ),
     )
     subtag = crud_tag.create(
         db=seed_db_session,
+        project_id=project.id,
         create_dto=TagCreate(
             name="Urgent",
             color="#ff00ff",
             description="Urgent tag",
             parent_id=tag.id,
-            project_id=project.id,
         ),
     )
     crud_tag.link_multiple_tags(
-        db=seed_db_session, sdoc_ids=[sdoc_one.id], tag_ids=[tag.id]
+        db=seed_db_session,
+        project_id=project.id,
+        sdoc_ids=[sdoc_one.id],
+        tag_ids=[tag.id],
     )
     crud_tag.link_multiple_tags(
-        db=seed_db_session, sdoc_ids=[sdoc_two.id], tag_ids=[subtag.id]
+        db=seed_db_session,
+        project_id=project.id,
+        sdoc_ids=[sdoc_two.id],
+        tag_ids=[subtag.id],
     )
 
     # --- folders (a hierarchy: "Archive" is a CHILD of "Research"). sdoc_two's

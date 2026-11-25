@@ -21,7 +21,7 @@ type SdocSearchRequest = Omit<Parameters<typeof SearchService.searchSdocs>[0], "
  *   sdocQueries.idByFilename(pid, filename)  ["sdoc", "idByFilename", pid, filename]
  *   sdocQueries.sameFolder(sdocId)           ["sdoc", "sameFolder", sdocId]
  *   sdocQueries.urls(sdocId)                 ["sdoc", "urls", sdocId]
- *   sdocQueries.idsByTag(tagId)              ["sdoc", "idsByTag", tagId]
+ *   sdocQueries.idsByTag(projectId, tagId)   ["sdoc", "idsByTag", tagId, projectId]
  *   sdocQueries.annotators(sdocId)           ["sdoc", "annotators", sdocId]
  *   sdocQueries.tableInfo(projectId)         ["tableInfo", "sdoc", projectId]
  *   sdocQueries.search(request)              ["sdoc", "search", projectId, request]
@@ -78,10 +78,10 @@ export const sdocQueries = {
 
   // ids of the sdocs that carry a tag
   idsByTagScope: () => [...sdocQueries.all(), "idsByTag"] as const,
-  idsByTag: (tagId: number | null | undefined) =>
+  idsByTag: (projectId: number | null | undefined, tagId: number | null | undefined) =>
     queryOptions({
-      queryKey: [...sdocQueries.idsByTagScope(), tagId] as const,
-      queryFn: !tagId ? skipToken : () => TagService.getSdocIdsByTagId({ tagId }),
+      queryKey: [...sdocQueries.idsByTagScope(), tagId, projectId] as const,
+      queryFn: !projectId || !tagId ? skipToken : () => TagService.getSdocIdsByTagId({ projectId, tagId }),
     }),
 
   // user ids that annotated the sdoc
@@ -123,7 +123,7 @@ export const sdocQueries = {
         });
 
         Object.entries(data.tags).forEach(([sdocId, tags]) => {
-          queryClient.setQueryData(tagQueries.idsBySdoc(parseInt(sdocId)).queryKey, tags);
+          queryClient.setQueryData(tagQueries.idsBySdoc(projectId, parseInt(sdocId)).queryKey, tags);
         });
 
         queryClient.setQueryData(folderQueries.byProject(projectId, FolderType.SDOC_FOLDER).queryKey, (prev) => {

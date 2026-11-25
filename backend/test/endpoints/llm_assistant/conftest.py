@@ -181,31 +181,34 @@ def llm_assistant_project(
     assert person_code is not None, "The default PERSON system code is missing"
     fact_code = crud_code.create(
         db=db_session,
+        project_id=test_project.id,
         create_dto=CodeCreate(
             name="FACT",
             description="A sentence that explicitly states a factual value.",
-            project_id=test_project.id,
             is_system=False,
         ),
     )
     people_tag = crud_tag.create(
         db=db_session,
+        project_id=test_project.id,
         create_dto=TagCreate(
             name="People",
             description="Documents that explicitly name a person.",
-            project_id=test_project.id,
         ),
     )
     other_tag = crud_tag.create(
         db=db_session,
+        project_id=test_project.id,
         create_dto=TagCreate(
             name="Other",
             description="Documents without a named person.",
-            project_id=test_project.id,
         ),
     )
     crud_tag.link_multiple_tags(
-        db=db_session, sdoc_ids=[target_sdoc.id], tag_ids=[other_tag.id]
+        db=db_session,
+        project_id=test_project.id,
+        sdoc_ids=[target_sdoc.id],
+        tag_ids=[other_tag.id],
     )
 
     metadata_fields = [
@@ -370,10 +373,10 @@ def llm_assistant_project(
     )
     foreign_code = crud_code.create(
         db=db_session,
+        project_id=foreign_project.id,
         create_dto=CodeCreate(
             name="FOREIGN",
             description="A foreign-project code.",
-            project_id=foreign_project.id,
             is_system=False,
         ),
     )

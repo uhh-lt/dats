@@ -172,10 +172,10 @@ def create_run_user_project(
     )
     code_claim = crud_code.create(
         db=db,
+        project_id=project.id,
         create_dto=CodeCreate(
             name="Claim",
             description="Claim code",
-            project_id=project.id,
             is_system=False,
         ),
     )

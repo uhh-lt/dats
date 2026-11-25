@@ -295,13 +295,13 @@ def _create_sdoc(
 def _create_code(db_session, *, project_id: int, name: str) -> CodeORM:
     return crud_code.create(
         db=db_session,
+        project_id=project_id,
         create_dto=CodeCreate(
             name=name,
             color="red",
             description=f"description of {name}",
             parent_id=None,
             enabled=True,
-            project_id=project_id,
             is_system=False,
         ),
     )

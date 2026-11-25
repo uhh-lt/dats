@@ -62,6 +62,7 @@ export function TagMenu(props: TagMenuProps) {
 }
 
 function TagMenuContent({
+  projectId,
   sdocIds,
   anchorEl,
   setAnchorEl,
@@ -107,6 +108,7 @@ function TagMenuContent({
 
     if (isChecked) {
       removeTagsMutation({
+        projectId,
         requestBody: {
           source_document_ids: sdocIds,
           tag_ids: [tagId],
@@ -114,6 +116,7 @@ function TagMenuContent({
       });
     } else {
       addTagsMutation({
+        projectId,
         requestBody: {
           source_document_ids: sdocIds,
           tag_ids: [tagId],
@@ -127,6 +130,7 @@ function TagMenuContent({
   const handleApplyTags = useCallback(() => {
     const checkedEntries = Object.entries(checked);
     updateTagsMutation({
+      projectId,
       requestBody: {
         sdoc_ids: sdocIds,
         link_tag_ids: checkedEntries
@@ -138,7 +142,7 @@ function TagMenuContent({
       },
     });
     handleClose();
-  }, [checked, handleClose, sdocIds, updateTagsMutation]);
+  }, [checked, handleClose, projectId, sdocIds, updateTagsMutation]);
 
   // Display buttons depending on state
   const actionMenu: React.ReactNode = useMemo(() => {

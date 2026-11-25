@@ -68,11 +68,11 @@ export function CodeCreateDialog({ projectId, onCodesCreated }: CodeCreateDialog
       }
       createCodeMutation(
         {
+          projectId,
           requestBody: {
             name: createData.name,
             description: createData.description,
             color: createData.color,
-            project_id: projectId,
             parent_id: pcid === -1 ? null : pcid,
             is_system: false,
           },

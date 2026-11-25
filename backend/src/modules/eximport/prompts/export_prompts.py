@@ -166,12 +166,14 @@ class _References:
             code_name={
                 id: code.name
                 for id, code in crud_code.read_existing_by_ids(
-                    db=db, ids=code_ids
+                    db=db, project_id=project_id, ids=code_ids
                 ).items()
             },
             tag_name={
                 id: tag.name
-                for id, tag in crud_tag.read_existing_by_ids(db=db, ids=tag_ids).items()
+                for id, tag in crud_tag.read_existing_by_ids(
+                    db=db, project_id=project_id, ids=tag_ids
+                ).items()
             },
             metadata_key_and_doctype={
                 id: (field.key, field.doctype)

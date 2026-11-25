@@ -45,7 +45,6 @@ export function TagCreateDialog({ projectId, onTagsCreated }: TagCreateDialogPro
         name: dialogData?.tagName || "",
         color: rgbToHex(contrastiveColors[Math.floor(Math.random() * contrastiveColors.length)]),
         description: "",
-        project_id: projectId,
       });
     }
   }, [dialogData, isOpen, reset, projectId]);
@@ -56,12 +55,12 @@ export function TagCreateDialog({ projectId, onTagsCreated }: TagCreateDialogPro
     (createData) => {
       createTagMutation(
         {
+          projectId,
           requestBody: {
             name: createData.name,
             description: createData.description || "",
             color: createData.color,
             parent_id: createData.parent_id === -1 ? null : createData.parent_id,
-            project_id: projectId,
           },
         },
         {

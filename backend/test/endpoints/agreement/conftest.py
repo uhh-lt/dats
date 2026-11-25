@@ -172,13 +172,13 @@ def _create_user(db, first_name: str, last_name: str, email: str) -> UserORM:
 def _create_code(db, project_id: int, name: str) -> CodeORM:
     return crud_code.create(
         db=db,
+        project_id=project_id,
         create_dto=CodeCreate(
             name=name,
             color="#ff0000",
             description=f"Code {name}",
             parent_id=None,
             enabled=True,
-            project_id=project_id,
             is_system=False,
         ),
     )

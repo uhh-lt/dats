@@ -70,10 +70,8 @@ def project_with_tags(db_session, test_project) -> ProjectWithTags:
     """
     tags = crud_tag.create_multi(
         db=db_session,
-        create_dtos=[
-            TagCreate(name=f"Tag {i}", color="#000000", project_id=test_project.id)
-            for i in range(5)
-        ],
+        project_id=test_project.id,
+        create_dtos=[TagCreate(name=f"Tag {i}", color="#000000") for i in range(5)],
     )
     db_session.commit()
 
@@ -150,11 +148,11 @@ def sdoc_with_span_annotations(
     sdoc_id = project_with_sdoc["source_document"].id
     code = crud_code.create(
         db=db_session,
+        project_id=project.id,
         create_dto=CodeCreate(
             name="crud-code",
             color="red",
             description="",
-            project_id=project.id,
             is_system=False,
         ),
     )

@@ -37,13 +37,13 @@ def project_with_sdoc_and_code(db_session, project_with_sdoc) -> ProjectWithSdoc
 
     code = crud_code.create(
         db=db_session,
+        project_id=project.id,
         create_dto=CodeCreate(
             name="Test Code",
             color="Red",
             description="Test code for sentence annotation",
             parent_id=None,
             enabled=True,
-            project_id=project.id,
             is_system=False,
         ),
     )
@@ -78,13 +78,13 @@ def project_with_sentence_annotation(
     # Create a second code in the project (for update tests)
     code2 = crud_code.create(
         db=db_session,
+        project_id=project.id,
         create_dto=CodeCreate(
             name="Test Code 2",
             color="Blue",
             description="Second test code for sentence annotation",
             parent_id=None,
             enabled=True,
-            project_id=project.id,
             is_system=False,
         ),
     )
@@ -205,13 +205,13 @@ def project_with_multiple_sentence_annotations_and_new_code(
     # Create a new code
     new_code = crud_code.create(
         db=db_session,
+        project_id=project.id,
         create_dto=CodeCreate(
             name="New Test Code",
             color="Blue",
             description="New test code for sentence annotation",
             parent_id=None,
             enabled=True,
-            project_id=project.id,
             is_system=False,
         ),
     )

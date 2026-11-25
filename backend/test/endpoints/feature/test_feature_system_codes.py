@@ -229,8 +229,10 @@ def test_import_of_entity_spans_keeps_the_annotations_on_one_set_of_system_codes
 
     db_session.expire_all()
     for name in ("NAMED_ENTITY", "PERSON"):
-        codes = crud_code.read_by_name(db=db_session, code_name=name)
-        assert [c.is_system for c in codes if c.project_id == target.id] == [True]
+        code = crud_code.read_by_name_and_project(
+            db_session, code_name=name, project_id=target.id
+        )
+        assert code is not None and code.is_system
     person = _codes(db_session, target.id)["PERSON"]
     assert person.parent_id == _codes(db_session, target.id)["NAMED_ENTITY"].id
     [sdoc] = crud_sdoc.read_by_project(

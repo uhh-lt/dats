@@ -486,9 +486,8 @@ def code_import_projects(db_session, test_user: UserORM) -> CodeImportProjects:
     )
     crud_code.create(
         db=db_session,
-        create_dto=CodeCreate(
-            name="NAMED_ENTITY", project_id=user_code.id, is_system=False
-        ),
+        project_id=user_code.id,
+        create_dto=CodeCreate(name="NAMED_ENTITY", is_system=False),
     )
     target = create_project_with_features(
         db_session, test_user, title="Codes Target", features=[]
@@ -528,15 +527,13 @@ def code_import_projects(db_session, test_user: UserORM) -> CodeImportProjects:
     )
     animal = crud_code.create(
         db=db_session,
-        create_dto=CodeCreate(
-            name="ANIMAL", project_id=user_animals.id, is_system=False
-        ),
+        project_id=user_animals.id,
+        create_dto=CodeCreate(name="ANIMAL", is_system=False),
     )
     crud_code.create(
         db=db_session,
-        create_dto=CodeCreate(
-            name="DOG", project_id=user_animals.id, parent_id=animal.id, is_system=False
-        ),
+        project_id=user_animals.id,
+        create_dto=CodeCreate(name="DOG", parent_id=animal.id, is_system=False),
     )
     entity_target = create_project_with_features(
         db_session, test_user, title="Entity Target", features=["entity_annotations"]

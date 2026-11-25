@@ -1,17 +1,13 @@
-from fastapi import APIRouter, Depends
+from fastapi import Depends
 
-from common.crud_enum import Crud
 from common.dats_event import DATSEvent
-from common.dependencies import DBSession, get_current_user
-from core.auth.authz_user import AuthzUser
+from common.dependencies import DBSession
+from common.project_router import project_router
 from core.code.code_crud import crud_code
 from core.code.code_dto import CodeCreate, CodeRead, CodeUpdate, CodeUpdateBulk
-from core.project.project_crud import crud_project
 from systems.websocket_system.websocket_dependency import WebsocketEmitter
 
-router = APIRouter(
-    prefix="/code", dependencies=[Depends(get_current_user)], tags=["code", "mcp"]
-)
+router = project_router("/codes", tags=["code", "mcp"])
 
 
 # --- create operations
@@ -25,21 +21,31 @@ router = APIRouter(
 def create_code(
     *,
     db: DBSession,
+    project_id: int,
     code: CodeCreate,
-    authz_user: AuthzUser = Depends(),
     ws: WebsocketEmitter = Depends(),
 ) -> CodeRead:
-    authz_user.assert_in_project(code.project_id)
-    if code.parent_id is not None:
-        authz_user.assert_in_same_project_as(Crud.CODE, code.parent_id)
-
-    db_code = crud_code.create(db=db, create_dto=code)
+    db_code = crud_code.create(db=db, project_id=project_id, create_dto=code)
     result = CodeRead.model_validate(db_code)
-    ws.emit_to_project(DATSEvent.CODE_CREATED, result, project_id=code.project_id)
+    ws.emit_to_project(DATSEvent.CODE_CREATED, result, project_id=project_id)
     return result
 
 
 # --- read operations
+
+
+@router.get(
+    "",
+    response_model=list[CodeRead],
+    summary="Returns all Codes of the Project",
+)
+def get_by_project(
+    *,
+    db: DBSession,
+    project_id: int,
+) -> list[CodeRead]:
+    db_objs = crud_code.read_by_project(db=db, project_id=project_id)
+    return [CodeRead.model_validate(db_obj) for db_obj in db_objs]
 
 
 @router.get(
@@ -50,75 +56,31 @@ def create_code(
 def get_by_id(
     *,
     db: DBSession,
-    code_id: int,
-    authz_user: AuthzUser = Depends(),
-) -> CodeRead:
-    authz_user.assert_in_same_project_as(Crud.CODE, code_id)
-
-    db_obj = crud_code.read(db=db, id=code_id)
-    return CodeRead.model_validate(db_obj)
-
-
-@router.get(
-    "/project/{project_id}",
-    response_model=list[CodeRead],
-    summary="Returns all Codes of the Project with the given ID",
-)
-def get_by_project(
-    *,
     project_id: int,
-    db: DBSession,
-    authz_user: AuthzUser = Depends(),
-) -> list[CodeRead]:
-    authz_user.assert_in_project(project_id)
-
-    proj_db_obj = crud_project.read(db=db, id=project_id)
-    result = [CodeRead.model_validate(code) for code in proj_db_obj.codes]
-    result.sort(key=lambda c: c.id)
-    return result
+    code_id: int,
+) -> CodeRead:
+    db_obj = crud_code.read(db=db, project_id=project_id, id=code_id)
+    return CodeRead.model_validate(db_obj)
 
 
 # --- update operations
 
 
 @router.patch(
-    "/{code_id}",
-    response_model=CodeRead,
-    summary="Updates the Code with the given ID.",
-)
-def update_by_id(
-    *,
-    db: DBSession,
-    code_id: int,
-    code: CodeUpdate,
-    authz_user: AuthzUser = Depends(),
-    ws: WebsocketEmitter = Depends(),
-) -> CodeRead:
-    authz_user.assert_in_same_project_as(Crud.CODE, code_id)
-    db_obj = crud_code.update(db=db, id=code_id, update_dto=code)
-    result = CodeRead.model_validate(db_obj)
-    ws.emit_to_project(
-        DATSEvent.CODE_UPDATED, result, project_id=db_obj.get_project_id()
-    )
-    return result
-
-
-@router.patch(
-    "/bulk/update",
+    "/bulk",
     response_model=list[CodeRead],
     summary="Updates the Codes with the given IDs.",
 )
 def update_codes_bulk(
     *,
     db: DBSession,
+    project_id: int,
     codes: list[CodeUpdateBulk],
-    authz_user: AuthzUser = Depends(),
     ws: WebsocketEmitter = Depends(),
 ) -> list[CodeRead]:
-    authz_user.assert_in_same_project_as_many(Crud.CODE, [c.code_id for c in codes])
-
     db_objs = crud_code.update_multi(
         db=db,
+        project_id=project_id,
         ids=[c.code_id for c in codes],
         update_dtos=[
             CodeUpdate.model_validate(
@@ -129,8 +91,27 @@ def update_codes_bulk(
     )
     results = [CodeRead.model_validate(db_obj) for db_obj in db_objs]
     if results:
-        ws.emit_dtos_to_projects(DATSEvent.CODE_UPDATED_BATCH, results)
+        ws.emit_to_project(DATSEvent.CODE_UPDATED_BATCH, results, project_id=project_id)
     return results
+
+
+@router.patch(
+    "/{code_id}",
+    response_model=CodeRead,
+    summary="Updates the Code with the given ID.",
+)
+def update_by_id(
+    *,
+    db: DBSession,
+    project_id: int,
+    code_id: int,
+    code: CodeUpdate,
+    ws: WebsocketEmitter = Depends(),
+) -> CodeRead:
+    db_obj = crud_code.update(db=db, project_id=project_id, id=code_id, update_dto=code)
+    result = CodeRead.model_validate(db_obj)
+    ws.emit_to_project(DATSEvent.CODE_UPDATED, result, project_id=project_id)
+    return result
 
 
 # --- delete operations
@@ -144,17 +125,12 @@ def update_codes_bulk(
 def delete_by_id(
     *,
     db: DBSession,
+    project_id: int,
     code_id: int,
-    authz_user: AuthzUser = Depends(),
     ws: WebsocketEmitter = Depends(),
 ) -> CodeRead:
-    authz_user.assert_in_same_project_as(Crud.CODE, code_id)
-
-    db_obj = crud_code.read(db=db, id=code_id)
-    code_read = CodeRead.model_validate(db_obj)
-
-    crud_code.delete(db=db, id=code_id)
-    ws.emit_to_project(
-        DATSEvent.CODE_DELETED, code_read, project_id=db_obj.get_project_id()
-    )
-    return code_read
+    db_obj = crud_code.read(db=db, project_id=project_id, id=code_id)
+    result = CodeRead.model_validate(db_obj)
+    crud_code.delete(db=db, project_id=project_id, id=code_id)
+    ws.emit_to_project(DATSEvent.CODE_DELETED, result, project_id=project_id)
+    return result

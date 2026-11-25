@@ -943,59 +943,23 @@
         }
       }
     },
-    "/code": {
+    "/projects/{project_id}/codes": {
       "put": {
         "tags": ["code"],
         "summary": "Creates a new Code and returns it with the generated ID.",
         "operationId": "create_code",
-        "requestBody": {
-          "content": { "application/json": { "schema": { "$ref": "#/components/schemas/CodeCreate" } } },
-          "required": true
-        },
-        "responses": {
-          "200": {
-            "description": "Successful Response",
-            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/CodeRead" } } }
-          },
-          "422": {
-            "description": "Validation Error",
-            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/HTTPValidationError" } } }
-          }
-        },
-        "security": [{ "OAuth2PasswordBearer": [] }]
-      }
-    },
-    "/code/{code_id}": {
-      "get": {
-        "tags": ["code"],
-        "summary": "Returns the Code with the given ID.",
-        "operationId": "get_by_id",
         "security": [{ "OAuth2PasswordBearer": [] }],
         "parameters": [
-          { "name": "code_id", "in": "path", "required": true, "schema": { "type": "integer", "title": "Code Id" } }
-        ],
-        "responses": {
-          "200": {
-            "description": "Successful Response",
-            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/CodeRead" } } }
-          },
-          "422": {
-            "description": "Validation Error",
-            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/HTTPValidationError" } } }
+          {
+            "name": "project_id",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "integer", "title": "Project Id" }
           }
-        }
-      },
-      "patch": {
-        "tags": ["code"],
-        "summary": "Updates the Code with the given ID.",
-        "operationId": "update_by_id",
-        "security": [{ "OAuth2PasswordBearer": [] }],
-        "parameters": [
-          { "name": "code_id", "in": "path", "required": true, "schema": { "type": "integer", "title": "Code Id" } }
         ],
         "requestBody": {
           "required": true,
-          "content": { "application/json": { "schema": { "$ref": "#/components/schemas/CodeUpdate" } } }
+          "content": { "application/json": { "schema": { "$ref": "#/components/schemas/CodeCreate" } } }
         },
         "responses": {
           "200": {
@@ -1008,30 +972,9 @@
           }
         }
       },
-      "delete": {
-        "tags": ["code"],
-        "summary": "Deletes the Code with the given ID.",
-        "operationId": "delete_by_id",
-        "security": [{ "OAuth2PasswordBearer": [] }],
-        "parameters": [
-          { "name": "code_id", "in": "path", "required": true, "schema": { "type": "integer", "title": "Code Id" } }
-        ],
-        "responses": {
-          "200": {
-            "description": "Successful Response",
-            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/CodeRead" } } }
-          },
-          "422": {
-            "description": "Validation Error",
-            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/HTTPValidationError" } } }
-          }
-        }
-      }
-    },
-    "/code/project/{project_id}": {
       "get": {
         "tags": ["code"],
-        "summary": "Returns all Codes of the Project with the given ID",
+        "summary": "Returns all Codes of the Project",
         "operationId": "get_by_project",
         "security": [{ "OAuth2PasswordBearer": [] }],
         "parameters": [
@@ -1062,22 +1005,112 @@
         }
       }
     },
-    "/code/bulk/update": {
+    "/projects/{project_id}/codes/{code_id}": {
+      "get": {
+        "tags": ["code"],
+        "summary": "Returns the Code with the given ID.",
+        "operationId": "get_by_id",
+        "security": [{ "OAuth2PasswordBearer": [] }],
+        "parameters": [
+          {
+            "name": "project_id",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "integer", "title": "Project Id" }
+          },
+          { "name": "code_id", "in": "path", "required": true, "schema": { "type": "integer", "title": "Code Id" } }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/CodeRead" } } }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/HTTPValidationError" } } }
+          }
+        }
+      },
+      "patch": {
+        "tags": ["code"],
+        "summary": "Updates the Code with the given ID.",
+        "operationId": "update_by_id",
+        "security": [{ "OAuth2PasswordBearer": [] }],
+        "parameters": [
+          {
+            "name": "project_id",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "integer", "title": "Project Id" }
+          },
+          { "name": "code_id", "in": "path", "required": true, "schema": { "type": "integer", "title": "Code Id" } }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": { "application/json": { "schema": { "$ref": "#/components/schemas/CodeUpdate" } } }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/CodeRead" } } }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/HTTPValidationError" } } }
+          }
+        }
+      },
+      "delete": {
+        "tags": ["code"],
+        "summary": "Deletes the Code with the given ID.",
+        "operationId": "delete_by_id",
+        "security": [{ "OAuth2PasswordBearer": [] }],
+        "parameters": [
+          {
+            "name": "project_id",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "integer", "title": "Project Id" }
+          },
+          { "name": "code_id", "in": "path", "required": true, "schema": { "type": "integer", "title": "Code Id" } }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/CodeRead" } } }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/HTTPValidationError" } } }
+          }
+        }
+      }
+    },
+    "/projects/{project_id}/codes/bulk": {
       "patch": {
         "tags": ["code"],
         "summary": "Updates the Codes with the given IDs.",
         "operationId": "update_codes_bulk",
+        "security": [{ "OAuth2PasswordBearer": [] }],
+        "parameters": [
+          {
+            "name": "project_id",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "integer", "title": "Project Id" }
+          }
+        ],
         "requestBody": {
+          "required": true,
           "content": {
             "application/json": {
               "schema": {
-                "items": { "$ref": "#/components/schemas/CodeUpdateBulk" },
                 "type": "array",
+                "items": { "$ref": "#/components/schemas/CodeUpdateBulk" },
                 "title": "Codes"
               }
             }
-          },
-          "required": true
+          }
         },
         "responses": {
           "200": {
@@ -1085,8 +1118,8 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "items": { "$ref": "#/components/schemas/CodeRead" },
                   "type": "array",
+                  "items": { "$ref": "#/components/schemas/CodeRead" },
                   "title": "Response Code-Update Codes Bulk"
                 }
               }
@@ -1096,8 +1129,7 @@
             "description": "Validation Error",
             "content": { "application/json": { "schema": { "$ref": "#/components/schemas/HTTPValidationError" } } }
           }
-        },
-        "security": [{ "OAuth2PasswordBearer": [] }]
+        }
       }
     },
     "/code_frequency/code_frequencies": {
@@ -6864,6 +6896,12 @@
         "operationId": "filter_code_stats",
         "security": [{ "OAuth2PasswordBearer": [] }],
         "parameters": [
+          {
+            "name": "project_id",
+            "in": "query",
+            "required": true,
+            "schema": { "type": "integer", "title": "Project Id" }
+          },
           { "name": "code_id", "in": "query", "required": true, "schema": { "type": "integer", "title": "Code Id" } },
           {
             "name": "sort_by_global",
@@ -6950,14 +6988,23 @@
         }
       }
     },
-    "/tag": {
+    "/projects/{project_id}/tags": {
       "put": {
         "tags": ["tag"],
         "summary": "Creates a new Tag and returns it with the generated ID.",
-        "operationId": "create_doc_tag",
+        "operationId": "create_tag",
+        "security": [{ "OAuth2PasswordBearer": [] }],
+        "parameters": [
+          {
+            "name": "project_id",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "integer", "title": "Project Id" }
+          }
+        ],
         "requestBody": {
-          "content": { "application/json": { "schema": { "$ref": "#/components/schemas/TagCreate" } } },
-          "required": true
+          "required": true,
+          "content": { "application/json": { "schema": { "$ref": "#/components/schemas/TagCreate" } } }
         },
         "responses": {
           "200": {
@@ -6968,17 +7015,148 @@
             "description": "Validation Error",
             "content": { "application/json": { "schema": { "$ref": "#/components/schemas/HTTPValidationError" } } }
           }
-        },
-        "security": [{ "OAuth2PasswordBearer": [] }]
+        }
+      },
+      "get": {
+        "tags": ["tag"],
+        "summary": "Returns the Tags of the Project, optionally only those of the SourceDocument",
+        "operationId": "get_by_project",
+        "security": [{ "OAuth2PasswordBearer": [] }],
+        "parameters": [
+          {
+            "name": "project_id",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "integer", "title": "Project Id" }
+          },
+          {
+            "name": "sdoc_id",
+            "in": "query",
+            "required": false,
+            "schema": { "anyOf": [{ "type": "integer" }, { "type": "null" }], "title": "Sdoc Id" }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": { "$ref": "#/components/schemas/TagRead" },
+                  "title": "Response Tag-Get By Project"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/HTTPValidationError" } } }
+          }
+        }
       }
     },
-    "/tag/{tag_id}": {
+    "/projects/{project_id}/tags/bulk/source-documents": {
+      "put": {
+        "tags": ["tag"],
+        "summary": "Links the Tags with the SourceDocuments and returns the resulting tags per document",
+        "operationId": "link_tags_bulk",
+        "security": [{ "OAuth2PasswordBearer": [] }],
+        "parameters": [
+          {
+            "name": "project_id",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "integer", "title": "Project Id" }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": { "application/json": { "schema": { "$ref": "#/components/schemas/SourceDocumentTagMultiLink" } } }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/SdocTagLinks" } } }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/HTTPValidationError" } } }
+          }
+        }
+      },
+      "patch": {
+        "tags": ["tag"],
+        "summary": "Links and unlinks Tags of the SourceDocuments and returns the resulting tags per document",
+        "operationId": "update_sdoc_tags_bulk",
+        "security": [{ "OAuth2PasswordBearer": [] }],
+        "parameters": [
+          {
+            "name": "project_id",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "integer", "title": "Project Id" }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": { "schema": { "$ref": "#/components/schemas/Body_tag-update_sdoc_tags_bulk" } }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/SdocTagLinks" } } }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/HTTPValidationError" } } }
+          }
+        }
+      },
+      "delete": {
+        "tags": ["tag"],
+        "summary": "Unlinks the Tags from the SourceDocuments and returns the resulting tags per document",
+        "operationId": "unlink_tags_bulk",
+        "security": [{ "OAuth2PasswordBearer": [] }],
+        "parameters": [
+          {
+            "name": "project_id",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "integer", "title": "Project Id" }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": { "application/json": { "schema": { "$ref": "#/components/schemas/SourceDocumentTagMultiLink" } } }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/SdocTagLinks" } } }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/HTTPValidationError" } } }
+          }
+        }
+      }
+    },
+    "/projects/{project_id}/tags/{tag_id}": {
       "get": {
         "tags": ["tag"],
         "summary": "Returns the Tag with the given ID.",
         "operationId": "get_by_id",
         "security": [{ "OAuth2PasswordBearer": [] }],
         "parameters": [
+          {
+            "name": "project_id",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "integer", "title": "Project Id" }
+          },
           { "name": "tag_id", "in": "path", "required": true, "schema": { "type": "integer", "title": "Tag Id" } }
         ],
         "responses": {
@@ -6998,6 +7176,12 @@
         "operationId": "update_by_id",
         "security": [{ "OAuth2PasswordBearer": [] }],
         "parameters": [
+          {
+            "name": "project_id",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "integer", "title": "Project Id" }
+          },
           { "name": "tag_id", "in": "path", "required": true, "schema": { "type": "integer", "title": "Tag Id" } }
         ],
         "requestBody": {
@@ -7021,6 +7205,12 @@
         "operationId": "delete_by_id",
         "security": [{ "OAuth2PasswordBearer": [] }],
         "parameters": [
+          {
+            "name": "project_id",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "integer", "title": "Project Id" }
+          },
           { "name": "tag_id", "in": "path", "required": true, "schema": { "type": "integer", "title": "Tag Id" } }
         ],
         "responses": {
@@ -7035,11 +7225,11 @@
         }
       }
     },
-    "/tag/project/{project_id}": {
+    "/projects/{project_id}/tags/{tag_id}/source-documents": {
       "get": {
         "tags": ["tag"],
-        "summary": "Returns all Tags of the Project with the given ID",
-        "operationId": "get_by_project",
+        "summary": "Returns the IDs of the SourceDocuments linked with the Tag.",
+        "operationId": "get_sdoc_ids_by_tag_id",
         "security": [{ "OAuth2PasswordBearer": [] }],
         "parameters": [
           {
@@ -7047,60 +7237,7 @@
             "in": "path",
             "required": true,
             "schema": { "type": "integer", "title": "Project Id" }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "Successful Response",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "array",
-                  "items": { "$ref": "#/components/schemas/TagRead" },
-                  "title": "Response Tag-Get By Project"
-                }
-              }
-            }
           },
-          "422": {
-            "description": "Validation Error",
-            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/HTTPValidationError" } } }
-          }
-        }
-      }
-    },
-    "/tag/sdoc/{sdoc_id}": {
-      "get": {
-        "tags": ["tag"],
-        "summary": "Returns all TagIDs linked with the SourceDocument.",
-        "operationId": "get_by_sdoc",
-        "security": [{ "OAuth2PasswordBearer": [] }],
-        "parameters": [
-          { "name": "sdoc_id", "in": "path", "required": true, "schema": { "type": "integer", "title": "Sdoc Id" } }
-        ],
-        "responses": {
-          "200": {
-            "description": "Successful Response",
-            "content": {
-              "application/json": {
-                "schema": { "type": "array", "items": { "type": "integer" }, "title": "Response Tag-Get By Sdoc" }
-              }
-            }
-          },
-          "422": {
-            "description": "Validation Error",
-            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/HTTPValidationError" } } }
-          }
-        }
-      }
-    },
-    "/tag/{tag_id}/sdocs": {
-      "get": {
-        "tags": ["tag"],
-        "summary": "Returns all SourceDocument IDs attached to the Tag with the given ID if it exists.",
-        "operationId": "get_sdoc_ids_by_tag_id",
-        "security": [{ "OAuth2PasswordBearer": [] }],
-        "parameters": [
           { "name": "tag_id", "in": "path", "required": true, "schema": { "type": "integer", "title": "Tag Id" } }
         ],
         "responses": {
@@ -7123,139 +7260,11 @@
         }
       }
     },
-    "/tag/bulk/update_tags": {
+    "/projects/{project_id}/tags/bulk": {
       "patch": {
         "tags": ["tag"],
         "summary": "Updates the Tags with the given IDs.",
         "operationId": "update_tags_bulk",
-        "requestBody": {
-          "content": {
-            "application/json": {
-              "schema": { "items": { "$ref": "#/components/schemas/TagUpdateBulk" }, "type": "array", "title": "Tags" }
-            }
-          },
-          "required": true
-        },
-        "responses": {
-          "200": {
-            "description": "Successful Response",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "items": { "$ref": "#/components/schemas/TagRead" },
-                  "type": "array",
-                  "title": "Response Tag-Update Tags Bulk"
-                }
-              }
-            }
-          },
-          "422": {
-            "description": "Validation Error",
-            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/HTTPValidationError" } } }
-          }
-        },
-        "security": [{ "OAuth2PasswordBearer": [] }]
-      }
-    },
-    "/tag/bulk/link": {
-      "patch": {
-        "tags": ["tag"],
-        "summary": "Links multiple Tags with the SourceDocuments and returns the resulting tags per document",
-        "operationId": "link_multiple_tags",
-        "requestBody": {
-          "content": {
-            "application/json": { "schema": { "$ref": "#/components/schemas/SourceDocumentTagMultiLink" } }
-          },
-          "required": true
-        },
-        "responses": {
-          "200": {
-            "description": "Successful Response",
-            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/SdocTagLinks" } } }
-          },
-          "422": {
-            "description": "Validation Error",
-            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/HTTPValidationError" } } }
-          }
-        },
-        "security": [{ "OAuth2PasswordBearer": [] }]
-      }
-    },
-    "/tag/bulk/set": {
-      "patch": {
-        "tags": ["tag"],
-        "summary": "Sets SourceDocuments' tags to the provided tags and returns the resulting tags per document",
-        "operationId": "set_tags_batch",
-        "requestBody": {
-          "content": { "application/json": { "schema": { "$ref": "#/components/schemas/SdocTagLinks" } } },
-          "required": true
-        },
-        "responses": {
-          "200": {
-            "description": "Successful Response",
-            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/SdocTagLinks" } } }
-          },
-          "422": {
-            "description": "Validation Error",
-            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/HTTPValidationError" } } }
-          }
-        },
-        "security": [{ "OAuth2PasswordBearer": [] }]
-      }
-    },
-    "/tag/bulk/update": {
-      "patch": {
-        "tags": ["tag"],
-        "summary": "Updates SourceDocuments' tags and returns the resulting tags per document",
-        "operationId": "update_tags_batch",
-        "requestBody": {
-          "content": {
-            "application/json": { "schema": { "$ref": "#/components/schemas/Body_tag-update_tags_batch" } }
-          },
-          "required": true
-        },
-        "responses": {
-          "200": {
-            "description": "Successful Response",
-            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/SdocTagLinks" } } }
-          },
-          "422": {
-            "description": "Validation Error",
-            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/HTTPValidationError" } } }
-          }
-        },
-        "security": [{ "OAuth2PasswordBearer": [] }]
-      }
-    },
-    "/tag/bulk/unlink": {
-      "delete": {
-        "tags": ["tag"],
-        "summary": "Unlinks all Tags with the SourceDocuments and returns the resulting tags per document",
-        "operationId": "unlink_multiple_tags",
-        "requestBody": {
-          "content": {
-            "application/json": { "schema": { "$ref": "#/components/schemas/SourceDocumentTagMultiLink" } }
-          },
-          "required": true
-        },
-        "responses": {
-          "200": {
-            "description": "Successful Response",
-            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/SdocTagLinks" } } }
-          },
-          "422": {
-            "description": "Validation Error",
-            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/HTTPValidationError" } } }
-          }
-        },
-        "security": [{ "OAuth2PasswordBearer": [] }]
-      }
-    },
-    "/tag/sdoc_counts/{project_id}": {
-      "post": {
-        "tags": ["tag"],
-        "summary": "Returns a dict of all tag ids with their count of assigned source documents, counting only source documents in the given id list",
-        "operationId": "get_sdoc_counts",
         "security": [{ "OAuth2PasswordBearer": [] }],
         "parameters": [
           {
@@ -7268,7 +7277,9 @@
         "requestBody": {
           "required": true,
           "content": {
-            "application/json": { "schema": { "type": "array", "items": { "type": "integer" }, "title": "Sdoc Ids" } }
+            "application/json": {
+              "schema": { "type": "array", "items": { "$ref": "#/components/schemas/TagUpdateBulk" }, "title": "Tags" }
+            }
           }
         },
         "responses": {
@@ -7277,9 +7288,9 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "type": "object",
-                  "additionalProperties": { "type": "integer" },
-                  "title": "Response Tag-Get Sdoc Counts"
+                  "type": "array",
+                  "items": { "$ref": "#/components/schemas/TagRead" },
+                  "title": "Response Tag-Update Tags Bulk"
                 }
               }
             }
@@ -7291,14 +7302,49 @@
         }
       }
     },
-    "/tag/count_tags/{user_id}": {
+    "/projects/{project_id}/tags/bulk/source-documents/set": {
+      "patch": {
+        "tags": ["tag"],
+        "summary": "Sets the Tags of each SourceDocument to the given Tags and returns the resulting tags per document",
+        "operationId": "set_sdoc_tags_bulk",
+        "security": [{ "OAuth2PasswordBearer": [] }],
+        "parameters": [
+          {
+            "name": "project_id",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "integer", "title": "Project Id" }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": { "application/json": { "schema": { "$ref": "#/components/schemas/SdocTagLinks" } } }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/SdocTagLinks" } } }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/HTTPValidationError" } } }
+          }
+        }
+      }
+    },
+    "/projects/{project_id}/tags/count": {
       "post": {
         "tags": ["tag"],
-        "summary": "Counts the Tags of the User (by user_id) per Tags (by class_ids) in Documents (by sdoc_ids)",
+        "summary": "Counts per Tag how many of the SourceDocuments carry it, for the given Tags or all Tags of the Project",
         "operationId": "count_tags",
         "security": [{ "OAuth2PasswordBearer": [] }],
         "parameters": [
-          { "name": "user_id", "in": "path", "required": true, "schema": { "type": "integer", "title": "User Id" } }
+          {
+            "name": "project_id",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "integer", "title": "Project Id" }
+          }
         ],
         "requestBody": {
           "required": true,
@@ -10650,22 +10696,46 @@
       },
       "Body_tag-count_tags": {
         "properties": {
-          "sdoc_ids": { "items": { "type": "integer" }, "type": "array", "title": "Sdoc Ids" },
-          "class_ids": { "items": { "type": "integer" }, "type": "array", "title": "Class Ids" }
+          "sdoc_ids": {
+            "items": { "type": "integer" },
+            "type": "array",
+            "title": "Sdoc Ids",
+            "description": "The SourceDocuments to count in"
+          },
+          "tag_ids": {
+            "anyOf": [{ "items": { "type": "integer" }, "type": "array" }, { "type": "null" }],
+            "title": "Tag Ids",
+            "description": "The Tags to count; all Tags of the Project if null"
+          }
         },
         "type": "object",
-        "required": ["sdoc_ids", "class_ids"],
+        "required": ["sdoc_ids"],
         "title": "Body_tag-count_tags"
       },
-      "Body_tag-update_tags_batch": {
+      "Body_tag-update_sdoc_tags_bulk": {
         "properties": {
-          "sdoc_ids": { "items": { "type": "integer" }, "type": "array", "title": "Sdoc Ids" },
-          "unlink_tag_ids": { "items": { "type": "integer" }, "type": "array", "title": "Unlink Tag Ids" },
-          "link_tag_ids": { "items": { "type": "integer" }, "type": "array", "title": "Link Tag Ids" }
+          "sdoc_ids": {
+            "items": { "type": "integer" },
+            "type": "array",
+            "title": "Sdoc Ids",
+            "description": "The SourceDocuments to change"
+          },
+          "link_tag_ids": {
+            "items": { "type": "integer" },
+            "type": "array",
+            "title": "Link Tag Ids",
+            "description": "The Tags to link"
+          },
+          "unlink_tag_ids": {
+            "items": { "type": "integer" },
+            "type": "array",
+            "title": "Unlink Tag Ids",
+            "description": "The Tags to unlink"
+          }
         },
         "type": "object",
-        "required": ["sdoc_ids", "unlink_tag_ids", "link_tag_ids"],
-        "title": "Body_tag-update_tags_batch"
+        "required": ["sdoc_ids", "link_tag_ids", "unlink_tag_ids"],
+        "title": "Body_tag-update_sdoc_tags_bulk"
       },
       "Body_word_frequency-word_frequency_analysis": {
         "properties": {
@@ -12202,11 +12272,10 @@
             "description": "While false, the code is neither created in pre-processing nor shown in the UI (except in settings to enable it again)",
             "default": true
           },
-          "project_id": { "type": "integer", "title": "Project Id", "description": "Project the Code belongs to" },
           "is_system": { "type": "boolean", "title": "Is System", "description": "Is the Code a system code" }
         },
         "type": "object",
-        "required": ["name", "project_id", "is_system"],
+        "required": ["name", "is_system"],
         "title": "CodeCreate"
       },
       "CodeCreatedEvent": {
@@ -19410,7 +19479,7 @@
       "TagCreate": {
         "properties": {
           "name": { "type": "string", "title": "Name", "description": "Title of the Tag" },
-          "color": { "type": "string", "title": "Color", "description": "Color of the Code" },
+          "color": { "type": "string", "title": "Color", "description": "Color of the Tag" },
           "description": {
             "anyOf": [{ "type": "string" }, { "type": "null" }],
             "title": "Description",
@@ -19420,11 +19489,10 @@
             "anyOf": [{ "type": "integer" }, { "type": "null" }],
             "title": "Parent Id",
             "description": "Parent of the Tag"
-          },
-          "project_id": { "type": "integer", "title": "Project Id", "description": "Project the Tag belongs to" }
+          }
         },
         "type": "object",
-        "required": ["name", "project_id"],
+        "required": ["name"],
         "title": "TagCreate"
       },
       "TagCreatedEvent": {

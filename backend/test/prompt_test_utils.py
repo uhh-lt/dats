@@ -187,10 +187,10 @@ def _create_code(
 ) -> CodeORM:
     return crud_code.create(
         db=db,
+        project_id=project_id,
         create_dto=CodeCreate(
             name=name,
             description=description,
-            project_id=project_id,
             is_system=False,
         ),
     )
@@ -220,10 +220,10 @@ def create_prompt_project(
     )
     report_tag = crud_tag.create(
         db=db_session,
+        project_id=test_project.id,
         create_dto=TagCreate(
             name="Report",
             description="Documents about reports.",
-            project_id=test_project.id,
         ),
     )
     author_field = crud_project_meta.create(
@@ -273,7 +273,7 @@ def create_prompt_project(
         db_session, project_id=test_project.id, name="OBSOLETE", description=""
     )
     deleted_code_id = deleted_code.id
-    crud_code.delete(db=db_session, id=deleted_code_id)
+    crud_code.delete(db=db_session, project_id=test_project.id, id=deleted_code_id)
     deleted_span_annotation_id = span("long", claim_code).id
     crud_span_anno.delete(
         db=db_session, project_id=test_project.id, id=deleted_span_annotation_id
@@ -345,10 +345,10 @@ def create_prompt_project(
     )
     foreign_tag = crud_tag.create(
         db=db_session,
+        project_id=foreign_project.id,
         create_dto=TagCreate(
             name="Foreign tag",
             description="A foreign-project tag.",
-            project_id=foreign_project.id,
         ),
     )
     foreign_span_annotation = dats_test_utils.create_span_for_text(
@@ -539,10 +539,10 @@ def create_prompt_eximport_projects(
     )
     target_report_tag = crud_tag.create(
         db=db_session,
+        project_id=target.id,
         create_dto=TagCreate(
             name="Report",
             description="Documents about reports.",
-            project_id=target.id,
         ),
     )
     target_author_field = crud_project_meta.create(

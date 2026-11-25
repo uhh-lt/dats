@@ -89,7 +89,7 @@ class TagRecommendationService(metaclass=SingletonMeta):
         sdocs_and_tags = {
             sdoc_id: [tag for tag in tags if not tag_ids or tag.id in tag_ids]
             for sdoc_id, tags in crud_tag.read_tags_for_documents(
-                db, sdoc_ids=sdoc_ids
+                db, project_id=project_id, sdoc_ids=list(sdoc_ids)
             ).items()
         }
 
@@ -121,14 +121,16 @@ class TagRecommendationService(metaclass=SingletonMeta):
         crud_tag_recommendation_link.create_multi(db=db, create_dtos=dtos)
 
     def group_by_document(
-        self, *, db: Session, links: list[TagRecommendationLinkORM]
+        self, *, db: Session, project_id: int, links: list[TagRecommendationLinkORM]
     ) -> list[TagRecommendationResult]:
         """The recommendations grouped by document, with each document's
         current tags, in the order the documents first appear."""
         by_sdoc: dict[int, list[TagRecommendationLinkORM]] = {}
         for link in links:
             by_sdoc.setdefault(link.source_document_id, []).append(link)
-        current_tags = crud_tag.read_tags_for_documents(db=db, sdoc_ids=list(by_sdoc))
+        current_tags = crud_tag.read_tags_for_documents(
+            db=db, project_id=project_id, sdoc_ids=list(by_sdoc)
+        )
         return [
             TagRecommendationResult(
                 sdoc_id=sdoc_id,

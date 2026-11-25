@@ -126,7 +126,10 @@ def test_tag_link_to_a_document_of_another_project_fails(
     _assert_foreign_key_violation(
         db_session,
         lambda: crud_tag.link_multiple_tags(
-            db=db_session, sdoc_ids=[own["sdoc"].id], tag_ids=[foreign["tag"].id]
+            db=db_session,
+            project_id=own["project"].id,
+            sdoc_ids=[own["sdoc"].id],
+            tag_ids=[foreign["tag"].id],
         ),
     )
 

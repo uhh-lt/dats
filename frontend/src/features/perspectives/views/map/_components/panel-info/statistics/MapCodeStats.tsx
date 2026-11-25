@@ -15,7 +15,8 @@ interface MapCodeStatsProps {
 
 export function MapCodeStats({ codeId, sdocIds, ...props }: MapCodeStatsProps) {
   const sortStatsByGlobal = useAppSelector((state) => state.perspectives.sortStatsByGlobal);
-  const codeStatsQuery = useQuery(statisticsQueries.codeStats(codeId, sdocIds, sortStatsByGlobal));
+  const projectId = useAppSelector((state) => state.project.projectId);
+  const codeStatsQuery = useQuery(statisticsQueries.codeStats(projectId, codeId, sdocIds, sortStatsByGlobal));
   return (
     <>
       {codeStatsQuery.isSuccess ? (

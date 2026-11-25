@@ -48,7 +48,7 @@ export function SelectionInformation({ aspectId }: SelectionInformationProps) {
 
   // global server state
   const metadata = SdocMetadataHooks.useGetSdocMetadata(selectedSdocIds[selectedSdocIdsIndex]);
-  const documentTagIds = useQuery(tagQueries.idsBySdoc(selectedSdocIds[selectedSdocIdsIndex]));
+  const documentTagIds = useQuery(tagQueries.idsBySdoc(projectId, selectedSdocIds[selectedSdocIdsIndex]));
   const docClusters = useQuery(perspectivesQueries.clustersBySdoc(aspectId, selectedSdocIds[selectedSdocIdsIndex]));
   const vis = PerspectivesHooks.useGetDocVisualization(aspectId);
   const sdoc = SdocHooks.useGetDocument(selectedSdocIds[selectedSdocIdsIndex]);

@@ -77,10 +77,12 @@ function DocumentTagResultStepContent({
     dispatch(LLMAssistantActions.closeDialog());
   }, [dispatch]);
 
+  const projectId = useAppSelector((state) => state.llmAssistant.projectId);
   const { mutate: applyTagsMutation, isPending } = TagHooks.useBulkSetTags();
   const handleApplyNewTags = useCallback(() => {
     applyTagsMutation(
       {
+        projectId,
         requestBody: {
           links: Object.fromEntries(rows.map((row) => [row.sdocId, row.merged_tags.map((tag) => tag.id)])),
         },
@@ -91,7 +93,7 @@ function DocumentTagResultStepContent({
         },
       },
     );
-  }, [rows, applyTagsMutation, dispatch]);
+  }, [rows, applyTagsMutation, dispatch, projectId]);
 
   return (
     <>

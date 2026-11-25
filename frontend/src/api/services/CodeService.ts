@@ -15,12 +15,38 @@ export class CodeService {
    * @returns CodeRead Successful Response
    * @throws ApiError
    */
-  public static createCode({ requestBody }: { requestBody: CodeCreate }): CancelablePromise<CodeRead> {
+  public static createCode({
+    projectId,
+    requestBody,
+  }: {
+    projectId: number;
+    requestBody: CodeCreate;
+  }): CancelablePromise<CodeRead> {
     return __request(OpenAPI, {
       method: "PUT",
-      url: "/code",
+      url: "/projects/{project_id}/codes",
+      path: {
+        project_id: projectId,
+      },
       body: requestBody,
       mediaType: "application/json",
+      errors: {
+        422: `Validation Error`,
+      },
+    });
+  }
+  /**
+   * Returns all Codes of the Project
+   * @returns CodeRead Successful Response
+   * @throws ApiError
+   */
+  public static getByProject({ projectId }: { projectId: number }): CancelablePromise<Array<CodeRead>> {
+    return __request(OpenAPI, {
+      method: "GET",
+      url: "/projects/{project_id}/codes",
+      path: {
+        project_id: projectId,
+      },
       errors: {
         422: `Validation Error`,
       },
@@ -31,11 +57,12 @@ export class CodeService {
    * @returns CodeRead Successful Response
    * @throws ApiError
    */
-  public static getById({ codeId }: { codeId: number }): CancelablePromise<CodeRead> {
+  public static getById({ projectId, codeId }: { projectId: number; codeId: number }): CancelablePromise<CodeRead> {
     return __request(OpenAPI, {
       method: "GET",
-      url: "/code/{code_id}",
+      url: "/projects/{project_id}/codes/{code_id}",
       path: {
+        project_id: projectId,
         code_id: codeId,
       },
       errors: {
@@ -49,16 +76,19 @@ export class CodeService {
    * @throws ApiError
    */
   public static updateById({
+    projectId,
     codeId,
     requestBody,
   }: {
+    projectId: number;
     codeId: number;
     requestBody: CodeUpdate;
   }): CancelablePromise<CodeRead> {
     return __request(OpenAPI, {
       method: "PATCH",
-      url: "/code/{code_id}",
+      url: "/projects/{project_id}/codes/{code_id}",
       path: {
+        project_id: projectId,
         code_id: codeId,
       },
       body: requestBody,
@@ -73,29 +103,13 @@ export class CodeService {
    * @returns CodeRead Successful Response
    * @throws ApiError
    */
-  public static deleteById({ codeId }: { codeId: number }): CancelablePromise<CodeRead> {
+  public static deleteById({ projectId, codeId }: { projectId: number; codeId: number }): CancelablePromise<CodeRead> {
     return __request(OpenAPI, {
       method: "DELETE",
-      url: "/code/{code_id}",
-      path: {
-        code_id: codeId,
-      },
-      errors: {
-        422: `Validation Error`,
-      },
-    });
-  }
-  /**
-   * Returns all Codes of the Project with the given ID
-   * @returns CodeRead Successful Response
-   * @throws ApiError
-   */
-  public static getByProject({ projectId }: { projectId: number }): CancelablePromise<Array<CodeRead>> {
-    return __request(OpenAPI, {
-      method: "GET",
-      url: "/code/project/{project_id}",
+      url: "/projects/{project_id}/codes/{code_id}",
       path: {
         project_id: projectId,
+        code_id: codeId,
       },
       errors: {
         422: `Validation Error`,
@@ -108,13 +122,18 @@ export class CodeService {
    * @throws ApiError
    */
   public static updateCodesBulk({
+    projectId,
     requestBody,
   }: {
+    projectId: number;
     requestBody: Array<CodeUpdateBulk>;
   }): CancelablePromise<Array<CodeRead>> {
     return __request(OpenAPI, {
       method: "PATCH",
-      url: "/code/bulk/update",
+      url: "/projects/{project_id}/codes/bulk",
+      path: {
+        project_id: projectId,
+      },
       body: requestBody,
       mediaType: "application/json",
       errors: {

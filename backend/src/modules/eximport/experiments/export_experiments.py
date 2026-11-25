@@ -48,7 +48,9 @@ def export_all_experiments(
     if len(experiments) == 0:
         raise NoDataToExportError("No experiments to export.")
 
-    export_data = __generate_export_df_for_experiments(db=db, experiments=experiments)
+    export_data = __generate_export_df_for_experiments(
+        db=db, project_id=project_id, experiments=experiments
+    )
     return write_df(
         out_dir=out_dir,
         df=export_data,
@@ -57,13 +59,13 @@ def export_all_experiments(
 
 
 def __generate_export_df_for_experiments(
-    db: Session, experiments: list[ExperimentORM]
+    db: Session, project_id: int, experiments: list[ExperimentORM]
 ) -> pd.DataFrame:
     logger.info(f"Exporting {len(experiments)} Experiments ...")
 
     # in the order of creation, so that the import creates them in the same order
     experiments = sorted(experiments, key=lambda experiment: experiment.id)
-    references = _References.read(db=db, experiments=experiments)
+    references = _References.read(db=db, project_id=project_id, experiments=experiments)
 
     return ExperimentExportCollection(
         experiments=[
@@ -105,7 +107,9 @@ class _References:
         self.prompt_version = prompt_version
 
     @classmethod
-    def read(cls, db: Session, *, experiments: list[ExperimentORM]) -> "_References":
+    def read(
+        cls, db: Session, *, project_id: int, experiments: list[ExperimentORM]
+    ) -> "_References":
         runs = [run for experiment in experiments for run in experiment.runs]
         sdoc_ids = [id for experiment in experiments for id in experiment.sdoc_ids]
         sdoc_ids.extend(id for run in runs for id in run.sdoc_ids)
@@ -139,7 +143,7 @@ class _References:
             code_name={
                 id: code.name
                 for id, code in crud_code.read_existing_by_ids(
-                    db=db, ids=code_ids
+                    db=db, project_id=project_id, ids=code_ids
                 ).items()
             },
             user_email={

@@ -50,7 +50,11 @@ def _system_spans(db: Session, sdoc_id: int) -> list[tuple[str, str]]:
         db=db, user_id=SYSTEM_USER_ID, sdoc_id=sdoc_id
     )
     return sorted(
-        (s.span_text.text, crud_code.read(db=db, id=s.code_id).name) for s in spans
+        (
+            s.span_text.text,
+            crud_code.read(db=db, project_id=s.project_id, id=s.code_id).name,
+        )
+        for s in spans
     )
 
 

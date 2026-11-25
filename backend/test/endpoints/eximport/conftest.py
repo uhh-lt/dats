@@ -139,25 +139,25 @@ def missing_value_named_codes(
     """
     na_code = crud_code.create(
         db=db_session,
+        project_id=test_project.id,
         create_dto=CodeCreate(
             name="NA",
             color="red",
             description="N/A",
             parent_id=None,
             enabled=True,
-            project_id=test_project.id,
             is_system=False,
         ),
     )
     null_code = crud_code.create(
         db=db_session,
+        project_id=test_project.id,
         create_dto=CodeCreate(
             name="null",
             color="blue",
             description="null",
             parent_id=na_code.id,
             enabled=True,
-            project_id=test_project.id,
             is_system=False,
         ),
     )
@@ -195,23 +195,23 @@ def empty_description_projects(
     """
     crud_code.create(
         db=db_session,
+        project_id=test_project.id,
         create_dto=CodeCreate(
             name="Undescribed code",
             color="red",
             description="",
             parent_id=None,
             enabled=True,
-            project_id=test_project.id,
             is_system=False,
         ),
     )
     crud_tag.create(
         db=db_session,
+        project_id=test_project.id,
         create_dto=TagCreate(
             name="Undescribed tag",
             color="blue",
             description="",
-            project_id=test_project.id,
         ),
     )
     crud_project_meta.create(
@@ -451,10 +451,10 @@ def experiment_eximport_projects(
     code_claim, code_evidence = [
         crud_code.create(
             db=db,
+            project_id=project.id,
             create_dto=CodeCreate(
                 name=name,
                 description=f"{name} code",
-                project_id=project.id,
                 is_system=False,
             ),
         )
@@ -844,9 +844,8 @@ def sdoc_eximport_projects(
     tag_ids = [
         crud_tag.create(
             db=db_session,
-            create_dto=TagCreate(
-                name="Important", color="blue", description="", project_id=project.id
-            ),
+            project_id=project.id,
+            create_dto=TagCreate(name="Important", color="blue", description=""),
         ).id
         for project in (test_project, target_project)
     ]
@@ -856,7 +855,12 @@ def sdoc_eximport_projects(
         filename="report.txt",
         sentences=["Alpha beta alpha.", "Gamma delta."],
     )
-    crud_tag.link_multiple_tags(db=db_session, sdoc_ids=[sdoc.id], tag_ids=tag_ids[:1])
+    crud_tag.link_multiple_tags(
+        db=db_session,
+        project_id=test_project.id,
+        sdoc_ids=[sdoc.id],
+        tag_ids=tag_ids[:1],
+    )
     set_step_status(db_session, sdoc.id, dict.fromkeys(toggled_text_steps(), 1))
     crud_word_frequency.create_multi(
         db=db_session,

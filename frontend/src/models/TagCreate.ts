@@ -8,7 +8,7 @@ export type TagCreate = {
    */
   name: string;
   /**
-   * Color of the Code
+   * Color of the Tag
    */
   color?: string;
   /**
@@ -19,8 +19,4 @@ export type TagCreate = {
    * Parent of the Tag
    */
   parent_id?: number | null;
-  /**
-   * Project the Tag belongs to
-   */
-  project_id: number;
 };

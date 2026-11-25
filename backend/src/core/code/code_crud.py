@@ -4,10 +4,11 @@ from core.code.code_dto import CodeCreate, CodeUpdate
 from core.code.code_exceptions import SystemCodeConflictError
 from core.code.code_orm import CodeORM
 from core.code.system_codes import ROOT, ROOT_DESCRIPTION, SystemCode
-from repos.db.crud_base import BATCH_SIZE, SQLCRUDBase
+from repos.db.crud_base import BATCH_SIZE
+from repos.db.project_crud_base import ProjectCRUDBase
 
 
-class CRUDCode(SQLCRUDBase[CodeORM, CodeCreate, CodeUpdate]):
+class CRUDCode(ProjectCRUDBase[CodeORM, CodeCreate, CodeUpdate]):
     ### CREATE OPERATIONS ###
 
     def create_system_codes(
@@ -42,10 +43,10 @@ class CRUDCode(SQLCRUDBase[CodeORM, CodeCreate, CodeUpdate]):
             if existing is None:
                 db_code = self.create(
                     db=db,
+                    project_id=project_id,
                     create_dto=CodeCreate(
                         name=name,
                         description=description,
-                        project_id=project_id,
                         parent_id=parent_id,
                         is_system=True,
                         enabled=enabled,
@@ -80,8 +81,22 @@ class CRUDCode(SQLCRUDBase[CodeORM, CodeCreate, CodeUpdate]):
 
     ### READ OPERATIONS ###
 
-    def read_by_name(self, db: Session, *, code_name: str) -> list[CodeORM]:
-        return db.query(self.model).filter(self.model.name == code_name).all()
+    def read_by_project(self, db: Session, *, project_id: int) -> list[CodeORM]:
+        """
+        Read all codes of the project.
+
+        Args:
+            project_id: The project of the codes.
+
+        Returns:
+            The codes, ordered by id.
+        """
+        return (
+            db.query(self.model)
+            .filter(self.model.project_id == project_id)
+            .order_by(self.model.id)
+            .all()
+        )
 
     def read_by_names(
         self, db: Session, *, project_id: int, names: list[str]
@@ -120,43 +135,60 @@ class CRUDCode(SQLCRUDBase[CodeORM, CodeCreate, CodeUpdate]):
             .first()
         )
 
-    def read_id_by_name_and_project(
-        self, db: Session, *, code_name: str, project_id: int
-    ) -> int | None:
-        code_id = (
-            db.query(self.model.id)
-            .filter(self.model.name == code_name, self.model.project_id == project_id)
-            .first()
-        )
-        return code_id[0] if code_id else None
+    def read_with_children(
+        self, db: Session, *, project_id: int, code_id: int
+    ) -> list[CodeORM]:
+        """
+        Read a code of the project and all its descendants.
 
-    def read_with_children(self, db: Session, *, code_id: int) -> list[CodeORM]:
+        Args:
+            project_id: The project of the code.
+            code_id: The code.
+
+        Returns:
+            The code and its descendants; empty if the code is not in the project.
+        """
         topq = (
             db.query(self.model.id)
-            .filter(self.model.id == code_id)
+            .filter(self.model.project_id == project_id, self.model.id == code_id)
             .cte("cte", recursive=True)
         )
-        bottomq = db.query(self.model.id).join(topq, self.model.parent_id == topq.c.id)
+        bottomq = db.query(self.model.id).join(
+            topq,
+            (self.model.project_id == project_id) & (self.model.parent_id == topq.c.id),
+        )
         recursive_q = topq.union(bottomq)  # type: ignore
         return (
             db.query(self.model)
-            .filter(self.model.id.in_(db.query(recursive_q.c.id)))
+            .filter(
+                self.model.project_id == project_id,
+                self.model.id.in_(db.query(recursive_q.c.id)),
+            )
             .all()
         )
 
     ### UPDATE OPERATIONS ###
 
     def update_multi(
-        self, db: Session, *, ids: list[int], update_dtos: list[CodeUpdate]
+        self,
+        db: Session,
+        *,
+        project_id: int,
+        ids: list[int],
+        update_dtos: list[CodeUpdate],
     ) -> list[CodeORM]:
-        codes = super().update_multi(db=db, ids=ids, update_dtos=update_dtos)
+        codes = super().update_multi(
+            db=db, project_id=project_id, ids=ids, update_dtos=update_dtos
+        )
 
         # enabling or disabling a code applies to all its descendants; enabling
         # also enables its ancestors, so the code is reachable from the top
         for code, update_dto in zip(codes, update_dtos):
             if update_dto.enabled is None:
                 continue
-            for descendant in self.read_with_children(db=db, code_id=code.id):
+            for descendant in self.read_with_children(
+                db=db, project_id=project_id, code_id=code.id
+            ):
                 descendant.enabled = update_dto.enabled
             parent = code.parent if update_dto.enabled else None
             while parent is not None:
@@ -164,14 +196,6 @@ class CRUDCode(SQLCRUDBase[CodeORM, CodeCreate, CodeUpdate]):
                 parent = parent.parent
         db.flush()
         return codes
-
-    ### OTHER OPERATIONS ###
-
-    def exists_by_name(self, db: Session, *, code_name: str) -> bool:
-        return (
-            db.query(self.model.id).filter(self.model.name == code_name).first()
-            is not None
-        )
 
 
 crud_code = CRUDCode(CodeORM)

@@ -29,7 +29,8 @@ export function CodeStats(props: CodeStatsProps) {
 function CodeStatsContent({ codeId, sdocIds, ...props }: CodeStatsProps) {
   // global client state (redux)
   const sortStatsByGlobal = useAppSelector((state) => state.documentSearch.sortStatsByGlobal);
-  const codeStats = useQuery(statisticsQueries.codeStats(codeId, sdocIds, sortStatsByGlobal));
+  const projectId = useAppSelector((state) => state.project.projectId);
+  const codeStats = useQuery(statisticsQueries.codeStats(projectId, codeId, sdocIds, sortStatsByGlobal));
   return (
     <TabPanel value={`${codeId}`} sx={{ p: 0 }}>
       {codeStats.isSuccess ? (

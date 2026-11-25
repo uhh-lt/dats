@@ -33,7 +33,6 @@ def count_existing_assistant_annotations(
     authz_user: AuthzUser = Depends(),
 ) -> dict[int, int]:
     authz_user.assert_in_same_project_as_many(Crud.SOURCE_DOCUMENT, sdoc_ids)
-    authz_user.assert_in_same_project_as_many(Crud.CODE, code_ids)
     authz_user.assert_in_same_project_as(Crud.USER, virtual_user_id)
 
     return llmas.count_existing_assistant_annotations(

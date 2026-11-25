@@ -46,13 +46,13 @@ def timeline_project(
     """
     person_code = crud_code.create(
         db=db_session,
+        project_id=test_project.id,
         create_dto=CodeCreate(
             name="Person",
             color="red",
             description="A person",
             parent_id=None,
             enabled=True,
-            project_id=test_project.id,
             is_system=False,
         ),
     )

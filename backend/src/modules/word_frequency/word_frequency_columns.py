@@ -261,10 +261,10 @@ class WordFrequencyColumns(str, AbstractColumns):
     def resolve_ids(self, db: Session, project_id: int, ids: list[int]) -> list[str]:
         match self:
             case WordFrequencyColumns.TAG_ID_LIST_RECURSIVE:
-                tags = crud_tag.read_by_ids(db, ids=ids)
+                tags = crud_tag.read_by_ids(db, project_id=project_id, ids=ids)
                 return [tag.name for tag in tags]
             case WordFrequencyColumns.CODE_ID_LIST_RECURSIVE:
-                codes = crud_code.read_by_ids(db, ids=ids)
+                codes = crud_code.read_by_ids(db, project_id=project_id, ids=ids)
                 return [code.name for code in codes]
             case WordFrequencyColumns.FOLDER_ID_LIST_RECURSIVE:
                 folders = crud_folder.read_by_ids(db, ids=ids)

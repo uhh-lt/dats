@@ -225,26 +225,26 @@ def _create_subset_tags(db_session, project: ProjectORM) -> SubsetTags:
     return {
         "train": crud_tag.create(
             db=db_session,
+            project_id=project.id,
             create_dto=TagCreate(
                 name=TRAIN_TAG_NAME,
                 description="Subset used for training",
-                project_id=project.id,
             ),
         ),
         "eval": crud_tag.create(
             db=db_session,
+            project_id=project.id,
             create_dto=TagCreate(
                 name=EVAL_TAG_NAME,
                 description="Subset used for evaluation",
-                project_id=project.id,
             ),
         ),
         "test": crud_tag.create(
             db=db_session,
+            project_id=project.id,
             create_dto=TagCreate(
                 name=TEST_TAG_NAME,
                 description="Subset used for inference",
-                project_id=project.id,
             ),
         ),
     }
@@ -263,7 +263,10 @@ def _link_subset_tags(
         subsets[("train", "eval", "test")[i % 3]].append(sdoc_id)
     for name, ids in subsets.items():
         crud_tag.link_multiple_tags(
-            db=db_session, sdoc_ids=ids, tag_ids=[tags[name].id]
+            db=db_session,
+            project_id=tags[name].project_id,
+            sdoc_ids=ids,
+            tag_ids=[tags[name].id],
         )
     return subsets
 
@@ -350,12 +353,12 @@ def span_statistics_dataset(db_session, test_project, test_user) -> SpanDataset:
     codes = {
         entity_type: crud_code.create(
             db=db_session,
+            project_id=test_project.id,
             create_dto=CodeCreate(
                 name=f"{CONLL_CODE_PREFIX}{entity_type}",
                 description=f"Synthetic entity type {entity_type}",
                 parent_id=None,
                 enabled=True,
-                project_id=test_project.id,
                 is_system=False,
             ),
         )
@@ -434,12 +437,12 @@ def conll_span_dataset(db_session, test_project, test_user) -> SpanDataset:
     for entity_type in CONLL_ENTITY_TYPES:
         codes[entity_type] = crud_code.create(
             db=db_session,
+            project_id=test_project.id,
             create_dto=CodeCreate(
                 name=f"{CONLL_CODE_PREFIX}{entity_type}",
                 description=f"CoNLL entity type {entity_type}",
                 parent_id=None,
                 enabled=True,
-                project_id=test_project.id,
                 is_system=False,
             ),
         )
@@ -558,10 +561,10 @@ def document_statistics_dataset(db_session, test_project) -> DocDataset:
     tags = {
         category: crud_tag.create(
             db=db_session,
+            project_id=test_project.id,
             create_dto=TagCreate(
                 name=category,
                 description=f"Synthetic 20NG category {category}",
-                project_id=test_project.id,
             ),
         )
         for category in NEWS20_CATEGORIES
@@ -583,6 +586,7 @@ def document_statistics_dataset(db_session, test_project) -> DocDataset:
     for sdoc, category in zip(sdocs, NEWS20_CATEGORIES):
         crud_tag.link_multiple_tags(
             db=db_session,
+            project_id=test_project.id,
             sdoc_ids=[sdoc.id],
             tag_ids=[tags[category].id],
         )
@@ -626,10 +630,10 @@ def news20_doc_dataset(db_session, test_project) -> DocDataset:
     for category in NEWS20_CATEGORIES:
         tags[category] = crud_tag.create(
             db=db_session,
+            project_id=test_project.id,
             create_dto=TagCreate(
                 name=category,
                 description=f"20NG category {category}",
-                project_id=test_project.id,
             ),
         )
 
@@ -663,7 +667,10 @@ def news20_doc_dataset(db_session, test_project) -> DocDataset:
         category2sdoc_ids[category].append(sdoc.id)
     for category, ids in category2sdoc_ids.items():
         crud_tag.link_multiple_tags(
-            db=db_session, sdoc_ids=ids, tag_ids=[tags[category].id]
+            db=db_session,
+            project_id=test_project.id,
+            sdoc_ids=ids,
+            tag_ids=[tags[category].id],
         )
 
     # 5. Create subset tags + split sdocs into train/eval/test subsets
@@ -717,12 +724,12 @@ def sentence_statistics_dataset(db_session, test_project, test_user) -> SentData
     codes = {
         label: crud_code.create(
             db=db_session,
+            project_id=test_project.id,
             create_dto=CodeCreate(
                 name=label,
                 description=f"Synthetic sentence label {label}",
                 parent_id=None,
                 enabled=True,
-                project_id=test_project.id,
                 is_system=False,
             ),
         )
@@ -795,12 +802,12 @@ def csabstruct_sent_dataset(db_session, test_project, test_user) -> SentDataset:
     for label in CSABSTRUCT_LABELS:
         codes[label] = crud_code.create(
             db=db_session,
+            project_id=test_project.id,
             create_dto=CodeCreate(
                 name=label,
                 description=f"CSAbstruct label {label}",
                 parent_id=None,
                 enabled=True,
-                project_id=test_project.id,
                 is_system=False,
             ),
         )

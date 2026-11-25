@@ -42,7 +42,7 @@ export function TagNode(props: NodeProps<TagNode>) {
   // global server state (react-query)
   const tag = TagHooks.useGetTag(props.data.tagId);
   const projectId = WhiteboardRouteAPI.useParams({ select: (params) => params.projectId });
-  const sdocIds = useQuery(sdocQueries.idsByTag(props.data.tagId));
+  const sdocIds = useQuery(sdocQueries.idsByTag(projectId, props.data.tagId));
   const memos = useQuery(memoQueries.byAttachedObject(projectId, AttachedObjectType.TAG, props.data.tagId));
 
   // effects

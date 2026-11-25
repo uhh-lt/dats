@@ -466,6 +466,7 @@ class SentClassificationModelService(TextClassificationModelService):
         # Build the flat label mappings over the user-selected classes.
         codes, codeid2labelid, _ = build_code_label_mappings(
             db=db,
+            project_id=project_id,
             code_ids=class_ids,
         )
 
@@ -595,7 +596,9 @@ class SentClassificationModelService(TextClassificationModelService):
         if merge_children_into_parent:
             codeid2parentid: dict[int, int] = {}
             for code_id in code_ids:
-                for code in crud_code.read_with_children(db, code_id=code_id):
+                for code in crud_code.read_with_children(
+                    db, project_id=project_id, code_id=code_id
+                ):
                     codeid2parentid[code.id] = code_id
         else:
             codeid2parentid = {code_id: code_id for code_id in code_ids}
@@ -771,6 +774,7 @@ class SentClassificationModelService(TextClassificationModelService):
         # Build the flat label mappings over the user-selected classes.
         codes, codeid2labelid, labelid2name = build_code_label_mappings(
             db=db,
+            project_id=payload.project_id,
             code_ids=parameters.class_ids,
         )
 

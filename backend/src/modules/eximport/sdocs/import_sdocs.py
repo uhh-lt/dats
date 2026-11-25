@@ -291,7 +291,9 @@ def import_sdocs_to_proj(
         # 4. Link the source documents with the attached data (tags, metadata)
         # Tags
         tag_ids = [existing_tags[tag_name].id for tag_name in sdoc_export.tags]
-        crud_tag.link_multiple_tags(db=db, sdoc_ids=[created_sdoc.id], tag_ids=tag_ids)
+        crud_tag.link_multiple_tags(
+            db=db, project_id=project_id, sdoc_ids=[created_sdoc.id], tag_ids=tag_ids
+        )
 
         # Metadata
         metadata_create_dtos = []

@@ -51,7 +51,9 @@ def get_all_tagrecommendations_from_job(
         db=db, project_id=project_id, feature=TAG_RECOMMENDATION
     )
 
-    return TagRecommendationService().group_by_document(db=db, links=recommendations)
+    return TagRecommendationService().group_by_document(
+        db=db, project_id=project_id, links=recommendations
+    )
 
 
 # --- update operations

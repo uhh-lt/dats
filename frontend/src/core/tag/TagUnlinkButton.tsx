@@ -16,6 +16,7 @@ export const TagUnlinkButton = memo(({ sdocId, tag, ...props }: IconButtonProps 
       text: `Do you really want to remove the DocumentTag "${tag.name}" from SourceDocument ${sdocId} ? You can reassign this tag later!`,
       onAccept: () => {
         removeTagMutation({
+          projectId: tag.project_id,
           requestBody: {
             source_document_ids: [sdocId],
             tag_ids: [tag.id],
@@ -23,7 +24,7 @@ export const TagUnlinkButton = memo(({ sdocId, tag, ...props }: IconButtonProps 
         });
       },
     });
-  }, [openConfirmationDialog, tag.name, tag.id, sdocId, removeTagMutation]);
+  }, [openConfirmationDialog, tag.name, tag.id, tag.project_id, sdocId, removeTagMutation]);
 
   return (
     <Tooltip title="Remove tag from document">

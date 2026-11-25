@@ -21,7 +21,6 @@ class CodeBaseDTO(BaseModel):
 
 # Properties for creation
 class CodeCreate(CodeBaseDTO):
-    project_id: int = Field(description="Project the Code belongs to")
     color: str = Field(description="Color of the Code", default_factory=get_next_color)
     is_system: bool = Field(description="Is the Code a system code")
 

@@ -134,7 +134,12 @@ export function TagRecommendationsView() {
         ) : recommendations.isLoading || documentTags.isLoading ? (
           <CardContent>Loading the recommendations...</CardContent>
         ) : documentTags.data && recommendations.data && recommendations.data.length > 0 ? (
-          <TagRecommendationsContent key={selectedJobId} results={recommendations.data} tags={documentTags.data} />
+          <TagRecommendationsContent
+            key={selectedJobId}
+            projectId={projectId}
+            results={recommendations.data}
+            tags={documentTags.data}
+          />
         ) : recommendations.data ? (
           <CardContent>No recommendations left to review: you reviewed them all, or the job found none.</CardContent>
         ) : null}
@@ -147,7 +152,15 @@ interface TagRecommendationResultRow extends DocumentTaggingResultRow {
   recommendation_ids: number[];
 }
 
-function TagRecommendationsContent({ results, tags }: { results: TagRecommendationResult[]; tags: TagRead[] }) {
+function TagRecommendationsContent({
+  projectId,
+  results,
+  tags,
+}: {
+  projectId: number;
+  results: TagRecommendationResult[];
+  tags: TagRead[];
+}) {
   // local client state
   const [rows, setRows] = useState<TagRecommendationResultRow[]>(() => {
     const tagId2Tag = tags.reduce(
@@ -177,6 +190,7 @@ function TagRecommendationsContent({ results, tags }: { results: TagRecommendati
     TagRecommendationHooks.useReviewTagRecommendations();
   const handleApplyNewTags = useCallback(() => {
     applyTagsMutation({
+      projectId,
       requestBody: {
         links: Object.fromEntries(rows.map((row) => [row.sdocId, row.merged_tags.map((tag) => tag.id)])),
       },
@@ -184,7 +198,7 @@ function TagRecommendationsContent({ results, tags }: { results: TagRecommendati
     reviewTagsMutation({
       requestBody: rows.map((row) => row.recommendation_ids).flat(),
     });
-  }, [applyTagsMutation, rows, reviewTagsMutation]);
+  }, [applyTagsMutation, projectId, rows, reviewTagsMutation]);
 
   return (
     <>

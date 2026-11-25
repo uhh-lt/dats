@@ -220,6 +220,7 @@ export function WhiteboardFlow({ whiteboard }: WhiteboardFlowProps) {
         if (isSdocNode(targetNode) && isTagNode(sourceNode)) {
           const mutation = bulkLinkTagsMutation.mutate;
           mutation({
+            projectId: whiteboard.project_id,
             requestBody: {
               tag_ids: [sourceNode.data.tagId],
               source_document_ids: [targetNode.data.sdocId],
@@ -231,6 +232,7 @@ export function WhiteboardFlow({ whiteboard }: WhiteboardFlowProps) {
         if (isCodeNode(sourceNode) && isCodeNode(targetNode)) {
           const mutation = updateCodeMutation.mutate;
           mutation({
+            projectId: whiteboard.project_id,
             codeId: sourceNode.data.codeId,
             requestBody: {
               parent_id: targetNode.data.codeId,

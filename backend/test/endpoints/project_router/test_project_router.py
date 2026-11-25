@@ -20,6 +20,8 @@ PATH_IDS: dict[str, Callable[[TenantRows], int]] = {
     "sentence_annotation_id": lambda rows: rows["sentence"].id,
     "bbox_annotation_id": lambda rows: rows["bbox"].id,
     "span_group_id": lambda rows: rows["span_group"].id,
+    "code_id": lambda rows: rows["code"].id,
+    "tag_id": lambda rows: rows["tag"].id,
 }
 
 # a valid body (with ids of the path's project) for the routes with a path id and a
@@ -36,6 +38,12 @@ BODIES: dict[str, Callable[[TenantRows], Any]] = {
     ),
     "PATCH /projects/{project_id}/span-groups/{span_group_id}": (
         lambda rows: {"name": "renamed"}
+    ),
+    "PATCH /projects/{project_id}/codes/{code_id}": (
+        lambda rows: {"description": "changed"}
+    ),
+    "PATCH /projects/{project_id}/tags/{tag_id}": (
+        lambda rows: {"description": "changed"}
     ),
 }
 
