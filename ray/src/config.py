@@ -36,7 +36,8 @@ def build_ray_model_deployment_config(name: str) -> RayModelDeploymentConfig:
 
     return {
         "max_ongoing_requests": int(model_cc.max_ongoing_requests),
-        "ray_actor_options": dict(model_cc.ray_actor_options),
+        # generate_specs.py sets num_gpus of the deployments with a gpu_memory_gb
+        "ray_actor_options": dict(model_cc.get("ray_actor_options", {})),
         "autoscaling_config": dict(model_cc.autoscaling_config),
     }
 
