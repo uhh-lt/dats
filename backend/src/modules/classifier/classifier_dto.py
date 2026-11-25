@@ -267,6 +267,7 @@ class ClassifierClassMetrics(BaseModel):
 
 
 class ClassifierEvaluationCreate(BaseModel):
+    project_id: int = Field(description="Project the evaluation belongs to")
     classifier_id: int = Field(description="ID of the Classifier")
     f1: float = Field(description="F1 score")
     precision: float = Field(description="Precision score")

@@ -32,7 +32,12 @@ class _WordFrequencyArchive(ArtefactArchive):
         crud_word_frequency.create_multi(
             db=db,
             create_dtos=[
-                WordFrequencyCreate(sdoc_id=sdoc.id, word=word, count=count)
+                WordFrequencyCreate(
+                    project_id=sdoc.project_id,
+                    sdoc_id=sdoc.id,
+                    word=word,
+                    count=count,
+                )
                 for word, count in _WORD_FREQUENCIES.validate_python(
                     archived["word_frequencies"]
                 )

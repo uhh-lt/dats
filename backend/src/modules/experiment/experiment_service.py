@@ -126,6 +126,7 @@ class ExperimentService(metaclass=SingletonMeta):
         run = crud_experiment_run.create(
             db=db,
             create_dto=ExperimentRunCreateIntern(
+                project_id=experiment.project_id,
                 experiment_id=experiment.id,
                 name=create_dto.name,
                 prompt_version_id=create_dto.prompt_version_id,

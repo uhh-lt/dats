@@ -72,6 +72,7 @@ def project_with_sdocs_in_same_folder(
         db=db_session,
         create_dto=SourceDocumentDataCreate(
             id=sdoc1.id,
+            project_id=sdoc1.project_id,
             content="This is a test document. It has two sentences.",
             raw_html="<p>This is a test document. It has two sentences.</p>",
             html="<p><sent>This is a test document.</sent> <sent>It has two sentences.</sent></p>",
@@ -100,6 +101,7 @@ def project_with_sdocs_in_same_folder(
         db=db_session,
         create_dto=SourceDocumentDataCreate(
             id=sdoc2.id,
+            project_id=sdoc2.project_id,
             content="This is a test document. It has two sentences.",
             raw_html="<p>This is a test document. It has two sentences.</p>",
             html="<p><sent>This is a test document.</sent> <sent>It has two sentences.</sent></p>",

@@ -24,6 +24,7 @@ class ProjectMetadataORM(ORMBase):
         back_populates="project_metadata",
         cascade="all, delete-orphan",
         passive_deletes=True,
+        foreign_keys="SourceDocumentMetadataORM.project_metadata_id",
     )
 
     # many to one
@@ -44,6 +45,7 @@ class ProjectMetadataORM(ORMBase):
             "doctype",
             name="UC_unique_metadata_key_doctype_per_project",
         ),
+        UniqueConstraint("project_id", "id", name="UC_projectmetadata_project_id_id"),
     )
 
     def get_project_id(self) -> int:

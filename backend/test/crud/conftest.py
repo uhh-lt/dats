@@ -8,6 +8,7 @@ from sqlalchemy import event
 from sqlalchemy.orm import Session
 
 from common.doc_type_enum import DocType
+from composite_keys_test_utils import TwoTenants, create_two_tenants
 from core.annotation.span_annotation_dto import SpanAnnotationCreate
 from core.annotation.span_annotation_service import SpanAnnotationService
 from core.annotation.span_group_crud import crud_span_group
@@ -106,7 +107,12 @@ def sdoc_with_word_frequencies(
     crud_word_frequency.create_multi(
         db=db_session,
         create_dtos=[
-            WordFrequencyCreate(sdoc_id=sdoc_id, word=word, count=i + 1)
+            WordFrequencyCreate(
+                project_id=project_with_sdoc["source_document"].project_id,
+                sdoc_id=sdoc_id,
+                word=word,
+                count=i + 1,
+            )
             for i, word in enumerate(words)
         ],
     )
@@ -379,3 +385,9 @@ def step_status_project(db_session, test_project, test_user) -> StepStatusProjec
         "image": sdocs["image"],
         "other_project_doc": sdocs["other_project_doc"],
     }
+
+
+@pytest.fixture(scope="function")
+def two_tenants(db_session: Session, test_user, test_project) -> TwoTenants:
+    """The rows of every project-owned table in two projects (see TwoTenants)."""
+    return create_two_tenants(db_session, user=test_user, project=test_project)

@@ -1,6 +1,14 @@
 from typing import TYPE_CHECKING
 
-from sqlalchemy import Boolean, Float, ForeignKey, Integer, String
+from sqlalchemy import (
+    Boolean,
+    Float,
+    ForeignKey,
+    ForeignKeyConstraint,
+    Integer,
+    String,
+    UniqueConstraint,
+)
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from repos.db.orm_base import ORMBase
@@ -18,26 +26,44 @@ class TagRecommendationLinkORM(ORMBase):
     is_reviewed: Mapped[bool | None] = mapped_column(Boolean, index=True)
 
     # many to one
-    source_document_id: Mapped[int] = mapped_column(
+    project_id: Mapped[int] = mapped_column(
         Integer,
-        ForeignKey("sourcedocument.id", ondelete="CASCADE"),
+        ForeignKey("project.id", ondelete="CASCADE"),
         nullable=False,
         index=True,
-    )
-    source_document: Mapped["SourceDocumentORM"] = relationship(
-        "SourceDocumentORM", back_populates="tag_recommendation_link"
     )
 
-    predicted_tag_id: Mapped[int] = mapped_column(
-        Integer,
-        ForeignKey("tag.id", ondelete="CASCADE"),
-        nullable=False,
-        index=True,
+    source_document_id: Mapped[int] = mapped_column(Integer, nullable=False, index=True)
+    source_document: Mapped["SourceDocumentORM"] = relationship(
+        "SourceDocumentORM",
+        back_populates="tag_recommendation_link",
+        foreign_keys=[source_document_id],
     )
+
+    predicted_tag_id: Mapped[int] = mapped_column(Integer, nullable=False, index=True)
     predicted_tag: Mapped["TagORM"] = relationship(
         "TagORM",
         back_populates="tag_recommendation_links",
+        foreign_keys=[predicted_tag_id],
+    )
+
+    __table_args__ = (
+        UniqueConstraint(
+            "project_id", "id", name="UC_tagrecommendationlink_project_id_id"
+        ),
+        ForeignKeyConstraint(
+            ["project_id", "source_document_id"],
+            ["sourcedocument.project_id", "sourcedocument.id"],
+            ondelete="CASCADE",
+            name="FK_tagrecommendationlink_source_document_id",
+        ),
+        ForeignKeyConstraint(
+            ["project_id", "predicted_tag_id"],
+            ["tag.project_id", "tag.id"],
+            ondelete="CASCADE",
+            name="FK_tagrecommendationlink_predicted_tag_id",
+        ),
     )
 
     def get_project_id(self) -> int:
-        return self.source_document.get_project_id()
+        return self.project_id

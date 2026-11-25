@@ -1,6 +1,15 @@
 from typing import TYPE_CHECKING, Any
 
-from sqlalchemy import Boolean, ForeignKey, Integer, String, Text, text
+from sqlalchemy import (
+    Boolean,
+    ForeignKey,
+    ForeignKeyConstraint,
+    Integer,
+    String,
+    Text,
+    UniqueConstraint,
+    text,
+)
 from sqlalchemy.dialects.postgresql import JSONB
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
@@ -41,12 +50,8 @@ class AspectORM(ORMBase):
     )
     project: Mapped["ProjectORM"] = relationship("ProjectORM", back_populates="aspects")
 
-    tag_id: Mapped[int | None] = mapped_column(
-        Integer,
-        ForeignKey("tag.id", ondelete="CASCADE"),
-        index=True,
-    )
-    tag: Mapped["TagORM | None"] = relationship("TagORM")
+    tag_id: Mapped[int | None] = mapped_column(Integer, index=True)
+    tag: Mapped["TagORM | None"] = relationship("TagORM", foreign_keys=[tag_id])
 
     # one to many
     clusters: Mapped[list["ClusterORM"]] = relationship(
@@ -54,6 +59,7 @@ class AspectORM(ORMBase):
         back_populates="aspect",
         cascade="all, delete-orphan",
         passive_deletes=True,
+        foreign_keys="ClusterORM.aspect_id",
     )
 
     # many to many
@@ -62,12 +68,23 @@ class AspectORM(ORMBase):
         back_populates="aspect",
         cascade="all, delete-orphan",
         passive_deletes=True,
+        foreign_keys="DocumentAspectORM.aspect_id",
     )
     source_documents: Mapped[list["SourceDocumentORM"]] = relationship(
         "SourceDocumentORM",
         secondary="documentaspect",
         back_populates="aspects",
-        overlaps="document_aspects,source_document,aspect",
+        viewonly=True,
+    )
+
+    __table_args__ = (
+        UniqueConstraint("project_id", "id", name="UC_aspect_project_id_id"),
+        ForeignKeyConstraint(
+            ["project_id", "tag_id"],
+            ["tag.project_id", "tag.id"],
+            ondelete="CASCADE",
+            name="FK_aspect_tag_id",
+        ),
     )
 
     def __repr__(self) -> str:

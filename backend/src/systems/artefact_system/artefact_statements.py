@@ -150,11 +150,12 @@ def create_missing(
     stmt = (
         insert(SourceDocumentStepStatusORM)
         .from_select(
-            ["sdoc_id", "step", "status"],
+            ["sdoc_id", "step", "status", "project_id"],
             select(
                 sdoc.id,
                 step_values.c.step,
                 literal(SDocStatus.processing.value),
+                sdoc.project_id,
             )
             .select_from(sdoc)
             .join(step_values, true())

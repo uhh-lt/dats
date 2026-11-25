@@ -5,6 +5,7 @@ from sqlalchemy import (
     Boolean,
     DateTime,
     ForeignKey,
+    ForeignKeyConstraint,
     Integer,
     String,
     UniqueConstraint,
@@ -45,6 +46,7 @@ class CodeORM(ORMBase):
         back_populates="code",
         cascade="all, delete-orphan",
         passive_deletes=True,
+        foreign_keys="ObjectHandleORM.code_id",
     )
 
     # many to one
@@ -82,19 +84,19 @@ class CodeORM(ORMBase):
     )
 
     # hierarchy reference
-    parent_id: Mapped[int | None] = mapped_column(
-        Integer,
-        ForeignKey("code.id", ondelete="CASCADE"),
-        index=True,
-    )
+    parent_id: Mapped[int | None] = mapped_column(Integer, index=True)
     parent: Mapped["CodeORM | None"] = relationship(
-        "CodeORM", remote_side=[id], back_populates="children"
+        "CodeORM",
+        remote_side=[id],
+        back_populates="children",
+        foreign_keys=[parent_id],
     )
     children: Mapped[list["CodeORM"]] = relationship(
         "CodeORM",
         back_populates="parent",
         cascade="all, delete-orphan",
         passive_deletes=True,
+        foreign_keys=[parent_id],
     )
 
     __table_args__ = (
@@ -102,6 +104,13 @@ class CodeORM(ORMBase):
             "project_id",
             "name",
             name="UC_code_name_unique_per_project",
+        ),
+        UniqueConstraint("project_id", "id", name="UC_code_project_id_id"),
+        ForeignKeyConstraint(
+            ["project_id", "parent_id"],
+            ["code.project_id", "code.id"],
+            ondelete="CASCADE",
+            name="FK_code_parent_id",
         ),
     )
 

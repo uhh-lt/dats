@@ -5,6 +5,7 @@ from sqlalchemy import (
     Boolean,
     DateTime,
     ForeignKey,
+    ForeignKeyConstraint,
     Integer,
     String,
     UniqueConstraint,
@@ -54,6 +55,7 @@ class PromptORM(ORMBase):
         cascade="all, delete-orphan",
         passive_deletes=True,
         order_by="PromptVersionORM.version",
+        foreign_keys="PromptVersionORM.prompt_id",
     )
 
     __table_args__ = (
@@ -62,6 +64,7 @@ class PromptORM(ORMBase):
             "name",
             name="UC_prompt_name_unique_per_project",
         ),
+        UniqueConstraint("project_id", "id", name="UC_prompt_project_id_id"),
     )
 
     def get_project_id(self) -> int:
@@ -99,13 +102,17 @@ class PromptVersionORM(ORMBase):
     )
 
     # many to one
-    prompt_id: Mapped[int] = mapped_column(
+    project_id: Mapped[int] = mapped_column(
         Integer,
-        ForeignKey("prompt.id", ondelete="CASCADE"),
+        ForeignKey("project.id", ondelete="CASCADE"),
         nullable=False,
         index=True,
     )
-    prompt: Mapped["PromptORM"] = relationship("PromptORM", back_populates="versions")
+
+    prompt_id: Mapped[int] = mapped_column(Integer, nullable=False, index=True)
+    prompt: Mapped["PromptORM"] = relationship(
+        "PromptORM", back_populates="versions", foreign_keys=[prompt_id]
+    )
 
     # the user who saved the version (kept as NULL when the user is deleted)
     user_id: Mapped[int | None] = mapped_column(
@@ -120,7 +127,14 @@ class PromptVersionORM(ORMBase):
             "version",
             name="UC_prompt_version_unique_per_prompt",
         ),
+        UniqueConstraint("project_id", "id", name="UC_promptversion_project_id_id"),
+        ForeignKeyConstraint(
+            ["project_id", "prompt_id"],
+            ["prompt.project_id", "prompt.id"],
+            ondelete="CASCADE",
+            name="FK_promptversion_prompt_id",
+        ),
     )
 
     def get_project_id(self) -> int:
-        return self.prompt.get_project_id()
+        return self.project_id

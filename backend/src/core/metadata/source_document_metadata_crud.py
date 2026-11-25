@@ -84,6 +84,7 @@ class CRUDSourceDocumentMetadata(
         for pm in project_metadatas.values():
             create_dtos.append(
                 SourceDocumentMetadataCreate.with_metatype(
+                    project_id=project_id,
                     metatype=pm.metatype,
                     project_metadata_id=pm.id,
                     source_document_id=sdoc_id,

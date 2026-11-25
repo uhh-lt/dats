@@ -73,14 +73,15 @@ def _create_tag(db: Session, project_id: int, name: str) -> TagORM:
 
 
 def _create_recommendation(
-    db: Session, *, ml_job_id: str, sdoc_id: int, tag_id: int, score: float
+    db: Session, *, ml_job_id: str, sdoc_id: int, tag: TagORM, score: float
 ) -> TagRecommendationLinkORM:
     return crud_tag_recommendation_link.create(
         db=db,
         create_dto=TagRecommendationLinkCreate(
+            project_id=tag.project_id,
             ml_job_id=ml_job_id,
             source_document_id=sdoc_id,
-            predicted_tag_id=tag_id,
+            predicted_tag_id=tag.id,
             prediction_score=score,
         ),
     )
@@ -96,10 +97,10 @@ def tag_recommendation_project(
     tag_a = _create_tag(db_session, project.id, "Tag A")
     tag_b = _create_tag(db_session, project.id, "Tag B")
     recommendation_a = _create_recommendation(
-        db_session, ml_job_id=OWN_ML_JOB_ID, sdoc_id=sdoc.id, tag_id=tag_a.id, score=0.9
+        db_session, ml_job_id=OWN_ML_JOB_ID, sdoc_id=sdoc.id, tag=tag_a, score=0.9
     )
     recommendation_b = _create_recommendation(
-        db_session, ml_job_id=OWN_ML_JOB_ID, sdoc_id=sdoc.id, tag_id=tag_b.id, score=0.4
+        db_session, ml_job_id=OWN_ML_JOB_ID, sdoc_id=sdoc.id, tag=tag_b, score=0.4
     )
 
     outsider = crud_user.create(
@@ -132,7 +133,7 @@ def tag_recommendation_project(
         db_session,
         ml_job_id=FOREIGN_ML_JOB_ID,
         sdoc_id=foreign_sdoc.id,
-        tag_id=foreign_tag.id,
+        tag=foreign_tag,
         score=0.7,
     )
     db_session.commit()
@@ -179,7 +180,7 @@ def featureless_recommendation(
         db_session,
         ml_job_id=FEATURELESS_ML_JOB_ID,
         sdoc_id=featureless_project["sdoc"].id,
-        tag_id=tag.id,
+        tag=tag,
         score=0.8,
     )
     db_session.commit()

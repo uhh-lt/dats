@@ -25,10 +25,7 @@ class CRUDClassifier(SQLCRUDBase[ClassifierORM, ClassifierCreate, ClassifierUpda
         self, db: Session, *, create_dto: ClassifierEvaluationCreate
     ) -> ClassifierORM:
         classifier = self.read(db=db, id=create_dto.classifier_id)
-        classifier.evaluations.append(
-            ClassifierEvaluationORM(**create_dto.model_dump())
-        )
-        db.add(classifier)
+        db.add(ClassifierEvaluationORM(**create_dto.model_dump()))
         db.flush()
         db.refresh(classifier)
         return classifier
@@ -67,7 +64,14 @@ class CRUDClassifier(SQLCRUDBase[ClassifierORM, ClassifierCreate, ClassifierUpda
             batch_ids = unique_ids[i : i + BATCH_SIZE]
             db.execute(
                 insert(link_table).on_conflict_do_nothing(),
-                [{"classifier_id": id, key: link_id} for link_id in batch_ids],
+                [
+                    {
+                        "project_id": classifier.project_id,
+                        "classifier_id": id,
+                        key: link_id,
+                    }
+                    for link_id in batch_ids
+                ],
             )
         db.flush()
 

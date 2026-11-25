@@ -1,6 +1,7 @@
 import pytest
 from fastapi.testclient import TestClient
 
+from composite_keys_test_utils import TwoTenants
 from core.code.code_dto import CodeCreate, CodeRead, CodeUpdate, CodeUpdateBulk
 from provenance_test_utils import ANNOTATION_KINDS, AnnotationKind, get_annotation
 
@@ -146,6 +147,28 @@ def test_update_by_id_not_existing(
     )
 
     assert response.status_code == 403, response.text
+
+
+def test_update_by_id_rejects_a_parent_of_another_project(
+    client: TestClient, two_tenants: TwoTenants
+):
+    """A code cannot get the parent of another project, also when the user is a
+    member of both: the composite foreign key rejects it (409) and the code keeps
+    its parent."""
+    child_code = two_tenants["own"]["child_code"]
+    foreign_code = two_tenants["foreign"]["code"]
+
+    response = client.patch(
+        f"/code/{child_code.id}",
+        json=CodeUpdate(parent_id=foreign_code.id).model_dump(exclude_unset=True),
+    )
+
+    assert response.status_code == 409, response.text
+    response = client.get(f"/code/{child_code.id}")
+    assert response.status_code == 200, response.text
+    assert CodeRead.model_validate(response.json()).parent_id == (
+        two_tenants["own"]["code"].id
+    )
 
 
 def test_delete_code(

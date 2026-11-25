@@ -18,7 +18,6 @@ if TYPE_CHECKING:
     from core.auth.api_key_orm import ApiKeyORM
     from core.auth.refresh_token_orm import RefreshTokenORM
     from core.memo.memo_orm import MemoORM
-    from core.memo.object_handle_orm import ObjectHandleORM
     from core.project.project_orm import ProjectORM
     from modules.search_view.search_view_orm import SearchViewORM
 
@@ -45,15 +44,6 @@ class UserORM(ORMBase):
         Integer,
         ForeignKey("project.id", ondelete="CASCADE", name="FK_user_project_id"),
         index=True,
-    )
-
-    # one to one
-    object_handle: Mapped["ObjectHandleORM"] = relationship(
-        "ObjectHandleORM",
-        uselist=False,
-        back_populates="user",
-        cascade="all, delete-orphan",
-        passive_deletes=True,
     )
 
     # one to many
@@ -101,7 +91,7 @@ class UserORM(ORMBase):
         "MemoORM",
         secondary="MemoFavoriteLinkTable".lower(),
         back_populates="favorited_by_users",
-        passive_deletes=True,
+        viewonly=True,
     )
 
     __table_args__ = (

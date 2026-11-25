@@ -55,6 +55,7 @@ def handle_init_sdoc_job(payload: SdocInitJobInput, job: Job) -> SdocInitJobOutp
             db=db,
             create_dto=SourceDocumentDataCreate(
                 id=sdoc_db_obj.id,
+                project_id=sdoc_db_obj.project_id,
                 content="",
                 raw_html="",
                 html="",

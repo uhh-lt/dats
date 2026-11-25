@@ -1,6 +1,13 @@
 from typing import TYPE_CHECKING
 
-from sqlalchemy import ForeignKey, Index, Integer, String, text
+from sqlalchemy import (
+    ForeignKey,
+    ForeignKeyConstraint,
+    Index,
+    Integer,
+    String,
+    text,
+)
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from common.sdoc_status_enum import SDocStatus
@@ -17,19 +24,27 @@ class SourceDocumentStepStatusORM(ORMBase):
     (artefact_statements.py) touch it."""
 
     # many to one; the primary key (sdoc_id, step) indexes it
-    sdoc_id: Mapped[int] = mapped_column(
-        Integer,
-        ForeignKey("sourcedocument.id", ondelete="CASCADE"),
-        primary_key=True,
-    )
+    sdoc_id: Mapped[int] = mapped_column(Integer, primary_key=True)
     source_document: Mapped["SourceDocumentORM"] = relationship(
-        "SourceDocumentORM", back_populates="step_statuses"
+        "SourceDocumentORM", back_populates="step_statuses", foreign_keys=[sdoc_id]
     )
 
     step: Mapped[str] = mapped_column(String, primary_key=True)
     status: Mapped[SDocStatus] = mapped_column(Integer, nullable=False)
+    project_id: Mapped[int] = mapped_column(
+        Integer,
+        ForeignKey("project.id", ondelete="CASCADE"),
+        nullable=False,
+        index=True,
+    )
 
     __table_args__ = (
+        ForeignKeyConstraint(
+            ["project_id", "sdoc_id"],
+            ["sourcedocument.project_id", "sourcedocument.id"],
+            ondelete="CASCADE",
+            name="FK_sourcedocumentstepstatus_sdoc_id",
+        ),
         Index("ix_sourcedocumentstepstatus_step_status", "step", "status"),
         # the few unfinished steps, for the overall status filters of crud_sdoc
         Index(
@@ -41,4 +56,4 @@ class SourceDocumentStepStatusORM(ORMBase):
     )
 
     def get_project_id(self) -> int:
-        return self.source_document.get_project_id()
+        return self.project_id

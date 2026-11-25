@@ -1,6 +1,12 @@
 from typing import TYPE_CHECKING
 
-from sqlalchemy import Boolean, Float, ForeignKey, Integer
+from sqlalchemy import (
+    Boolean,
+    Float,
+    ForeignKey,
+    ForeignKeyConstraint,
+    Integer,
+)
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from repos.db.orm_base import ORMBase
@@ -11,16 +17,12 @@ if TYPE_CHECKING:
 
 
 class DocumentClusterORM(ORMBase):
-    sdoc_id: Mapped[int] = mapped_column(
+    sdoc_id: Mapped[int] = mapped_column(Integer, primary_key=True, index=True)
+    cluster_id: Mapped[int] = mapped_column(Integer, primary_key=True, index=True)
+    project_id: Mapped[int] = mapped_column(
         Integer,
-        ForeignKey("sourcedocument.id", ondelete="CASCADE"),
-        primary_key=True,
-        index=True,
-    )
-    cluster_id: Mapped[int] = mapped_column(
-        Integer,
-        ForeignKey("cluster.id", ondelete="CASCADE"),
-        primary_key=True,
+        ForeignKey("project.id", ondelete="CASCADE"),
+        nullable=False,
         index=True,
     )
 
@@ -31,14 +33,31 @@ class DocumentClusterORM(ORMBase):
     source_document: Mapped["SourceDocumentORM"] = relationship(
         "SourceDocumentORM",
         back_populates="document_clusters",
+        foreign_keys=[sdoc_id],
     )
     cluster: Mapped["ClusterORM"] = relationship(
         "ClusterORM",
         back_populates="document_clusters",
+        foreign_keys=[cluster_id],
+    )
+
+    __table_args__ = (
+        ForeignKeyConstraint(
+            ["project_id", "sdoc_id"],
+            ["sourcedocument.project_id", "sourcedocument.id"],
+            ondelete="CASCADE",
+            name="FK_documentcluster_sdoc_id",
+        ),
+        ForeignKeyConstraint(
+            ["project_id", "cluster_id"],
+            ["cluster.project_id", "cluster.id"],
+            ondelete="CASCADE",
+            name="FK_documentcluster_cluster_id",
+        ),
     )
 
     def __repr__(self) -> str:
         return f"<DocumentClusterORM(sdoc_id={self.sdoc_id}, cluster_id={self.cluster_id}, is_accepted={self.is_accepted})>"
 
     def get_project_id(self) -> int:
-        return self.source_document.get_project_id()
+        return self.project_id

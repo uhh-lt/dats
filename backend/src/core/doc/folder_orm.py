@@ -1,7 +1,15 @@
 from datetime import datetime
 from typing import TYPE_CHECKING
 
-from sqlalchemy import DateTime, ForeignKey, Integer, String, UniqueConstraint, func
+from sqlalchemy import (
+    DateTime,
+    ForeignKey,
+    ForeignKeyConstraint,
+    Integer,
+    String,
+    UniqueConstraint,
+    func,
+)
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from core.doc.folder_enum import FolderType
@@ -45,26 +53,34 @@ class FolderORM(ORMBase):
         back_populates="folder",
         cascade="all, delete-orphan",
         passive_deletes=True,
+        foreign_keys="SourceDocumentORM.folder_id",
     )
 
     # hierarchy reference
-    parent_id: Mapped[int | None] = mapped_column(
-        Integer,
-        ForeignKey("folder.id", ondelete="CASCADE"),
-        index=True,
-    )
+    parent_id: Mapped[int | None] = mapped_column(Integer, index=True)
     parent: Mapped["FolderORM | None"] = relationship(
-        "FolderORM", remote_side=[id], back_populates="children"
+        "FolderORM",
+        remote_side=[id],
+        back_populates="children",
+        foreign_keys=[parent_id],
     )
     children: Mapped[list["FolderORM"]] = relationship(
         "FolderORM",
         back_populates="parent",
         cascade="all, delete-orphan",
         passive_deletes=True,
+        foreign_keys=[parent_id],
     )
 
     __table_args__ = (
         UniqueConstraint("parent_id", "name", name="UC_unique_folder_name_in_parent"),
+        UniqueConstraint("project_id", "id", name="UC_folder_project_id_id"),
+        ForeignKeyConstraint(
+            ["project_id", "parent_id"],
+            ["folder.project_id", "folder.id"],
+            ondelete="CASCADE",
+            name="FK_folder_parent_id",
+        ),
     )
 
     def get_project_id(self) -> int:

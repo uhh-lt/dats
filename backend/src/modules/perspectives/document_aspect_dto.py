@@ -5,6 +5,7 @@ from repos.db.dto_base import UpdateDTOBase
 
 # Properties for creation
 class DocumentAspectCreate(BaseModel):
+    project_id: int = Field(description="Project the document aspect belongs to")
     sdoc_id: int = Field(description="ID of the source document")
     aspect_id: int = Field(description="ID of the aspect")
     content: str = Field(description="Content of the document aspect")

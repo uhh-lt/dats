@@ -4,6 +4,7 @@ from typing import Iterable
 from sqlalchemy import CursorResult, delete, func, select
 from sqlalchemy.orm import Session
 
+from core.doc.source_document_orm import SourceDocumentORM
 from core.tag.tag_dto import TagCreate, TagUpdate
 from core.tag.tag_orm import SourceDocumentTagLinkTable, TagORM
 from repos.db.crud_base import BATCH_SIZE, SQLCRUDBase
@@ -185,11 +186,28 @@ class CRUDTag(SQLCRUDBase[TagORM, TagCreate, TagUpdate]):
         if len(sdoc_ids) == 0 or len(tag_ids) == 0:
             return 0
 
-        # insert links (sdoc <-> tag)
+        # insert links (sdoc <-> tag), in the project of the document
         from sqlalchemy.dialects.postgresql import insert
 
+        project_id_by_sdoc: dict[int, int] = {}
+        for i in range(0, len(sdoc_ids), BATCH_SIZE):
+            batch_ids = sdoc_ids[i : i + BATCH_SIZE]
+            project_id_by_sdoc.update(
+                {
+                    sdoc_id: project_id
+                    for sdoc_id, project_id in db.execute(
+                        select(
+                            SourceDocumentORM.id, SourceDocumentORM.project_id
+                        ).where(SourceDocumentORM.id.in_(batch_ids))
+                    ).tuples()
+                }
+            )
         insert_values = [
-            {"source_document_id": str(sdoc_id), "tag_id": str(tag_id)}
+            {
+                "project_id": project_id_by_sdoc[sdoc_id],
+                "source_document_id": sdoc_id,
+                "tag_id": tag_id,
+            }
             for sdoc_id in sdoc_ids
             for tag_id in tag_ids
         ]

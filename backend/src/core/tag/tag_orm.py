@@ -1,7 +1,15 @@
 from datetime import datetime
 from typing import TYPE_CHECKING
 
-from sqlalchemy import DateTime, ForeignKey, Integer, String, UniqueConstraint, func
+from sqlalchemy import (
+    DateTime,
+    ForeignKey,
+    ForeignKeyConstraint,
+    Integer,
+    String,
+    UniqueConstraint,
+    func,
+)
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from repos.db.orm_base import ORMBase
@@ -36,6 +44,7 @@ class TagORM(ORMBase):
         back_populates="tag",
         cascade="all, delete-orphan",
         passive_deletes=True,
+        foreign_keys="ObjectHandleORM.tag_id",
     )
 
     # many to one
@@ -53,6 +62,7 @@ class TagORM(ORMBase):
         back_populates="predicted_tag",
         cascade="all, delete-orphan",
         passive_deletes=True,
+        foreign_keys="TagRecommendationLinkORM.predicted_tag_id",
     )
 
     # many to many
@@ -60,23 +70,23 @@ class TagORM(ORMBase):
         "SourceDocumentORM",
         secondary="SourceDocumentTagLinkTable".lower(),
         back_populates="tags",
-        passive_deletes=True,
+        viewonly=True,
     )
 
     # hierarchy reference
-    parent_id: Mapped[int | None] = mapped_column(
-        Integer,
-        ForeignKey("tag.id", ondelete="CASCADE"),
-        index=True,
-    )
+    parent_id: Mapped[int | None] = mapped_column(Integer, index=True)
     parent: Mapped["TagORM | None"] = relationship(
-        "TagORM", remote_side=[id], back_populates="children"
+        "TagORM",
+        remote_side=[id],
+        back_populates="children",
+        foreign_keys=[parent_id],
     )
     children: Mapped[list["TagORM"]] = relationship(
         "TagORM",
         back_populates="parent",
         cascade="all, delete-orphan",
         passive_deletes=True,
+        foreign_keys=[parent_id],
     )
 
     __table_args__ = (
@@ -84,6 +94,13 @@ class TagORM(ORMBase):
             "project_id",
             "name",
             name="UC_tag_name_unique_per_project",
+        ),
+        UniqueConstraint("project_id", "id", name="UC_tag_project_id_id"),
+        ForeignKeyConstraint(
+            ["project_id", "parent_id"],
+            ["tag.project_id", "tag.id"],
+            ondelete="CASCADE",
+            name="FK_tag_parent_id",
         ),
     )
 
@@ -99,14 +116,27 @@ class TagORM(ORMBase):
 
 class SourceDocumentTagLinkTable(ORMBase):
     source_document_id: Mapped[int] = mapped_column(
+        Integer, primary_key=True, index=True
+    )
+    tag_id: Mapped[int] = mapped_column(Integer, primary_key=True, index=True)
+    project_id: Mapped[int] = mapped_column(
         Integer,
-        ForeignKey("sourcedocument.id", ondelete="CASCADE"),
-        primary_key=True,
+        ForeignKey("project.id", ondelete="CASCADE"),
+        nullable=False,
         index=True,
     )
-    tag_id: Mapped[int] = mapped_column(
-        Integer,
-        ForeignKey("tag.id", ondelete="CASCADE"),
-        primary_key=True,
-        index=True,
+
+    __table_args__ = (
+        ForeignKeyConstraint(
+            ["project_id", "source_document_id"],
+            ["sourcedocument.project_id", "sourcedocument.id"],
+            ondelete="CASCADE",
+            name="FK_sourcedocumenttaglinktable_source_document_id",
+        ),
+        ForeignKeyConstraint(
+            ["project_id", "tag_id"],
+            ["tag.project_id", "tag.id"],
+            ondelete="CASCADE",
+            name="FK_sourcedocumenttaglinktable_tag_id",
+        ),
     )

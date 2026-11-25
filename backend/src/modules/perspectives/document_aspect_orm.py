@@ -1,6 +1,12 @@
 from typing import TYPE_CHECKING
 
-from sqlalchemy import Float, ForeignKey, Integer, Text
+from sqlalchemy import (
+    Float,
+    ForeignKey,
+    ForeignKeyConstraint,
+    Integer,
+    Text,
+)
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from repos.db.orm_base import ORMBase
@@ -11,16 +17,12 @@ if TYPE_CHECKING:
 
 
 class DocumentAspectORM(ORMBase):
-    sdoc_id: Mapped[int] = mapped_column(
+    sdoc_id: Mapped[int] = mapped_column(Integer, primary_key=True, index=True)
+    aspect_id: Mapped[int] = mapped_column(Integer, primary_key=True, index=True)
+    project_id: Mapped[int] = mapped_column(
         Integer,
-        ForeignKey("sourcedocument.id", ondelete="CASCADE"),
-        primary_key=True,
-        index=True,
-    )
-    aspect_id: Mapped[int] = mapped_column(
-        Integer,
-        ForeignKey("aspect.id", ondelete="CASCADE"),
-        primary_key=True,
+        ForeignKey("project.id", ondelete="CASCADE"),
+        nullable=False,
         index=True,
     )
 
@@ -34,9 +36,27 @@ class DocumentAspectORM(ORMBase):
     source_document: Mapped["SourceDocumentORM"] = relationship(
         "SourceDocumentORM",
         back_populates="document_aspects",
+        foreign_keys=[sdoc_id],
     )
     aspect: Mapped["AspectORM"] = relationship(
-        "AspectORM", back_populates="document_aspects"
+        "AspectORM",
+        back_populates="document_aspects",
+        foreign_keys=[aspect_id],
+    )
+
+    __table_args__ = (
+        ForeignKeyConstraint(
+            ["project_id", "sdoc_id"],
+            ["sourcedocument.project_id", "sourcedocument.id"],
+            ondelete="CASCADE",
+            name="FK_documentaspect_sdoc_id",
+        ),
+        ForeignKeyConstraint(
+            ["project_id", "aspect_id"],
+            ["aspect.project_id", "aspect.id"],
+            ondelete="CASCADE",
+            name="FK_documentaspect_aspect_id",
+        ),
     )
 
     def __repr__(self) -> str:
@@ -45,4 +65,4 @@ class DocumentAspectORM(ORMBase):
         )
 
     def get_project_id(self) -> int:
-        return self.source_document.get_project_id()
+        return self.project_id

@@ -1,6 +1,7 @@
 from fastapi.encoders import jsonable_encoder
 from sqlalchemy import select
 from sqlalchemy.orm import Session, selectinload
+from sqlalchemy.orm.attributes import set_committed_value
 from sqlalchemy.sql.base import ExecutableOption
 
 from core.memo.memo_dto import MemoCreateIntern, MemoUpdate
@@ -72,46 +73,72 @@ class CRUDMemo(SQLCRUDBase[MemoORM, MemoCreateIntern, MemoUpdate]):
             db=db,
             create_dtos=[
                 self._object_handle_create_dto(
+                    project_id=create_dto.project_id,
                     attached_object_id=attached_object_id,
                     attached_object_type=attached_object_type,
                 )
-                for attached_object_id in attached_object_ids
+                for attached_object_id, create_dto in zip(
+                    attached_object_ids, create_dtos
+                )
             ],
         )
 
-        # 2) create the memos, linked to the object handles via the relationship, so
-        # that reading memo.attached_to needs no query
+        # 2) create the memos, linked to the object handles by their id; the loaded
+        # handles are set as committed values, so that reading memo.attached_to
+        # needs no query
         # noinspection PyArgumentList
         db_objs = [
-            self.model(**jsonable_encoder(create_dto), attached_to=oh_db_obj)
+            self.model(**jsonable_encoder(create_dto), attached_to_id=oh_db_obj.id)
             for create_dto, oh_db_obj in zip(create_dtos, oh_db_objs)
         ]
         db.add_all(db_objs)
         db.flush()
+        for db_obj, oh_db_obj in zip(db_objs, oh_db_objs):
+            set_committed_value(db_obj, "attached_to", oh_db_obj)
 
         return db_objs
 
     def _object_handle_create_dto(
-        self, *, attached_object_id: int, attached_object_type: AttachedObjectType
+        self,
+        *,
+        project_id: int,
+        attached_object_id: int,
+        attached_object_type: AttachedObjectType,
     ) -> ObjectHandleCreate:
-        """The object handle that refers to the attached object."""
+        """The object handle in the project that refers to the attached object."""
         match attached_object_type:
             case AttachedObjectType.code:
-                return ObjectHandleCreate(code_id=attached_object_id)
+                return ObjectHandleCreate(
+                    project_id=project_id, code_id=attached_object_id
+                )
             case AttachedObjectType.span_annotation:
-                return ObjectHandleCreate(span_annotation_id=attached_object_id)
+                return ObjectHandleCreate(
+                    project_id=project_id, span_annotation_id=attached_object_id
+                )
             case AttachedObjectType.sentence_annotation:
-                return ObjectHandleCreate(sentence_annotation_id=attached_object_id)
+                return ObjectHandleCreate(
+                    project_id=project_id, sentence_annotation_id=attached_object_id
+                )
             case AttachedObjectType.span_group:
-                return ObjectHandleCreate(span_group_id=attached_object_id)
+                return ObjectHandleCreate(
+                    project_id=project_id, span_group_id=attached_object_id
+                )
             case AttachedObjectType.bbox_annotation:
-                return ObjectHandleCreate(bbox_annotation_id=attached_object_id)
+                return ObjectHandleCreate(
+                    project_id=project_id, bbox_annotation_id=attached_object_id
+                )
             case AttachedObjectType.source_document:
-                return ObjectHandleCreate(source_document_id=attached_object_id)
+                return ObjectHandleCreate(
+                    project_id=project_id, source_document_id=attached_object_id
+                )
             case AttachedObjectType.project:
-                return ObjectHandleCreate(project_id=attached_object_id)
+                return ObjectHandleCreate(
+                    project_id=project_id, attached_project_id=attached_object_id
+                )
             case AttachedObjectType.tag:
-                return ObjectHandleCreate(tag_id=attached_object_id)
+                return ObjectHandleCreate(
+                    project_id=project_id, tag_id=attached_object_id
+                )
 
     ### READ OPERATIONS ###
 
@@ -188,7 +215,10 @@ class CRUDMemo(SQLCRUDBase[MemoORM, MemoCreateIntern, MemoUpdate]):
         """Upsert a (user, memo) recents row, bumping last_opened to now."""
         from sqlalchemy.dialects.postgresql import insert
 
-        insert_stmt = insert(MemoRecentORM).values(memo_id=memo_id, user_id=user_id)
+        memo = self.read(db=db, id=memo_id)
+        insert_stmt = insert(MemoRecentORM).values(
+            memo_id=memo_id, user_id=user_id, project_id=memo.project_id
+        )
         upsert_stmt = insert_stmt.on_conflict_do_update(
             index_elements=["user_id", "memo_id"],
             set_={"last_opened": insert_stmt.excluded.last_opened},
@@ -213,7 +243,9 @@ class CRUDMemo(SQLCRUDBase[MemoORM, MemoCreateIntern, MemoUpdate]):
         """
         if not memo_ids:
             return
-        self.read_by_ids(db=db, ids=memo_ids)
+        project_id_by_memo = {
+            memo.id: memo.project_id for memo in self.read_by_ids(db=db, ids=memo_ids)
+        }
 
         from sqlalchemy.dialects.postgresql import insert
 
@@ -223,7 +255,14 @@ class CRUDMemo(SQLCRUDBase[MemoORM, MemoCreateIntern, MemoUpdate]):
             batch_ids = unique_ids[i : i + BATCH_SIZE]
             db.execute(
                 insert_stmt,
-                [{"memo_id": memo_id, "user_id": user_id} for memo_id in batch_ids],
+                [
+                    {
+                        "memo_id": memo_id,
+                        "user_id": user_id,
+                        "project_id": project_id_by_memo[memo_id],
+                    }
+                    for memo_id in batch_ids
+                ],
             )
         db.flush()
 

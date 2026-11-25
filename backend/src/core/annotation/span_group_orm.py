@@ -1,7 +1,15 @@
 from datetime import datetime
 from typing import TYPE_CHECKING
 
-from sqlalchemy import DateTime, ForeignKey, Integer, String, func
+from sqlalchemy import (
+    DateTime,
+    ForeignKey,
+    ForeignKeyConstraint,
+    Integer,
+    String,
+    UniqueConstraint,
+    func,
+)
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from repos.db.orm_base import ORMBase
@@ -31,24 +39,42 @@ class SpanGroupORM(ORMBase):
         back_populates="span_group",
         cascade="all, delete-orphan",
         passive_deletes=True,
+        foreign_keys="ObjectHandleORM.span_group_id",
     )
 
     # many to one
-    annotation_document_id: Mapped[int] = mapped_column(
+    project_id: Mapped[int] = mapped_column(
         Integer,
-        ForeignKey("annotationdocument.id", ondelete="CASCADE"),
+        ForeignKey("project.id", ondelete="CASCADE"),
         nullable=False,
         index=True,
     )
+
+    annotation_document_id: Mapped[int] = mapped_column(
+        Integer, nullable=False, index=True
+    )
     annotation_document: Mapped["AnnotationDocumentORM"] = relationship(
-        "AnnotationDocumentORM", back_populates="span_groups"
+        "AnnotationDocumentORM",
+        back_populates="span_groups",
+        foreign_keys=[annotation_document_id],
     )
 
-    # many to many
+    # many to many (read only: links are written by id columns)
     span_annotations: Mapped[list["SpanAnnotationORM"]] = relationship(
         "SpanAnnotationORM",
         secondary="SpanAnnotationSpanGroupLinkTable".lower(),
         back_populates="span_groups",
+        viewonly=True,
+    )
+
+    __table_args__ = (
+        UniqueConstraint("project_id", "id", name="UC_spangroup_project_id_id"),
+        ForeignKeyConstraint(
+            ["project_id", "annotation_document_id"],
+            ["annotationdocument.project_id", "annotationdocument.id"],
+            ondelete="CASCADE",
+            name="FK_spangroup_annotation_document_id",
+        ),
     )
 
     @property
@@ -60,19 +86,32 @@ class SpanGroupORM(ORMBase):
         return self.annotation_document.source_document_id
 
     def get_project_id(self) -> int:
-        return self.annotation_document.get_project_id()
+        return self.project_id
 
 
 class SpanAnnotationSpanGroupLinkTable(ORMBase):
     span_annotation_id: Mapped[int] = mapped_column(
+        Integer, primary_key=True, index=True
+    )
+    span_group_id: Mapped[int] = mapped_column(Integer, primary_key=True, index=True)
+    project_id: Mapped[int] = mapped_column(
         Integer,
-        ForeignKey("spanannotation.id", ondelete="CASCADE"),
-        primary_key=True,
+        ForeignKey("project.id", ondelete="CASCADE"),
+        nullable=False,
         index=True,
     )
-    span_group_id: Mapped[int] = mapped_column(
-        Integer,
-        ForeignKey("spangroup.id", ondelete="CASCADE"),
-        primary_key=True,
-        index=True,
+
+    __table_args__ = (
+        ForeignKeyConstraint(
+            ["project_id", "span_annotation_id"],
+            ["spanannotation.project_id", "spanannotation.id"],
+            ondelete="CASCADE",
+            name="FK_spanannotationspangrouplinktable_span_annotation_id",
+        ),
+        ForeignKeyConstraint(
+            ["project_id", "span_group_id"],
+            ["spangroup.project_id", "spangroup.id"],
+            ondelete="CASCADE",
+            name="FK_spanannotationspangrouplinktable_span_group_id",
+        ),
     )

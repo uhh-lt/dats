@@ -44,6 +44,7 @@ class CRUDProjectMetadata(
     ) -> None:
         metadata_create_dtos = [
             SourceDocumentMetadataCreate.with_metatype(
+                project_id=project_metadata.project_id,
                 source_document_id=sdoc.id,
                 project_metadata_id=project_metadata.id,
                 metatype=metatype,

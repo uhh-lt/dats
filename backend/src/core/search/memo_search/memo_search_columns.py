@@ -43,7 +43,7 @@ def build_memo_subquery(db, project_id: int, user_id: int):
         handle.source_document_id,
         handle.code_id,
         handle.tag_id,
-        handle.project_id,
+        handle.attached_project_id,
         handle.span_annotation_id,
         handle.sentence_annotation_id,
         handle.bbox_annotation_id,
@@ -56,7 +56,7 @@ def build_memo_subquery(db, project_id: int, user_id: int):
         ),
         (handle.code_id.is_not(None), AttachedObjectType.code.value),
         (handle.tag_id.is_not(None), AttachedObjectType.tag.value),
-        (handle.project_id.is_not(None), AttachedObjectType.project.value),
+        (handle.attached_project_id.is_not(None), AttachedObjectType.project.value),
         (
             handle.span_annotation_id.is_not(None),
             AttachedObjectType.span_annotation.value,
@@ -75,7 +75,7 @@ def build_memo_subquery(db, project_id: int, user_id: int):
         (handle.source_document_id.is_not(None), source_document.name),
         (handle.code_id.is_not(None), code.name),
         (handle.tag_id.is_not(None), tag.name),
-        (handle.project_id.is_not(None), project.title),
+        (handle.attached_project_id.is_not(None), project.title),
         (
             handle.span_annotation_id.is_not(None),
             func.concat("Span annotation #", handle.span_annotation_id),
@@ -117,7 +117,7 @@ def build_memo_subquery(db, project_id: int, user_id: int):
         .outerjoin(source_document, source_document.id == handle.source_document_id)
         .outerjoin(code, code.id == handle.code_id)
         .outerjoin(tag, tag.id == handle.tag_id)
-        .outerjoin(project, project.id == handle.project_id)
+        .outerjoin(project, project.id == handle.attached_project_id)
         .outerjoin(
             favorite,
             and_(favorite.memo_id == MemoORM.id, favorite.user_id == user_id),

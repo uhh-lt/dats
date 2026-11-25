@@ -56,6 +56,7 @@ class WhiteboardORM(ORMBase):
     # 3d. Table-level constraints (only if needed)
     __table_args__ = (
         UniqueConstraint("project_id", "title", name="UC_<...>_unique_per_project"),
+        UniqueConstraint("project_id", "id", name="UC_whiteboard_project_id_id"),
     )
 
     # 3e. Derived @property values (memo_ids, sdoc_id, user_id, ...)
@@ -68,12 +69,25 @@ class WhiteboardORM(ORMBase):
 # 4. Association tables for many-to-many relationships: <A><B>LinkTable
 class SourceDocumentTagLinkTable(ORMBase):
     source_document_id: Mapped[int] = mapped_column(
-        Integer,
-        ForeignKey("sourcedocument.id", ondelete="CASCADE"),
-        primary_key=True,
-        index=True,
+        Integer, primary_key=True, index=True
     )
     # tag_id: same shape
+    project_id: Mapped[int] = mapped_column(
+        Integer,
+        ForeignKey("project.id", ondelete="CASCADE"),
+        nullable=False,
+        index=True,
+    )
+
+    __table_args__ = (
+        ForeignKeyConstraint(
+            ["project_id", "source_document_id"],
+            ["sourcedocument.project_id", "sourcedocument.id"],
+            ondelete="CASCADE",
+            name="FK_sourcedocumenttaglinktable_source_document_id",
+        ),
+        # tag_id: same shape
+    )
 ```
 
 ## Rules
@@ -84,7 +98,7 @@ class SourceDocumentTagLinkTable(ORMBase):
 - **Table name**: never set `__tablename__`. `ORMBase` derives it from the class name (`SpanAnnotationORM` → `spanannotation`, `SourceDocumentTagLinkTable` → `sourcedocumenttaglinktable`). Use that derived name in every `ForeignKey("<table>.id")` and `secondary=` string.
 - **`secondary=`**: write it as `"<ClassName>".lower()` (e.g. `secondary="SourceDocumentTagLinkTable".lower()`), so it can be found by searching for the class name.
 - **FK columns**: `<relationship>_id` sits directly above the relationship it backs (`code_id` → `code`, `project_id` → `project`).
-- **Constraint names**: unique constraints are `UC_<what>` (e.g. `UC_code_name_unique_per_project`). Check constraints are `CC_<what>`.
+- **Constraint names**: unique constraints are `UC_<what>` (e.g. `UC_code_name_unique_per_project`). Check constraints are `CC_<what>`. Composite foreign keys are `FK_<table>_<column>` (e.g. `FK_spanannotation_code_id`).
 
 ### Columns
 
@@ -100,14 +114,18 @@ class SourceDocumentTagLinkTable(ORMBase):
 
 ### Foreign Keys & Relationships
 
-- **FK cascade**: every FK column, including link-table and composite-key columns, uses `ForeignKey("<table>.id", ondelete="CASCADE")` and `index=True`, except the first primary key column, which the primary key index covers (`SourceDocumentStepStatusORM.sdoc_id`). The only exceptions are `ondelete="SET NULL"` on an optional column (`ClusterORM.parent_cluster_id`, `ExperimentORM.gold_user_id`) and `ondelete="NO ACTION", deferrable=True, initially="IMMEDIATE"` on `ExperimentRunORM.virtual_user_id`, whose check `crud_project.delete_multi` defers to the commit.
+- **Tenant**: every project-owned table (all but `ProjectORM`, `UserORM`, `ApiKeyORM`, `RefreshTokenORM`, `SpanTextORM`, `ProjectUserLinkTable`) has `project_id: Mapped[int]` with `ForeignKey("project.id", ondelete="CASCADE")`, and a table with an `id` has `UniqueConstraint("project_id", "id", name="UC_<table>_project_id_id")`.
+- **Composite FKs**: an FK onto a project-owned table is a `ForeignKeyConstraint(["project_id", "<column>"], ["<table>.project_id", "<table>.id"], ondelete="CASCADE", name="FK_<table>_<column>")` in `__table_args__`, and its column is a plain `mapped_column(Integer, index=True)`; an optional column uses `ondelete="SET NULL (<column>)"`, so the shared `project_id` is never nulled.
+- **FK cascade**: an FK onto a global table (project, user, span text) is a column `ForeignKey("<table>.id", ondelete="CASCADE")` with `index=True`, except the first primary key column, which the primary key index covers (`SourceDocumentStepStatusORM.sdoc_id`). The only exceptions are `ondelete="SET NULL"` on an optional user column (`ExperimentORM.gold_user_id`) and `ondelete="NO ACTION", deferrable=True, initially="IMMEDIATE", name="experimentrun_virtual_user_id_fkey"` on `ExperimentRunORM.virtual_user_id`, whose check `crud_project.delete_multi` defers to the commit by that name.
+- **Relationships never write `project_id`**: a relationship over a composite FK passes `foreign_keys=` with the id column only, on both sides, so it never copies the `project_id` of another project; only the relationships onto `ProjectORM` write it.
+- **Create with id columns**: create rows with their id columns and `project_id` (`attached_to_id=handle.id`), never by assigning relationship objects.
 - **Relationship form**: `relationship("<TargetORM>", back_populates="<attr>", ...)`. Pass the target as a string, and give the annotation as a string as well (`Mapped["CodeORM"]`, `Mapped[list["CodeORM"]]`).
 - **`back_populates` both ways**: when the other side declares the inverse relationship, both sides name each other with `back_populates`. Never use `backref`.
 - **Parent side of one-to-many / one-to-one**: `cascade="all, delete-orphan", passive_deletes=True`. Together with `ondelete="CASCADE"`, the database does the deleting. Exceptions: `ClusterORM.child_clusters` (children survive via `SET NULL`) and the shared lookup `SpanTextORM.span_annotations` (only `passive_deletes=True`).
 - **One to one**: add `uselist=False` on the parent side (e.g. `object_handle`, `data`).
-- **Many to many**: `secondary=...` plus `back_populates`, usually with `passive_deletes=True`. When both an association-object relationship and a `secondary` shortcut map the same table, add `overlaps="..."` (see `aspect_orm.py`).
-- **Hierarchies** (code, tag, folder): `parent_id: Mapped[int | None]` is a self-FK. `parent: Mapped["<Self>ORM | None"] = relationship("<Self>ORM", remote_side=[id], back_populates="children")`. `children` has `back_populates="parent"` and the parent-side cascade.
-- **Ambiguous FKs**: pass `foreign_keys="<table>.c.<column>"` when two FKs connect the same tables (`MemoORM` ↔ `ObjectHandleORM`).
+- **Many to many**: `secondary=...` plus `back_populates` and `viewonly=True`; the CRUD writes the link rows by their id columns and `project_id` (`crud_tag.link_multiple_tags`).
+- **Hierarchies** (code, tag, folder, cluster): `parent_id: Mapped[int | None]` has a composite self-FK. `parent: Mapped["<Self>ORM | None"] = relationship("<Self>ORM", remote_side=[id], back_populates="children", foreign_keys=[parent_id])`. `children` has `back_populates="parent"`, `foreign_keys=[parent_id]` and the parent-side cascade.
+- **Ambiguous FKs**: `foreign_keys=` also picks the FK when two connect the same tables (`SpanAnnotationORM.code` and `source_code_id`).
 - **Inverse side**: adding a relationship to an existing model also means adding the inverse relationship and the `TYPE_CHECKING` import in the target ORM file (e.g. a new project-scoped entity adds a list to `ProjectORM`).
 
 ### Imports
@@ -117,12 +135,12 @@ class SourceDocumentTagLinkTable(ORMBase):
 
 ### Table Arguments
 
-- **`__table_args__`**: a tuple placed after all columns and relationships. It holds `UniqueConstraint(..., name="UC_...")`, `CheckConstraint(..., name="CC_...")` and composite `Index(...)` entries.
+- **`__table_args__`**: a tuple placed after all columns and relationships. It holds `UniqueConstraint(..., name="UC_...")`, `CheckConstraint(..., name="CC_...")`, `ForeignKeyConstraint(..., name="FK_...")` and composite `Index(...)` entries.
 - **Project-scoped uniqueness**: entities with a user-facing name or uuid are unique per project (`UniqueConstraint("project_id", "name", ...)`).
 
 ### Behavior
 
-- **`get_project_id()`**: every project-scoped model overrides it. Return `self.project_id` when the column exists. Otherwise delegate to the parent, e.g. `return self.source_document.get_project_id()`. Only user-scoped auth tables (`ApiKeyORM`, `RefreshTokenORM`), `SpanTextORM` and pure link tables skip it; `UserORM` returns its `project_id`, which is set for virtual users only.
+- **`get_project_id()`**: every project-owned model overrides it with `return self.project_id`. Only user-scoped auth tables (`ApiKeyORM`, `RefreshTokenORM`), `SpanTextORM` and pure link tables skip it; `UserORM` returns its `project_id`, which is set for virtual users only.
 - **`get_user_id()`**: never override it. `ORMBase` reads the `user_id` attribute, so a model that is owned through its parent exposes `user_id` as a `@property` (see `SpanAnnotationORM.user_id`).
 - **`memo_ids`**: models that own an `object_handle` expose the same `memo_ids` property (copy it from `code_orm.py`).
 - **Derived values**: `@property` (or `hybrid_property` when the value must be usable in SQL queries) is used for convenience accessors that DTOs read through `from_attributes`. Keep them free of queries and side effects.
@@ -135,4 +153,4 @@ See:
 - [code_orm.py](backend/src/core/code/code_orm.py): project-scoped entity with timestamps, object handle, one-to-many with cascades, hierarchy, unique constraint, `memo_ids` and `get_project_id`.
 - [tag_orm.py](backend/src/core/tag/tag_orm.py): many-to-many through a `<A><B>LinkTable` in the same file.
 - [cota_orm.py](backend/src/modules/concept_over_time_analysis/cota_orm.py): JSONB documents with JSONB server defaults.
-- [word_frequency_orm.py](backend/src/core/artefacts/word_frequencies/word_frequency_orm.py): minimal dependent table with a composite primary key that delegates `get_project_id`.
+- [word_frequency_orm.py](backend/src/core/artefacts/word_frequencies/word_frequency_orm.py): minimal dependent table with a composite primary key and a composite foreign key onto its document.

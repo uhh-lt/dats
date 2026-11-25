@@ -1,6 +1,6 @@
 import datetime
 
-from sqlalchemy import update
+from sqlalchemy import literal, select, update
 from sqlalchemy.dialects.postgresql import insert
 from sqlalchemy.orm import Session
 
@@ -9,6 +9,7 @@ from core.annotation.annotation_document_dto import (
     AnnotationDocumentUpdate,
 )
 from core.annotation.annotation_document_orm import AnnotationDocumentORM
+from core.doc.source_document_orm import SourceDocumentORM
 from repos.db.crud_base import BATCH_SIZE, SQLCRUDBase
 from repos.db.sql_exceptions import NoSuchElementError
 
@@ -19,6 +20,22 @@ class CRUDAnnotationDocument(
     ]
 ):
     ### READ OPERATIONS ###
+
+    def read_by_id(self, db: Session, *, id: int) -> AnnotationDocumentORM:
+        """
+        Read an annotation document by its id column; the base `read` takes the
+        primary key (source_document_id, user_id).
+
+        Args:
+            id: The id of the annotation document.
+
+        Returns:
+            The annotation document.
+        """
+        db_obj = db.query(self.model).filter(self.model.id == id).first()
+        if db_obj is None:
+            raise NoSuchElementError(self.model, id=id)
+        return db_obj
 
     def read_by_user(self, db: Session, *, user_id: int) -> list[AnnotationDocumentORM]:
         return db.query(self.model).filter(self.model.user_id == user_id).all()
@@ -149,11 +166,13 @@ class CRUDAnnotationDocument(
             batch_ids = unique_sdoc_ids[i : i + BATCH_SIZE]
             db.execute(
                 insert(self.model)
-                .values(
-                    [
-                        {"user_id": user_id, "source_document_id": sdoc_id}
-                        for sdoc_id in batch_ids
-                    ]
+                .from_select(
+                    ["user_id", "source_document_id", "project_id"],
+                    select(
+                        literal(user_id),
+                        SourceDocumentORM.id,
+                        SourceDocumentORM.project_id,
+                    ).where(SourceDocumentORM.id.in_(batch_ids)),
                 )
                 .on_conflict_do_nothing(
                     index_elements=[

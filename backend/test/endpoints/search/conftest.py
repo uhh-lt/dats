@@ -317,6 +317,7 @@ def search_project(
         db=seed_db_session,
         create_dto=SourceDocumentDataCreate(
             id=sdoc_two.id,
+            project_id=sdoc_two.project_id,
             content="Alpha beta gamma.",
             raw_html="<p>Alpha beta gamma.</p>",
             html="<p><sent>Alpha beta gamma.</sent></p>",

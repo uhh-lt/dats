@@ -349,6 +349,7 @@ def create_project_with_sdoc(db: Session, test_project: ProjectORM) -> ProjectWi
         db=db,
         create_dto=SourceDocumentDataCreate(
             id=sdoc.id,
+            project_id=sdoc.project_id,
             content="This is a test document. It has two sentences.",
             raw_html="<p>This is a test document. It has two sentences.</p>",
             html="<p><sent>This is a test document.</sent> <sent>It has two sentences.</sent></p>",
@@ -446,6 +447,7 @@ def create_text_document(
         db=db,
         create_dto=SourceDocumentDataCreate(
             id=sdoc.id,
+            project_id=sdoc.project_id,
             content=content,
             raw_html=f"<p>{content}</p>",
             html="<p>"

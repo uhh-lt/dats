@@ -5,6 +5,7 @@ from repos.db.dto_base import UpdateDTOBase
 
 # Properties for creation
 class DocumentClusterCreate(BaseModel):
+    project_id: int = Field(description="Project the document cluster belongs to")
     sdoc_id: int = Field(description="ID of the source document")
     cluster_id: int = Field(description="ID of the cluster")
 

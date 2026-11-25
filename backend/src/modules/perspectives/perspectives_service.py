@@ -231,6 +231,7 @@ class PerspectivesService:
                     assert response.parsed is not None
                     create_dtos.append(
                         DocumentAspectCreate(
+                            project_id=aspect.project_id,
                             aspect_id=aspect_id,
                             sdoc_id=sdoc_id,
                             content=response.parsed.content,
@@ -245,6 +246,7 @@ class PerspectivesService:
             create_dtos.extend(
                 [
                     DocumentAspectCreate(
+                        project_id=aspect.project_id,
                         aspect_id=aspect_id,
                         sdoc_id=sdoc_id,
                         content=sdoc_content,
@@ -670,6 +672,7 @@ class PerspectivesService:
                 db=db,
                 create_dtos=[
                     ClusterCreateIntern(
+                        project_id=aspect.project_id,
                         aspect_id=aspect_id,
                         level=0,
                         name=None,
@@ -690,6 +693,7 @@ class PerspectivesService:
                 db=db,
                 create_dtos=[
                     DocumentClusterCreate(
+                        project_id=aspect.project_id,
                         sdoc_id=da.sdoc_id,
                         cluster_id=hdb_cluster_id2db_cluster_id[hdb_cluster],
                     )
@@ -1172,6 +1176,7 @@ class PerspectivesService:
         new_cluster = crud_cluster.create(
             db=db,
             create_dto=ClusterCreateIntern(
+                project_id=aspect.project_id,
                 parent_cluster_id=params.create_dto.parent_cluster_id,
                 aspect_id=params.create_dto.aspect_id,
                 level=params.create_dto.level,
@@ -1266,9 +1271,11 @@ class PerspectivesService:
         # - Create the new cluster in the database
         self._log_status_step(0)
         self._log_status_msg("Creating new empty cluster...")
+        aspect = crud_aspect.read(db=db, id=aspect_id)
         new_cluster = crud_cluster.create(
             db=db,
             create_dto=ClusterCreateIntern(
+                project_id=aspect.project_id,
                 name="New Cluster",
                 aspect_id=aspect_id,
                 level=0,

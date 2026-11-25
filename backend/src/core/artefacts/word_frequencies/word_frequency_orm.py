@@ -1,6 +1,11 @@
 from typing import TYPE_CHECKING
 
-from sqlalchemy import ForeignKey, Integer, String
+from sqlalchemy import (
+    ForeignKey,
+    ForeignKeyConstraint,
+    Integer,
+    String,
+)
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from repos.db.orm_base import ORMBase
@@ -11,18 +16,28 @@ if TYPE_CHECKING:
 
 class WordFrequencyORM(ORMBase):
     # many to one
-    sdoc_id: Mapped[int] = mapped_column(
+    project_id: Mapped[int] = mapped_column(
         Integer,
-        ForeignKey("sourcedocument.id", ondelete="CASCADE"),
-        primary_key=True,
+        ForeignKey("project.id", ondelete="CASCADE"),
+        nullable=False,
         index=True,
     )
+    sdoc_id: Mapped[int] = mapped_column(Integer, primary_key=True, index=True)
     source_document: Mapped["SourceDocumentORM"] = relationship(
-        "SourceDocumentORM", back_populates="word_frequencies"
+        "SourceDocumentORM", back_populates="word_frequencies", foreign_keys=[sdoc_id]
     )
 
     word: Mapped[str] = mapped_column(String, primary_key=True, index=True)
     count: Mapped[int] = mapped_column(Integer, index=True)
 
+    __table_args__ = (
+        ForeignKeyConstraint(
+            ["project_id", "sdoc_id"],
+            ["sourcedocument.project_id", "sourcedocument.id"],
+            ondelete="CASCADE",
+            name="FK_wordfrequency_sdoc_id",
+        ),
+    )
+
     def get_project_id(self) -> int:
-        return self.source_document.get_project_id()
+        return self.project_id

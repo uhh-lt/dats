@@ -399,6 +399,7 @@ class _Remapper:
 
         return _ImportedRun(
             create_dto=ExperimentRunCreateIntern(
+                project_id=experiment.project_id,
                 experiment_id=experiment.id,
                 name=row.run_name,
                 prompt_version_id=prompt_version_id,

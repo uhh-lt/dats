@@ -1,5 +1,5 @@
 from fastapi.encoders import jsonable_encoder
-from sqlalchemy import func, select
+from sqlalchemy import delete, func, insert, select
 from sqlalchemy.orm import Session, selectinload
 from sqlalchemy.sql.base import ExecutableOption
 
@@ -12,6 +12,7 @@ from core.annotation.span_annotation_dto import (
 )
 from core.annotation.span_annotation_orm import SpanAnnotationORM
 from core.annotation.span_group_crud import crud_span_group
+from core.annotation.span_group_orm import SpanAnnotationSpanGroupLinkTable
 from core.annotation.span_text_crud import crud_span_text
 from core.annotation.span_text_dto import SpanTextCreate
 from core.code.code_orm import CodeORM
@@ -417,19 +418,30 @@ class CRUDSpanAnnotation(
     def remove_from_all_span_groups(
         self, db: Session, *, span_id: int
     ) -> SpanAnnotationORM:
-        db_obj = self.read(db=db, id=span_id)
-        db_obj.span_groups = []
+        db.execute(
+            delete(SpanAnnotationSpanGroupLinkTable).where(
+                SpanAnnotationSpanGroupLinkTable.span_annotation_id == span_id
+            )
+        )
         db.flush()
+        db_obj = self.read(db=db, id=span_id)
         db.refresh(db_obj)
         return db_obj
 
     def add_to_span_group(
         self, db: Session, *, span_id: int, group_id: int
     ) -> SpanAnnotationORM:
+        # the link belongs to the project of the span annotation, so a span group
+        # of another project violates the link's foreign key
         span_db_obj = self.read(db=db, id=span_id)
-        group_db_obj = crud_span_group.read(db=db, id=group_id)
-        span_db_obj.span_groups.append(group_db_obj)
-        db.add(span_db_obj)
+        crud_span_group.exists(db=db, id=group_id, raise_error=True)
+        db.execute(
+            insert(SpanAnnotationSpanGroupLinkTable).values(
+                project_id=span_db_obj.project_id,
+                span_annotation_id=span_id,
+                span_group_id=group_id,
+            )
+        )
         db.flush()
         db.refresh(span_db_obj)
         return span_db_obj
@@ -438,9 +450,13 @@ class CRUDSpanAnnotation(
         self, db: Session, *, span_id: int, group_id: int
     ) -> SpanAnnotationORM:
         span_db_obj = self.read(db=db, id=span_id)
-        group_db_obj = crud_span_group.read(db=db, id=group_id)
-        if group_db_obj in span_db_obj.span_groups:
-            span_db_obj.span_groups.remove(group_db_obj)
+        crud_span_group.exists(db=db, id=group_id, raise_error=True)
+        db.execute(
+            delete(SpanAnnotationSpanGroupLinkTable).where(
+                SpanAnnotationSpanGroupLinkTable.span_annotation_id == span_id,
+                SpanAnnotationSpanGroupLinkTable.span_group_id == group_id,
+            )
+        )
         db.flush()
         db.refresh(span_db_obj)
         return span_db_obj

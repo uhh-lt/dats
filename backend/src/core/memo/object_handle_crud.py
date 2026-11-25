@@ -14,7 +14,6 @@ from core.code.code_crud import crud_code
 from core.code.code_orm import CodeORM
 from core.doc.source_document_crud import crud_sdoc
 from core.doc.source_document_orm import SourceDocumentORM
-from core.memo.memo_crud import crud_memo
 from core.memo.memo_enum import AttachedObjectType
 from core.memo.memo_orm import MemoORM
 from core.memo.object_handle_dto import ObjectHandleCreate
@@ -23,8 +22,6 @@ from core.project.project_crud import crud_project
 from core.project.project_orm import ProjectORM
 from core.tag.tag_crud import crud_tag
 from core.tag.tag_orm import TagORM
-from core.user.user_crud import crud_user
-from core.user.user_orm import UserORM
 from repos.db.crud_base import BATCH_SIZE, SQLCRUDBase, UpdateNotAllowed
 from repos.db.sql_exceptions import NoSuchElementError
 from repos.db.sql_utils import aggregate_ids
@@ -36,27 +33,23 @@ class CRUDObjectHandle(
     __obj_id_crud_map = {
         "code_id": crud_code,
         "tag_id": crud_tag,
-        "project_id": crud_project,
+        "attached_project_id": crud_project,
         "source_document_id": crud_sdoc,
         "span_annotation_id": crud_span_anno,
         "bbox_annotation_id": crud_bbox_anno,
         "sentence_annotation_id": crud_sentence_anno,
         "span_group_id": crud_span_group,
-        "user_id": crud_user,
-        "memo_id": crud_memo,
     }
 
     __obj_id_orm_type_map = {
         "code_id": CodeORM,
         "tag_id": TagORM,
-        "project_id": ProjectORM,
+        "attached_project_id": ProjectORM,
         "source_document_id": SourceDocumentORM,
         "span_annotation_id": SpanAnnotationORM,
         "bbox_annotation_id": BBoxAnnotationORM,
         "sentence_annotation_id": SentenceAnnotationORM,
         "span_group_id": SpanGroupORM,
-        "user_id": UserORM,
-        "memo_id": MemoORM,
     }
 
     __attached_obj_type_2_obj_id_key = {
@@ -67,7 +60,7 @@ class CRUDObjectHandle(
         AttachedObjectType.sentence_annotation: "sentence_annotation_id",
         AttachedObjectType.bbox_annotation: "bbox_annotation_id",
         AttachedObjectType.span_group: "span_group_id",
-        AttachedObjectType.project: "project_id",
+        AttachedObjectType.project: "attached_project_id",
     }
 
     ### CREATE OPERATIONS ###
@@ -193,8 +186,6 @@ class CRUDObjectHandle(
         | SentenceAnnotationORM
         | BBoxAnnotationORM
         | SpanGroupORM
-        | UserORM
-        | MemoORM
         | None
     ):
         target_id = None
@@ -213,7 +204,7 @@ class CRUDObjectHandle(
         return next(
             (column, object_id)
             for column, object_id in row.items()
-            if object_id is not None
+            if column != "project_id" and object_id is not None
         )
 
 

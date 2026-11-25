@@ -72,7 +72,7 @@ _HANDLE_COLUMN_TO_ATTACHED_OBJECT_TYPE = {
     "bbox_annotation_id": AttachedObjectType.bbox_annotation,
     "sentence_annotation_id": AttachedObjectType.sentence_annotation,
     "source_document_id": AttachedObjectType.source_document,
-    "project_id": AttachedObjectType.project,
+    "attached_project_id": AttachedObjectType.project,
     "tag_id": AttachedObjectType.tag,
 }
 

@@ -253,6 +253,7 @@ def import_sdocs_to_proj(
             db=db,
             create_dtos=[
                 SourceDocumentStepStatusCreate(
+                    project_id=created_sdoc.project_id,
                     sdoc_id=created_sdoc.id,
                     step=step,
                     status=SDocStatus(status),
@@ -274,6 +275,7 @@ def import_sdocs_to_proj(
         # 3. Create the source document data in the database
         sdoc_data_create = SourceDocumentDataCreate(
             id=created_sdoc.id,
+            project_id=created_sdoc.project_id,
             content=sdoc_export.content if sdoc_export.content else "",
             html=sdoc_export.html,
             raw_html=sdoc_export.raw_html,
@@ -298,6 +300,7 @@ def import_sdocs_to_proj(
             project_metadata = existing_metadata[(DocType(sdoc_export.doctype), key)]
 
             metadata_create = SourceDocumentMetadataCreate.with_metatype(
+                project_id=created_sdoc.project_id,
                 metatype=project_metadata.metatype,
                 source_document_id=created_sdoc.id,
                 project_metadata_id=project_metadata.id,

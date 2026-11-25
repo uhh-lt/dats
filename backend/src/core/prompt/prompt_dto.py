@@ -187,6 +187,7 @@ class PromptVersionCreate(PromptContent):
 
 
 class PromptVersionCreateIntern(PromptContent):
+    project_id: int = Field(description="Project the version belongs to")
     prompt_id: int = Field(description="ID of the prompt the version belongs to")
     version: int = Field(description="Number of the version within its prompt")
     user_id: int | None = Field(description="ID of the user who saved the version")

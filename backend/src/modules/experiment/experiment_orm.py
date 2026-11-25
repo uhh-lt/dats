@@ -4,6 +4,7 @@ from typing import TYPE_CHECKING, Any
 from sqlalchemy import (
     DateTime,
     ForeignKey,
+    ForeignKeyConstraint,
     Integer,
     String,
     UniqueConstraint,
@@ -71,6 +72,7 @@ class ExperimentORM(ORMBase):
         cascade="all, delete-orphan",
         passive_deletes=True,
         order_by="ExperimentRunORM.id",
+        foreign_keys="ExperimentRunORM.experiment_id",
     )
 
     __table_args__ = (
@@ -79,6 +81,7 @@ class ExperimentORM(ORMBase):
             "name",
             name="UC_experiment_name_unique_per_project",
         ),
+        UniqueConstraint("project_id", "id", name="UC_experiment_project_id_id"),
     )
 
     def get_project_id(self) -> int:
@@ -129,22 +132,19 @@ class ExperimentRunORM(ORMBase):
     )
 
     # many to one
-    experiment_id: Mapped[int] = mapped_column(
+    project_id: Mapped[int] = mapped_column(
         Integer,
-        ForeignKey("experiment.id", ondelete="CASCADE"),
+        ForeignKey("project.id", ondelete="CASCADE"),
         nullable=False,
         index=True,
-    )
-    experiment: Mapped["ExperimentORM"] = relationship(
-        "ExperimentORM", back_populates="runs"
     )
 
-    prompt_version_id: Mapped[int] = mapped_column(
-        Integer,
-        ForeignKey("promptversion.id", ondelete="CASCADE"),
-        nullable=False,
-        index=True,
+    experiment_id: Mapped[int] = mapped_column(Integer, nullable=False, index=True)
+    experiment: Mapped["ExperimentORM"] = relationship(
+        "ExperimentORM", back_populates="runs", foreign_keys=[experiment_id]
     )
+
+    prompt_version_id: Mapped[int] = mapped_column(Integer, nullable=False, index=True)
 
     # the virtual user the run writes its annotations into. ExperimentService deletes it
     # after the run; NO ACTION refuses to delete it before. Deleting the project defers
@@ -153,7 +153,11 @@ class ExperimentRunORM(ORMBase):
     virtual_user_id: Mapped[int] = mapped_column(
         Integer,
         ForeignKey(
-            "user.id", ondelete="NO ACTION", deferrable=True, initially="IMMEDIATE"
+            "user.id",
+            ondelete="NO ACTION",
+            deferrable=True,
+            initially="IMMEDIATE",
+            name="experimentrun_virtual_user_id_fkey",
         ),
         nullable=False,
         index=True,
@@ -172,7 +176,20 @@ class ExperimentRunORM(ORMBase):
             "name",
             name="UC_experiment_run_name_unique_per_experiment",
         ),
+        UniqueConstraint("project_id", "id", name="UC_experimentrun_project_id_id"),
+        ForeignKeyConstraint(
+            ["project_id", "experiment_id"],
+            ["experiment.project_id", "experiment.id"],
+            ondelete="CASCADE",
+            name="FK_experimentrun_experiment_id",
+        ),
+        ForeignKeyConstraint(
+            ["project_id", "prompt_version_id"],
+            ["promptversion.project_id", "promptversion.id"],
+            ondelete="CASCADE",
+            name="FK_experimentrun_prompt_version_id",
+        ),
     )
 
     def get_project_id(self) -> int:
-        return self.experiment.get_project_id()
+        return self.project_id
