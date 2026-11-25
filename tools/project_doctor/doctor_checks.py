@@ -6,6 +6,7 @@ import sys
 import time
 import unicodedata
 from collections.abc import Callable
+from pathlib import Path
 from typing import Any
 
 from doctor_portability import PortabilityChecker
@@ -27,15 +28,24 @@ from doctor_report import (
 from doctor_stores import (
     ALL_COLLECTIONS,
     ANNOTATION_TABLES,
+    AUDIO_FILE,
     EMBEDDING_STEPS,
+    ENTITY_FOLDERS,
     ES_INDEX_STEP,
     IMAGE_THUMBNAIL_STEP,
+    LEGACY_DOCS_FOLDER,
+    LEGACY_FOLDERS,
     PROCESSING_STEPS,
     SDOC_COLLECTIONS,
+    SDOC_FILES_FOLDER,
     STATUS_ERRONEOUS,
     STATUS_FINISHED,
     STATUS_PROCESSING,
     STEP_STATUS_TABLE,
+    THUMBNAIL_FILE,
+    VIDEO_AUDIO_STEP,
+    VIDEO_THUMBNAIL_STEP,
+    WEB_IMAGE_FILE,
     AnnotationKind,
     Stores,
 )
@@ -51,6 +61,11 @@ _HINT_FAILED_PROCESSING = (
 )
 _HINT_RECOMPUTE = (
     "Recompute the step '{step}' in the document health view of the project."
+)
+_HINT_LEGACY_FOLDER = (
+    "DATS no longer reads this folder. Move the files DATS still needs into "
+    "the folder of their entity (see missing_original_file); heal moves the "
+    "folder to the quarantine."
 )
 _HINT_CROSS_PROJECT = (
     "The rows reference entities of another project. Inspect them in the "
@@ -107,6 +122,17 @@ def _ids_text(ids: list[int]) -> str:
 
 def _normalize_filename(name: str) -> str:
     return unicodedata.normalize("NFC", name).casefold()
+
+
+# The files a finished step has written, and the check that reports them missing
+_STEP_FILES: dict[str, tuple[CheckName, list[tuple[str, str]]]] = {
+    IMAGE_THUMBNAIL_STEP: (
+        CheckName.MISSING_THUMBNAIL,
+        [WEB_IMAGE_FILE, THUMBNAIL_FILE],
+    ),
+    VIDEO_THUMBNAIL_STEP: (CheckName.MISSING_THUMBNAIL, [THUMBNAIL_FILE]),
+    VIDEO_AUDIO_STEP: (CheckName.MISSING_AUDIO, [AUDIO_FILE]),
+}
 
 
 class Checker:
@@ -179,93 +205,139 @@ class Checker:
     # POSTGRES <-> FILESYSTEM
     # ==========================================================================
     def _check_files(self, *, project_id: int, sdocs: list[SdocRow]) -> list[Issue]:
-        docs_dir = self.stores.docs_dir(project_id)
-        on_disk = {p.name: p for p in docs_dir.iterdir()} if docs_dir.is_dir() else {}
-        normalized_on_disk = {_normalize_filename(n): n for n in on_disk}
-
         issues: list[Issue] = []
-        # the chunking splits a long upload into documents and keeps the original
-        # file, named like the SDOC_FOLDER of its chunks (the folder type is
-        # stored as name or as value, depending on the DATS version)
-        owned: set[str] = {
-            self.stores.truncate_filename(name)
-            for name in self.conn.execute(
-                text(
-                    "SELECT name FROM folder WHERE project_id = :pid "
-                    "AND lower(folder_type::text) = 'sdoc_folder'"
-                ),
-                {"pid": project_id},
-            ).scalars()
-        }
         for sdoc in sdocs:
-            owned |= self.stores.owned_filenames(sdoc.filename, sdoc.doctype)
-            name = self.stores.truncate_filename(sdoc.filename)
+            sdoc_dir = self.stores.entity_dir(project_id, SDOC_FILES_FOLDER, sdoc.id)
+            path = sdoc_dir / sdoc.filename
 
             # 1) the original file, which the export and the viewer need
-            if name not in on_disk:
-                similar = normalized_on_disk.get(_normalize_filename(name))
-                if similar:
-                    # not an orphan: the hint proposes to rename it
-                    owned.add(similar)
+            if not path.is_file():
+                found = self._find_original(project_id=project_id, sdoc=sdoc)
                 issues.append(
                     Issue(
                         key=f"{CheckName.MISSING_ORIGINAL_FILE.value}:sdoc:{sdoc.id}",
                         check=CheckName.MISSING_ORIGINAL_FILE,
                         project_id=project_id,
                         message=f"SourceDocument {sdoc.id} ({sdoc.filename}): "
-                        f"original file {docs_dir / name} does not exist",
-                        # a file that differs only in case or unicode normalization
-                        # is probably the original: renaming it keeps the document
-                        fix=None if similar else DeleteSdocs(sdoc_ids=[sdoc.id]),
-                        hint=f"A file with a similar name exists: '{similar}'. Rename "
-                        f"it to '{name}' to restore the document."
-                        if similar
+                        f"original file {path} does not exist",
+                        # a file in a legacy folder, or one that differs only in
+                        # case or unicode normalization, is probably the original:
+                        # moving it keeps the document
+                        fix=None if found else DeleteSdocs(sdoc_ids=[sdoc.id]),
+                        hint=f"A file with this name exists: '{found}'. Move it to "
+                        f"'{path}' to restore the document."
+                        if found
                         else "Restore the file to keep the document; heal deletes it.",
                     )
                 )
                 continue
 
-            # 2) the image thumbnails, which the document views show
-            if sdoc.doctype == "image" and sdoc.is_finished(IMAGE_THUMBNAIL_STEP):
+            # 2) the files of the finished steps (WebP image, thumbnail, audio)
+            for step, (check, files) in _STEP_FILES.items():
+                if not sdoc.is_finished(step):
+                    continue
                 missing = [
-                    fn
-                    for fn in (f"{name}.webp", f"{name}.thumbnail.webp")
-                    if fn not in on_disk
+                    str(file)
+                    for folder, name in files
+                    if not (
+                        file := self.stores.entity_dir(project_id, folder, sdoc.id)
+                        / name
+                    ).is_file()
                 ]
                 if missing:
                     issues.append(
                         Issue(
-                            key=f"{CheckName.MISSING_THUMBNAIL.value}:sdoc:{sdoc.id}",
-                            check=CheckName.MISSING_THUMBNAIL,
+                            key=f"{check.value}:sdoc:{sdoc.id}",
+                            check=check,
                             project_id=project_id,
                             message=f"SourceDocument {sdoc.id} ({sdoc.filename}): "
                             f"missing {', '.join(missing)}",
                             fix=None,
-                            hint=_HINT_RECOMPUTE.format(step=IMAGE_THUMBNAIL_STEP),
+                            hint=_HINT_RECOMPUTE.format(step=step),
                         )
                     )
 
-        # 3) files that no document owns (uploads that never became a document,
-        #    leftovers of deleted documents). Young files may still be processed.
+        return (
+            issues
+            + self._check_orphaned_entity_dirs(project_id)
+            + self._check_legacy_folders(project_id)
+        )
+
+    def _find_original(self, *, project_id: int, sdoc: SdocRow) -> Path | None:
+        """A file that probably is the missing original of the document: one
+        in the legacy `docs/` folder, or one in its folder whose name differs
+        only in case or unicode normalization."""
+        legacy = (
+            self.stores.project_dir(project_id) / LEGACY_DOCS_FOLDER / sdoc.filename
+        )
+        if legacy.is_file():
+            return legacy
+        sdoc_dir = self.stores.entity_dir(project_id, SDOC_FILES_FOLDER, sdoc.id)
+        if not sdoc_dir.is_dir():
+            return None
+        normalized = _normalize_filename(sdoc.filename)
+        return next(
+            (
+                p
+                for p in sdoc_dir.iterdir()
+                if _normalize_filename(p.name) == normalized
+            ),
+            None,
+        )
+
+    def _check_orphaned_entity_dirs(self, project_id: int) -> list[Issue]:
+        """The folders in the file store whose entity no longer exists (deleted
+        documents, classifiers, aspects) and the expired exports. Young folders
+        may still be written."""
+        project_dir = self.stores.project_dir(project_id)
+        entity_ids: dict[str, set[str]] = {}
         now = time.time()
-        for name, path in sorted(on_disk.items()):
-            if name in owned:
+        issues: list[Issue] = []
+        for folder, table in ENTITY_FOLDERS.items():
+            root = project_dir / folder
+            if not root.is_dir():
                 continue
-            # the archive upload extracts a zip into the docs folder and keeps it
-            if path.suffix.lower() == ".zip":
-                continue
-            if now - path.stat().st_mtime < self.min_file_age_seconds:
-                continue
-            issues.append(
-                Issue(
-                    key=f"{CheckName.ORPHANED_FILE.value}:{path}",
-                    check=CheckName.ORPHANED_FILE,
-                    project_id=project_id,
-                    message=f"{path} belongs to no SourceDocument",
-                    fix=QuarantinePath(path=str(path)),
+            if table is not None and table not in entity_ids:
+                entity_ids[table] = {
+                    str(i)
+                    for i in self._ids(
+                        f"SELECT id FROM {table} WHERE project_id = :pid",
+                        pid=project_id,
+                    )
+                }
+            existing = entity_ids[table] if table is not None else set()
+            for path in sorted(root.iterdir()):
+                if path.name in existing:
+                    continue
+                if now - path.stat().st_mtime < self.min_file_age_seconds:
+                    continue
+                issues.append(
+                    Issue(
+                        key=f"{CheckName.ORPHANED_FILE.value}:{path}",
+                        check=CheckName.ORPHANED_FILE,
+                        project_id=project_id,
+                        message=f"{path} belongs to no {table} of the project"
+                        if table is not None
+                        else f"{path} is an expired export",
+                        fix=QuarantinePath(path=str(path)),
+                    )
                 )
-            )
         return issues
+
+    def _check_legacy_folders(self, project_id: int) -> list[Issue]:
+        project_dir = self.stores.project_dir(project_id)
+        return [
+            Issue(
+                key=f"{CheckName.LEGACY_FOLDER.value}:{path}",
+                check=CheckName.LEGACY_FOLDER,
+                project_id=project_id,
+                message=f"{path} is a folder of the legacy file layout",
+                fix=QuarantinePath(path=str(path)),
+                hint=_HINT_LEGACY_FOLDER,
+            )
+            for name in LEGACY_FOLDERS
+            if (path := project_dir / name).exists()
+        ]
 
     def _check_orphaned_project_dirs(
         self, existing_project_ids: set[int]

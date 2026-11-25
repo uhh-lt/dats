@@ -35,6 +35,7 @@ from doctor_report import (
 from doctor_stores import (
     ANNOTATION_TABLES,
     CSV_NA_VALUES,
+    ENTITY_FOLDERS,
     SDOC_COLLECTIONS,
     SETTABLE_COLUMNS,
     Stores,
@@ -161,7 +162,7 @@ class Healer:
         # 1) read the documents
         sdocs = self.conn.execute(
             text(
-                "SELECT id, filename, doctype, project_id, folder_id "
+                "SELECT id, project_id, folder_id "
                 "FROM sourcedocument WHERE id = ANY(:ids)"
             ),
             {"ids": sdoc_ids},
@@ -187,12 +188,15 @@ class Healer:
             {"ids": list({sdoc.folder_id for sdoc in sdocs if sdoc.folder_id})},
         )
 
-        # 4) quarantine their files (the original and the derived files)
+        # 4) quarantine their folders in the file store (the original and the
+        #    derived files)
         for sdoc in sdocs:
-            docs_dir = self.stores.docs_dir(sdoc.project_id)
-            for name in self.stores.owned_filenames(sdoc.filename, sdoc.doctype):
-                if (docs_dir / name).exists():
-                    self._quarantine(docs_dir / name)
+            for folder, table in ENTITY_FOLDERS.items():
+                if table != "sourcedocument":
+                    continue
+                path = self.stores.entity_dir(sdoc.project_id, folder, sdoc.id)
+                if path.exists():
+                    self._quarantine(path)
 
         # 5) delete their Elasticsearch documents and Weaviate objects
         by_project: dict[int, list[int]] = {}
