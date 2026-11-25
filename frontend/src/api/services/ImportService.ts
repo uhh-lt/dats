@@ -25,47 +25,15 @@ export class ImportService {
   }): CancelablePromise<ImportJobRead> {
     return __request(OpenAPI, {
       method: "POST",
-      url: "/import/{project_id}/type/{import_job_type}",
+      url: "/projects/{project_id}/jobs/import",
       path: {
         project_id: projectId,
+      },
+      query: {
         import_job_type: importJobType,
       },
       formData: formData,
       mediaType: "multipart/form-data",
-      errors: {
-        422: `Validation Error`,
-      },
-    });
-  }
-  /**
-   * Returns the ImportJob for the given ID if it exists
-   * @returns ImportJobRead Successful Response
-   * @throws ApiError
-   */
-  public static getImportJob({ importJobId }: { importJobId: string }): CancelablePromise<ImportJobRead> {
-    return __request(OpenAPI, {
-      method: "GET",
-      url: "/import/{import_job_id}",
-      path: {
-        import_job_id: importJobId,
-      },
-      errors: {
-        422: `Validation Error`,
-      },
-    });
-  }
-  /**
-   * Returns all ImportJobs for the given project ID if it exists
-   * @returns ImportJobRead Successful Response
-   * @throws ApiError
-   */
-  public static getAllImportJobs({ projectId }: { projectId: number }): CancelablePromise<Array<ImportJobRead>> {
-    return __request(OpenAPI, {
-      method: "GET",
-      url: "/import/project/{project_id}",
-      path: {
-        project_id: projectId,
-      },
       errors: {
         422: `Validation Error`,
       },

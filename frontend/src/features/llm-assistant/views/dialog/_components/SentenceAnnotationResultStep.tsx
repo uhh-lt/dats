@@ -12,8 +12,9 @@ import { LLMAssistantUtterance } from "./LLMAssistantUtterance";
 
 export function SentenceAnnotationResultStep() {
   // get the job
+  const jobProjectId = useAppSelector((state) => state.llmAssistant.projectId);
   const jobId = useAppSelector((state) => state.llmAssistant.jobId);
-  const llmAssistantJob = useLiveJob(llmAssistantQueries.job.byId(jobId));
+  const llmAssistantJob = useLiveJob(llmAssistantQueries.job.byId(jobProjectId, jobId));
 
   if (llmAssistantJob.isSuccess && llmAssistantJob.data.output) {
     return (

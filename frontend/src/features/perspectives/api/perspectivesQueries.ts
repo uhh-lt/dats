@@ -1,3 +1,4 @@
+import { JobService } from "@api/services/JobService";
 import { createJobQueries } from "@core/job";
 import { PerspectivesService } from "@api/services/PerspectivesService";
 import type { AspectRead } from "@models/AspectRead";
@@ -87,7 +88,5 @@ export const perspectivesQueries = {
     }),
 
   // the refinement / background job of this domain
-  job: createJobQueries("perspectives", (jobId) =>
-    PerspectivesService.getPerspectivesJob({ perspectivesJobId: jobId }),
-  ),
+  job: createJobQueries("perspectives", (job) => JobService.getPerspectivesJobById(job)),
 };

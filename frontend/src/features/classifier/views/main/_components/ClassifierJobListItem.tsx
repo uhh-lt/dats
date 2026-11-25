@@ -18,7 +18,10 @@ interface ClassifierJobListItemProps {
 
 export const ClassifierJobListItem = memo(({ initialClassifierJob }: ClassifierJobListItemProps) => {
   // global server state (react-query)
-  const cj = useLiveJob(classifierQueries.job.byId(initialClassifierJob.job_id), initialClassifierJob);
+  const cj = useLiveJob(
+    classifierQueries.job.byId(initialClassifierJob.project_id, initialClassifierJob.job_id),
+    initialClassifierJob,
+  );
 
   // compute subtitle
   const subTitle = useMemo(() => {
@@ -39,6 +42,7 @@ export const ClassifierJobListItem = memo(({ initialClassifierJob }: ClassifierJ
     return (
       <JobListItem
         jobStatus={cj.data.status}
+        projectId={cj.data.project_id}
         jobId={cj.data.job_id}
         jobQueries={classifierQueries.job}
         title={`${cj.data.input.model_type} - ${cj.data.input.task_type}`}

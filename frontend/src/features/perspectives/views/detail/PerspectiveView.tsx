@@ -40,7 +40,7 @@ export function PerspectiveView() {
     ...aspectsByProjectOptions,
     select: (data) => data[aspectId],
   });
-  const perspectivesJob = useLiveJob(perspectivesQueries.job.byId(aspect?.most_recent_job_id));
+  const perspectivesJob = useLiveJob(perspectivesQueries.job.byId(projectId, aspect?.most_recent_job_id));
   const vis = PerspectivesHooks.useGetDocVisualization(aspectId);
 
   // computed

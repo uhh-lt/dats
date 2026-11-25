@@ -5,7 +5,6 @@
 import type { COTACreate } from "@models/COTACreate";
 import type { COTARead } from "@models/COTARead";
 import type { COTARefinementJobInput } from "@models/COTARefinementJobInput";
-import type { COTARefinementJobRead } from "@models/COTARefinementJobRead";
 import type { COTASentenceID } from "@models/COTASentenceID";
 import type { COTAUpdate } from "@models/COTAUpdate";
 import type { CancelablePromise } from "../core/CancelablePromise";
@@ -211,24 +210,6 @@ export class ConceptOverTimeAnalysisService {
       url: "/cota/refine",
       body: requestBody,
       mediaType: "application/json",
-      errors: {
-        422: `Validation Error`,
-      },
-    });
-  }
-  /**
-   * Returns the COTA Refinement Job for the given ID
-   * Returns the COTA Refinement Job for the given ID if it exists
-   * @returns COTARefinementJobRead Successful Response
-   * @throws ApiError
-   */
-  public static getCotaJob({ cotaJobId }: { cotaJobId: string }): CancelablePromise<COTARefinementJobRead> {
-    return __request(OpenAPI, {
-      method: "GET",
-      url: "/cota/refine/{cota_job_id}",
-      path: {
-        cota_job_id: cotaJobId,
-      },
       errors: {
         422: `Validation Error`,
       },

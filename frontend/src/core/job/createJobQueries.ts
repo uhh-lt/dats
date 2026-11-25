@@ -1,9 +1,15 @@
 import { type QueryKey, queryOptions, skipToken } from "@tanstack/react-query";
 
+/** A job, addressed by its project and its id like every job route. */
+export interface JobRef {
+  projectId: number;
+  jobId: string;
+}
+
 /** The generated abort and retry endpoints of a job type; each answers whether it stopped or requeued the job. */
 export interface JobActions {
-  abort: (jobId: string) => Promise<boolean>;
-  retry: (jobId: string) => Promise<boolean>;
+  abort: (job: JobRef) => Promise<boolean>;
+  retry: (job: JobRef) => Promise<boolean>;
 }
 
 /** What a job list item needs to offer the actions of its job type: none if the type generates no such endpoints. */
@@ -22,7 +28,7 @@ export const hasJobActions = (jobQueries: JobActionQueries): jobQueries is JobQu
   jobQueries.actions !== undefined;
 
 export interface JobQueriesWithoutList<TJob> extends JobActionQueries {
-  byId: (jobId: string | null | undefined) => ReturnType<typeof jobById<TJob>>;
+  byId: (projectId: number | null | undefined, jobId: string | null | undefined) => ReturnType<typeof jobById<TJob>>;
 }
 
 interface JobQueriesWithList<TJob> extends JobQueriesWithoutList<TJob> {
@@ -32,12 +38,13 @@ interface JobQueriesWithList<TJob> extends JobQueriesWithoutList<TJob> {
 
 const jobById = <TJob>(
   scope: readonly unknown[],
+  projectId: number | null | undefined,
   jobId: string | null | undefined,
-  fetchJob: (jobId: string) => Promise<TJob>,
+  fetchJob: (job: JobRef) => Promise<TJob>,
 ) =>
   queryOptions({
-    queryKey: [...scope, "detail", jobId] as const,
-    queryFn: !jobId ? skipToken : () => fetchJob(jobId),
+    queryKey: [...scope, "detail", jobId, projectId] as const,
+    queryFn: !projectId || !jobId ? skipToken : () => fetchJob({ projectId, jobId }),
     // kept fresh by the cache-sync code (JOB_UPDATED), useLiveJob polls while the websocket is down
     staleTime: Infinity,
   });
@@ -58,7 +65,7 @@ const jobsByProject = <TJob>(
  * Builds the queries of the background job of a domain, the `job` object of its query factory:
  *
  *   xQueries.job.all()                 [<domain>, "job"]
- *   xQueries.job.byId(jobId)           [<domain>, "job", "detail", jobId]
+ *   xQueries.job.byId(projectId, jobId)  [<domain>, "job", "detail", jobId, projectId]
  *   xQueries.job.byProject(projectId)  [<domain>, "job", "project", projectId]     (only if the domain lists its jobs)
  *   xQueries.job.actions               abort and retry                              (only if the type generates them)
  *
@@ -69,22 +76,23 @@ const jobsByProject = <TJob>(
  */
 export function createJobQueries<TJob>(
   root: string,
-  fetchJob: (jobId: string) => Promise<TJob>,
+  fetchJob: (job: JobRef) => Promise<TJob>,
 ): JobQueriesWithoutList<TJob>;
 export function createJobQueries<TJob>(
   root: string,
-  fetchJob: (jobId: string) => Promise<TJob>,
+  fetchJob: (job: JobRef) => Promise<TJob>,
   fetchJobs: (projectId: number) => Promise<TJob[]>,
   actions?: JobActions,
 ): JobQueriesWithList<TJob>;
 export function createJobQueries<TJob>(
   root: string,
-  fetchJob: (jobId: string) => Promise<TJob>,
+  fetchJob: (job: JobRef) => Promise<TJob>,
   fetchJobs?: (projectId: number) => Promise<TJob[]>,
   actions?: JobActions,
 ) {
   const all = () => [root, "job"] as const;
-  const byId = (jobId: string | null | undefined) => jobById([...all()], jobId, fetchJob);
+  const byId = (projectId: number | null | undefined, jobId: string | null | undefined) =>
+    jobById([...all()], projectId, jobId, fetchJob);
   if (!fetchJobs) return { all, byId };
 
   const byProjectScope = () => [...all(), "project"] as const;

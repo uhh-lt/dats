@@ -43,7 +43,7 @@ export function CotaControl({ cota }: CotaControlProps) {
   const dispatch = useAppDispatch();
 
   // global server state (react-query)
-  const refinementJob = useLiveJob(cotaQueries.job.byId(cota.last_refinement_job_id));
+  const refinementJob = useLiveJob(cotaQueries.job.byId(cota.project_id, cota.last_refinement_job_id));
 
   // actions
   const refineCota = CotaHooks.useRefineCota();

@@ -14,10 +14,11 @@ import { DocumentTagResultStepTable } from "./DocumentTagResultStepTable";
 
 export const DocumentTagResultStep = memo(() => {
   // global client state
+  const jobProjectId = useAppSelector((state) => state.llmAssistant.projectId);
   const jobId = useAppSelector((state) => state.llmAssistant.jobId);
   // global server state
   const documentTags = TagHooks.useGetAllTags();
-  const llmAssistantJob = useLiveJob(llmAssistantQueries.job.byId(jobId));
+  const llmAssistantJob = useLiveJob(llmAssistantQueries.job.byId(jobProjectId, jobId));
 
   if (llmAssistantJob.isSuccess && llmAssistantJob.data.output && documentTags.isSuccess) {
     return (

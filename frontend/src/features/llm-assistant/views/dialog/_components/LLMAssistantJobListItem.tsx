@@ -32,7 +32,7 @@ interface LLMAssistantJobListItemProps {
 export const LLMAssistantJobListItem = memo(({ initialLLMAssistantJob }: LLMAssistantJobListItemProps) => {
   // global server state (react-query)
   const llmAssistantJob = useLiveJob(
-    llmAssistantQueries.job.byId(initialLLMAssistantJob.job_id),
+    llmAssistantQueries.job.byId(initialLLMAssistantJob.project_id, initialLLMAssistantJob.job_id),
     initialLLMAssistantJob,
   );
 
@@ -65,6 +65,7 @@ export const LLMAssistantJobListItem = memo(({ initialLLMAssistantJob }: LLMAssi
     return (
       <JobListItem
         jobStatus={llmAssistantJob.data.status}
+        projectId={llmAssistantJob.data.project_id}
         jobId={llmAssistantJob.data.job_id}
         jobQueries={llmAssistantQueries.job}
         title={`LLM Assistant Job - ${llmAssistantJob.data.input.task_type}${llmAssistantJob.data.output ? ` - ${llmAssistantJob.data.output.approach_type}` : ""}`}

@@ -82,6 +82,7 @@ export function EvalSettingsStep() {
 
     startClassifierJobMutation(
       {
+        projectId,
         requestBody: {
           model_type: model,
           task_type: task,

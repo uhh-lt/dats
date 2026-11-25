@@ -1,3 +1,4 @@
+import { JobService } from "@api/services/JobService";
 import { createJobQueries } from "@core/job";
 import { LlmAssistantService } from "@api/services/LlmAssistantService";
 import { TaskType } from "@models/TaskType";
@@ -17,7 +18,7 @@ export interface ExistingAnnotationCountParams {
  *
  *   llmAssistantQueries.all()                         ["llmAssistant"]
  *   llmAssistantQueries.existingAnnotationCount(...)  ["llmAssistant", "existingAnnotationCount", ...]
- *   llmAssistantQueries.job.byId(jobId)               ["llmAssistant", "job", "detail", jobId]
+ *   llmAssistantQueries.job.byId(projectId, jobId)    ["llmAssistant", "job", "detail", jobId, projectId]
  *   llmAssistantQueries.job.byProject(projectId)      ["llmAssistant", "job", "project", projectId]
  */
 export const llmAssistantQueries = {
@@ -49,11 +50,11 @@ export const llmAssistantQueries = {
   // the background job of the LLM assistant
   job: createJobQueries(
     "llmAssistant",
-    (jobId) => LlmAssistantService.getLlmAssistantJobById({ jobId }),
-    (projectId) => LlmAssistantService.getLlmAssistantJobsByProject({ projectId }),
+    (job) => JobService.getLlmAssistantJobById(job),
+    (projectId) => JobService.getLlmAssistantJobsByProject({ projectId }),
     {
-      abort: (jobId) => LlmAssistantService.abortLlmAssistantJob({ jobId }),
-      retry: (jobId) => LlmAssistantService.retryLlmAssistantJob({ jobId }),
+      abort: (job) => JobService.abortLlmAssistantJob(job),
+      retry: (job) => JobService.retryLlmAssistantJob(job),
     },
   ),
 };

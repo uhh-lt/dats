@@ -57,6 +57,7 @@ export function DuplicateFinderView() {
   const handleClickFindDuplicateTextDocuments = () => {
     startDuplicateFinderJob(
       {
+        projectId,
         requestBody: {
           project_id: projectId,
           max_different_words: maxDifferentWords,
@@ -82,6 +83,7 @@ export function DuplicateFinderView() {
           setRowSelection({});
           startDuplicateFinderJob(
             {
+              projectId,
               requestBody: {
                 project_id: projectId,
                 max_different_words: maxDifferentWords,
@@ -111,7 +113,7 @@ export function DuplicateFinderView() {
   };
 
   // job data
-  const duplicateFinderJob = useLiveJob(duplicateFinderQueries.job.byId(lastDuplicateFinderJobId));
+  const duplicateFinderJob = useLiveJob(duplicateFinderQueries.job.byId(projectId, lastDuplicateFinderJobId));
 
   // computed
   const { data, rowCount } = useMemo(() => {

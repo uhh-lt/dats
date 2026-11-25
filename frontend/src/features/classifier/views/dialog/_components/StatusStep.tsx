@@ -9,11 +9,12 @@ import { ClassifierActions } from "../../../store/classifierSlice";
 
 export const StatusStep = memo(() => {
   // global state
+  const projectId = useAppSelector((state) => state.classifier.context.projectId);
   const classifierJobId = useAppSelector((state) => state.classifier.jobId);
   const dispatch = useAppDispatch();
 
   // poll the job
-  const classifierJob = useLiveJob(classifierQueries.job.byId(classifierJobId));
+  const classifierJob = useLiveJob(classifierQueries.job.byId(projectId, classifierJobId));
 
   const handleClose = useCallback(() => {
     dispatch(ClassifierActions.closeClassifierDialog());

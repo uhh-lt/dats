@@ -3,8 +3,6 @@
 /* tslint:disable */
 /* eslint-disable */
 import type { Body_llm_assistant_count_existing_assistant_annotations } from "@models/Body_llm_assistant_count_existing_assistant_annotations";
-import type { LLMAssistantJobInput } from "@models/LLMAssistantJobInput";
-import type { LlmAssistantJobRead } from "@models/LlmAssistantJobRead";
 import type { TaskType } from "@models/TaskType";
 import type { CancelablePromise } from "../core/CancelablePromise";
 import { OpenAPI } from "../core/OpenAPI";
@@ -36,98 +34,6 @@ export class LlmAssistantService {
       },
       body: requestBody,
       mediaType: "application/json",
-      errors: {
-        422: `Validation Error`,
-      },
-    });
-  }
-  /**
-   * Start LlmAssistant job
-   * @returns LlmAssistantJobRead Successful Response
-   * @throws ApiError
-   */
-  public static startLlmAssistantJob({
-    requestBody,
-  }: {
-    requestBody: LLMAssistantJobInput;
-  }): CancelablePromise<LlmAssistantJobRead> {
-    return __request(OpenAPI, {
-      method: "POST",
-      url: "/llm_assistant/llm_assistant",
-      body: requestBody,
-      mediaType: "application/json",
-      errors: {
-        422: `Validation Error`,
-      },
-    });
-  }
-  /**
-   * Get LlmAssistant job
-   * @returns LlmAssistantJobRead Successful Response
-   * @throws ApiError
-   */
-  public static getLlmAssistantJobById({ jobId }: { jobId: string }): CancelablePromise<LlmAssistantJobRead> {
-    return __request(OpenAPI, {
-      method: "GET",
-      url: "/llm_assistant/llm_assistant/{job_id}",
-      path: {
-        job_id: jobId,
-      },
-      errors: {
-        422: `Validation Error`,
-      },
-    });
-  }
-  /**
-   * Abort LlmAssistant job
-   * @returns boolean Successful Response
-   * @throws ApiError
-   */
-  public static abortLlmAssistantJob({ jobId }: { jobId: string }): CancelablePromise<boolean> {
-    return __request(OpenAPI, {
-      method: "POST",
-      url: "/llm_assistant/llm_assistant/{job_id}/abort",
-      path: {
-        job_id: jobId,
-      },
-      errors: {
-        422: `Validation Error`,
-      },
-    });
-  }
-  /**
-   * Retry LlmAssistant job
-   * @returns boolean Successful Response
-   * @throws ApiError
-   */
-  public static retryLlmAssistantJob({ jobId }: { jobId: string }): CancelablePromise<boolean> {
-    return __request(OpenAPI, {
-      method: "POST",
-      url: "/llm_assistant/llm_assistant/{job_id}/retry",
-      path: {
-        job_id: jobId,
-      },
-      errors: {
-        422: `Validation Error`,
-      },
-    });
-  }
-  /**
-   * Get all LlmAssistant jobs by project
-   * @returns LlmAssistantJobRead Successful Response
-   * @throws ApiError
-   */
-  public static getLlmAssistantJobsByProject({
-    projectId,
-  }: {
-    projectId: number;
-  }): CancelablePromise<Array<LlmAssistantJobRead>> {
-    return __request(OpenAPI, {
-      method: "GET",
-      url: "/llm_assistant/llm_assistant/project/{project_id}",
-      path: {
-        project_id: projectId,
-      },
       errors: {
         422: `Validation Error`,
       },

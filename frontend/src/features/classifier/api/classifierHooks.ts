@@ -1,3 +1,4 @@
+import { JobService } from "@api/services/JobService";
 import { ClassifierService } from "@api/services/ClassifierService";
 import { ClassifierJobRead } from "@models/ClassifierJobRead";
 import { ClassifierModel } from "@models/ClassifierModel";
@@ -27,7 +28,7 @@ const useComputeDatasetStatistics = (params: ClassifierDatasetStatisticsParams) 
 const useStartClassifierJob = () =>
   useMutation({
     mutationKey: [...classifierQueries.job.all(), "start"],
-    mutationFn: ClassifierService.startClassifierJob,
+    mutationFn: JobService.startClassifierJob,
     meta: {
       datsEvent: "JOB_UPDATED",
       successMessage: (data: ClassifierJobRead) =>

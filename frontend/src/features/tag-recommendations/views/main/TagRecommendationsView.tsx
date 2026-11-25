@@ -48,7 +48,7 @@ export function TagRecommendationsView() {
   const selectedJobState = selectedJob ? jobStatusToSimple[selectedJob.status] : undefined;
   // the recommendations exist once the job finished (cache-sync refetches them then)
   const recommendations = useQuery(
-    tagRecommendationQueries.byJob(selectedJobState === "finished" ? selectedJobId : null),
+    tagRecommendationQueries.byJob(projectId, selectedJobState === "finished" ? selectedJobId : null),
   );
   const startJob = TagRecommendationHooks.useStartTagRecommendationJob();
 
@@ -62,7 +62,7 @@ export function TagRecommendationsView() {
   };
   const handleStart = () => {
     startJob.mutate(
-      { requestBody: { project_id: projectId, method, multi_class: multiClass } },
+      { projectId, requestBody: { project_id: projectId, method, multi_class: multiClass } },
       { onSuccess: (job) => setSelectedJobId(job.job_id) },
     );
   };

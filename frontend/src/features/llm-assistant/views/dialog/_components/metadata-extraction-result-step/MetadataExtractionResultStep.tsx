@@ -9,8 +9,9 @@ import { MetadataExtractionResultStepTable } from "./MetadataExtractionResultSte
 
 export const MetadataExtractionResultStep = memo(() => {
   // get the job
+  const jobProjectId = useAppSelector((state) => state.llmAssistant.projectId);
   const jobId = useAppSelector((state) => state.llmAssistant.jobId);
-  const llmAssistantJob = useLiveJob(llmAssistantQueries.job.byId(jobId));
+  const llmAssistantJob = useLiveJob(llmAssistantQueries.job.byId(jobProjectId, jobId));
 
   return (
     <>
