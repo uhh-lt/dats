@@ -156,6 +156,9 @@ class CRUDAnnotationDocument(
         Concurrent jobs (e.g. object detection and spacy of the same image) create the
         same annotation document, so a check-then-insert would race. ON CONFLICT DO
         NOTHING waits for the other transaction and skips the row if it committed.
+
+        Raises:
+            NoSuchElementError: If a source document does not exist.
         """
         if not sdoc_ids:
             return {}
@@ -191,10 +194,14 @@ class CRUDAnnotationDocument(
             )
         db.flush()
 
-        return {
+        adoc_by_sdoc_id = {
             annotation_document.source_document_id: annotation_document
             for annotation_document in annotation_documents
         }
+        missing_sdoc_ids = [id for id in unique_sdoc_ids if id not in adoc_by_sdoc_id]
+        if missing_sdoc_ids:
+            raise NoSuchElementError(SourceDocumentORM, ids=missing_sdoc_ids)
+        return adoc_by_sdoc_id
 
 
 crud_adoc = CRUDAnnotationDocument(AnnotationDocumentORM)
