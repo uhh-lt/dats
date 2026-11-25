@@ -29,6 +29,7 @@ export function ConceptList({ timelineAnalysis }: ConceptListProps) {
   const updateTimelineAnalysisMutation = TimelineAnalysisHooks.useUpdateTimelineAnalysis();
   const handleAddConcept = () => {
     updateTimelineAnalysisMutation.mutate({
+      projectId: timelineAnalysis.project_id,
       timelineAnalysisId: timelineAnalysis.id,
       requestBody: {
         concepts: [
@@ -82,6 +83,7 @@ export function ConceptList({ timelineAnalysis }: ConceptListProps) {
       );
 
       updateTimelineAnalysisMutation.mutate({
+        projectId: timelineAnalysis.project_id,
         timelineAnalysisId: timelineAnalysis.id,
         requestBody: {
           concepts: updatedConcepts,
@@ -98,6 +100,7 @@ export function ConceptList({ timelineAnalysis }: ConceptListProps) {
   const handleDeleteConcept = (conceptId: string) => {
     const updatedConcepts = timelineAnalysis.concepts.filter((c) => c.id !== conceptId);
     updateTimelineAnalysisMutation.mutate({
+      projectId: timelineAnalysis.project_id,
       timelineAnalysisId: timelineAnalysis.id,
       requestBody: {
         concepts: updatedConcepts,
@@ -116,6 +119,7 @@ export function ConceptList({ timelineAnalysis }: ConceptListProps) {
         visible: !updatedConcepts[index].visible,
       };
       updateTimelineAnalysisMutation.mutate({
+        projectId: timelineAnalysis.project_id,
         timelineAnalysisId: timelineAnalysis.id,
         requestBody: {
           concepts: updatedConcepts,
@@ -135,6 +139,7 @@ export function ConceptList({ timelineAnalysis }: ConceptListProps) {
         name: `Duplicated Concept #${timelineAnalysis.concepts.length + 1}`,
       };
       updateTimelineAnalysisMutation.mutate({
+        projectId: timelineAnalysis.project_id,
         timelineAnalysisId: timelineAnalysis.id,
         requestBody: {
           concepts: [...timelineAnalysis.concepts, duplicatedConcept],

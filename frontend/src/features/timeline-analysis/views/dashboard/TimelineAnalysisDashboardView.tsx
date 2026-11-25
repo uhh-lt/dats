@@ -77,8 +77,8 @@ export function TimelineAnalysisDashboardView() {
     ({ values, table }) => {
       createTimelineAnalysis(
         {
+          projectId,
           requestBody: {
-            project_id: projectId,
             name: values.title,
             timeline_analysis_type: (createOption?.option as TimelineAnalysisType) || TimelineAnalysisType.DOCUMENT,
           },
@@ -93,6 +93,7 @@ export function TimelineAnalysisDashboardView() {
 
   const handleDuplicateAnalysis = (row: MRT_Row<TimelineAnaylsisDashboardRow>) => {
     duplicateTimelineAnalysis({
+      projectId,
       timelineAnalysisId: row.original.id,
     });
   };
@@ -103,6 +104,7 @@ export function TimelineAnalysisDashboardView() {
       text: `Do you really want to remove the analysis ${row.original.id}? This action cannot be undone!`,
       onAccept: () => {
         deleteTimelineAnalysis({
+          projectId,
           timelineAnalysisId: row.original.id,
         });
       },
@@ -120,6 +122,7 @@ export function TimelineAnalysisDashboardView() {
     }
     updateTimelineAnalysis(
       {
+        projectId,
         timelineAnalysisId: row.original.id,
         requestBody: {
           name: values.title,

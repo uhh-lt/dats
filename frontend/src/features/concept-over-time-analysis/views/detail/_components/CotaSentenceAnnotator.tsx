@@ -200,6 +200,7 @@ function SimilarSentencesTable({ cota, concept }: SimilarSentencesTableProps) {
   const annotateCotaSentences = CotaHooks.useAnnotateCotaSentences();
   const handleAnnotateSentences = (sentences: COTASentenceID[], conceptId: string | null) => {
     annotateCotaSentences.mutate({
+      projectId: cota.project_id,
       cotaId: cota.id,
       conceptId: conceptId,
       requestBody: sentences,
@@ -210,6 +211,7 @@ function SimilarSentencesTable({ cota, concept }: SimilarSentencesTableProps) {
   const handleRemoveSentences = (sentences: COTASentenceID[]) => {
     removeCotaSentences.mutate(
       {
+        projectId: cota.project_id,
         cotaId: cota.id,
         requestBody: sentences,
       },

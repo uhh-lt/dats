@@ -1108,83 +1108,24 @@
         }
       }
     },
-    "/cota": {
+    "/projects/{project_id}/concept-over-time-analyses": {
       "put": {
         "tags": ["conceptOverTimeAnalysis"],
         "summary": "Creates an ConceptOverTimeAnalysis",
         "description": "Creates an ConceptOverTimeAnalysis",
         "operationId": "create",
-        "requestBody": {
-          "content": { "application/json": { "schema": { "$ref": "#/components/schemas/COTACreate" } } },
-          "required": true
-        },
-        "responses": {
-          "200": {
-            "description": "Successful Response",
-            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/COTARead" } } }
-          },
-          "422": {
-            "description": "Validation Error",
-            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/HTTPValidationError" } } }
-          }
-        },
-        "security": [{ "OAuth2PasswordBearer": [] }]
-      }
-    },
-    "/cota/duplicate/{cota_id}": {
-      "put": {
-        "tags": ["conceptOverTimeAnalysis"],
-        "summary": "Duplicates the ConceptOverTimeAnalysis with the given ID if it exists",
-        "operationId": "duplicate_by_id",
         "security": [{ "OAuth2PasswordBearer": [] }],
         "parameters": [
-          { "name": "cota_id", "in": "path", "required": true, "schema": { "type": "integer", "title": "Cota Id" } }
-        ],
-        "responses": {
-          "200": {
-            "description": "Successful Response",
-            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/COTARead" } } }
-          },
-          "422": {
-            "description": "Validation Error",
-            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/HTTPValidationError" } } }
+          {
+            "name": "project_id",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "integer", "title": "Project Id" }
           }
-        }
-      }
-    },
-    "/cota/{cota_id}": {
-      "get": {
-        "tags": ["conceptOverTimeAnalysis"],
-        "summary": "Returns the ConceptOverTimeAnalysis",
-        "description": "Returns the ConceptOverTimeAnalysis with the given ID if it exists",
-        "operationId": "get_by_id",
-        "security": [{ "OAuth2PasswordBearer": [] }],
-        "parameters": [
-          { "name": "cota_id", "in": "path", "required": true, "schema": { "type": "integer", "title": "Cota Id" } }
-        ],
-        "responses": {
-          "200": {
-            "description": "Successful Response",
-            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/COTARead" } } }
-          },
-          "422": {
-            "description": "Validation Error",
-            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/HTTPValidationError" } } }
-          }
-        }
-      },
-      "patch": {
-        "tags": ["conceptOverTimeAnalysis"],
-        "summary": "Updates the ConceptOverTimeAnalysis",
-        "description": "Updates the ConceptOverTimeAnalysis with the given ID if it exists",
-        "operationId": "update_by_id",
-        "security": [{ "OAuth2PasswordBearer": [] }],
-        "parameters": [
-          { "name": "cota_id", "in": "path", "required": true, "schema": { "type": "integer", "title": "Cota Id" } }
         ],
         "requestBody": {
           "required": true,
-          "content": { "application/json": { "schema": { "$ref": "#/components/schemas/COTAUpdate" } } }
+          "content": { "application/json": { "schema": { "$ref": "#/components/schemas/COTACreate" } } }
         },
         "responses": {
           "200": {
@@ -1197,32 +1138,10 @@
           }
         }
       },
-      "delete": {
-        "tags": ["conceptOverTimeAnalysis"],
-        "summary": "Removes the ConceptOverTimeAnalysis",
-        "description": "Removes the ConceptOverTimeAnalysis with the given ID if it exists",
-        "operationId": "delete_by_id",
-        "security": [{ "OAuth2PasswordBearer": [] }],
-        "parameters": [
-          { "name": "cota_id", "in": "path", "required": true, "schema": { "type": "integer", "title": "Cota Id" } }
-        ],
-        "responses": {
-          "200": {
-            "description": "Successful Response",
-            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/COTARead" } } }
-          },
-          "422": {
-            "description": "Validation Error",
-            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/HTTPValidationError" } } }
-          }
-        }
-      }
-    },
-    "/cota/project/{project_id}": {
       "get": {
         "tags": ["conceptOverTimeAnalysis"],
         "summary": "Returns COTAs of the Project",
-        "description": "Returns the COTA of the Project with the given ID if it exists",
+        "description": "Returns the COTAs of the Project",
         "operationId": "get_by_project",
         "security": [{ "OAuth2PasswordBearer": [] }],
         "parameters": [
@@ -1253,13 +1172,130 @@
         }
       }
     },
-    "/cota/annotate/{cota_id}": {
+    "/projects/{project_id}/concept-over-time-analyses/{cota_id}/duplicate": {
+      "put": {
+        "tags": ["conceptOverTimeAnalysis"],
+        "summary": "Duplicates the ConceptOverTimeAnalysis with the given ID if it exists",
+        "operationId": "duplicate_by_id",
+        "security": [{ "OAuth2PasswordBearer": [] }],
+        "parameters": [
+          {
+            "name": "project_id",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "integer", "title": "Project Id" }
+          },
+          { "name": "cota_id", "in": "path", "required": true, "schema": { "type": "integer", "title": "Cota Id" } }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/COTARead" } } }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/HTTPValidationError" } } }
+          }
+        }
+      }
+    },
+    "/projects/{project_id}/concept-over-time-analyses/{cota_id}": {
+      "get": {
+        "tags": ["conceptOverTimeAnalysis"],
+        "summary": "Returns the ConceptOverTimeAnalysis",
+        "description": "Returns the ConceptOverTimeAnalysis with the given ID if it exists",
+        "operationId": "get_by_id",
+        "security": [{ "OAuth2PasswordBearer": [] }],
+        "parameters": [
+          {
+            "name": "project_id",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "integer", "title": "Project Id" }
+          },
+          { "name": "cota_id", "in": "path", "required": true, "schema": { "type": "integer", "title": "Cota Id" } }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/COTARead" } } }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/HTTPValidationError" } } }
+          }
+        }
+      },
+      "patch": {
+        "tags": ["conceptOverTimeAnalysis"],
+        "summary": "Updates the ConceptOverTimeAnalysis",
+        "description": "Updates the ConceptOverTimeAnalysis with the given ID if it exists",
+        "operationId": "update_by_id",
+        "security": [{ "OAuth2PasswordBearer": [] }],
+        "parameters": [
+          {
+            "name": "project_id",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "integer", "title": "Project Id" }
+          },
+          { "name": "cota_id", "in": "path", "required": true, "schema": { "type": "integer", "title": "Cota Id" } }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": { "application/json": { "schema": { "$ref": "#/components/schemas/COTAUpdate" } } }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/COTARead" } } }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/HTTPValidationError" } } }
+          }
+        }
+      },
+      "delete": {
+        "tags": ["conceptOverTimeAnalysis"],
+        "summary": "Removes the ConceptOverTimeAnalysis",
+        "description": "Removes the ConceptOverTimeAnalysis with the given ID if it exists",
+        "operationId": "delete_by_id",
+        "security": [{ "OAuth2PasswordBearer": [] }],
+        "parameters": [
+          {
+            "name": "project_id",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "integer", "title": "Project Id" }
+          },
+          { "name": "cota_id", "in": "path", "required": true, "schema": { "type": "integer", "title": "Cota Id" } }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/COTARead" } } }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/HTTPValidationError" } } }
+          }
+        }
+      }
+    },
+    "/projects/{project_id}/concept-over-time-analyses/{cota_id}/annotate": {
       "patch": {
         "tags": ["conceptOverTimeAnalysis"],
         "summary": "Annotate (multiple) COTASentences",
         "operationId": "annotate_cota_sentence",
         "security": [{ "OAuth2PasswordBearer": [] }],
         "parameters": [
+          {
+            "name": "project_id",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "integer", "title": "Project Id" }
+          },
           { "name": "cota_id", "in": "path", "required": true, "schema": { "type": "integer", "title": "Cota Id" } },
           {
             "name": "concept_id",
@@ -1292,13 +1328,19 @@
         }
       }
     },
-    "/cota/remove/{cota_id}": {
+    "/projects/{project_id}/concept-over-time-analyses/{cota_id}/remove": {
       "patch": {
         "tags": ["conceptOverTimeAnalysis"],
         "summary": "Remove (multiple) COTASentences from the search space",
         "operationId": "remove_cota_sentence",
         "security": [{ "OAuth2PasswordBearer": [] }],
         "parameters": [
+          {
+            "name": "project_id",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "integer", "title": "Project Id" }
+          },
           { "name": "cota_id", "in": "path", "required": true, "schema": { "type": "integer", "title": "Cota Id" } }
         ],
         "requestBody": {
@@ -1325,7 +1367,7 @@
         }
       }
     },
-    "/cota/reset/{cota_id}": {
+    "/projects/{project_id}/concept-over-time-analyses/{cota_id}/reset": {
       "patch": {
         "tags": ["conceptOverTimeAnalysis"],
         "summary": "Resets the ConceptOverTimeAnalysis",
@@ -1333,6 +1375,12 @@
         "operationId": "reset_cota",
         "security": [{ "OAuth2PasswordBearer": [] }],
         "parameters": [
+          {
+            "name": "project_id",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "integer", "title": "Project Id" }
+          },
           { "name": "cota_id", "in": "path", "required": true, "schema": { "type": "integer", "title": "Cota Id" } }
         ],
         "responses": {
@@ -1347,15 +1395,27 @@
         }
       }
     },
-    "/cota/refine": {
+    "/projects/{project_id}/concept-over-time-analyses/{cota_id}/refine": {
       "post": {
         "tags": ["conceptOverTimeAnalysis"],
         "summary": "Refines the ConceptOverTimeAnalysis",
-        "description": "Refines the ConceptOverTimeAnalysis with the given ID if it exists",
+        "description": "Starts the refinement job of the ConceptOverTimeAnalysis with the given ID; read the job at /jobs/cota-refinement",
         "operationId": "refine_cota",
+        "security": [{ "OAuth2PasswordBearer": [] }],
+        "parameters": [
+          {
+            "name": "project_id",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "integer", "title": "Project Id" }
+          },
+          { "name": "cota_id", "in": "path", "required": true, "schema": { "type": "integer", "title": "Cota Id" } }
+        ],
         "requestBody": {
-          "content": { "application/json": { "schema": { "$ref": "#/components/schemas/COTARefinementJobInput" } } },
-          "required": true
+          "required": true,
+          "content": {
+            "application/json": { "schema": { "$ref": "#/components/schemas/COTARefinementHyperparameters" } }
+          }
         },
         "responses": {
           "200": {
@@ -1366,8 +1426,7 @@
             "description": "Validation Error",
             "content": { "application/json": { "schema": { "$ref": "#/components/schemas/HTTPValidationError" } } }
           }
-        },
-        "security": [{ "OAuth2PasswordBearer": [] }]
+        }
       }
     },
     "/projects/{project_id}/doc-processing/columns": {
@@ -1649,91 +1708,23 @@
         }
       }
     },
-    "/experiment": {
+    "/projects/{project_id}/experiments": {
       "put": {
         "tags": ["experiment"],
         "summary": "Creates an experiment: documents, codes, task and a gold annotator who annotated every document",
         "operationId": "create",
-        "requestBody": {
-          "content": { "application/json": { "schema": { "$ref": "#/components/schemas/ExperimentCreate" } } },
-          "required": true
-        },
-        "responses": {
-          "200": {
-            "description": "Successful Response",
-            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/ExperimentRead" } } }
-          },
-          "422": {
-            "description": "Validation Error",
-            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/HTTPValidationError" } } }
-          }
-        },
-        "security": [{ "OAuth2PasswordBearer": [] }]
-      }
-    },
-    "/experiment/run": {
-      "put": {
-        "tags": ["experiment"],
-        "summary": "Creates and starts a run of an experiment with a prompt version and a model; the run writes into its own new virtual user. Returns the experiment.",
-        "operationId": "create_run",
-        "requestBody": {
-          "content": { "application/json": { "schema": { "$ref": "#/components/schemas/ExperimentRunCreate" } } },
-          "required": true
-        },
-        "responses": {
-          "200": {
-            "description": "Successful Response",
-            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/ExperimentRead" } } }
-          },
-          "422": {
-            "description": "Validation Error",
-            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/HTTPValidationError" } } }
-          }
-        },
-        "security": [{ "OAuth2PasswordBearer": [] }]
-      }
-    },
-    "/experiment/{experiment_id}": {
-      "get": {
-        "tags": ["experiment"],
-        "summary": "Returns the experiment with its runs",
-        "operationId": "get_by_id",
         "security": [{ "OAuth2PasswordBearer": [] }],
         "parameters": [
           {
-            "name": "experiment_id",
+            "name": "project_id",
             "in": "path",
             "required": true,
-            "schema": { "type": "integer", "title": "Experiment Id" }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "Successful Response",
-            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/ExperimentRead" } } }
-          },
-          "422": {
-            "description": "Validation Error",
-            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/HTTPValidationError" } } }
-          }
-        }
-      },
-      "patch": {
-        "tags": ["experiment"],
-        "summary": "Renames the experiment and the virtual users of its runs. Documents, codes, task and gold annotator are fixed when the experiment is created.",
-        "operationId": "update_by_id",
-        "security": [{ "OAuth2PasswordBearer": [] }],
-        "parameters": [
-          {
-            "name": "experiment_id",
-            "in": "path",
-            "required": true,
-            "schema": { "type": "integer", "title": "Experiment Id" }
+            "schema": { "type": "integer", "title": "Project Id" }
           }
         ],
         "requestBody": {
           "required": true,
-          "content": { "application/json": { "schema": { "$ref": "#/components/schemas/ExperimentUpdate" } } }
+          "content": { "application/json": { "schema": { "$ref": "#/components/schemas/ExperimentCreate" } } }
         },
         "responses": {
           "200": {
@@ -1746,32 +1737,6 @@
           }
         }
       },
-      "delete": {
-        "tags": ["experiment"],
-        "summary": "Removes the experiment with all its runs and their virtual users, including their annotations",
-        "operationId": "delete_by_id",
-        "security": [{ "OAuth2PasswordBearer": [] }],
-        "parameters": [
-          {
-            "name": "experiment_id",
-            "in": "path",
-            "required": true,
-            "schema": { "type": "integer", "title": "Experiment Id" }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "Successful Response",
-            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/ExperimentRead" } } }
-          },
-          "422": {
-            "description": "Validation Error",
-            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/HTTPValidationError" } } }
-          }
-        }
-      }
-    },
-    "/experiment/project/{project_id}": {
       "get": {
         "tags": ["experiment"],
         "summary": "Returns all experiments of the project with their runs, newest first",
@@ -1805,15 +1770,24 @@
         }
       }
     },
-    "/experiment/run/{run_id}/scores": {
-      "patch": {
+    "/projects/{project_id}/experiments/runs": {
+      "put": {
         "tags": ["experiment"],
-        "summary": "Recomputes and stores the agreement of the run with the gold annotator. Returns the experiment.",
-        "operationId": "refresh_run_scores",
+        "summary": "Creates and starts a run of an experiment with a prompt version and a model; the run writes into its own new virtual user. Returns the experiment.",
+        "operationId": "create_run",
         "security": [{ "OAuth2PasswordBearer": [] }],
         "parameters": [
-          { "name": "run_id", "in": "path", "required": true, "schema": { "type": "integer", "title": "Run Id" } }
+          {
+            "name": "project_id",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "integer", "title": "Project Id" }
+          }
         ],
+        "requestBody": {
+          "required": true,
+          "content": { "application/json": { "schema": { "$ref": "#/components/schemas/ExperimentRunCreate" } } }
+        },
         "responses": {
           "200": {
             "description": "Successful Response",
@@ -1826,13 +1800,83 @@
         }
       }
     },
-    "/experiment/{experiment_id}/scores": {
-      "patch": {
+    "/projects/{project_id}/experiments/{experiment_id}": {
+      "get": {
         "tags": ["experiment"],
-        "summary": "Recomputes and stores the agreement of all finished runs of the experiment with the gold annotator, so that all runs are scored against the same state of the gold annotator. Returns the experiment.",
-        "operationId": "refresh_all_run_scores",
+        "summary": "Returns the experiment with its runs",
+        "operationId": "get_by_id",
         "security": [{ "OAuth2PasswordBearer": [] }],
         "parameters": [
+          {
+            "name": "project_id",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "integer", "title": "Project Id" }
+          },
+          {
+            "name": "experiment_id",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "integer", "title": "Experiment Id" }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/ExperimentRead" } } }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/HTTPValidationError" } } }
+          }
+        }
+      },
+      "patch": {
+        "tags": ["experiment"],
+        "summary": "Renames the experiment and the virtual users of its runs. Documents, codes, task and gold annotator are fixed when the experiment is created.",
+        "operationId": "update_by_id",
+        "security": [{ "OAuth2PasswordBearer": [] }],
+        "parameters": [
+          {
+            "name": "project_id",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "integer", "title": "Project Id" }
+          },
+          {
+            "name": "experiment_id",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "integer", "title": "Experiment Id" }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": { "application/json": { "schema": { "$ref": "#/components/schemas/ExperimentUpdate" } } }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/ExperimentRead" } } }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/HTTPValidationError" } } }
+          }
+        }
+      },
+      "delete": {
+        "tags": ["experiment"],
+        "summary": "Removes the experiment with all its runs and their virtual users, including their annotations",
+        "operationId": "delete_by_id",
+        "security": [{ "OAuth2PasswordBearer": [] }],
+        "parameters": [
+          {
+            "name": "project_id",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "integer", "title": "Project Id" }
+          },
           {
             "name": "experiment_id",
             "in": "path",
@@ -1852,13 +1896,19 @@
         }
       }
     },
-    "/experiment/run/{run_id}": {
-      "delete": {
+    "/projects/{project_id}/experiments/runs/{run_id}/scores": {
+      "patch": {
         "tags": ["experiment"],
-        "summary": "Removes the run with its virtual user and its annotations. Returns the experiment.",
-        "operationId": "delete_run",
+        "summary": "Recomputes and stores the agreement of the run with the gold annotator. Returns the experiment.",
+        "operationId": "refresh_run_scores",
         "security": [{ "OAuth2PasswordBearer": [] }],
         "parameters": [
+          {
+            "name": "project_id",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "integer", "title": "Project Id" }
+          },
           { "name": "run_id", "in": "path", "required": true, "schema": { "type": "integer", "title": "Run Id" } }
         ],
         "responses": {
@@ -1873,13 +1923,78 @@
         }
       }
     },
-    "/experiment/run/{run_id}/export_log": {
+    "/projects/{project_id}/experiments/{experiment_id}/scores": {
+      "patch": {
+        "tags": ["experiment"],
+        "summary": "Recomputes and stores the agreement of all finished runs of the experiment with the gold annotator, so that all runs are scored against the same state of the gold annotator. Returns the experiment.",
+        "operationId": "refresh_all_run_scores",
+        "security": [{ "OAuth2PasswordBearer": [] }],
+        "parameters": [
+          {
+            "name": "project_id",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "integer", "title": "Project Id" }
+          },
+          {
+            "name": "experiment_id",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "integer", "title": "Experiment Id" }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/ExperimentRead" } } }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/HTTPValidationError" } } }
+          }
+        }
+      }
+    },
+    "/projects/{project_id}/experiments/runs/{run_id}": {
+      "delete": {
+        "tags": ["experiment"],
+        "summary": "Removes the run with its virtual user and its annotations. Returns the experiment.",
+        "operationId": "delete_run",
+        "security": [{ "OAuth2PasswordBearer": [] }],
+        "parameters": [
+          {
+            "name": "project_id",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "integer", "title": "Project Id" }
+          },
+          { "name": "run_id", "in": "path", "required": true, "schema": { "type": "integer", "title": "Run Id" } }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/ExperimentRead" } } }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/HTTPValidationError" } } }
+          }
+        }
+      }
+    },
+    "/projects/{project_id}/experiments/runs/{run_id}/export-log": {
       "post": {
         "tags": ["experiment"],
         "summary": "Exports the log of a run as JSON or CSV. Returns the URL of the file.",
         "operationId": "export_run_log",
         "security": [{ "OAuth2PasswordBearer": [] }],
         "parameters": [
+          {
+            "name": "project_id",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "integer", "title": "Project Id" }
+          },
           { "name": "run_id", "in": "path", "required": true, "schema": { "type": "integer", "title": "Run Id" } },
           {
             "name": "export_format",
@@ -7830,95 +7945,23 @@
         }
       }
     },
-    "/timelineAnalysis": {
+    "/projects/{project_id}/timeline-analyses": {
       "put": {
         "tags": ["timelineAnalysis"],
         "summary": "Creates an TimelineAnalysis",
         "operationId": "create",
-        "requestBody": {
-          "content": { "application/json": { "schema": { "$ref": "#/components/schemas/TimelineAnalysisCreate" } } },
-          "required": true
-        },
-        "responses": {
-          "200": {
-            "description": "Successful Response",
-            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/TimelineAnalysisRead" } } }
-          },
-          "422": {
-            "description": "Validation Error",
-            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/HTTPValidationError" } } }
-          }
-        },
-        "security": [{ "OAuth2PasswordBearer": [] }]
-      }
-    },
-    "/timelineAnalysis/duplicate/{timeline_analysis_id}": {
-      "put": {
-        "tags": ["timelineAnalysis"],
-        "summary": "Duplicates the TimelineAnalysis with the given ID if it exists",
-        "operationId": "duplicate_by_id",
         "security": [{ "OAuth2PasswordBearer": [] }],
         "parameters": [
           {
-            "name": "timeline_analysis_id",
+            "name": "project_id",
             "in": "path",
             "required": true,
-            "schema": { "type": "integer", "title": "Timeline Analysis Id" }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "Successful Response",
-            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/TimelineAnalysisRead" } } }
-          },
-          "422": {
-            "description": "Validation Error",
-            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/HTTPValidationError" } } }
-          }
-        }
-      }
-    },
-    "/timelineAnalysis/{timeline_analysis_id}": {
-      "get": {
-        "tags": ["timelineAnalysis"],
-        "summary": "Returns the TimelineAnalysis with the given ID if it exists",
-        "operationId": "get_by_id",
-        "security": [{ "OAuth2PasswordBearer": [] }],
-        "parameters": [
-          {
-            "name": "timeline_analysis_id",
-            "in": "path",
-            "required": true,
-            "schema": { "type": "integer", "title": "Timeline Analysis Id" }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "Successful Response",
-            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/TimelineAnalysisRead" } } }
-          },
-          "422": {
-            "description": "Validation Error",
-            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/HTTPValidationError" } } }
-          }
-        }
-      },
-      "patch": {
-        "tags": ["timelineAnalysis"],
-        "summary": "Updates the TimelineAnalysis with the given ID if it exists",
-        "operationId": "update_by_id",
-        "security": [{ "OAuth2PasswordBearer": [] }],
-        "parameters": [
-          {
-            "name": "timeline_analysis_id",
-            "in": "path",
-            "required": true,
-            "schema": { "type": "integer", "title": "Timeline Analysis Id" }
+            "schema": { "type": "integer", "title": "Project Id" }
           }
         ],
         "requestBody": {
           "required": true,
-          "content": { "application/json": { "schema": { "$ref": "#/components/schemas/TimelineAnalysisUpdate" } } }
+          "content": { "application/json": { "schema": { "$ref": "#/components/schemas/TimelineAnalysisCreate" } } }
         },
         "responses": {
           "200": {
@@ -7931,35 +7974,9 @@
           }
         }
       },
-      "delete": {
-        "tags": ["timelineAnalysis"],
-        "summary": "Removes the TimelineAnalysis with the given ID if it exists",
-        "operationId": "delete_by_id",
-        "security": [{ "OAuth2PasswordBearer": [] }],
-        "parameters": [
-          {
-            "name": "timeline_analysis_id",
-            "in": "path",
-            "required": true,
-            "schema": { "type": "integer", "title": "Timeline Analysis Id" }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "Successful Response",
-            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/TimelineAnalysisRead" } } }
-          },
-          "422": {
-            "description": "Validation Error",
-            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/HTTPValidationError" } } }
-          }
-        }
-      }
-    },
-    "/timelineAnalysis/project/{project_id}": {
       "get": {
         "tags": ["timelineAnalysis"],
-        "summary": "Returns the TimelineAnalysis of the Project with the given ID if it exists",
+        "summary": "Returns the TimelineAnalyses of the Project",
         "operationId": "get_by_project",
         "security": [{ "OAuth2PasswordBearer": [] }],
         "parameters": [
@@ -7990,13 +8007,147 @@
         }
       }
     },
-    "/timelineAnalysis/recompute/{timeline_analysis_id}": {
+    "/projects/{project_id}/timeline-analyses/{timeline_analysis_id}/duplicate": {
+      "put": {
+        "tags": ["timelineAnalysis"],
+        "summary": "Duplicates the TimelineAnalysis with the given ID if it exists",
+        "operationId": "duplicate_by_id",
+        "security": [{ "OAuth2PasswordBearer": [] }],
+        "parameters": [
+          {
+            "name": "project_id",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "integer", "title": "Project Id" }
+          },
+          {
+            "name": "timeline_analysis_id",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "integer", "title": "Timeline Analysis Id" }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/TimelineAnalysisRead" } } }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/HTTPValidationError" } } }
+          }
+        }
+      }
+    },
+    "/projects/{project_id}/timeline-analyses/{timeline_analysis_id}": {
+      "get": {
+        "tags": ["timelineAnalysis"],
+        "summary": "Returns the TimelineAnalysis with the given ID if it exists",
+        "operationId": "get_by_id",
+        "security": [{ "OAuth2PasswordBearer": [] }],
+        "parameters": [
+          {
+            "name": "project_id",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "integer", "title": "Project Id" }
+          },
+          {
+            "name": "timeline_analysis_id",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "integer", "title": "Timeline Analysis Id" }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/TimelineAnalysisRead" } } }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/HTTPValidationError" } } }
+          }
+        }
+      },
+      "patch": {
+        "tags": ["timelineAnalysis"],
+        "summary": "Updates the TimelineAnalysis with the given ID if it exists",
+        "operationId": "update_by_id",
+        "security": [{ "OAuth2PasswordBearer": [] }],
+        "parameters": [
+          {
+            "name": "project_id",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "integer", "title": "Project Id" }
+          },
+          {
+            "name": "timeline_analysis_id",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "integer", "title": "Timeline Analysis Id" }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": { "application/json": { "schema": { "$ref": "#/components/schemas/TimelineAnalysisUpdate" } } }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/TimelineAnalysisRead" } } }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/HTTPValidationError" } } }
+          }
+        }
+      },
+      "delete": {
+        "tags": ["timelineAnalysis"],
+        "summary": "Removes the TimelineAnalysis with the given ID if it exists",
+        "operationId": "delete_by_id",
+        "security": [{ "OAuth2PasswordBearer": [] }],
+        "parameters": [
+          {
+            "name": "project_id",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "integer", "title": "Project Id" }
+          },
+          {
+            "name": "timeline_analysis_id",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "integer", "title": "Timeline Analysis Id" }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/TimelineAnalysisRead" } } }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/HTTPValidationError" } } }
+          }
+        }
+      }
+    },
+    "/projects/{project_id}/timeline-analyses/{timeline_analysis_id}/recompute": {
       "patch": {
         "tags": ["timelineAnalysis"],
         "summary": "Recomputes the TimelineAnalysis with the given ID if it exists",
         "operationId": "recompute_by_id",
         "security": [{ "OAuth2PasswordBearer": [] }],
         "parameters": [
+          {
+            "name": "project_id",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "integer", "title": "Project Id" }
+          },
           {
             "name": "timeline_analysis_id",
             "in": "path",
@@ -8298,14 +8449,23 @@
         }
       }
     },
-    "/whiteboard": {
+    "/projects/{project_id}/whiteboards": {
       "put": {
         "tags": ["whiteboard"],
         "summary": "Creates an Whiteboard",
         "operationId": "create",
+        "security": [{ "OAuth2PasswordBearer": [] }],
+        "parameters": [
+          {
+            "name": "project_id",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "integer", "title": "Project Id" }
+          }
+        ],
         "requestBody": {
-          "content": { "application/json": { "schema": { "$ref": "#/components/schemas/WhiteboardCreate" } } },
-          "required": true
+          "required": true,
+          "content": { "application/json": { "schema": { "$ref": "#/components/schemas/WhiteboardCreate" } } }
         },
         "responses": {
           "200": {
@@ -8316,17 +8476,54 @@
             "description": "Validation Error",
             "content": { "application/json": { "schema": { "$ref": "#/components/schemas/HTTPValidationError" } } }
           }
-        },
-        "security": [{ "OAuth2PasswordBearer": [] }]
+        }
+      },
+      "get": {
+        "tags": ["whiteboard"],
+        "summary": "Returns the Whiteboards of the Project",
+        "operationId": "get_by_project",
+        "security": [{ "OAuth2PasswordBearer": [] }],
+        "parameters": [
+          {
+            "name": "project_id",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "integer", "title": "Project Id" }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": { "$ref": "#/components/schemas/WhiteboardRead" },
+                  "title": "Response Whiteboard-Get By Project"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/HTTPValidationError" } } }
+          }
+        }
       }
     },
-    "/whiteboard/duplicate/{whiteboard_id}": {
+    "/projects/{project_id}/whiteboards/{whiteboard_id}/duplicate": {
       "put": {
         "tags": ["whiteboard"],
         "summary": "Duplicates the Whiteboard with the given ID if it exists",
         "operationId": "duplicate_by_id",
         "security": [{ "OAuth2PasswordBearer": [] }],
         "parameters": [
+          {
+            "name": "project_id",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "integer", "title": "Project Id" }
+          },
           {
             "name": "whiteboard_id",
             "in": "path",
@@ -8346,13 +8543,19 @@
         }
       }
     },
-    "/whiteboard/{whiteboard_id}": {
+    "/projects/{project_id}/whiteboards/{whiteboard_id}": {
       "get": {
         "tags": ["whiteboard"],
         "summary": "Returns the Whiteboard with the given ID if it exists",
         "operationId": "get_by_id",
         "security": [{ "OAuth2PasswordBearer": [] }],
         "parameters": [
+          {
+            "name": "project_id",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "integer", "title": "Project Id" }
+          },
           {
             "name": "whiteboard_id",
             "in": "path",
@@ -8377,6 +8580,12 @@
         "operationId": "update_by_id",
         "security": [{ "OAuth2PasswordBearer": [] }],
         "parameters": [
+          {
+            "name": "project_id",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "integer", "title": "Project Id" }
+          },
           {
             "name": "whiteboard_id",
             "in": "path",
@@ -8406,6 +8615,12 @@
         "security": [{ "OAuth2PasswordBearer": [] }],
         "parameters": [
           {
+            "name": "project_id",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "integer", "title": "Project Id" }
+          },
+          {
             "name": "whiteboard_id",
             "in": "path",
             "required": true,
@@ -8424,13 +8639,19 @@
         }
       }
     },
-    "/whiteboard/data/{whiteboard_id}": {
+    "/projects/{project_id}/whiteboards/{whiteboard_id}/data": {
       "get": {
         "tags": ["whiteboard"],
-        "summary": "Returns the Whiteboard with the given ID if it exists",
+        "summary": "Returns the data of the objects on the Whiteboard with the given ID",
         "operationId": "get_data_by_id",
         "security": [{ "OAuth2PasswordBearer": [] }],
         "parameters": [
+          {
+            "name": "project_id",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "integer", "title": "Project Id" }
+          },
           {
             "name": "whiteboard_id",
             "in": "path",
@@ -8442,40 +8663,6 @@
           "200": {
             "description": "Successful Response",
             "content": { "application/json": { "schema": { "$ref": "#/components/schemas/WhiteboardData" } } }
-          },
-          "422": {
-            "description": "Validation Error",
-            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/HTTPValidationError" } } }
-          }
-        }
-      }
-    },
-    "/whiteboard/project/{project_id}": {
-      "get": {
-        "tags": ["whiteboard"],
-        "summary": "Returns the Whiteboards of the Project with the given ID",
-        "operationId": "get_by_project",
-        "security": [{ "OAuth2PasswordBearer": [] }],
-        "parameters": [
-          {
-            "name": "project_id",
-            "in": "path",
-            "required": true,
-            "schema": { "type": "integer", "title": "Project Id" }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "Successful Response",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "array",
-                  "items": { "$ref": "#/components/schemas/WhiteboardRead" },
-                  "title": "Response Whiteboard-Get By Project"
-                }
-              }
-            }
           },
           "422": {
             "description": "Validation Error",
@@ -11240,15 +11427,10 @@
       },
       "COTACreate": {
         "properties": {
-          "name": { "type": "string", "title": "Name", "description": "Name of the ConceptOverTimeAnalysis" },
-          "project_id": {
-            "type": "integer",
-            "title": "Project Id",
-            "description": "Project the ConceptOverTimeAnalysis belongs to"
-          }
+          "name": { "type": "string", "title": "Name", "description": "Name of the ConceptOverTimeAnalysis" }
         },
         "type": "object",
-        "required": ["name", "project_id"],
+        "required": ["name"],
         "title": "COTACreate"
       },
       "COTARead": {
@@ -13343,11 +13525,6 @@
             "title": "Code Ids",
             "description": "IDs of the codes of the experiment"
           },
-          "project_id": {
-            "type": "integer",
-            "title": "Project Id",
-            "description": "Project the experiment belongs to"
-          },
           "gold_user_id": {
             "type": "integer",
             "title": "Gold User Id",
@@ -13355,7 +13532,7 @@
           }
         },
         "type": "object",
-        "required": ["name", "task_type", "sdoc_ids", "code_ids", "project_id", "gold_user_id"],
+        "required": ["name", "task_type", "sdoc_ids", "code_ids", "gold_user_id"],
         "title": "ExperimentCreate"
       },
       "ExperimentCreatedEvent": {
@@ -20415,15 +20592,10 @@
           "timeline_analysis_type": {
             "$ref": "#/components/schemas/TimelineAnalysisType",
             "description": "The type of the TimelineAnalysis"
-          },
-          "project_id": {
-            "type": "integer",
-            "title": "Project Id",
-            "description": "Project the TimelineAnalysis belongs to"
           }
         },
         "type": "object",
-        "required": ["name", "timeline_analysis_type", "project_id"],
+        "required": ["name", "timeline_analysis_type"],
         "title": "TimelineAnalysisCreate"
       },
       "TimelineAnalysisCreatedEvent": {
@@ -20751,12 +20923,9 @@
         "title": "WhiteboardContent"
       },
       "WhiteboardCreate": {
-        "properties": {
-          "title": { "type": "string", "title": "Title", "description": "Title of the Whiteboard" },
-          "project_id": { "type": "integer", "title": "Project Id", "description": "Project the Whiteboard belongs to" }
-        },
+        "properties": { "title": { "type": "string", "title": "Title", "description": "Title of the Whiteboard" } },
         "type": "object",
-        "required": ["title", "project_id"],
+        "required": ["title"],
         "title": "WhiteboardCreate"
       },
       "WhiteboardCreatedEvent": {

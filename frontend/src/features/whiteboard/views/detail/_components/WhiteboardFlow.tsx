@@ -351,13 +351,14 @@ export function WhiteboardFlow({ whiteboard }: WhiteboardFlowProps) {
   const handleSaveWhiteboard = useCallback(() => {
     const customEdges = edges.filter(isCustomEdge);
     updateWhiteboard({
+      projectId: whiteboard.project_id,
       whiteboardId: whiteboard.id,
       requestBody: {
         title: whiteboard.title,
         content: { nodes, edges: customEdges },
       },
     });
-  }, [edges, nodes, updateWhiteboard, whiteboard.id, whiteboard.title]);
+  }, [edges, nodes, updateWhiteboard, whiteboard.id, whiteboard.project_id, whiteboard.title]);
 
   // 2. Keep track of the latest save function without triggering re-renders
   const latestSaveRef = useRef(handleSaveWhiteboard);
@@ -396,13 +397,14 @@ export function WhiteboardFlow({ whiteboard }: WhiteboardFlowProps) {
   const handleTitleChange = useCallback(
     (newTitle: string) => {
       updateWhiteboard({
+        projectId: whiteboard.project_id,
         whiteboardId: whiteboard.id,
         requestBody: {
           title: newTitle,
         },
       });
     },
-    [updateWhiteboard, whiteboard.id],
+    [updateWhiteboard, whiteboard.id, whiteboard.project_id],
   );
 
   const handleShapeMenuClick = (event: React.MouseEvent<HTMLElement>) => {

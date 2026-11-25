@@ -17,7 +17,7 @@ export type WhiteboardMap = Record<number, WhiteboardRead>;
  *
  *   whiteboardQueries.all()                  ["whiteboard"]
  *   whiteboardQueries.byProject(projectId)   ["whiteboard", "project", projectId]
- *   whiteboardQueries.data(projectId, id)    ["whiteboard", "data", id]
+ *   whiteboardQueries.data(projectId, id)    ["whiteboard", "data", id, projectId]
  */
 export const whiteboardQueries = {
   all: () => ["whiteboard"] as const,
@@ -42,9 +42,9 @@ export const whiteboardQueries = {
   dataScope: () => [...whiteboardQueries.all(), "data"] as const,
   data: (projectId: number, whiteboardId: number) =>
     queryOptions({
-      queryKey: [...whiteboardQueries.dataScope(), whiteboardId] as const,
+      queryKey: [...whiteboardQueries.dataScope(), whiteboardId, projectId] as const,
       queryFn: async () => {
-        const whiteboardData = await WhiteboardService.getDataById({ whiteboardId });
+        const whiteboardData = await WhiteboardService.getDataById({ projectId, whiteboardId });
 
         whiteboardData.span_annotations.forEach((sa) => {
           queryClient.setQueryData(spanAnnotationQueries.byId(sa.project_id, sa.id).queryKey, sa);

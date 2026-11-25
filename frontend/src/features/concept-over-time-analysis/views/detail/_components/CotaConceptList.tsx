@@ -32,6 +32,7 @@ export function CotaConceptList({ cota }: CotaConceptListProps) {
   const handleAddConcept = () => {
     const conceptId = crypto.randomUUID();
     updateCota.mutate({
+      projectId: cota.project_id,
       cotaId: cota.id,
       requestBody: {
         concepts: [
@@ -54,6 +55,7 @@ export function CotaConceptList({ cota }: CotaConceptListProps) {
     if (index !== -1) {
       cotaConcepts.splice(index, 1);
       updateCota.mutate({
+        projectId: cota.project_id,
         cotaId: cota.id,
         requestBody: {
           concepts: cotaConcepts,
@@ -68,6 +70,7 @@ export function CotaConceptList({ cota }: CotaConceptListProps) {
     if (index !== -1) {
       cotaConcepts[index].visible = !cotaConcepts[index].visible;
       updateCota.mutate({
+        projectId: cota.project_id,
         cotaId: cota.id,
         requestBody: {
           concepts: cotaConcepts,
@@ -83,6 +86,7 @@ export function CotaConceptList({ cota }: CotaConceptListProps) {
     if (index !== -1) {
       cotaConcepts[index] = concept;
       updateCota.mutate({
+        projectId: cota.project_id,
         cotaId: cota.id,
         requestBody: {
           concepts: cotaConcepts,
@@ -114,6 +118,7 @@ export function CotaConceptList({ cota }: CotaConceptListProps) {
       };
       cotaConcepts.push(duplicatedConcept);
       updateCota.mutate({
+        projectId: cota.project_id,
         cotaId: cota.id,
         requestBody: {
           concepts: cotaConcepts,

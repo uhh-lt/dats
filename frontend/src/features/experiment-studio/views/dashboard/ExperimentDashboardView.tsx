@@ -83,7 +83,7 @@ export function ExperimentDashboardView() {
     }
     // renaming an experiment renames the virtual users of its runs
     updateExperimentMutation(
-      { experimentId: row.original.id, requestBody: { name: values.title } },
+      { projectId, experimentId: row.original.id, requestBody: { name: values.title } },
       { onSuccess: () => table.setEditingRow(null) },
     );
   };
@@ -94,7 +94,7 @@ export function ExperimentDashboardView() {
       text:
         `Do you really want to delete the experiment ${row.original.title}? Its ${row.original.runCount} run(s) and ` +
         "their virtual users are deleted with all their annotations. This action cannot be undone!",
-      onAccept: () => deleteExperimentMutation({ experimentId: row.original.id }),
+      onAccept: () => deleteExperimentMutation({ projectId, experimentId: row.original.id }),
     });
   };
 

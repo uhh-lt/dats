@@ -56,8 +56,8 @@ export function CotaDashboardView() {
     ({ values, table }) => {
       createCota(
         {
+          projectId,
           requestBody: {
-            project_id: projectId,
             name: values.title,
           },
         },
@@ -71,6 +71,7 @@ export function CotaDashboardView() {
 
   const handleDuplicateAnalysis = (row: MRT_Row<AnalysisDashboardRow>) => {
     duplicateCota({
+      projectId,
       cotaId: row.original.id,
     });
   };
@@ -81,6 +82,7 @@ export function CotaDashboardView() {
       text: `Do you really want to remove the analysis ${row.original.id}? This action cannot be undone!`,
       onAccept: () => {
         deleteCota({
+          projectId,
           cotaId: row.original.id,
         });
       },
@@ -94,6 +96,7 @@ export function CotaDashboardView() {
     }
     updateCota(
       {
+        projectId,
         cotaId: row.original.id,
         requestBody: {
           name: values.title,

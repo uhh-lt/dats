@@ -15,12 +15,38 @@ export class WhiteboardService {
    * @returns WhiteboardRead Successful Response
    * @throws ApiError
    */
-  public static create({ requestBody }: { requestBody: WhiteboardCreate }): CancelablePromise<WhiteboardRead> {
+  public static create({
+    projectId,
+    requestBody,
+  }: {
+    projectId: number;
+    requestBody: WhiteboardCreate;
+  }): CancelablePromise<WhiteboardRead> {
     return __request(OpenAPI, {
       method: "PUT",
-      url: "/whiteboard",
+      url: "/projects/{project_id}/whiteboards",
+      path: {
+        project_id: projectId,
+      },
       body: requestBody,
       mediaType: "application/json",
+      errors: {
+        422: `Validation Error`,
+      },
+    });
+  }
+  /**
+   * Returns the Whiteboards of the Project
+   * @returns WhiteboardRead Successful Response
+   * @throws ApiError
+   */
+  public static getByProject({ projectId }: { projectId: number }): CancelablePromise<Array<WhiteboardRead>> {
+    return __request(OpenAPI, {
+      method: "GET",
+      url: "/projects/{project_id}/whiteboards",
+      path: {
+        project_id: projectId,
+      },
       errors: {
         422: `Validation Error`,
       },
@@ -31,11 +57,18 @@ export class WhiteboardService {
    * @returns WhiteboardRead Successful Response
    * @throws ApiError
    */
-  public static duplicateById({ whiteboardId }: { whiteboardId: number }): CancelablePromise<WhiteboardRead> {
+  public static duplicateById({
+    projectId,
+    whiteboardId,
+  }: {
+    projectId: number;
+    whiteboardId: number;
+  }): CancelablePromise<WhiteboardRead> {
     return __request(OpenAPI, {
       method: "PUT",
-      url: "/whiteboard/duplicate/{whiteboard_id}",
+      url: "/projects/{project_id}/whiteboards/{whiteboard_id}/duplicate",
       path: {
+        project_id: projectId,
         whiteboard_id: whiteboardId,
       },
       errors: {
@@ -48,11 +81,18 @@ export class WhiteboardService {
    * @returns WhiteboardRead Successful Response
    * @throws ApiError
    */
-  public static getById({ whiteboardId }: { whiteboardId: number }): CancelablePromise<WhiteboardRead> {
+  public static getById({
+    projectId,
+    whiteboardId,
+  }: {
+    projectId: number;
+    whiteboardId: number;
+  }): CancelablePromise<WhiteboardRead> {
     return __request(OpenAPI, {
       method: "GET",
-      url: "/whiteboard/{whiteboard_id}",
+      url: "/projects/{project_id}/whiteboards/{whiteboard_id}",
       path: {
+        project_id: projectId,
         whiteboard_id: whiteboardId,
       },
       errors: {
@@ -66,16 +106,19 @@ export class WhiteboardService {
    * @throws ApiError
    */
   public static updateById({
+    projectId,
     whiteboardId,
     requestBody,
   }: {
+    projectId: number;
     whiteboardId: number;
     requestBody: WhiteboardUpdate;
   }): CancelablePromise<WhiteboardRead> {
     return __request(OpenAPI, {
       method: "PATCH",
-      url: "/whiteboard/{whiteboard_id}",
+      url: "/projects/{project_id}/whiteboards/{whiteboard_id}",
       path: {
+        project_id: projectId,
         whiteboard_id: whiteboardId,
       },
       body: requestBody,
@@ -90,11 +133,18 @@ export class WhiteboardService {
    * @returns WhiteboardRead Successful Response
    * @throws ApiError
    */
-  public static deleteById({ whiteboardId }: { whiteboardId: number }): CancelablePromise<WhiteboardRead> {
+  public static deleteById({
+    projectId,
+    whiteboardId,
+  }: {
+    projectId: number;
+    whiteboardId: number;
+  }): CancelablePromise<WhiteboardRead> {
     return __request(OpenAPI, {
       method: "DELETE",
-      url: "/whiteboard/{whiteboard_id}",
+      url: "/projects/{project_id}/whiteboards/{whiteboard_id}",
       path: {
+        project_id: projectId,
         whiteboard_id: whiteboardId,
       },
       errors: {
@@ -103,33 +153,23 @@ export class WhiteboardService {
     });
   }
   /**
-   * Returns the Whiteboard with the given ID if it exists
+   * Returns the data of the objects on the Whiteboard with the given ID
    * @returns WhiteboardData Successful Response
    * @throws ApiError
    */
-  public static getDataById({ whiteboardId }: { whiteboardId: number }): CancelablePromise<WhiteboardData> {
+  public static getDataById({
+    projectId,
+    whiteboardId,
+  }: {
+    projectId: number;
+    whiteboardId: number;
+  }): CancelablePromise<WhiteboardData> {
     return __request(OpenAPI, {
       method: "GET",
-      url: "/whiteboard/data/{whiteboard_id}",
-      path: {
-        whiteboard_id: whiteboardId,
-      },
-      errors: {
-        422: `Validation Error`,
-      },
-    });
-  }
-  /**
-   * Returns the Whiteboards of the Project with the given ID
-   * @returns WhiteboardRead Successful Response
-   * @throws ApiError
-   */
-  public static getByProject({ projectId }: { projectId: number }): CancelablePromise<Array<WhiteboardRead>> {
-    return __request(OpenAPI, {
-      method: "GET",
-      url: "/whiteboard/project/{project_id}",
+      url: "/projects/{project_id}/whiteboards/{whiteboard_id}/data",
       path: {
         project_id: projectId,
+        whiteboard_id: whiteboardId,
       },
       errors: {
         422: `Validation Error`,

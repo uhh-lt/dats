@@ -109,8 +109,8 @@ export function ExperimentCreateDialog({ projectId }: ExperimentCreateDialogProp
       if (data.goldUserId === "" || selectedCodeIds.length === 0 || selectedSdocIds.length === 0) return;
       createExperimentMutation(
         {
+          projectId,
           requestBody: {
-            project_id: projectId,
             name: data.name,
             task_type: data.taskType,
             gold_user_id: data.goldUserId,
