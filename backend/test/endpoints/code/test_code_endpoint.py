@@ -15,10 +15,9 @@ def test_create_new_code(client: TestClient, test_project):
         description="Hallo here is the new test",
         parent_id=None,
         enabled=True,
-        project_id=project.id,
         is_system=False,
     )
-    response = client.put("/code", json=payload.model_dump())
+    response = client.put(f"/projects/{project.id}/codes", json=payload.model_dump())
 
     assert response.status_code == 200, response.text
     code = CodeRead.model_validate(response.json())
@@ -27,7 +26,7 @@ def test_create_new_code(client: TestClient, test_project):
     assert payload.description == code.description
     assert payload.parent_id == code.parent_id
     assert payload.enabled == code.enabled
-    assert payload.project_id == code.project_id
+    assert code.project_id == project.id
     assert payload.is_system == code.is_system
 
 
@@ -41,21 +40,19 @@ def test_create_code_project_not_existing(
         description="Trying to create code in a non-existing project",
         parent_id=None,
         enabled=True,
-        project_id=non_existing_project_id,
         is_system=False,
     )
-    response = client.put("/code", json=payload.model_dump())
+    response = client.put(
+        f"/projects/{non_existing_project_id}/codes", json=payload.model_dump()
+    )
 
     assert response.status_code == 403, response.text
 
 
-def test_get_code(
-    client: TestClient,
-    project_with_code,
-):
+def test_get_code(client: TestClient, project_with_code, test_project):
     code = project_with_code["code"]
 
-    response = client.get(f"/code/{code.id}")
+    response = client.get(f"/projects/{test_project.id}/codes/{code.id}")
 
     assert response.status_code == 200, response.text
     code_read = CodeRead.model_validate(response.json())
@@ -68,13 +65,11 @@ def test_get_code(
     assert code.is_system == code_read.is_system
 
 
-def test_get_code_does_not_exist(
-    client: TestClient,
-):
+def test_get_code_does_not_exist(client: TestClient, test_project):
     non_existing_id = 999999999
 
-    response = client.get(f"/code/{non_existing_id}")
-    assert response.status_code == 403, response.text
+    response = client.get(f"/projects/{test_project.id}/codes/{non_existing_id}")
+    assert response.status_code == 404, response.text
 
 
 testdata = [
@@ -87,14 +82,14 @@ testdata = [
 
 @pytest.mark.parametrize("payload", testdata)
 def test_update_code_parametrize(
-    client: TestClient,
-    project_with_code,
-    payload: dict,
+    client: TestClient, project_with_code, payload: dict, test_project
 ) -> None:
     code = project_with_code["code"]
     project = project_with_code["project"]
 
-    response = client.patch(f"/code/{code.id}", json=payload)
+    response = client.patch(
+        f"/projects/{test_project.id}/codes/{code.id}", json=payload
+    )
 
     assert response.status_code == 200, response.text
     updated = CodeRead.model_validate(response.json())
@@ -107,8 +102,7 @@ def test_update_code_parametrize(
 
 
 def test_update_by_id_alt(
-    client: TestClient,
-    project_with_parent_and_child_code,
+    client: TestClient, project_with_parent_and_child_code, test_project
 ):
     code = project_with_parent_and_child_code["code"]
 
@@ -119,7 +113,9 @@ def test_update_by_id_alt(
         parent_id=None,
         enabled=False,
     )
-    response = client.patch(f"/code/{code.id}", json=update.model_dump())
+    response = client.patch(
+        f"/projects/{test_project.id}/codes/{code.id}", json=update.model_dump()
+    )
 
     assert response.status_code == 200, response.text
     updated = CodeRead.model_validate(response.json())
@@ -130,9 +126,7 @@ def test_update_by_id_alt(
     assert updated.enabled == update.enabled
 
 
-def test_update_by_id_not_existing(
-    client: TestClient,
-):
+def test_update_by_id_not_existing(client: TestClient, test_project):
     non_existing_code_id = 999999999
     update = CodeUpdate(
         name="new Update Code",
@@ -142,15 +136,15 @@ def test_update_by_id_not_existing(
         enabled=False,
     )
     response = client.patch(
-        f"/code/{non_existing_code_id}",
+        f"/projects/{test_project.id}/codes/{non_existing_code_id}",
         json=update.model_dump(exclude_unset=True),
     )
 
-    assert response.status_code == 403, response.text
+    assert response.status_code == 404, response.text
 
 
 def test_update_by_id_rejects_a_parent_of_another_project(
-    client: TestClient, two_tenants: TwoTenants
+    client: TestClient, two_tenants: TwoTenants, test_project
 ):
     """A code cannot get the parent of another project, also when the user is a
     member of both: the composite foreign key rejects it (409) and the code keeps
@@ -159,25 +153,54 @@ def test_update_by_id_rejects_a_parent_of_another_project(
     foreign_code = two_tenants["foreign"]["code"]
 
     response = client.patch(
-        f"/code/{child_code.id}",
+        f"/projects/{test_project.id}/codes/{child_code.id}",
         json=CodeUpdate(parent_id=foreign_code.id).model_dump(exclude_unset=True),
     )
 
     assert response.status_code == 409, response.text
-    response = client.get(f"/code/{child_code.id}")
+    response = client.get(f"/projects/{test_project.id}/codes/{child_code.id}")
     assert response.status_code == 200, response.text
     assert CodeRead.model_validate(response.json()).parent_id == (
         two_tenants["own"]["code"].id
     )
 
 
-def test_delete_code(
-    client: TestClient,
-    project_with_code,
+def test_create_code_rejects_a_parent_of_another_project(
+    client: TestClient, two_tenants: TwoTenants
 ):
+    """A new code cannot get the parent of another project: the composite foreign
+    key rejects the body reference (409)."""
+    own, foreign = two_tenants["own"], two_tenants["foreign"]
+    payload = CodeCreate(
+        name="Foreign Parent",
+        color="red",
+        parent_id=foreign["code"].id,
+        is_system=False,
+    )
+
+    response = client.put(
+        f"/projects/{own['project'].id}/codes", json=payload.model_dump()
+    )
+
+    assert response.status_code == 409, response.text
+
+
+def test_get_code_of_another_project_is_not_found(
+    client: TestClient, two_tenants: TwoTenants
+):
+    """A code of another project does not exist in the project of the path (404),
+    also for a member of both projects."""
+    own, foreign = two_tenants["own"], two_tenants["foreign"]
+
+    response = client.get(f"/projects/{own['project'].id}/codes/{foreign['code'].id}")
+
+    assert response.status_code == 404, response.text
+
+
+def test_delete_code(client: TestClient, project_with_code, test_project):
     code = project_with_code["code"]
 
-    response = client.delete(f"/code/{code.id}")
+    response = client.delete(f"/projects/{test_project.id}/codes/{code.id}")
 
     assert response.status_code == 200, response.text
     code_delete = CodeRead.model_validate(response.json())
@@ -190,13 +213,11 @@ def test_delete_code(
     assert code.is_system == code_delete.is_system
 
 
-def test_delete_code_not_existing(
-    client: TestClient,
-):
+def test_delete_code_not_existing(client: TestClient, test_project):
     non_existing_id = 99999999
-    response = client.delete(f"/code/{non_existing_id}")
+    response = client.delete(f"/projects/{test_project.id}/codes/{non_existing_id}")
 
-    assert response.status_code == 403, response.text
+    assert response.status_code == 404, response.text
 
 
 def test_get_by_project(
@@ -209,7 +230,7 @@ def test_get_by_project(
     code."""
     project = project_with_code["project"]
 
-    response = client.get(f"/code/project/{project.id}")
+    response = client.get(f"/projects/{project.id}/codes")
 
     EXPECTED_COUNT = 125
     assert response.status_code == 200, response.text
@@ -221,39 +242,39 @@ def test_get_by_project_not_existing(
     client: TestClient,
 ):
     non_existing_project_id = 999999
-    response = client.get(f"/code/project/{non_existing_project_id}")
+    response = client.get(f"/projects/{non_existing_project_id}/codes")
 
     assert response.status_code == 403, response.text
 
 
 def test_disable_parent_code_disables_children(
-    client: TestClient,
-    project_with_code_hierarchy,
+    client: TestClient, project_with_code_hierarchy, test_project
 ):
     """Disabling a code must disable all its descendants."""
     grandparent = project_with_code_hierarchy["grandparent_code"]
     parent = project_with_code_hierarchy["parent_code"]
     child = project_with_code_hierarchy["child_code"]
 
-    response = client.patch(f"/code/{grandparent.id}", json={"enabled": False})
+    response = client.patch(
+        f"/projects/{test_project.id}/codes/{grandparent.id}", json={"enabled": False}
+    )
 
     assert response.status_code == 200, response.text
     updated = CodeRead.model_validate(response.json())
     assert updated.enabled is False
 
     # descendants must be disabled as well
-    response = client.get(f"/code/{parent.id}")
+    response = client.get(f"/projects/{test_project.id}/codes/{parent.id}")
     assert response.status_code == 200, response.text
     assert CodeRead.model_validate(response.json()).enabled is False
 
-    response = client.get(f"/code/{child.id}")
+    response = client.get(f"/projects/{test_project.id}/codes/{child.id}")
     assert response.status_code == 200, response.text
     assert CodeRead.model_validate(response.json()).enabled is False
 
 
 def test_enable_child_code_enables_disabled_ancestors(
-    client: TestClient,
-    project_with_code_hierarchy,
+    client: TestClient, project_with_code_hierarchy, test_project
 ):
     """Enabling a code must enable all its disabled ancestors, so that the
     code is reachable from the top of the hierarchy."""
@@ -262,44 +283,51 @@ def test_enable_child_code_enables_disabled_ancestors(
     child = project_with_code_hierarchy["child_code"]
 
     # disable the grandparent, which disables the whole subtree
-    response = client.patch(f"/code/{grandparent.id}", json={"enabled": False})
+    response = client.patch(
+        f"/projects/{test_project.id}/codes/{grandparent.id}", json={"enabled": False}
+    )
     assert response.status_code == 200, response.text
 
     # now enable the child code
-    response = client.patch(f"/code/{child.id}", json={"enabled": True})
+    response = client.patch(
+        f"/projects/{test_project.id}/codes/{child.id}", json={"enabled": True}
+    )
     assert response.status_code == 200, response.text
     updated = CodeRead.model_validate(response.json())
     assert updated.enabled is True
 
     # all ancestors must be enabled as well
-    response = client.get(f"/code/{parent.id}")
+    response = client.get(f"/projects/{test_project.id}/codes/{parent.id}")
     assert response.status_code == 200, response.text
     assert CodeRead.model_validate(response.json()).enabled is True
 
-    response = client.get(f"/code/{grandparent.id}")
+    response = client.get(f"/projects/{test_project.id}/codes/{grandparent.id}")
     assert response.status_code == 200, response.text
     assert CodeRead.model_validate(response.json()).enabled is True
 
 
 def test_enable_child_code_keeps_enabled_ancestors(
-    client: TestClient,
-    project_with_code_hierarchy,
+    client: TestClient, project_with_code_hierarchy, test_project
 ):
     """Enabling a code whose ancestors are already enabled must not change them."""
     parent = project_with_code_hierarchy["parent_code"]
     child = project_with_code_hierarchy["child_code"]
 
     # disable only the child
-    response = client.patch(f"/code/{child.id}", json={"enabled": False})
+    response = client.patch(
+        f"/projects/{test_project.id}/codes/{child.id}", json={"enabled": False}
+    )
     assert response.status_code == 200, response.text
 
     # re-enable the child
-    response = client.patch(f"/code/{child.id}", json={"enabled": True})
+    response = client.patch(
+        f"/projects/{test_project.id}/codes/{child.id}", json={"enabled": True}
+    )
     assert response.status_code == 200, response.text
     assert CodeRead.model_validate(response.json()).enabled is True
 
     # the parent must still be enabled
-    response = client.get(f"/code/{parent.id}")
+    response = client.get(f"/projects/{test_project.id}/codes/{parent.id}")
     assert response.status_code == 200, response.text
     assert CodeRead.model_validate(response.json()).enabled is True
 
@@ -313,7 +341,9 @@ def test_enable_child_code_keeps_enabled_ancestors(
 
 @pytest.mark.parametrize("kind", ANNOTATION_KINDS)
 def test_delete_source_code_keeps_source_user_of_copy(
-    client: TestClient, provenance_project_with_copies, kind: AnnotationKind
+    client: TestClient,
+    provenance_project_with_copies,
+    kind: AnnotationKind,
 ) -> None:
     """Deleting "Code A" deletes the source annotation (it has Code A) and clears
     both the copy's `source_annotation_id` and `source_code_id`; the copy (Code B)
@@ -321,7 +351,9 @@ def test_delete_source_code_keeps_source_user_of_copy(
     project = provenance_project_with_copies
     copy_id = project[f"{kind}_copies"]["copy_id"]
 
-    response = client.delete(f"/code/{project['code_a'].id}")
+    response = client.delete(
+        f"/projects/{project['project'].id}/codes/{project['code_a'].id}"
+    )
 
     assert response.status_code == 200, response.text
     copy = get_annotation(client, kind, project["project"].id, copy_id)
@@ -337,7 +369,7 @@ def test_delete_source_code_keeps_source_user_of_copy(
 
 
 def test_update_codes_bulk_updates_each_code(
-    client: TestClient, project_with_parent_and_child_code
+    client: TestClient, project_with_parent_and_child_code, test_project
 ):
     """Every code gets its own changes; the results keep the request order and the
     fields that were not sent stay unchanged."""
@@ -349,7 +381,7 @@ def test_update_codes_bulk_updates_each_code(
     ]
 
     response = client.patch(
-        "/code/bulk/update",
+        f"/projects/{test_project.id}/codes/bulk",
         json=[update.model_dump(exclude_unset=True) for update in request],
     )
 
@@ -366,32 +398,33 @@ def test_update_codes_bulk_updates_each_code(
 
 
 def test_update_codes_bulk_disabling_a_code_disables_its_descendants(
-    client: TestClient, project_with_code_hierarchy
+    client: TestClient, project_with_code_hierarchy, test_project
 ):
     """A bulk update applies the same enabled cascade as the single update."""
     grandparent = project_with_code_hierarchy["grandparent_code"]
     child = project_with_code_hierarchy["child_code"]
 
     response = client.patch(
-        "/code/bulk/update", json=[{"code_id": grandparent.id, "enabled": False}]
+        f"/projects/{test_project.id}/codes/bulk",
+        json=[{"code_id": grandparent.id, "enabled": False}],
     )
 
     assert response.status_code == 200, response.text
-    response = client.get(f"/code/{child.id}")
+    response = client.get(f"/projects/{test_project.id}/codes/{child.id}")
     assert response.status_code == 200, response.text
     assert CodeRead.model_validate(response.json()).enabled is False
 
 
-def test_update_codes_bulk_accepts_an_empty_list(client: TestClient):
+def test_update_codes_bulk_accepts_an_empty_list(client: TestClient, test_project):
     """An empty bulk update changes nothing and returns no codes."""
-    response = client.patch("/code/bulk/update", json=[])
+    response = client.patch(f"/projects/{test_project.id}/codes/bulk", json=[])
 
     assert response.status_code == 200, response.text
     assert response.json() == []
 
 
 def test_update_codes_bulk_rejects_a_taken_name_without_changes(
-    client: TestClient, project_with_parent_and_child_code
+    client: TestClient, project_with_parent_and_child_code, test_project
 ):
     """Code names are unique per project: a taken name fails the whole update
     with 409, and no code of the request is changed."""
@@ -399,7 +432,7 @@ def test_update_codes_bulk_rejects_a_taken_name_without_changes(
     child = project_with_parent_and_child_code["code"]
 
     response = client.patch(
-        "/code/bulk/update",
+        f"/projects/{test_project.id}/codes/bulk",
         json=[
             {"code_id": parent.id, "description": "changed"},
             {"code_id": child.id, "name": "Parent Code"},
@@ -407,19 +440,21 @@ def test_update_codes_bulk_rejects_a_taken_name_without_changes(
     )
 
     assert response.status_code == 409, response.text
-    response = client.get(f"/code/{parent.id}")
+    response = client.get(f"/projects/{test_project.id}/codes/{parent.id}")
     assert response.status_code == 200, response.text
     assert CodeRead.model_validate(response.json()).description == (
         "Parent code for testing"
     )
 
 
-def test_update_codes_bulk_rejects_duplicate_ids(client: TestClient, project_with_code):
+def test_update_codes_bulk_rejects_duplicate_ids(
+    client: TestClient, project_with_code, test_project
+):
     """A code may appear only once per bulk update."""
     code = project_with_code["code"]
 
     response = client.patch(
-        "/code/bulk/update",
+        f"/projects/{test_project.id}/codes/bulk",
         json=[
             {"code_id": code.id, "name": "A"},
             {"code_id": code.id, "name": "B"},
@@ -430,26 +465,31 @@ def test_update_codes_bulk_rejects_duplicate_ids(client: TestClient, project_wit
 
 
 def test_update_codes_bulk_rejects_an_update_without_changes(
-    client: TestClient, project_with_code
+    client: TestClient, project_with_code, test_project
 ):
     """Every item must change at least one field."""
     code = project_with_code["code"]
 
-    response = client.patch("/code/bulk/update", json=[{"code_id": code.id}])
+    response = client.patch(
+        f"/projects/{test_project.id}/codes/bulk", json=[{"code_id": code.id}]
+    )
 
     assert response.status_code == 422, response.text
 
 
-def test_update_codes_bulk_rejects_unknown_codes(client: TestClient, project_with_code):
-    """A code that does not exist (or belongs to a foreign project) is forbidden."""
+def test_update_codes_bulk_rejects_unknown_codes(
+    client: TestClient, project_with_code, test_project
+):
+    """A code that does not exist in the project is not found, and no code of the
+    request is changed."""
     code = project_with_code["code"]
 
     response = client.patch(
-        "/code/bulk/update",
+        f"/projects/{test_project.id}/codes/bulk",
         json=[
             {"code_id": code.id, "name": "Renamed"},
             {"code_id": 999999, "name": "Unknown"},
         ],
     )
 
-    assert response.status_code == 403, response.text
+    assert response.status_code == 404, response.text

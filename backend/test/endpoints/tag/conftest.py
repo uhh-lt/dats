@@ -5,6 +5,7 @@ from fastapi.testclient import TestClient
 
 import dats_test_utils
 from common.doc_type_enum import DocType
+from composite_keys_test_utils import TwoTenants, create_two_tenants
 from core.doc.source_document_crud import crud_sdoc
 from core.doc.source_document_dto import SourceDocumentCreate
 from core.doc.source_document_orm import SourceDocumentORM
@@ -34,14 +35,16 @@ def project_with_sdoc_and_tag(db_session, project_with_sdoc) -> ProjectWithSdocA
     # Create a tag in the project
     tag = crud_tag.create(
         db=db_session,
+        project_id=project.id,
         create_dto=TagCreate(
             name="Test Tag",
-            project_id=project.id,
         ),
     )
 
     # Link the tag to the source document
-    crud_tag.link_multiple_tags(db=db_session, sdoc_ids=[sdoc.id], tag_ids=[tag.id])
+    crud_tag.link_multiple_tags(
+        db=db_session, project_id=project.id, sdoc_ids=[sdoc.id], tag_ids=[tag.id]
+    )
 
     # Commit the changes to the database and refresh the objects
     db_session.commit()
@@ -73,14 +76,16 @@ def project_with_sdoc_and_multiple_tags(
     # Create a second tag in the project
     tag2 = crud_tag.create(
         db=db_session,
+        project_id=project.id,
         create_dto=TagCreate(
             name="Test Tag 2",
-            project_id=project.id,
         ),
     )
 
     # Link the second tag to the source document
-    crud_tag.link_multiple_tags(db=db_session, sdoc_ids=[sdoc.id], tag_ids=[tag2.id])
+    crud_tag.link_multiple_tags(
+        db=db_session, project_id=project.id, sdoc_ids=[sdoc.id], tag_ids=[tag2.id]
+    )
 
     # Commit the changes to the database and refresh the objects
     db_session.commit()
@@ -136,28 +141,31 @@ def project_with_multiple_sdocs_and_multiple_tags(
     # Create two tags in the project
     tag1 = crud_tag.create(
         db=db_session,
+        project_id=test_project.id,
         create_dto=TagCreate(
             name="T1",
             color="red",
             description="d",
             parent_id=None,
-            project_id=test_project.id,
         ),
     )
     tag2 = crud_tag.create(
         db=db_session,
+        project_id=test_project.id,
         create_dto=TagCreate(
             name="T2",
             color="blue",
             description="d",
             parent_id=None,
-            project_id=test_project.id,
         ),
     )
 
     # Link tags to source documents
-    crud_tag.set_tags(db=db_session, sdoc_id=sdoc1.id, tag_ids=[tag1.id, tag2.id])
-    crud_tag.set_tags(db=db_session, sdoc_id=sdoc2.id, tag_ids=[tag1.id])
+    crud_tag.set_tags_batch(
+        db=db_session,
+        project_id=test_project.id,
+        links={sdoc1.id: [tag1.id, tag2.id], sdoc2.id: [tag1.id]},
+    )
 
     # Commit the changes to the database and refresh the objects
     db_session.commit()
@@ -207,3 +215,12 @@ def system_only_project(
     c = dats_test_utils.create_user_client(app_client, system_user)
     yield {"project": project, "client": c}
     c.close()
+
+
+@pytest.fixture(scope="function")
+def two_tenants(db_session, test_user, test_project) -> TwoTenants:
+    """The rows of every project-owned table in the test project and in "Foreign
+    Project" (composite_keys_test_utils.TwoTenants and TenantRows list them): in
+    each, the document "doc_<p>.txt" is linked to "Tag <p>", which has the child
+    "Child tag <p>"."""
+    return create_two_tenants(db_session, user=test_user, project=test_project)

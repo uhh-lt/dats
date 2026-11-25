@@ -147,13 +147,13 @@ def project_with_sentence_annotation(
     # Create a code in the project
     code = crud_code.create(
         db=db_session,
+        project_id=project.id,
         create_dto=CodeCreate(
             name="Test Code",
             color="Red",
             description="Test code for sentence annotation",
             parent_id=None,
             enabled=True,
-            project_id=project.id,
             is_system=False,
         ),
     )

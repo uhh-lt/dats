@@ -62,13 +62,13 @@ def _create_image(db_session, *, project_id: int, name: str) -> SourceDocumentOR
 def _create_code(db_session, *, project_id: int, name: str) -> CodeORM:
     return crud_code.create(
         db=db_session,
+        project_id=project_id,
         create_dto=CodeCreate(
             name=name,
             color="Red",
             description=f"{name} for bbox annotations",
             parent_id=None,
             enabled=True,
-            project_id=project_id,
             is_system=False,
         ),
     )

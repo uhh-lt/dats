@@ -263,13 +263,13 @@ class SentAnnoColumns(str, AbstractColumns):
     def resolve_ids(self, db: Session, project_id: int, ids: list[int]) -> list[str]:
         match self:
             case SentAnnoColumns.TAG_ID_LIST_RECURSIVE:
-                tags = crud_tag.read_by_ids(db, ids=ids)
+                tags = crud_tag.read_by_ids(db, project_id=project_id, ids=ids)
                 return [tag.name for tag in tags]
             case SentAnnoColumns.FOLDER_ID_LIST_RECURSIVE:
                 folders = crud_folder.read_by_ids(db, ids=ids)
                 return [folder.name for folder in folders]
             case SentAnnoColumns.CODE_ID_LIST_RECURSIVE:
-                codes = crud_code.read_by_ids(db, ids=ids)
+                codes = crud_code.read_by_ids(db, project_id=project_id, ids=ids)
                 return [code.name for code in codes]
             case SentAnnoColumns.USER_ID | SentAnnoColumns.SOURCE_USER_ID:
                 users = crud_user.read_by_ids(db, ids=ids)

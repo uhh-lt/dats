@@ -339,7 +339,9 @@ class ExperimentService(metaclass=SingletonMeta):
             case ExperimentRunLogFormat.CSV:
                 code_names = {
                     code.id: code.name
-                    for code in crud_code.read_by_ids(db=db, ids=log.code_ids)
+                    for code in crud_code.read_by_ids(
+                        db=db, project_id=project_id, ids=log.code_ids
+                    )
                 }
                 name = f"{fn}.csv"
                 df = self._run_log_to_df(log=log, code_names=code_names)
@@ -378,8 +380,10 @@ class ExperimentService(metaclass=SingletonMeta):
             raise ExperimentInvalidSelectionError(
                 f"the documents {foreign_sdoc_ids} do not belong to project {project_id}"
             )
-        codes = crud_code.read_by_ids(db=db, ids=code_ids)  # raises NoSuchElementError
-        foreign_code_ids = [code.id for code in codes if code.project_id != project_id]
+        codes = crud_code.read_existing_by_ids(
+            db=db, project_id=project_id, ids=code_ids
+        )
+        foreign_code_ids = [code_id for code_id in code_ids if code_id not in codes]
         if foreign_code_ids:
             raise ExperimentInvalidSelectionError(
                 f"the codes {foreign_code_ids} do not belong to project {project_id}"

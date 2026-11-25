@@ -42,11 +42,11 @@ A fresh worktree has an empty database. Keep test data minimal and only in this 
 
 - Log in: `POST /authentication/login` with form fields `username` (email) and `password` returns an `access_token`; send it as `Authorization: Bearer <token>`.
 - A second annotator: `POST /authentication/register`, then `PATCH /user/{project_id}/user` to add the user to the project, then log in as that user.
-- Codes: `PUT /code` (`name`, `color`, `description`, `parent_id`, `project_id`, `is_system: false`, `enabled: true`). New projects contain the system codes of their enabled features (with all features about 135, e.g. `PERSON`, `ORG`), so give test codes distinct names.
+- Codes: `PUT /projects/{project_id}/codes` (`name`, `color`, `description`, `parent_id`, `is_system: false`, `enabled: true`). New projects contain the system codes of their enabled features (with all features about 135, e.g. `PERSON`, `ORG`), so give test codes distinct names.
 - Documents: create a small project and upload two or three short plain-text documents through the UI (write them to a temporary folder outside the repo first and use `browser_file_upload`). Run `just dev worker` so they get preprocessed. Sentence splitting and other ML steps use the shared hosted services; wait until the documents' sentences exist (`GET /sdoc/data/{sdoc_id}` returns `tokens`, `token_character_offsets` and sentences).
 - Span annotations: `PUT /projects/{project_id}/span-annotations` with `sdoc_id`, `code_id`, `begin` / `end` (character offsets) and `begin_token` / `end_token` (from `token_character_offsets`) and `span_text`.
 - Sentence annotations: `PUT /projects/{project_id}/sentence-annotations` with `sdoc_id`, `code_id`, `sentence_id_start`, `sentence_id_end`.
-- Tags: `PUT /tag`, then `PATCH /tag/bulk/link` with `source_document_ids` and `tag_ids`.
+- Tags: `PUT /projects/{project_id}/tags`, then `PUT /projects/{project_id}/tags/bulk/source-documents` with `source_document_ids` and `tag_ids`.
 
 Check the exact request bodies in the API docs at `http://localhost:<UVICORN_PORT>/docs` if a call is rejected. Write seed scripts to your scratchpad, not into the repository. Design the data so that the cases your feature must handle actually occur.
 

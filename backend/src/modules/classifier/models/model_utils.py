@@ -201,6 +201,7 @@ def grouped_train_test_split(
 
 def build_code_label_mappings(
     db: Session,
+    project_id: int,
     code_ids: list[int],
 ) -> tuple[list[CodeORM], dict[int, int], dict[int, str]]:
     """Builds the bidirectional mapping between database code ids and the
@@ -209,7 +210,7 @@ def build_code_label_mappings(
     Returns ``(codes, codeid2labelid, labelid2name)``; ``codeid2labelid``
     includes the ``0 -> 0" ("O") sentinel.
     """
-    codes = crud_code.read_by_ids(db=db, ids=code_ids)
+    codes = crud_code.read_by_ids(db=db, project_id=project_id, ids=code_ids)
 
     codeid2labelid: dict[int, int] = {code.id: i + 1 for i, code in enumerate(codes)}
     codeid2labelid[O_LABEL_ID] = O_LABEL_ID
@@ -221,6 +222,7 @@ def build_code_label_mappings(
 
 def build_tag_label_mappings(
     db: Session,
+    project_id: int,
     class_ids: list[int],
 ) -> tuple[list[TagORM], dict[int, int], dict[int, str]]:
     """Buidls the bidirectional mapping between database tag ids and the
@@ -229,7 +231,7 @@ def build_tag_label_mappings(
     Returns ``(tags, tagid2labelid, labelid2name)``; ``tagid2labelid``
     includes the ``0 -> 0" ("O") sentinel.
     """
-    tags = crud_tag.read_by_ids(db=db, ids=class_ids)
+    tags = crud_tag.read_by_ids(db=db, project_id=project_id, ids=class_ids)
 
     tagid2labelid: dict[int, int] = {tag.id: i + 1 for i, tag in enumerate(tags)}
     tagid2labelid[O_LABEL_ID] = O_LABEL_ID

@@ -4,12 +4,14 @@ from sqlalchemy.orm import aliased
 from common.crud_enum import Crud
 from core.annotation.span_group_crud import crud_span_group
 from core.annotation.span_group_orm import SpanGroupORM
+from core.code.code_crud import crud_code
 from core.code.code_orm import CodeORM
 from core.doc.source_document_orm import SourceDocumentORM
 from core.memo.memo_enum import AttachedObjectType
 from core.memo.memo_orm import MemoFavoriteLinkTable, MemoORM
 from core.memo.object_handle_orm import ObjectHandleORM
 from core.project.project_orm import ProjectORM
+from core.tag.tag_crud import crud_tag
 from core.tag.tag_orm import TagORM
 from core.user.user_crud import crud_user
 from core.user.user_orm import UserORM
@@ -341,7 +343,11 @@ class MemoColumns(str, AbstractColumns):
                 return crud_span_group.read(
                     db=db, project_id=project_id, id=object_id
                 ).name
-            case Crud.SOURCE_DOCUMENT | Crud.CODE | Crud.TAG:
+            case Crud.CODE:
+                return crud_code.read(db=db, project_id=project_id, id=object_id).name
+            case Crud.TAG:
+                return crud_tag.read(db=db, project_id=project_id, id=object_id).name
+            case Crud.SOURCE_DOCUMENT:
                 return crud.value.read(db=db, id=object_id).name
             case Crud.PROJECT:
                 return crud.value.read(db=db, id=object_id).title
@@ -377,13 +383,13 @@ class MemoColumns(str, AbstractColumns):
             case Crud.SOURCE_DOCUMENT:
                 found = crud.value.read_by_name(db, name=name, project_id=project_id)  # type: ignore
             case Crud.CODE:
-                found = crud.value.read_by_name_and_project(
+                found = crud_code.read_by_name_and_project(
                     db, code_name=name, project_id=project_id
-                )  # type: ignore
+                )
             case Crud.TAG:
-                found = crud.value.read_by_name_and_project(
+                found = crud_tag.read_by_name_and_project(
                     db, name=name, project_id=project_id
-                )  # type: ignore
+                )
             case Crud.PROJECT:
                 found = crud.value.read_by_title(db, title=name)  # type: ignore
             case Crud.SPAN_GROUP:

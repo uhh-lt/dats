@@ -141,7 +141,7 @@ class SourceDocumentTagLinkTable(ORMBase):
 
 ### Behavior
 
-- **`get_project_id()`**: every project-owned model overrides it with `return self.project_id`, except the tables keyed by their project whose CRUD callers all pass `project_id` (`span_group_orm.py`, `annotation_document_orm.py`). Only user-scoped auth tables (`ApiKeyORM`, `RefreshTokenORM`), `SpanTextORM` and pure link tables skip it; `UserORM` returns its `project_id`, which is set for virtual users only.
+- **`get_project_id()`**: every project-owned model overrides it with `return self.project_id`, except the tables keyed by their project whose CRUD callers all pass `project_id` (`span_group_orm.py`, `annotation_document_orm.py`, `code_orm.py`, `tag_orm.py`). Only user-scoped auth tables (`ApiKeyORM`, `RefreshTokenORM`), `SpanTextORM` and pure link tables skip it; `UserORM` returns its `project_id`, which is set for virtual users only.
 - **`get_user_id()`**: never override it. `ORMBase` reads the `user_id` attribute, so a model that is owned through its parent exposes `user_id` as a `@property` (see `SpanAnnotationORM.user_id`).
 - **`memo_ids`**: models that own an `object_handle` expose the same `memo_ids` property (copy it from `code_orm.py`).
 - **Derived values**: `@property` (or `hybrid_property` when the value must be usable in SQL queries) is used for convenience accessors that DTOs read through `from_attributes`. Keep them free of queries and side effects.
@@ -151,7 +151,7 @@ class SourceDocumentTagLinkTable(ORMBase):
 
 See:
 
-- [code_orm.py](backend/src/core/code/code_orm.py): project-scoped entity with timestamps, object handle, one-to-many with cascades, hierarchy, unique constraint, `memo_ids` and `get_project_id`.
+- [code_orm.py](backend/src/core/code/code_orm.py): project-scoped entity with timestamps, object handle, one-to-many with cascades, hierarchy, unique constraint, `memo_ids` and the project key.
 - [tag_orm.py](backend/src/core/tag/tag_orm.py): many-to-many through a `<A><B>LinkTable` in the same file.
 - [cota_orm.py](backend/src/modules/concept_over_time_analysis/cota_orm.py): JSONB documents with JSONB server defaults.
 - [word_frequency_orm.py](backend/src/core/artefacts/word_frequencies/word_frequency_orm.py): minimal dependent table with a composite primary key and a composite foreign key onto its document.

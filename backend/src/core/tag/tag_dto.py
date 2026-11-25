@@ -17,8 +17,7 @@ class TagBaseDTO(BaseModel):
 
 # Properties for creation
 class TagCreate(TagBaseDTO):
-    project_id: int = Field(description="Project the Tag belongs to")
-    color: str = Field(description="Color of the Code", default_factory=get_next_color)
+    color: str = Field(description="Color of the Tag", default_factory=get_next_color)
 
 
 # Properties for updating

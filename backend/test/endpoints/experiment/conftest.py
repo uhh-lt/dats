@@ -130,10 +130,10 @@ class ExperimentProject(TypedDict):
 def _create_code(db: Session, *, project_id: int, name: str) -> CodeORM:
     return crud_code.create(
         db=db,
+        project_id=project_id,
         create_dto=CodeCreate(
             name=name,
             description=f"{name} code",
-            project_id=project_id,
             is_system=False,
         ),
     )

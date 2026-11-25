@@ -96,7 +96,7 @@ A CRUD with no custom methods is just `class CRUDAspect(SQLCRUDBase[...]):` + `p
 
 - Every `.in_()` over a list that comes from a method argument runs in chunks of `BATCH_SIZE = conf.postgres.batch_size`: `for i in range(0, len(ids), BATCH_SIZE): batch_ids = ids[i : i + BATCH_SIZE]`. Exempt are only:
   - lists built inside the method with a known small bound;
-  - the second list of a two-list filter when it is bounded by the project (`code_ids`, `tag_ids`): only the unbounded list (`sdoc_ids`) is chunked (see `crud_span_anno.read_by_user_sdocs_codes`, `crud_tag.count_by_tags_and_sdocs_and_user`);
+  - the second list of a two-list filter when it is bounded by the project (`code_ids`, `tag_ids`): only the unbounded list (`sdoc_ids`) is chunked (see `crud_span_anno.read_by_user_sdocs_codes`, `crud_tag.count_by_sdocs`);
   - filters that cannot be split into separate queries, such as `notin_(...)` and `.any(... .in_(...))` (see `crud_sdoc.read_all_without_tags`, `crud_sdoc.read_by_tags`).
 - Return early on empty input (`if not ids: return []` / `return 0` / `return {}`).
 - Bulk deletes use `delete(Model).where(...)` via `db.execute`, `assert isinstance(result, CursorResult)` and sum `result.rowcount` (see `SQLCRUDBase.delete_multi`).
@@ -119,14 +119,14 @@ A CRUD with no custom methods is just `class CRUDAspect(SQLCRUDBase[...]):` + `p
 
 ## Variations
 
-- **Project key** (`span_annotation_crud`, `sentence_annotation_crud`, `bbox_annotation_crud`): a table with the primary key `(project_id, id)` extends `ProjectCRUDBase` (`repos/db/project_crud_base.py`), whose base methods take `project_id` plus plain ids (`crud_span_anno.read(db=db, project_id=project_id, id=anno_id)`) and whose create DTOs carry no `project_id`. Overrides keep these signatures, and custom methods that read or write by id take `project_id` too.
+- **Project key** (`span_annotation_crud`, `code_crud`, `tag_crud`): a table with the primary key `(project_id, id)` extends `ProjectCRUDBase` (`repos/db/project_crud_base.py`), whose base methods take `project_id` plus plain ids (`crud_span_anno.read(db=db, project_id=project_id, id=anno_id)`) and whose create DTOs carry no `project_id`. Overrides keep these signatures, and custom methods that read or write by id take `project_id` too.
 - **Composite primary key** (`document_aspect_crud`, `document_cluster_crud`, `word_frequency_crud`): pass the key type as the fourth generic parameter, in key column order: `SQLCRUDBase[DocumentAspectORM, DocumentAspectCreate, DocumentAspectUpdate, tuple[int, int]]` for `(sdoc_id, aspect_id)`. The base builds every id filter from the model's primary key (`tuple_(...).in_(ids)`), so `read`, `read_by_ids`, `update_multi`, `delete_multi` and `exists` take these tuples and need no override. The parameter defaults to `int` (a single `id` column).
 
 ## Examples
 
 See:
 
-- [code_crud.py](backend/src/core/code/code_crud.py) — sections, custom reads, `update_with_children` reusing the base `update`.
+- [code_crud.py](backend/src/core/code/code_crud.py) — sections, custom reads, the project key, an `update_multi` override that calls `super()`.
 - [span_annotation_crud.py](backend/src/core/annotation/span_annotation_crud.py) — `_multi` overrides that batch side effects (span texts, adoc timestamps) and call `super()`.
 - [tag_crud.py](backend/src/core/tag/tag_crud.py) — batched reads, upsert link insert, batched delete with `rowcount`.
 - [document_aspect_crud.py](backend/src/modules/perspectives/document_aspect_crud.py) — composite-key variation with batched, order-preserving `read_by_ids`.

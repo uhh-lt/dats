@@ -7,6 +7,7 @@ from sqlalchemy import (
     ForeignKey,
     ForeignKeyConstraint,
     Integer,
+    PrimaryKeyConstraint,
     String,
     UniqueConstraint,
     func,
@@ -24,7 +25,8 @@ if TYPE_CHECKING:
 
 
 class CodeORM(ORMBase):
-    id: Mapped[int] = mapped_column(Integer, primary_key=True, index=True)
+    # the primary key is (project_id, id), see __table_args__
+    id: Mapped[int] = mapped_column(Integer, autoincrement=True, index=True)
     name: Mapped[str] = mapped_column(String, nullable=False, index=True)
     is_system: Mapped[bool] = mapped_column(Boolean, index=False, nullable=False)
     enabled: Mapped[bool] = mapped_column(Boolean, index=False, nullable=False)
@@ -54,7 +56,6 @@ class CodeORM(ORMBase):
         Integer,
         ForeignKey("project.id", ondelete="CASCADE"),
         nullable=False,
-        index=True,
     )
     project: Mapped["ProjectORM"] = relationship("ProjectORM", back_populates="codes")
 
@@ -100,6 +101,7 @@ class CodeORM(ORMBase):
     )
 
     __table_args__ = (
+        PrimaryKeyConstraint("project_id", "id", name="code_pkey"),
         UniqueConstraint(
             "project_id",
             "name",
@@ -119,6 +121,3 @@ class CodeORM(ORMBase):
         if self.object_handle is None:
             return []
         return [memo.id for memo in self.object_handle.attached_memos]
-
-    def get_project_id(self) -> int:
-        return self.project_id

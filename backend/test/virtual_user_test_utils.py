@@ -99,11 +99,11 @@ def create_virtual_user_project(
     )
     code = crud_code.create(
         db=db_session,
+        project_id=project.id,
         create_dto=CodeCreate(
             name="Claim",
             color="#ff0000",
             description="",
-            project_id=project.id,
             is_system=False,
         ),
     )

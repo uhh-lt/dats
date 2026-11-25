@@ -428,7 +428,9 @@ class DocClassificationModelService(TextClassificationModelService):
         base_model_name: str,
     ) -> ClassifierDatasetStatistics:
         # Build the label mappings
-        tags, tagid2labelid, _ = build_tag_label_mappings(db=db, class_ids=class_ids)
+        tags, tagid2labelid, _ = build_tag_label_mappings(
+            db=db, project_id=project_id, class_ids=class_ids
+        )
 
         # Build the dataset exactly as in training, but skip tokenization
         _, dataset, unannotated_sdocs = self._retrieve_and_build_dataset(
@@ -658,7 +660,7 @@ class DocClassificationModelService(TextClassificationModelService):
         job.update(current_step=1)
         # Get tags and create mapping
         tags, tagid2labelid, labelid2name = build_tag_label_mappings(
-            db=db, class_ids=parameters.class_ids
+            db=db, project_id=payload.project_id, class_ids=parameters.class_ids
         )
 
         # Build dataset
@@ -1056,6 +1058,7 @@ class DocClassificationModelService(TextClassificationModelService):
         if parameters.delete_existing_work:
             crud_tag.unlink_multiple_tags(
                 db=db,
+                project_id=classifier.project_id,
                 sdoc_ids=parameters.sdoc_ids,
                 tag_ids=classifier.class_ids,
             )
@@ -1144,7 +1147,9 @@ class DocClassificationModelService(TextClassificationModelService):
 
         # add db state
         sdoc_ids2tags = crud_tag.read_tags_for_documents(
-            db=db, sdoc_ids=list({x["sdoc_id"] for x in results})
+            db=db,
+            project_id=classifier.project_id,
+            sdoc_ids=list({x["sdoc_id"] for x in results}),
         )
         for sdoc_id, tags in sdoc_ids2tags.items():
             sdoc_ids2tag_ids[sdoc_id].update({tag.id for tag in tags})
@@ -1152,6 +1157,7 @@ class DocClassificationModelService(TextClassificationModelService):
         # write updated state to db
         crud_tag.set_tags_batch(
             db=db,
+            project_id=classifier.project_id,
             links={
                 sdoc_id: list(tag_ids) for sdoc_id, tag_ids in sdoc_ids2tag_ids.items()
             },

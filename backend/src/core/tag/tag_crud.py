@@ -1,20 +1,42 @@
 from collections import defaultdict
-from typing import Iterable
 
 from sqlalchemy import CursorResult, delete, func, select
+from sqlalchemy.dialects.postgresql import insert
 from sqlalchemy.orm import Session
 
-from core.doc.source_document_orm import SourceDocumentORM
 from core.tag.tag_dto import TagCreate, TagUpdate
 from core.tag.tag_orm import SourceDocumentTagLinkTable, TagORM
-from repos.db.crud_base import BATCH_SIZE, SQLCRUDBase
+from repos.db.crud_base import BATCH_SIZE
+from repos.db.project_crud_base import ProjectCRUDBase
 
 
-class CRUDTag(SQLCRUDBase[TagORM, TagCreate, TagUpdate]):
+class CRUDTag(ProjectCRUDBase[TagORM, TagCreate, TagUpdate]):
+    ### CREATE OPERATIONS ###
+    # Inherited from ProjectCRUDBase
+
     ### READ OPERATIONS ###
 
-    def read_by_project(self, db: Session, *, project_id: int) -> list[TagORM]:
-        return db.query(TagORM).filter(TagORM.project_id == project_id).all()
+    def read_by_project(
+        self, db: Session, *, project_id: int, sdoc_id: int | None = None
+    ) -> list[TagORM]:
+        """
+        Read the tags of the project, optionally only those of a document.
+
+        Args:
+            project_id: The project of the tags.
+            sdoc_id: Only the tags linked with this document of the project.
+
+        Returns:
+            The matching tags, ordered by id.
+        """
+        query = db.query(self.model).filter(self.model.project_id == project_id)
+        if sdoc_id is not None:
+            query = query.join(
+                SourceDocumentTagLinkTable,
+                (SourceDocumentTagLinkTable.project_id == self.model.project_id)
+                & (SourceDocumentTagLinkTable.tag_id == self.model.id),
+            ).filter(SourceDocumentTagLinkTable.source_document_id == sdoc_id)
+        return query.order_by(self.model.id).all()
 
     def read_by_name_and_project(
         self, db: Session, *, name: str, project_id: int
@@ -45,98 +67,39 @@ class CRUDTag(SQLCRUDBase[TagORM, TagCreate, TagUpdate]):
             )
         return db_objs
 
-    # for all tags in the project
-    def read_tag_sdoc_counts(
-        self, db: Session, *, project_id: int, sdoc_ids: list[int]
-    ) -> dict[int, int]:
-        """
-        Counts how many of the specified source documents (sdoc_ids) have each tag in the project.
-        Args:
-            db (Session): The current database session used for querying.
-            project_id (int): The project ID to filter tags.
-            sdoc_ids (list[int]): A list of source document IDs to consider for counting.
-
-        Returns:
-            dict[int, int]: A dictionary mapping each tag ID to the count of source documents
-                            (from sdoc_ids) that have that tag.
-        """
-        # 1. Get ALL tag IDs that exist in the project
-        all_tag_ids = [
-            tag.id for tag in self.read_by_project(db=db, project_id=project_id)
-        ]
-
-        # Initialize the results dictionary with all tags having a count of 0
-        results: dict[int, int] = {tag_id: 0 for tag_id in all_tag_ids}
-
-        if not sdoc_ids:
-            return results
-
-        # 2. Process sdoc_ids in Batches
-        for i in range(0, len(sdoc_ids), BATCH_SIZE):
-            batch_ids = sdoc_ids[i : i + BATCH_SIZE]
-
-            # 3. Build the SELECT statement for the current batch
-            stmt = (
-                select(
-                    SourceDocumentTagLinkTable.tag_id,
-                    func.count(SourceDocumentTagLinkTable.tag_id),
-                )
-                .where(
-                    SourceDocumentTagLinkTable.source_document_id.in_(batch_ids),
-                    SourceDocumentTagLinkTable.tag_id.in_(all_tag_ids),
-                )
-                .group_by(SourceDocumentTagLinkTable.tag_id)
-            )
-
-            # 4. Execute the statement and fetch the results for the batch
-            batch_rows = db.execute(stmt).all()
-
-            # 5. Aggregate the counts
-            for tag_id, count in batch_rows:
-                results[tag_id] += count
-
-        return results
-
     def read_tags_for_documents(
-        self, db: Session, *, sdoc_ids: Iterable[int]
+        self, db: Session, *, project_id: int, sdoc_ids: list[int]
     ) -> dict[int, list[TagORM]]:
         """
-        Retrieves all tags associated with the given list of document IDs.
+        Read the tags of documents of the project.
 
         Args:
-            db (Session): The current database session used for querying.
-            sdoc_ids (Iterable[int]): A list of document IDs for which to retrieve tags.
+            project_id: The project of the documents.
+            sdoc_ids: The documents.
 
         Returns:
-            dict[int, list[TagORM]]: A dictionary mapping each document ID to a list of associated tags.
+            The tags per document id; documents without tags have no entry.
         """
-        sdoc_id_list = list(sdoc_ids)
-        if not sdoc_id_list:
+        if not sdoc_ids:
             return {}
 
-        # result aggregation
         result: dict[int, list[TagORM]] = defaultdict(list)
-
-        # 1. Process in Batches
-        for i in range(0, len(sdoc_id_list), BATCH_SIZE):
-            batch_ids = sdoc_id_list[i : i + BATCH_SIZE]
-
-            # 2. Build the 2.0 SELECT Statement
+        for i in range(0, len(sdoc_ids), BATCH_SIZE):
+            batch_ids = sdoc_ids[i : i + BATCH_SIZE]
             stmt = (
                 select(SourceDocumentTagLinkTable.source_document_id, TagORM)
                 .join_from(
                     SourceDocumentTagLinkTable,
                     TagORM,
-                    SourceDocumentTagLinkTable.tag_id == TagORM.id,
+                    (SourceDocumentTagLinkTable.project_id == TagORM.project_id)
+                    & (SourceDocumentTagLinkTable.tag_id == TagORM.id),
                 )
-                .filter(SourceDocumentTagLinkTable.source_document_id.in_(batch_ids))
+                .where(
+                    SourceDocumentTagLinkTable.project_id == project_id,
+                    SourceDocumentTagLinkTable.source_document_id.in_(batch_ids),
+                )
             )
-
-            # 3. Execute the statement and fetch the results
-            batch_rows = db.execute(stmt).all()
-
-            # 4. Aggregate the results
-            for sdoc_id, tag_obj in batch_rows:
+            for sdoc_id, tag_obj in db.execute(stmt).all():
                 result[sdoc_id].append(tag_obj)
 
         return dict(result)
@@ -144,186 +107,168 @@ class CRUDTag(SQLCRUDBase[TagORM, TagCreate, TagUpdate]):
     ### UPDATE OPERATIONS ###
 
     def update_multi(
-        self, db: Session, *, ids: list[int], update_dtos: list[TagUpdate]
+        self,
+        db: Session,
+        *,
+        project_id: int,
+        ids: list[int],
+        update_dtos: list[TagUpdate],
     ) -> list[TagORM]:
         # check that no parent tag is being set to the tag itself
         for id, update_dto in zip(ids, update_dtos):
             if update_dto.parent_id == id:
                 raise ValueError("A tag cannot be its own parent")
 
-        return super().update_multi(db=db, ids=ids, update_dtos=update_dtos)
+        return super().update_multi(
+            db=db, project_id=project_id, ids=ids, update_dtos=update_dtos
+        )
 
     ### OTHER OPERATIONS ###
 
-    def exists_by_project_and_tag_name_and_parent_id(
-        self, db: Session, *, tag_name: str, project_id: int, parent_id: int | None
-    ) -> bool:
-        if parent_id:
-            return (
-                db.query(TagORM)
-                .filter(
-                    TagORM.project_id == project_id,
-                    TagORM.parent_id == parent_id,
-                    TagORM.name == tag_name,
-                )
-                .first()
-                is not None
-            )
-        else:
-            return (
-                db.query(TagORM)
-                .filter(TagORM.project_id == project_id, TagORM.name == tag_name)
-                .first()
-                is not None
-            )
-
-    def link_multiple_tags(
-        self, db: Session, *, sdoc_ids: list[int], tag_ids: list[int]
-    ) -> int:
-        """
-        Links all SDocs with all DocTags
-        """
-        if len(sdoc_ids) == 0 or len(tag_ids) == 0:
-            return 0
-
-        # insert links (sdoc <-> tag), in the project of the document
-        from sqlalchemy.dialects.postgresql import insert
-
-        project_id_by_sdoc: dict[int, int] = {}
-        for i in range(0, len(sdoc_ids), BATCH_SIZE):
-            batch_ids = sdoc_ids[i : i + BATCH_SIZE]
-            project_id_by_sdoc.update(
-                {
-                    sdoc_id: project_id
-                    for sdoc_id, project_id in db.execute(
-                        select(
-                            SourceDocumentORM.id, SourceDocumentORM.project_id
-                        ).where(SourceDocumentORM.id.in_(batch_ids))
-                    ).tuples()
-                }
-            )
-        insert_values = [
-            {
-                "project_id": project_id_by_sdoc[sdoc_id],
-                "source_document_id": sdoc_id,
-                "tag_id": tag_id,
-            }
-            for sdoc_id in sdoc_ids
-            for tag_id in tag_ids
-        ]
-
-        insert_stmt = (
-            insert(SourceDocumentTagLinkTable)
-            .on_conflict_do_nothing()
-            .returning(SourceDocumentTagLinkTable.source_document_id)
-        )
-
-        new_rows = db.execute(insert_stmt, insert_values).fetchall()
-        db.flush()
-
-        return len(new_rows)
-
-    def unlink_multiple_tags(
-        self, db: Session, *, sdoc_ids: list[int], tag_ids: list[int]
-    ) -> int:
-        """
-        Unlinks specified tags from specified source documents, using batched deletion.
-        Returns the total count of rows deleted.
-        """
-        if not sdoc_ids or not tag_ids:
-            return 0
-
-        total_deleted_count = 0
-
-        # 1. Process sdoc_ids in Batches
-        for i in range(0, len(sdoc_ids), BATCH_SIZE):
-            batch_sdoc_ids = sdoc_ids[i : i + BATCH_SIZE]
-
-            # 2. Build the DELETE Statement
-            stmt = delete(SourceDocumentTagLinkTable).where(
-                SourceDocumentTagLinkTable.source_document_id.in_(batch_sdoc_ids),
-                SourceDocumentTagLinkTable.tag_id.in_(tag_ids),
-            )
-
-            # 3. Execute the statement
-            result = db.execute(stmt)
-            assert isinstance(result, CursorResult), "Expected a CursorResult!"
-
-            # Add the count of deleted rows from this batch
-            total_deleted_count += result.rowcount
-
-        # 4. Flush all batched deletions
-        db.flush()
-
-        return total_deleted_count
-
-    def set_tags(self, db: Session, *, sdoc_id: int, tag_ids: list[int]) -> int:
-        """
-        Link/Unlink DocTags so that sdoc has exactly the tags
-        """
-        # current state
-        from core.doc.source_document_crud import crud_sdoc
-
-        current_tag_ids = [tag.id for tag in crud_sdoc.read(db=db, id=sdoc_id).tags]
-
-        # find tags to be added and removed
-        add_tag_ids = list(set(tag_ids) - set(current_tag_ids))
-        del_tag_ids = list(set(current_tag_ids) - set(tag_ids))
-
-        modifications = self.unlink_multiple_tags(
-            db, sdoc_ids=[sdoc_id], tag_ids=del_tag_ids
-        )
-        modifications += self.link_multiple_tags(
-            db, sdoc_ids=[sdoc_id], tag_ids=add_tag_ids
-        )
-
-        return modifications
-
-    def set_tags_batch(self, db: Session, *, links: dict[int, list[int]]) -> int:
-        modifications = 0
-        for sdoc_id, tag_ids in links.items():
-            modifications += self.set_tags(db, sdoc_id=sdoc_id, tag_ids=tag_ids)
-        return modifications
-
-    def count_by_tags_and_sdocs_and_user(
+    def count_by_sdocs(
         self,
         db: Session,
         *,
-        tag_ids: list[int],
+        project_id: int,
         sdoc_ids: list[int],
-        user_id: int,
+        tag_ids: list[int] | None = None,
     ) -> dict[int, int]:
-        # Initialize the results dictionary: {tag_id: 0} for all input tags
-        results: dict[int, int] = {tag_id: 0 for tag_id in tag_ids}
+        """
+        Count per tag how many of the documents carry it.
 
+        Args:
+            project_id: The project of the tags and documents.
+            sdoc_ids: The documents to count.
+            tag_ids: The tags to count; all tags of the project if None.
+
+        Returns:
+            The number of documents per tag id, 0 for a tag no document carries.
+            A tag id of another project is counted as 0.
+        """
+        if tag_ids is None:
+            tag_ids = [
+                tag.id for tag in self.read_by_project(db=db, project_id=project_id)
+            ]
+        results: dict[int, int] = {tag_id: 0 for tag_id in tag_ids}
         if not tag_ids or not sdoc_ids:
             return results
 
-        # 1. Process sdoc_ids in Batches
         for i in range(0, len(sdoc_ids), BATCH_SIZE):
-            batch_sdoc_ids = sdoc_ids[i : i + BATCH_SIZE]
-
-            # 2. Build the SELECT Statement
+            batch_ids = sdoc_ids[i : i + BATCH_SIZE]
             stmt = (
                 select(
                     SourceDocumentTagLinkTable.tag_id,
                     func.count(SourceDocumentTagLinkTable.tag_id),
                 )
                 .where(
+                    SourceDocumentTagLinkTable.project_id == project_id,
+                    SourceDocumentTagLinkTable.source_document_id.in_(batch_ids),
                     SourceDocumentTagLinkTable.tag_id.in_(tag_ids),
-                    SourceDocumentTagLinkTable.source_document_id.in_(batch_sdoc_ids),
                 )
                 .group_by(SourceDocumentTagLinkTable.tag_id)
             )
-
-            # 3. Execute the statement and fetch the results
-            batch_rows = db.execute(stmt).all()
-
-            # 4. Aggregate the counts
-            for tag_id, count in batch_rows:
+            for tag_id, count in db.execute(stmt).all():
                 results[tag_id] += count
 
         return results
+
+    def link_multiple_tags(
+        self, db: Session, *, project_id: int, sdoc_ids: list[int], tag_ids: list[int]
+    ) -> int:
+        """
+        Link every document with every tag. A document or tag of another project
+        violates the composite foreign keys of the link table.
+
+        Args:
+            project_id: The project of the documents and tags.
+            sdoc_ids: The documents.
+            tag_ids: The tags.
+
+        Returns:
+            The number of new links.
+        """
+        if not sdoc_ids or not tag_ids:
+            return 0
+
+        insert_values = [
+            {"project_id": project_id, "source_document_id": sdoc_id, "tag_id": tag_id}
+            for sdoc_id in sdoc_ids
+            for tag_id in tag_ids
+        ]
+        insert_stmt = (
+            insert(SourceDocumentTagLinkTable)
+            .on_conflict_do_nothing()
+            .returning(SourceDocumentTagLinkTable.source_document_id)
+        )
+        new_rows = db.execute(insert_stmt, insert_values).fetchall()
+        db.flush()
+
+        return len(new_rows)
+
+    def unlink_multiple_tags(
+        self, db: Session, *, project_id: int, sdoc_ids: list[int], tag_ids: list[int]
+    ) -> int:
+        """
+        Unlink the tags from the documents of the project.
+
+        Args:
+            project_id: The project of the documents and tags.
+            sdoc_ids: The documents.
+            tag_ids: The tags.
+
+        Returns:
+            The number of removed links.
+        """
+        if not sdoc_ids or not tag_ids:
+            return 0
+
+        total_deleted_count = 0
+        for i in range(0, len(sdoc_ids), BATCH_SIZE):
+            batch_sdoc_ids = sdoc_ids[i : i + BATCH_SIZE]
+            stmt = delete(SourceDocumentTagLinkTable).where(
+                SourceDocumentTagLinkTable.project_id == project_id,
+                SourceDocumentTagLinkTable.source_document_id.in_(batch_sdoc_ids),
+                SourceDocumentTagLinkTable.tag_id.in_(tag_ids),
+            )
+            result = db.execute(stmt)
+            assert isinstance(result, CursorResult), "Expected a CursorResult!"
+            total_deleted_count += result.rowcount
+
+        db.flush()
+        return total_deleted_count
+
+    def set_tags_batch(
+        self, db: Session, *, project_id: int, links: dict[int, list[int]]
+    ) -> int:
+        """
+        Link and unlink tags so that every document has exactly its given tags.
+
+        Args:
+            project_id: The project of the documents and tags.
+            links: The tag ids per document id.
+
+        Returns:
+            The number of added and removed links.
+        """
+        current = self.read_tags_for_documents(
+            db=db, project_id=project_id, sdoc_ids=list(links)
+        )
+        modifications = 0
+        for sdoc_id, tag_ids in links.items():
+            current_tag_ids = {tag.id for tag in current.get(sdoc_id, [])}
+            modifications += self.unlink_multiple_tags(
+                db,
+                project_id=project_id,
+                sdoc_ids=[sdoc_id],
+                tag_ids=list(current_tag_ids - set(tag_ids)),
+            )
+            modifications += self.link_multiple_tags(
+                db,
+                project_id=project_id,
+                sdoc_ids=[sdoc_id],
+                tag_ids=list(set(tag_ids) - current_tag_ids),
+            )
+        return modifications
 
 
 crud_tag = CRUDTag(TagORM)

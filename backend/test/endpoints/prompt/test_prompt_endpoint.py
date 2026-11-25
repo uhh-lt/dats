@@ -754,7 +754,7 @@ def test_create_version_stores_local_definitions_without_changing_the_project(
     updated = PromptRead.model_validate(response.json())
     assert updated.versions[-1].codes == [local_claim]
 
-    response = client.get(f"/code/{claim.id}")
+    response = client.get(f"/projects/{claim.project_id}/codes/{claim.id}")
     assert response.status_code == 200, response.text
     assert (response.json()["name"], response.json()["description"]) == (
         "Claim",

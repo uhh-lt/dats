@@ -60,6 +60,7 @@ class TagImporter:
                 if not validate_only:
                     created_tags = crud_tag.create_multi(
                         db=self.db,
+                        project_id=self.project_id,
                         create_dtos=layer_dtos,
                     )
                     for tag in created_tags:
@@ -158,7 +159,6 @@ class TagImporter:
                 name=tag.tag_name,
                 description=tag.description,
                 parent_id=parent_id,
-                project_id=self.project_id,
                 color=tag.color if tag.color else get_next_color(),
             )
 

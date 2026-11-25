@@ -103,7 +103,8 @@ def export_annotation_provenance(
         )
     )
     name_by_code_id = {
-        code.id: code.name for code in crud_code.read_by_ids(db=db, ids=code_ids)
+        code.id: code.name
+        for code in crud_code.read_by_ids(db=db, project_id=project_id, ids=code_ids)
     }
 
     return [

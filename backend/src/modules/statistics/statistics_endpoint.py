@@ -23,6 +23,7 @@ def filter_code_stats(
     db: DBSession,
     authz_user: AuthzUser = Depends(),
     # code stat params
+    project_id: int,
     code_id: int,
     sort_by_global: bool = False,
     top_k: int = 20,
@@ -33,9 +34,13 @@ def filter_code_stats(
         return []
 
     # compute code stats
-    authz_user.assert_in_same_project_as(Crud.CODE, code_id)
+    authz_user.assert_in_project(project_id)
     code_stats = StatisticsService().compute_code_statistics(
-        db=db, code_id=code_id, sdoc_ids=set(sdoc_ids), top_k=top_k
+        db=db,
+        project_id=project_id,
+        code_id=code_id,
+        sdoc_ids=set(sdoc_ids),
+        top_k=top_k,
     )
     if sort_by_global:
         code_stats.sort(key=lambda x: x.global_count, reverse=True)

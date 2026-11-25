@@ -341,10 +341,10 @@ def _person_boxes_project(
     if own_human:
         crud_code.create(
             db=db,
+            project_id=project_id,
             create_dto=CodeCreate(
                 name="HUMAN",
                 description="My people",
-                project_id=project_id,
                 is_system=False,
                 enabled=True,
             ),

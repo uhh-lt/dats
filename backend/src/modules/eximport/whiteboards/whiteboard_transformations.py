@@ -160,7 +160,9 @@ def transform_nodes_for_export(
                 if node.data.parentCodeId is not None:
                     code_ids.append(node.data.parentCodeId)
 
-            codes = crud_code.read_by_ids(db=db, ids=code_ids)
+            codes = crud_code.read_existing_by_ids(
+                db=db, project_id=project_id, ids=code_ids
+            ).values()
             code_id_to_name: dict[int, str] = {code.id: code.name for code in codes}
 
             for node in nodes:
@@ -196,7 +198,9 @@ def transform_nodes_for_export(
                 assert isinstance(node.data, TagNodeData), "Expected TagNodeData type"
                 tag_ids.append(node.data.tagId)
 
-            tags = crud_tag.read_by_ids(db=db, ids=tag_ids)
+            tags = crud_tag.read_existing_by_ids(
+                db=db, project_id=project_id, ids=tag_ids
+            ).values()
             tag_id_to_name: dict[int, str] = {tag.id: tag.name for tag in tags}
 
             for node in nodes:

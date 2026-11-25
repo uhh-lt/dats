@@ -5,6 +5,7 @@ from common.singleton_meta import SingletonMeta
 from core.annotation.annotation_document_orm import AnnotationDocumentORM
 from core.annotation.span_annotation_orm import SpanAnnotationORM
 from core.annotation.span_text_orm import SpanTextORM
+from core.code.code_crud import crud_code
 from core.tag.tag_orm import SourceDocumentTagLinkTable, TagORM
 from modules.statistics.statistics_dto import SpanEntityStat, TagStat
 
@@ -51,10 +52,20 @@ class StatisticsService(metaclass=SingletonMeta):
         self,
         *,
         db: Session,
+        project_id: int,
         code_id: int,
         sdoc_ids: set[int],
         top_k: int = 20,
     ) -> list[SpanEntityStat]:
+        """
+        The most frequent span texts of the code in the documents, with their
+        frequency in all documents of the project.
+
+        Raises:
+            NoSuchElementError: If the code does not exist in the project.
+        """
+        crud_code.read(db=db, project_id=project_id, id=code_id)
+
         # code statistics for the sdoc_ids
         count = func.count(AnnotationDocumentORM.source_document_id.distinct()).label(
             "count"
@@ -69,6 +80,7 @@ class StatisticsService(metaclass=SingletonMeta):
             .join(SpanAnnotationORM.annotation_document)
             .group_by(SpanTextORM.id)
             .filter(
+                SpanAnnotationORM.project_id == project_id,
                 SpanAnnotationORM.code_id == code_id,
                 AnnotationDocumentORM.source_document_id.in_(list(sdoc_ids)),
             )
@@ -94,6 +106,7 @@ class StatisticsService(metaclass=SingletonMeta):
             .join(SpanAnnotationORM.code)
             .group_by(SpanTextORM.id)
             .filter(
+                SpanAnnotationORM.project_id == project_id,
                 SpanAnnotationORM.code_id == code_id,
                 SpanTextORM.id.in_(span_text_ids),
             )

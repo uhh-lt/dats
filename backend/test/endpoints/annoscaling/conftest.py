@@ -63,11 +63,11 @@ def annotated_scaling_project(
     accept, reject = (
         crud_code.create(
             db=db_session,
+            project_id=project_id,
             create_dto=CodeCreate(
                 name=name,
                 color="#ff0000",
                 description="",
-                project_id=project_id,
                 is_system=False,
                 enabled=True,
             ),

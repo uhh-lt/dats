@@ -79,7 +79,10 @@ def _groups(db: Session, sdoc: SourceDocumentORM) -> list[list[tuple[str, str]]]
     db.expire_all()
     return [
         [
-            (crud_code.read(db=db, id=span.code_id).name, span.text)
+            (
+                crud_code.read(db=db, project_id=span.project_id, id=span.code_id).name,
+                span.text,
+            )
             for span in group.span_annotations
         ]
         for group in SpanGroupService().read_with_annotations_by_user(

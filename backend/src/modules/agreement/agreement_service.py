@@ -24,7 +24,6 @@ from modules.agreement.agreement_dto import (
 from modules.agreement.agreement_enum import AgreementAnnotationType, AgreementScoring
 from modules.agreement.agreement_exceptions import (
     AgreementAnnotatorsNotInProjectError,
-    AgreementCodesNotInProjectError,
     AgreementSdocsNotInProjectError,
 )
 
@@ -270,12 +269,8 @@ class AgreementService(metaclass=SingletonMeta):
     def _read_code_names(
         self, *, db: Session, project_id: int, code_ids: list[int]
     ) -> dict[int, str]:
-        codes = crud_code.read_by_ids(db=db, ids=code_ids)  # raises NoSuchElementError
-        foreign = [code.id for code in codes if code.project_id != project_id]
-        if foreign:
-            raise AgreementCodesNotInProjectError(
-                project_id=project_id, code_ids=foreign
-            )
+        # raises NoSuchElementError for a code that is not in the project
+        codes = crud_code.read_by_ids(db=db, project_id=project_id, ids=code_ids)
         return {code.id: code.name for code in codes}
 
     def _compute_segments(

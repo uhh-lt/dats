@@ -73,6 +73,7 @@ class CodeImporter:
                 if not validate_only:
                     created_codes = crud_code.create_multi(
                         db=self.db,
+                        project_id=self.project_id,
                         create_dtos=layer_dtos,
                     )
                     for code in created_codes:
@@ -180,7 +181,6 @@ class CodeImporter:
             name=code.code_name,
             description=code.description,
             parent_id=parent_id,
-            project_id=self.project_id,
             is_system=is_system,
             # a declared system code is enabled as declared, a user code is enabled
             enabled=declared.enabled if is_system and declared else True,

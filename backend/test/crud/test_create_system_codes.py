@@ -20,7 +20,7 @@ def _parent_name(db: Session, project_id: int, name: str) -> str | None:
     assert code is not None, name
     if code.parent_id is None:
         return None
-    return crud_code.read(db=db, id=code.parent_id).name
+    return crud_code.read(db=db, project_id=code.project_id, id=code.parent_id).name
 
 
 def test_create_system_codes_creates_the_missing_codes_once(
@@ -75,9 +75,8 @@ def test_create_system_codes_rejects_a_user_code_of_the_name(
     """A user code named like a declared code is not adopted: 409."""
     crud_code.create(
         db=db_session,
-        create_dto=CodeCreate(
-            name="TEST_TAKEN", project_id=test_project.id, is_system=False
-        ),
+        project_id=test_project.id,
+        create_dto=CodeCreate(name="TEST_TAKEN", is_system=False),
     )
 
     with pytest.raises(SystemCodeConflictError, match="a user code has the name"):

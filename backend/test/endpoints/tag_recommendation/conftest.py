@@ -68,7 +68,7 @@ class TagRecommendationProject(TypedDict):
 
 def _create_tag(db: Session, project_id: int, name: str) -> TagORM:
     return crud_tag.create(
-        db=db, create_dto=TagCreate(name=name, project_id=project_id)
+        db=db, project_id=project_id, create_dto=TagCreate(name=name)
     )
 
 
@@ -255,11 +255,13 @@ def tag_recommendation_job_project(
     }
     crud_tag.link_multiple_tags(
         db=db_session,
+        project_id=test_project.id,
         sdoc_ids=[sdocs["sports_tagged"].id],
         tag_ids=[tags["sports"].id],
     )
     crud_tag.link_multiple_tags(
         db=db_session,
+        project_id=test_project.id,
         sdoc_ids=[sdocs["politics_tagged"].id],
         tag_ids=[tags["politics"].id],
     )

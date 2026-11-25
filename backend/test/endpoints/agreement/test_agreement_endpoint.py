@@ -596,7 +596,7 @@ def test_compute_agreement_rejects_document_of_other_project(
 def test_compute_agreement_rejects_code_of_other_project(
     client: TestClient, agreement_project: AgreementProject
 ) -> None:
-    """A code of another project is rejected with 400 and named in the message."""
+    """A code of another project does not exist in the project (404)."""
     p = agreement_project
     other_code_id = p["other_code"].id
     params = _params(p, SPAN_WORDS).model_copy(
@@ -607,8 +607,7 @@ def test_compute_agreement_rejects_code_of_other_project(
         params={"project_id": p["project"].id},
         json=params.model_dump(mode="json"),
     )
-    assert response.status_code == 400, response.text
-    assert str(other_code_id) in response.text
+    assert response.status_code == 404, response.text
 
 
 @pytest.mark.parametrize(

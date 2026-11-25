@@ -20,12 +20,11 @@ Key files:
 
 ## Enabling MCP for an Endpoint
 
-Add `"mcp"` to the endpoint's `tags` list in its `APIRouter`:
+Add `"mcp"` to the endpoint's `tags` list in its router:
 
 ```python
-router = APIRouter(
-    prefix="/code",
-    dependencies=[Depends(get_current_user)],
+router = project_router(
+    "/codes",
     tags=["code", "mcp"],  # ← "mcp" tag exposes this router's endpoints as MCP tools
 )
 ```

@@ -45,13 +45,13 @@ def project_with_span_annotation(
     # Create a code in the project
     code = crud_code.create(
         db=db_session,
+        project_id=project.id,
         create_dto=CodeCreate(
             name="Test Code",
             color="Red",
             description="Test code for span annotation",
             parent_id=None,
             enabled=True,
-            project_id=project.id,
             is_system=False,
         ),
     )
@@ -112,13 +112,13 @@ def project_with_span_annotations_for_bulk_test(
     # Create a second code for updating
     code2 = crud_code.create(
         db=db_session,
+        project_id=project.id,
         create_dto=CodeCreate(
             name="code-2",
             color="blue",
             description="desc",
             parent_id=None,
             enabled=True,
-            project_id=project.id,
             is_system=False,
         ),
     )

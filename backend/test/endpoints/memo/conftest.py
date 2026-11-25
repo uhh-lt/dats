@@ -184,24 +184,24 @@ def memo_project(
     # A code and a tag to attach memos to.
     code = crud_code.create(
         db=db_session,
+        project_id=project.id,
         create_dto=CodeCreate(
             name="Memo Target Code",
             color="#0000ff",
             description="Code for memo tests",
             parent_id=None,
             enabled=True,
-            project_id=project.id,
             is_system=False,
         ),
     )
     tag = crud_tag.create(
         db=db_session,
+        project_id=project.id,
         create_dto=TagCreate(
             name="Memo Target Tag",
             color="#ff0000",
             description="Tag for memo tests",
             parent_id=None,
-            project_id=project.id,
         ),
     )
 
