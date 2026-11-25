@@ -82,7 +82,7 @@ class AnnoScalingService(metaclass=SingletonMeta):
             to_create.append(span_anno)
 
         return SpanAnnotationService().create_multi(
-            db=db, user_id=user_id, create_dtos=to_create
+            db=db, project_id=project_id, user_id=user_id, create_dtos=to_create
         )
 
     def __suggest_similar_sentences(

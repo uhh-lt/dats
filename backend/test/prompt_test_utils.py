@@ -165,9 +165,11 @@ def _create_sentence_annotation(
 ) -> SentenceAnnotationORM:
     return crud_sentence_anno.read(
         db=db,
+        project_id=sdoc.project_id,
         id=SentenceAnnotationService()
         .create(
             db=db,
+            project_id=sdoc.project_id,
             user_id=user_id,
             create_dto=SentenceAnnotationCreate(
                 sdoc_id=sdoc.id,
@@ -273,7 +275,9 @@ def create_prompt_project(
     deleted_code_id = deleted_code.id
     crud_code.delete(db=db_session, id=deleted_code_id)
     deleted_span_annotation_id = span("long", claim_code).id
-    crud_span_anno.delete(db=db_session, id=deleted_span_annotation_id)
+    crud_span_anno.delete(
+        db=db_session, project_id=test_project.id, id=deleted_span_annotation_id
+    )
 
     def examples(
         kind: PromptExampleKind, annotation_ids: list[int]

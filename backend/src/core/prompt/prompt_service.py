@@ -556,7 +556,9 @@ class PromptService(metaclass=SingletonMeta):
     def _create_span_examples(
         self, *, db: Session, project_id: int, annotation_ids: list[int]
     ) -> list[PromptExample]:
-        annotations = crud_span_anno.read_by_ids(db=db, ids=annotation_ids)
+        annotations = crud_span_anno.read_by_ids(
+            db=db, project_id=project_id, ids=annotation_ids
+        )
         self._assert_annotations_in_project(
             annotation_ids=[
                 a.id for a in annotations if a.get_project_id() != project_id
@@ -617,7 +619,9 @@ class PromptService(metaclass=SingletonMeta):
     def _create_sentence_examples(
         self, *, db: Session, project_id: int, annotation_ids: list[int]
     ) -> list[PromptExample]:
-        annotations = crud_sentence_anno.read_by_ids(db=db, ids=annotation_ids)
+        annotations = crud_sentence_anno.read_by_ids(
+            db=db, project_id=project_id, ids=annotation_ids
+        )
         self._assert_annotations_in_project(
             annotation_ids=[
                 a.id for a in annotations if a.get_project_id() != project_id

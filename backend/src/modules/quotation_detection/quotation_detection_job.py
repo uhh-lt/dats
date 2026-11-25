@@ -168,22 +168,15 @@ def handle_quotation_detection_job(
             groups = [
                 [
                     *_make_span_annos(
-                        payload,
                         document,
                         adoc.id,
                         _get_quote_type(quote.typ, codes),
                         quote.quote,
                     ),
-                    *_make_span_annos(
-                        payload, document, adoc.id, codes.frame, quote.frame
-                    ),
-                    *_make_span_annos(
-                        payload, document, adoc.id, codes.addr, quote.addressee
-                    ),
-                    *_make_span_annos(payload, document, adoc.id, codes.cue, quote.cue),
-                    *_make_span_annos(
-                        payload, document, adoc.id, codes.speaker, quote.speaker
-                    ),
+                    *_make_span_annos(document, adoc.id, codes.frame, quote.frame),
+                    *_make_span_annos(document, adoc.id, codes.addr, quote.addressee),
+                    *_make_span_annos(document, adoc.id, codes.cue, quote.cue),
+                    *_make_span_annos(document, adoc.id, codes.speaker, quote.speaker),
                 ]
                 for doc in output.documents
                 for quote in doc.quotes
@@ -201,7 +194,6 @@ def handle_quotation_detection_job(
 
 
 def _make_span_annos(
-    payload: QuotationDetectionJobInput,
     document: QuoteInputDoc,
     adoc_id: int,
     code_id: int,
@@ -215,7 +207,6 @@ def _make_span_annos(
         char_end = tokens[end - 1].end
         annos.append(
             SpanAnnotationCreateIntern(
-                project_id=payload.project_id,
                 uuid=str(uuid4()),
                 begin_token=start,
                 end_token=end,

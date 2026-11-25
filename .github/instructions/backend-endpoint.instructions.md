@@ -65,6 +65,17 @@ router = APIRouter(
 - **GET = read.** GET is a pure read and never syncs.
 - **POST = computation or job start.** A computation is a one-time operation whose result is not persisted (search, statistics, exports, suggestions). Computations do **not** need sync.
 
+### Project Routes
+
+Resources of a project move under `/projects/{project_id}/...` module group by module group (#928); `span_annotation_endpoint.py` is the example.
+
+- **Router**: `router = project_router("/<resources>", tags=[...], feature=FEATURE)` (`common/project_router.py`) checks the membership and, for a feature module, the feature for every route; omit `feature` in core.
+- **Project from the path only**: every route takes `project_id: int`; request and create DTOs carry no `project_id`.
+- **Paths**: plural kebab-case collections (`/span-annotations`), one resource at `/{<entity>_id}`, links at `/{<entity>_id}/<others>/{<other>_id}` (PUT adds, DELETE removes), bulk routes at `/bulk` declared before `/{<entity>_id}`, computations at `POST /<verb>`.
+- **Filters**: optional query parameters on the collection (`GET /span-annotations?user_id=1&sdoc_id=2`), never one route per filter combination.
+- **Ids within the project**: read every id of the path, query and body within the project (`crud_x.read(db=db, project_id=project_id, id=...)`), so an id of another project answers 404 and a filter id of another project matches nothing; no `assert_in_same_project_as` or `get_project_id()`.
+- **Emit to the path's project**: `ws.emit_to_project(event, result, project_id=project_id)`, also for batch events.
+
 ### Mutation & Sync
 
 - **Inject the emitter**: Every mutation route takes `ws: WebsocketEmitter = Depends()`.
@@ -84,11 +95,12 @@ router = APIRouter(
 
 - **Decorator**: Always set `response_model` and `summary`; the path uses `{resource_id}` path params for single-entity routes.
 - **Signature**: Keyword-only parameters (`*` first); `db: DBSession` (commits before the response and the websocket events) and `authz_user: AuthzUser = Depends()`; mutations add `ws`.
-- **Authz first**: The first statement of the body is `authz_user.assert_in_project(project_id)` or `authz_user.assert_in_same_project_as(Crud.X, id)`.
+- **Authz first**: outside a project router, the first statement of the body is `authz_user.assert_in_project(project_id)` or `authz_user.assert_in_same_project_as(Crud.X, id)`.
 - **Thin body**: Delegate to `crud_*` / service functions; no business logic in the route. Return type annotation matches `response_model`.
 
 ### Feature Gating
 
+- **Project router**: a project router of a feature gates every route (`project_router(..., feature=FEATURE)`); the rules below apply to routes not yet under `/projects/{project_id}`.
 - **Gate the router**: routes of a toggleable feature declare `dependencies=[Depends(require_feature(FEATURE))]`, with the object `register_feature` returned (imported from the module's `*_feature.py`), when they have a `project_id` path or query parameter (`simsearch_endpoint.py`).
 - **Gate by object**: routes that identify an object by a path parameter use `require_feature_of(FEATURE, Crud.Y, "y_id")` (`cota_endpoint.py`).
 - **Gate by body**: routes that carry the project id only in the body call `FeatureService().assert_enabled(db=db, project_id=..., feature=FEATURE)` right after the authz check.

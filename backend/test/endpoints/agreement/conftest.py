@@ -275,6 +275,7 @@ def agreement_project(db_session, test_project, test_user) -> AgreementProject:
     spans = {
         name: SpanAnnotationService().create(
             db=db,
+            project_id=project.id,
             user_id=user.id,
             create_dto=_span(sdoc_a.id, code.id, begin_token, end_token),
         )
@@ -295,6 +296,7 @@ def agreement_project(db_session, test_project, test_user) -> AgreementProject:
     sentences = {
         name: SentenceAnnotationService().create(
             db=db,
+            project_id=project.id,
             user_id=user.id,
             create_dto=SentenceAnnotationCreate(
                 sdoc_id=sdoc_a.id,

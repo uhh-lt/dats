@@ -9,13 +9,20 @@ from core.annotation.span_annotation_dto import (
     SpanAnnotationUpdate,
 )
 from core.annotation.span_group_dto import SpanGroupRead
+from core.project.project_orm import ProjectORM
 from provenance_test_utils import (
+    annotation_route,
     create_payload,
     get_annotation,
     get_memos,
     get_user_annotation_ids,
 )
 from virtual_user_test_utils import SENTENCES, VirtualUserProject
+
+
+def _url(project_id: int) -> str:
+    """The route of the span annotations of the project."""
+    return annotation_route("span", project_id)
 
 
 def test_add_span_annotation(
@@ -32,8 +39,10 @@ def test_add_span_annotation(
 
 
 def test_add_span_annotation_if_not_exists(
-    client: TestClient,
+    client: TestClient, test_project: ProjectORM
 ) -> None:
+    """A span annotation of a document and code that do not exist in the project is
+    not found."""
     fake_id = 3000
     payload = SpanAnnotationCreate(
         sdoc_id=fake_id,
@@ -45,15 +54,16 @@ def test_add_span_annotation_if_not_exists(
         span_text="Span",
     )
 
-    resp = client.put("/span", json=payload.model_dump(exclude_none=True))
+    resp = client.put(_url(test_project.id), json=payload.model_dump(exclude_none=True))
 
-    assert resp.status_code == 403, resp.text
+    assert resp.status_code == 404, resp.text
 
 
 def test_add_span_annotations_bulk(
     client: TestClient,
     project_with_span_annotation,
 ) -> None:
+    project = project_with_span_annotation["project"]
     sdoc = project_with_span_annotation["source_document"]
     code = project_with_span_annotation["code"]
 
@@ -78,7 +88,7 @@ def test_add_span_annotations_bulk(
         ).model_dump(exclude_none=True),
     ]
 
-    resp = client.put("/span/bulk/create", json=payload)
+    resp = client.put(f"{_url(project.id)}/bulk", json=payload)
 
     assert resp.status_code == 200, resp.text
 
@@ -87,13 +97,11 @@ def test_add_span_annotations_bulk(
     assert all(i.code_id == code.id and i.sdoc_id == sdoc.id for i in items)
     # results follow the input order and name their project
     assert [i.text for i in items] == ["Span 3", "Span 4"]
-    assert all(
-        i.project_id == project_with_span_annotation["project"].id for i in items
-    )
+    assert all(i.project_id == project.id for i in items)
 
 
 def test_add_span_annotations_bulk_if_not_exists(
-    client: TestClient,
+    client: TestClient, test_project: ProjectORM
 ) -> None:
     payload = SpanAnnotationCreate(
         sdoc_id=9000,
@@ -105,9 +113,11 @@ def test_add_span_annotations_bulk_if_not_exists(
         span_text="Span",
     )
 
-    resp = client.put("/span/bulk/create", json=[payload.model_dump(exclude_none=True)])
+    resp = client.put(
+        f"{_url(test_project.id)}/bulk", json=[payload.model_dump(exclude_none=True)]
+    )
 
-    assert resp.status_code == 403, resp.text
+    assert resp.status_code == 404, resp.text
 
 
 # Character and token ends are exclusive, so a span covers begin..end - 1 and
@@ -128,12 +138,6 @@ empty_span_positions = [
 ]
 
 
-def _user_span_ids(client: TestClient, sdoc_id: int, user_id: int) -> set[int]:
-    resp = client.get(f"/span/sdoc/{sdoc_id}/user/{user_id}")
-    assert resp.status_code == 200, resp.text
-    return {span["id"] for span in resp.json()}
-
-
 @pytest.mark.parametrize("positions", empty_span_positions)
 def test_add_span_annotation_rejects_empty_span(
     client: TestClient,
@@ -143,19 +147,20 @@ def test_add_span_annotation_rejects_empty_span(
 ) -> None:
     """A span annotation that covers no character or no token is rejected with 400
     and not created."""
+    project = project_with_span_annotation["project"]
     sdoc = project_with_span_annotation["source_document"]
     code = project_with_span_annotation["code"]
     payload = SpanAnnotationCreate(
         sdoc_id=sdoc.id, code_id=code.id, span_text="Span", **positions
     )
 
-    resp = client.put("/span", json=payload.model_dump(exclude_none=True))
+    resp = client.put(_url(project.id), json=payload.model_dump(exclude_none=True))
 
     assert resp.status_code == 400, resp.text
     assert "must not be empty" in resp.text
-    assert _user_span_ids(client, sdoc.id, test_user.id) == {
-        project_with_span_annotation["span_annotation"].id
-    }
+    assert get_user_annotation_ids(
+        client, "span", project.id, sdoc.id, test_user.id
+    ) == {project_with_span_annotation["span_annotation"].id}
 
 
 @pytest.mark.parametrize("positions", empty_span_positions)
@@ -167,6 +172,7 @@ def test_add_span_annotations_bulk_rejects_an_empty_span(
 ) -> None:
     """One empty span rejects the whole bulk create with 400; the valid span of the
     batch is not created either."""
+    project = project_with_span_annotation["project"]
     sdoc = project_with_span_annotation["source_document"]
     code = project_with_span_annotation["code"]
     payload = [
@@ -184,23 +190,24 @@ def test_add_span_annotations_bulk_rejects_an_empty_span(
         ).model_dump(exclude_none=True),
     ]
 
-    resp = client.put("/span/bulk/create", json=payload)
+    resp = client.put(f"{_url(project.id)}/bulk", json=payload)
 
     assert resp.status_code == 400, resp.text
-    assert _user_span_ids(client, sdoc.id, test_user.id) == {
-        project_with_span_annotation["span_annotation"].id
-    }
+    assert get_user_annotation_ids(
+        client, "span", project.id, sdoc.id, test_user.id
+    ) == {project_with_span_annotation["span_annotation"].id}
 
 
 def test_get_by_id(
     client: TestClient,
     project_with_span_annotation,
 ) -> None:
+    project = project_with_span_annotation["project"]
     span_annotation = project_with_span_annotation["span_annotation"]
     sdoc = project_with_span_annotation["source_document"]
     code = project_with_span_annotation["code"]
 
-    resp = client.get(f"/span/{span_annotation.id}")
+    resp = client.get(f"{_url(project.id)}/{span_annotation.id}")
 
     assert resp.status_code == 200, resp.text
     span_read = SpanAnnotationRead.model_validate(resp.json())
@@ -214,23 +221,39 @@ def test_get_by_id(
 
 
 def test_get_by_id_if_id_not_exists(
-    client: TestClient,
+    client: TestClient, test_project: ProjectORM
 ) -> None:
     fake_nummer = 3000
 
-    resp = client.get(f"/span/{fake_nummer}")
+    resp = client.get(f"{_url(test_project.id)}/{fake_nummer}")
 
-    assert resp.status_code == 403, resp.text
+    assert resp.status_code == 404, resp.text
+
+
+def test_get_by_id_of_another_project_is_not_found(
+    client: TestClient, two_tenants: TwoTenants
+) -> None:
+    """The span annotation of another project does not exist in the path's project,
+    also when the user is a member of both."""
+    own_project = two_tenants["own"]["project"]
+    foreign_span = two_tenants["foreign"]["span"]
+
+    resp = client.get(f"{_url(own_project.id)}/{foreign_span.id}")
+
+    assert resp.status_code == 404, resp.text
 
 
 def test_get_by_sdoc_and_user(
     client: TestClient, project_with_span_annotation, test_user
 ) -> None:
+    project = project_with_span_annotation["project"]
     sdoc = project_with_span_annotation["source_document"]
     code = project_with_span_annotation["code"]
     span_annotation = project_with_span_annotation["span_annotation"]
 
-    resp = client.get(f"/span/sdoc/{sdoc.id}/user/{test_user.id}")
+    resp = client.get(
+        _url(project.id), params={"user_id": test_user.id, "sdoc_id": sdoc.id}
+    )
 
     assert resp.status_code == 200, resp.text
     assert len(resp.json()) == 1
@@ -244,14 +267,18 @@ def test_get_by_sdoc_and_user(
 
 
 def test_get_by_sdoc_and_user_both_ids_not_exist(
-    client: TestClient,
+    client: TestClient, test_project: ProjectORM
 ) -> None:
+    """Filter ids that do not exist in the project match nothing."""
     sdoc_id = 99999
     user_id = 99999
 
-    resp = client.get(f"/span/sdoc/{sdoc_id}/user/{user_id}")
+    resp = client.get(
+        _url(test_project.id), params={"user_id": user_id, "sdoc_id": sdoc_id}
+    )
 
-    assert resp.status_code == 403, resp.text
+    assert resp.status_code == 200, resp.text
+    assert resp.json() == []
 
 
 test_data_span_update = [
@@ -265,6 +292,7 @@ def test_update_by_id(
     project_with_span_annotations_for_bulk_test,
     payload,
 ) -> None:
+    project = project_with_span_annotations_for_bulk_test["project"]
     span_annotation = project_with_span_annotations_for_bulk_test["span_annotation"]
     code2 = project_with_span_annotations_for_bulk_test["code2"]
     sdoc = project_with_span_annotations_for_bulk_test["source_document"]
@@ -273,7 +301,7 @@ def test_update_by_id(
         payload["code_id"] = code2.id
 
     resp = client.patch(
-        f"/span/{span_annotation.id}",
+        f"{_url(project.id)}/{span_annotation.id}",
         json=payload,
     )
 
@@ -289,6 +317,7 @@ def test_resize_span_annotation(
     db_session,
     project_with_span_annotation,
 ) -> None:
+    project = project_with_span_annotation["project"]
     span_annotation = project_with_span_annotation["span_annotation"]
     original_span_text_id = span_annotation.span_text_id
     payload = {
@@ -299,7 +328,7 @@ def test_resize_span_annotation(
         "span_text": "resized annotation text",
     }
 
-    resp = client.patch(f"/span/{span_annotation.id}", json=payload)
+    resp = client.patch(f"{_url(project.id)}/{span_annotation.id}", json=payload)
 
     assert resp.status_code == 200, resp.text
     updated = SpanAnnotationRead.model_validate(resp.json())
@@ -323,6 +352,7 @@ def test_resize_span_annotation_and_update_code(
     client: TestClient,
     project_with_span_annotations_for_bulk_test,
 ) -> None:
+    project = project_with_span_annotations_for_bulk_test["project"]
     span_annotation = project_with_span_annotations_for_bulk_test["span_annotation"]
     code2 = project_with_span_annotations_for_bulk_test["code2"]
     payload = {
@@ -334,7 +364,7 @@ def test_resize_span_annotation_and_update_code(
         "span_text": "combined update",
     }
 
-    resp = client.patch(f"/span/{span_annotation.id}", json=payload)
+    resp = client.patch(f"{_url(project.id)}/{span_annotation.id}", json=payload)
 
     assert resp.status_code == 200, resp.text
     updated = SpanAnnotationRead.model_validate(resp.json())
@@ -351,6 +381,7 @@ def test_resize_span_annotation_reuses_span_text(
     db_session,
     project_with_span_annotations_for_bulk_test,
 ) -> None:
+    project = project_with_span_annotations_for_bulk_test["project"]
     span_annotation = project_with_span_annotations_for_bulk_test["span_annotation"]
     span_annotation2 = project_with_span_annotations_for_bulk_test["span_annotation2"]
     payload = {
@@ -361,7 +392,7 @@ def test_resize_span_annotation_reuses_span_text(
         "span_text": span_annotation.text,
     }
 
-    resp = client.patch(f"/span/{span_annotation2.id}", json=payload)
+    resp = client.patch(f"{_url(project.id)}/{span_annotation2.id}", json=payload)
 
     assert resp.status_code == 200, resp.text
     db_session.refresh(span_annotation2)
@@ -421,26 +452,31 @@ def test_resize_span_annotation_rejects_invalid_payload(
     project_with_span_annotation,
     payload,
 ) -> None:
+    project = project_with_span_annotation["project"]
     span_annotation = project_with_span_annotation["span_annotation"]
 
-    resp = client.patch(f"/span/{span_annotation.id}", json=payload)
+    resp = client.patch(f"{_url(project.id)}/{span_annotation.id}", json=payload)
 
     assert resp.status_code == 422, resp.text
 
 
-def test_update_by_id_if_not_exists(client: TestClient) -> None:
+def test_update_by_id_if_not_exists(
+    client: TestClient, test_project: ProjectORM
+) -> None:
     non_existing_span_anno_id = 9999
     payload = SpanAnnotationUpdate(code_id=1)
 
     resp = client.patch(
-        f"/span/{non_existing_span_anno_id}",
+        f"{_url(test_project.id)}/{non_existing_span_anno_id}",
         json=payload.model_dump(exclude_none=True),
     )
 
-    assert resp.status_code == 403, resp.text
+    assert resp.status_code == 404, resp.text
 
 
-def test_resize_span_annotation_if_not_exists(client: TestClient) -> None:
+def test_resize_span_annotation_if_not_exists(
+    client: TestClient, test_project: ProjectORM
+) -> None:
     payload = {
         "begin": 5,
         "end": 24,
@@ -449,15 +485,16 @@ def test_resize_span_annotation_if_not_exists(client: TestClient) -> None:
         "span_text": "resized annotation text",
     }
 
-    resp = client.patch("/span/9999", json=payload)
+    resp = client.patch(f"{_url(test_project.id)}/9999", json=payload)
 
-    assert resp.status_code == 403, resp.text
+    assert resp.status_code == 404, resp.text
 
 
 def test_update_span_annotations_bulk(
     client: TestClient,
     project_with_span_annotations_for_bulk_test,
 ) -> None:
+    project = project_with_span_annotations_for_bulk_test["project"]
     code2 = project_with_span_annotations_for_bulk_test["code2"]
     span_annotation = project_with_span_annotations_for_bulk_test["span_annotation"]
     span_annotation2 = project_with_span_annotations_for_bulk_test["span_annotation2"]
@@ -466,7 +503,7 @@ def test_update_span_annotations_bulk(
         {"span_annotation_id": span_annotation.id, "code_id": code2.id},
         {"span_annotation_id": span_annotation2.id, "code_id": code2.id},
     ]
-    resp = client.patch("/span/bulk/update", json=payload)
+    resp = client.patch(f"{_url(project.id)}/bulk", json=payload)
 
     assert resp.status_code == 200, resp.text
     body = resp.json()
@@ -480,6 +517,7 @@ def test_update_span_annotations_bulk_keeps_input_order(
     client: TestClient,
     project_with_span_annotations_for_bulk_test,
 ) -> None:
+    project = project_with_span_annotations_for_bulk_test["project"]
     code = project_with_span_annotations_for_bulk_test["code"]
     code2 = project_with_span_annotations_for_bulk_test["code2"]
     span_annotation = project_with_span_annotations_for_bulk_test["span_annotation"]
@@ -490,7 +528,7 @@ def test_update_span_annotations_bulk_keeps_input_order(
         {"span_annotation_id": span_annotation2.id, "code_id": code2.id},
         {"span_annotation_id": span_annotation.id, "code_id": code.id},
     ]
-    resp = client.patch("/span/bulk/update", json=payload)
+    resp = client.patch(f"{_url(project.id)}/bulk", json=payload)
 
     assert resp.status_code == 200, resp.text
     body = resp.json()
@@ -504,6 +542,7 @@ def test_update_span_annotations_bulk_rejects_duplicate_ids(
     client: TestClient,
     project_with_span_annotations_for_bulk_test,
 ) -> None:
+    project = project_with_span_annotations_for_bulk_test["project"]
     code2 = project_with_span_annotations_for_bulk_test["code2"]
     span_annotation = project_with_span_annotations_for_bulk_test["span_annotation"]
 
@@ -511,35 +550,40 @@ def test_update_span_annotations_bulk_rejects_duplicate_ids(
         {"span_annotation_id": span_annotation.id, "code_id": code2.id},
         {"span_annotation_id": span_annotation.id, "code_id": code2.id},
     ]
-    resp = client.patch("/span/bulk/update", json=payload)
+    resp = client.patch(f"{_url(project.id)}/bulk", json=payload)
 
     assert resp.status_code == 400, resp.text
     assert str(span_annotation.id) in resp.text
 
 
 def test_update_span_annotations_bulk_not_exists(
-    client: TestClient,
+    client: TestClient, project_with_span_annotation
 ) -> None:
+    """Span annotations that do not exist in the project are not found."""
+    project = project_with_span_annotation["project"]
+    code = project_with_span_annotation["code"]
     payload = [
-        {"span_annotation_id": 9991, "code_id": 1},
-        {"span_annotation_id": 9992, "code_id": 1},
+        {"span_annotation_id": 9991, "code_id": code.id},
+        {"span_annotation_id": 9992, "code_id": code.id},
     ]
 
-    resp = client.patch("/span/bulk/update", json=payload)
+    resp = client.patch(f"{_url(project.id)}/bulk", json=payload)
 
-    assert resp.status_code == 403, resp.text
+    assert resp.status_code == 404, resp.text
 
 
 def test_delete_span_annotation_by_id(
     client: TestClient,
     project_with_span_annotation,
 ) -> None:
+    project = project_with_span_annotation["project"]
     span_annotation = project_with_span_annotation["span_annotation"]
     sdoc = project_with_span_annotation["source_document"]
     code = project_with_span_annotation["code"]
 
-    resp = client.delete(f"/span/{span_annotation.id}")
+    resp = client.delete(f"{_url(project.id)}/{span_annotation.id}")
 
+    assert resp.status_code == 200, resp.text
     deleted = resp.json()
     assert deleted["id"] == span_annotation.id
     assert deleted["sdoc_id"] == sdoc.id
@@ -549,24 +593,28 @@ def test_delete_span_annotation_by_id(
 
 
 def test_delete_span_annotation_by_id_if_not_exists(
-    client: TestClient,
+    client: TestClient, test_project: ProjectORM
 ) -> None:
-    resp = client.delete("/span/999999")
+    resp = client.delete(f"{_url(test_project.id)}/999999")
 
-    assert resp.status_code == 403, resp.text
+    assert resp.status_code == 404, resp.text
 
 
 def test_delete_span_annotations_bulk(
     client: TestClient,
     project_with_span_annotations_for_bulk_test,
 ) -> None:
+    project = project_with_span_annotations_for_bulk_test["project"]
     span_annotation = project_with_span_annotations_for_bulk_test["span_annotation"]
     span_annotation2 = project_with_span_annotations_for_bulk_test["span_annotation2"]
 
     resp = client.request(
-        "DELETE", "/span/bulk/delete", json=[span_annotation.id, span_annotation2.id]
+        "DELETE",
+        f"{_url(project.id)}/bulk",
+        json=[span_annotation.id, span_annotation2.id],
     )
 
+    assert resp.status_code == 200, resp.text
     body = resp.json()
     returned_ids = {item["id"] for item in body}
     assert returned_ids == {span_annotation.id, span_annotation2.id}
@@ -576,11 +624,14 @@ def test_delete_span_annotations_bulk_keeps_input_order(
     client: TestClient,
     project_with_span_annotations_for_bulk_test,
 ) -> None:
+    project = project_with_span_annotations_for_bulk_test["project"]
     span_annotation = project_with_span_annotations_for_bulk_test["span_annotation"]
     span_annotation2 = project_with_span_annotations_for_bulk_test["span_annotation2"]
 
     resp = client.request(
-        "DELETE", "/span/bulk/delete", json=[span_annotation2.id, span_annotation.id]
+        "DELETE",
+        f"{_url(project.id)}/bulk",
+        json=[span_annotation2.id, span_annotation.id],
     )
 
     assert resp.status_code == 200, resp.text
@@ -589,21 +640,27 @@ def test_delete_span_annotations_bulk_keeps_input_order(
     assert [d.begin for d in deleted] == [span_annotation2.begin, span_annotation.begin]
 
 
-def test_delete_span_annotations_bulk_not_exists(client: TestClient) -> None:
-    resp = client.request("DELETE", "/span/bulk/delete", json=[999999])
+def test_delete_span_annotations_bulk_not_exists(
+    client: TestClient, test_project: ProjectORM
+) -> None:
+    resp = client.request("DELETE", f"{_url(test_project.id)}/bulk", json=[999999])
 
-    assert resp.status_code == 403, resp.text
+    assert resp.status_code == 404, resp.text
 
 
 def test_get_by_user_code(
     client: TestClient,
     project_with_span_annotations_for_count_test,
+    test_user,
 ) -> None:
+    project = project_with_span_annotations_for_count_test["project"]
     code = project_with_span_annotations_for_count_test["code"]
     span_annotation = project_with_span_annotations_for_count_test["span_annotation"]
     span_annotation2 = project_with_span_annotations_for_count_test["span_annotation2"]
 
-    resp = client.get(f"/span/code/{code.id}/user")
+    resp = client.get(
+        _url(project.id), params={"user_id": test_user.id, "code_id": code.id}
+    )
 
     assert resp.status_code == 200, resp.text
     items = resp.json()
@@ -611,47 +668,69 @@ def test_get_by_user_code(
     assert all(i["code_id"] == code.id for i in items)
 
 
-def test_get_by_user_code_if_not_exists(client: TestClient) -> None:
+def test_get_by_user_code_if_not_exists(
+    client: TestClient, test_project: ProjectORM, test_user
+) -> None:
+    """A code that does not exist in the project matches nothing."""
     non_existing_id = 1000
 
-    resp = client.get(f"/span/code/{non_existing_id}/user")
+    resp = client.get(
+        _url(test_project.id),
+        params={"user_id": test_user.id, "code_id": non_existing_id},
+    )
 
-    assert resp.status_code == 403, resp.text
+    assert resp.status_code == 200, resp.text
+    assert resp.json() == []
 
 
 def test_count_span_annotations(
     client: TestClient, project_with_span_annotations_for_count_test, test_user
 ) -> None:
+    project = project_with_span_annotations_for_count_test["project"]
     sdoc = project_with_span_annotations_for_count_test["source_document"]
     code = project_with_span_annotations_for_count_test["code"]
 
-    payload = {"sdoc_ids": [sdoc.id], "class_ids": [code.id]}
-    resp = client.post(f"/span/count_annotations/{test_user.id}", json=payload)
+    payload = {"sdoc_ids": [sdoc.id], "code_ids": [code.id]}
+    resp = client.post(
+        f"{_url(project.id)}/count", params={"user_id": test_user.id}, json=payload
+    )
 
     assert resp.status_code == 200, resp.text
     data = resp.json()
     assert data.get(str(code.id)) == 2
 
 
-def test_count_annotation_if_not_exists(client: TestClient) -> None:
+def test_count_annotation_if_not_exists(
+    client: TestClient, test_project: ProjectORM
+) -> None:
+    """Documents, codes and a user that do not exist in the project count
+    nothing."""
     not_existing_id = 2000
-    payload = {"sdoc_ids": [not_existing_id], "class_ids": [not_existing_id]}
+    payload = {"sdoc_ids": [not_existing_id], "code_ids": [not_existing_id]}
 
-    resp = client.post(f"/span/count_annotations/{not_existing_id}", json=payload)
+    resp = client.post(
+        f"{_url(test_project.id)}/count",
+        params={"user_id": not_existing_id},
+        json=payload,
+    )
 
-    assert resp.status_code == 403, resp.text
+    assert resp.status_code == 200, resp.text
+    assert resp.json() == {}
 
 
 def test_add_to_group_ok(
     client: TestClient,
     project_with_span_annotations_and_group,
 ):
+    project = project_with_span_annotations_and_group["project"]
     span_annotation = project_with_span_annotations_and_group["span_annotation"]
     span_group = project_with_span_annotations_and_group["span_group"]
     sdoc = project_with_span_annotations_and_group["source_document"]
     code = project_with_span_annotations_and_group["code"]
 
-    resp = client.patch(f"/span/{span_annotation.id}/group/{span_group.id}")
+    resp = client.put(
+        f"{_url(project.id)}/{span_annotation.id}/span-groups/{span_group.id}"
+    )
 
     assert resp.status_code == 200, resp.text
     body = resp.json()
@@ -660,25 +739,26 @@ def test_add_to_group_ok(
     assert body["code_id"] == code.id
 
 
-def test_add_to_group_not_found(client: TestClient):
-    resp = client.patch("/span/999999/group/888888")
+def test_add_to_group_not_found(client: TestClient, test_project: ProjectORM):
+    resp = client.put(f"{_url(test_project.id)}/999999/span-groups/888888")
 
-    assert resp.status_code == 403, resp.text
+    assert resp.status_code == 404, resp.text
 
 
 def test_add_to_group_rejects_a_span_group_of_another_project(
     client: TestClient, two_tenants: TwoTenants
 ):
     """A span annotation cannot join the span group of another project, also when
-    the user is a member of both: the composite foreign key rejects the link
-    (409) and the span annotation keeps its groups."""
+    the user is a member of both: the group does not exist in the path's project
+    (404) and the span annotation keeps its groups."""
+    project = two_tenants["own"]["project"]
     span = two_tenants["own"]["span"]
     foreign_group = two_tenants["foreign"]["span_group"]
 
-    resp = client.patch(f"/span/{span.id}/group/{foreign_group.id}")
+    resp = client.put(f"{_url(project.id)}/{span.id}/span-groups/{foreign_group.id}")
 
-    assert resp.status_code == 409, resp.text
-    resp = client.get(f"/span/{span.id}/groups")
+    assert resp.status_code == 404, resp.text
+    resp = client.get(f"{_url(project.id)}/{span.id}/span-groups")
     assert resp.status_code == 200, resp.text
     assert [group["id"] for group in resp.json()] == [
         two_tenants["own"]["span_group"].id
@@ -689,12 +769,15 @@ def test_remove_from_group_ok(
     client: TestClient,
     project_with_span_annotations_and_linked_group,
 ):
+    project = project_with_span_annotations_and_linked_group["project"]
     sdoc = project_with_span_annotations_and_linked_group["source_document"]
     code = project_with_span_annotations_and_linked_group["code"]
     span_annotation = project_with_span_annotations_and_linked_group["span_annotation"]
     span_group = project_with_span_annotations_and_linked_group["span_group"]
 
-    resp = client.delete(f"/span/{span_annotation.id}/group/{span_group.id}")
+    resp = client.delete(
+        f"{_url(project.id)}/{span_annotation.id}/span-groups/{span_group.id}"
+    )
 
     assert resp.status_code == 200, resp.text
     deleted = SpanAnnotationRead.model_validate(resp.json())
@@ -705,50 +788,55 @@ def test_remove_from_group_ok(
     assert deleted.end == span_annotation.end
     assert span_group.id not in deleted.group_ids
 
-    groups_resp = client.get(f"/span/{span_annotation.id}/groups")
+    groups_resp = client.get(f"{_url(project.id)}/{span_annotation.id}/span-groups")
     assert groups_resp.status_code == 200, groups_resp.text
     assert groups_resp.json() == []
 
 
-def test_remove_from_group_not_exists(client: TestClient):
-    resp = client.delete("/span/999999/group/888888")
+def test_remove_from_group_not_exists(client: TestClient, test_project: ProjectORM):
+    resp = client.delete(f"{_url(test_project.id)}/999999/span-groups/888888")
 
-    assert resp.status_code == 403, resp.text
+    assert resp.status_code == 404, resp.text
 
 
 def test_remove_from_all_groups_ok(
     client: TestClient,
-    project_with_span_annotations_and_group,
+    project_with_span_annotations_and_linked_group,
 ):
-    span_annotation = project_with_span_annotations_and_group["span_annotation"]
-    sdoc = project_with_span_annotations_and_group["source_document"]
-    code = project_with_span_annotations_and_group["code"]
+    """Removing a span annotation from all its groups returns the span annotation
+    without groups."""
+    project = project_with_span_annotations_and_linked_group["project"]
+    span_annotation = project_with_span_annotations_and_linked_group["span_annotation"]
+    sdoc = project_with_span_annotations_and_linked_group["source_document"]
+    code = project_with_span_annotations_and_linked_group["code"]
 
-    resp = client.delete(f"/span/{span_annotation.id}/groups")
+    resp = client.delete(f"{_url(project.id)}/{span_annotation.id}/span-groups")
 
     assert resp.status_code == 200, resp.text
-    deleted = SpanAnnotationDeleted.model_validate(resp.json())
-    assert deleted.id == span_annotation.id
-    assert deleted.sdoc_id == sdoc.id
-    assert deleted.code_id == code.id
-    assert deleted.begin == span_annotation.begin
-    assert deleted.end == span_annotation.end
+    updated = SpanAnnotationRead.model_validate(resp.json())
+    assert updated.id == span_annotation.id
+    assert updated.sdoc_id == sdoc.id
+    assert updated.code_id == code.id
+    assert updated.begin == span_annotation.begin
+    assert updated.end == span_annotation.end
+    assert updated.group_ids == []
 
 
-def test_remove_from_all_groups_not_found(client: TestClient):
-    resp = client.delete("/span/999999/groups")
+def test_remove_from_all_groups_not_found(client: TestClient, test_project: ProjectORM):
+    resp = client.delete(f"{_url(test_project.id)}/999999/span-groups")
 
-    assert resp.status_code == 403, resp.text
+    assert resp.status_code == 404, resp.text
 
 
 def test_get_groups_ok(
     client: TestClient,
     project_with_span_annotations_and_linked_group,
 ):
+    project = project_with_span_annotations_and_linked_group["project"]
     span_annotation = project_with_span_annotations_and_linked_group["span_annotation"]
     span_group = project_with_span_annotations_and_linked_group["span_group"]
 
-    resp = client.get(f"/span/{span_annotation.id}/groups")
+    resp = client.get(f"{_url(project.id)}/{span_annotation.id}/span-groups")
 
     assert resp.status_code == 200, resp.text
     groups = [SpanGroupRead.model_validate(g) for g in resp.json()]
@@ -756,14 +844,14 @@ def test_get_groups_ok(
     assert returned_ids == {span_group.id}
 
 
-def test_get_groups_not_found(client: TestClient):
-    resp = client.get("/span/999999/groups")
+def test_get_groups_not_found(client: TestClient, test_project: ProjectORM):
+    resp = client.get(f"{_url(test_project.id)}/999999/span-groups")
 
-    assert resp.status_code == 403, resp.text
+    assert resp.status_code == 404, resp.text
 
 
 # ===========================================================================
-# CREATE SPAN ANNOTATION (/span) TESTS: PROVENANCE
+# CREATE SPAN ANNOTATION (/projects/{project_id}/span-annotations) TESTS: PROVENANCE
 # ===========================================================================
 # --- A. single copies record their provenance --------------------------------------
 
@@ -782,7 +870,7 @@ def test_create_copy_records_source_annotation_user_and_code(
         source_annotation_id=annotations["source_id"],
     )
 
-    response = client.put("/span", json=payload)
+    response = client.put(_url(provenance_project["project"].id), json=payload)
 
     assert response.status_code == 200, response.text
     copy = SpanAnnotationRead.model_validate(response.json())
@@ -798,7 +886,9 @@ def test_create_copy_is_created_after_its_source(
 ) -> None:
     """The copy time is the copy's own `created`, not the source's."""
     annotations = provenance_project["span"]
-    source = get_annotation(client, "span", annotations["source_id"])
+    source = get_annotation(
+        client, "span", provenance_project["project"].id, annotations["source_id"]
+    )
     payload = create_payload(
         "span",
         sdoc_id=annotations["sdoc_id"],
@@ -807,7 +897,7 @@ def test_create_copy_is_created_after_its_source(
         source_annotation_id=annotations["source_id"],
     )
 
-    response = client.put("/span", json=payload)
+    response = client.put(_url(provenance_project["project"].id), json=payload)
 
     assert response.status_code == 200, response.text
     copy = SpanAnnotationRead.model_validate(response.json())
@@ -830,11 +920,11 @@ def test_create_copy_copies_memos_of_source_with_their_authors(
         source_annotation_id=annotations["source_id"],
     )
 
-    response = client.put("/span", json=payload)
+    response = client.put(_url(provenance_project["project"].id), json=payload)
 
     assert response.status_code == 200, response.text
     copy = SpanAnnotationRead.model_validate(response.json())
-    copied_memos = get_memos(client, "span", copy.id)
+    copied_memos = get_memos(client, "span", provenance_project["project"].id, copy.id)
     assert sorted(copy.memo_ids) == sorted(memo.id for memo in copied_memos)
     assert {
         (memo.title, memo.icon, memo.content, memo.content_json, memo.user_id)
@@ -846,7 +936,10 @@ def test_create_copy_copies_memos_of_source_with_their_authors(
     assert not {memo.id for memo in copied_memos} & {memo.id for memo in source_memos}
     assert all(memo.attached_object_id == copy.id for memo in copied_memos)
     assert {
-        memo.id for memo in get_memos(client, "span", annotations["source_id"])
+        memo.id
+        for memo in get_memos(
+            client, "span", provenance_project["project"].id, annotations["source_id"]
+        )
     } == {memo.id for memo in source_memos}
 
 
@@ -863,7 +956,7 @@ def test_create_copy_of_source_without_memos_has_no_memos(
         source_annotation_id=annotations["source_plain_id"],
     )
 
-    response = client.put("/span", json=payload)
+    response = client.put(_url(provenance_project["project"].id), json=payload)
 
     assert response.status_code == 200, response.text
     copy = SpanAnnotationRead.model_validate(response.json())
@@ -883,7 +976,7 @@ def test_create_own_annotation_has_no_provenance(
         position=2,
     )
 
-    response = client.put("/span", json=payload)
+    response = client.put(_url(provenance_project["project"].id), json=payload)
 
     assert response.status_code == 200, response.text
     annotation = SpanAnnotationRead.model_validate(response.json())
@@ -908,7 +1001,7 @@ def test_create_copy_of_own_annotation_is_recorded(
         source_annotation_id=own_id,
     )
 
-    response = client.put("/span", json=payload)
+    response = client.put(_url(project["project"].id), json=payload)
 
     assert response.status_code == 200, response.text
     copy = SpanAnnotationRead.model_validate(response.json())
@@ -933,7 +1026,7 @@ def test_create_copy_ignores_client_sent_source_user_and_code(
     payload["source_user_id"] = provenance_project["user"].id
     payload["source_code_id"] = provenance_project["code_b"].id
 
-    response = client.put("/span", json=payload)
+    response = client.put(_url(provenance_project["project"].id), json=payload)
 
     assert response.status_code == 200, response.text
     copy = SpanAnnotationRead.model_validate(response.json())
@@ -942,29 +1035,17 @@ def test_create_copy_ignores_client_sent_source_user_and_code(
 
 
 # --- B. invalid sources ---------------------------------------------------------------
-# A source must annotate the same document of the same project (HTTP 400); a single
-# copy of a source that does not exist is not found (HTTP 404), because nothing is
-# left to create. Nothing is created in either case.
+# A source must annotate the same document (HTTP 400); a single copy of a source that
+# does not exist in the project (deleted, or of another project) is not found (HTTP
+# 404), because nothing is left to create. Nothing is created in either case.
 
 
-@pytest.mark.parametrize(
-    "source_key,expected_status",
-    [
-        # the source annotates another document of the same project
-        pytest.param("other_sdoc_source_id", 400, id="other-document"),
-        # the source belongs to another project of the same user
-        pytest.param("other_project_source_id", 400, id="other-project"),
-    ],
-)
-def test_create_copy_of_invalid_source_is_rejected(
-    client: TestClient,
-    provenance_project,
-    source_key: str,
-    expected_status: int,
+def test_create_copy_of_source_of_another_document_is_rejected(
+    client: TestClient, provenance_project
 ) -> None:
-    """A copy of a source from another document or project is rejected."""
+    """A copy of a source from another document of the project is rejected."""
     annotations = provenance_project["span"]
-    source_id = annotations[source_key]
+    source_id = annotations["other_sdoc_source_id"]
     payload = create_payload(
         "span",
         sdoc_id=annotations["sdoc_id"],
@@ -973,45 +1054,65 @@ def test_create_copy_of_invalid_source_is_rejected(
         source_annotation_id=source_id,
     )
 
-    response = client.put("/span", json=payload)
+    response = client.put(_url(provenance_project["project"].id), json=payload)
 
-    assert response.status_code == expected_status, response.text
+    assert response.status_code == 400, response.text
     assert f"Annotation {source_id} cannot be copied" in response.text
     assert (
         get_user_annotation_ids(
-            client, "span", annotations["sdoc_id"], provenance_project["user"].id
+            client,
+            "span",
+            provenance_project["project"].id,
+            annotations["sdoc_id"],
+            provenance_project["user"].id,
         )
         == set()
     )
 
 
-def test_create_copy_of_nonexistent_source_is_not_found(
-    client: TestClient, provenance_project
+@pytest.mark.parametrize(
+    "source_key",
+    [
+        # the source was deleted after the comparison was opened
+        pytest.param(None, id="nonexistent"),
+        # the source belongs to another project of the same user
+        pytest.param("other_project_source_id", id="other-project"),
+    ],
+)
+def test_create_copy_of_source_not_in_project_is_not_found(
+    client: TestClient, provenance_project, source_key: str | None
 ) -> None:
-    """A single copy of a source that does not exist (e.g. deleted after the
-    comparison was opened) is skipped, so the request fails with 404."""
+    """A single copy of a source that does not exist in the project is skipped, so
+    the request fails with 404."""
     annotations = provenance_project["span"]
+    source_id = 999_999
+    if source_key is not None:
+        source_id = annotations[source_key]  # type: ignore[literal-required]
     payload = create_payload(
         "span",
         sdoc_id=annotations["sdoc_id"],
         code_id=provenance_project["code_a"].id,
         position=0,
-        source_annotation_id=999_999,
+        source_annotation_id=source_id,
     )
 
-    response = client.put("/span", json=payload)
+    response = client.put(_url(provenance_project["project"].id), json=payload)
 
     assert response.status_code == 404, response.text
     assert (
         get_user_annotation_ids(
-            client, "span", annotations["sdoc_id"], provenance_project["user"].id
+            client,
+            "span",
+            provenance_project["project"].id,
+            annotations["sdoc_id"],
+            provenance_project["user"].id,
         )
         == set()
     )
 
 
 # ===========================================================================
-# CREATE SPAN ANNOTATION (/span) TESTS: VIRTUAL USERS
+# CREATE SPAN ANNOTATION (/projects/{project_id}/span-annotations) TESTS: VIRTUAL USERS
 # ===========================================================================
 
 
@@ -1041,7 +1142,7 @@ def test_create_span_annotation_as_virtual_user(
     run2 = virtual_user_project["run2"]
 
     response = client.put(
-        "/span",
+        _url(virtual_user_project["project"].id),
         params={"user_id": run2.id},
         json=_virtual_user_span_create(virtual_user_project, "gamma.").model_dump(),
     )
@@ -1069,7 +1170,7 @@ def test_create_span_annotation_as_current_user(
     user = virtual_user_project["user"]
 
     response = client.put(
-        "/span",
+        _url(virtual_user_project["project"].id),
         params={"user_id": user.id} if params is None else params,
         json=_virtual_user_span_create(virtual_user_project, "zeta.").model_dump(),
     )
@@ -1097,7 +1198,7 @@ def test_create_span_annotation_as_other_user_or_foreign_virtual_user_is_forbidd
     user = virtual_user_project[user_key]  # type: ignore[literal-required]
 
     response = client.put(
-        "/span",
+        _url(virtual_user_project["project"].id),
         params={"user_id": user.id},
         json=_virtual_user_span_create(virtual_user_project, "gamma.").model_dump(),
     )
@@ -1106,7 +1207,7 @@ def test_create_span_annotation_as_other_user_or_foreign_virtual_user_is_forbidd
 
 
 # ===========================================================================
-# BULK CREATE SPAN ANNOTATIONS (/span/bulk/create) TESTS: PROVENANCE
+# BULK CREATE SPAN ANNOTATIONS (/projects/{project_id}/span-annotations/bulk) TESTS: PROVENANCE
 # ===========================================================================
 def test_create_bulk_records_provenance_of_every_copy(
     client: TestClient, provenance_project
@@ -1136,7 +1237,9 @@ def test_create_bulk_records_provenance_of_every_copy(
         ),
     ]
 
-    response = client.put("/span/bulk/create", json=payload)
+    response = client.put(
+        f"{_url(provenance_project['project'].id)}/bulk", json=payload
+    )
 
     assert response.status_code == 200, response.text
     results = [SpanAnnotationRead.model_validate(item) for item in response.json()]
@@ -1174,7 +1277,9 @@ def test_create_bulk_copies_of_same_source_each_get_memo_copies(
         ]
     ]
 
-    response = client.put("/span/bulk/create", json=payload)
+    response = client.put(
+        f"{_url(provenance_project['project'].id)}/bulk", json=payload
+    )
 
     assert response.status_code == 200, response.text
     results = [SpanAnnotationRead.model_validate(item) for item in response.json()]
@@ -1210,7 +1315,9 @@ def test_create_bulk_skips_copies_of_nonexistent_sources(
         ),
     ]
 
-    response = client.put("/span/bulk/create", json=payload)
+    response = client.put(
+        f"{_url(provenance_project['project'].id)}/bulk", json=payload
+    )
 
     assert response.status_code == 200, response.text
     results = [SpanAnnotationRead.model_validate(item) for item in response.json()]
@@ -1219,7 +1326,11 @@ def test_create_bulk_skips_copies_of_nonexistent_sources(
         None,
     ]
     assert get_user_annotation_ids(
-        client, "span", annotations["sdoc_id"], provenance_project["user"].id
+        client,
+        "span",
+        provenance_project["project"].id,
+        annotations["sdoc_id"],
+        provenance_project["user"].id,
     ) == {result.id for result in results}
 
 
@@ -1246,19 +1357,25 @@ def test_create_bulk_with_one_invalid_source_creates_nothing(
         ),
     ]
 
-    response = client.put("/span/bulk/create", json=payload)
+    response = client.put(
+        f"{_url(provenance_project['project'].id)}/bulk", json=payload
+    )
 
     assert response.status_code == 400, response.text
     assert (
         get_user_annotation_ids(
-            client, "span", annotations["sdoc_id"], provenance_project["user"].id
+            client,
+            "span",
+            provenance_project["project"].id,
+            annotations["sdoc_id"],
+            provenance_project["user"].id,
         )
         == set()
     )
 
 
 # ===========================================================================
-# BULK CREATE SPAN ANNOTATIONS (/span/bulk/create) TESTS: VIRTUAL USERS
+# BULK CREATE SPAN ANNOTATIONS (/projects/{project_id}/span-annotations/bulk) TESTS: VIRTUAL USERS
 # ===========================================================================
 
 
@@ -1269,7 +1386,7 @@ def test_create_span_annotations_bulk_as_virtual_user(
     run2 = virtual_user_project["run2"]
 
     response = client.put(
-        "/span/bulk/create",
+        f"{_url(virtual_user_project['project'].id)}/bulk",
         params={"user_id": run2.id},
         json=[
             _virtual_user_span_create(virtual_user_project, text).model_dump()
@@ -1283,7 +1400,7 @@ def test_create_span_annotations_bulk_as_virtual_user(
 
 
 # ===========================================================================
-# DELETE SPAN ANNOTATION (/span/{span_id}) TESTS: PROVENANCE
+# DELETE SPAN ANNOTATION (/projects/{project_id}/span-annotations/{id}) TESTS: PROVENANCE
 # ===========================================================================
 # The provenance columns are ON DELETE SET NULL: deleting the source annotation, its
 # user or its code clears only that column of the copy and keeps the rest.
@@ -1297,10 +1414,12 @@ def test_delete_source_annotation_keeps_source_user_and_code_of_copy(
     project = provenance_project_with_copies
     copy_id = project["span_copies"]["copy_id"]
 
-    response = client.delete(f"/span/{project['span']['source_id']}")
+    response = client.delete(
+        f"{_url(project['project'].id)}/{project['span']['source_id']}"
+    )
 
     assert response.status_code == 200, response.text
-    copy = get_annotation(client, "span", copy_id)
+    copy = get_annotation(client, "span", project["project"].id, copy_id)
     assert copy.source_annotation_id is None
     assert copy.source_user_id == project["assistant"].id
     assert copy.source_code_id == project["code_a"].id

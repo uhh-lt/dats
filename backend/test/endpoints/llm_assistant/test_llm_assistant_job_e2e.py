@@ -169,7 +169,10 @@ def _run_a_annotations(
         EXAMPLE: base["example_sdoc"].id,
         NO_MATCH: base["no_match_sdoc"].id,
     }[document]
-    response = client.get(f"/sentence/sdoc/{sdoc_id}/user/{base['run_a'].id}")
+    response = client.get(
+        f"/projects/{base['project'].id}/sentence-annotations/by-sentence",
+        params={"user_id": base["run_a"].id, "sdoc_id": sdoc_id},
+    )
     assert response.status_code == 200, response.text
     result = SentenceAnnotatorResult.model_validate(response.json())
     by_id = {

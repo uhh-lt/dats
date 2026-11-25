@@ -130,7 +130,7 @@ def __generate_export_df_for_whiteboards(
 
         # Transform the whiteboard content for export
         transformed_content = transform_content_for_export(
-            db=db, content=wb_dto.content
+            db=db, project_id=wb.project_id, content=wb_dto.content
         )
 
         whiteboard_export_items.append(

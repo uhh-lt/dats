@@ -18,7 +18,6 @@ class SentenceAnnotationBaseDTO(BaseModel):
 
 # Properties for creation
 class SentenceAnnotationCreateIntern(SentenceAnnotationBaseDTO):
-    project_id: int = Field(description="Project the SentenceAnnotation belongs to")
     uuid: str = Field(description="UUID of the SentenceAnnotation")
     code_id: int = Field(description="Code the SentenceAnnotation refers to")
     annotation_document_id: int = Field(

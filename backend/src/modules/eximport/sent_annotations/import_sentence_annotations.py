@@ -141,7 +141,6 @@ def import_sentence_annotations_to_proj(
             [
                 SentenceAnnotationCreateIntern(
                     uuid=annotation.uuid,
-                    project_id=project_id,
                     annotation_document_id=adoc_id_by_sdoc_id[
                         project_sdoc_names[annotation.sdoc_name].id
                     ],
@@ -156,6 +155,7 @@ def import_sentence_annotations_to_proj(
     # we can bulk create the annotations
     created_annos = crud_sentence_anno.create_multi(
         db=db,
+        project_id=project_id,
         create_dtos=create_dtos,
     )
     import_annotation_provenance(

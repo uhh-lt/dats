@@ -277,10 +277,12 @@ def llm_assistant_project(
     ]
     human_sentence_annotations = crud_sentence_anno.read_by_ids(
         db=db_session,
+        project_id=test_project.id,
         ids=[
             dto.id
             for dto in SentenceAnnotationService().create_multi(
                 db=db_session,
+                project_id=test_project.id,
                 user_id=test_user.id,
                 create_dtos=[
                     SentenceAnnotationCreate(
@@ -317,9 +319,11 @@ def llm_assistant_project(
     )
     run_a_sentence_annotation = crud_sentence_anno.read(
         db=db_session,
+        project_id=test_project.id,
         id=SentenceAnnotationService()
         .create(
             db=db_session,
+            project_id=test_project.id,
             user_id=run_a.id,
             create_dto=SentenceAnnotationCreate(
                 sdoc_id=target_sdoc.id,
@@ -332,9 +336,11 @@ def llm_assistant_project(
     )
     run_b_sentence_annotation = crud_sentence_anno.read(
         db=db_session,
+        project_id=test_project.id,
         id=SentenceAnnotationService()
         .create(
             db=db_session,
+            project_id=test_project.id,
             user_id=run_b.id,
             create_dto=SentenceAnnotationCreate(
                 sdoc_id=target_sdoc.id,

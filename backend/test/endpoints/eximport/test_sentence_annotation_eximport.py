@@ -70,7 +70,9 @@ def test_import_of_exported_sentence_annotations_restores_them_for_their_user(
     assert output.results_url is not None
     staged = stage_for_import(FilesystemRepo().root_dir / output.results_url)
     for annotation_id in annotation_ids:
-        crud_sentence_anno.delete(db=db_session, id=annotation_id)
+        crud_sentence_anno.delete(
+            db=db_session, project_id=project_id, id=annotation_id
+        )
     db_session.commit()
     assert _sentence_annotations(db_session, project_id) == set()
 

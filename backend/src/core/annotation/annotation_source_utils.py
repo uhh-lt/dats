@@ -8,7 +8,7 @@ from core.annotation.sentence_annotation_orm import SentenceAnnotationORM
 from core.annotation.span_annotation_orm import SpanAnnotationORM
 from core.memo.memo_enum import AttachedObjectType
 from core.memo.memo_service import MemoService
-from repos.db.crud_base import SQLCRUDBase
+from repos.db.project_crud_base import ProjectCRUDBase
 
 AnnotationORM = TypeVar(
     "AnnotationORM", SpanAnnotationORM, SentenceAnnotationORM, BBoxAnnotationORM
@@ -31,22 +31,22 @@ AnnotationCreate = TypeVar("AnnotationCreate", bound=AnnotationCopyCreate)
 def read_annotation_sources(
     db: Session,
     *,
-    crud: SQLCRUDBase[AnnotationORM, Any, Any],
+    crud: ProjectCRUDBase[AnnotationORM, Any, Any],
+    project_id: int,
     create_dtos: Sequence[AnnotationCreate],
-    project_id_by_sdoc_id: dict[int, int],
 ) -> list[tuple[AnnotationCreate, AnnotationORM | None]]:
     """
     Read the annotations the new ones are copied from with one query and check
-    that each annotates the same source document of the same project.
+    that each annotates the same source document.
 
-    A copy whose source annotation no longer exists (e.g. it was deleted after the
-    user opened the annotation comparison) is skipped silently, so the other
-    annotations of a batch are still created.
+    A copy whose source annotation does not exist in the project (e.g. it was
+    deleted after the user opened the annotation comparison) is skipped silently,
+    so the other annotations of a batch are still created.
 
     Args:
         crud: The CRUD of the annotation type.
+        project_id: The project of the new annotations.
         create_dtos: The annotations to create.
-        project_id_by_sdoc_id: The project of every source document of `create_dtos`.
 
     Returns:
         The annotations to create, each with its source annotation (None if it is
@@ -54,7 +54,7 @@ def read_annotation_sources(
 
     Raises:
         AnnotationSourceError: If a source annotation does not annotate the same
-            source document of the same project.
+            source document.
     """
     source_ids = list(
         dict.fromkeys(
@@ -63,7 +63,9 @@ def read_annotation_sources(
             if create_dto.source_annotation_id is not None
         )
     )
-    source_by_id = crud.read_existing_by_ids(db=db, ids=source_ids)
+    source_by_id = crud.read_existing_by_ids(
+        db=db, project_id=project_id, ids=source_ids
+    )
 
     annotations: list[tuple[AnnotationCreate, AnnotationORM | None]] = []
     for create_dto in create_dtos:
@@ -73,10 +75,7 @@ def read_annotation_sources(
         source = source_by_id.get(create_dto.source_annotation_id)
         if source is None:
             continue
-        if (
-            source.project_id != project_id_by_sdoc_id[create_dto.sdoc_id]
-            or source.sdoc_id != create_dto.sdoc_id
-        ):
+        if source.sdoc_id != create_dto.sdoc_id:
             raise AnnotationSourceError(
                 source_annotation_id=source.id, sdoc_id=create_dto.sdoc_id
             )

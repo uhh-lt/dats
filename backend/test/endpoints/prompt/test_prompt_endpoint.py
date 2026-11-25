@@ -1106,7 +1106,8 @@ def test_create_examples_rejects_annotations_of_another_project(
     client: TestClient,
     prompt_project: PromptProject,
 ) -> None:
-    """Examples are created from the project's own annotations only (HTTP 400)."""
+    """Examples are created from the project's own annotations only: an annotation
+    of another project does not exist in the project (HTTP 404)."""
     project = prompt_project
     response = _post_examples(
         client,
@@ -1114,8 +1115,8 @@ def test_create_examples_rejects_annotations_of_another_project(
         PromptExampleKind.SPAN,
         [project["foreign_span_annotation"].id],
     )
-    assert response.status_code == 400, response.text
-    assert "do not belong to project" in response.text
+    assert response.status_code == 404, response.text
+    assert "There exists no SpanAnnotation" in response.text
 
 
 def test_create_examples_rejects_foreign_project(

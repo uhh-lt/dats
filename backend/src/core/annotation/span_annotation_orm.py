@@ -6,6 +6,7 @@ from sqlalchemy import (
     ForeignKey,
     ForeignKeyConstraint,
     Integer,
+    PrimaryKeyConstraint,
     String,
     UniqueConstraint,
     func,
@@ -24,7 +25,8 @@ if TYPE_CHECKING:
 
 
 class SpanAnnotationORM(ORMBase):
-    id: Mapped[int] = mapped_column(Integer, primary_key=True, index=True)
+    # the primary key is (project_id, id), see __table_args__
+    id: Mapped[int] = mapped_column(Integer, autoincrement=True, index=True)
     uuid: Mapped[str] = mapped_column(String, nullable=False, index=True)
     begin: Mapped[int] = mapped_column(Integer, nullable=False, index=True)
     end: Mapped[int] = mapped_column(Integer, nullable=False, index=True)
@@ -56,7 +58,6 @@ class SpanAnnotationORM(ORMBase):
             "project.id", ondelete="CASCADE", name="FK_span_annotation_project_id"
         ),
         nullable=False,
-        index=True,
     )
     project: Mapped["ProjectORM"] = relationship(
         "ProjectORM", back_populates="span_annotations"
@@ -112,6 +113,7 @@ class SpanAnnotationORM(ORMBase):
     )
 
     __table_args__ = (
+        PrimaryKeyConstraint("project_id", "id", name="spanannotation_pkey"),
         UniqueConstraint(
             "project_id",
             "uuid",

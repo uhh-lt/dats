@@ -7,6 +7,7 @@ Enforces the unified conventions for the three CRUD kinds in backend/src:
     *_embedding_crud.py  Weaviate embedding CRUD,  base EmbeddingCRUDBase, first param `client`
     *_elastic_crud.py    Elasticsearch CRUD,       base ElasticCRUDBase,   first param `client`
     *_crud.py            SQL CRUD (everything else), base SQLCRUDBase,     first param `db`
+                         (or ProjectCRUDBase for a table keyed by (project_id, id))
 
 File CRUDs (*_file_crud.py, base FileCRUDBase) are not checked.
 
@@ -97,6 +98,9 @@ class CrudKind:
 
 
 SQL = CrudKind("SQL", "SQLCRUDBase", "db")
+# the SQL base of a table with the primary key (project_id, id); its base methods take
+# project_id besides their own parameters
+PROJECT_BASE = "ProjectCRUDBase"
 EMBEDDING = CrudKind("embedding", "EmbeddingCRUDBase", "client")
 ELASTIC = CrudKind("elastic", "ElasticCRUDBase", "client")
 
@@ -135,7 +139,7 @@ def generic_params(crud_class: ast.ClassDef) -> tuple[str, str] | None:
     for b in crud_class.bases:
         if (
             isinstance(b, ast.Subscript)
-            and base_name(b) == SQL.base
+            and base_name(b) in (SQL.base, PROJECT_BASE)
             and isinstance(b.slice, ast.Tuple)
             and len(b.slice.elts) in (3, 4)
         ):
@@ -312,7 +316,7 @@ def check_source(path: Path, source: str) -> list[Violation]:
 
     # crud-base
     bases = [base_name(b) for b in crud_class.bases]
-    if kind.base not in bases:
+    if kind.base not in bases and not (kind == SQL and PROJECT_BASE in bases):
         violations.append(
             Violation(
                 p,
@@ -484,6 +488,8 @@ def check_source(path: Path, source: str) -> list[Violation]:
                 )
             if m.name in BASE_WRITE_SIGNATURES and dto_types is not None:
                 names, dto_param, dto_type = BASE_WRITE_SIGNATURES[m.name]
+                if PROJECT_BASE in bases:
+                    names = names | {"project_id"}
                 expected_type = dto_type.format(
                     create=dto_types[0], update=dto_types[1]
                 )

@@ -17,9 +17,11 @@ from core.annotation.bbox_annotation_dto import (
     BBoxAnnotationUpdateBulk,
 )
 from core.annotation.bbox_annotation_orm import BBoxAnnotationORM
+from core.code.code_crud import crud_code
 from core.doc.source_document_crud import crud_sdoc
 from core.memo.memo_enum import AttachedObjectType
 from repos.db.sql_exceptions import NoSuchElementError
+from repos.db.sql_utils import assert_in_project
 
 
 class BBoxAnnotationService(metaclass=SingletonMeta):
@@ -27,7 +29,12 @@ class BBoxAnnotationService(metaclass=SingletonMeta):
         return super(BBoxAnnotationService, cls).__new__(cls)
 
     def create(
-        self, db: Session, *, user_id: int, create_dto: BBoxAnnotationCreate
+        self,
+        db: Session,
+        *,
+        project_id: int,
+        user_id: int,
+        create_dto: BBoxAnnotationCreate,
     ) -> BBoxAnnotationRead:
         """
         Like `create_multi`, for one annotation.
@@ -36,16 +43,25 @@ class BBoxAnnotationService(metaclass=SingletonMeta):
             NoSuchElementError: If the annotation is a copy of an annotation that does
                 not exist.
         """
-        results = self.create_multi(db=db, user_id=user_id, create_dtos=[create_dto])
+        results = self.create_multi(
+            db=db, project_id=project_id, user_id=user_id, create_dtos=[create_dto]
+        )
         if not results:
             # the copy was skipped because its source annotation does not exist
             raise NoSuchElementError(
-                BBoxAnnotationORM, id=create_dto.source_annotation_id
+                BBoxAnnotationORM,
+                project_id=project_id,
+                id=create_dto.source_annotation_id,
             )
         return results[0]
 
     def create_multi(
-        self, db: Session, *, user_id: int, create_dtos: list[BBoxAnnotationCreate]
+        self,
+        db: Session,
+        *,
+        project_id: int,
+        user_id: int,
+        create_dtos: list[BBoxAnnotationCreate],
     ) -> list[BBoxAnnotationRead]:
         """
         Create bbox annotations of a user, creating missing annotation documents.
@@ -58,6 +74,7 @@ class BBoxAnnotationService(metaclass=SingletonMeta):
         constant number of queries.
 
         Args:
+            project_id: The project of the annotations.
             user_id: The user the annotations belong to.
             create_dtos: The annotations to create.
 
@@ -72,19 +89,23 @@ class BBoxAnnotationService(metaclass=SingletonMeta):
         if not create_dtos:
             return []
 
-        # 1) find the project of every affected source document
+        # 1) the documents and codes must belong to the project
         sdoc_ids = list(dict.fromkeys(create_dto.sdoc_id for create_dto in create_dtos))
-        project_id_by_sdoc_id = {
-            sdoc.id: sdoc.project_id
-            for sdoc in crud_sdoc.read_by_ids(db=db, ids=sdoc_ids)
-        }
+        assert_in_project(
+            crud_sdoc.read_by_ids(db=db, ids=sdoc_ids), project_id=project_id
+        )
+        self._assert_codes_in_project(
+            db=db,
+            project_id=project_id,
+            code_ids=[create_dto.code_id for create_dto in create_dtos],
+        )
 
         # 2) read the annotations that are copied, skipping copies of deleted ones
         annotations = read_annotation_sources(
             db=db,
             crud=crud_bbox_anno,
+            project_id=project_id,
             create_dtos=create_dtos,
-            project_id_by_sdoc_id=project_id_by_sdoc_id,
         )
 
         # 3) find or create the user's annotation document of every source document
@@ -99,9 +120,9 @@ class BBoxAnnotationService(metaclass=SingletonMeta):
         # 4) create the annotations, with the provenance of the copies
         db_objs = crud_bbox_anno.create_multi(
             db=db,
+            project_id=project_id,
             create_dtos=[
                 BBoxAnnotationCreateIntern(
-                    project_id=project_id_by_sdoc_id[create_dto.sdoc_id],
                     uuid=str(uuid4()),
                     x_min=create_dto.x_min,
                     x_max=create_dto.x_max,
@@ -126,35 +147,71 @@ class BBoxAnnotationService(metaclass=SingletonMeta):
         )
 
         # 6) read them back with their relationships for the DTOs
-        return self._to_read_dtos(db=db, ids=[db_obj.id for db_obj in db_objs])
+        return self._to_read_dtos(
+            db=db, project_id=project_id, ids=[db_obj.id for db_obj in db_objs]
+        )
 
     def update_multi(
-        self, db: Session, *, update_dtos: list[BBoxAnnotationUpdateBulk]
+        self,
+        db: Session,
+        *,
+        project_id: int,
+        update_dtos: list[BBoxAnnotationUpdateBulk],
     ) -> list[BBoxAnnotationRead]:
         """
         Change the code of bbox annotations, each identified by its id.
 
         Args:
+            project_id: The project of the annotations.
             update_dtos: The annotations to update. Must not repeat an id.
 
         Returns:
             The updated annotations, in the order of `update_dtos`.
         """
+        self._assert_codes_in_project(
+            db=db,
+            project_id=project_id,
+            code_ids=[update_dto.code_id for update_dto in update_dtos],
+        )
         db_objs = crud_bbox_anno.update_multi(
             db=db,
+            project_id=project_id,
             ids=[update_dto.bbox_annotation_id for update_dto in update_dtos],
             update_dtos=[
                 BBoxAnnotationUpdate(code_id=update_dto.code_id)
                 for update_dto in update_dtos
             ],
         )
-        return self._to_read_dtos(db=db, ids=[db_obj.id for db_obj in db_objs])
+        return self._to_read_dtos(
+            db=db, project_id=project_id, ids=[db_obj.id for db_obj in db_objs]
+        )
 
-    def delete_multi(self, db: Session, *, ids: list[int]) -> list[BBoxAnnotationRead]:
+    def update(
+        self, db: Session, *, project_id: int, id: int, update_dto: BBoxAnnotationUpdate
+    ) -> BBoxAnnotationRead:
+        """
+        Update an annotation of the project; a new code must belong to the project.
+
+        Returns:
+            The updated annotation.
+        """
+        if update_dto.code_id is not None:
+            self._assert_codes_in_project(
+                db=db, project_id=project_id, code_ids=[update_dto.code_id]
+            )
+        db_obj = crud_bbox_anno.update(
+            db=db, project_id=project_id, id=id, update_dto=update_dto
+        )
+        return self._to_read_dtos(db=db, project_id=project_id, ids=[db_obj.id])[0]
+
+    def delete_multi(
+        self, db: Session, *, project_id: int, ids: list[int]
+    ) -> list[BBoxAnnotationRead]:
         """
         Delete bbox annotations.
 
         Args:
+            project_id: The project of the annotations.
             ids: The annotations to delete.
 
         Returns:
@@ -164,17 +221,31 @@ class BBoxAnnotationService(metaclass=SingletonMeta):
         # 1) snapshot the annotations before they are deleted
         deleted = [
             BBoxAnnotationRead.model_validate(db_obj)
-            for db_obj in crud_bbox_anno.read_by_ids(db=db, ids=ids)
+            for db_obj in crud_bbox_anno.read_by_ids(
+                db=db, project_id=project_id, ids=ids
+            )
         ]
 
         # 2) delete them
-        crud_bbox_anno.delete_multi(db=db, ids=ids)
+        crud_bbox_anno.delete_multi(db=db, project_id=project_id, ids=ids)
 
         return deleted
 
-    def _to_read_dtos(self, db: Session, *, ids: list[int]) -> list[BBoxAnnotationRead]:
+    def _to_read_dtos(
+        self, db: Session, *, project_id: int, ids: list[int]
+    ) -> list[BBoxAnnotationRead]:
         """Read DTOs of the given annotations, re-read with eager loading."""
         return [
             BBoxAnnotationRead.model_validate(db_obj)
-            for db_obj in crud_bbox_anno.read_by_ids(db=db, ids=ids)
+            for db_obj in crud_bbox_anno.read_by_ids(
+                db=db, project_id=project_id, ids=ids
+            )
         ]
+
+    def _assert_codes_in_project(
+        self, db: Session, *, project_id: int, code_ids: list[int]
+    ) -> None:
+        assert_in_project(
+            crud_code.read_by_ids(db=db, ids=list(dict.fromkeys(code_ids))),
+            project_id=project_id,
+        )

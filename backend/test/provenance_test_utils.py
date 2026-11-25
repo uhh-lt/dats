@@ -101,36 +101,42 @@ def create_payload(
             ).model_dump()
 
 
+def annotation_route(kind: AnnotationKind, project_id: int) -> str:
+    """The route of the annotations of the kind in the project."""
+    return f"/projects/{project_id}/{kind}-annotations"
+
+
 def get_annotation(
-    client: TestClient, kind: AnnotationKind, annotation_id: int
+    client: TestClient, kind: AnnotationKind, project_id: int, annotation_id: int
 ) -> AnnotationRead:
-    response = client.get(f"/{kind}/{annotation_id}")
+    response = client.get(f"{annotation_route(kind, project_id)}/{annotation_id}")
     assert response.status_code == 200, response.text
     return READ_DTO[kind].model_validate(response.json())
 
 
 def get_memos(
-    client: TestClient, kind: AnnotationKind, annotation_id: int
+    client: TestClient, kind: AnnotationKind, project_id: int, annotation_id: int
 ) -> list[MemoRead]:
     response = client.get(
-        f"/memo/attached_obj/{ATTACHED_OBJECT_TYPE[kind].value}/to/{annotation_id}"
+        f"/memo/attached_obj/{ATTACHED_OBJECT_TYPE[kind].value}/to/{annotation_id}",
+        params={"project_id": project_id},
     )
     assert response.status_code == 200, response.text
     return [MemoRead.model_validate(memo) for memo in response.json()]
 
 
 def get_user_annotation_ids(
-    client: TestClient, kind: AnnotationKind, sdoc_id: int, user_id: int
+    client: TestClient,
+    kind: AnnotationKind,
+    project_id: int,
+    sdoc_id: int,
+    user_id: int,
 ) -> set[int]:
-    response = client.get(f"/{kind}/sdoc/{sdoc_id}/user/{user_id}")
+    response = client.get(
+        annotation_route(kind, project_id),
+        params={"user_id": user_id, "sdoc_id": sdoc_id},
+    )
     assert response.status_code == 200, response.text
-    if kind == "sentence":
-        # sentence annotations come grouped by sentence
-        return {
-            annotation["id"]
-            for annotations in response.json()["sentence_annotations"].values()
-            for annotation in annotations
-        }
     return {annotation["id"] for annotation in response.json()}
 
 
@@ -204,6 +210,7 @@ def _create_annotation(
     db_session,
     *,
     kind: AnnotationKind,
+    project_id: int,
     user_id: int,
     sdoc_id: int,
     code_id: int,
@@ -217,6 +224,7 @@ def _create_annotation(
                 SpanAnnotationService()
                 .create(
                     db=db_session,
+                    project_id=project_id,
                     user_id=user_id,
                     create_dto=SpanAnnotationCreate(
                         source_annotation_id=source_annotation_id,
@@ -236,6 +244,7 @@ def _create_annotation(
                 SentenceAnnotationService()
                 .create(
                     db=db_session,
+                    project_id=project_id,
                     user_id=user_id,
                     create_dto=SentenceAnnotationCreate(
                         source_annotation_id=source_annotation_id,
@@ -252,6 +261,7 @@ def _create_annotation(
                 BBoxAnnotationService()
                 .create(
                     db=db_session,
+                    project_id=project_id,
                     user_id=user_id,
                     create_dto=BBoxAnnotationCreate(
                         source_annotation_id=source_annotation_id,
@@ -396,6 +406,7 @@ def create_provenance_project(
         source_id = _create_annotation(
             db_session,
             kind=kind,
+            project_id=project.id,
             user_id=assistant.id,
             sdoc_id=sdoc.id,
             code_id=code_a.id,
@@ -428,6 +439,7 @@ def create_provenance_project(
             "source_plain_id": _create_annotation(
                 db_session,
                 kind=kind,
+                project_id=project.id,
                 user_id=assistant.id,
                 sdoc_id=sdoc.id,
                 code_id=code_a.id,
@@ -436,6 +448,7 @@ def create_provenance_project(
             "other_sdoc_source_id": _create_annotation(
                 db_session,
                 kind=kind,
+                project_id=project.id,
                 user_id=assistant.id,
                 sdoc_id=other_sdoc.id,
                 code_id=code_a.id,
@@ -444,6 +457,7 @@ def create_provenance_project(
             "other_project_source_id": _create_annotation(
                 db_session,
                 kind=kind,
+                project_id=other_project.id,
                 user_id=test_user.id,
                 sdoc_id=other_project_sdoc_by_doctype[DocType(sdoc.doctype)].id,
                 code_id=other_code.id,
@@ -499,6 +513,7 @@ def create_provenance_copies(
     db_session: Session, provenance_project: ProvenanceProject
 ) -> ProvenanceProjectWithCopies:
     """Create the copies described in `ProvenanceProjectWithCopies`."""
+    project_id = provenance_project["project"].id
     user = provenance_project["user"]
     code_b = provenance_project["code_b"]
 
@@ -509,6 +524,7 @@ def create_provenance_copies(
             "copy_id": _create_annotation(
                 db_session,
                 kind=kind,
+                project_id=project_id,
                 user_id=user.id,
                 sdoc_id=annotations["sdoc_id"],
                 code_id=code_b.id,
@@ -518,6 +534,7 @@ def create_provenance_copies(
             "own_id": _create_annotation(
                 db_session,
                 kind=kind,
+                project_id=project_id,
                 user_id=user.id,
                 sdoc_id=annotations["sdoc_id"],
                 code_id=code_b.id,

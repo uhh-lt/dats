@@ -1178,6 +1178,7 @@ class SpanClassificationModelService(TextClassificationModelService):
         if parameters.delete_existing_work:
             crud_span_anno.delete_by_user_sdocs_codes(
                 db=db,
+                project_id=payload.project_id,
                 user_id=virtual_user_id,
                 sdoc_ids=parameters.sdoc_ids,
                 code_ids=classifier.class_ids,
@@ -1374,7 +1375,10 @@ class SpanClassificationModelService(TextClassificationModelService):
 
         # Write to db
         SpanAnnotationService().create_multi(
-            db=db, user_id=virtual_user_id, create_dtos=create_dtos
+            db=db,
+            project_id=payload.project_id,
+            user_id=virtual_user_id,
+            create_dtos=create_dtos,
         )
 
         return ClassifierJobOutput(

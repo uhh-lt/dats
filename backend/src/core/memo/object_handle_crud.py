@@ -2,25 +2,17 @@ from sqlalchemy import select
 from sqlalchemy.dialects.postgresql import insert
 from sqlalchemy.orm import Session
 
-from core.annotation.bbox_annotation_crud import crud_bbox_anno
 from core.annotation.bbox_annotation_orm import BBoxAnnotationORM
-from core.annotation.sentence_annotation_crud import crud_sentence_anno
 from core.annotation.sentence_annotation_orm import SentenceAnnotationORM
-from core.annotation.span_annotation_crud import crud_span_anno
 from core.annotation.span_annotation_orm import SpanAnnotationORM
-from core.annotation.span_group_crud import crud_span_group
 from core.annotation.span_group_orm import SpanGroupORM
-from core.code.code_crud import crud_code
 from core.code.code_orm import CodeORM
-from core.doc.source_document_crud import crud_sdoc
 from core.doc.source_document_orm import SourceDocumentORM
 from core.memo.memo_enum import AttachedObjectType
 from core.memo.memo_orm import MemoORM
 from core.memo.object_handle_dto import ObjectHandleCreate
 from core.memo.object_handle_orm import ObjectHandleORM
-from core.project.project_crud import crud_project
 from core.project.project_orm import ProjectORM
-from core.tag.tag_crud import crud_tag
 from core.tag.tag_orm import TagORM
 from repos.db.crud_base import BATCH_SIZE, SQLCRUDBase, UpdateNotAllowed
 from repos.db.sql_exceptions import NoSuchElementError
@@ -30,17 +22,6 @@ from repos.db.sql_utils import aggregate_ids
 class CRUDObjectHandle(
     SQLCRUDBase[ObjectHandleORM, ObjectHandleCreate, UpdateNotAllowed]
 ):
-    __obj_id_crud_map = {
-        "code_id": crud_code,
-        "tag_id": crud_tag,
-        "attached_project_id": crud_project,
-        "source_document_id": crud_sdoc,
-        "span_annotation_id": crud_span_anno,
-        "bbox_annotation_id": crud_bbox_anno,
-        "sentence_annotation_id": crud_sentence_anno,
-        "span_group_id": crud_span_group,
-    }
-
     __obj_id_orm_type_map = {
         "code_id": CodeORM,
         "tag_id": TagORM,
@@ -188,14 +169,12 @@ class CRUDObjectHandle(
         | SpanGroupORM
         | None
     ):
-        target_id = None
-        for target_id in self.__obj_id_crud_map.keys():
-            if getattr(handle, target_id):
-                return self.__obj_id_crud_map[target_id].read(
-                    db=db, id=getattr(handle, target_id)
-                )
+        # the relationship of the one id column that is set, e.g. span_annotation
+        for target_id in self.__obj_id_orm_type_map.keys():
+            if getattr(handle, target_id) is not None:
+                return getattr(handle, target_id.removesuffix("_id"))
 
-        raise KeyError(f"Unknown target_id: {target_id}!")
+        raise KeyError(f"Object handle {handle.id} refers to no object!")
 
     ### OTHER OPERATIONS ###
 

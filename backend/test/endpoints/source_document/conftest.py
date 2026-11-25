@@ -161,9 +161,11 @@ def project_with_sentence_annotation(
     # Create a sentence annotation
     sentence_annotation = crud_sentence_anno.read(
         db=db_session,
+        project_id=project.id,
         id=SentenceAnnotationService()
         .create(
             db=db_session,
+            project_id=project.id,
             user_id=test_user.id,
             create_dto=SentenceAnnotationCreate(
                 sentence_id_start=0,

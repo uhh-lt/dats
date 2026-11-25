@@ -23,10 +23,13 @@ def export_selected_bbox_annotations(
     project_id: int,
     bbox_annotation_ids: list[int],
 ) -> Path:
-    bbox_annotations = crud_bbox_anno.read_by_ids(db=db, ids=bbox_annotation_ids)
+    bbox_annotations = crud_bbox_anno.read_by_ids(
+        db=db, project_id=project_id, ids=bbox_annotation_ids
+    )
     return __export_bbox_annotations(
         db=db,
         out_dir=out_dir,
+        project_id=project_id,
         fn=f"project_{project_id}_selected_bbox_annotations",
         bbox_annotations=bbox_annotations,
     )
@@ -41,6 +44,7 @@ def export_all_bbox_annotations(
     return __export_bbox_annotations(
         db=db,
         out_dir=out_dir,
+        project_id=project_id,
         fn=f"project_{project_id}_all_bbox_annotations",
         bbox_annotations=bbox_annotations,
     )
@@ -49,6 +53,7 @@ def export_all_bbox_annotations(
 def __export_bbox_annotations(
     db: Session,
     out_dir: Path,
+    project_id: int,
     fn: str,
     bbox_annotations: list[BBoxAnnotationORM],
 ) -> Path:
@@ -56,7 +61,7 @@ def __export_bbox_annotations(
         raise NoDataToExportError("No bbox annotations to export.")
 
     export_data = __generate_export_df_for_bbox_annotations(
-        db=db, bbox_annotations=bbox_annotations
+        db=db, project_id=project_id, bbox_annotations=bbox_annotations
     )
     return write_df(
         out_dir=out_dir,
@@ -67,13 +72,14 @@ def __export_bbox_annotations(
 
 def __generate_export_df_for_bbox_annotations(
     db: Session,
+    project_id: int,
     bbox_annotations: list[BBoxAnnotationORM],
 ) -> pd.DataFrame:
     logger.info(f"Exporting {len(bbox_annotations)} BBox Annotations ...")
 
     annotation_export_items = []
     provenances = export_annotation_provenance(
-        db=db, crud=crud_bbox_anno, annotations=bbox_annotations
+        db=db, crud=crud_bbox_anno, project_id=project_id, annotations=bbox_annotations
     )
     for bbox, provenance in zip(bbox_annotations, provenances):
         sdoc = bbox.annotation_document.source_document

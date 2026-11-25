@@ -6,6 +6,7 @@ from sqlalchemy import (
     ForeignKey,
     ForeignKeyConstraint,
     Integer,
+    PrimaryKeyConstraint,
     String,
     UniqueConstraint,
     func,
@@ -22,7 +23,8 @@ if TYPE_CHECKING:
 
 
 class BBoxAnnotationORM(ORMBase):
-    id: Mapped[int] = mapped_column(Integer, primary_key=True, index=True)
+    # the primary key is (project_id, id), see __table_args__
+    id: Mapped[int] = mapped_column(Integer, autoincrement=True, index=True)
     uuid: Mapped[str] = mapped_column(String, nullable=False, index=True)
     x_min: Mapped[int] = mapped_column(Integer, nullable=False, index=True)
     x_max: Mapped[int] = mapped_column(Integer, nullable=False, index=True)
@@ -54,7 +56,6 @@ class BBoxAnnotationORM(ORMBase):
             "project.id", ondelete="CASCADE", name="FK_bbox_annotation_project_id"
         ),
         nullable=False,
-        index=True,
     )
     project: Mapped["ProjectORM"] = relationship(
         "ProjectORM", back_populates="bbox_annotations"
@@ -92,6 +93,7 @@ class BBoxAnnotationORM(ORMBase):
     source_code_id: Mapped[int | None] = mapped_column(Integer, index=True)
 
     __table_args__ = (
+        PrimaryKeyConstraint("project_id", "id", name="bboxannotation_pkey"),
         UniqueConstraint(
             "project_id",
             "uuid",
