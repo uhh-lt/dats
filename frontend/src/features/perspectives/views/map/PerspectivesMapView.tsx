@@ -21,7 +21,7 @@ export function PerspectivesMapView() {
 
   // the map is outdated while the aspect's most recent job runs, so the job's progress replaces it
   const aspect = PerspectivesHooks.useGetAspect(aspectId);
-  const job = useLiveJob(perspectivesQueries.job.byId(aspect.data?.most_recent_job_id));
+  const job = useLiveJob(perspectivesQueries.job.byId(projectId, aspect.data?.most_recent_job_id));
 
   // render
   if (job.data && job.data.status !== JobStatus.FINISHED) {

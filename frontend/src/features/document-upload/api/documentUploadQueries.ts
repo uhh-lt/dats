@@ -5,7 +5,7 @@ import { JobService } from "@api/services/JobService";
  * Query factory for the document upload (crawler jobs of a project).
  *
  *   documentUploadQueries.all()            ["documentUpload"]
- *   documentUploadQueries.job.byId(jobId)  ["documentUpload", "job", "detail", jobId]
+ *   documentUploadQueries.job.byId(projectId, jobId)  ["documentUpload", "job", "detail", jobId, projectId]
  *
  * Job updates arrive via websocket (JOB_UPDATED) and are written into the job caches by the cache-sync code.
  */
@@ -15,11 +15,11 @@ export const documentUploadQueries = {
   // the background job of this domain
   job: createJobQueries(
     "documentUpload",
-    (jobId) => JobService.getCrawlerJobById({ jobId }),
+    (job) => JobService.getCrawlerJobById(job),
     (projectId) => JobService.getCrawlerJobsByProject({ projectId }),
     {
-      abort: (jobId) => JobService.abortCrawlerJob({ jobId }),
-      retry: (jobId) => JobService.retryCrawlerJob({ jobId }),
+      abort: (job) => JobService.abortCrawlerJob(job),
+      retry: (job) => JobService.retryCrawlerJob(job),
     },
   ),
 };

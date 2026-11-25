@@ -631,7 +631,7 @@ export function handleDATSEvent(event: DATSEvent, source: DATSEventSource): void
     case "TAG_RECOMMENDATION_REVIEWED_BATCH": {
       const mlJobIds = new Set(event.payload.map((link) => link.ml_job_id));
       mlJobIds.forEach((mlJobId) => {
-        queryClient.invalidateQueries({ queryKey: tagRecommendationQueries.byJob(mlJobId).queryKey });
+        queryClient.invalidateQueries({ queryKey: tagRecommendationQueries.byJobOfJobScope(mlJobId) });
       });
       break;
     }

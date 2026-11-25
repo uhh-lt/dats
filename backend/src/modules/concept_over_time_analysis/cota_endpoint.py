@@ -10,7 +10,6 @@ from modules.concept_over_time_analysis.cota_dto import (
     COTACreateIntern,
     COTARead,
     COTARefinementJobInput,
-    COTARefinementJobRead,
     COTASentenceID,
     COTAUpdate,
 )
@@ -295,19 +294,3 @@ def refine_cota(
         feature=CONCEPTS_OVER_TIME,
     )
     return cotas.start_refinement_job(db=db, payload=payload)
-
-
-@router.get(
-    "/refine/{cota_job_id}",
-    response_model=COTARefinementJobRead,
-    summary="Returns the COTA Refinement Job for the given ID",
-    description="Returns the COTA Refinement Job for the given ID if it exists",
-)
-def get_cota_job(
-    *,
-    cota_job_id: str,
-    authz_user: AuthzUser = Depends(),
-) -> COTARefinementJobRead:
-    job = js.get_job(job_id=cota_job_id)
-    authz_user.assert_in_project(job.get_project_id())
-    return COTARefinementJobRead.from_rq_job(job=job)

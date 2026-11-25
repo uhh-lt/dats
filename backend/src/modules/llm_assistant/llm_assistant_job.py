@@ -4,7 +4,6 @@ from core.auth.auth_exceptions import InvalidError
 from core.doc.source_document_crud import crud_sdoc
 from core.prompt.prompt_service import PromptService
 from core.user.user_crud import crud_user
-from modules.llm_assistant.llm_assistant_endpoint import router
 from modules.llm_assistant.llm_assistant_job_dto import (
     LLMAssistantJobInput,
     LLMAssistantJobOutput,
@@ -75,7 +74,6 @@ def _build_strategy(db: Session, payload: LLMAssistantJobInput) -> LLMAssistantS
     output_type=LLMAssistantJobOutput,
     generate_endpoints=EndpointGeneration.ALL,
     publish_updates=True,
-    router=router,
     device="api",
     result_ttl=JobTiming.NINETY_DAYS,
     timeout=JobTiming.ONE_WEEK,

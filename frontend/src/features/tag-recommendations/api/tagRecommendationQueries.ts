@@ -7,9 +7,9 @@ import { queryOptions, skipToken } from "@tanstack/react-query";
  * Query factory for tag recommendations.
  *
  *   tagRecommendationQueries.all()                      ["tagRecommendation"]
- *   tagRecommendationQueries.job.byId(jobId)            ["tagRecommendation", "job", "detail", jobId]
+ *   tagRecommendationQueries.job.byId(projectId, jobId) ["tagRecommendation", "job", "detail", jobId, projectId]
  *   tagRecommendationQueries.job.byProject(projectId)   ["tagRecommendation", "job", "project", projectId]
- *   tagRecommendationQueries.byJob(jobId)               ["tagRecommendation", "recommendations", jobId]
+ *   tagRecommendationQueries.byJob(projectId, jobId)    ["tagRecommendation", "recommendations", jobId, projectId]
  *
  * Job updates arrive via websocket (JOB_UPDATED) and are written into the job caches by the cache-sync code.
  */
@@ -19,16 +19,19 @@ export const tagRecommendationQueries = {
   // the tag recommendation jobs
   job: createJobQueries(
     "tagRecommendation",
-    (jobId) => JobService.getTagRecommendationJobById({ jobId }),
+    (job) => JobService.getTagRecommendationJobById(job),
     (projectId) => JobService.getTagRecommendationJobsByProject({ projectId }),
   ),
 
   // the recommendations of one job
   byJobScope: () => [...tagRecommendationQueries.all(), "recommendations"] as const,
-  byJob: (jobId: string | null | undefined) =>
+  byJobOfJobScope: (jobId: string) => [...tagRecommendationQueries.byJobScope(), jobId] as const,
+  byJob: (projectId: number, jobId: string | null | undefined) =>
     queryOptions({
-      queryKey: [...tagRecommendationQueries.byJobScope(), jobId] as const,
-      queryFn: !jobId ? skipToken : () => TagRecommendationService.getAllTagrecommendationsFromJob({ jobId }),
+      queryKey: [...tagRecommendationQueries.byJobScope(), jobId, projectId] as const,
+      queryFn: !jobId
+        ? skipToken
+        : () => TagRecommendationService.getAllTagrecommendationsFromJob({ projectId, jobId }),
       staleTime: 1000 * 60 * 5,
     }),
 };

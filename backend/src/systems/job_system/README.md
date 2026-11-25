@@ -42,7 +42,7 @@ Key decorator arguments:
 | `input_type`         | Pydantic model of the job input (stored in the RQ job kwargs).                                                                                   |
 | `output_type`        | Pydantic model of the result (optional).                                                                                                         |
 | `device`             | Which queue the job lands on: `cpu`, `gpu`, or `api`.                                                                                            |
-| `generate_endpoints` | `ALL` / `MINIMAL` / `NONE` — which REST endpoints are auto-generated.                                                                            |
+| `generate_endpoints` | Which REST endpoints are generated under `/projects/{project_id}/jobs/<job-type>` (see below): `ALL`, `MINIMAL`, `READ` or `NONE`.                  |
 | `publish_updates`    | Whether state changes are pushed over websockets (see below).                                                                                    |
 | `read_model`         | Optional custom `JobRead` subclass for the event/REST payload.                                                                                   |
 | `validate_input`     | Optional check `(db, payload)` the generated start endpoint runs before enqueueing; it raises to reject the input (e.g. ids of another project). |
@@ -85,7 +85,7 @@ Key decorator arguments:
    `rq_job_handler` a day after the job finished, so a retry still continues
    from it if the worker died before RQ saved the result.
 6. **State** — job state lives in Redis (RQ meta), not Postgres. The REST
-   polling endpoints (`/job/...`) read it from there and stay fully
+   polling endpoints (`/projects/{project_id}/jobs/...`) read it from there and stay fully
    functional — they are used by MCP/agents and as the frontend's
    initial-load and websocket-disconnected fallback.
 
@@ -196,6 +196,28 @@ The job system does not reinvent delivery — it reuses the
 3. Call `job.update(...)` inside the handler to report progress.
 4. Run `just update-api` — the frontend's generated event union gains the new
    concrete `JobRead`, and the brain's `JOB_UPDATED` handler picks it up.
+
+## Generated Endpoints
+
+`job_endpoint.py` generates the REST endpoints of every job type on one
+project router (`/projects/{project_id}/jobs`, which checks the membership),
+at the job type in kebab-case (`llm_assistant` → `/jobs/llm-assistant`), each
+with the job type's own `JobRead` model:
+
+| Route                              | `ALL` | `MINIMAL` | `READ` |
+| ---------------------------------- | ----- | --------- | ------ |
+| `POST /<job-type>` (start)         | ✓     | ✓         |        |
+| `GET /<job-type>` (the project's)  | ✓     |           | ✓      |
+| `GET /<job-type>/{job_id}`         | ✓     | ✓         | ✓      |
+| `POST /<job-type>/{job_id}/abort`  | ✓     |           |        |
+| `POST /<job-type>/{job_id}/retry`  | ✓     |           |        |
+
+- The start overwrites the `project_id` of the job input with the project of
+  the path, then runs `validate_input`, which checks the job's feature.
+- A job id is read with `JobService.read_project_job`: a job of another
+  project or of another type answers 404, like an unknown one.
+- `READ` is for a job that a route of its module starts, because the start
+  does more than enqueue (e.g. the import upload, the COTA refinement).
 
 REST polling endpoints, websocket events, and OpenAPI schema are all derived
 from the registration — no extra wiring.

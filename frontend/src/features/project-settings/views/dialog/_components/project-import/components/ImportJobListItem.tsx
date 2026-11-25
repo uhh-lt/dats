@@ -12,7 +12,10 @@ interface ImportJobListItemProps {
 
 export const ImportJobListItem = memo(({ initialImportJob }: ImportJobListItemProps) => {
   // global server state (react-query)
-  const importJob = useLiveJob(importQueries.job.byId(initialImportJob.job_id), initialImportJob);
+  const importJob = useLiveJob(
+    importQueries.job.byId(initialImportJob.project_id, initialImportJob.job_id),
+    initialImportJob,
+  );
 
   // compute subtitle
   const subTitle = useMemo(() => {
@@ -32,6 +35,7 @@ export const ImportJobListItem = memo(({ initialImportJob }: ImportJobListItemPr
     return (
       <JobListItem
         jobStatus={importJob.data.status}
+        projectId={importJob.data.project_id}
         jobId={importJob.data.job_id}
         jobQueries={importQueries.job}
         title={`Import Job - ${importJob.data.input.import_job_type}`}

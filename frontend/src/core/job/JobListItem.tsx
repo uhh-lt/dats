@@ -16,6 +16,7 @@ const RETRYABLE = [JobStatus.FAILED, JobStatus.STOPPED];
 
 interface JobListItemProps {
   jobStatus: JobStatus;
+  projectId: number;
   jobId: string;
   // the queries of the job's type (`xQueries.job`): their actions are offered
   jobQueries: JobActionQueries;
@@ -24,55 +25,60 @@ interface JobListItemProps {
   children: React.ReactNode;
 }
 
-export const JobListItem = memo(({ jobStatus, jobId, jobQueries, title, subTitle, children }: JobListItemProps) => {
-  // local state
-  const [expanded, setExpanded] = useState(false);
+export const JobListItem = memo(
+  ({ jobStatus, projectId, jobId, jobQueries, title, subTitle, children }: JobListItemProps) => {
+    // local state
+    const [expanded, setExpanded] = useState(false);
 
-  const handleExpandClick = useCallback(() => {
-    setExpanded((prev) => !prev);
-  }, []);
+    const handleExpandClick = useCallback(() => {
+      setExpanded((prev) => !prev);
+    }, []);
 
-  return (
-    <>
-      <ListItem>
-        <ListItemIcon sx={{ color: jobStatusToTypographyColor[jobStatus] }}>
-          {getIconComponent(JobStatusIcons[jobStatus])}
-        </ListItemIcon>
+    return (
+      <>
+        <ListItem>
+          <ListItemIcon sx={{ color: jobStatusToTypographyColor[jobStatus] }}>
+            {getIconComponent(JobStatusIcons[jobStatus])}
+          </ListItemIcon>
 
-        <ListItemText primary={title} secondary={subTitle} />
-        <Tooltip title={expanded ? "Collapse" : "Expand"}>
-          <IconButton
-            edge="end"
-            aria-label="expand"
-            size="large"
-            sx={{ cursor: expanded ? "zoom-out" : "zoom-in" }}
-            onClick={handleExpandClick}
-          >
-            {expanded ? <ExpandLess /> : <ExpandMoreIcon />}
-          </IconButton>
-        </Tooltip>
-        {hasJobActions(jobQueries) && <JobActionButtons jobStatus={jobStatus} jobId={jobId} jobQueries={jobQueries} />}
-      </ListItem>
-      <Collapse in={expanded} timeout="auto" unmountOnExit>
-        {children}
-      </Collapse>
-    </>
-  );
-});
+          <ListItemText primary={title} secondary={subTitle} />
+          <Tooltip title={expanded ? "Collapse" : "Expand"}>
+            <IconButton
+              edge="end"
+              aria-label="expand"
+              size="large"
+              sx={{ cursor: expanded ? "zoom-out" : "zoom-in" }}
+              onClick={handleExpandClick}
+            >
+              {expanded ? <ExpandLess /> : <ExpandMoreIcon />}
+            </IconButton>
+          </Tooltip>
+          {hasJobActions(jobQueries) && (
+            <JobActionButtons jobStatus={jobStatus} projectId={projectId} jobId={jobId} jobQueries={jobQueries} />
+          )}
+        </ListItem>
+        <Collapse in={expanded} timeout="auto" unmountOnExit>
+          {children}
+        </Collapse>
+      </>
+    );
+  },
+);
 
 interface JobActionButtonsProps {
   jobStatus: JobStatus;
+  projectId: number;
   jobId: string;
   jobQueries: JobQueriesWithActions;
 }
 
 // The abort and retry of a job; its new state arrives as a job update (JOB_UPDATED).
-function JobActionButtons({ jobStatus, jobId, jobQueries }: JobActionButtonsProps) {
+function JobActionButtons({ jobStatus, projectId, jobId, jobQueries }: JobActionButtonsProps) {
   const { mutate: abort, isPending: isAborting } = JobHooks.useAbortJob(jobQueries);
   const { mutate: retry, isPending: isRetrying } = JobHooks.useRetryJob(jobQueries);
 
-  const handleAbortClick = useCallback(() => abort(jobId), [abort, jobId]);
-  const handleRetryClick = useCallback(() => retry(jobId), [retry, jobId]);
+  const handleAbortClick = useCallback(() => abort({ projectId, jobId }), [abort, projectId, jobId]);
+  const handleRetryClick = useCallback(() => retry({ projectId, jobId }), [retry, projectId, jobId]);
 
   if (ABORTABLE.includes(jobStatus)) {
     return (

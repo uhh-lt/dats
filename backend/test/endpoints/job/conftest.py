@@ -1,17 +1,26 @@
 import time
 from collections.abc import Generator
+from typing import Any, TypedDict
 
 import pytest
-import rq
+from fastapi.testclient import TestClient
 from rq.registry import StartedJobRegistry
 
+from core.project.project_orm import ProjectORM
+from core.user.user_crud import crud_user
+from core.user.user_dto import UserCreate
 from core.user.user_orm import UserORM
-from feature_test_utils import FeaturelessProject, create_featureless_project
+from dats_test_utils import create_user_client
+from feature_test_utils import (
+    FeaturelessProject,
+    create_featureless_project,
+    create_project_with_features,
+)
+from job_test_utils import HeldJobs, store_job
 from modules.tag_recommendation.tag_recommendation_dto import (
     TagRecommendationJobInput,
 )
 from systems.job_system.job_dto import Job, JobInputBase
-from systems.job_system.job_handler import rq_job_handler
 from systems.job_system.job_register_decorator import register_job
 from systems.job_system.job_service import JobService
 
@@ -34,24 +43,67 @@ def featureless_tag_recommendation_job(featureless_project: FeaturelessProject) 
     """The id of a tag recommendation job of `featureless_project` (like a job
     started before the feature was disabled). The job is stored, not enqueued,
     so no worker runs it."""
-    js = JobService()
-    job = rq.job.Job.create(
-        rq_job_handler,
-        kwargs={
-            "jobtype": "tag_recommendation",
-            "handler": None,
-            "payload": TagRecommendationJobInput(
-                project_id=featureless_project["project"].id
-            ),
-        },
-        meta={
-            "type": "tag_recommendation",
-            "project_id": featureless_project["project"].id,
-        },
-        connection=js.redis_conn,
+    return store_job(
+        "tag_recommendation",
+        TagRecommendationJobInput(project_id=featureless_project["project"].id),
     )
-    job.save()
-    return job.id
+
+
+class TagRecommendationJobs(TypedDict):
+    own: str
+    other: str
+    other_project: ProjectORM
+
+
+@pytest.fixture(scope="function")
+def tag_recommendation_jobs(
+    db_session, test_user: UserORM, test_project: ProjectORM, held_jobs: HeldJobs
+) -> TagRecommendationJobs:
+    """
+    This fixture starts the following jobs on held queues, so no worker runs
+    them (they stay QUEUED):
+
+    - other_project: "Other Project" of `test_user` (a member), without features
+    - own: the id of a tag recommendation job of `test_project`
+    - other: the id of a tag recommendation job of `other_project`
+
+    Non-obvious derived behavior: because the user is a member of both projects,
+    a request for the job of the other project fails only because the job
+    belongs to the other project.
+    """
+    other_project = create_project_with_features(
+        db_session, test_user, title="Other Project", features=[]
+    )
+    js = JobService()
+    return {
+        "own": js.start_job(
+            "tag_recommendation", TagRecommendationJobInput(project_id=test_project.id)
+        ).get_id(),
+        "other": js.start_job(
+            "tag_recommendation",
+            TagRecommendationJobInput(project_id=other_project.id),
+        ).get_id(),
+        "other_project": other_project,
+    }
+
+
+@pytest.fixture(scope="function")
+def non_member_client(app_client, db_session) -> Generator[TestClient, Any, None]:
+    """A client authenticated as "nonmember@dats.org", a user who is not a
+    member of the test project."""
+    user = crud_user.create(
+        db=db_session,
+        create_dto=UserCreate(
+            first_name="Non",
+            last_name="Member",
+            email="nonmember@dats.org",
+            password="NonPassword123",
+        ),
+    )
+    db_session.commit()
+    client = create_user_client(app_client, user)
+    yield client
+    client.close()
 
 
 # the status message of a stoppable job while it waits to be stopped

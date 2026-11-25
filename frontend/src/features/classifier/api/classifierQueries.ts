@@ -1,3 +1,4 @@
+import { JobService } from "@api/services/JobService";
 import { createJobQueries } from "@core/job";
 import { ClassifierService } from "@api/services/ClassifierService";
 import type { ClassifierDatasetStatisticsRequest } from "@models/ClassifierDatasetStatisticsRequest";
@@ -94,11 +95,11 @@ export const classifierQueries = {
   // the refinement / background job of this domain
   job: createJobQueries(
     "classifier",
-    (jobId) => ClassifierService.getClassifierJobById({ jobId }),
-    (projectId) => ClassifierService.getClassifierJobsByProject({ projectId }),
+    (job) => JobService.getClassifierJobById(job),
+    (projectId) => JobService.getClassifierJobsByProject({ projectId }),
     {
-      abort: (jobId) => ClassifierService.abortClassifierJob({ jobId }),
-      retry: (jobId) => ClassifierService.retryClassifierJob({ jobId }),
+      abort: (job) => JobService.abortClassifierJob(job),
+      retry: (job) => JobService.retryClassifierJob(job),
     },
   ),
 };

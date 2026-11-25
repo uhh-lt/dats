@@ -16,7 +16,7 @@ from modules.concept_over_time_analysis.refinement_steps.init_search_space impor
 from repos.db.sql_repo import SQLRepo
 from systems.job_system.job_dto import Job
 from systems.job_system.job_register_decorator import register_job
-from systems.job_system.job_system_enum import JobTiming
+from systems.job_system.job_system_enum import EndpointGeneration, JobTiming
 
 sqlr = SQLRepo()
 
@@ -25,6 +25,8 @@ sqlr = SQLRepo()
     job_type="cota_refinement",
     input_type=COTARefinementJobInput,
     output_type=None,
+    # started by the refine route of cota_endpoint.py
+    generate_endpoints=EndpointGeneration.READ,
     publish_updates=True,
     device="gpu",
     result_ttl=JobTiming.INFINITY,

@@ -12,7 +12,10 @@ interface CrawlerJobListItemProps {
 
 export const CrawlerJobListItem = memo(({ initialCrawlerJob }: CrawlerJobListItemProps) => {
   // global server state (react-query)
-  const crawlerJob = useLiveJob(documentUploadQueries.job.byId(initialCrawlerJob.job_id), initialCrawlerJob);
+  const crawlerJob = useLiveJob(
+    documentUploadQueries.job.byId(initialCrawlerJob.project_id, initialCrawlerJob.job_id),
+    initialCrawlerJob,
+  );
 
   const dateString = useMemo(() => {
     return formatDateTime(initialCrawlerJob.created);
@@ -22,6 +25,7 @@ export const CrawlerJobListItem = memo(({ initialCrawlerJob }: CrawlerJobListIte
     return (
       <JobListItem
         jobStatus={crawlerJob.data.status}
+        projectId={crawlerJob.data.project_id}
         jobId={crawlerJob.data.job_id}
         jobQueries={documentUploadQueries.job}
         title={`Crawler Job: ${crawlerJob.data.job_id}`}

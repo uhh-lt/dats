@@ -10,11 +10,12 @@ import { LLMAssistantUtterance } from "./LLMAssistantUtterance";
 
 export const StatusStep = memo(() => {
   // global state
+  const jobProjectId = useAppSelector((state) => state.llmAssistant.projectId);
   const jobId = useAppSelector((state) => state.llmAssistant.jobId);
   const dispatch = useAppDispatch();
 
   // poll the job
-  const llmAssistantJob = useLiveJob(llmAssistantQueries.job.byId(jobId));
+  const llmAssistantJob = useLiveJob(llmAssistantQueries.job.byId(jobProjectId, jobId));
 
   const handleClose = useCallback(() => {
     dispatch(LLMAssistantActions.closeDialog());

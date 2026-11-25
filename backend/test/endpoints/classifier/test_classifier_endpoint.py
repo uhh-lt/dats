@@ -112,7 +112,7 @@ def test_start_job_invalid_task_type(client: TestClient, test_project):
         "model_type": "span",
         "task_parameters": {"task_type": "bogus"},
     }
-    response = client.post("/classifier/classifier", json=payload)
+    response = client.post(f"/projects/{test_project.id}/jobs/classifier", json=payload)
     assert response.status_code == 422, response.text
 
 
@@ -124,7 +124,7 @@ def test_start_job_missing_params(client: TestClient, test_project):
         "model_type": "span",
         "task_parameters": {"task_type": "training"},
     }
-    response = client.post("/classifier/classifier", json=payload)
+    response = client.post(f"/projects/{test_project.id}/jobs/classifier", json=payload)
     assert response.status_code == 422, response.text
 
 
@@ -164,7 +164,7 @@ def test_start_job_nonexistent_project(client: TestClient):
         task_parameters=training_params,
     )
     response = client.post(
-        "/classifier/classifier",
+        "/projects/999999/jobs/classifier",
         json=request.model_dump(mode="json"),
     )
     assert response.status_code in (403, 404), response.text

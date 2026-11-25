@@ -64,6 +64,7 @@ export function UrlCrawlerSection({ projectId }: UrlCrawlerSectionProps) {
     if (urls.length === 0) return;
     startCrawlerJob(
       {
+        projectId,
         requestBody: {
           settings: settings,
           project_id: projectId,

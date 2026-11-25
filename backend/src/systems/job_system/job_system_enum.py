@@ -32,4 +32,5 @@ class JobTiming(int, enum.Enum):
 class EndpointGeneration(str, enum.Enum):
     ALL = "all"  # Generate all endpoints
     MINIMAL = "minimal"  # Generate start and get_by_id endpoints
+    READ = "read"  # Generate get_by_id and list endpoints (a module route starts it)
     NONE = "none"  # Do not generate any endpoints

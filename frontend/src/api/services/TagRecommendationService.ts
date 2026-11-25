@@ -9,27 +9,6 @@ import { OpenAPI } from "../core/OpenAPI";
 import { request as __request } from "../core/request";
 export class TagRecommendationService {
   /**
-   * Retrieve all (non-reviewed) document tag recommendations of the given tag recommendation job.
-   * @returns TagRecommendationResult Successful Response
-   * @throws ApiError
-   */
-  public static getAllTagrecommendationsFromJob({
-    jobId,
-  }: {
-    jobId: string;
-  }): CancelablePromise<Array<TagRecommendationResult>> {
-    return __request(OpenAPI, {
-      method: "GET",
-      url: "/tagrecommendation/job/{job_id}",
-      path: {
-        job_id: jobId,
-      },
-      errors: {
-        422: `Validation Error`,
-      },
-    });
-  }
-  /**
    * The endpoint receives IDs of wrongly and correctly tagged document recommendations and sets `is_accepted` to `true` or `false`, while setting the corresponding document tags if `true`.
    * @returns TagRecommendationLinkRead Successful Response
    * @throws ApiError
@@ -44,6 +23,30 @@ export class TagRecommendationService {
       url: "/tagrecommendation/review_recommendations",
       body: requestBody,
       mediaType: "application/json",
+      errors: {
+        422: `Validation Error`,
+      },
+    });
+  }
+  /**
+   * Retrieve all (non-reviewed) document tag recommendations of the given tag recommendation job.
+   * @returns TagRecommendationResult Successful Response
+   * @throws ApiError
+   */
+  public static getAllTagrecommendationsFromJob({
+    projectId,
+    jobId,
+  }: {
+    projectId: number;
+    jobId: string;
+  }): CancelablePromise<Array<TagRecommendationResult>> {
+    return __request(OpenAPI, {
+      method: "GET",
+      url: "/projects/{project_id}/jobs/tag-recommendation/{job_id}/recommendations",
+      path: {
+        project_id: projectId,
+        job_id: jobId,
+      },
       errors: {
         422: `Validation Error`,
       },

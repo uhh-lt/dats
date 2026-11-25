@@ -41,21 +41,29 @@ EMBEDDING_BASE = conf.classifier.embedding_models[0].value
 # JOB UTILS (start + poll classifier jobs via the endpoint)
 # ---------------------------------------------------------------------------
 
-CLASSIFIER_JOB_URL = "/classifier/classifier"
+
+def _job_url(project_id: int) -> str:
+    return f"/projects/{project_id}/jobs/classifier"
+
+
 ClassifierJobRead = JobRead[ClassifierJobInput, ClassifierJobOutput]
 
 
 def _wait_for_job(
-    client: TestClient, job_id: str, timeout: float = 600.0, poll_interval: float = 10.0
+    client: TestClient,
+    started: ClassifierJobRead,
+    timeout: float = 600.0,
+    poll_interval: float = 10.0,
 ) -> ClassifierJobRead:
     """Poll a classifier job until it finishes and return its endpoint response.
 
     Fail the test with the job's status message when it fails, is stopped or
     canceled, or does not finish before ``timeout``.
     """
+    job_id = started.job_id
     deadline = time.monotonic() + timeout
     while True:
-        response = client.get(f"{CLASSIFIER_JOB_URL}/{job_id}")
+        response = client.get(f"{_job_url(started.project_id)}/{job_id}")
         assert response.status_code == 200, response.text
         job = ClassifierJobRead.model_validate(response.json())
         status = job.status
@@ -81,7 +89,7 @@ def _wait_for_job(
 def _start_job(client: TestClient, payload: ClassifierJobInput) -> ClassifierJobRead:
     """Serialize a typed classifier request, start its job, and return the response."""
     response = client.post(
-        CLASSIFIER_JOB_URL,
+        _job_url(payload.project_id),
         json=payload.model_dump(mode="json"),
     )
     assert response.status_code == 200, response.text
@@ -569,7 +577,7 @@ def test_span_classifier_train_eval_infer(
     training_params = training_request.task_parameters
     assert isinstance(training_params, ClassifierTrainingParams)
     train_job = _start_job(client, training_request)
-    train_finished = _wait_for_job(client, train_job.job_id)
+    train_finished = _wait_for_job(client, train_job)
     assert train_finished.output is not None
     train_output = train_finished.output.task_output
     assert isinstance(train_output, ClassifierTrainingOutput)
@@ -620,7 +628,7 @@ def test_span_classifier_train_eval_infer(
             [test_user.id],
         ),
     )
-    eval_finished = _wait_for_job(client, eval_job.job_id)
+    eval_finished = _wait_for_job(client, eval_job)
     assert eval_finished.output is not None
     eval_output = eval_finished.output.task_output
     assert isinstance(eval_output, ClassifierEvaluationOutput)
@@ -660,7 +668,7 @@ def test_span_classifier_train_eval_infer(
             classifier_virtual_user.id,
         ),
     )
-    infer_finished = _wait_for_job(client, infer_job.job_id)
+    infer_finished = _wait_for_job(client, infer_job)
     assert infer_finished.output is not None
     infer_output = infer_finished.output.task_output
     assert isinstance(infer_output, ClassifierInferenceOutput)
@@ -710,7 +718,7 @@ def test_document_classifier_train_eval_infer(
     assert isinstance(training_params, ClassifierTrainingParams)
     head_only = training_params.freeze_base_model and not training_params.lora_enabled
     train_job = _start_job(client, training_request)
-    train_finished = _wait_for_job(client, train_job.job_id)
+    train_finished = _wait_for_job(client, train_job)
     assert train_finished.output is not None
     train_output = train_finished.output.task_output
     assert isinstance(train_output, ClassifierTrainingOutput)
@@ -763,7 +771,7 @@ def test_document_classifier_train_eval_infer(
             [],
         ),
     )
-    eval_finished = _wait_for_job(client, eval_job.job_id)
+    eval_finished = _wait_for_job(client, eval_job)
     assert eval_finished.output is not None
     eval_output = eval_finished.output.task_output
     assert isinstance(eval_output, ClassifierEvaluationOutput)
@@ -805,7 +813,7 @@ def test_document_classifier_train_eval_infer(
             None,
         ),
     )
-    infer_finished = _wait_for_job(client, infer_job.job_id)
+    infer_finished = _wait_for_job(client, infer_job)
     assert infer_finished.output is not None
     infer_output = infer_finished.output.task_output
     assert isinstance(infer_output, ClassifierInferenceOutput)
@@ -858,7 +866,7 @@ def test_sentence_classifier_train_eval_infer(
     assert isinstance(training_params, ClassifierTrainingParams)
     head_only = training_params.freeze_base_model and not training_params.lora_enabled
     train_job = _start_job(client, training_request)
-    train_finished = _wait_for_job(client, train_job.job_id)
+    train_finished = _wait_for_job(client, train_job)
     assert train_finished.output is not None
     train_output = train_finished.output.task_output
     assert isinstance(train_output, ClassifierTrainingOutput)
@@ -910,7 +918,7 @@ def test_sentence_classifier_train_eval_infer(
             [test_user.id],
         ),
     )
-    eval_finished = _wait_for_job(client, eval_job.job_id)
+    eval_finished = _wait_for_job(client, eval_job)
     assert eval_finished.output is not None
     eval_output = eval_finished.output.task_output
     assert isinstance(eval_output, ClassifierEvaluationOutput)
@@ -951,7 +959,7 @@ def test_sentence_classifier_train_eval_infer(
             classifier_virtual_user.id,
         ),
     )
-    infer_finished = _wait_for_job(client, infer_job.job_id)
+    infer_finished = _wait_for_job(client, infer_job)
     assert infer_finished.output is not None
     infer_output = infer_finished.output.task_output
     assert isinstance(infer_output, ClassifierInferenceOutput)
@@ -982,7 +990,7 @@ def test_train_job_invalid_base_model(client: TestClient, test_project):
     # We poll manually here to assert on the failure message instead.
     deadline = time.monotonic() + 120
     while True:
-        response = client.get(f"{CLASSIFIER_JOB_URL}/{job.job_id}")
+        response = client.get(f"{_job_url(job.project_id)}/{job.job_id}")
         assert response.status_code == 200, response.text
         current_job = ClassifierJobRead.model_validate(response.json())
         if current_job.status == JobStatus.FAILED:
@@ -1018,15 +1026,15 @@ def test_inference_job_requires_a_virtual_user(
         test_project.id, model_type, 1, [], classifier_virtual_user.id
     ).model_dump(mode="json")
     payload["task_parameters"]["virtual_user_id"] = None
-    response = client.post(CLASSIFIER_JOB_URL, json=payload)
+    response = client.post(_job_url(test_project.id), json=payload)
     assert response.status_code == 422, response.text
     assert "need the virtual user to annotate as" in response.text
 
     payload["task_parameters"]["virtual_user_id"] = test_user.id
-    response = client.post(CLASSIFIER_JOB_URL, json=payload)
+    response = client.post(_job_url(test_project.id), json=payload)
     assert response.status_code == 400, response.text
     assert "is not a virtual user of project" in response.text
 
-    list_response = client.get(f"{CLASSIFIER_JOB_URL}/project/{test_project.id}")
+    list_response = client.get(_job_url(test_project.id))
     assert list_response.status_code == 200, list_response.text
     assert list_response.json() == []

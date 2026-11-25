@@ -126,6 +126,7 @@ export function InferenceSettingsStep() {
 
     startClassifierJobMutation(
       {
+        projectId,
         requestBody: {
           model_type: model,
           task_type: task,

@@ -12,6 +12,7 @@ from core.annotation.sentence_annotation_dto import (
 from core.annotation.span_annotation_dto import SpanAnnotationRead
 from core.memo.memo_dto import MemoRead
 from core.memo.memo_enum import AttachedObjectType
+from core.project.project_orm import ProjectORM
 from core.prompt.prompt_defaults import DEFAULT_PROMPTS
 from core.prompt.prompt_dto import (
     PromptSettings,
@@ -41,7 +42,11 @@ from systems.job_system.job_system_enum import JobStatus
 
 from .conftest import JobPromptProject, prompt_code
 
-LLM_ASSISTANT_JOB_URL = "/llm_assistant/llm_assistant"
+
+def _job_url(project_id: int) -> str:
+    return f"/projects/{project_id}/jobs/llm-assistant"
+
+
 LLMAssistantJobRead = JobRead[LLMAssistantJobInput, LLMAssistantJobOutput]
 # six tokens per chunk with an overlap of three: the target document becomes
 # several chunks and "Alice" is part of the first two
@@ -50,13 +55,14 @@ SMALL_CHUNKS = PromptSettings(chunk_size_tokens=6, chunk_overlap_tokens=3)
 
 def _wait_for_status(
     client: TestClient,
-    job_id: str,
+    started: LLMAssistantJobRead,
     expected_status: JobStatus,
     *,
     timeout: float = 300.0,
     poll_interval: float = 1,
 ) -> LLMAssistantJobRead:
     """Poll one assistant job until the expected or another terminal status occurs."""
+    job_id = started.job_id
     deadline = time.monotonic() + timeout
     terminal_statuses = {
         JobStatus.FINISHED,
@@ -65,7 +71,7 @@ def _wait_for_status(
         JobStatus.CANCELED,
     }
     while True:
-        response = client.get(f"{LLM_ASSISTANT_JOB_URL}/{job_id}")
+        response = client.get(f"{_job_url(started.project_id)}/{job_id}")
         assert response.status_code == 200, response.text
         job = LLMAssistantJobRead.model_validate(response.json())
         if job.status == expected_status:
@@ -88,7 +94,9 @@ def _start_job(
     client: TestClient, payload: LLMAssistantJobInput
 ) -> LLMAssistantJobRead:
     """Start a typed assistant job and validate its initial endpoint response."""
-    response = client.post(LLM_ASSISTANT_JOB_URL, json=payload.model_dump(mode="json"))
+    response = client.post(
+        _job_url(payload.project_id), json=payload.model_dump(mode="json")
+    )
     assert response.status_code == 200, response.text
     job = LLMAssistantJobRead.model_validate(response.json())
     assert job.job_type == "llm_assistant"
@@ -235,7 +243,7 @@ def _count_by_code_id(
 
 
 # ===========================================================================
-# START/GET LLM ASSISTANT JOB (/llm_assistant/llm_assistant) TESTS
+# START/GET LLM ASSISTANT JOB (/projects/{project_id}/jobs/llm-assistant) TESTS
 # ===========================================================================
 
 
@@ -251,7 +259,7 @@ def test_tagging_job_returns_current_and_exact_suggested_tags(
     """A stored tagging version classifies the target (names Alice) as People."""
     base = job_prompt_project["base"]
     started = _start_job(client, _tagging_payload(job_prompt_project))
-    finished = _wait_for_status(client, started.job_id, JobStatus.FINISHED)
+    finished = _wait_for_status(client, started, JobStatus.FINISHED)
 
     assert finished.output is not None
     assert finished.output.task_type == TaskType.TAGGING
@@ -280,7 +288,7 @@ def test_metadata_job_extracts_all_supported_value_types(
         version_id=job_prompt_project["metadata_prompt"].versions[0].id,
     )
     started = _start_job(client, payload)
-    finished = _wait_for_status(client, started.job_id, JobStatus.FINISHED)
+    finished = _wait_for_status(client, started, JobStatus.FINISHED)
 
     assert finished.output is not None
     assert finished.output.task_type == TaskType.METADATA_EXTRACTION
@@ -343,7 +351,7 @@ def test_span_annotation_job_covers_all_formats_units_and_approaches(
         is_fewshot=is_fewshot,
     )
     started = _start_job(client, _draft_payload(job_prompt_project, draft))
-    finished = _wait_for_status(client, started.job_id, JobStatus.FINISHED)
+    finished = _wait_for_status(client, started, JobStatus.FINISHED)
 
     approach_type = _expected_approach(is_fewshot)
     assistant_user_id = base["run_a"].id
@@ -402,7 +410,7 @@ def test_sentence_annotation_job_covers_all_units_and_approaches(
         is_fewshot=is_fewshot,
     )
     started = _start_job(client, _draft_payload(job_prompt_project, draft))
-    finished = _wait_for_status(client, started.job_id, JobStatus.FINISHED)
+    finished = _wait_for_status(client, started, JobStatus.FINISHED)
 
     approach_type = _expected_approach(is_fewshot)
     assistant_user_id = base["run_a"].id
@@ -485,7 +493,7 @@ def test_annotation_job_stores_a_reasoning_memo_per_annotation_only_when_request
     )
     draft.settings = PromptSettings(request_reasoning=request_reasoning)
     started = _start_job(client, _draft_payload(job_prompt_project, draft))
-    finished = _wait_for_status(client, started.job_id, JobStatus.FINISHED)
+    finished = _wait_for_status(client, started, JobStatus.FINISHED)
 
     assert finished.output is not None
     task_result = finished.output.specific_task_result
@@ -535,7 +543,7 @@ def test_sentence_annotation_job_runs_a_stored_version(
         version_id=job_prompt_project["sentence_prompt"].versions[0].id,
     )
     started = _start_job(client, payload)
-    finished = _wait_for_status(client, started.job_id, JobStatus.FINISHED)
+    finished = _wait_for_status(client, started, JobStatus.FINISHED)
 
     assert finished.output is not None
     assert finished.output.approach_type == ApproachType.LLM_ZERO_SHOT
@@ -584,7 +592,7 @@ def test_job_fails_with_a_version_of_another_project_or_task(
             job_prompt_project, task_type=task_type, version_id=version_id
         ),
     )
-    failed = _wait_for_status(client, started.job_id, JobStatus.FAILED)
+    failed = _wait_for_status(client, started, JobStatus.FAILED)
     assert failed.output is None
     assert f"Prompt version {version_id} cannot be used" in (
         failed.status_message or ""
@@ -603,7 +611,7 @@ def test_job_fails_with_a_draft_that_selects_no_codes(
         is_fewshot=False,
     ).model_copy(update={"codes": []})
     started = _start_job(client, _draft_payload(job_prompt_project, draft))
-    failed = _wait_for_status(client, started.job_id, JobStatus.FAILED)
+    failed = _wait_for_status(client, started, JobStatus.FAILED)
     assert "The prompt selects no codes" in (failed.status_message or "")
 
 
@@ -620,7 +628,7 @@ def test_job_fails_with_a_default_version_that_selects_no_tags(
             version_id=job_prompt_project["empty_tagging_version_id"],
         ),
     )
-    failed = _wait_for_status(client, started.job_id, JobStatus.FAILED)
+    failed = _wait_for_status(client, started, JobStatus.FAILED)
     assert "The prompt selects no tags" in (failed.status_message or "")
 
 
@@ -639,7 +647,7 @@ def test_job_fails_with_a_draft_that_breaks_the_block_rules(
         update={"text": draft.text.replace("<document:whole>", "")}
     )
     started = _start_job(client, _draft_payload(job_prompt_project, draft))
-    failed = _wait_for_status(client, started.job_id, JobStatus.FAILED)
+    failed = _wait_for_status(client, started, JobStatus.FAILED)
     assert "must contain exactly one document block" in (failed.status_message or "")
 
 
@@ -706,7 +714,7 @@ def test_job_start_rejects_malformed_payloads(
             if isinstance(value, str) and value in drafts
             else value
         )
-    response = client.post(LLM_ASSISTANT_JOB_URL, json=payload)
+    response = client.post(_job_url(payload["project_id"]), json=payload)
     assert response.status_code == 422, response.text
     assert expected_fragment in response.text
 
@@ -721,11 +729,11 @@ def test_job_start_and_project_list_reject_foreign_project(
         update={"project_id": foreign_project.id}
     )
     start_response = client.post(
-        LLM_ASSISTANT_JOB_URL, json=payload.model_dump(mode="json")
+        _job_url(foreign_project.id), json=payload.model_dump(mode="json")
     )
     assert start_response.status_code == 403, start_response.text
 
-    list_response = client.get(f"{LLM_ASSISTANT_JOB_URL}/project/{foreign_project.id}")
+    list_response = client.get(_job_url(foreign_project.id))
     assert list_response.status_code == 403, list_response.text
 
 
@@ -752,10 +760,12 @@ def test_job_start_rejects_documents_outside_the_project(
         update={"sdoc_ids": [base["target_sdoc"].id, sdoc_id]}
     )
 
-    response = client.post(LLM_ASSISTANT_JOB_URL, json=payload.model_dump(mode="json"))
+    response = client.post(
+        _job_url(base["project"].id), json=payload.model_dump(mode="json")
+    )
 
     assert response.status_code == 404, response.text
-    list_response = client.get(f"{LLM_ASSISTANT_JOB_URL}/project/{base['project'].id}")
+    list_response = client.get(_job_url(base["project"].id))
     assert list_response.status_code == 200, list_response.text
     assert list_response.json() == []
 
@@ -790,7 +800,7 @@ def test_job_start_requires_a_virtual_user_for_annotation_tasks(
             is_fewshot=False,
         ).model_dump(mode="json")
 
-    response = client.post(LLM_ASSISTANT_JOB_URL, json=payload)
+    response = client.post(_job_url(payload["project_id"]), json=payload)
 
     assert response.status_code == 422, response.text
     assert "need the virtual user to annotate as" in response.text
@@ -827,16 +837,18 @@ def test_job_start_rejects_users_that_are_no_virtual_user_of_the_project(
         version_id=job_prompt_project["sentence_prompt"].versions[0].id,
     ).model_copy(update={"virtual_user_id": virtual_user_id})
 
-    response = client.post(LLM_ASSISTANT_JOB_URL, json=payload.model_dump(mode="json"))
+    response = client.post(
+        _job_url(base["project"].id), json=payload.model_dump(mode="json")
+    )
 
     assert response.status_code in (400, 404), response.text
-    list_response = client.get(f"{LLM_ASSISTANT_JOB_URL}/project/{base['project'].id}")
+    list_response = client.get(_job_url(base["project"].id))
     assert list_response.status_code == 200, list_response.text
     assert list_response.json() == []
 
 
 # ===========================================================================
-# JOB MANAGEMENT (/llm_assistant/llm_assistant/...) TESTS
+# JOB MANAGEMENT (/projects/{project_id}/jobs/llm-assistant/...) TESTS
 # ===========================================================================
 
 
@@ -848,19 +860,19 @@ def test_finished_job_can_be_read_listed_but_not_aborted_or_retried(
     """Get, project-list, abort and retry expose consistent finished-job state."""
     project_id = job_prompt_project["base"]["project"].id
     started = _start_job(client, _tagging_payload(job_prompt_project))
-    finished = _wait_for_status(client, started.job_id, JobStatus.FINISHED)
+    finished = _wait_for_status(client, started, JobStatus.FINISHED)
 
-    list_response = client.get(f"{LLM_ASSISTANT_JOB_URL}/project/{project_id}")
+    list_response = client.get(_job_url(project_id))
     assert list_response.status_code == 200, list_response.text
     jobs = TypeAdapter(list[LLMAssistantJobRead]).validate_python(list_response.json())
     assert [job.job_id for job in jobs] == [finished.job_id]
     assert jobs[0].status == JobStatus.FINISHED
 
-    abort_response = client.post(f"{LLM_ASSISTANT_JOB_URL}/{finished.job_id}/abort")
+    abort_response = client.post(f"{_job_url(project_id)}/{finished.job_id}/abort")
     assert abort_response.status_code == 200, abort_response.text
     assert abort_response.json() is False
 
-    retry_response = client.post(f"{LLM_ASSISTANT_JOB_URL}/{finished.job_id}/retry")
+    retry_response = client.post(f"{_job_url(project_id)}/{finished.job_id}/retry")
     assert retry_response.status_code == 200, retry_response.text
     assert retry_response.json() is False
 
@@ -875,14 +887,14 @@ def test_failed_job_can_be_retried_and_fails_again_with_the_same_invalid_model(
         job_prompt_project, model="definitely-not-an-available-model"
     )
     started = _start_job(client, payload)
-    failed = _wait_for_status(client, started.job_id, JobStatus.FAILED)
+    failed = _wait_for_status(client, started, JobStatus.FAILED)
     assert failed.output is None
 
-    retry_response = client.post(f"{LLM_ASSISTANT_JOB_URL}/{failed.job_id}/retry")
+    retry_response = client.post(f"{_job_url(failed.project_id)}/{failed.job_id}/retry")
     assert retry_response.status_code == 200, retry_response.text
     assert retry_response.json() is True
 
-    failed_again = _wait_for_status(client, failed.job_id, JobStatus.FAILED)
+    failed_again = _wait_for_status(client, failed, JobStatus.FAILED)
     assert failed_again.input == payload
     assert failed_again.output is None
 
@@ -899,9 +911,9 @@ def test_failed_job_can_be_retried_and_fails_again_with_the_same_invalid_model(
     ],
 )
 def test_job_management_rejects_nonexistent_job_ids(
-    client: TestClient, suffix: str
+    client: TestClient, test_project: ProjectORM, suffix: str
 ) -> None:
     """Every single-job management route returns HTTP 404 for an unknown ID."""
     method = client.get if suffix == "" else client.post
-    response = method(f"{LLM_ASSISTANT_JOB_URL}/not-a-real-job{suffix}")
+    response = method(f"{_job_url(test_project.id)}/not-a-real-job{suffix}")
     assert response.status_code == 404, response.text

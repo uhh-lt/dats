@@ -110,7 +110,7 @@ The API surface. Key interactions:
 ## API & Frontend Interaction
 
 1.  **Creation**: Frontend calls `create_aspect` (PUT `/aspect`). This immediately triggers a background Job.
-2.  **Monitoring**: Frontend polls `/job/{job_id}` to show a progress bar.
+2.  **Monitoring**: Frontend polls `/projects/{project_id}/jobs/perspectives/{job_id}` to show a progress bar.
 3.  **Visualization**:
     - Call `/visualize_documents/{aspect_id}` to get all points (x, y) and their cluster assignments.
     - Call `/cluster_similarities/{aspect_id}` to get a similarity matrix for the cluster map.

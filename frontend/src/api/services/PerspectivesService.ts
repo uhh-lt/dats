@@ -245,27 +245,6 @@ export class PerspectivesService {
     });
   }
   /**
-   * Returns the PerspectivesJob for the given ID if it exists
-   * @returns PerspectivesJobRead Successful Response
-   * @throws ApiError
-   */
-  public static getPerspectivesJob({
-    perspectivesJobId,
-  }: {
-    perspectivesJobId: string;
-  }): CancelablePromise<PerspectivesJobRead> {
-    return __request(OpenAPI, {
-      method: "GET",
-      url: "/perspectives/job/{perspectives_job_id}",
-      path: {
-        perspectives_job_id: perspectivesJobId,
-      },
-      errors: {
-        422: `Validation Error`,
-      },
-    });
-  }
-  /**
    * Returns data for visualizing the documents of the given aspect.
    * @returns PerspectivesVisualization Successful Response
    * @throws ApiError

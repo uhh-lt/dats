@@ -5,7 +5,7 @@ from modules.perspectives.perspectives_job_dto import (
 from repos.db.sql_repo import SQLRepo
 from systems.job_system.job_dto import Job
 from systems.job_system.job_register_decorator import register_job
-from systems.job_system.job_system_enum import JobTiming
+from systems.job_system.job_system_enum import EndpointGeneration, JobTiming
 
 sqlr = SQLRepo()
 
@@ -13,6 +13,8 @@ sqlr = SQLRepo()
 @register_job(
     job_type="perspectives",
     input_type=PerspectivesJobInput,
+    # started by the job route of perspectives_endpoint.py
+    generate_endpoints=EndpointGeneration.READ,
     publish_updates=True,
     device="gpu",
     result_ttl=JobTiming.INFINITY,

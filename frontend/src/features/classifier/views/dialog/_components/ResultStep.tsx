@@ -12,11 +12,12 @@ import { ClassifierActions } from "../../../store/classifierSlice";
 
 export function ResultStep() {
   // global client state
+  const projectId = useAppSelector((state) => state.classifier.context.projectId);
   const classifierJobId = useAppSelector((state) => state.classifier.jobId);
   const dispatch = useAppDispatch();
 
   // get the job
-  const cj = useLiveJob(classifierQueries.job.byId(classifierJobId));
+  const cj = useLiveJob(classifierQueries.job.byId(projectId, classifierJobId));
 
   // dialog actions
   const handleClose = useCallback(() => {

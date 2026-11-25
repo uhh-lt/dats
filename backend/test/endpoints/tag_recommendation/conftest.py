@@ -1,6 +1,8 @@
+from collections.abc import Generator
 from typing import TypedDict
 
 import pytest
+from fastapi.testclient import TestClient
 from sqlalchemy.orm import Session
 
 import dats_test_utils
@@ -16,12 +18,14 @@ from core.user.user_crud import crud_user
 from core.user.user_dto import UserCreate
 from core.user.user_orm import UserORM
 from feature_test_utils import FeaturelessProject, create_featureless_project
+from job_test_utils import store_job
 from modules.tag_recommendation.document_embedding_crud import crud_document_embedding
 from modules.tag_recommendation.document_embedding_dto import DocumentObjectIdentifier
 from modules.tag_recommendation.tag_recommendation_crud import (
     crud_tag_recommendation_link,
 )
 from modules.tag_recommendation.tag_recommendation_dto import (
+    TagRecommendationJobInput,
     TagRecommendationLinkCreate,
 )
 from modules.tag_recommendation.tag_recommendation_orm import (
@@ -40,18 +44,21 @@ class TagRecommendationProject(TypedDict):
     - `project` "Simple Test Project" of the test user (testuser@dats.org), the
       only member. It has the text document `sdoc` "Test Document" and the tags
       `tag_a` "Tag A" and `tag_b` "Tag B" (neither linked to the document).
-    - Two unreviewed recommendations of the tag recommendation job `OWN_ML_JOB_ID` for `sdoc`:
+    - The tag recommendation job `OWN_ML_JOB_ID` of `project` (stored, not
+      run) and two unreviewed recommendations of it for `sdoc`:
       `recommendation_a` predicts `tag_a` with score 0.9, `recommendation_b`
       predicts `tag_b` with score 0.4.
     - `outsider` "Outside User" (outsider@dats.org) is not a member of `project`.
       `foreign_project` "Foreign Project" belongs to the outsider only; it has
-      its own document "Test Document", the tag `foreign_tag` "Foreign Tag" and the
-      unreviewed recommendation `foreign_recommendation` of the tag recommendation
-      job `FOREIGN_ML_JOB_ID` (predicts `foreign_tag` with score 0.7).
+      its own document "Test Document", the tag `foreign_tag` "Foreign Tag", the
+      tag recommendation job `FOREIGN_ML_JOB_ID` (stored, not run) and its
+      unreviewed recommendation `foreign_recommendation` (predicts `foreign_tag`
+      with score 0.7).
 
     Derived behavior:
 
-    - `GET /tagrecommendation/job/{job_id}` lists only unreviewed
+    - `GET /projects/{project_id}/jobs/tag-recommendation/{job_id}/recommendations`
+      lists only unreviewed
       recommendations, so a reviewed recommendation disappears from it.
     """
 
@@ -96,6 +103,11 @@ def tag_recommendation_project(
     sdoc = project_with_sdoc["source_document"]
     tag_a = _create_tag(db_session, project.id, "Tag A")
     tag_b = _create_tag(db_session, project.id, "Tag B")
+    store_job(
+        "tag_recommendation",
+        TagRecommendationJobInput(project_id=project.id),
+        job_id=OWN_ML_JOB_ID,
+    )
     recommendation_a = _create_recommendation(
         db_session, ml_job_id=OWN_ML_JOB_ID, sdoc_id=sdoc.id, tag=tag_a, score=0.9
     )
@@ -129,6 +141,11 @@ def tag_recommendation_project(
         db_session, foreign_project
     )["source_document"]
     foreign_tag = _create_tag(db_session, foreign_project.id, "Foreign Tag")
+    store_job(
+        "tag_recommendation",
+        TagRecommendationJobInput(project_id=foreign_project.id),
+        job_id=FOREIGN_ML_JOB_ID,
+    )
     foreign_recommendation = _create_recommendation(
         db_session,
         ml_job_id=FOREIGN_ML_JOB_ID,
@@ -152,6 +169,18 @@ def tag_recommendation_project(
 
 
 @pytest.fixture(scope="function")
+def outsider_client(
+    app_client: TestClient, tag_recommendation_project: TagRecommendationProject
+) -> Generator[TestClient, None, None]:
+    """A client that sends its requests as the outsider."""
+    c = dats_test_utils.create_user_client(
+        app_client, tag_recommendation_project["outsider"]
+    )
+    yield c
+    c.close()
+
+
+@pytest.fixture(scope="function")
 def featureless_project(db_session, test_user: UserORM) -> FeaturelessProject:
     """
     This fixture sets up the following project, in addition to `test_project`
@@ -170,11 +199,17 @@ def featureless_recommendation(
 ) -> TagRecommendationLinkORM:
     """
     This fixture adds to `featureless_project` (whose tag recommendation is
-    disabled) the tag "Featureless Tag" and one unreviewed recommendation of
-    the tag recommendation job `FEATURELESS_ML_JOB_ID`, which predicts that
-    tag for its document "text_done.txt" with score 0.8.
+    disabled) the tag "Featureless Tag", the tag recommendation job
+    `FEATURELESS_ML_JOB_ID` (stored, not run) and one unreviewed recommendation
+    of it, which predicts that tag for its document "text_done.txt" with score
+    0.8.
     """
     project = featureless_project["project"]
+    store_job(
+        "tag_recommendation",
+        TagRecommendationJobInput(project_id=project.id),
+        job_id=FEATURELESS_ML_JOB_ID,
+    )
     tag = _create_tag(db_session, project.id, "Featureless Tag")
     recommendation = _create_recommendation(
         db_session,

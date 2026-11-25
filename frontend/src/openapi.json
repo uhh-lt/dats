@@ -816,133 +816,6 @@
         }
       }
     },
-    "/classifier/classifier": {
-      "post": {
-        "tags": ["classifier"],
-        "summary": "Start Classifier job",
-        "operationId": "start_classifier_job",
-        "requestBody": {
-          "content": { "application/json": { "schema": { "$ref": "#/components/schemas/ClassifierJobInput" } } },
-          "required": true
-        },
-        "responses": {
-          "200": {
-            "description": "Successful Response",
-            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/ClassifierJobRead" } } }
-          },
-          "422": {
-            "description": "Validation Error",
-            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/HTTPValidationError" } } }
-          }
-        },
-        "security": [{ "OAuth2PasswordBearer": [] }]
-      }
-    },
-    "/classifier/classifier/{job_id}": {
-      "get": {
-        "tags": ["classifier"],
-        "summary": "Get Classifier job",
-        "operationId": "get_classifier_job_by_id",
-        "security": [{ "OAuth2PasswordBearer": [] }],
-        "parameters": [
-          { "name": "job_id", "in": "path", "required": true, "schema": { "type": "string", "title": "Job Id" } }
-        ],
-        "responses": {
-          "200": {
-            "description": "Successful Response",
-            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/ClassifierJobRead" } } }
-          },
-          "422": {
-            "description": "Validation Error",
-            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/HTTPValidationError" } } }
-          }
-        }
-      }
-    },
-    "/classifier/classifier/{job_id}/abort": {
-      "post": {
-        "tags": ["classifier"],
-        "summary": "Abort Classifier job",
-        "operationId": "abort_classifier_job",
-        "security": [{ "OAuth2PasswordBearer": [] }],
-        "parameters": [
-          { "name": "job_id", "in": "path", "required": true, "schema": { "type": "string", "title": "Job Id" } }
-        ],
-        "responses": {
-          "200": {
-            "description": "Successful Response",
-            "content": {
-              "application/json": {
-                "schema": { "type": "boolean", "title": "Response Classifier-Abort Classifier Job" }
-              }
-            }
-          },
-          "422": {
-            "description": "Validation Error",
-            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/HTTPValidationError" } } }
-          }
-        }
-      }
-    },
-    "/classifier/classifier/{job_id}/retry": {
-      "post": {
-        "tags": ["classifier"],
-        "summary": "Retry Classifier job",
-        "operationId": "retry_classifier_job",
-        "security": [{ "OAuth2PasswordBearer": [] }],
-        "parameters": [
-          { "name": "job_id", "in": "path", "required": true, "schema": { "type": "string", "title": "Job Id" } }
-        ],
-        "responses": {
-          "200": {
-            "description": "Successful Response",
-            "content": {
-              "application/json": {
-                "schema": { "type": "boolean", "title": "Response Classifier-Retry Classifier Job" }
-              }
-            }
-          },
-          "422": {
-            "description": "Validation Error",
-            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/HTTPValidationError" } } }
-          }
-        }
-      }
-    },
-    "/classifier/classifier/project/{project_id}": {
-      "get": {
-        "tags": ["classifier"],
-        "summary": "Get all Classifier jobs by project",
-        "operationId": "get_classifier_jobs_by_project",
-        "security": [{ "OAuth2PasswordBearer": [] }],
-        "parameters": [
-          {
-            "name": "project_id",
-            "in": "path",
-            "required": true,
-            "schema": { "type": "integer", "title": "Project Id" }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "Successful Response",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "array",
-                  "items": { "$ref": "#/components/schemas/ClassifierJobRead" },
-                  "title": "Response Classifier-Get Classifier Jobs By Project"
-                }
-              }
-            }
-          },
-          "422": {
-            "description": "Validation Error",
-            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/HTTPValidationError" } } }
-          }
-        }
-      }
-    },
     "/projects/{project_id}/codes": {
       "put": {
         "tags": ["code"],
@@ -1479,33 +1352,6 @@
           }
         },
         "security": [{ "OAuth2PasswordBearer": [] }]
-      }
-    },
-    "/cota/refine/{cota_job_id}": {
-      "get": {
-        "tags": ["conceptOverTimeAnalysis"],
-        "summary": "Returns the COTA Refinement Job for the given ID",
-        "description": "Returns the COTA Refinement Job for the given ID if it exists",
-        "operationId": "get_cota_job",
-        "security": [{ "OAuth2PasswordBearer": [] }],
-        "parameters": [
-          {
-            "name": "cota_job_id",
-            "in": "path",
-            "required": true,
-            "schema": { "type": "string", "title": "Cota Job Id" }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "Successful Response",
-            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/COTARefinementJobRead" } } }
-          },
-          "422": {
-            "description": "Validation Error",
-            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/HTTPValidationError" } } }
-          }
-        }
       }
     },
     "/projects/{project_id}/doc-processing/columns": {
@@ -2439,7 +2285,7 @@
         }
       }
     },
-    "/import/{project_id}/type/{import_job_type}": {
+    "/projects/{project_id}/jobs/import": {
       "post": {
         "tags": ["import"],
         "summary": "Starts an import job with the given parameters and file",
@@ -2454,7 +2300,7 @@
           },
           {
             "name": "import_job_type",
-            "in": "path",
+            "in": "query",
             "required": true,
             "schema": { "$ref": "#/components/schemas/ImportJobType" }
           }
@@ -2475,39 +2321,11 @@
             "content": { "application/json": { "schema": { "$ref": "#/components/schemas/HTTPValidationError" } } }
           }
         }
-      }
-    },
-    "/import/{import_job_id}": {
+      },
       "get": {
-        "tags": ["import"],
-        "summary": "Returns the ImportJob for the given ID if it exists",
-        "operationId": "get_import_job",
-        "security": [{ "OAuth2PasswordBearer": [] }],
-        "parameters": [
-          {
-            "name": "import_job_id",
-            "in": "path",
-            "required": true,
-            "schema": { "type": "string", "title": "Import Job Id" }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "Successful Response",
-            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/ImportJobRead" } } }
-          },
-          "422": {
-            "description": "Validation Error",
-            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/HTTPValidationError" } } }
-          }
-        }
-      }
-    },
-    "/import/project/{project_id}": {
-      "get": {
-        "tags": ["import"],
-        "summary": "Returns all ImportJobs for the given project ID if it exists",
-        "operationId": "get_all_import_jobs",
+        "tags": ["job"],
+        "summary": "Get all Import jobs of the project",
+        "operationId": "get_import_jobs_by_project",
         "security": [{ "OAuth2PasswordBearer": [] }],
         "parameters": [
           {
@@ -2525,7 +2343,7 @@
                 "schema": {
                   "type": "array",
                   "items": { "$ref": "#/components/schemas/ImportJobRead" },
-                  "title": "Response Import-Get All Import Jobs"
+                  "title": "Response Job-Get Import Jobs By Project"
                 }
               }
             }
@@ -2570,14 +2388,231 @@
         }
       }
     },
-    "/job/crawler": {
+    "/projects/{project_id}/jobs/classifier": {
+      "post": {
+        "tags": ["job"],
+        "summary": "Start Classifier job",
+        "operationId": "start_classifier_job",
+        "security": [{ "OAuth2PasswordBearer": [] }],
+        "parameters": [
+          {
+            "name": "project_id",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "integer", "title": "Project Id" }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": { "application/json": { "schema": { "$ref": "#/components/schemas/ClassifierJobInput" } } }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/ClassifierJobRead" } } }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/HTTPValidationError" } } }
+          }
+        }
+      },
+      "get": {
+        "tags": ["job"],
+        "summary": "Get all Classifier jobs of the project",
+        "operationId": "get_classifier_jobs_by_project",
+        "security": [{ "OAuth2PasswordBearer": [] }],
+        "parameters": [
+          {
+            "name": "project_id",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "integer", "title": "Project Id" }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": { "$ref": "#/components/schemas/ClassifierJobRead" },
+                  "title": "Response Job-Get Classifier Jobs By Project"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/HTTPValidationError" } } }
+          }
+        }
+      }
+    },
+    "/projects/{project_id}/jobs/classifier/{job_id}": {
+      "get": {
+        "tags": ["job"],
+        "summary": "Get Classifier job",
+        "operationId": "get_classifier_job_by_id",
+        "security": [{ "OAuth2PasswordBearer": [] }],
+        "parameters": [
+          {
+            "name": "project_id",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "integer", "title": "Project Id" }
+          },
+          { "name": "job_id", "in": "path", "required": true, "schema": { "type": "string", "title": "Job Id" } }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/ClassifierJobRead" } } }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/HTTPValidationError" } } }
+          }
+        }
+      }
+    },
+    "/projects/{project_id}/jobs/classifier/{job_id}/abort": {
+      "post": {
+        "tags": ["job"],
+        "summary": "Abort Classifier job",
+        "operationId": "abort_classifier_job",
+        "security": [{ "OAuth2PasswordBearer": [] }],
+        "parameters": [
+          {
+            "name": "project_id",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "integer", "title": "Project Id" }
+          },
+          { "name": "job_id", "in": "path", "required": true, "schema": { "type": "string", "title": "Job Id" } }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": { "schema": { "type": "boolean", "title": "Response Job-Abort Classifier Job" } }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/HTTPValidationError" } } }
+          }
+        }
+      }
+    },
+    "/projects/{project_id}/jobs/classifier/{job_id}/retry": {
+      "post": {
+        "tags": ["job"],
+        "summary": "Retry Classifier job",
+        "operationId": "retry_classifier_job",
+        "security": [{ "OAuth2PasswordBearer": [] }],
+        "parameters": [
+          {
+            "name": "project_id",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "integer", "title": "Project Id" }
+          },
+          { "name": "job_id", "in": "path", "required": true, "schema": { "type": "string", "title": "Job Id" } }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": { "schema": { "type": "boolean", "title": "Response Job-Retry Classifier Job" } }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/HTTPValidationError" } } }
+          }
+        }
+      }
+    },
+    "/projects/{project_id}/jobs/cota-refinement": {
+      "get": {
+        "tags": ["job"],
+        "summary": "Get all CotaRefinement jobs of the project",
+        "operationId": "get_cota_refinement_jobs_by_project",
+        "security": [{ "OAuth2PasswordBearer": [] }],
+        "parameters": [
+          {
+            "name": "project_id",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "integer", "title": "Project Id" }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": { "$ref": "#/components/schemas/COTARefinementJobRead" },
+                  "title": "Response Job-Get Cota Refinement Jobs By Project"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/HTTPValidationError" } } }
+          }
+        }
+      }
+    },
+    "/projects/{project_id}/jobs/cota-refinement/{job_id}": {
+      "get": {
+        "tags": ["job"],
+        "summary": "Get CotaRefinement job",
+        "operationId": "get_cota_refinement_job_by_id",
+        "security": [{ "OAuth2PasswordBearer": [] }],
+        "parameters": [
+          {
+            "name": "project_id",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "integer", "title": "Project Id" }
+          },
+          { "name": "job_id", "in": "path", "required": true, "schema": { "type": "string", "title": "Job Id" } }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/COTARefinementJobRead" } } }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/HTTPValidationError" } } }
+          }
+        }
+      }
+    },
+    "/projects/{project_id}/jobs/crawler": {
       "post": {
         "tags": ["job"],
         "summary": "Start Crawler job",
         "operationId": "start_crawler_job",
+        "security": [{ "OAuth2PasswordBearer": [] }],
+        "parameters": [
+          {
+            "name": "project_id",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "integer", "title": "Project Id" }
+          }
+        ],
         "requestBody": {
-          "content": { "application/json": { "schema": { "$ref": "#/components/schemas/CrawlerJobInput" } } },
-          "required": true
+          "required": true,
+          "content": { "application/json": { "schema": { "$ref": "#/components/schemas/CrawlerJobInput" } } }
         },
         "responses": {
           "200": {
@@ -2588,81 +2623,11 @@
             "description": "Validation Error",
             "content": { "application/json": { "schema": { "$ref": "#/components/schemas/HTTPValidationError" } } }
           }
-        },
-        "security": [{ "OAuth2PasswordBearer": [] }]
-      }
-    },
-    "/job/crawler/{job_id}": {
+        }
+      },
       "get": {
         "tags": ["job"],
-        "summary": "Get Crawler job",
-        "operationId": "get_crawler_job_by_id",
-        "security": [{ "OAuth2PasswordBearer": [] }],
-        "parameters": [
-          { "name": "job_id", "in": "path", "required": true, "schema": { "type": "string", "title": "Job Id" } }
-        ],
-        "responses": {
-          "200": {
-            "description": "Successful Response",
-            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/CrawlerJobRead" } } }
-          },
-          "422": {
-            "description": "Validation Error",
-            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/HTTPValidationError" } } }
-          }
-        }
-      }
-    },
-    "/job/crawler/{job_id}/abort": {
-      "post": {
-        "tags": ["job"],
-        "summary": "Abort Crawler job",
-        "operationId": "abort_crawler_job",
-        "security": [{ "OAuth2PasswordBearer": [] }],
-        "parameters": [
-          { "name": "job_id", "in": "path", "required": true, "schema": { "type": "string", "title": "Job Id" } }
-        ],
-        "responses": {
-          "200": {
-            "description": "Successful Response",
-            "content": {
-              "application/json": { "schema": { "type": "boolean", "title": "Response Job-Abort Crawler Job" } }
-            }
-          },
-          "422": {
-            "description": "Validation Error",
-            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/HTTPValidationError" } } }
-          }
-        }
-      }
-    },
-    "/job/crawler/{job_id}/retry": {
-      "post": {
-        "tags": ["job"],
-        "summary": "Retry Crawler job",
-        "operationId": "retry_crawler_job",
-        "security": [{ "OAuth2PasswordBearer": [] }],
-        "parameters": [
-          { "name": "job_id", "in": "path", "required": true, "schema": { "type": "string", "title": "Job Id" } }
-        ],
-        "responses": {
-          "200": {
-            "description": "Successful Response",
-            "content": {
-              "application/json": { "schema": { "type": "boolean", "title": "Response Job-Retry Crawler Job" } }
-            }
-          },
-          "422": {
-            "description": "Validation Error",
-            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/HTTPValidationError" } } }
-          }
-        }
-      }
-    },
-    "/job/crawler/project/{project_id}": {
-      "get": {
-        "tags": ["job"],
-        "summary": "Get all Crawler jobs by project",
+        "summary": "Get all Crawler jobs of the project",
         "operationId": "get_crawler_jobs_by_project",
         "security": [{ "OAuth2PasswordBearer": [] }],
         "parameters": [
@@ -2693,14 +2658,108 @@
         }
       }
     },
-    "/job/duplicate_finder": {
+    "/projects/{project_id}/jobs/crawler/{job_id}": {
+      "get": {
+        "tags": ["job"],
+        "summary": "Get Crawler job",
+        "operationId": "get_crawler_job_by_id",
+        "security": [{ "OAuth2PasswordBearer": [] }],
+        "parameters": [
+          {
+            "name": "project_id",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "integer", "title": "Project Id" }
+          },
+          { "name": "job_id", "in": "path", "required": true, "schema": { "type": "string", "title": "Job Id" } }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/CrawlerJobRead" } } }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/HTTPValidationError" } } }
+          }
+        }
+      }
+    },
+    "/projects/{project_id}/jobs/crawler/{job_id}/abort": {
+      "post": {
+        "tags": ["job"],
+        "summary": "Abort Crawler job",
+        "operationId": "abort_crawler_job",
+        "security": [{ "OAuth2PasswordBearer": [] }],
+        "parameters": [
+          {
+            "name": "project_id",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "integer", "title": "Project Id" }
+          },
+          { "name": "job_id", "in": "path", "required": true, "schema": { "type": "string", "title": "Job Id" } }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": { "schema": { "type": "boolean", "title": "Response Job-Abort Crawler Job" } }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/HTTPValidationError" } } }
+          }
+        }
+      }
+    },
+    "/projects/{project_id}/jobs/crawler/{job_id}/retry": {
+      "post": {
+        "tags": ["job"],
+        "summary": "Retry Crawler job",
+        "operationId": "retry_crawler_job",
+        "security": [{ "OAuth2PasswordBearer": [] }],
+        "parameters": [
+          {
+            "name": "project_id",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "integer", "title": "Project Id" }
+          },
+          { "name": "job_id", "in": "path", "required": true, "schema": { "type": "string", "title": "Job Id" } }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": { "schema": { "type": "boolean", "title": "Response Job-Retry Crawler Job" } }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/HTTPValidationError" } } }
+          }
+        }
+      }
+    },
+    "/projects/{project_id}/jobs/duplicate-finder": {
       "post": {
         "tags": ["job"],
         "summary": "Start DuplicateFinder job",
         "operationId": "start_duplicate_finder_job",
+        "security": [{ "OAuth2PasswordBearer": [] }],
+        "parameters": [
+          {
+            "name": "project_id",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "integer", "title": "Project Id" }
+          }
+        ],
         "requestBody": {
-          "content": { "application/json": { "schema": { "$ref": "#/components/schemas/DuplicateFinderInput" } } },
-          "required": true
+          "required": true,
+          "content": { "application/json": { "schema": { "$ref": "#/components/schemas/DuplicateFinderInput" } } }
         },
         "responses": {
           "200": {
@@ -2711,17 +2770,22 @@
             "description": "Validation Error",
             "content": { "application/json": { "schema": { "$ref": "#/components/schemas/HTTPValidationError" } } }
           }
-        },
-        "security": [{ "OAuth2PasswordBearer": [] }]
+        }
       }
     },
-    "/job/duplicate_finder/{job_id}": {
+    "/projects/{project_id}/jobs/duplicate-finder/{job_id}": {
       "get": {
         "tags": ["job"],
         "summary": "Get DuplicateFinder job",
         "operationId": "get_duplicate_finder_job_by_id",
         "security": [{ "OAuth2PasswordBearer": [] }],
         "parameters": [
+          {
+            "name": "project_id",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "integer", "title": "Project Id" }
+          },
           { "name": "job_id", "in": "path", "required": true, "schema": { "type": "string", "title": "Job Id" } }
         ],
         "responses": {
@@ -2736,14 +2800,170 @@
         }
       }
     },
-    "/job/export": {
+    "/projects/{project_id}/jobs/llm-assistant": {
+      "post": {
+        "tags": ["job"],
+        "summary": "Start LlmAssistant job",
+        "operationId": "start_llm_assistant_job",
+        "security": [{ "OAuth2PasswordBearer": [] }],
+        "parameters": [
+          {
+            "name": "project_id",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "integer", "title": "Project Id" }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": { "application/json": { "schema": { "$ref": "#/components/schemas/LLMAssistantJobInput" } } }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/LlmAssistantJobRead" } } }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/HTTPValidationError" } } }
+          }
+        }
+      },
+      "get": {
+        "tags": ["job"],
+        "summary": "Get all LlmAssistant jobs of the project",
+        "operationId": "get_llm_assistant_jobs_by_project",
+        "security": [{ "OAuth2PasswordBearer": [] }],
+        "parameters": [
+          {
+            "name": "project_id",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "integer", "title": "Project Id" }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": { "$ref": "#/components/schemas/LlmAssistantJobRead" },
+                  "title": "Response Job-Get Llm Assistant Jobs By Project"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/HTTPValidationError" } } }
+          }
+        }
+      }
+    },
+    "/projects/{project_id}/jobs/llm-assistant/{job_id}": {
+      "get": {
+        "tags": ["job"],
+        "summary": "Get LlmAssistant job",
+        "operationId": "get_llm_assistant_job_by_id",
+        "security": [{ "OAuth2PasswordBearer": [] }],
+        "parameters": [
+          {
+            "name": "project_id",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "integer", "title": "Project Id" }
+          },
+          { "name": "job_id", "in": "path", "required": true, "schema": { "type": "string", "title": "Job Id" } }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/LlmAssistantJobRead" } } }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/HTTPValidationError" } } }
+          }
+        }
+      }
+    },
+    "/projects/{project_id}/jobs/llm-assistant/{job_id}/abort": {
+      "post": {
+        "tags": ["job"],
+        "summary": "Abort LlmAssistant job",
+        "operationId": "abort_llm_assistant_job",
+        "security": [{ "OAuth2PasswordBearer": [] }],
+        "parameters": [
+          {
+            "name": "project_id",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "integer", "title": "Project Id" }
+          },
+          { "name": "job_id", "in": "path", "required": true, "schema": { "type": "string", "title": "Job Id" } }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": { "schema": { "type": "boolean", "title": "Response Job-Abort Llm Assistant Job" } }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/HTTPValidationError" } } }
+          }
+        }
+      }
+    },
+    "/projects/{project_id}/jobs/llm-assistant/{job_id}/retry": {
+      "post": {
+        "tags": ["job"],
+        "summary": "Retry LlmAssistant job",
+        "operationId": "retry_llm_assistant_job",
+        "security": [{ "OAuth2PasswordBearer": [] }],
+        "parameters": [
+          {
+            "name": "project_id",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "integer", "title": "Project Id" }
+          },
+          { "name": "job_id", "in": "path", "required": true, "schema": { "type": "string", "title": "Job Id" } }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": { "schema": { "type": "boolean", "title": "Response Job-Retry Llm Assistant Job" } }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/HTTPValidationError" } } }
+          }
+        }
+      }
+    },
+    "/projects/{project_id}/jobs/export": {
       "post": {
         "tags": ["job"],
         "summary": "Start Export job",
         "operationId": "start_export_job",
+        "security": [{ "OAuth2PasswordBearer": [] }],
+        "parameters": [
+          {
+            "name": "project_id",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "integer", "title": "Project Id" }
+          }
+        ],
         "requestBody": {
-          "content": { "application/json": { "schema": { "$ref": "#/components/schemas/ExportJobInput" } } },
-          "required": true
+          "required": true,
+          "content": { "application/json": { "schema": { "$ref": "#/components/schemas/ExportJobInput" } } }
         },
         "responses": {
           "200": {
@@ -2754,17 +2974,22 @@
             "description": "Validation Error",
             "content": { "application/json": { "schema": { "$ref": "#/components/schemas/HTTPValidationError" } } }
           }
-        },
-        "security": [{ "OAuth2PasswordBearer": [] }]
+        }
       }
     },
-    "/job/export/{job_id}": {
+    "/projects/{project_id}/jobs/export/{job_id}": {
       "get": {
         "tags": ["job"],
         "summary": "Get Export job",
         "operationId": "get_export_job_by_id",
         "security": [{ "OAuth2PasswordBearer": [] }],
         "parameters": [
+          {
+            "name": "project_id",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "integer", "title": "Project Id" }
+          },
           { "name": "job_id", "in": "path", "required": true, "schema": { "type": "string", "title": "Job Id" } }
         ],
         "responses": {
@@ -2779,14 +3004,111 @@
         }
       }
     },
-    "/job/tag_recommendation": {
+    "/projects/{project_id}/jobs/import/{job_id}": {
+      "get": {
+        "tags": ["job"],
+        "summary": "Get Import job",
+        "operationId": "get_import_job_by_id",
+        "security": [{ "OAuth2PasswordBearer": [] }],
+        "parameters": [
+          {
+            "name": "project_id",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "integer", "title": "Project Id" }
+          },
+          { "name": "job_id", "in": "path", "required": true, "schema": { "type": "string", "title": "Job Id" } }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/ImportJobRead" } } }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/HTTPValidationError" } } }
+          }
+        }
+      }
+    },
+    "/projects/{project_id}/jobs/perspectives": {
+      "get": {
+        "tags": ["job"],
+        "summary": "Get all Perspectives jobs of the project",
+        "operationId": "get_perspectives_jobs_by_project",
+        "security": [{ "OAuth2PasswordBearer": [] }],
+        "parameters": [
+          {
+            "name": "project_id",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "integer", "title": "Project Id" }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": { "$ref": "#/components/schemas/PerspectivesJobRead" },
+                  "title": "Response Job-Get Perspectives Jobs By Project"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/HTTPValidationError" } } }
+          }
+        }
+      }
+    },
+    "/projects/{project_id}/jobs/perspectives/{job_id}": {
+      "get": {
+        "tags": ["job"],
+        "summary": "Get Perspectives job",
+        "operationId": "get_perspectives_job_by_id",
+        "security": [{ "OAuth2PasswordBearer": [] }],
+        "parameters": [
+          {
+            "name": "project_id",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "integer", "title": "Project Id" }
+          },
+          { "name": "job_id", "in": "path", "required": true, "schema": { "type": "string", "title": "Job Id" } }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/PerspectivesJobRead" } } }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/HTTPValidationError" } } }
+          }
+        }
+      }
+    },
+    "/projects/{project_id}/jobs/tag-recommendation": {
       "post": {
         "tags": ["job"],
         "summary": "Start TagRecommendation job",
         "operationId": "start_tag_recommendation_job",
+        "security": [{ "OAuth2PasswordBearer": [] }],
+        "parameters": [
+          {
+            "name": "project_id",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "integer", "title": "Project Id" }
+          }
+        ],
         "requestBody": {
-          "content": { "application/json": { "schema": { "$ref": "#/components/schemas/TagRecommendationJobInput" } } },
-          "required": true
+          "required": true,
+          "content": { "application/json": { "schema": { "$ref": "#/components/schemas/TagRecommendationJobInput" } } }
         },
         "responses": {
           "200": {
@@ -2797,85 +3119,11 @@
             "description": "Validation Error",
             "content": { "application/json": { "schema": { "$ref": "#/components/schemas/HTTPValidationError" } } }
           }
-        },
-        "security": [{ "OAuth2PasswordBearer": [] }]
-      }
-    },
-    "/job/tag_recommendation/{job_id}": {
+        }
+      },
       "get": {
         "tags": ["job"],
-        "summary": "Get TagRecommendation job",
-        "operationId": "get_tag_recommendation_job_by_id",
-        "security": [{ "OAuth2PasswordBearer": [] }],
-        "parameters": [
-          { "name": "job_id", "in": "path", "required": true, "schema": { "type": "string", "title": "Job Id" } }
-        ],
-        "responses": {
-          "200": {
-            "description": "Successful Response",
-            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/TagRecommendationJobRead" } } }
-          },
-          "422": {
-            "description": "Validation Error",
-            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/HTTPValidationError" } } }
-          }
-        }
-      }
-    },
-    "/job/tag_recommendation/{job_id}/abort": {
-      "post": {
-        "tags": ["job"],
-        "summary": "Abort TagRecommendation job",
-        "operationId": "abort_tag_recommendation_job",
-        "security": [{ "OAuth2PasswordBearer": [] }],
-        "parameters": [
-          { "name": "job_id", "in": "path", "required": true, "schema": { "type": "string", "title": "Job Id" } }
-        ],
-        "responses": {
-          "200": {
-            "description": "Successful Response",
-            "content": {
-              "application/json": {
-                "schema": { "type": "boolean", "title": "Response Job-Abort Tag Recommendation Job" }
-              }
-            }
-          },
-          "422": {
-            "description": "Validation Error",
-            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/HTTPValidationError" } } }
-          }
-        }
-      }
-    },
-    "/job/tag_recommendation/{job_id}/retry": {
-      "post": {
-        "tags": ["job"],
-        "summary": "Retry TagRecommendation job",
-        "operationId": "retry_tag_recommendation_job",
-        "security": [{ "OAuth2PasswordBearer": [] }],
-        "parameters": [
-          { "name": "job_id", "in": "path", "required": true, "schema": { "type": "string", "title": "Job Id" } }
-        ],
-        "responses": {
-          "200": {
-            "description": "Successful Response",
-            "content": {
-              "application/json": {
-                "schema": { "type": "boolean", "title": "Response Job-Retry Tag Recommendation Job" }
-              }
-            }
-          },
-          "422": {
-            "description": "Validation Error",
-            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/HTTPValidationError" } } }
-          }
-        }
-      }
-    },
-    "/job/tag_recommendation/project/{project_id}": {
-      "get": {
-        "tags": ["job"],
-        "summary": "Get all TagRecommendation jobs by project",
+        "summary": "Get all TagRecommendation jobs of the project",
         "operationId": "get_tag_recommendation_jobs_by_project",
         "security": [{ "OAuth2PasswordBearer": [] }],
         "parameters": [
@@ -2896,6 +3144,95 @@
                   "items": { "$ref": "#/components/schemas/TagRecommendationJobRead" },
                   "title": "Response Job-Get Tag Recommendation Jobs By Project"
                 }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/HTTPValidationError" } } }
+          }
+        }
+      }
+    },
+    "/projects/{project_id}/jobs/tag-recommendation/{job_id}": {
+      "get": {
+        "tags": ["job"],
+        "summary": "Get TagRecommendation job",
+        "operationId": "get_tag_recommendation_job_by_id",
+        "security": [{ "OAuth2PasswordBearer": [] }],
+        "parameters": [
+          {
+            "name": "project_id",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "integer", "title": "Project Id" }
+          },
+          { "name": "job_id", "in": "path", "required": true, "schema": { "type": "string", "title": "Job Id" } }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/TagRecommendationJobRead" } } }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/HTTPValidationError" } } }
+          }
+        }
+      }
+    },
+    "/projects/{project_id}/jobs/tag-recommendation/{job_id}/abort": {
+      "post": {
+        "tags": ["job"],
+        "summary": "Abort TagRecommendation job",
+        "operationId": "abort_tag_recommendation_job",
+        "security": [{ "OAuth2PasswordBearer": [] }],
+        "parameters": [
+          {
+            "name": "project_id",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "integer", "title": "Project Id" }
+          },
+          { "name": "job_id", "in": "path", "required": true, "schema": { "type": "string", "title": "Job Id" } }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": { "type": "boolean", "title": "Response Job-Abort Tag Recommendation Job" }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/HTTPValidationError" } } }
+          }
+        }
+      }
+    },
+    "/projects/{project_id}/jobs/tag-recommendation/{job_id}/retry": {
+      "post": {
+        "tags": ["job"],
+        "summary": "Retry TagRecommendation job",
+        "operationId": "retry_tag_recommendation_job",
+        "security": [{ "OAuth2PasswordBearer": [] }],
+        "parameters": [
+          {
+            "name": "project_id",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "integer", "title": "Project Id" }
+          },
+          { "name": "job_id", "in": "path", "required": true, "schema": { "type": "string", "title": "Job Id" } }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": { "type": "boolean", "title": "Response Job-Retry Tag Recommendation Job" }
               }
             }
           },
@@ -3001,133 +3338,6 @@
                   "type": "object",
                   "additionalProperties": { "type": "integer" },
                   "title": "Response Llm Assistant-Count Existing Assistant Annotations"
-                }
-              }
-            }
-          },
-          "422": {
-            "description": "Validation Error",
-            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/HTTPValidationError" } } }
-          }
-        }
-      }
-    },
-    "/llm_assistant/llm_assistant": {
-      "post": {
-        "tags": ["llm_assistant"],
-        "summary": "Start LlmAssistant job",
-        "operationId": "start_llm_assistant_job",
-        "requestBody": {
-          "content": { "application/json": { "schema": { "$ref": "#/components/schemas/LLMAssistantJobInput" } } },
-          "required": true
-        },
-        "responses": {
-          "200": {
-            "description": "Successful Response",
-            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/LlmAssistantJobRead" } } }
-          },
-          "422": {
-            "description": "Validation Error",
-            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/HTTPValidationError" } } }
-          }
-        },
-        "security": [{ "OAuth2PasswordBearer": [] }]
-      }
-    },
-    "/llm_assistant/llm_assistant/{job_id}": {
-      "get": {
-        "tags": ["llm_assistant"],
-        "summary": "Get LlmAssistant job",
-        "operationId": "get_llm_assistant_job_by_id",
-        "security": [{ "OAuth2PasswordBearer": [] }],
-        "parameters": [
-          { "name": "job_id", "in": "path", "required": true, "schema": { "type": "string", "title": "Job Id" } }
-        ],
-        "responses": {
-          "200": {
-            "description": "Successful Response",
-            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/LlmAssistantJobRead" } } }
-          },
-          "422": {
-            "description": "Validation Error",
-            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/HTTPValidationError" } } }
-          }
-        }
-      }
-    },
-    "/llm_assistant/llm_assistant/{job_id}/abort": {
-      "post": {
-        "tags": ["llm_assistant"],
-        "summary": "Abort LlmAssistant job",
-        "operationId": "abort_llm_assistant_job",
-        "security": [{ "OAuth2PasswordBearer": [] }],
-        "parameters": [
-          { "name": "job_id", "in": "path", "required": true, "schema": { "type": "string", "title": "Job Id" } }
-        ],
-        "responses": {
-          "200": {
-            "description": "Successful Response",
-            "content": {
-              "application/json": {
-                "schema": { "type": "boolean", "title": "Response Llm Assistant-Abort Llm Assistant Job" }
-              }
-            }
-          },
-          "422": {
-            "description": "Validation Error",
-            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/HTTPValidationError" } } }
-          }
-        }
-      }
-    },
-    "/llm_assistant/llm_assistant/{job_id}/retry": {
-      "post": {
-        "tags": ["llm_assistant"],
-        "summary": "Retry LlmAssistant job",
-        "operationId": "retry_llm_assistant_job",
-        "security": [{ "OAuth2PasswordBearer": [] }],
-        "parameters": [
-          { "name": "job_id", "in": "path", "required": true, "schema": { "type": "string", "title": "Job Id" } }
-        ],
-        "responses": {
-          "200": {
-            "description": "Successful Response",
-            "content": {
-              "application/json": {
-                "schema": { "type": "boolean", "title": "Response Llm Assistant-Retry Llm Assistant Job" }
-              }
-            }
-          },
-          "422": {
-            "description": "Validation Error",
-            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/HTTPValidationError" } } }
-          }
-        }
-      }
-    },
-    "/llm_assistant/llm_assistant/project/{project_id}": {
-      "get": {
-        "tags": ["llm_assistant"],
-        "summary": "Get all LlmAssistant jobs by project",
-        "operationId": "get_llm_assistant_jobs_by_project",
-        "security": [{ "OAuth2PasswordBearer": [] }],
-        "parameters": [
-          {
-            "name": "project_id",
-            "in": "path",
-            "required": true,
-            "schema": { "type": "integer", "title": "Project Id" }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "Successful Response",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "array",
-                  "items": { "$ref": "#/components/schemas/LlmAssistantJobRead" },
-                  "title": "Response Llm Assistant-Get Llm Assistant Jobs By Project"
                 }
               }
             }
@@ -3766,32 +3976,6 @@
             }
           }
         },
-        "responses": {
-          "200": {
-            "description": "Successful Response",
-            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/PerspectivesJobRead" } } }
-          },
-          "422": {
-            "description": "Validation Error",
-            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/HTTPValidationError" } } }
-          }
-        }
-      }
-    },
-    "/perspectives/job/{perspectives_job_id}": {
-      "get": {
-        "tags": ["perspectives"],
-        "summary": "Returns the PerspectivesJob for the given ID if it exists",
-        "operationId": "get_perspectives_job",
-        "security": [{ "OAuth2PasswordBearer": [] }],
-        "parameters": [
-          {
-            "name": "perspectives_job_id",
-            "in": "path",
-            "required": true,
-            "schema": { "type": "string", "title": "Perspectives Job Id" }
-          }
-        ],
         "responses": {
           "200": {
             "description": "Successful Response",
@@ -7561,35 +7745,6 @@
         }
       }
     },
-    "/tagrecommendation/job/{job_id}": {
-      "get": {
-        "tags": ["TagRecommendation"],
-        "summary": "Retrieve all (non-reviewed) document tag recommendations of the given tag recommendation job.",
-        "operationId": "get_all_tagrecommendations_from_job",
-        "security": [{ "OAuth2PasswordBearer": [] }],
-        "parameters": [
-          { "name": "job_id", "in": "path", "required": true, "schema": { "type": "string", "title": "Job Id" } }
-        ],
-        "responses": {
-          "200": {
-            "description": "Successful Response",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "array",
-                  "items": { "$ref": "#/components/schemas/TagRecommendationResult" },
-                  "title": "Response Tagrecommendation-Get All Tagrecommendations From Job"
-                }
-              }
-            }
-          },
-          "422": {
-            "description": "Validation Error",
-            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/HTTPValidationError" } } }
-          }
-        }
-      }
-    },
     "/tagrecommendation/review_recommendations": {
       "patch": {
         "tags": ["TagRecommendation"],
@@ -7622,6 +7777,41 @@
           }
         },
         "security": [{ "OAuth2PasswordBearer": [] }]
+      }
+    },
+    "/projects/{project_id}/jobs/tag-recommendation/{job_id}/recommendations": {
+      "get": {
+        "tags": ["TagRecommendation"],
+        "summary": "Retrieve all (non-reviewed) document tag recommendations of the given tag recommendation job.",
+        "operationId": "get_all_tagrecommendations_from_job",
+        "security": [{ "OAuth2PasswordBearer": [] }],
+        "parameters": [
+          {
+            "name": "project_id",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "integer", "title": "Project Id" }
+          },
+          { "name": "job_id", "in": "path", "required": true, "schema": { "type": "string", "title": "Job Id" } }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": { "$ref": "#/components/schemas/TagRecommendationResult" },
+                  "title": "Response Tagrecommendation-Get All Tagrecommendations From Job"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/HTTPValidationError" } } }
+          }
+        }
       }
     },
     "/timelineAnalysis": {

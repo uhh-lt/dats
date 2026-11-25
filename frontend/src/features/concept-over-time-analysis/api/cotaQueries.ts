@@ -1,3 +1,4 @@
+import { JobService } from "@api/services/JobService";
 import { createJobQueries } from "@core/job";
 import { ConceptOverTimeAnalysisService } from "@api/services/ConceptOverTimeAnalysisService";
 import type { COTARead } from "@models/COTARead";
@@ -32,5 +33,5 @@ export const cotaQueries = {
     }),
 
   // the refinement / background job of this domain
-  job: createJobQueries("cota", (jobId) => ConceptOverTimeAnalysisService.getCotaJob({ cotaJobId: jobId })),
+  job: createJobQueries("cota", (job) => JobService.getCotaRefinementJobById(job)),
 };

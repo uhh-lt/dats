@@ -15,7 +15,7 @@ export const useExport = ({ export_job_type, specific_export_job_parameters }: O
 
   // mutations
   const { mutate: startExportMutation, reset: resetExport, data, isPending } = ExportHooks.useStartExportJob();
-  const exportJob = useLiveJob(exportQueries.job.byId(data?.job_id));
+  const exportJob = useLiveJob(exportQueries.job.byId(projectId, data?.job_id));
 
   // snackbar
   const openSnackbar = useOpenSnackbar();
@@ -23,6 +23,7 @@ export const useExport = ({ export_job_type, specific_export_job_parameters }: O
   const onClick = useCallback(() => {
     if (!projectId) return;
     startExportMutation({
+      projectId,
       requestBody: {
         export_job_type: export_job_type,
         project_id: projectId,

@@ -7,7 +7,6 @@ from modules.classifier.classifier_dto import (
     ClassifierJobInput,
     ClassifierJobOutput,
 )
-from modules.classifier.classifier_endpoint import router
 from repos.db.sql_repo import SQLRepo
 from systems.job_system.job_dto import Job
 from systems.job_system.job_register_decorator import register_job
@@ -38,7 +37,6 @@ def validate_classifier_input(db: Session, payload: ClassifierJobInput) -> None:
     output_type=ClassifierJobOutput,
     generate_endpoints=EndpointGeneration.ALL,
     publish_updates=True,
-    router=router,
     device="gpu",
     result_ttl=JobTiming.NINETY_DAYS,
     timeout=JobTiming.ONE_DAY,

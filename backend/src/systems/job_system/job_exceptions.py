@@ -1,6 +1,15 @@
 from fastapi import status
 
+from common.common_exceptions import NotFoundError
 from common.exception_handler import exception_handler
+
+
+class JobNotFoundError(NotFoundError):
+    """Raised by `JobService.read_project_job` for a job of another project or
+    of another type than the one asked for."""
+
+    def __init__(self, job_id: str) -> None:
+        super().__init__(f"Job {job_id} not found.")
 
 
 class JobInputError(Exception):

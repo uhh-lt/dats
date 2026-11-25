@@ -51,7 +51,7 @@ interface PerspectiveCardProps {
 }
 
 export function PerspectiveCard({ aspect, title }: PerspectiveCardProps) {
-  const perspectivesJob = useLiveJob(perspectivesQueries.job.byId(aspect.most_recent_job_id));
+  const perspectivesJob = useLiveJob(perspectivesQueries.job.byId(aspect.project_id, aspect.most_recent_job_id));
   const mapThumbnailUrl = PerspectivesHooks.useGetMapThumbnailURL(
     aspect.id,
     perspectivesJob.data?.status === JobStatus.FINISHED,

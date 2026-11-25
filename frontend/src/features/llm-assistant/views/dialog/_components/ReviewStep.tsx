@@ -115,6 +115,7 @@ export function ReviewStep() {
       if (!method || !source) return;
       startLLMAssistantJobMutation(
         {
+          projectId,
           requestBody: {
             project_id: projectId,
             task_type: method,

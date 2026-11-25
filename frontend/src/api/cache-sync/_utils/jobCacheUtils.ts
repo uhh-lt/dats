@@ -72,7 +72,9 @@ export function handleJobUpdate(job: JobRead): void {
       upsertJob(job, tagRecommendationQueries.job);
       // the recommendations of the job exist once it finished
       if (job.status === JobStatus.FINISHED) {
-        queryClient.invalidateQueries({ queryKey: tagRecommendationQueries.byJob(job.job_id).queryKey });
+        queryClient.invalidateQueries({
+          queryKey: tagRecommendationQueries.byJob(job.project_id, job.job_id).queryKey,
+        });
       }
       break;
     case ClassifierJobRead.job_type.CLASSIFIER:
@@ -106,7 +108,10 @@ export function invalidateAllJobs(): void {
 // The query definitions of one job type (`<domain>Queries.job`): the single-job query and, for types that have one,
 // the per-project job list.
 interface JobTypeQueries<T> {
-  byId: (jobId: string) => {
+  byId: (
+    projectId: number,
+    jobId: string,
+  ) => {
     queryKey: DataTag<readonly unknown[], T | null | undefined, Error> | DataTag<readonly unknown[], T, Error>;
   };
   byProject?: (projectId: number) => { queryKey: DataTag<readonly unknown[], T[], Error> };
@@ -115,7 +120,7 @@ interface JobTypeQueries<T> {
 // A job update carries the full JobRead: write it into the single-job cache and
 // upsert it into the project job-list cache (if the job type has one).
 function upsertJob<T extends { job_id: string; project_id: number }>(job: T, queries: JobTypeQueries<T>) {
-  queryClient.setQueryData(queries.byId(job.job_id).queryKey, job);
+  queryClient.setQueryData(queries.byId(job.project_id, job.job_id).queryKey, job);
   if (!queries.byProject) return;
   queryClient.setQueryData(queries.byProject(job.project_id).queryKey, (old) => {
     if (!old) return old;

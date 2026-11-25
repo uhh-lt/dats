@@ -357,21 +357,6 @@ def start_perspectives_job(
     return PerspectivesJobRead.from_rq_job(job)
 
 
-@router.get(
-    "/job/{perspectives_job_id}",
-    response_model=PerspectivesJobRead,
-    summary="Returns the PerspectivesJob for the given ID if it exists",
-)
-def get_perspectives_job(
-    *,
-    perspectives_job_id: str,
-    authz_user: AuthzUser = Depends(),
-) -> PerspectivesJobRead:
-    job = js.get_job(perspectives_job_id)
-    authz_user.assert_in_project(job.get_project_id())
-    return PerspectivesJobRead.from_rq_job(job=job)
-
-
 # --- other operations
 
 

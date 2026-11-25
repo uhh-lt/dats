@@ -5,8 +5,6 @@
 import type { ClassifierDatasetStatistics } from "@models/ClassifierDatasetStatistics";
 import type { ClassifierDatasetStatisticsRequest } from "@models/ClassifierDatasetStatisticsRequest";
 import type { ClassifierInfo } from "@models/ClassifierInfo";
-import type { ClassifierJobInput } from "@models/ClassifierJobInput";
-import type { ClassifierJobRead } from "@models/ClassifierJobRead";
 import type { ClassifierRead } from "@models/ClassifierRead";
 import type { ClassifierUpdate } from "@models/ClassifierUpdate";
 import type { CancelablePromise } from "../core/CancelablePromise";
@@ -103,98 +101,6 @@ export class ClassifierService {
       },
       body: requestBody,
       mediaType: "application/json",
-      errors: {
-        422: `Validation Error`,
-      },
-    });
-  }
-  /**
-   * Start Classifier job
-   * @returns ClassifierJobRead Successful Response
-   * @throws ApiError
-   */
-  public static startClassifierJob({
-    requestBody,
-  }: {
-    requestBody: ClassifierJobInput;
-  }): CancelablePromise<ClassifierJobRead> {
-    return __request(OpenAPI, {
-      method: "POST",
-      url: "/classifier/classifier",
-      body: requestBody,
-      mediaType: "application/json",
-      errors: {
-        422: `Validation Error`,
-      },
-    });
-  }
-  /**
-   * Get Classifier job
-   * @returns ClassifierJobRead Successful Response
-   * @throws ApiError
-   */
-  public static getClassifierJobById({ jobId }: { jobId: string }): CancelablePromise<ClassifierJobRead> {
-    return __request(OpenAPI, {
-      method: "GET",
-      url: "/classifier/classifier/{job_id}",
-      path: {
-        job_id: jobId,
-      },
-      errors: {
-        422: `Validation Error`,
-      },
-    });
-  }
-  /**
-   * Abort Classifier job
-   * @returns boolean Successful Response
-   * @throws ApiError
-   */
-  public static abortClassifierJob({ jobId }: { jobId: string }): CancelablePromise<boolean> {
-    return __request(OpenAPI, {
-      method: "POST",
-      url: "/classifier/classifier/{job_id}/abort",
-      path: {
-        job_id: jobId,
-      },
-      errors: {
-        422: `Validation Error`,
-      },
-    });
-  }
-  /**
-   * Retry Classifier job
-   * @returns boolean Successful Response
-   * @throws ApiError
-   */
-  public static retryClassifierJob({ jobId }: { jobId: string }): CancelablePromise<boolean> {
-    return __request(OpenAPI, {
-      method: "POST",
-      url: "/classifier/classifier/{job_id}/retry",
-      path: {
-        job_id: jobId,
-      },
-      errors: {
-        422: `Validation Error`,
-      },
-    });
-  }
-  /**
-   * Get all Classifier jobs by project
-   * @returns ClassifierJobRead Successful Response
-   * @throws ApiError
-   */
-  public static getClassifierJobsByProject({
-    projectId,
-  }: {
-    projectId: number;
-  }): CancelablePromise<Array<ClassifierJobRead>> {
-    return __request(OpenAPI, {
-      method: "GET",
-      url: "/classifier/classifier/project/{project_id}",
-      path: {
-        project_id: projectId,
-      },
       errors: {
         422: `Validation Error`,
       },
