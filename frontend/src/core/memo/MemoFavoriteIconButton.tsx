@@ -18,9 +18,12 @@ export const MemoFavoriteIconButton = memo(({ memo }: MemoFavoriteIconButtonProp
   const handleClick = useCallback(
     (event: React.MouseEvent) => {
       event.stopPropagation();
-      updateMemos({ requestBody: [{ memo_id: memo.id, is_favorite: !memo.is_favorite }] });
+      updateMemos({
+        projectId: memo.project_id,
+        requestBody: [{ memo_id: memo.id, is_favorite: !memo.is_favorite }],
+      });
     },
-    [updateMemos, memo.id, memo.is_favorite],
+    [updateMemos, memo.project_id, memo.id, memo.is_favorite],
   );
 
   return (

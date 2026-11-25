@@ -67,12 +67,12 @@ function DocumentMemoList({ sdocId, onClick }: DocumentMemoListProps) {
     createMemoMutation(
       {
         projectId,
-        attachedObjectId: sdocId,
-        attachedObjectType: AttachedObjectType.SOURCE_DOCUMENT,
         requestBody: {
           content: "",
           content_json: "",
           title: `${user.first_name} ${user.last_name}'s Memo`,
+          attached_object_id: sdocId,
+          attached_object_type: AttachedObjectType.SOURCE_DOCUMENT,
         },
       },
       { onSuccess: onClick },

@@ -102,16 +102,19 @@ export function useMemoPersistence({
             content: values.content,
             content_json: values.content_json,
           };
+          // the project of the attached object; a project memo is attached to the project itself
+          const projectId = "project_id" in attachedObject ? attachedObject.project_id : attachedObject.id;
 
           if (currentMemoIdRef.current) {
-            await updateMemo({ memoId: currentMemoIdRef.current, requestBody });
+            await updateMemo({ projectId, memoId: currentMemoIdRef.current, requestBody });
           } else {
             const savedMemo = await createMemo({
-              // the project of the attached object; a project memo is attached to the project itself
-              projectId: "project_id" in attachedObject ? attachedObject.project_id : attachedObject.id,
-              attachedObjectId: attachedObject.id,
-              attachedObjectType,
-              requestBody,
+              projectId,
+              requestBody: {
+                ...requestBody,
+                attached_object_id: attachedObject.id,
+                attached_object_type: attachedObjectType,
+              },
             });
             currentMemoIdRef.current = savedMemo.id;
             onMemoCreateSuccess?.(savedMemo);

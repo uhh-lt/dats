@@ -2,6 +2,7 @@
 /* istanbul ignore file */
 /* tslint:disable */
 /* eslint-disable */
+import type { AttachedObjectType } from "./AttachedObjectType";
 export type MemoCreate = {
   /**
    * Title of the Memo
@@ -19,4 +20,12 @@ export type MemoCreate = {
    * JSON content of the Memo
    */
   content_json: string;
+  /**
+   * ID of the Object the Memo is attached to
+   */
+  attached_object_id: number;
+  /**
+   * Type of the Object the ID refers to
+   */
+  attached_object_type: AttachedObjectType;
 };

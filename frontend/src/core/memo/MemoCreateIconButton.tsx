@@ -31,9 +31,13 @@ export const MemoCreateIconButton = memo(
       createMemo.mutate(
         {
           projectId,
-          attachedObjectId,
-          attachedObjectType,
-          requestBody: { title: "Untitled", content: "", content_json: "" },
+          requestBody: {
+            title: "Untitled",
+            content: "",
+            content_json: "",
+            attached_object_id: attachedObjectId,
+            attached_object_type: attachedObjectType,
+          },
         },
         { onSuccess: (memo) => onCreated?.(memo.id) },
       );

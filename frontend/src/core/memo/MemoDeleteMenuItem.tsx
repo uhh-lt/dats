@@ -1,6 +1,7 @@
 import { useOpenConfirmationDialog } from "@core/notification";
 import DeleteIcon from "@mui/icons-material/Delete";
 import { ListItemIcon, ListItemText, MenuItem, MenuItemProps } from "@mui/material";
+import { useParams } from "@tanstack/react-router";
 import { memo, useCallback } from "react";
 import { MemoHooks } from "./api/memoHooks";
 
@@ -13,18 +14,19 @@ interface MemoDeleteMenuItemProps {
 
 export const MemoDeleteMenuItem = memo(
   ({ memoId, memoTitle, onClick, ...props }: MemoDeleteMenuItemProps & MenuItemProps) => {
+    const projectId = useParams({ strict: false, select: (params) => params.projectId });
     const { mutate: deleteMemo } = MemoHooks.useDeleteMemo();
 
     const openConfirmationDialog = useOpenConfirmationDialog();
     const handleDeleteMemo = useCallback(
       (event: React.MouseEvent<HTMLLIElement>) => {
         event.stopPropagation();
-        if (memoId) {
+        if (memoId && projectId !== undefined) {
           openConfirmationDialog({
             text: `Do you really want to remove the Memo "${memoTitle}"? This action cannot be undone!`,
             onAccept: () => {
               deleteMemo(
-                { memoId: memoId },
+                { projectId, memoId },
                 {
                   onSuccess: () => {
                     onClick();
@@ -37,7 +39,7 @@ export const MemoDeleteMenuItem = memo(
           throw Error("Invalid invocation of handleDeleteTagMemo. No memo to delete.");
         }
       },
-      [memoId, openConfirmationDialog, memoTitle, deleteMemo, onClick],
+      [memoId, projectId, openConfirmationDialog, memoTitle, deleteMemo, onClick],
     );
 
     return (

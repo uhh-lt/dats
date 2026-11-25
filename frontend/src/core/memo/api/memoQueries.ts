@@ -13,7 +13,7 @@ const nextPageByCount = <TPage extends { items: unknown[]; total_results: number
  * Query factory for memos.
  *
  *   memoQueries.all()                              ["memo"]
- *   memoQueries.byId(memoId)                       ["memo", "detail", memoId]
+ *   memoQueries.byId(projectId, memoId)            ["memo", "detail", memoId, projectId]
  *   memoQueries.byAttachedObject(projectId, type, id)  ["memo", "attached", type, id, projectId]
  *   memoQueries.recent(projectId)                  ["memo", "recent", projectId]
  *   memoQueries.search(request)                    ["memo", "search", request]
@@ -25,10 +25,10 @@ export const memoQueries = {
 
   // a single memo
   byIdScope: () => [...memoQueries.all(), "detail"] as const,
-  byId: (memoId: number | null | undefined) =>
+  byId: (projectId: number | null | undefined, memoId: number | null | undefined) =>
     queryOptions({
-      queryKey: [...memoQueries.byIdScope(), memoId] as const,
-      queryFn: !memoId ? skipToken : () => MemoService.getById({ memoId }),
+      queryKey: [...memoQueries.byIdScope(), memoId, projectId] as const,
+      queryFn: !projectId || !memoId ? skipToken : () => MemoService.getById({ projectId, memoId }),
       staleTime: 1000 * 60 * 5,
     }),
 
@@ -44,7 +44,12 @@ export const memoQueries = {
       queryFn:
         !projectId || !attachedObjId
           ? skipToken
-          : () => MemoService.getMemosByAttachedObjectId({ projectId, attachedObjType, attachedObjId }),
+          : () =>
+              MemoService.getByProject({
+                projectId,
+                attachedObjectType: attachedObjType,
+                attachedObjectId: attachedObjId,
+              }),
       retry: false,
     }),
 

@@ -2,8 +2,15 @@ import { queryClient } from "@api/queryClient";
 import { MemoService } from "@api/services/MemoService";
 import { AttachedObjectType } from "@models/AttachedObjectType";
 import { MemoRead } from "@models/MemoRead";
+import { useAppSelector } from "@store/storeHooks";
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { memoQueries } from "./memoQueries";
+
+// MEMO QUERIES
+const useGetMemo = (memoId: number | null | undefined) => {
+  const projectId = useAppSelector((state) => state.project.projectId);
+  return useQuery(memoQueries.byId(projectId, memoId));
+};
 
 // MEMO MUTATIONS
 const useCreateMemo = () =>
@@ -49,7 +56,8 @@ const useDeleteMemo = () =>
 const useDeleteMemos = () =>
   useMutation({
     mutationKey: [...memoQueries.all(), "deleteMemos"],
-    mutationFn: ({ memoIds }: { memoIds: number[] }) => MemoService.deleteMemosBulk({ requestBody: memoIds }),
+    mutationFn: ({ projectId, memoIds }: { projectId: number; memoIds: number[] }) =>
+      MemoService.deleteMemosBulk({ projectId, requestBody: memoIds }),
     meta: {
       datsEvent: "MEMO_DELETED_BATCH",
       successMessage: (memos: MemoRead[]) => `Deleted ${memos.length} memo(s)`,
@@ -59,7 +67,7 @@ const useDeleteMemos = () =>
 const useRecordRecentMemo = () =>
   useMutation({
     mutationKey: [...memoQueries.all(), "recordRecentMemo"],
-    mutationFn: ({ memoId }: { memoId: number; projectId: number }) => MemoService.recordRecentMemo({ memoId }),
+    mutationFn: MemoService.recordRecentMemo,
     // The recent memos are private to the user, so there is no DATS event for this: refresh them here.
     onSuccess: (_data, { projectId }) => {
       queryClient.invalidateQueries({ queryKey: memoQueries.recent(projectId).queryKey });
@@ -78,6 +86,7 @@ const useGetObjectMemos = (
   });
 
 export const MemoHooks = {
+  useGetMemo,
   useCreateMemo,
   useUpdateMemo,
   useUpdateMemos,
