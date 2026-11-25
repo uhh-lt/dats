@@ -229,9 +229,9 @@ def import_sdocs_to_proj(
         if sdoc_folder is None:
             sdoc_folder = crud_folder.create(
                 db=db,
+                project_id=project_id,
                 create_dto=FolderCreate(
                     name=sdoc_export.folder_name,
-                    project_id=project_id,
                     folder_type=FolderType.SDOC_FOLDER,
                 ),
             )
@@ -302,14 +302,15 @@ def import_sdocs_to_proj(
             project_metadata = existing_metadata[(DocType(sdoc_export.doctype), key)]
 
             metadata_create = SourceDocumentMetadataCreate.with_metatype(
-                project_id=created_sdoc.project_id,
                 metatype=project_metadata.metatype,
                 source_document_id=created_sdoc.id,
                 project_metadata_id=project_metadata.id,
                 value=value,
             )
             metadata_create_dtos.append(metadata_create)
-        crud_sdoc_meta.create_multi(db=db, create_dtos=metadata_create_dtos)
+        crud_sdoc_meta.create_multi(
+            db=db, project_id=project_id, create_dtos=metadata_create_dtos
+        )
 
         # 5. Write the artefacts with an archive to their stores, if
         # their step was imported as finished

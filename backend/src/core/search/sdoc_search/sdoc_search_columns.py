@@ -219,7 +219,7 @@ class SdocColumns(str, AbstractColumns):
                 codes = crud_code.read_by_ids(db, project_id=project_id, ids=ids)
                 return [code.name for code in codes]
             case SdocColumns.FOLDER_ID_LIST_RECURSIVE:
-                folders = crud_folder.read_by_ids(db, ids=ids)
+                folders = crud_folder.read_by_ids(db, project_id=project_id, ids=ids)
                 return [folder.name for folder in folders]
             case SdocColumns.USER_ID_LIST:
                 users = crud_user.read_by_ids(db, ids=ids)

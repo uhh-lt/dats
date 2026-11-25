@@ -274,7 +274,7 @@ class SpanColumns(str, AbstractColumns):
                 tags = crud_tag.read_by_ids(db, project_id=project_id, ids=ids)
                 return [tag.name for tag in tags]
             case SpanColumns.FOLDER_ID_LIST_RECURSIVE:
-                folders = crud_folder.read_by_ids(db, ids=ids)
+                folders = crud_folder.read_by_ids(db, project_id=project_id, ids=ids)
                 return [folder.name for folder in folders]
             case SpanColumns.CODE_ID_LIST_RECURSIVE:
                 codes = crud_code.read_by_ids(db, project_id=project_id, ids=ids)

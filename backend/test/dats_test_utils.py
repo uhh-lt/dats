@@ -469,7 +469,7 @@ def create_text_document(
             doctype=doctype,
         )
         language = crud_sdoc_meta.read_by_sdoc_and_key(
-            db=db, sdoc_id=sdoc.id, key="language"
+            db=db, project_id=project.id, sdoc_id=sdoc.id, key="language"
         )
         language.str_value = "en"
     return sdoc

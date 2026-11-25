@@ -1,19 +1,16 @@
-from fastapi import APIRouter, Depends
+from fastapi import Depends
 
-from common.crud_enum import Crud
 from common.dats_event import DATSEvent
-from common.dependencies import DBSession, get_current_user
+from common.dependencies import DBSession
 from common.doc_type_enum import DocType
-from core.auth.authz_user import AuthzUser
+from common.project_router import project_router
 from core.doc.folder_crud import crud_folder
 from core.doc.folder_dto import FolderCreate, FolderRead, FolderUpdate, FolderUpdateBulk
 from core.doc.folder_enum import FolderType
 from core.doc.folder_service import FolderService
 from systems.websocket_system.websocket_dependency import WebsocketEmitter
 
-router = APIRouter(
-    prefix="/folder", dependencies=[Depends(get_current_user)], tags=["folder", "mcp"]
-)
+router = project_router("/folders", tags=["folder", "mcp"])
 
 
 # --- create operations
@@ -26,19 +23,38 @@ router = APIRouter(
 )
 def create_folder(
     *,
-    folder: FolderCreate,
     db: DBSession,
-    authz_user: AuthzUser = Depends(),
+    project_id: int,
+    folder: FolderCreate,
     ws: WebsocketEmitter = Depends(),
 ) -> FolderRead:
-    authz_user.assert_in_project(folder.project_id)
-    db_obj = crud_folder.create(db=db, create_dto=folder)
+    db_obj = crud_folder.create(db=db, project_id=project_id, create_dto=folder)
     result = FolderRead.model_validate(db_obj)
-    ws.emit_to_project(DATSEvent.FOLDER_CREATED, result, project_id=folder.project_id)
+    ws.emit_to_project(DATSEvent.FOLDER_CREATED, result, project_id=project_id)
     return result
 
 
 # --- read operations
+
+
+@router.get(
+    "",
+    response_model=list[FolderRead],
+    summary="Returns the folders of the project, optionally only those of the folder_type",
+)
+def get_by_project(
+    *,
+    db: DBSession,
+    project_id: int,
+    folder_type: FolderType | None = None,
+) -> list[FolderRead]:
+    if folder_type is None:
+        folders = crud_folder.read_by_project(db=db, project_id=project_id)
+    else:
+        folders = crud_folder.read_by_project_and_type(
+            db=db, project_id=project_id, folder_type=folder_type
+        )
+    return [FolderRead.model_validate(folder) for folder in folders]
 
 
 @router.get(
@@ -48,28 +64,26 @@ def create_folder(
 )
 def get_by_id(
     *,
-    folder_id: int,
     db: DBSession,
-    authz_user: AuthzUser = Depends(),
+    project_id: int,
+    folder_id: int,
 ) -> FolderRead:
-    authz_user.assert_in_same_project_as(Crud.FOLDER, folder_id)
-    folder = crud_folder.read(db=db, id=folder_id)
+    folder = crud_folder.read(db=db, project_id=project_id, id=folder_id)
     return FolderRead.model_validate(folder)
 
 
 @router.get(
-    "/sdocids/{folder_id}",
+    "/{folder_id}/source-documents",
     response_model=dict[DocType, list[int]],
     summary="Returns lists of source document ids per doctype in the specified sdoc folder",
 )
 def get_sdoc_ids_in_folder_by_doctype(
     *,
-    folder_id: int,
     db: DBSession,
-    authz_user: AuthzUser = Depends(),
+    project_id: int,
+    folder_id: int,
 ) -> dict[DocType, list[int]]:
-    authz_user.assert_in_same_project_as(Crud.FOLDER, folder_id)
-    folder = crud_folder.read(db=db, id=folder_id)
+    folder = crud_folder.read(db=db, project_id=project_id, id=folder_id)
     if folder.folder_type != FolderType.SDOC_FOLDER:
         raise ValueError("Folder is not an SDOC folder")
     result: dict[DocType, list[int]] = {dt: [] for dt in DocType}
@@ -78,67 +92,24 @@ def get_sdoc_ids_in_folder_by_doctype(
     return result
 
 
-@router.get(
-    "/project/{project_id}/folder/{folder_type}",
-    response_model=list[FolderRead],
-    summary="Returns the folders of the folder_type of the project with the given ID",
-)
-def get_folders_by_project_and_type(
-    *,
-    project_id: int,
-    folder_type: FolderType,
-    db: DBSession,
-    authz_user: AuthzUser = Depends(),
-) -> list[FolderRead]:
-    authz_user.assert_in_project(project_id)
-    folders = crud_folder.read_by_project_and_type(
-        db=db, project_id=project_id, folder_type=folder_type
-    )
-    return [FolderRead.model_validate(folder) for folder in folders]
-
-
 # --- update operations
 
 
 @router.patch(
-    "/{folder_id}",
-    response_model=FolderRead,
-    summary="Updates the Folder with the given ID.",
-)
-def update_by_id(
-    *,
-    folder_id: int,
-    folder_update: FolderUpdate,
-    db: DBSession,
-    authz_user: AuthzUser = Depends(),
-    ws: WebsocketEmitter = Depends(),
-) -> FolderRead:
-    authz_user.assert_in_same_project_as(Crud.FOLDER, folder_id)
-    db_obj = crud_folder.update(db=db, id=folder_id, update_dto=folder_update)
-    result = FolderRead.model_validate(db_obj)
-    ws.emit_to_project(
-        DATSEvent.FOLDER_UPDATED, result, project_id=db_obj.get_project_id()
-    )
-    return result
-
-
-@router.patch(
-    "/bulk/update",
+    "/bulk",
     response_model=list[FolderRead],
     summary="Updates the Folders with the given IDs.",
 )
 def update_folders_bulk(
     *,
-    folder_updates: list[FolderUpdateBulk],
     db: DBSession,
-    authz_user: AuthzUser = Depends(),
+    project_id: int,
+    folder_updates: list[FolderUpdateBulk],
     ws: WebsocketEmitter = Depends(),
 ) -> list[FolderRead]:
-    for folder_update in folder_updates:
-        authz_user.assert_in_same_project_as(Crud.FOLDER, folder_update.folder_id)
-
     db_objs = crud_folder.update_multi(
         db=db,
+        project_id=project_id,
         ids=[u.folder_id for u in folder_updates],
         update_dtos=[
             FolderUpdate.model_validate(
@@ -149,12 +120,31 @@ def update_folders_bulk(
     )
     results = [FolderRead.model_validate(folder) for folder in db_objs]
     if results:
-        ws.emit_to_projects_grouped(
-            DATSEvent.FOLDER_UPDATED_BATCH,
-            db_objs,
-            to_dto=FolderRead.model_validate,
+        ws.emit_to_project(
+            DATSEvent.FOLDER_UPDATED_BATCH, results, project_id=project_id
         )
     return results
+
+
+@router.patch(
+    "/{folder_id}",
+    response_model=FolderRead,
+    summary="Updates the Folder with the given ID.",
+)
+def update_by_id(
+    *,
+    db: DBSession,
+    project_id: int,
+    folder_id: int,
+    folder_update: FolderUpdate,
+    ws: WebsocketEmitter = Depends(),
+) -> FolderRead:
+    db_obj = crud_folder.update(
+        db=db, project_id=project_id, id=folder_id, update_dto=folder_update
+    )
+    result = FolderRead.model_validate(db_obj)
+    ws.emit_to_project(DATSEvent.FOLDER_UPDATED, result, project_id=project_id)
+    return result
 
 
 # --- delete operations
@@ -167,12 +157,13 @@ def update_folders_bulk(
 )
 def delete_by_id(
     *,
-    folder_id: int,
     db: DBSession,
-    authz_user: AuthzUser = Depends(),
+    project_id: int,
+    folder_id: int,
     ws: WebsocketEmitter = Depends(),
 ) -> FolderRead:
-    authz_user.assert_in_same_project_as(Crud.FOLDER, folder_id)
-    result = FolderService().delete_folder(db=db, folder_id=folder_id)
-    ws.emit_to_project(DATSEvent.FOLDER_DELETED, result, project_id=result.project_id)
+    result = FolderService().delete_folder(
+        db=db, project_id=project_id, folder_id=folder_id
+    )
+    ws.emit_to_project(DATSEvent.FOLDER_DELETED, result, project_id=project_id)
     return result

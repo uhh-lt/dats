@@ -26,7 +26,7 @@ class ProjectMetadataBaseDTO(BaseModel):
 
 # Properties for creation
 class ProjectMetadataCreate(ProjectMetadataBaseDTO):
-    project_id: int = Field(description="Project the ProjectMetadata belongs to")
+    pass
 
 
 # Properties for updating

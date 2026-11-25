@@ -178,7 +178,7 @@ class _References:
             metadata_key_and_doctype={
                 id: (field.key, field.doctype)
                 for id, field in crud_project_meta.read_existing_by_ids(
-                    db=db, ids=metadata_ids
+                    db=db, project_id=project_id, ids=metadata_ids
                 ).items()
             },
             sdoc_filename={

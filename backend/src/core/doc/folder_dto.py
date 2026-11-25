@@ -20,9 +20,6 @@ class FolderBaseDTO(BaseModel):
     parent_id: int | None = Field(
         default=None, description="ID of the parent folder (nullable)"
     )
-    project_id: int = Field(
-        description="ID of the project this folder belongs to (nullable)"
-    )
 
 
 class FolderCreate(FolderBaseDTO):
@@ -44,6 +41,7 @@ class FolderUpdateBulk(FolderUpdate):
 
 class FolderRead(FolderBaseDTO):
     id: int = Field(description="ID of the Folder")
+    project_id: int = Field(description="ID of the project this folder belongs to")
     created: datetime = Field(description="Creation timestamp of the folder")
     updated: datetime = Field(description="Update timestamp of the folder")
     model_config = ConfigDict(from_attributes=True)

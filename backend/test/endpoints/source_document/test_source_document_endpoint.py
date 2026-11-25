@@ -126,7 +126,10 @@ def test_delete_source_document_by_id(
     assert not file_path.exists()
     index_name = crud_sdoc_elastic.index.get_index_name(project_id=sdoc.project_id)
     assert not es_client.exists(index=index_name, id=str(sdoc.id))
-    assert client.get(f"/folder/{folder_id}").status_code == 403
+    assert (
+        client.get(f"/projects/{sdoc.project_id}/folders/{folder_id}").status_code
+        == 404
+    )
 
 
 def test_delete_image_removes_all_its_files(
@@ -178,7 +181,10 @@ def test_delete_sdocs_bulk(client: TestClient, project_with_sdocs_in_same_folder
         assert client.get(_url(sdocs[0].project_id, f"/{sdoc_id}")).status_code == 404
     # the SDOC_FOLDER of both documents is empty now and deleted as well
     folder = project_with_sdocs_in_same_folder["folder"]
-    assert client.get(f"/folder/{folder.id}").status_code == 403
+    assert (
+        client.get(f"/projects/{folder.project_id}/folders/{folder.id}").status_code
+        == 404
+    )
 
 
 def test_delete_sdoc_keeps_sdoc_folder_with_other_sdocs(
@@ -191,7 +197,10 @@ def test_delete_sdoc_keeps_sdoc_folder_with_other_sdocs(
     response = client.delete(_url(sdoc.project_id, f"/{sdoc.id}"))
 
     assert response.status_code == 200, response.text
-    assert client.get(f"/folder/{folder.id}").status_code == 200
+    assert (
+        client.get(f"/projects/{folder.project_id}/folders/{folder.id}").status_code
+        == 200
+    )
     assert (
         client.get(_url(other_sdoc.project_id, f"/{other_sdoc.id}")).status_code == 200
     )
@@ -203,11 +212,11 @@ def test_delete_sdoc_keeps_empty_normal_folder(
     """A NORMAL folder is never deleted with its documents, even when empty."""
     folder = crud_folder.create(
         db=db_session,
+        project_id=test_project.id,
         create_dto=FolderCreate(
             name="Normal Folder",
             folder_type=FolderType.NORMAL,
             parent_id=None,
-            project_id=test_project.id,
         ),
     )
     sdoc = crud_sdoc.create(
@@ -226,7 +235,10 @@ def test_delete_sdoc_keeps_empty_normal_folder(
 
     assert response.status_code == 200, response.text
     assert client.get(_url(sdoc.project_id, f"/{sdoc.id}")).status_code == 404
-    assert client.get(f"/folder/{folder.id}").status_code == 200
+    assert (
+        client.get(f"/projects/{folder.project_id}/folders/{folder.id}").status_code
+        == 200
+    )
 
 
 def test_delete_sdocs_bulk_if_not_exists(client: TestClient, test_project):

@@ -216,12 +216,12 @@ def empty_description_projects(
     )
     crud_project_meta.create(
         db=db_session,
+        project_id=test_project.id,
         create_dto=ProjectMetadataCreate(
             key="undescribed",
             metatype=MetaType.STRING,
             doctype=DocType.text,
             description="",
-            project_id=test_project.id,
         ),
     )
     target_project = _create_target_project(db_session, test_user)

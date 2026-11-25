@@ -23,6 +23,9 @@ PATH_IDS: dict[str, Callable[[TenantRows], int]] = {
     "code_id": lambda rows: rows["code"].id,
     "tag_id": lambda rows: rows["tag"].id,
     "sdoc_id": lambda rows: rows["sdoc"].id,
+    "folder_id": lambda rows: rows["folder"].id,
+    "project_metadata_id": lambda rows: rows["project_metadata"].id,
+    "sdoc_metadata_id": lambda rows: rows["sdoc_metadata"].id,
 }
 
 # a valid body (with ids of the path's project) for the routes with a path id and a
@@ -48,6 +51,15 @@ BODIES: dict[str, Callable[[TenantRows], Any]] = {
     ),
     "PATCH /projects/{project_id}/source-documents/{sdoc_id}": (
         lambda rows: {"name": "renamed"}
+    ),
+    "PATCH /projects/{project_id}/folders/{folder_id}": (
+        lambda rows: {"name": "renamed"}
+    ),
+    "PATCH /projects/{project_id}/project-metadata/{project_metadata_id}": (
+        lambda rows: {"description": "changed"}
+    ),
+    "PATCH /projects/{project_id}/source-document-metadata/{sdoc_metadata_id}": (
+        lambda rows: {"str_value": "changed"}
     ),
 }
 
@@ -229,5 +241,22 @@ def test_filter_id_of_another_project_matches_nothing(
     response = client.get(
         url, params={"user_id": test_user.id, "sdoc_id": foreign["sdoc"].id}
     )
+    assert response.status_code == 200, response.text
+    assert response.json() == []
+
+
+def test_document_filter_id_of_another_project_matches_nothing(
+    client: TestClient, tenants: TwoTenants
+) -> None:
+    """Filtering the document metadata of the path's project by a document of the
+    other project returns nothing, while the own document returns its metadata."""
+    own, foreign = tenants["own"], tenants["foreign"]
+    url = f"/projects/{own['project'].id}/source-document-metadata"
+
+    response = client.get(url, params={"sdoc_id": own["sdoc"].id})
+    assert response.status_code == 200, response.text
+    assert [meta["id"] for meta in response.json()] == [own["sdoc_metadata"].id]
+
+    response = client.get(url, params={"sdoc_id": foreign["sdoc"].id})
     assert response.status_code == 200, response.text
     assert response.json() == []

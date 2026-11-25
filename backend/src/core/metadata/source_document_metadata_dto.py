@@ -26,7 +26,6 @@ class SourceDocumentMetadataBaseDTO(BaseModel):
 
 # Properties for creation
 class SourceDocumentMetadataCreate(SourceDocumentMetadataBaseDTO):
-    project_id: int = Field(description="Project the SourceDocumentMetadata belongs to")
     source_document_id: int = Field(
         description="SourceDocument the SourceDocumentMetadata belongs to"
     )
@@ -34,7 +33,6 @@ class SourceDocumentMetadataCreate(SourceDocumentMetadataBaseDTO):
 
     @staticmethod
     def with_metatype(
-        project_id: int,
         source_document_id: int,
         project_metadata_id: int,
         metatype: MetaType | str,
@@ -48,7 +46,6 @@ class SourceDocumentMetadataCreate(SourceDocumentMetadataBaseDTO):
                     date_value=None,
                     int_value=None,
                     list_value=None,
-                    project_id=project_id,
                     source_document_id=source_document_id,
                     project_metadata_id=project_metadata_id,
                 )
@@ -59,7 +56,6 @@ class SourceDocumentMetadataCreate(SourceDocumentMetadataBaseDTO):
                     date_value=None,
                     int_value=round(float(value)) if value is not None else 0,
                     list_value=None,
-                    project_id=project_id,
                     source_document_id=source_document_id,
                     project_metadata_id=project_metadata_id,
                 )
@@ -70,7 +66,6 @@ class SourceDocumentMetadataCreate(SourceDocumentMetadataBaseDTO):
                     date_value=value if value is not None else date.today(),
                     int_value=None,
                     list_value=None,
-                    project_id=project_id,
                     source_document_id=source_document_id,
                     project_metadata_id=project_metadata_id,
                 )
@@ -81,7 +76,6 @@ class SourceDocumentMetadataCreate(SourceDocumentMetadataBaseDTO):
                     date_value=None,
                     int_value=None,
                     list_value=None,
-                    project_id=project_id,
                     source_document_id=source_document_id,
                     project_metadata_id=project_metadata_id,
                 )
@@ -95,7 +89,6 @@ class SourceDocumentMetadataCreate(SourceDocumentMetadataBaseDTO):
                     date_value=None,
                     int_value=None,
                     list_value=list_value,
-                    project_id=project_id,
                     source_document_id=source_document_id,
                     project_metadata_id=project_metadata_id,
                 )
@@ -105,7 +98,6 @@ class SourceDocumentMetadataCreate(SourceDocumentMetadataBaseDTO):
             date_value=None,
             int_value=None,
             list_value=None,
-            project_id=project_id,
             source_document_id=source_document_id,
             project_metadata_id=project_metadata_id,
         )

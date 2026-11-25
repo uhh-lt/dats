@@ -380,20 +380,20 @@ def search_project(
     # expands to {Research, Archive} and matches sdoc_two's annotations. ---
     folder = crud_folder.create(
         db=seed_db_session,
+        project_id=project.id,
         create_dto=FolderCreate(
             name="Research",
             folder_type=FolderType.NORMAL,
             parent_id=None,
-            project_id=project.id,
         ),
     )
     subfolder = crud_folder.create(
         db=seed_db_session,
+        project_id=project.id,
         create_dto=FolderCreate(
             name="Archive",
             folder_type=FolderType.NORMAL,
             parent_id=folder.id,
-            project_id=project.id,
         ),
     )
     seed_db_session.refresh(sdoc_two)

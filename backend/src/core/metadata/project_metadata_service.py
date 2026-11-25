@@ -15,12 +15,18 @@ class ProjectMetadataService(metaclass=SingletonMeta):
         return super(ProjectMetadataService, cls).__new__(cls)
 
     def update(
-        self, db: Session, *, id: int, update_dto: ProjectMetadataUpdate
+        self,
+        db: Session,
+        *,
+        project_id: int,
+        id: int,
+        update_dto: ProjectMetadataUpdate,
     ) -> ProjectMetadataRead:
         """
         Update a user-defined project metadata key.
 
         Args:
+            project_id: The project of the project metadata.
             id: The project metadata to update.
             update_dto: The changes. A new metatype replaces the values of all
                 documents with empty values of the new type.
@@ -32,20 +38,27 @@ class ProjectMetadataService(metaclass=SingletonMeta):
             ReadOnlyMetadataError: If the project metadata is read-only.
         """
         # 1) only the system may change read-only keys (doc processing fills them by key)
-        self._assert_writable(db=db, id=id)
+        self._assert_writable(db=db, project_id=project_id, id=id)
 
         # 2) update it
         return ProjectMetadataRead.model_validate(
-            crud_project_meta.update(db=db, id=id, update_dto=update_dto)
+            crud_project_meta.update(
+                db=db, project_id=project_id, id=id, update_dto=update_dto
+            )
         )
 
     def update_multi(
-        self, db: Session, *, update_dtos: list[ProjectMetadataUpdateBulk]
+        self,
+        db: Session,
+        *,
+        project_id: int,
+        update_dtos: list[ProjectMetadataUpdateBulk],
     ) -> list[ProjectMetadataRead]:
         """
         Update user-defined project metadata keys, each identified by its id.
 
         Args:
+            project_id: The project of the project metadata.
             update_dtos: The changes. Must not repeat an id. A new metatype replaces
                 the values of all documents with empty values of the new type.
 
@@ -60,7 +73,9 @@ class ProjectMetadataService(metaclass=SingletonMeta):
         # 1) only the system may change read-only keys (doc processing fills them by key)
         read_only = [
             metadata.key
-            for metadata in crud_project_meta.read_by_ids(db=db, ids=ids)
+            for metadata in crud_project_meta.read_by_ids(
+                db=db, project_id=project_id, ids=ids
+            )
             if metadata.read_only
         ]
         if read_only:
@@ -69,6 +84,7 @@ class ProjectMetadataService(metaclass=SingletonMeta):
         # 2) update them
         crud_project_meta.update_multi(
             db=db,
+            project_id=project_id,
             ids=ids,
             update_dtos=[
                 ProjectMetadataUpdate.model_validate(
@@ -79,14 +95,17 @@ class ProjectMetadataService(metaclass=SingletonMeta):
         )
         return [
             ProjectMetadataRead.model_validate(metadata)
-            for metadata in crud_project_meta.read_by_ids(db=db, ids=ids)
+            for metadata in crud_project_meta.read_by_ids(
+                db=db, project_id=project_id, ids=ids
+            )
         ]
 
-    def delete(self, db: Session, *, id: int) -> ProjectMetadataRead:
+    def delete(self, db: Session, *, project_id: int, id: int) -> ProjectMetadataRead:
         """
         Delete a user-defined project metadata key with the values of all documents.
 
         Args:
+            project_id: The project of the project metadata.
             id: The project metadata to delete.
 
         Returns:
@@ -96,16 +115,18 @@ class ProjectMetadataService(metaclass=SingletonMeta):
             ReadOnlyMetadataError: If the project metadata is read-only.
         """
         # 1) only the system may delete read-only keys (doc processing fills them by key)
-        deleted = self._assert_writable(db=db, id=id)
+        deleted = self._assert_writable(db=db, project_id=project_id, id=id)
 
         # 2) delete it
-        crud_project_meta.delete(db=db, id=id)
+        crud_project_meta.delete(db=db, project_id=project_id, id=id)
 
         return deleted
 
-    def _assert_writable(self, db: Session, *, id: int) -> ProjectMetadataRead:
+    def _assert_writable(
+        self, db: Session, *, project_id: int, id: int
+    ) -> ProjectMetadataRead:
         project_metadata = ProjectMetadataRead.model_validate(
-            crud_project_meta.read(db=db, id=id)
+            crud_project_meta.read(db=db, project_id=project_id, id=id)
         )
         if project_metadata.read_only:
             raise ReadOnlyMetadataError([project_metadata.key])

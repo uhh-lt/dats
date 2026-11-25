@@ -64,8 +64,8 @@ def import_project_metadata_to_proj(
 
         imported_pm = crud_project_meta.create(
             db=db,
+            project_id=project_id,
             create_dto=ProjectMetadataCreate(
-                project_id=project_id,
                 key=metadata.key,
                 metatype=MetaType(metadata.metatype),
                 read_only=metadata.read_only,

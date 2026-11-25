@@ -12,17 +12,6 @@ class FolderMoveToNonNormalFolderError(Exception):
 
 
 @exception_handler(status.HTTP_400_BAD_REQUEST)
-class FolderMoveAcrossProjectsError(Exception):
-    """Raised when a folder is moved into a folder of a different project."""
-
-    def __init__(self, folder_id: int, target_folder_id: int) -> None:
-        super().__init__(
-            f"Cannot move folder {folder_id} to folder {target_folder_id} of a "
-            "different project!"
-        )
-
-
-@exception_handler(status.HTTP_400_BAD_REQUEST)
 class FolderMoveCycleError(Exception):
     """Raised when a folder is moved into itself or one of its descendants."""
 

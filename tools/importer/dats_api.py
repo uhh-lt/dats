@@ -407,7 +407,7 @@ class DATSAPI:
         # metatype is STRING DATE BOOLEAN NUMBER LIST
         # doctype is text image video audio
         r = requests.put(
-            self.BASE_PATH + "projmeta",
+            self.BASE_PATH + f"projects/{proj_id}/project-metadata",
             data=json.dumps(
                 {
                     "key": key,
@@ -415,7 +415,6 @@ class DATSAPI:
                     "read_only": False,
                     "doctype": doctype,
                     "description": description,
-                    "project_id": proj_id,
                 }
             ),
             headers={
@@ -429,7 +428,7 @@ class DATSAPI:
 
     def read_all_project_metadata(self, proj_id: int):
         r = requests.get(
-            self.BASE_PATH + f"projmeta/project/{proj_id}",
+            self.BASE_PATH + f"projects/{proj_id}/project-metadata",
             headers={"Authorization": f"Bearer {self.access_token}"},
         )
         r.raise_for_status()
@@ -437,12 +436,13 @@ class DATSAPI:
 
     def read_sdoc_metadata_by_key(self, proj_id: int, sdoc_id: int, key: str):
         r = requests.get(
-            self.BASE_PATH
-            + f"sdocmeta/sdoc/{sdoc_id}/metadata/{key}?project_id={proj_id}",
+            self.BASE_PATH + f"projects/{proj_id}/source-document-metadata",
+            params={"sdoc_id": sdoc_id, "key": key},
             headers={"Authorization": f"Bearer {self.access_token}"},
         )
         r.raise_for_status()
-        return r.json()
+        [sdoc_metadata] = r.json()
+        return sdoc_metadata
 
     def update_sdoc_metadata(
         self,
@@ -457,7 +457,8 @@ class DATSAPI:
         )
 
         r = requests.patch(
-            self.BASE_PATH + f"sdocmeta/{sdoc_metadata['id']}",
+            self.BASE_PATH
+            + f"projects/{proj_id}/source-document-metadata/{sdoc_metadata['id']}",
             data=json.dumps(
                 {
                     "str_value": value if metatype == "STRING" else None,

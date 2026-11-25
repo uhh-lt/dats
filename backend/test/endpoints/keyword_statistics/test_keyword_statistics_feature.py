@@ -85,7 +85,9 @@ def test_enable_creates_the_keywords_key_and_its_set_up_is_safe_to_run_twice(
     assert _keyword_keys(db_session, project_id) == dict.fromkeys(
         ALL_DOCTYPES, MetaType.LIST
     )
-    value = crud_sdoc_meta.read_by_sdoc_and_key(db=db_session, sdoc_id=sdoc_id, key=KEY)
+    value = crud_sdoc_meta.read_by_sdoc_and_key(
+        db=db_session, project_id=project_id, sdoc_id=sdoc_id, key=KEY
+    )
     assert value.list_value in (None, [])
 
     set_up = feature_named(FEATURE).set_up

@@ -53,7 +53,10 @@ def enrich_for_recompute(
             db=db, project_id=payload.project_id, id=payload.sdoc_id
         )
         language = crud_sdoc_meta.read_by_sdoc_and_key(
-            db=db, key="language", sdoc_id=payload.sdoc_id
+            db=db,
+            project_id=payload.project_id,
+            key="language",
+            sdoc_id=payload.sdoc_id,
         )
 
         # text documents only, and the model supports German only: other

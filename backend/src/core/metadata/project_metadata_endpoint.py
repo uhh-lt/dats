@@ -1,9 +1,8 @@
-from fastapi import APIRouter, Depends
+from fastapi import Depends
 
-from common.crud_enum import Crud
 from common.dats_event import DATSEvent
-from common.dependencies import DBSession, get_current_user
-from core.auth.authz_user import AuthzUser
+from common.dependencies import DBSession
+from common.project_router import project_router
 from core.metadata.project_metadata_crud import crud_project_meta
 from core.metadata.project_metadata_dto import (
     ProjectMetadataCreate,
@@ -14,11 +13,7 @@ from core.metadata.project_metadata_dto import (
 from core.metadata.project_metadata_service import ProjectMetadataService
 from systems.websocket_system.websocket_dependency import WebsocketEmitter
 
-router = APIRouter(
-    prefix="/projmeta",
-    dependencies=[Depends(get_current_user)],
-    tags=["projectMetadata", "mcp"],
-)
+router = project_router("/project-metadata", tags=["projectMetadata", "mcp"])
 
 
 # --- create operations
@@ -32,18 +27,16 @@ router = APIRouter(
 def create_metadata(
     *,
     db: DBSession,
+    project_id: int,
     metadata: ProjectMetadataCreate,
-    authz_user: AuthzUser = Depends(),
     ws: WebsocketEmitter = Depends(),
 ) -> ProjectMetadataRead:
-    authz_user.assert_in_project(metadata.project_id)
-
-    db_metadata = crud_project_meta.create(db=db, create_dto=metadata)
+    db_metadata = crud_project_meta.create(
+        db=db, project_id=project_id, create_dto=metadata
+    )
     result = ProjectMetadataRead.model_validate(db_metadata)
     ws.emit_to_project(
-        DATSEvent.PROJECT_METADATA_CREATED,
-        result,
-        project_id=metadata.project_id,
+        DATSEvent.PROJECT_METADATA_CREATED, result, project_id=project_id
     )
     return result
 
@@ -52,106 +45,102 @@ def create_metadata(
 
 
 @router.get(
-    "/{metadata_id}",
+    "",
+    response_model=list[ProjectMetadataRead],
+    summary="Returns all ProjectMetadata of the Project",
+)
+def get_by_project(
+    *,
+    db: DBSession,
+    project_id: int,
+) -> list[ProjectMetadataRead]:
+    db_objs = crud_project_meta.read_by_project(db=db, project_id=project_id)
+    return [ProjectMetadataRead.model_validate(meta) for meta in db_objs]
+
+
+@router.get(
+    "/{project_metadata_id}",
     response_model=ProjectMetadataRead,
     summary="Returns the Metadata with the given ID.",
 )
 def get_by_id(
     *,
     db: DBSession,
-    metadata_id: int,
-    authz_user: AuthzUser = Depends(),
-) -> ProjectMetadataRead:
-    authz_user.assert_in_same_project_as(Crud.PROJECT_METADATA, metadata_id)
-
-    db_obj = crud_project_meta.read(db=db, id=metadata_id)
-    return ProjectMetadataRead.model_validate(db_obj)
-
-
-@router.get(
-    "/project/{project_id}",
-    response_model=list[ProjectMetadataRead],
-    summary="Returns all ProjectMetadata of the Project with the given ID if it exists",
-)
-def get_by_project(
-    *,
-    db: DBSession,
     project_id: int,
-    authz_user: AuthzUser = Depends(),
-) -> list[ProjectMetadataRead]:
-    authz_user.assert_in_project(project_id)
-
-    db_objs = crud_project_meta.read_by_project(db=db, project_id=project_id)
-    metadata = [ProjectMetadataRead.model_validate(meta) for meta in db_objs]
-    return metadata
+    project_metadata_id: int,
+) -> ProjectMetadataRead:
+    db_obj = crud_project_meta.read(
+        db=db, project_id=project_id, id=project_metadata_id
+    )
+    return ProjectMetadataRead.model_validate(db_obj)
 
 
 # --- update operations
 
 
 @router.patch(
-    "/{metadata_id}",
-    response_model=ProjectMetadataRead,
-    summary="Updates the Metadata with the given ID.",
-)
-def update_by_id(
-    *,
-    db: DBSession,
-    metadata_id: int,
-    metadata: ProjectMetadataUpdate,
-    authz_user: AuthzUser = Depends(),
-    ws: WebsocketEmitter = Depends(),
-) -> ProjectMetadataRead:
-    authz_user.assert_in_same_project_as(Crud.PROJECT_METADATA, metadata_id)
-
-    result = ProjectMetadataService().update(db=db, id=metadata_id, update_dto=metadata)
-    ws.emit_to_project(
-        DATSEvent.PROJECT_METADATA_UPDATED, result, project_id=result.project_id
-    )
-    return result
-
-
-@router.patch(
-    "/bulk/update",
+    "/bulk",
     response_model=list[ProjectMetadataRead],
     summary="Updates the Metadata with the given IDs.",
 )
 def update_project_metadata_bulk(
     *,
     db: DBSession,
+    project_id: int,
     metadata: list[ProjectMetadataUpdateBulk],
-    authz_user: AuthzUser = Depends(),
     ws: WebsocketEmitter = Depends(),
 ) -> list[ProjectMetadataRead]:
-    authz_user.assert_in_same_project_as_many(
-        Crud.PROJECT_METADATA, [m.project_metadata_id for m in metadata]
+    results = ProjectMetadataService().update_multi(
+        db=db, project_id=project_id, update_dtos=metadata
     )
-
-    results = ProjectMetadataService().update_multi(db=db, update_dtos=metadata)
     if results:
-        ws.emit_dtos_to_projects(DATSEvent.PROJECT_METADATA_UPDATED_BATCH, results)
+        ws.emit_to_project(
+            DATSEvent.PROJECT_METADATA_UPDATED_BATCH, results, project_id=project_id
+        )
     return results
+
+
+@router.patch(
+    "/{project_metadata_id}",
+    response_model=ProjectMetadataRead,
+    summary="Updates the Metadata with the given ID.",
+)
+def update_by_id(
+    *,
+    db: DBSession,
+    project_id: int,
+    project_metadata_id: int,
+    metadata: ProjectMetadataUpdate,
+    ws: WebsocketEmitter = Depends(),
+) -> ProjectMetadataRead:
+    result = ProjectMetadataService().update(
+        db=db, project_id=project_id, id=project_metadata_id, update_dto=metadata
+    )
+    ws.emit_to_project(
+        DATSEvent.PROJECT_METADATA_UPDATED, result, project_id=project_id
+    )
+    return result
 
 
 # --- delete operations
 
 
 @router.delete(
-    "/{metadata_id}",
+    "/{project_metadata_id}",
     response_model=ProjectMetadataRead,
     summary="Deletes the Metadata with the given ID.",
 )
 def delete_by_id(
     *,
     db: DBSession,
-    metadata_id: int,
-    authz_user: AuthzUser = Depends(),
+    project_id: int,
+    project_metadata_id: int,
     ws: WebsocketEmitter = Depends(),
 ) -> ProjectMetadataRead:
-    authz_user.assert_in_same_project_as(Crud.PROJECT_METADATA, metadata_id)
-
-    result = ProjectMetadataService().delete(db=db, id=metadata_id)
+    result = ProjectMetadataService().delete(
+        db=db, project_id=project_id, id=project_metadata_id
+    )
     ws.emit_to_project(
-        DATSEvent.PROJECT_METADATA_DELETED, result, project_id=result.project_id
+        DATSEvent.PROJECT_METADATA_DELETED, result, project_id=project_id
     )
     return result

@@ -8,14 +8,10 @@ from core.annotation.span_text_crud import crud_span_text
 from core.artefacts.word_frequencies.word_frequency_crud import crud_word_frequency
 from core.auth.refresh_token_crud import crud_refresh_token
 from core.code.code_crud import crud_code
-from core.doc.folder_crud import crud_folder
 from core.doc.source_document_crud import crud_sdoc
-from core.doc.source_document_data_crud import crud_sdoc_data
 from core.memo.memo_crud import crud_memo
 from core.memo.memo_enum import AttachedObjectType
 from core.memo.object_handle_crud import crud_object_handle
-from core.metadata.project_metadata_crud import crud_project_meta
-from core.metadata.source_document_metadata_crud import crud_sdoc_meta
 from core.project.project_crud import crud_project
 from core.prompt.prompt_crud import crud_prompt
 from core.prompt.prompt_version_crud import (
@@ -53,17 +49,13 @@ class Crud(Enum):
     EXPERIMENT_RUN = crud_experiment_run
     TAG = crud_tag
     TAG_RECOMMENDATION = crud_tag_recommendation_link
-    FOLDER = crud_folder
     MEMO = crud_memo
     OBJECT_HANDLE = crud_object_handle
     PROJECT = crud_project
-    PROJECT_METADATA = crud_project_meta
     PROMPT = crud_prompt
     PROMPT_VERSION = crud_prompt_version
     REFRESH_TOKEN = crud_refresh_token
     SENTENCE_ANNOTATION = crud_sentence_anno
-    SOURCE_DOCUMENT_DATA = crud_sdoc_data
-    SOURCE_DOCUMENT_METADATA = crud_sdoc_meta
     SOURCE_DOCUMENT = crud_sdoc
     SPAN_ANNOTATION = crud_span_anno
     SPAN_GROUP = crud_span_group

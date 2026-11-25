@@ -88,7 +88,7 @@ def _create_sdoc(
         doctype=doctype,
     )
     crud_sdoc_meta.read_by_sdoc_and_key(
-        db=db, sdoc_id=sdoc.id, key="language"
+        db=db, project_id=sdoc.project_id, sdoc_id=sdoc.id, key="language"
     ).str_value = language
     steps = minimal_text_steps() if doctype == DocType.text else minimal_image_steps()
     set_step_status(db, sdoc.id, dict.fromkeys(steps, 1))

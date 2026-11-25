@@ -228,8 +228,8 @@ def create_prompt_project(
     )
     author_field = crud_project_meta.create(
         db=db_session,
+        project_id=test_project.id,
         create_dto=ProjectMetadataCreate(
-            project_id=test_project.id,
             key="author",
             metatype=MetaType.STRING,
             read_only=False,
@@ -547,8 +547,8 @@ def create_prompt_eximport_projects(
     )
     target_author_field = crud_project_meta.create(
         db=db_session,
+        project_id=target.id,
         create_dto=ProjectMetadataCreate(
-            project_id=target.id,
             key="author",
             metatype=MetaType.STRING,
             read_only=False,

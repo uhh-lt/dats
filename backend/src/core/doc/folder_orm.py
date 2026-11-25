@@ -6,6 +6,7 @@ from sqlalchemy import (
     ForeignKey,
     ForeignKeyConstraint,
     Integer,
+    PrimaryKeyConstraint,
     String,
     UniqueConstraint,
     func,
@@ -21,7 +22,8 @@ if TYPE_CHECKING:
 
 
 class FolderORM(ORMBase):
-    id: Mapped[int] = mapped_column(Integer, primary_key=True, index=True)
+    # the primary key is (project_id, id), see __table_args__
+    id: Mapped[int] = mapped_column(Integer, autoincrement=True, index=True)
 
     name: Mapped[str] = mapped_column(String, nullable=False, index=True)
     folder_type: Mapped[FolderType] = mapped_column(String, nullable=False, index=True)
@@ -40,7 +42,6 @@ class FolderORM(ORMBase):
         Integer,
         ForeignKey("project.id", ondelete="CASCADE"),
         nullable=False,
-        index=True,
     )
     project: Mapped["ProjectORM"] = relationship(
         "ProjectORM",
@@ -73,6 +74,7 @@ class FolderORM(ORMBase):
     )
 
     __table_args__ = (
+        PrimaryKeyConstraint("project_id", "id", name="folder_pkey"),
         UniqueConstraint("parent_id", "name", name="UC_unique_folder_name_in_parent"),
         UniqueConstraint("project_id", "id", name="UC_folder_project_id_id"),
         ForeignKeyConstraint(
@@ -82,6 +84,3 @@ class FolderORM(ORMBase):
             name="FK_folder_parent_id",
         ),
     )
-
-    def get_project_id(self) -> int:
-        return self.project_id

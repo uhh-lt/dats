@@ -48,11 +48,17 @@ class SourceDocumentMetadataService(metaclass=SingletonMeta):
         )
 
     def update(
-        self, db: Session, *, id: int, update_dto: SourceDocumentMetadataUpdate
+        self,
+        db: Session,
+        *,
+        project_id: int,
+        id: int,
+        update_dto: SourceDocumentMetadataUpdate,
     ) -> SourceDocumentMetadataRead:
         """Like `update_multi`, for one metadata value."""
         return self.update_multi(
             db=db,
+            project_id=project_id,
             update_dtos=[
                 SourceDocumentMetadataUpdateBulk(
                     sdoc_metadata_id=id, **update_dto.model_dump()
@@ -61,12 +67,17 @@ class SourceDocumentMetadataService(metaclass=SingletonMeta):
         )[0]
 
     def update_multi(
-        self, db: Session, *, update_dtos: list[SourceDocumentMetadataUpdateBulk]
+        self,
+        db: Session,
+        *,
+        project_id: int,
+        update_dtos: list[SourceDocumentMetadataUpdateBulk],
     ) -> list[SourceDocumentMetadataRead]:
         """
         Update user-editable source document metadata, each identified by its id.
 
         Args:
+            project_id: The project of the metadata.
             update_dtos: The new values. Must not repeat an id.
 
         Returns:
@@ -78,13 +89,14 @@ class SourceDocumentMetadataService(metaclass=SingletonMeta):
         """
         # 1) only the system may change read-only metadata (doc processing fills it)
         metadatas = crud_sdoc_meta.read_by_ids(
-            db=db, ids=[u.sdoc_metadata_id for u in update_dtos]
+            db=db, project_id=project_id, ids=[u.sdoc_metadata_id for u in update_dtos]
         )
         self._assert_writable(metadatas)
 
         # 2) update them
         crud_sdoc_meta.update_multi(
             db=db,
+            project_id=project_id,
             ids=[u.sdoc_metadata_id for u in update_dtos],
             update_dtos=[
                 SourceDocumentMetadataUpdate(
@@ -99,7 +111,9 @@ class SourceDocumentMetadataService(metaclass=SingletonMeta):
             for metadata in metadatas
         ]
 
-    def delete(self, db: Session, *, id: int) -> SourceDocumentMetadataRead:
+    def delete(
+        self, db: Session, *, project_id: int, id: int
+    ) -> SourceDocumentMetadataRead:
         """
         Delete a user-editable source document metadata value.
 
@@ -110,12 +124,12 @@ class SourceDocumentMetadataService(metaclass=SingletonMeta):
             ReadOnlyMetadataError: If the metadata is read-only.
         """
         # 1) only the system may delete read-only metadata (doc processing fills it)
-        metadata = crud_sdoc_meta.read(db=db, id=id)
+        metadata = crud_sdoc_meta.read(db=db, project_id=project_id, id=id)
         self._assert_writable([metadata])
         deleted = SourceDocumentMetadataRead.model_validate(metadata)
 
         # 2) delete it
-        crud_sdoc_meta.delete(db=db, id=id)
+        crud_sdoc_meta.delete(db=db, project_id=project_id, id=id)
 
         return deleted
 

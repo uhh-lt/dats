@@ -8,6 +8,7 @@ from sqlalchemy import (
     ForeignKey,
     ForeignKeyConstraint,
     Integer,
+    PrimaryKeyConstraint,
     String,
     UniqueConstraint,
 )
@@ -22,7 +23,8 @@ if TYPE_CHECKING:
 
 
 class SourceDocumentMetadataORM(ORMBase):
-    id: Mapped[int] = mapped_column(Integer, primary_key=True, index=True)
+    # the primary key is (project_id, id), see __table_args__
+    id: Mapped[int] = mapped_column(Integer, autoincrement=True, index=True)
 
     int_value: Mapped[int | None] = mapped_column(Integer)
     str_value: Mapped[str | None] = mapped_column(String)
@@ -35,7 +37,6 @@ class SourceDocumentMetadataORM(ORMBase):
         Integer,
         ForeignKey("project.id", ondelete="CASCADE"),
         nullable=False,
-        index=True,
     )
 
     project_metadata_id: Mapped[int] = mapped_column(
@@ -55,6 +56,7 @@ class SourceDocumentMetadataORM(ORMBase):
     )
 
     __table_args__ = (
+        PrimaryKeyConstraint("project_id", "id", name="sourcedocumentmetadata_pkey"),
         # CHECK constraint that asserts that exactly one of the values is NOT NULL
         CheckConstraint(
             """(
@@ -88,6 +90,3 @@ class SourceDocumentMetadataORM(ORMBase):
             name="FK_sourcedocumentmetadata_source_document_id",
         ),
     )
-
-    def get_project_id(self) -> int:
-        return self.project_id

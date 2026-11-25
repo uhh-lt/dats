@@ -64,6 +64,7 @@ class FolderImporter:
                 if not validate_only:
                     created_folders = crud_folder.create_multi(
                         db=self.db,
+                        project_id=self.project_id,
                         create_dtos=layer_dtos,
                     )
                     for folder in created_folders:
@@ -168,7 +169,6 @@ class FolderImporter:
                 folder_type=FolderType.NORMAL,
                 name=folder.folder_name,
                 parent_id=parent_id,
-                project_id=self.project_id,
             )
 
     def _validate_existing_folder(

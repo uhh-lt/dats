@@ -1,10 +1,8 @@
-from fastapi import APIRouter, Depends
+from fastapi import Depends
 
-from common.crud_enum import Crud
 from common.dats_event import DATSEvent
-from common.dependencies import DBSession, get_current_user
-from core.auth.authz_user import AuthzUser
-from core.doc.source_document_crud import crud_sdoc
+from common.dependencies import DBSession
+from common.project_router import project_router
 from core.metadata.source_document_metadata_crud import crud_sdoc_meta
 from core.metadata.source_document_metadata_dto import (
     DateMetadataCountResult,
@@ -17,78 +15,40 @@ from core.metadata.source_document_metadata_service import (
 )
 from systems.websocket_system.websocket_dependency import WebsocketEmitter
 
-router = APIRouter(
-    prefix="/sdocmeta",
-    dependencies=[Depends(get_current_user)],
-    tags=["sdocMetadata", "mcp"],
-)
+router = project_router("/source-document-metadata", tags=["sdocMetadata", "mcp"])
 
 
 # --- read operations
 
 
 @router.get(
-    "/{metadata_id}",
-    response_model=SourceDocumentMetadataRead,
-    summary="Returns the Metadata with the given ID.",
-)
-def get_by_id(
-    *,
-    db: DBSession,
-    metadata_id: int,
-    authz_user: AuthzUser = Depends(),
-) -> SourceDocumentMetadataRead:
-    authz_user.assert_in_same_project_as(Crud.SOURCE_DOCUMENT_METADATA, metadata_id)
-
-    db_obj = crud_sdoc_meta.read(db=db, id=metadata_id)
-    return SourceDocumentMetadataRead.model_validate(db_obj)
-
-
-@router.get(
-    "/sdoc/{sdoc_id}",
+    "",
     response_model=list[SourceDocumentMetadataRead],
-    summary="Returns all SourceDocumentMetadata of the SourceDocument with the given ID if it exists",
+    summary="Returns the SourceDocumentMetadata of the SourceDocument, optionally only the one with the given key",
 )
 def get_by_sdoc(
     *,
     db: DBSession,
-    sdoc_id: int,
     project_id: int,
-    authz_user: AuthzUser = Depends(),
+    sdoc_id: int,
+    key: str | None = None,
 ) -> list[SourceDocumentMetadataRead]:
-    authz_user.assert_in_project(project_id)
-
-    sdoc_db_obj = crud_sdoc.read(db=db, project_id=project_id, id=sdoc_id)
-    return [
-        SourceDocumentMetadataRead.model_validate(meta)
-        for meta in sdoc_db_obj.metadata_
-    ]
-
-
-@router.get(
-    "/sdoc/{sdoc_id}/metadata/{metadata_key}",
-    response_model=SourceDocumentMetadataRead,
-    summary="Returns the SourceDocumentMetadata with the given Key if it exists.",
-)
-def get_by_sdoc_and_key(
-    *,
-    db: DBSession,
-    sdoc_id: int,
-    metadata_key: str,
-    project_id: int,
-    authz_user: AuthzUser = Depends(),
-) -> SourceDocumentMetadataRead:
-    authz_user.assert_in_project(project_id)
-    crud_sdoc.exists(db=db, project_id=project_id, id=sdoc_id, raise_error=True)
-
-    metadata_db_obj = crud_sdoc_meta.read_by_sdoc_and_key(
-        db=db, sdoc_id=sdoc_id, key=metadata_key
-    )
-    return SourceDocumentMetadataRead.model_validate(metadata_db_obj)
+    if key is None:
+        db_objs = crud_sdoc_meta.read_by_sdoc(
+            db=db, project_id=project_id, sdoc_id=sdoc_id
+        )
+    else:
+        db_objs = [
+            sdoc_metadata
+            for _, sdoc_metadata in crud_sdoc_meta.read_by_sdoc_and_keys(
+                db=db, project_id=project_id, sdoc_id=sdoc_id, keys=[key]
+            )
+        ]
+    return [SourceDocumentMetadataRead.model_validate(meta) for meta in db_objs]
 
 
 @router.get(
-    "/count_sdocs_with_date_metadata/{project_id}/metadata/{date_metadata_id}",
+    "/date-count",
     response_model=DateMetadataCountResult,
     summary="Returns the number of SourceDocuments with a value for the date metadata and of all SourceDocuments of the Project.",
 )
@@ -97,83 +57,89 @@ def count_sdocs_with_date_metadata(
     db: DBSession,
     project_id: int,
     date_metadata_id: int,
-    authz_user: AuthzUser = Depends(),
 ) -> DateMetadataCountResult:
-    authz_user.assert_in_project(project_id)
-
     return SourceDocumentMetadataService().count_sdocs_with_date_metadata(
         db=db, project_id=project_id, date_metadata_id=date_metadata_id
     )
+
+
+@router.get(
+    "/{sdoc_metadata_id}",
+    response_model=SourceDocumentMetadataRead,
+    summary="Returns the SourceDocumentMetadata with the given ID if it exists",
+)
+def get_by_id(
+    *,
+    db: DBSession,
+    project_id: int,
+    sdoc_metadata_id: int,
+) -> SourceDocumentMetadataRead:
+    db_obj = crud_sdoc_meta.read(db=db, project_id=project_id, id=sdoc_metadata_id)
+    return SourceDocumentMetadataRead.model_validate(db_obj)
 
 
 # --- update operations
 
 
 @router.patch(
-    "/{metadata_id}",
-    response_model=SourceDocumentMetadataRead,
-    summary="Updates the Metadata with the given ID.",
-)
-def update_by_id(
-    *,
-    db: DBSession,
-    metadata_id: int,
-    metadata: SourceDocumentMetadataUpdate,
-    authz_user: AuthzUser = Depends(),
-    ws: WebsocketEmitter = Depends(),
-) -> SourceDocumentMetadataRead:
-    authz_user.assert_in_same_project_as(Crud.SOURCE_DOCUMENT_METADATA, metadata_id)
-
-    result = SourceDocumentMetadataService().update(
-        db=db, id=metadata_id, update_dto=metadata
-    )
-    ws.emit_to_project(
-        DATSEvent.SDOC_METADATA_UPDATED,
-        result,
-        project_id=result.project_id,
-    )
-    return result
-
-
-@router.patch(
-    "/bulk/update",
+    "/bulk",
     response_model=list[SourceDocumentMetadataRead],
     summary="Updates multiple metadata objects at once.",
 )
 def update_bulk(
     *,
     db: DBSession,
+    project_id: int,
     metadatas: list[SourceDocumentMetadataUpdateBulk],
-    authz_user: AuthzUser = Depends(),
     ws: WebsocketEmitter = Depends(),
 ) -> list[SourceDocumentMetadataRead]:
-    authz_user.assert_in_same_project_as_many(
-        Crud.SOURCE_DOCUMENT_METADATA, [m.sdoc_metadata_id for m in metadatas]
+    results = SourceDocumentMetadataService().update_multi(
+        db=db, project_id=project_id, update_dtos=metadatas
     )
-    results = SourceDocumentMetadataService().update_multi(db=db, update_dtos=metadatas)
     if results:
-        ws.emit_dtos_to_projects(DATSEvent.SDOC_METADATA_UPDATED_BATCH, results)
+        ws.emit_to_project(
+            DATSEvent.SDOC_METADATA_UPDATED_BATCH, results, project_id=project_id
+        )
     return results
+
+
+@router.patch(
+    "/{sdoc_metadata_id}",
+    response_model=SourceDocumentMetadataRead,
+    summary="Updates the Metadata with the given ID.",
+)
+def update_by_id(
+    *,
+    db: DBSession,
+    project_id: int,
+    sdoc_metadata_id: int,
+    metadata: SourceDocumentMetadataUpdate,
+    ws: WebsocketEmitter = Depends(),
+) -> SourceDocumentMetadataRead:
+    result = SourceDocumentMetadataService().update(
+        db=db, project_id=project_id, id=sdoc_metadata_id, update_dto=metadata
+    )
+    ws.emit_to_project(DATSEvent.SDOC_METADATA_UPDATED, result, project_id=project_id)
+    return result
 
 
 # --- delete operations
 
 
 @router.delete(
-    "/{metadata_id}",
+    "/{sdoc_metadata_id}",
     response_model=SourceDocumentMetadataRead,
     summary="Deletes the Metadata with the given ID.",
 )
 def delete_by_id(
     *,
     db: DBSession,
-    metadata_id: int,
-    authz_user: AuthzUser = Depends(),
+    project_id: int,
+    sdoc_metadata_id: int,
     ws: WebsocketEmitter = Depends(),
 ) -> SourceDocumentMetadataRead:
-    authz_user.assert_in_same_project_as(Crud.SOURCE_DOCUMENT_METADATA, metadata_id)
-    result = SourceDocumentMetadataService().delete(db=db, id=metadata_id)
-    ws.emit_to_project(
-        DATSEvent.SDOC_METADATA_DELETED, result, project_id=result.project_id
+    result = SourceDocumentMetadataService().delete(
+        db=db, project_id=project_id, id=sdoc_metadata_id
     )
+    ws.emit_to_project(DATSEvent.SDOC_METADATA_DELETED, result, project_id=project_id)
     return result

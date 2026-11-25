@@ -65,16 +65,16 @@ def timeline_project(
     )
     published_field = crud_project_meta.create(
         db=db_session,
+        project_id=test_project.id,
         create_dto=ProjectMetadataCreate(
             key="published",
             metatype=MetaType.DATE,
             doctype=DocType.text,
             description="Publication date",
-            project_id=test_project.id,
         ),
     )
     crud_sdoc_meta.read_by_sdoc_and_key(
-        db=db_session, sdoc_id=report.id, key="published"
+        db=db_session, project_id=report.project_id, sdoc_id=report.id, key="published"
     ).date_value = date(2020, 5, 1)
     for text in ["Alice met Bob", "Berlin."]:
         dats_test_utils.create_span_for_text(

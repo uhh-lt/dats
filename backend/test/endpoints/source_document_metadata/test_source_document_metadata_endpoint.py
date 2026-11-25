@@ -18,7 +18,9 @@ def test_get_by_id(
     pm = project_with_sdoc_and_projmeta_and_sdocmeta["project_metadata"]
     metadata = project_with_sdoc_and_projmeta_and_sdocmeta["source_document_metadata"]
 
-    resp = client.get(f"/sdocmeta/{metadata.id}")
+    resp = client.get(
+        f"/projects/{metadata.project_id}/source-document-metadata/{metadata.id}"
+    )
 
     assert resp.status_code == 200, resp.text
     body = SourceDocumentMetadataRead.model_validate(resp.json())
@@ -34,11 +36,12 @@ def test_get_by_id(
 
 def test_get_by_id_if_not_exists(
     client: TestClient,
+    test_project,
 ):
     fake_id = 3000
-    resp = client.get(f"/sdocmeta/{fake_id}")
+    resp = client.get(f"/projects/{test_project.id}/source-document-metadata/{fake_id}")
 
-    assert resp.status_code == 403, resp.text
+    assert resp.status_code == 404, resp.text
 
 
 def test_get_by_sdoc(
@@ -50,7 +53,8 @@ def test_get_by_sdoc(
     sm = project_with_sdoc_and_projmeta_and_sdocmeta["source_document_metadata"]
 
     resp = client.get(
-        f"/sdocmeta/sdoc/{sdoc.id}", params={"project_id": sdoc.project_id}
+        f"/projects/{sdoc.project_id}/source-document-metadata",
+        params={"sdoc_id": sdoc.id},
     )
 
     assert resp.status_code == 200, resp.text
@@ -68,13 +72,15 @@ def test_get_by_sdoc(
 
 
 def test_get_by_sdoc_if_not_exists(client: TestClient, test_project):
-    """A document that does not exist in the project is not found (404)."""
+    """A document that does not exist in the project matches nothing."""
     fake_id = 3000
     resp = client.get(
-        f"/sdocmeta/sdoc/{fake_id}", params={"project_id": test_project.id}
+        f"/projects/{test_project.id}/source-document-metadata",
+        params={"sdoc_id": fake_id},
     )
 
-    assert resp.status_code == 404, resp.text
+    assert resp.status_code == 200, resp.text
+    assert resp.json() == []
 
 
 def test_get_by_sdoc_and_key(
@@ -86,12 +92,12 @@ def test_get_by_sdoc_and_key(
     sm = project_with_sdoc_and_projmeta_and_sdocmeta["source_document_metadata"]
 
     resp = client.get(
-        f"/sdocmeta/sdoc/{sdoc.id}/metadata/{pm.key}",
-        params={"project_id": sdoc.project_id},
+        f"/projects/{sdoc.project_id}/source-document-metadata",
+        params={"sdoc_id": sdoc.id, "key": pm.key},
     )
 
     assert resp.status_code == 200, resp.text
-    body = SourceDocumentMetadataRead.model_validate(resp.json())
+    [body] = [SourceDocumentMetadataRead.model_validate(m) for m in resp.json()]
     assert body.id == sm.id
     assert body.source_document_id == sdoc.id
     assert body.project_metadata_id == pm.id
@@ -107,11 +113,12 @@ def test_get_by_sdoc_and_key_if_not_exists(client: TestClient, project_with_sdoc
 
     non_existing_key = "random-key"
     resp = client.get(
-        f"/sdocmeta/sdoc/{sdoc.id}/metadata/{non_existing_key}",
-        params={"project_id": sdoc.project_id},
+        f"/projects/{sdoc.project_id}/source-document-metadata",
+        params={"sdoc_id": sdoc.id, "key": non_existing_key},
     )
 
-    assert resp.status_code == 404, resp.text
+    assert resp.status_code == 200, resp.text
+    assert resp.json() == []
 
 
 test_data_metadata_update = [
@@ -140,7 +147,9 @@ def test_update_sdoc_metadata(
         "list_value": None,
     }
     payload = {**base, payload_1["field"]: payload_1["new"]}
-    resp = client.patch(f"/sdocmeta/{sm.id}", json=payload)
+    resp = client.patch(
+        f"/projects/{sm.project_id}/source-document-metadata/{sm.id}", json=payload
+    )
 
     assert resp.status_code == 200, resp.text
     updated = SourceDocumentMetadataRead.model_validate(resp.json())
@@ -158,6 +167,7 @@ def test_update_sdoc_metadata(
 
 def test_update_by_id_if_not_exists(
     client: TestClient,
+    test_project,
 ):
     fake_id = 3000
     payload = SourceDocumentMetadataUpdate(
@@ -167,9 +177,12 @@ def test_update_by_id_if_not_exists(
         list_value=None,
         boolean_value=None,
     )
-    resp = client.patch(f"/sdocmeta/{fake_id}", json=payload.model_dump())
+    resp = client.patch(
+        f"/projects/{test_project.id}/source-document-metadata/{fake_id}",
+        json=payload.model_dump(),
+    )
 
-    assert resp.status_code == 403, resp.text
+    assert resp.status_code == 404, resp.text
 
 
 test_data_bulk_metadata = [
@@ -226,7 +239,9 @@ def test_update_bulk_metadata_parametrized(
         "list_value": None,
     }
     payload = {**base, "sdoc_metadata_id": sm.id, payload_1["field"]: payload_1["new"]}
-    resp = client.patch("/sdocmeta/bulk/update", json=[payload])
+    resp = client.patch(
+        f"/projects/{sdoc.project_id}/source-document-metadata/bulk", json=[payload]
+    )
 
     assert resp.status_code == 200, resp.text
     updated = SourceDocumentMetadataRead.model_validate(resp.json()[0])
@@ -243,6 +258,7 @@ def test_update_bulk_metadata_parametrized(
 
 def test_update_bulk_if_id_not_exists(
     client: TestClient,
+    test_project,
 ):
     non_existing_id = 3000
     payload = SourceDocumentMetadataUpdateBulk(
@@ -254,11 +270,11 @@ def test_update_bulk_if_id_not_exists(
         boolean_value=None,
     )
     resp = client.patch(
-        "/sdocmeta/bulk/update",
+        f"/projects/{test_project.id}/source-document-metadata/bulk",
         json=[payload.model_dump()],
     )
 
-    assert resp.status_code == 403, resp.text
+    assert resp.status_code == 404, resp.text
 
 
 def test_delete_by_id(
@@ -269,7 +285,9 @@ def test_delete_by_id(
     pm = project_with_sdoc_and_projmeta_and_sdocmeta["project_metadata"]
     sm = project_with_sdoc_and_projmeta_and_sdocmeta["source_document_metadata"]
 
-    response = client.delete(f"/sdocmeta/{sm.id}")
+    response = client.delete(
+        f"/projects/{sm.project_id}/source-document-metadata/{sm.id}"
+    )
 
     assert response.status_code == 200, response.text
     deleted = SourceDocumentMetadataRead.model_validate(response.json())
@@ -285,17 +303,19 @@ def test_delete_by_id(
 
 def test_delete_by_id_if_not_exists(
     client: TestClient,
+    test_project,
 ):
     fake_id = 30000
-    response = client.delete(f"/sdocmeta/{fake_id}")
+    response = client.delete(
+        f"/projects/{test_project.id}/source-document-metadata/{fake_id}"
+    )
 
-    assert response.status_code == 403, response.text
+    assert response.status_code == 404, response.text
 
 
 # ===========================================================================
 # COUNT SDOCS WITH DATE METADATA
-# (/sdocmeta/count_sdocs_with_date_metadata/{project_id}/metadata/{date_metadata_id})
-# TESTS
+# (/projects/{project_id}/source-document-metadata/date-count) TESTS
 # ===========================================================================
 
 
@@ -308,7 +328,8 @@ def test_count_sdocs_with_date_metadata_counts_the_documents_with_a_date(
     metadata_id = project_with_date_metadata["date_metadata"].id
 
     response = client.get(
-        f"/sdocmeta/count_sdocs_with_date_metadata/{project_id}/metadata/{metadata_id}"
+        f"/projects/{project_id}/source-document-metadata/date-count",
+        params={"date_metadata_id": metadata_id},
     )
 
     assert response.status_code == 200, response.text
