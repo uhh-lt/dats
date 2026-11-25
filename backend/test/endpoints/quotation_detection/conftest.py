@@ -143,6 +143,7 @@ def quotation_project(db_session: Session, test_user: UserORM) -> QuotationProje
     assert direct is not None
     SpanGroupService().replace_groups(
         db=db_session,
+        project_id=project.id,
         annotation_document_id=adoc.id,
         name="quote",
         code_ids=[direct.id],

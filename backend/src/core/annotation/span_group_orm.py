@@ -6,6 +6,7 @@ from sqlalchemy import (
     ForeignKey,
     ForeignKeyConstraint,
     Integer,
+    PrimaryKeyConstraint,
     String,
     UniqueConstraint,
     func,
@@ -21,7 +22,8 @@ if TYPE_CHECKING:
 
 
 class SpanGroupORM(ORMBase):
-    id: Mapped[int] = mapped_column(Integer, primary_key=True, index=True)
+    # the primary key is (project_id, id), see __table_args__
+    id: Mapped[int] = mapped_column(Integer, autoincrement=True, index=True)
     name: Mapped[str] = mapped_column(String, nullable=False, index=True)
     created: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), server_default=func.now(), index=True
@@ -47,7 +49,6 @@ class SpanGroupORM(ORMBase):
         Integer,
         ForeignKey("project.id", ondelete="CASCADE"),
         nullable=False,
-        index=True,
     )
 
     annotation_document_id: Mapped[int] = mapped_column(
@@ -68,6 +69,7 @@ class SpanGroupORM(ORMBase):
     )
 
     __table_args__ = (
+        PrimaryKeyConstraint("project_id", "id", name="spangroup_pkey"),
         UniqueConstraint("project_id", "id", name="UC_spangroup_project_id_id"),
         ForeignKeyConstraint(
             ["project_id", "annotation_document_id"],
@@ -84,9 +86,6 @@ class SpanGroupORM(ORMBase):
     @property
     def sdoc_id(self):
         return self.annotation_document.source_document_id
-
-    def get_project_id(self) -> int:
-        return self.project_id
 
 
 class SpanAnnotationSpanGroupLinkTable(ORMBase):

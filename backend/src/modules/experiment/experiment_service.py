@@ -399,7 +399,7 @@ class ExperimentService(metaclass=SingletonMeta):
         annotated_sdoc_ids = {
             adoc.source_document_id
             for adoc in crud_adoc.read_by_user_and_sdocs(
-                db=db, user_id=gold_user_id, sdoc_ids=sdoc_ids
+                db=db, project_id=project_id, user_id=gold_user_id, sdoc_ids=sdoc_ids
             )
         }
         missing = [sdoc_id for sdoc_id in sdoc_ids if sdoc_id not in annotated_sdoc_ids]

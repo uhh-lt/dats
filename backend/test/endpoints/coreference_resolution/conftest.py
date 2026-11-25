@@ -120,6 +120,7 @@ def _store_earlier_mentions(
         )
     SpanGroupService().replace_groups(
         db=db,
+        project_id=sdoc.project_id,
         annotation_document_id=adoc.id,
         name="coref",
         code_ids=[code_id],

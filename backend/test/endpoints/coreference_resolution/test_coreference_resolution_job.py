@@ -62,13 +62,13 @@ def _mock_coref(
     return calls
 
 
-def _groups(client: TestClient, sdoc_id: int) -> list[SpanGroupWithAnnotationsRead]:
-    """The span groups of the system user in the document, with their spans.
-    The route's `{sdoc}` is no parameter of its function: the document is the
-    query parameter `sdoc_id`, as in the generated client."""
+def _groups(
+    client: TestClient, project_id: int, sdoc_id: int
+) -> list[SpanGroupWithAnnotationsRead]:
+    """The span groups of the system user in the document, with their spans."""
     response = client.get(
-        f"/spangroup/sdoc/{sdoc_id}/user/{SYSTEM_USER_ID}",
-        params={"sdoc_id": sdoc_id},
+        f"/projects/{project_id}/span-groups",
+        params={"user_id": SYSTEM_USER_ID, "sdoc_id": sdoc_id},
     )
     assert response.status_code == 200, response.text
     return [SpanGroupWithAnnotationsRead.model_validate(g) for g in response.json()]
@@ -128,7 +128,7 @@ def test_enable_resolves_the_german_text_into_mention_groups(
         ["Anna", "liest", "ein", "Buch."],
         ["Sie", "mag", "es", "sehr."],
     ]
-    groups = _groups(client, sdoc_id)
+    groups = _groups(client, p["project"].id, sdoc_id)
     assert {group.name for group in groups} == {"coref"}
     assert _texts(groups) == [["Anna", "Sie"], ["ein Buch.", "es"]]
     spans = [span for group in groups for span in group.span_annotations]
@@ -215,7 +215,7 @@ def test_enable_finishes_documents_it_does_not_resolve_without_output(
     sdoc_id = p[sdoc_key].id
     assert read_step_status(db_session, sdoc_id, STEP) == 1
     assert sdoc_id not in {doc.id for call in calls for doc in call.documents}
-    assert _groups(client, sdoc_id) == []
+    assert _groups(client, p["project"].id, sdoc_id) == []
 
 
 # ===========================================================================
@@ -250,7 +250,7 @@ def test_recompute_replaces_the_mentions_and_groups(
     _recompute(client, p["project"].id, sdoc_id)
     held_jobs.run(STEP)
 
-    assert _texts(_groups(client, sdoc_id)) == [["Anna", "Sie"]]
+    assert _texts(_groups(client, p["project"].id, sdoc_id)) == [["Anna", "Sie"]]
     assert sorted(span.text for span in _spans(client, p["project"].id, sdoc_id)) == [
         "Anna",
         "Sie",
@@ -270,14 +270,14 @@ def test_recompute_clears_a_document_that_is_no_longer_german(
     p = coref_project
     sdoc_id = p["formerly_german"].id
     calls = _mock_coref(monkeypatch, CLUSTERS)
-    assert _texts(_groups(client, sdoc_id)) == [["Anna", "She"]]
+    assert _texts(_groups(client, p["project"].id, sdoc_id)) == [["Anna", "She"]]
 
     _recompute(client, p["project"].id, sdoc_id)
     held_jobs.run(STEP)
 
     assert calls == []
     assert read_step_status(db_session, sdoc_id, STEP) == 1
-    assert _groups(client, sdoc_id) == []
+    assert _groups(client, p["project"].id, sdoc_id) == []
     assert _spans(client, p["project"].id, sdoc_id) == []
 
 

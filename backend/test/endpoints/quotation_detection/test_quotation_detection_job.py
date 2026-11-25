@@ -82,8 +82,8 @@ def _groups(db: Session, sdoc: SourceDocumentORM) -> list[list[tuple[str, str]]]
             (crud_code.read(db=db, id=span.code_id).name, span.text)
             for span in group.span_annotations
         ]
-        for group in SpanGroupService().read_with_annotations_by_user_and_sdoc(
-            db=db, user_id=SYSTEM_USER_ID, sdoc_id=sdoc.id
+        for group in SpanGroupService().read_with_annotations_by_user(
+            db=db, project_id=sdoc.project_id, user_id=SYSTEM_USER_ID, sdoc_id=sdoc.id
         )
         if group.name == "quote"
     ]

@@ -13,17 +13,22 @@ import { request as __request } from "../core/request";
 export class SpanGroupService {
   /**
    * Creates a new SpanGroup and returns it with the generated ID.
-   * @returns any Successful Response
+   * @returns SpanGroupRead Successful Response
    * @throws ApiError
    */
   public static createSpanGroup({
+    projectId,
     requestBody,
   }: {
+    projectId: number;
     requestBody: SpanGroupCreate;
-  }): CancelablePromise<SpanGroupRead | null> {
+  }): CancelablePromise<SpanGroupRead> {
     return __request(OpenAPI, {
       method: "PUT",
-      url: "/spangroup",
+      url: "/projects/{project_id}/span-groups",
+      path: {
+        project_id: projectId,
+      },
       body: requestBody,
       mediaType: "application/json",
       errors: {
@@ -32,15 +37,51 @@ export class SpanGroupService {
     });
   }
   /**
-   * Returns the SpanGroup with the given ID.
-   * @returns any Successful Response
+   * Returns the SpanGroups of the User with their SpanAnnotations, optionally only those in the SourceDocument
+   * @returns SpanGroupWithAnnotationsRead Successful Response
    * @throws ApiError
    */
-  public static getById({ spanGroupId }: { spanGroupId: number }): CancelablePromise<SpanGroupRead | null> {
+  public static getSpanGroups({
+    projectId,
+    userId,
+    sdocId,
+  }: {
+    projectId: number;
+    userId: number;
+    sdocId?: number | null;
+  }): CancelablePromise<Array<SpanGroupWithAnnotationsRead>> {
     return __request(OpenAPI, {
       method: "GET",
-      url: "/spangroup/{span_group_id}",
+      url: "/projects/{project_id}/span-groups",
       path: {
+        project_id: projectId,
+      },
+      query: {
+        user_id: userId,
+        sdoc_id: sdocId,
+      },
+      errors: {
+        422: `Validation Error`,
+      },
+    });
+  }
+  /**
+   * Returns the SpanGroup with the given ID.
+   * @returns SpanGroupRead Successful Response
+   * @throws ApiError
+   */
+  public static getById({
+    projectId,
+    spanGroupId,
+  }: {
+    projectId: number;
+    spanGroupId: number;
+  }): CancelablePromise<SpanGroupRead> {
+    return __request(OpenAPI, {
+      method: "GET",
+      url: "/projects/{project_id}/span-groups/{span_group_id}",
+      path: {
+        project_id: projectId,
         span_group_id: spanGroupId,
       },
       errors: {
@@ -50,20 +91,23 @@ export class SpanGroupService {
   }
   /**
    * Updates the SpanGroup with the given ID.
-   * @returns any Successful Response
+   * @returns SpanGroupRead Successful Response
    * @throws ApiError
    */
   public static updateById({
+    projectId,
     spanGroupId,
     requestBody,
   }: {
+    projectId: number;
     spanGroupId: number;
     requestBody: SpanGroupUpdate;
-  }): CancelablePromise<SpanGroupRead | null> {
+  }): CancelablePromise<SpanGroupRead> {
     return __request(OpenAPI, {
       method: "PATCH",
-      url: "/spangroup/{span_group_id}",
+      url: "/projects/{project_id}/span-groups/{span_group_id}",
       path: {
+        project_id: projectId,
         span_group_id: spanGroupId,
       },
       body: requestBody,
@@ -75,67 +119,22 @@ export class SpanGroupService {
   }
   /**
    * Deletes the SpanGroup with the given ID.
-   * @returns any Successful Response
-   * @throws ApiError
-   */
-  public static deleteById({ spanGroupId }: { spanGroupId: number }): CancelablePromise<SpanGroupRead | null> {
-    return __request(OpenAPI, {
-      method: "DELETE",
-      url: "/spangroup/{span_group_id}",
-      path: {
-        span_group_id: spanGroupId,
-      },
-      errors: {
-        422: `Validation Error`,
-      },
-    });
-  }
-  /**
-   * Returns all SpanAnnotations in the SpanGroup with the given ID if it exists
-   * @returns SpanAnnotationRead Successful Response
-   * @throws ApiError
-   */
-  public static getAnnotations({ spanGroupId }: { spanGroupId: number }): CancelablePromise<Array<SpanAnnotationRead>> {
-    return __request(OpenAPI, {
-      method: "GET",
-      url: "/spangroup/{span_group_id}/span_annotations",
-      path: {
-        span_group_id: spanGroupId,
-      },
-      errors: {
-        422: `Validation Error`,
-      },
-    });
-  }
-  /**
-   * Returns all SpanGroups of the logged-in User if it exists
    * @returns SpanGroupRead Successful Response
    * @throws ApiError
    */
-  public static getBySdoc({
-    sdocId,
-    skip,
-    limit,
+  public static deleteById({
+    projectId,
+    spanGroupId,
   }: {
-    sdocId: number;
-    /**
-     * The number of elements to skip (offset)
-     */
-    skip?: number | null;
-    /**
-     * The maximum number of returned elements
-     */
-    limit?: number | null;
-  }): CancelablePromise<Array<SpanGroupRead>> {
+    projectId: number;
+    spanGroupId: number;
+  }): CancelablePromise<SpanGroupRead> {
     return __request(OpenAPI, {
-      method: "GET",
-      url: "/spangroup/sdoc/{sdoc_id}",
+      method: "DELETE",
+      url: "/projects/{project_id}/span-groups/{span_group_id}",
       path: {
-        sdoc_id: sdocId,
-      },
-      query: {
-        skip: skip,
-        limit: limit,
+        project_id: projectId,
+        span_group_id: spanGroupId,
       },
       errors: {
         422: `Validation Error`,
@@ -143,25 +142,23 @@ export class SpanGroupService {
     });
   }
   /**
-   * Returns all SpanGroupWithAnnotations of the User in the sDoc
-   * @returns SpanGroupWithAnnotationsRead Successful Response
+   * Returns all SpanAnnotations in the SpanGroup with the given ID
+   * @returns SpanAnnotationRead Successful Response
    * @throws ApiError
    */
-  public static getBySdocAndUser({
-    userId,
-    sdocId,
+  public static getAnnotations({
+    projectId,
+    spanGroupId,
   }: {
-    userId: number;
-    sdocId: number;
-  }): CancelablePromise<Array<SpanGroupWithAnnotationsRead>> {
+    projectId: number;
+    spanGroupId: number;
+  }): CancelablePromise<Array<SpanAnnotationRead>> {
     return __request(OpenAPI, {
       method: "GET",
-      url: "/spangroup/sdoc/{sdoc}/user/{user_id}",
+      url: "/projects/{project_id}/span-groups/{span_group_id}/span-annotations",
       path: {
-        user_id: userId,
-      },
-      query: {
-        sdoc_id: sdocId,
+        project_id: projectId,
+        span_group_id: spanGroupId,
       },
       errors: {
         422: `Validation Error`,

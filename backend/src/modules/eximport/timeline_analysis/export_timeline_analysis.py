@@ -139,7 +139,9 @@ def __generate_export_df_for_timeline_analyses(
 
         # Transform concepts for export - resolving IDs to names
         transformed_concepts = [
-            transform_concept_for_export(db=db, concept=concept)
+            transform_concept_for_export(
+                db=db, project_id=ta.project_id, concept=concept
+            )
             for concept in ta_dto.concepts
         ]
 

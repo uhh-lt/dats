@@ -36,7 +36,7 @@ class CRUDBBoxAnnotation(
         adoc_ids = list(
             {create_dto.annotation_document_id for create_dto in create_dtos}
         )
-        crud_adoc.update_timestamps(db=db, ids=adoc_ids)
+        crud_adoc.update_timestamps(db=db, project_id=project_id, ids=adoc_ids)
 
         return db_objs
 
@@ -199,7 +199,9 @@ class CRUDBBoxAnnotation(
 
         # update the annotation documents' timestamp
         crud_adoc.update_timestamps(
-            db=db, ids=list({anno.annotation_document_id for anno in annos})
+            db=db,
+            project_id=project_id,
+            ids=list({anno.annotation_document_id for anno in annos}),
         )
 
         return annos
@@ -211,7 +213,7 @@ class CRUDBBoxAnnotation(
         num_deletions = super().delete_multi(db=db, project_id=project_id, ids=ids)
 
         # update the annotation documents' timestamp
-        crud_adoc.update_timestamps(db=db, ids=adoc_ids)
+        crud_adoc.update_timestamps(db=db, project_id=project_id, ids=adoc_ids)
 
         return num_deletions
 

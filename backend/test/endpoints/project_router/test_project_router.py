@@ -22,11 +22,6 @@ PATH_IDS: dict[str, Callable[[TenantRows], int]] = {
     "span_group_id": lambda rows: rows["span_group"].id,
 }
 
-# path ids of tables whose CRUD does not take the project yet: the routes leave them
-# to the composite foreign key of the link (409) or filter by the project (see the
-# span annotation tests), so the path id test below does not cover them
-PATH_IDS_LEFT_TO_FOREIGN_KEYS = {"span_group_id"}
-
 # a valid body (with ids of the path's project) for the routes with a path id and a
 # body, by "<METHOD> <path>"
 BODIES: dict[str, Callable[[TenantRows], Any]] = {
@@ -38,6 +33,9 @@ BODIES: dict[str, Callable[[TenantRows], Any]] = {
     ),
     "PATCH /projects/{project_id}/bbox-annotations/{bbox_annotation_id}": (
         lambda rows: {"code_id": rows["code"].id}
+    ),
+    "PATCH /projects/{project_id}/span-groups/{span_group_id}": (
+        lambda rows: {"name": "renamed"}
     ),
 }
 
@@ -106,8 +104,7 @@ def test_path_id_of_another_project_is_not_found(
     client: TestClient, tenants: TwoTenants
 ) -> None:
     """Every project route answers 404 when one of its path ids belongs to the other
-    project and the others to the path's project; the user is a member of both.
-    The ids of PATH_IDS_LEFT_TO_FOREIGN_KEYS are not swapped."""
+    project and the others to the path's project; the user is a member of both."""
     own, foreign = tenants["own"], tenants["foreign"]
     failures: list[str] = []
     routes = _project_routes(client)
@@ -116,8 +113,6 @@ def test_path_id_of_another_project_is_not_found(
         names = _path_params(route)
         body = BODIES.get(f"{method} {route.path}")
         for foreign_name in names:
-            if foreign_name in PATH_IDS_LEFT_TO_FOREIGN_KEYS:
-                continue
             values = {
                 name: PATH_IDS[name](foreign if name == foreign_name else own)
                 for name in names

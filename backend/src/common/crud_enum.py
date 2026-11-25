@@ -1,6 +1,5 @@
 from enum import Enum
 
-from core.annotation.annotation_document_crud import crud_adoc
 from core.annotation.bbox_annotation_crud import crud_bbox_anno
 from core.annotation.sentence_annotation_crud import crud_sentence_anno
 from core.annotation.span_annotation_crud import crud_span_anno
@@ -44,7 +43,6 @@ from modules.whiteboard.whiteboard_crud import crud_whiteboard
 
 class Crud(Enum):
     ASPECT = crud_aspect
-    ANNOTATION_DOCUMENT = crud_adoc
     BBOX_ANNOTATION = crud_bbox_anno
     CLASSIFIER = crud_classifier
     CLUSTER = crud_cluster

@@ -10,60 +10,27 @@ from core.annotation.annotation_document_dto import (
 )
 from core.annotation.annotation_document_orm import AnnotationDocumentORM
 from core.doc.source_document_orm import SourceDocumentORM
-from repos.db.crud_base import BATCH_SIZE, SQLCRUDBase
+from repos.db.crud_base import BATCH_SIZE
+from repos.db.project_crud_base import ProjectCRUDBase
 from repos.db.sql_exceptions import NoSuchElementError
 
 
 class CRUDAnnotationDocument(
-    SQLCRUDBase[
+    ProjectCRUDBase[
         AnnotationDocumentORM, AnnotationDocumentCreate, AnnotationDocumentUpdate
     ]
 ):
     ### READ OPERATIONS ###
 
-    def read_by_id(self, db: Session, *, id: int) -> AnnotationDocumentORM:
-        """
-        Read an annotation document by its id column; the base `read` takes the
-        primary key (source_document_id, user_id).
-
-        Args:
-            id: The id of the annotation document.
-
-        Returns:
-            The annotation document.
-        """
-        db_obj = db.query(self.model).filter(self.model.id == id).first()
-        if db_obj is None:
-            raise NoSuchElementError(self.model, id=id)
-        return db_obj
-
-    def read_by_user(self, db: Session, *, user_id: int) -> list[AnnotationDocumentORM]:
-        return db.query(self.model).filter(self.model.user_id == user_id).all()
-
-    def read_by_sdoc_and_user(
-        self, db: Session, *, sdoc_id: int, user_id: int
-    ) -> AnnotationDocumentORM:
-        db_obj = (
-            db.query(self.model)
-            .filter(
-                self.model.source_document_id == sdoc_id,
-                self.model.user_id == user_id,
-            )
-            .first()
-        )
-        if db_obj is None:
-            raise NoSuchElementError(self.model, sdoc_id=sdoc_id, user_id=user_id)
-
-        return db_obj
-
     def read_by_user_and_sdocs(
-        self, db: Session, *, user_id: int, sdoc_ids: list[int]
+        self, db: Session, *, project_id: int, user_id: int, sdoc_ids: list[int]
     ) -> list[AnnotationDocumentORM]:
         """
         Read the annotation documents of a user for the given documents. A document
         has one if the user annotated it (the "Annotated by" filter).
 
         Args:
+            project_id: The project of the annotation documents.
             user_id: The ID of the user.
             sdoc_ids: The IDs of the documents.
 
@@ -79,6 +46,7 @@ class CRUDAnnotationDocument(
             db_objs.extend(
                 db.query(self.model)
                 .filter(
+                    self.model.project_id == project_id,
                     self.model.user_id == user_id,
                     self.model.source_document_id.in_(batch_ids),
                 )
@@ -88,22 +56,16 @@ class CRUDAnnotationDocument(
 
     ### UPDATE OPERATIONS ###
 
-    def update_timestamp(
-        self,
-        db: Session,
-        *,
-        id: int,
-    ) -> AnnotationDocumentORM:
-        return self.update(
-            db=db,
-            id=id,
-            update_dto=AnnotationDocumentUpdate(
-                updated=datetime.datetime.now(datetime.UTC)
-            ),
-        )
+    def update_timestamps(
+        self, db: Session, *, project_id: int, ids: list[int]
+    ) -> None:
+        """
+        Set the updated timestamp of annotation documents to now, in batches.
 
-    def update_timestamps(self, db: Session, *, ids: list[int]) -> None:
-        """Update annotation-document timestamps using batched SQL statements."""
+        Args:
+            project_id: The project of the annotation documents.
+            ids: The annotation documents.
+        """
         if not ids:
             return
 
@@ -112,24 +74,13 @@ class CRUDAnnotationDocument(
             batch_ids = ids[i : i + BATCH_SIZE]
             db.execute(
                 update(self.model)
-                .where(self.model.id.in_(batch_ids))
+                .where(
+                    self.model.project_id == project_id,
+                    self.model.id.in_(batch_ids),
+                )
                 .values(updated=updated)
             )
         db.flush()
-
-    ### DELETE OPERATIONS ###
-
-    def delete_by_sdoc(self, db: Session, *, sdoc_id: int) -> list[int]:
-        # find all adocs to be removed
-        query = db.query(self.model).filter(self.model.source_document_id == sdoc_id)
-        removed_orms = query.all()
-        ids = [removed_orm.id for removed_orm in removed_orms]
-
-        # delete the adocs
-        query.delete()
-        db.flush()
-
-        return ids
 
     ### OTHER OPERATIONS ###
 
@@ -152,6 +103,10 @@ class CRUDAnnotationDocument(
         sdoc_ids: list[int],
     ) -> dict[int, AnnotationDocumentORM]:
         """Return annotation documents for a user, creating missing rows in bulk.
+
+        Each annotation document belongs to the project of its source document, so a
+        caller that writes a row of its own project referencing one of another
+        project fails at the composite foreign key (409).
 
         Concurrent jobs (e.g. object detection and spacy of the same image) create the
         same annotation document, so a check-then-insert would race. ON CONFLICT DO

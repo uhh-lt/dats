@@ -268,7 +268,7 @@ class SpanColumns(str, AbstractColumns):
             case _:
                 return None
 
-    def resolve_ids(self, db: Session, ids: list[int]) -> list[str]:
+    def resolve_ids(self, db: Session, project_id: int, ids: list[int]) -> list[str]:
         match self:
             case SpanColumns.TAG_ID_LIST_RECURSIVE:
                 tags = crud_tag.read_by_ids(db, ids=ids)

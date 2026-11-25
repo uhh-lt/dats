@@ -14,7 +14,6 @@ class SpanGroupBaseDTO(BaseModel):
 
 # Properties for creation
 class SpanGroupCreateIntern(SpanGroupBaseDTO):
-    project_id: int = Field(description="Project the SpanGroup belongs to")
     annotation_document_id: int = Field(
         description="The ID of the AnnotationDocument the SpanGroup belongs to"
     )
