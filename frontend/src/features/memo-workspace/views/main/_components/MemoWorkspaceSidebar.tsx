@@ -77,9 +77,13 @@ export const MemoWorkspaceSidebar = memo(({ projectId, scope }: MemoWorkspaceSid
     createMemo.mutate(
       {
         projectId,
-        attachedObjectId: projectId,
-        attachedObjectType: AttachedObjectType.PROJECT,
-        requestBody: { title: "Untitled", content: "", content_json: "" },
+        requestBody: {
+          title: "Untitled",
+          content: "",
+          content_json: "",
+          attached_object_id: projectId,
+          attached_object_type: AttachedObjectType.PROJECT,
+        },
       },
       {
         onSuccess: (memo) => dispatch(MemoWorkspaceActions.openMemo({ scope, memoId: memo.id })),

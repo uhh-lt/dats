@@ -138,7 +138,6 @@ def create_reasoning_memos(
         attached_object_ids.append(annotation.id)
         create_dtos.append(
             MemoCreateIntern(
-                project_id=context.payload.project_id,
                 uuid=str(uuid4()),
                 user_id=context.virtual_user_id,
                 title=REASONING_MEMO_TITLE,
@@ -157,6 +156,7 @@ def create_reasoning_memos(
 
     memos = MemoService().create_multi_for_attached_objects(
         db=context.db,
+        project_id=context.payload.project_id,
         attached_object_type=attached_object_type,
         attached_object_ids=attached_object_ids,
         create_dtos=create_dtos,

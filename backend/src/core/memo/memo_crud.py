@@ -1,5 +1,6 @@
 from fastapi.encoders import jsonable_encoder
-from sqlalchemy import select
+from sqlalchemy import and_, delete, select
+from sqlalchemy.dialects.postgresql import insert
 from sqlalchemy.orm import Session, selectinload
 from sqlalchemy.orm.attributes import set_committed_value
 from sqlalchemy.sql.base import ExecutableOption
@@ -8,14 +9,19 @@ from core.memo.memo_dto import MemoCreateIntern, MemoUpdate
 from core.memo.memo_enum import AttachedObjectType
 from core.memo.memo_orm import MemoFavoriteLinkTable, MemoORM, MemoRecentORM
 from core.memo.object_handle_dto import ObjectHandleCreate
-from repos.db.crud_base import BATCH_SIZE, SQLCRUDBase
+from core.memo.object_handle_orm import (
+    ATTACHED_OBJECT_TYPE_TO_HANDLE_COLUMN,
+    ObjectHandleORM,
+)
+from repos.db.crud_base import BATCH_SIZE
+from repos.db.project_crud_base import ProjectCRUDBase
 
 
-class CRUDMemo(SQLCRUDBase[MemoORM, MemoCreateIntern, MemoUpdate]):
+class CRUDMemo(ProjectCRUDBase[MemoORM, MemoCreateIntern, MemoUpdate]):
     ### CREATE OPERATIONS ###
 
     def create_multi(
-        self, db: Session, *, create_dtos: list[MemoCreateIntern]
+        self, db: Session, *, project_id: int, create_dtos: list[MemoCreateIntern]
     ) -> list[MemoORM]:
         # a memo needs an object handle: use create_multi_for_attached_objects
         raise NotImplementedError()
@@ -24,12 +30,14 @@ class CRUDMemo(SQLCRUDBase[MemoORM, MemoCreateIntern, MemoUpdate]):
         self,
         db: Session,
         *,
+        project_id: int,
         attached_object_id: int,
         attached_object_type: AttachedObjectType,
         create_dto: MemoCreateIntern,
     ) -> MemoORM:
         return self.create_multi_for_attached_objects(
             db=db,
+            project_id=project_id,
             attached_object_type=attached_object_type,
             attached_object_ids=[attached_object_id],
             create_dtos=[create_dto],
@@ -39,6 +47,7 @@ class CRUDMemo(SQLCRUDBase[MemoORM, MemoCreateIntern, MemoUpdate]):
         self,
         db: Session,
         *,
+        project_id: int,
         attached_object_type: AttachedObjectType,
         attached_object_ids: list[int],
         create_dtos: list[MemoCreateIntern],
@@ -46,9 +55,11 @@ class CRUDMemo(SQLCRUDBase[MemoORM, MemoCreateIntern, MemoUpdate]):
         """
         Create memos attached to objects of one type, with a constant number of
         queries: the missing object handles are created in one batch, the memos
-        with one flush.
+        with one flush. An object of another project violates the composite foreign
+        key of its object handle (409).
 
         Args:
+            project_id: The project of the memos and their objects.
             attached_object_type: The type of the objects the memos are attached to.
             attached_object_ids: The object each memo is attached to, parallel to
                 `create_dtos`. An object may get several memos.
@@ -69,17 +80,13 @@ class CRUDMemo(SQLCRUDBase[MemoORM, MemoCreateIntern, MemoUpdate]):
             return []
 
         # 1) find or create the object handle of every attached object
+        handle_column = ATTACHED_OBJECT_TYPE_TO_HANDLE_COLUMN[attached_object_type]
         oh_db_objs = crud_object_handle.create_multi(
             db=db,
+            project_id=project_id,
             create_dtos=[
-                self._object_handle_create_dto(
-                    project_id=create_dto.project_id,
-                    attached_object_id=attached_object_id,
-                    attached_object_type=attached_object_type,
-                )
-                for attached_object_id, create_dto in zip(
-                    attached_object_ids, create_dtos
-                )
+                ObjectHandleCreate.model_validate({handle_column: attached_object_id})
+                for attached_object_id in attached_object_ids
             ],
         )
 
@@ -88,7 +95,11 @@ class CRUDMemo(SQLCRUDBase[MemoORM, MemoCreateIntern, MemoUpdate]):
         # needs no query
         # noinspection PyArgumentList
         db_objs = [
-            self.model(**jsonable_encoder(create_dto), attached_to_id=oh_db_obj.id)
+            self.model(
+                **jsonable_encoder(create_dto),
+                project_id=project_id,
+                attached_to_id=oh_db_obj.id,
+            )
             for create_dto, oh_db_obj in zip(create_dtos, oh_db_objs)
         ]
         db.add_all(db_objs)
@@ -98,48 +109,6 @@ class CRUDMemo(SQLCRUDBase[MemoORM, MemoCreateIntern, MemoUpdate]):
 
         return db_objs
 
-    def _object_handle_create_dto(
-        self,
-        *,
-        project_id: int,
-        attached_object_id: int,
-        attached_object_type: AttachedObjectType,
-    ) -> ObjectHandleCreate:
-        """The object handle in the project that refers to the attached object."""
-        match attached_object_type:
-            case AttachedObjectType.code:
-                return ObjectHandleCreate(
-                    project_id=project_id, code_id=attached_object_id
-                )
-            case AttachedObjectType.span_annotation:
-                return ObjectHandleCreate(
-                    project_id=project_id, span_annotation_id=attached_object_id
-                )
-            case AttachedObjectType.sentence_annotation:
-                return ObjectHandleCreate(
-                    project_id=project_id, sentence_annotation_id=attached_object_id
-                )
-            case AttachedObjectType.span_group:
-                return ObjectHandleCreate(
-                    project_id=project_id, span_group_id=attached_object_id
-                )
-            case AttachedObjectType.bbox_annotation:
-                return ObjectHandleCreate(
-                    project_id=project_id, bbox_annotation_id=attached_object_id
-                )
-            case AttachedObjectType.source_document:
-                return ObjectHandleCreate(
-                    project_id=project_id, source_document_id=attached_object_id
-                )
-            case AttachedObjectType.project:
-                return ObjectHandleCreate(
-                    project_id=project_id, attached_project_id=attached_object_id
-                )
-            case AttachedObjectType.tag:
-                return ObjectHandleCreate(
-                    project_id=project_id, tag_id=attached_object_id
-                )
-
     ### READ OPERATIONS ###
 
     def read_by_project(
@@ -147,14 +116,48 @@ class CRUDMemo(SQLCRUDBase[MemoORM, MemoCreateIntern, MemoUpdate]):
         db: Session,
         *,
         project_id: int,
+        attached_object_type: AttachedObjectType | None = None,
+        attached_object_id: int | None = None,
+        user_id: int | None = None,
     ) -> list[MemoORM]:
+        """
+        Read the memos of a project, optionally filtered.
+
+        Args:
+            project_id: The project of the memos.
+            attached_object_type: Only memos attached to an object of this type.
+            attached_object_id: Only memos attached to the object with this id; needs
+                `attached_object_type`.
+            user_id: Only memos of this author.
+
+        Returns:
+            The matching memos.
+        """
         query = (
             db.query(self.model)
             .options(*self._load_options())
-            .where(
-                self.model.project_id == project_id,
-            )
+            .where(self.model.project_id == project_id)
         )
+        if attached_object_type is not None:
+            handle_column = getattr(
+                ObjectHandleORM,
+                ATTACHED_OBJECT_TYPE_TO_HANDLE_COLUMN[attached_object_type],
+            )
+            query = query.join(
+                ObjectHandleORM,
+                and_(
+                    ObjectHandleORM.project_id == self.model.project_id,
+                    ObjectHandleORM.id == self.model.attached_to_id,
+                ),
+            ).where(
+                handle_column.is_not(None)
+                if attached_object_id is None
+                else handle_column == attached_object_id
+            )
+        elif attached_object_id is not None:
+            raise ValueError("Filtering by attached_object_id needs its type.")
+        if user_id is not None:
+            query = query.where(self.model.user_id == user_id)
         return query.all()
 
     def read_by_project_and_uuid(
@@ -175,13 +178,19 @@ class CRUDMemo(SQLCRUDBase[MemoORM, MemoCreateIntern, MemoUpdate]):
         return query.first()
 
     def read_recents(
-        self, db: Session, *, user_id: int, project_id: int, limit: int
+        self, db: Session, *, project_id: int, user_id: int, limit: int
     ) -> list[MemoORM]:
         """Return the user's most recently opened memos in a project, newest first."""
         return (
             db.query(MemoORM)
             .options(*self._load_options())
-            .join(MemoRecentORM, MemoRecentORM.memo_id == MemoORM.id)
+            .join(
+                MemoRecentORM,
+                and_(
+                    MemoRecentORM.project_id == MemoORM.project_id,
+                    MemoRecentORM.memo_id == MemoORM.id,
+                ),
+            )
             .filter(
                 MemoRecentORM.user_id == user_id,
                 MemoORM.project_id == project_id,
@@ -192,9 +201,9 @@ class CRUDMemo(SQLCRUDBase[MemoORM, MemoCreateIntern, MemoUpdate]):
         )
 
     def read_favorite_ids(
-        self, db: Session, *, memo_ids: list[int], user_id: int
+        self, db: Session, *, project_id: int, memo_ids: list[int], user_id: int
     ) -> set[int]:
-        """Return the ids of the given memos that the user favorited."""
+        """Return the ids of the given memos of the project that the user favorited."""
         favorite_ids: set[int] = set()
         unique_ids = list(dict.fromkeys(memo_ids))
         for i in range(0, len(unique_ids), BATCH_SIZE):
@@ -202,6 +211,7 @@ class CRUDMemo(SQLCRUDBase[MemoORM, MemoCreateIntern, MemoUpdate]):
             favorite_ids.update(
                 db.scalars(
                     select(MemoFavoriteLinkTable.memo_id).where(
+                        MemoFavoriteLinkTable.project_id == project_id,
                         MemoFavoriteLinkTable.memo_id.in_(batch_ids),
                         MemoFavoriteLinkTable.user_id == user_id,
                     )
@@ -211,13 +221,18 @@ class CRUDMemo(SQLCRUDBase[MemoORM, MemoCreateIntern, MemoUpdate]):
 
     ### UPDATE OPERATIONS ###
 
-    def update_recent(self, db: Session, *, memo_id: int, user_id: int) -> None:
-        """Upsert a (user, memo) recents row, bumping last_opened to now."""
-        from sqlalchemy.dialects.postgresql import insert
+    def update_recent(
+        self, db: Session, *, project_id: int, memo_id: int, user_id: int
+    ) -> None:
+        """
+        Upsert a (user, memo) recents row, bumping last_opened to now.
 
-        memo = self.read(db=db, id=memo_id)
+        Raises:
+            NoSuchElementError: If the memo does not exist in the project.
+        """
+        self.exists(db=db, project_id=project_id, id=memo_id, raise_error=True)
         insert_stmt = insert(MemoRecentORM).values(
-            memo_id=memo_id, user_id=user_id, project_id=memo.project_id
+            memo_id=memo_id, user_id=user_id, project_id=project_id
         )
         upsert_stmt = insert_stmt.on_conflict_do_update(
             index_elements=["user_id", "memo_id"],
@@ -227,27 +242,26 @@ class CRUDMemo(SQLCRUDBase[MemoORM, MemoCreateIntern, MemoUpdate]):
         db.flush()
 
     ### DELETE OPERATIONS ###
-    # Inherited from SQLCRUDBase
+    # Inherited from ProjectCRUDBase
 
     ### OTHER OPERATIONS ###
 
-    def favorite(self, db: Session, *, memo_id: int, user_id: int) -> None:
-        self.favorite_multi(db=db, memo_ids=[memo_id], user_id=user_id)
+    def favorite(
+        self, db: Session, *, project_id: int, memo_id: int, user_id: int
+    ) -> None:
+        self.favorite_multi(
+            db=db, project_id=project_id, memo_ids=[memo_id], user_id=user_id
+        )
 
-    def favorite_multi(self, db: Session, *, memo_ids: list[int], user_id: int) -> None:
+    def favorite_multi(
+        self, db: Session, *, project_id: int, memo_ids: list[int], user_id: int
+    ) -> None:
         """
-        Favorite memos for a user; already favorited memos are skipped.
-
-        Raises:
-            NoSuchElementError: If any memo does not exist.
+        Favorite memos of the project for a user; already favorited memos are
+        skipped. A memo of another project violates the composite foreign key (409).
         """
         if not memo_ids:
             return
-        project_id_by_memo = {
-            memo.id: memo.project_id for memo in self.read_by_ids(db=db, ids=memo_ids)
-        }
-
-        from sqlalchemy.dialects.postgresql import insert
 
         unique_ids = list(dict.fromkeys(memo_ids))
         insert_stmt = insert(MemoFavoriteLinkTable).on_conflict_do_nothing()
@@ -256,33 +270,25 @@ class CRUDMemo(SQLCRUDBase[MemoORM, MemoCreateIntern, MemoUpdate]):
             db.execute(
                 insert_stmt,
                 [
-                    {
-                        "memo_id": memo_id,
-                        "user_id": user_id,
-                        "project_id": project_id_by_memo[memo_id],
-                    }
+                    {"memo_id": memo_id, "user_id": user_id, "project_id": project_id}
                     for memo_id in batch_ids
                 ],
             )
         db.flush()
 
-    def unfavorite(self, db: Session, *, memo_id: int, user_id: int) -> None:
-        self.unfavorite_multi(db=db, memo_ids=[memo_id], user_id=user_id)
-
     def unfavorite_multi(
-        self, db: Session, *, memo_ids: list[int], user_id: int
+        self, db: Session, *, project_id: int, memo_ids: list[int], user_id: int
     ) -> None:
         """Remove the favorite of a user from memos; memos without one are skipped."""
         if not memo_ids:
             return
-
-        from sqlalchemy import delete
 
         unique_ids = list(dict.fromkeys(memo_ids))
         for i in range(0, len(unique_ids), BATCH_SIZE):
             batch_ids = unique_ids[i : i + BATCH_SIZE]
             db.execute(
                 delete(MemoFavoriteLinkTable).where(
+                    MemoFavoriteLinkTable.project_id == project_id,
                     MemoFavoriteLinkTable.memo_id.in_(batch_ids),
                     MemoFavoriteLinkTable.user_id == user_id,
                 )

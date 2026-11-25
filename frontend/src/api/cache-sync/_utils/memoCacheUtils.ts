@@ -90,7 +90,7 @@ export function invalidateCopiedAnnotationMemos(
 }
 
 export function writeMemo(memo: MemoRead): void {
-  setSingle(memoQueries.byId(memo.id).queryKey, memo);
+  setSingle(memoQueries.byId(memo.project_id, memo.id).queryKey, memo);
   queryClient.setQueryData(
     memoQueries.byAttachedObject(memo.project_id, memo.attached_object_type, memo.attached_object_id).queryKey,
     (old) => (old ? old.map((m) => (m.id === memo.id ? memo : m)) : old),
@@ -98,7 +98,7 @@ export function writeMemo(memo: MemoRead): void {
 }
 
 export function appendMemo(memo: MemoRead): void {
-  setSingle(memoQueries.byId(memo.id).queryKey, memo);
+  setSingle(memoQueries.byId(memo.project_id, memo.id).queryKey, memo);
   queryClient.setQueryData(
     memoQueries.byAttachedObject(memo.project_id, memo.attached_object_type, memo.attached_object_id).queryKey,
     (old) => (old ? [...old, memo] : old),
@@ -106,7 +106,7 @@ export function appendMemo(memo: MemoRead): void {
 }
 
 export function removeMemo(memo: MemoRead): void {
-  removeSingle(memoQueries.byId(memo.id).queryKey);
+  removeSingle(memoQueries.byId(memo.project_id, memo.id).queryKey);
   queryClient.setQueryData(
     memoQueries.byAttachedObject(memo.project_id, memo.attached_object_type, memo.attached_object_id).queryKey,
     (old) => (old ? old.filter((m) => m.id !== memo.id) : old),

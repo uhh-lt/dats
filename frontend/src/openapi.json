@@ -3139,30 +3139,18 @@
         }
       }
     },
-    "/memo": {
+    "/projects/{project_id}/memos": {
       "put": {
         "tags": ["memo"],
-        "summary": "Adds a Memo to the Attached Object with the given ID if it exists",
+        "summary": "Creates a Memo attached to the given object and returns it.",
         "operationId": "create_memo",
         "security": [{ "OAuth2PasswordBearer": [] }],
         "parameters": [
           {
             "name": "project_id",
-            "in": "query",
+            "in": "path",
             "required": true,
             "schema": { "type": "integer", "title": "Project Id" }
-          },
-          {
-            "name": "attached_object_id",
-            "in": "query",
-            "required": true,
-            "schema": { "type": "integer", "title": "Attached Object Id" }
-          },
-          {
-            "name": "attached_object_type",
-            "in": "query",
-            "required": true,
-            "schema": { "$ref": "#/components/schemas/AttachedObjectType" }
           }
         ],
         "requestBody": {
@@ -3179,9 +3167,62 @@
             "content": { "application/json": { "schema": { "$ref": "#/components/schemas/HTTPValidationError" } } }
           }
         }
+      },
+      "get": {
+        "tags": ["memo"],
+        "summary": "Returns the Memos of the Project, optionally filtered by the attached object (attached_object_id needs attached_object_type) and the author (user_id).",
+        "operationId": "get_by_project",
+        "security": [{ "OAuth2PasswordBearer": [] }],
+        "parameters": [
+          {
+            "name": "project_id",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "integer", "title": "Project Id" }
+          },
+          {
+            "name": "attached_object_type",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [{ "$ref": "#/components/schemas/AttachedObjectType" }, { "type": "null" }],
+              "title": "Attached Object Type"
+            }
+          },
+          {
+            "name": "attached_object_id",
+            "in": "query",
+            "required": false,
+            "schema": { "anyOf": [{ "type": "integer" }, { "type": "null" }], "title": "Attached Object Id" }
+          },
+          {
+            "name": "user_id",
+            "in": "query",
+            "required": false,
+            "schema": { "anyOf": [{ "type": "integer" }, { "type": "null" }], "title": "User Id" }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": { "$ref": "#/components/schemas/MemoRead" },
+                  "title": "Response Memo-Get By Project"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/HTTPValidationError" } } }
+          }
+        }
       }
     },
-    "/memo/recent": {
+    "/projects/{project_id}/memos/recent": {
       "get": {
         "tags": ["memo"],
         "summary": "Returns the current user's most recently opened Memos in the project",
@@ -3190,7 +3231,7 @@
         "parameters": [
           {
             "name": "project_id",
-            "in": "query",
+            "in": "path",
             "required": true,
             "schema": { "type": "integer", "title": "Project Id" }
           },
@@ -3221,13 +3262,19 @@
         }
       }
     },
-    "/memo/{memo_id}": {
+    "/projects/{project_id}/memos/{memo_id}": {
       "get": {
         "tags": ["memo"],
-        "summary": "Returns the Memo with the given ID if it exists",
+        "summary": "Returns the Memo with the given ID.",
         "operationId": "get_by_id",
         "security": [{ "OAuth2PasswordBearer": [] }],
         "parameters": [
+          {
+            "name": "project_id",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "integer", "title": "Project Id" }
+          },
           { "name": "memo_id", "in": "path", "required": true, "schema": { "type": "integer", "title": "Memo Id" } }
         ],
         "responses": {
@@ -3243,10 +3290,16 @@
       },
       "patch": {
         "tags": ["memo"],
-        "summary": "Updates the Memo with the given ID if it exists",
+        "summary": "Updates the Memo with the given ID.",
         "operationId": "update_by_id",
         "security": [{ "OAuth2PasswordBearer": [] }],
         "parameters": [
+          {
+            "name": "project_id",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "integer", "title": "Project Id" }
+          },
           { "name": "memo_id", "in": "path", "required": true, "schema": { "type": "integer", "title": "Memo Id" } }
         ],
         "requestBody": {
@@ -3266,10 +3319,16 @@
       },
       "delete": {
         "tags": ["memo"],
-        "summary": "Removes the Memo with the given ID if it exists",
+        "summary": "Deletes the Memo with the given ID.",
         "operationId": "delete_by_id",
         "security": [{ "OAuth2PasswordBearer": [] }],
         "parameters": [
+          {
+            "name": "project_id",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "integer", "title": "Project Id" }
+          },
           { "name": "memo_id", "in": "path", "required": true, "schema": { "type": "integer", "title": "Memo Id" } }
         ],
         "responses": {
@@ -3284,32 +3343,32 @@
         }
       }
     },
-    "/memo/attached_obj/{attached_obj_type}/to/{attached_obj_id}": {
-      "get": {
+    "/projects/{project_id}/memos/bulk": {
+      "patch": {
         "tags": ["memo"],
-        "summary": "Returns all Memos attached to the object if it exists",
-        "operationId": "get_memos_by_attached_object_id",
+        "summary": "Updates the Memos with the given IDs.",
+        "operationId": "update_memos_bulk",
         "security": [{ "OAuth2PasswordBearer": [] }],
         "parameters": [
           {
-            "name": "attached_obj_id",
-            "in": "path",
-            "required": true,
-            "schema": { "type": "integer", "title": "Attached Obj Id" }
-          },
-          {
-            "name": "attached_obj_type",
-            "in": "path",
-            "required": true,
-            "schema": { "$ref": "#/components/schemas/AttachedObjectType" }
-          },
-          {
             "name": "project_id",
-            "in": "query",
+            "in": "path",
             "required": true,
             "schema": { "type": "integer", "title": "Project Id" }
           }
         ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "array",
+                "items": { "$ref": "#/components/schemas/MemoUpdateBulk" },
+                "title": "Memos"
+              }
+            }
+          }
+        },
         "responses": {
           "200": {
             "description": "Successful Response",
@@ -3318,7 +3377,45 @@
                 "schema": {
                   "type": "array",
                   "items": { "$ref": "#/components/schemas/MemoRead" },
-                  "title": "Response Memo-Get Memos By Attached Object Id"
+                  "title": "Response Memo-Update Memos Bulk"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/HTTPValidationError" } } }
+          }
+        }
+      },
+      "delete": {
+        "tags": ["memo"],
+        "summary": "Deletes the Memos with the given IDs.",
+        "operationId": "delete_memos_bulk",
+        "security": [{ "OAuth2PasswordBearer": [] }],
+        "parameters": [
+          {
+            "name": "project_id",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "integer", "title": "Project Id" }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": { "schema": { "type": "array", "items": { "type": "integer" }, "title": "Memo Ids" } }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": { "$ref": "#/components/schemas/MemoRead" },
+                  "title": "Response Memo-Delete Memos Bulk"
                 }
               }
             }
@@ -3330,51 +3427,19 @@
         }
       }
     },
-    "/memo/bulk/update": {
-      "patch": {
-        "tags": ["memo"],
-        "summary": "Updates Memos in Bulk",
-        "operationId": "update_memos_bulk",
-        "requestBody": {
-          "content": {
-            "application/json": {
-              "schema": {
-                "items": { "$ref": "#/components/schemas/MemoUpdateBulk" },
-                "type": "array",
-                "title": "Memos"
-              }
-            }
-          },
-          "required": true
-        },
-        "responses": {
-          "200": {
-            "description": "Successful Response",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "items": { "$ref": "#/components/schemas/MemoRead" },
-                  "type": "array",
-                  "title": "Response Memo-Update Memos Bulk"
-                }
-              }
-            }
-          },
-          "422": {
-            "description": "Validation Error",
-            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/HTTPValidationError" } } }
-          }
-        },
-        "security": [{ "OAuth2PasswordBearer": [] }]
-      }
-    },
-    "/memo/{memo_id}/recent": {
+    "/projects/{project_id}/memos/{memo_id}/recent": {
       "post": {
         "tags": ["memo"],
         "summary": "Records that the current user opened the Memo with the given ID",
         "operationId": "record_recent_memo",
         "security": [{ "OAuth2PasswordBearer": [] }],
         "parameters": [
+          {
+            "name": "project_id",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "integer", "title": "Project Id" }
+          },
           { "name": "memo_id", "in": "path", "required": true, "schema": { "type": "integer", "title": "Memo Id" } }
         ],
         "responses": {
@@ -3386,62 +3451,30 @@
         }
       }
     },
-    "/memo/bulk/delete": {
-      "delete": {
-        "tags": ["memo"],
-        "summary": "Deletes all Memos with the given IDs.",
-        "operationId": "delete_memos_bulk",
-        "requestBody": {
-          "content": {
-            "application/json": { "schema": { "items": { "type": "integer" }, "type": "array", "title": "Memo Ids" } }
-          },
-          "required": true
-        },
-        "responses": {
-          "200": {
-            "description": "Successful Response",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "items": { "$ref": "#/components/schemas/MemoRead" },
-                  "type": "array",
-                  "title": "Response Memo-Delete Memos Bulk"
-                }
-              }
-            }
-          },
-          "422": {
-            "description": "Validation Error",
-            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/HTTPValidationError" } } }
-          }
-        },
-        "security": [{ "OAuth2PasswordBearer": [] }]
-      }
-    },
-    "/memo/generate_suggestion/{attached_obj_type}/{attached_obj_id}": {
-      "get": {
+    "/projects/{project_id}/memos/suggest": {
+      "post": {
         "tags": ["memo"],
         "summary": "Generates a 1–2 sentence memo suggestion using LLM based on the attached object",
         "operationId": "generate_memo_suggestion",
         "security": [{ "OAuth2PasswordBearer": [] }],
         "parameters": [
           {
-            "name": "attached_obj_id",
+            "name": "project_id",
             "in": "path",
             "required": true,
-            "schema": { "type": "integer", "title": "Attached Obj Id" }
+            "schema": { "type": "integer", "title": "Project Id" }
           },
           {
-            "name": "attached_obj_type",
-            "in": "path",
+            "name": "attached_object_type",
+            "in": "query",
             "required": true,
             "schema": { "$ref": "#/components/schemas/AttachedObjectType" }
           },
           {
-            "name": "project_id",
+            "name": "attached_object_id",
             "in": "query",
             "required": true,
-            "schema": { "type": "integer", "title": "Project Id" }
+            "schema": { "type": "integer", "title": "Attached Object Id" }
           },
           { "name": "model", "in": "query", "required": true, "schema": { "type": "string", "title": "Model" } }
         ],
@@ -15111,10 +15144,19 @@
             "description": "Optional Unicode emoji used as the Memo icon"
           },
           "content": { "type": "string", "title": "Content", "description": "Textual content of the Memo" },
-          "content_json": { "type": "string", "title": "Content Json", "description": "JSON content of the Memo" }
+          "content_json": { "type": "string", "title": "Content Json", "description": "JSON content of the Memo" },
+          "attached_object_id": {
+            "type": "integer",
+            "title": "Attached Object Id",
+            "description": "ID of the Object the Memo is attached to"
+          },
+          "attached_object_type": {
+            "$ref": "#/components/schemas/AttachedObjectType",
+            "description": "Type of the Object the ID refers to"
+          }
         },
         "type": "object",
-        "required": ["title", "content", "content_json"],
+        "required": ["title", "content", "content_json", "attached_object_id", "attached_object_type"],
         "title": "MemoCreate"
       },
       "MemoCreatedEvent": {

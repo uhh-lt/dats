@@ -22,6 +22,7 @@ import { Node, NodeProps, useReactFlow, XYPosition } from "@xyflow/react";
 import { useEffect, useRef } from "react";
 import { useReactFlowService } from "../../_hooks/ReactFlowService";
 import { DATSEdge } from "../../_types/DATSEdge";
+import { WhiteboardRouteAPI } from "../../_hooks/whiteboardRouteAPI";
 import { DATSNode } from "../../_types/DATSNode";
 import {
   isBBoxAnnotationNode,
@@ -215,7 +216,8 @@ export function MemoNode(props: NodeProps<MemoNode>) {
   const readonly = !props.isConnectable;
 
   // global server state (react-query)
-  const memo = useQuery(memoQueries.byId(props.data.memoId));
+  const projectId = WhiteboardRouteAPI.useParams({ select: (params) => params.projectId });
+  const memo = useQuery(memoQueries.byId(projectId, props.data.memoId));
   const attachedObject = useGetMemosAttachedObject(memo.data?.attached_object_type, memo.data?.attached_object_id);
 
   useEffect(() => {

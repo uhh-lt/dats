@@ -102,7 +102,11 @@ class WhiteboardService(metaclass=SingletonMeta):
                         MemoNodeData.model_validate(node.data).memoId for node in nodes
                     ]
                     result.memos = get_memo_read_dtos_from_orms(
-                        db=db, db_objs=crud_memo.read_by_ids(db=db, ids=memo_ids)
+                        db=db,
+                        project_id=whiteboard.project_id,
+                        db_objs=crud_memo.read_by_ids(
+                            db=db, project_id=whiteboard.project_id, ids=memo_ids
+                        ),
                     )
                 case WhiteboardNodeType.SDOC:
                     sdoc_ids = [

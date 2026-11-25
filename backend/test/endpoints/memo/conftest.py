@@ -62,6 +62,7 @@ def _create_memo(
     """Create a memo attached to an object via the memo CRUD (no favorite)."""
     return crud_memo.create_for_attached_object(
         db=db_session,
+        project_id=project.id,
         attached_object_id=attached_object_id,
         attached_object_type=attached_object_type,
         create_dto=MemoCreateIntern(
@@ -70,7 +71,6 @@ def _create_memo(
             content=content,
             content_json='{"blocks": []}',
             user_id=user.id,
-            project_id=project.id,
         ),
     )
 
@@ -110,11 +110,13 @@ class MemoProjectState(TypedDict):
       memo):
       - `user` favorited `code_memo_a`.
       - `other_user` favorited `code_memo_a` AND `code_memo_b`.
-    - Two extra projects used to exercise project scoping and authorization of
-      the recents endpoint. Both are empty (no memos, no recents):
-      - `other_project` "Other Test Project": `user` IS a member.
+    - Two extra projects used to exercise project scoping and authorization:
+      - `other_project` "Other Test Project": `user` IS a member. It holds the
+        code `other_project_code` "Other Project Code" with the memo
+        `other_project_memo` "Other Project Memo" by `user` (not favorited, no
+        recents).
       - `foreign_project` "Foreign Project": `user` is NOT a member (owned by
-        `other_user`).
+        `other_user`); empty.
 
     Non-obvious derived behavior (documented so tests don't re-derive it):
     - `is_favorite` on a MemoRead is computed for the REQUESTING user. Because
@@ -122,20 +124,23 @@ class MemoProjectState(TypedDict):
       `get_current_user` to the test_user), a memo read through the API reports
       `is_favorite=True` only for `code_memo_a` — even though `other_user` also
       favorited `code_memo_b`. Favorites are per-user, never global.
-    - Existence-vs-authorization ordering differs by endpoint. `get_by_id` and
-      the favorite endpoints authorize FIRST (`assert_in_same_project_as`), so
-      a nonexistent memo id yields 403. `update_by_id` and `delete_by_id` READ
-      the memo first, so a nonexistent memo id yields 404 (NoSuchElementError).
-      Create/list take the project as `project_id`: a project `user` is not a
-      member of (`foreign_project`) yields 403, an attached object that does
-      not exist in that project (a nonexistent id, or an object of the fixture
-      project read within `other_project`) yields 404.
+    - Every route lives under /projects/{project_id}/memos: a project `user`
+      is not a member of (`foreign_project`) yields 403. A memo id in the path
+      or in a bulk body that does not exist in the path's project (a
+      nonexistent id, or `other_project_memo` read within the fixture project)
+      yields 404. The attached object of a create is left to the composite
+      foreign key of its object handle: an object that does not exist in the
+      path's project yields 409, except a project, which must be the path's
+      project itself (404 otherwise). A list filter by an object of another
+      project matches nothing.
     """
 
     project: ProjectORM
     user: UserORM
     other_user: UserORM
     other_project: ProjectORM
+    other_project_code: CodeORM
+    other_project_memo: MemoORM
     foreign_project: ProjectORM
     code: CodeORM
     tag: TagORM
@@ -310,19 +315,48 @@ def memo_project(
     tag_memo = create_memo(test_user, "Tag Memo", tag.id, AttachedObjectType.tag)
 
     # Per-user favorites: user -> A; other_user -> A and B.
-    crud_memo.favorite(db=db_session, memo_id=code_memo_a.id, user_id=test_user.id)
-    crud_memo.favorite(db=db_session, memo_id=code_memo_a.id, user_id=other_user.id)
-    crud_memo.favorite(db=db_session, memo_id=code_memo_b.id, user_id=other_user.id)
+    for memo, user in [
+        (code_memo_a, test_user),
+        (code_memo_a, other_user),
+        (code_memo_b, other_user),
+    ]:
+        crud_memo.favorite(
+            db=db_session, project_id=project.id, memo_id=memo.id, user_id=user.id
+        )
 
-    # Two extra projects for recents scoping/authorization tests. Both are empty.
-    # `other_project` has `user` as a member; `foreign_project` does not.
+    # Two extra projects for scoping/authorization tests: `other_project` has
+    # `user` as a member and a code with a memo; `foreign_project` does not and
+    # is empty.
     other_project = _create_project(db_session, test_user, "Other Test Project")
+    other_project_code = crud_code.create(
+        db=db_session,
+        project_id=other_project.id,
+        create_dto=CodeCreate(
+            name="Other Project Code",
+            color="#00ff00",
+            description="Code of another project",
+            parent_id=None,
+            enabled=True,
+            is_system=False,
+        ),
+    )
+    other_project_memo = _create_memo(
+        db_session,
+        project=other_project,
+        user=test_user,
+        title="Other Project Memo",
+        content="Content of Other Project Memo",
+        attached_object_id=other_project_code.id,
+        attached_object_type=AttachedObjectType.code,
+    )
     foreign_project = _create_project(db_session, other_user, "Foreign Project")
 
     db_session.commit()
     for obj in (
         project,
         other_project,
+        other_project_code,
+        other_project_memo,
         foreign_project,
         code,
         tag,
@@ -347,6 +381,8 @@ def memo_project(
         "user": test_user,
         "other_user": other_user,
         "other_project": other_project,
+        "other_project_code": other_project_code,
+        "other_project_memo": other_project_memo,
         "foreign_project": foreign_project,
         "code": code,
         "tag": tag,

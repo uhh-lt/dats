@@ -12,31 +12,57 @@ import { OpenAPI } from "../core/OpenAPI";
 import { request as __request } from "../core/request";
 export class MemoService {
   /**
-   * Adds a Memo to the Attached Object with the given ID if it exists
+   * Creates a Memo attached to the given object and returns it.
    * @returns MemoRead Successful Response
    * @throws ApiError
    */
   public static createMemo({
     projectId,
-    attachedObjectId,
-    attachedObjectType,
     requestBody,
   }: {
     projectId: number;
-    attachedObjectId: number;
-    attachedObjectType: AttachedObjectType;
     requestBody: MemoCreate;
   }): CancelablePromise<MemoRead> {
     return __request(OpenAPI, {
       method: "PUT",
-      url: "/memo",
-      query: {
+      url: "/projects/{project_id}/memos",
+      path: {
         project_id: projectId,
-        attached_object_id: attachedObjectId,
-        attached_object_type: attachedObjectType,
       },
       body: requestBody,
       mediaType: "application/json",
+      errors: {
+        422: `Validation Error`,
+      },
+    });
+  }
+  /**
+   * Returns the Memos of the Project, optionally filtered by the attached object (attached_object_id needs attached_object_type) and the author (user_id).
+   * @returns MemoRead Successful Response
+   * @throws ApiError
+   */
+  public static getByProject({
+    projectId,
+    attachedObjectType,
+    attachedObjectId,
+    userId,
+  }: {
+    projectId: number;
+    attachedObjectType?: AttachedObjectType | null;
+    attachedObjectId?: number | null;
+    userId?: number | null;
+  }): CancelablePromise<Array<MemoRead>> {
+    return __request(OpenAPI, {
+      method: "GET",
+      url: "/projects/{project_id}/memos",
+      path: {
+        project_id: projectId,
+      },
+      query: {
+        attached_object_type: attachedObjectType,
+        attached_object_id: attachedObjectId,
+        user_id: userId,
+      },
       errors: {
         422: `Validation Error`,
       },
@@ -56,9 +82,11 @@ export class MemoService {
   }): CancelablePromise<Array<MemoRead>> {
     return __request(OpenAPI, {
       method: "GET",
-      url: "/memo/recent",
-      query: {
+      url: "/projects/{project_id}/memos/recent",
+      path: {
         project_id: projectId,
+      },
+      query: {
         limit: limit,
       },
       errors: {
@@ -67,15 +95,16 @@ export class MemoService {
     });
   }
   /**
-   * Returns the Memo with the given ID if it exists
+   * Returns the Memo with the given ID.
    * @returns MemoRead Successful Response
    * @throws ApiError
    */
-  public static getById({ memoId }: { memoId: number }): CancelablePromise<MemoRead> {
+  public static getById({ projectId, memoId }: { projectId: number; memoId: number }): CancelablePromise<MemoRead> {
     return __request(OpenAPI, {
       method: "GET",
-      url: "/memo/{memo_id}",
+      url: "/projects/{project_id}/memos/{memo_id}",
       path: {
+        project_id: projectId,
         memo_id: memoId,
       },
       errors: {
@@ -84,21 +113,24 @@ export class MemoService {
     });
   }
   /**
-   * Updates the Memo with the given ID if it exists
+   * Updates the Memo with the given ID.
    * @returns MemoRead Successful Response
    * @throws ApiError
    */
   public static updateById({
+    projectId,
     memoId,
     requestBody,
   }: {
+    projectId: number;
     memoId: number;
     requestBody: MemoUpdate;
   }): CancelablePromise<MemoRead> {
     return __request(OpenAPI, {
       method: "PATCH",
-      url: "/memo/{memo_id}",
+      url: "/projects/{project_id}/memos/{memo_id}",
       path: {
+        project_id: projectId,
         memo_id: memoId,
       },
       body: requestBody,
@@ -109,15 +141,16 @@ export class MemoService {
     });
   }
   /**
-   * Removes the Memo with the given ID if it exists
+   * Deletes the Memo with the given ID.
    * @returns MemoRead Successful Response
    * @throws ApiError
    */
-  public static deleteById({ memoId }: { memoId: number }): CancelablePromise<MemoRead> {
+  public static deleteById({ projectId, memoId }: { projectId: number; memoId: number }): CancelablePromise<MemoRead> {
     return __request(OpenAPI, {
       method: "DELETE",
-      url: "/memo/{memo_id}",
+      url: "/projects/{project_id}/memos/{memo_id}",
       path: {
+        project_id: projectId,
         memo_id: memoId,
       },
       errors: {
@@ -126,47 +159,48 @@ export class MemoService {
     });
   }
   /**
-   * Returns all Memos attached to the object if it exists
+   * Updates the Memos with the given IDs.
    * @returns MemoRead Successful Response
    * @throws ApiError
    */
-  public static getMemosByAttachedObjectId({
-    attachedObjId,
-    attachedObjType,
+  public static updateMemosBulk({
     projectId,
+    requestBody,
   }: {
-    attachedObjId: number;
-    attachedObjType: AttachedObjectType;
     projectId: number;
+    requestBody: Array<MemoUpdateBulk>;
   }): CancelablePromise<Array<MemoRead>> {
     return __request(OpenAPI, {
-      method: "GET",
-      url: "/memo/attached_obj/{attached_obj_type}/to/{attached_obj_id}",
+      method: "PATCH",
+      url: "/projects/{project_id}/memos/bulk",
       path: {
-        attached_obj_id: attachedObjId,
-        attached_obj_type: attachedObjType,
-      },
-      query: {
         project_id: projectId,
       },
+      body: requestBody,
+      mediaType: "application/json",
       errors: {
         422: `Validation Error`,
       },
     });
   }
   /**
-   * Updates Memos in Bulk
+   * Deletes the Memos with the given IDs.
    * @returns MemoRead Successful Response
    * @throws ApiError
    */
-  public static updateMemosBulk({
+  public static deleteMemosBulk({
+    projectId,
     requestBody,
   }: {
-    requestBody: Array<MemoUpdateBulk>;
+    projectId: number;
+    requestBody: Array<number>;
   }): CancelablePromise<Array<MemoRead>> {
     return __request(OpenAPI, {
-      method: "PATCH",
-      url: "/memo/bulk/update",
+      method: "DELETE",
+      url: "/projects/{project_id}/memos/bulk",
+      path: {
+        project_id: projectId,
+      },
       body: requestBody,
       mediaType: "application/json",
       errors: {
@@ -179,29 +213,20 @@ export class MemoService {
    * @returns void
    * @throws ApiError
    */
-  public static recordRecentMemo({ memoId }: { memoId: number }): CancelablePromise<void> {
+  public static recordRecentMemo({
+    projectId,
+    memoId,
+  }: {
+    projectId: number;
+    memoId: number;
+  }): CancelablePromise<void> {
     return __request(OpenAPI, {
       method: "POST",
-      url: "/memo/{memo_id}/recent",
+      url: "/projects/{project_id}/memos/{memo_id}/recent",
       path: {
+        project_id: projectId,
         memo_id: memoId,
       },
-      errors: {
-        422: `Validation Error`,
-      },
-    });
-  }
-  /**
-   * Deletes all Memos with the given IDs.
-   * @returns MemoRead Successful Response
-   * @throws ApiError
-   */
-  public static deleteMemosBulk({ requestBody }: { requestBody: Array<number> }): CancelablePromise<Array<MemoRead>> {
-    return __request(OpenAPI, {
-      method: "DELETE",
-      url: "/memo/bulk/delete",
-      body: requestBody,
-      mediaType: "application/json",
       errors: {
         422: `Validation Error`,
       },
@@ -213,25 +238,25 @@ export class MemoService {
    * @throws ApiError
    */
   public static generateMemoSuggestion({
-    attachedObjId,
-    attachedObjType,
     projectId,
+    attachedObjectType,
+    attachedObjectId,
     model,
   }: {
-    attachedObjId: number;
-    attachedObjType: AttachedObjectType;
     projectId: number;
+    attachedObjectType: AttachedObjectType;
+    attachedObjectId: number;
     model: string;
   }): CancelablePromise<string> {
     return __request(OpenAPI, {
-      method: "GET",
-      url: "/memo/generate_suggestion/{attached_obj_type}/{attached_obj_id}",
+      method: "POST",
+      url: "/projects/{project_id}/memos/suggest",
       path: {
-        attached_obj_id: attachedObjId,
-        attached_obj_type: attachedObjType,
+        project_id: projectId,
       },
       query: {
-        project_id: projectId,
+        attached_object_type: attachedObjectType,
+        attached_object_id: attachedObjectId,
         model: model,
       },
       errors: {

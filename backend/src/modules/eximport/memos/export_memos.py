@@ -32,10 +32,11 @@ def export_selected_memos(
     project_id: int,
     memo_ids: list[int],
 ) -> Path:
-    memos = crud_memo.read_by_ids(db=db, ids=memo_ids)
+    memos = crud_memo.read_by_ids(db=db, project_id=project_id, ids=memo_ids)
     return __export_memos(
         db=db,
         out_dir=out_dir,
+        project_id=project_id,
         fn=f"project_{project_id}_selected_memos",
         memos=memos,
     )
@@ -50,6 +51,7 @@ def export_all_memos(
     return __export_memos(
         db=db,
         out_dir=out_dir,
+        project_id=project_id,
         fn=f"project_{project_id}_all_memos",
         memos=memos,
     )
@@ -58,13 +60,16 @@ def export_all_memos(
 def __export_memos(
     db: Session,
     out_dir: Path,
+    project_id: int,
     fn: str,
     memos: list[MemoORM],
 ) -> Path:
     if len(memos) == 0:
         raise NoDataToExportError("No memos to export.")
 
-    export_data = __generate_export_df_for_memos(db=db, memos=memos)
+    export_data = __generate_export_df_for_memos(
+        db=db, project_id=project_id, memos=memos
+    )
     return write_df(
         out_dir=out_dir,
         df=export_data,
@@ -74,6 +79,7 @@ def __export_memos(
 
 def __generate_export_df_for_memos(
     db: Session,
+    project_id: int,
     memos: list[MemoORM],
 ) -> pd.DataFrame:
     logger.info(f"Exporting {len(memos)} Memos ...")
@@ -83,13 +89,18 @@ def __generate_export_df_for_memos(
     rows = db.execute(
         select(MemoFavoriteLinkTable.memo_id, UserORM.email)
         .join(UserORM, UserORM.id == MemoFavoriteLinkTable.user_id)
-        .where(MemoFavoriteLinkTable.memo_id.in_([memo.id for memo in memos]))
+        .where(
+            MemoFavoriteLinkTable.project_id == project_id,
+            MemoFavoriteLinkTable.memo_id.in_([memo.id for memo in memos]),
+        )
     ).all()
     for memo_id, email in rows:
         favorited_by_emails.setdefault(memo_id, []).append(email)
 
     memo_export_items = []
-    memo_dtos = get_memo_read_dtos_from_orms(db=db, db_objs=memos)
+    memo_dtos = get_memo_read_dtos_from_orms(
+        db=db, project_id=project_id, db_objs=memos
+    )
     for memo, memo_dto in zip(memos, memo_dtos, strict=True):
         user = memo.user
 

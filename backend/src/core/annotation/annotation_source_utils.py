@@ -86,6 +86,7 @@ def read_annotation_sources(
 def copy_annotation_source_memos(
     db: Session,
     *,
+    project_id: int,
     attached_object_type: AttachedObjectType,
     sources: Sequence[AnnotationORM | None],
     copies: Sequence[AnnotationORM],
@@ -95,6 +96,7 @@ def copy_annotation_source_memos(
     authors).
 
     Args:
+        project_id: The project of the annotations.
         attached_object_type: The type of the annotations.
         sources: The source annotation of every created annotation (None if it is
             no copy), parallel to `copies`.
@@ -107,6 +109,7 @@ def copy_annotation_source_memos(
     ]
     MemoService().copy_to_attached_objects(
         db=db,
+        project_id=project_id,
         attached_object_type=attached_object_type,
         source_object_ids=[source_id for source_id, _ in pairs],
         target_object_ids=[copy_id for _, copy_id in pairs],

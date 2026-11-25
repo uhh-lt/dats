@@ -110,6 +110,7 @@ def find_span_annotations(
 
     memo_ids_by_annotation = crud_object_handle.read_memo_ids_by_objects(
         db=db,
+        project_id=request.project_id,
         attached_object_type=AttachedObjectType.span_annotation,
         object_ids=[row[0] for row in result_rows],
     )

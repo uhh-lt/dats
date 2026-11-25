@@ -1,9 +1,8 @@
-from pydantic import BaseModel, ConfigDict, Field, model_validator
+from pydantic import BaseModel, Field, model_validator
 
 
 # Properties shared across all DTOs
 class ObjectHandleBaseDTO(BaseModel):
-    project_id: int = Field(description="Project the ObjectHandle belongs to")
     attached_project_id: int | None = Field(
         description="Project the ObjectHandle refers to", default=None
     )
@@ -32,7 +31,7 @@ class ObjectHandleBaseDTO(BaseModel):
     @model_validator(mode="after")
     def check_at_least_one_not_null(self):
         # make sure that the handle refers to an object
-        values = self.model_dump(exclude={"project_id"})
+        values = self.model_dump()
         for val in values.values():
             if val is not None:
                 return self
@@ -42,9 +41,3 @@ class ObjectHandleBaseDTO(BaseModel):
 # Properties for creation
 class ObjectHandleCreate(ObjectHandleBaseDTO):
     pass
-
-
-# Properties for reading (as in ORM)
-class ObjectHandleRead(ObjectHandleBaseDTO):
-    id: int = Field(description="ID of the ObjectHandle")
-    model_config = ConfigDict(from_attributes=True)

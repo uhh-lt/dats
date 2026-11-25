@@ -26,6 +26,7 @@ PATH_IDS: dict[str, Callable[[TenantRows], int]] = {
     "folder_id": lambda rows: rows["folder"].id,
     "project_metadata_id": lambda rows: rows["project_metadata"].id,
     "sdoc_metadata_id": lambda rows: rows["sdoc_metadata"].id,
+    "memo_id": lambda rows: rows["memo"].id,
 }
 
 # a valid body (with ids of the path's project) for the routes with a path id and a
@@ -58,6 +59,7 @@ BODIES: dict[str, Callable[[TenantRows], Any]] = {
     "PATCH /projects/{project_id}/project-metadata/{project_metadata_id}": (
         lambda rows: {"description": "changed"}
     ),
+    "PATCH /projects/{project_id}/memos/{memo_id}": (lambda rows: {"title": "x"}),
     "PATCH /projects/{project_id}/source-document-metadata/{sdoc_metadata_id}": (
         lambda rows: {
             "str_value": "changed",
@@ -266,3 +268,52 @@ def test_document_filter_id_of_another_project_matches_nothing(
     response = client.get(url, params={"sdoc_id": foreign["sdoc"].id})
     assert response.status_code == 200, response.text
     assert response.json() == []
+
+
+def test_memo_filter_by_an_object_of_another_project_matches_nothing(
+    client: TestClient, tenants: TwoTenants
+) -> None:
+    """Filtering the memos of the path's project by the code of the other project
+    returns nothing, while the own code returns its memos."""
+    own, foreign = tenants["own"], tenants["foreign"]
+    url = f"/projects/{own['project'].id}/memos"
+
+    response = client.get(
+        url,
+        params={"attached_object_type": "code", "attached_object_id": own["code"].id},
+    )
+    assert response.status_code == 200, response.text
+    assert {memo["id"] for memo in response.json()} == {
+        own["memo"].id,
+        own["bare_memo"].id,
+    }
+
+    response = client.get(
+        url,
+        params={
+            "attached_object_type": "code",
+            "attached_object_id": foreign["code"].id,
+        },
+    )
+    assert response.status_code == 200, response.text
+    assert response.json() == []
+
+
+def test_memo_on_an_object_of_another_project_is_a_conflict(
+    client: TestClient, tenants: TwoTenants
+) -> None:
+    """Creating a memo on the code of the other project is rejected by the
+    composite foreign key of its object handle (409)."""
+    own, foreign = tenants["own"], tenants["foreign"]
+
+    response = client.put(
+        f"/projects/{own['project'].id}/memos",
+        json={
+            "title": "Cross-project memo",
+            "content": "",
+            "content_json": "",
+            "attached_object_type": "code",
+            "attached_object_id": foreign["code"].id,
+        },
+    )
+    assert response.status_code == 409, response.text

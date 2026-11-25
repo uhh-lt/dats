@@ -21,7 +21,7 @@ export function MemoWorkspaceView() {
   const scope = user ? `${user.id}:${projectId}` : "";
   const openMemoId = useAppSelector((state) => state.memoWorkspace.workspaces[scope]?.openMemoId);
 
-  const memo = useQuery(memoQueries.byId(openMemoId));
+  const memo = useQuery(memoQueries.byId(projectId, openMemoId));
   const { mutate: recordRecent } = MemoHooks.useRecordRecentMemo();
 
   // Record the opened memo as recently-opened (server-driven recents).
