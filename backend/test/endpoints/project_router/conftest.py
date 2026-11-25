@@ -1,6 +1,9 @@
 import pytest
 
 from composite_keys_test_utils import TwoTenants, create_two_tenants
+from job_test_utils import store_job
+from systems.job_system.job_dto import JobInputBase
+from systems.job_system.job_service import JobService
 
 
 @pytest.fixture(scope="function")
@@ -22,3 +25,29 @@ def tenants(db_session, test_user, test_project) -> TwoTenants:
     because of the membership.
     """
     return create_two_tenants(db_session, user=test_user, project=test_project)
+
+
+# per tenant ("own", "foreign"): the id of a job of every job type by job type
+TenantJobs = dict[str, dict[str, str]]
+
+
+@pytest.fixture(scope="function")
+def tenant_jobs(tenants: TwoTenants) -> TenantJobs:
+    """
+    This fixture stores one job of every registered job type in each project of
+    `tenants`, without enqueueing it, so no worker runs it: `own` holds the job
+    ids of the test project, `foreign` those of "Foreign Project", by job type.
+
+    Non-obvious derived behavior: the jobs carry a bare `JobInputBase` as input,
+    so only the routes that read the job without its input succeed with them;
+    the routes of a job of another project fail before they read the input.
+    """
+    return {
+        tenant: {
+            job_type: store_job(
+                job_type, JobInputBase(project_id=tenants[tenant]["project"].id)
+            )
+            for job_type in JobService().job_registry
+        }
+        for tenant in ("own", "foreign")
+    }

@@ -1,10 +1,7 @@
-from collections.abc import Generator
-
 import pytest
 from fastapi.testclient import TestClient
 from sqlalchemy.orm import Session
 
-import dats_test_utils
 from feature_test_utils import FeaturelessProject, assert_feature_disabled
 from job_test_utils import HeldJobs
 from modules.tag_recommendation.tag_recommendation_crud import (
@@ -31,20 +28,12 @@ from .conftest import (
 )
 
 
-@pytest.fixture(scope="function")
-def outsider_client(
-    app_client: TestClient, tag_recommendation_project: TagRecommendationProject
-) -> Generator[TestClient, None, None]:
-    """A client that sends its requests as the outsider."""
-    c = dats_test_utils.create_user_client(
-        app_client, tag_recommendation_project["outsider"]
+def _unreviewed_recommendation_ids(
+    client: TestClient, project_id: int, ml_job_id: str
+) -> set[int]:
+    response = client.get(
+        f"/projects/{project_id}/jobs/tag-recommendation/{ml_job_id}/recommendations"
     )
-    yield c
-    c.close()
-
-
-def _unreviewed_recommendation_ids(client: TestClient, ml_job_id: str) -> set[int]:
-    response = client.get(f"/tagrecommendation/job/{ml_job_id}")
     assert response.status_code == 200, response.text
     results = [TagRecommendationResult.model_validate(r) for r in response.json()]
     return {rid for result in results for rid in result.recommendation_ids}
@@ -68,7 +57,12 @@ def test_review_recommendations_marks_own_recommendations_as_reviewed(
     results = [TagRecommendationLinkRead.model_validate(r) for r in response.json()]
     assert [r.predicted_tag_id for r in results] == [p["tag_a"].id, p["tag_b"].id]
     assert all(r.is_reviewed for r in results)
-    assert _unreviewed_recommendation_ids(client, OWN_ML_JOB_ID) == set()
+    assert (
+        _unreviewed_recommendation_ids(
+            client, tag_recommendation_project["project"].id, OWN_ML_JOB_ID
+        )
+        == set()
+    )
 
 
 def test_review_recommendations_rejects_non_member_and_changes_nothing(
@@ -86,7 +80,9 @@ def test_review_recommendations_rejects_non_member_and_changes_nothing(
     )
 
     assert response.status_code == 403, response.text
-    assert _unreviewed_recommendation_ids(client, OWN_ML_JOB_ID) == set(ids)
+    assert _unreviewed_recommendation_ids(
+        client, tag_recommendation_project["project"].id, OWN_ML_JOB_ID
+    ) == set(ids)
 
 
 def test_review_recommendations_rejects_mixed_own_and_foreign_ids(
@@ -105,13 +101,17 @@ def test_review_recommendations_rejects_mixed_own_and_foreign_ids(
     )
 
     assert response.status_code == 403, response.text
-    assert _unreviewed_recommendation_ids(client, OWN_ML_JOB_ID) == {
+    assert _unreviewed_recommendation_ids(
+        client, tag_recommendation_project["project"].id, OWN_ML_JOB_ID
+    ) == {
         p["recommendation_a"].id,
         p["recommendation_b"].id,
     }
-    assert _unreviewed_recommendation_ids(outsider_client, FOREIGN_ML_JOB_ID) == {
-        foreign_id
-    }
+    assert _unreviewed_recommendation_ids(
+        outsider_client,
+        tag_recommendation_project["foreign_project"].id,
+        FOREIGN_ML_JOB_ID,
+    ) == {foreign_id}
 
 
 def test_review_recommendations_rejects_unknown_id(
@@ -145,7 +145,7 @@ def test_review_recommendations_rejects_a_disabled_feature_and_changes_nothing(
 
 
 # ===========================================================================
-# TAG RECOMMENDATION JOBS (/job/tag_recommendation) TESTS
+# TAG RECOMMENDATION JOBS (/projects/{project_id}/jobs/tag-recommendation) TESTS
 # ===========================================================================
 # The job endpoints are generated from the job registration (job system).
 
@@ -157,10 +157,9 @@ def test_a_started_tag_recommendation_job_is_listed(
     project (it is held, so it does not run)."""
     payload = TagRecommendationJobInput(project_id=test_project.id)
 
-    started = client.post(
-        "/job/tag_recommendation", json=payload.model_dump(mode="json")
-    )
-    listed = client.get(f"/job/tag_recommendation/project/{test_project.id}")
+    url = f"/projects/{test_project.id}/jobs/tag-recommendation"
+    started = client.post(url, json=payload.model_dump(mode="json"))
+    listed = client.get(url)
 
     assert started.status_code == 200, started.text
     assert listed.status_code == 200, listed.text
@@ -174,7 +173,7 @@ def test_a_tag_recommendation_job_of_a_disabled_feature_stays_listed(
     listing: a project without tag recommendation lists its jobs (none here),
     while starting one is rejected (see the job endpoint tests)."""
     response = client.get(
-        f"/job/tag_recommendation/project/{featureless_project['project'].id}"
+        f"/projects/{featureless_project['project'].id}/jobs/tag-recommendation"
     )
 
     assert response.status_code == 200, response.text
@@ -191,16 +190,15 @@ def _run_job(
     payload: TagRecommendationJobInput,
 ) -> dict[int, list[int]]:
     """Start and run the job; its recommendations: tag ids by document id."""
-    started = client.post(
-        "/job/tag_recommendation", json=payload.model_dump(mode="json")
-    )
+    url = f"/projects/{payload.project_id}/jobs/tag-recommendation"
+    started = client.post(url, json=payload.model_dump(mode="json"))
     assert started.status_code == 200, started.text
     held_jobs.run("tag_recommendation")
     job_id = started.json()["job_id"]
     (job,) = held_jobs.ran("tag_recommendation")
     assert job.get_status() == JobStatus.FINISHED
 
-    response = client.get(f"/tagrecommendation/job/{job_id}")
+    response = client.get(f"{url}/{job_id}/recommendations")
     assert response.status_code == 200, response.text
     results = [TagRecommendationResult.model_validate(r) for r in response.json()]
     return {r.sdoc_id: r.suggested_tag_ids for r in results}

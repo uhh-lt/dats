@@ -1,8 +1,8 @@
 from typing import TypedDict
 
-from fastapi import APIRouter, Depends, UploadFile
+from fastapi import Depends, UploadFile
 
-from common.dependencies import get_current_user
+from common.project_router import project_router
 from core.auth.authz_user import AuthzUser
 from modules.eximport.import_enum import ImportJobType
 from modules.eximport.import_job_dto import ImportJobInput, ImportJobRead
@@ -10,9 +10,7 @@ from modules.eximport.import_service import ImportJobPreparationError, ImportSer
 from repos.filesystem.temporary_file_crud import crud_temporary_file
 from systems.job_system.job_service import JobService
 
-router = APIRouter(
-    prefix="/import", dependencies=[Depends(get_current_user)], tags=["import"]
-)
+router = project_router("/jobs/import", tags=["import"])
 
 ims: ImportService = ImportService()
 js: JobService = JobService()
@@ -71,7 +69,7 @@ import_job_file_formats: dict[ImportJobType, FileFormat] = {
 
 
 @router.post(
-    "/{project_id}/type/{import_job_type}",
+    "",
     response_model=ImportJobRead,
     summary="Starts an import job with the given parameters and file",
 )
@@ -82,8 +80,6 @@ def start_import_job(
     uploaded_file: UploadFile,
     authz_user: AuthzUser = Depends(),
 ) -> ImportJobRead:
-    authz_user.assert_in_project(project_id)
-
     file_format = import_job_file_formats[import_job_type]
 
     # Based on the import job type, check the file type and contents
@@ -129,31 +125,3 @@ def start_import_job(
         ),
     )
     return ImportJobRead.from_rq_job(job)
-
-
-@router.get(
-    "/{import_job_id}",
-    response_model=ImportJobRead,
-    summary="Returns the ImportJob for the given ID if it exists",
-)
-def get_import_job(
-    *, import_job_id: str, authz_user: AuthzUser = Depends()
-) -> ImportJobRead:
-    job = js.get_job(import_job_id)
-    authz_user.assert_in_project(job.get_project_id())
-    return ImportJobRead.from_rq_job(job)
-
-
-@router.get(
-    "/project/{project_id}",
-    response_model=list[ImportJobRead],
-    summary="Returns all ImportJobs for the given project ID if it exists",
-)
-def get_all_import_jobs(
-    *, project_id: int, authz_user: AuthzUser = Depends()
-) -> list[ImportJobRead]:
-    authz_user.assert_in_project(project_id)
-
-    jobs = js.get_jobs_by_project(job_type="import", project_id=project_id)
-    jobs.sort(key=lambda x: x.get_created(), reverse=True)
-    return [ImportJobRead.from_rq_job(job) for job in jobs]

@@ -23,10 +23,13 @@ class CRUDTagRecommendationLink(
         self,
         db: Session,
         *,
+        project_id: int,
         ml_job_id: str,
         exclude_reviewed: bool = False,
     ) -> list[TagRecommendationLinkORM]:
-        query = db.query(self.model).filter(self.model.ml_job_id == ml_job_id)
+        query = db.query(self.model).filter(
+            self.model.project_id == project_id, self.model.ml_job_id == ml_job_id
+        )
 
         if exclude_reviewed:
             query = query.filter(self.model.is_reviewed == False)  # noqa: E712

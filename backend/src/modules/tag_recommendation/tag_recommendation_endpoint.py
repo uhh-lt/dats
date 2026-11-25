@@ -10,12 +10,8 @@ from modules.tag_recommendation.tag_recommendation_crud import (
 from modules.tag_recommendation.tag_recommendation_dto import (
     TagRecommendationLinkRead,
     TagRecommendationLinkUpdate,
-    TagRecommendationResult,
 )
 from modules.tag_recommendation.tag_recommendation_feature import TAG_RECOMMENDATION
-from modules.tag_recommendation.tag_recommendation_service import (
-    TagRecommendationService,
-)
 from systems.feature_system.feature_service import FeatureService
 from systems.websocket_system.websocket_dependency import WebsocketEmitter
 
@@ -24,36 +20,6 @@ router = APIRouter(
     dependencies=[Depends(get_current_user)],
     tags=["TagRecommendation"],
 )
-
-
-# --- read operations
-
-
-@router.get(
-    "/job/{job_id}",
-    response_model=list[TagRecommendationResult],
-    summary="Retrieve all (non-reviewed) document tag recommendations of the given tag recommendation job.",
-)
-def get_all_tagrecommendations_from_job(
-    *,
-    db: DBSession,
-    job_id: str,
-    authz_user: AuthzUser = Depends(),
-) -> list[TagRecommendationResult]:
-    recommendations = crud_tag_recommendation_link.read_by_ml_job_id(
-        db=db, ml_job_id=job_id, exclude_reviewed=True
-    )
-    if len(recommendations) == 0:
-        return []
-    project_id = recommendations[0].source_document.project_id
-    authz_user.assert_in_project(project_id)
-    FeatureService().assert_enabled(
-        db=db, project_id=project_id, feature=TAG_RECOMMENDATION
-    )
-
-    return TagRecommendationService().group_by_document(
-        db=db, project_id=project_id, links=recommendations
-    )
 
 
 # --- update operations

@@ -1,6 +1,5 @@
 from typing import Callable, Literal, TypeVar
 
-from fastapi import APIRouter
 from sqlalchemy.orm import Session
 
 from systems.job_system.job_dto import Job, JobInputBase, JobOutputBase, JobRead
@@ -22,7 +21,6 @@ def register_job(
     device: Literal["gpu", "cpu", "api"] = "cpu",
     generate_endpoints: EndpointGeneration = EndpointGeneration.NONE,
     publish_updates: bool = False,
-    router: APIRouter | None = None,
     result_ttl: JobTiming = JobTiming.TEN_MINUTES,
     retry: tuple[int, int] | None = None,
     timeout: JobTiming = JobTiming.ONE_HOUR,  # (RQ default is 3 min [180])
@@ -35,8 +33,9 @@ def register_job(
     Register a job handler with the job system.
 
     `validate_input` checks the input when the generated start endpoint starts a
-    job, after the project membership check and before the job is enqueued. It
-    raises an exception (e.g. a 400 or 403 error) to reject the input.
+    job in the project of the path, after the router checked the membership,
+    and before the job is enqueued. It raises an exception (e.g. a 400 or 403
+    error) to reject the input; the feature of a job is checked here.
     `validate_retry` checks the stored input when the generated retry endpoint
     requeues a job, which may be valid for a retry only (e.g. some of its data
     was deleted meanwhile); without it, the retry runs `validate_input`.
@@ -54,7 +53,6 @@ def register_job(
             device=device,
             generate_endpoints=generate_endpoints,
             publish_updates=publish_updates,
-            router=router,
             result_ttl=result_ttl,
             retry=retry,
             timeout=timeout,

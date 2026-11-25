@@ -12,7 +12,12 @@ from fastapi.testclient import TestClient
 
 from composite_keys_test_utils import TenantRows, TwoTenants
 
+from .conftest import TenantJobs
+
 PROJECT_PREFIX = "/projects/{project_id}"
+
+# the path parameter of a job, a job of the type the route names after /jobs/
+JOB_ID = "job_id"
 
 # the row of a tenant that a path parameter names
 PATH_IDS: dict[str, Callable[[TenantRows], int]] = {
@@ -112,6 +117,17 @@ def _path_params(route: APIRoute) -> list[str]:
     return [name for name in re.findall(r"{(\w+)}", route.path) if name != "project_id"]
 
 
+def _path_id(
+    name: str, route: APIRoute, rows: TenantRows, jobs: dict[str, str]
+) -> int | str:
+    """The id of the tenant's row (or job) that the path parameter names."""
+    if name == JOB_ID:
+        match = re.search(r"/jobs/([\w-]+)/", route.path)
+        assert match, f"{route.path}: {JOB_ID} outside /jobs/<job type>"
+        return jobs[match.group(1).replace("-", "_")]
+    return PATH_IDS[name](rows)
+
+
 # ===========================================================================
 # ALL PROJECT ROUTES: PATH IDS
 # ===========================================================================
@@ -125,7 +141,9 @@ def test_every_project_route_is_covered(client: TestClient) -> None:
     assert routes, "no route under /projects/{project_id}"
     for method, route in routes:
         for name in _path_params(route):
-            assert name in PATH_IDS, f"{method} {route.path}: add {name} to PATH_IDS"
+            assert name in PATH_IDS or name == JOB_ID, (
+                f"{method} {route.path}: add {name} to PATH_IDS"
+            )
         if _path_params(route) and route.body_field is not None:
             assert f"{method} {route.path}" in BODIES, (
                 f"{method} {route.path}: add a body to BODIES"
@@ -133,7 +151,7 @@ def test_every_project_route_is_covered(client: TestClient) -> None:
 
 
 def test_path_id_of_another_project_is_not_found(
-    client: TestClient, tenants: TwoTenants
+    client: TestClient, tenants: TwoTenants, tenant_jobs: TenantJobs
 ) -> None:
     """Every project route answers 404 when one of its path ids belongs to the other
     project and the others to the path's project; the user is a member of both."""
@@ -146,7 +164,12 @@ def test_path_id_of_another_project_is_not_found(
         body = BODIES.get(f"{method} {route.path}")
         for foreign_name in names:
             values = {
-                name: PATH_IDS[name](foreign if name == foreign_name else own)
+                name: _path_id(
+                    name,
+                    route,
+                    foreign if name == foreign_name else own,
+                    tenant_jobs["foreign" if name == foreign_name else "own"],
+                )
                 for name in names
             }
             url = route.path.format(project_id=own["project"].id, **values)

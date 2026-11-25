@@ -1,7 +1,7 @@
 """End-to-end tests of stopping a job (`JobService.stop_job`, behind the
-generated `/job/{job_type}/{job_id}/abort` routes) that the background worker
-runs: a started job really stops and ends as STOPPED, a queued job is left as
-it is."""
+generated `/projects/{project_id}/jobs/{job_type}/{job_id}/abort` routes) that
+the background worker runs: a started job really stops and ends as STOPPED, a
+queued job is left as it is."""
 
 import time
 from collections.abc import Callable

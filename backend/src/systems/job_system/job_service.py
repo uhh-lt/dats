@@ -3,7 +3,6 @@ from datetime import UTC, datetime
 from typing import Any, Callable, Dict, Literal, NamedTuple, TypedDict, TypeVar
 
 import rq
-from fastapi import APIRouter
 from loguru import logger
 from pydantic import Field, create_model
 from redis import Redis
@@ -24,7 +23,11 @@ from sqlalchemy.orm import Session
 from common.singleton_meta import SingletonMeta
 from repos.redis_repo import RedisRepo
 from systems.job_system.job_dto import Job, JobInputBase, JobOutputBase, JobRead
-from systems.job_system.job_exceptions import JobInputError, JobQueueUnavailableError
+from systems.job_system.job_exceptions import (
+    JobInputError,
+    JobNotFoundError,
+    JobQueueUnavailableError,
+)
 from systems.job_system.job_system_enum import EndpointGeneration, JobPriority
 
 InputT = TypeVar("InputT", bound=JobInputBase)
@@ -40,7 +43,6 @@ class RegisteredJob(TypedDict):
     publish_updates: bool
     priority: JobPriority
     device: Literal["gpu", "cpu", "api"]
-    router: APIRouter | None
     result_ttl: int  # how long to keep successful jobs and their results (in seconds)
     # failure_ttl  # how long to keep failed jobs (defaults to 1 year)
     # ttl  # how long to keep jobs in queue before they are discarded (defaults to infinite)
@@ -124,7 +126,6 @@ class JobService(metaclass=SingletonMeta):
         device: Literal["gpu", "cpu", "api"],
         generate_endpoints: EndpointGeneration,
         publish_updates: bool,
-        router: APIRouter | None,
         result_ttl: int,
         retry: tuple[int, int] | None,
         timeout: int,
@@ -175,7 +176,6 @@ class JobService(metaclass=SingletonMeta):
             "publish_updates": publish_updates,
             "priority": priority,
             "device": device,
-            "router": router,
             "result_ttl": result_ttl,
             "retry": retry,
             "timeout": timeout,
@@ -275,6 +275,15 @@ class JobService(metaclass=SingletonMeta):
 
     def get_job(self, job_id: str) -> Job:
         return Job(rq.job.Job.fetch(job_id, connection=self.redis_conn))
+
+    def read_project_job(self, project_id: int, job_type: str, job_id: str) -> Job:
+        """The job of this id if it is a job of this type in the project. A job
+        of another project or type is not found (404), like one that does not
+        exist (`NoSuchJobError`, 404)."""
+        job = self.get_job(job_id)
+        if job.get_project_id() != project_id or job.get_type() != job_type:
+            raise JobNotFoundError(job_id)
+        return job
 
     def get_jobs_by_project(
         self,

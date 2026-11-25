@@ -17,7 +17,7 @@ from rq.registry import (
 )
 
 from systems.job_system.job_dto import Job, JobInputBase
-from systems.job_system.job_handler import STOP_SIGNAL
+from systems.job_system.job_handler import STOP_SIGNAL, rq_job_handler
 from systems.job_system.job_service import JobService
 from systems.job_system.job_system_enum import JobPriority
 from worker import DATSSimpleWorker
@@ -201,3 +201,18 @@ def unreachable_redis(after_starts: int = 0) -> Generator[None, None, None]:
         yield
     finally:
         js.queues = original
+
+
+def store_job(job_type: str, payload: JobInputBase, job_id: str | None = None) -> str:
+    """Store a job of this type with this input (and this id, a new one if None)
+    in the test Redis, as if it had been started, without enqueueing it, so no
+    worker runs it. Returns its id."""
+    job = rq.job.Job.create(
+        rq_job_handler,
+        id=job_id,
+        kwargs={"jobtype": job_type, "handler": None, "payload": payload},
+        meta={"type": job_type, "project_id": payload.project_id},
+        connection=JobService().redis_conn,
+    )
+    job.save()
+    return job.id

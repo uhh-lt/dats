@@ -37,7 +37,11 @@ from systems.job_system.job_system_enum import JobStatus, JobTiming
 
 from .conftest import TARGET_SENTENCES, JobPromptProject
 
-LLM_ASSISTANT_JOB_URL = "/llm_assistant/llm_assistant"
+
+def _job_url(project: JobPromptProject) -> str:
+    return f"/projects/{project['base']['project'].id}/jobs/llm-assistant"
+
+
 LLMAssistantJobRead = JobRead[LLMAssistantJobInput, LLMAssistantJobOutput]
 
 # the documents of the job, in its order, by a text only their prompts show
@@ -147,13 +151,15 @@ def _start_sentence_job(
         virtual_user_id=base["run_a"].id,
         delete_existing_annotations=True,
     )
-    response = client.post(LLM_ASSISTANT_JOB_URL, json=payload.model_dump(mode="json"))
+    response = client.post(_job_url(project), json=payload.model_dump(mode="json"))
     assert response.status_code == 200, response.text
     return LLMAssistantJobRead.model_validate(response.json()).job_id
 
 
-def _read_job(client: TestClient, job_id: str) -> LLMAssistantJobRead:
-    response = client.get(f"{LLM_ASSISTANT_JOB_URL}/{job_id}")
+def _read_job(
+    client: TestClient, project: JobPromptProject, job_id: str
+) -> LLMAssistantJobRead:
+    response = client.get(f"{_job_url(project)}/{job_id}")
     assert response.status_code == 200, response.text
     return LLMAssistantJobRead.model_validate(response.json())
 
@@ -216,7 +222,7 @@ def test_a_failing_batch_keeps_the_annotations_of_the_earlier_batches(
     job_id = _start_sentence_job(client, job_prompt_project)
     held_jobs.run("llm_assistant")
 
-    assert _read_job(client, job_id).status == JobStatus.FAILED
+    assert _read_job(client, job_prompt_project, job_id).status == JobStatus.FAILED
     assert fake.asked == [TARGET, EXAMPLE, NO_MATCH]
     target = _run_a_annotations(client, job_prompt_project, TARGET)
     assert _ranges(target) == [(0, 0, fact_id)]
@@ -255,12 +261,12 @@ def test_a_retry_skips_the_finished_documents_and_returns_the_results_of_all(
     fake.failing = set()
     fake.asked.clear()
 
-    response = client.post(f"{LLM_ASSISTANT_JOB_URL}/{job_id}/retry")
+    response = client.post(f"{_job_url(job_prompt_project)}/{job_id}/retry")
     assert response.status_code == 200, response.text
     assert response.json() is True
     held_jobs.run("llm_assistant")
 
-    job = _read_job(client, job_id)
+    job = _read_job(client, job_prompt_project, job_id)
     assert job.status == JobStatus.FINISHED, job.status_message
     assert fake.asked == [NO_MATCH]
     for document, annotations in saved.items():
@@ -302,7 +308,7 @@ def test_the_job_reports_its_progress_once_per_batch(
     job_id = _start_sentence_job(client, job_prompt_project)
     held_jobs.run("llm_assistant")
 
-    assert _read_job(client, job_id).status == JobStatus.FINISHED
+    assert _read_job(client, job_prompt_project, job_id).status == JobStatus.FINISHED
     assert [message for message in messages if message is not None] == [
         "Started LLM Assistant!",
         "Started LLMAssistantJob - Sentence Annotation, num docs: 3",
@@ -355,7 +361,7 @@ def test_a_stop_keeps_the_earlier_batches_and_rolls_back_the_batch_in_progress(
     held_jobs.run("llm_assistant")
 
     assert time.monotonic() - started < 20
-    job = _read_job(client, job_id)
+    job = _read_job(client, job_prompt_project, job_id)
     assert job.status == JobStatus.STOPPED, job.status_message
     assert job.status_message == "The job was stopped"
     for document in (TARGET, EXAMPLE):
@@ -379,15 +385,15 @@ def test_a_retry_of_a_stopped_job_continues_after_its_committed_batches(
         _stop_after(stop, base["no_match_sdoc"].id)
         job_id = _start_sentence_job(client, job_prompt_project)
         held_jobs.run("llm_assistant")
-    assert _read_job(client, job_id).status == JobStatus.STOPPED
+    assert _read_job(client, job_prompt_project, job_id).status == JobStatus.STOPPED
     fake.asked.clear()
 
-    response = client.post(f"{LLM_ASSISTANT_JOB_URL}/{job_id}/retry")
+    response = client.post(f"{_job_url(job_prompt_project)}/{job_id}/retry")
     assert response.status_code == 200, response.text
     assert response.json() is True
     held_jobs.run("llm_assistant")
 
-    job = _read_job(client, job_id)
+    job = _read_job(client, job_prompt_project, job_id)
     assert job.status == JobStatus.FINISHED, job.status_message
     assert fake.asked == [NO_MATCH]
     assert _ranges(_run_a_annotations(client, job_prompt_project, NO_MATCH)) == [
@@ -448,7 +454,7 @@ def test_the_checkpoint_expires_with_the_job(
     job_id = _start_sentence_job(client, job_prompt_project)
     held_jobs.run("llm_assistant")
 
-    assert _read_job(client, job_id).status == status
+    assert _read_job(client, job_prompt_project, job_id).status == status
     timeout = JobService().get_job(job_id).job.timeout
     assert timeout is not None
     running = timeout + JobTiming.ONE_DAY
@@ -505,7 +511,7 @@ def test_a_deleted_and_a_failing_document_become_error_results(
 
     held_jobs.run("llm_assistant")
 
-    job = _read_job(client, job_id)
+    job = _read_job(client, job_prompt_project, job_id)
     assert job.status == JobStatus.FINISHED, job.status_message
     assert fake.asked == [TARGET, NO_MATCH]
     assert _results(job) == [
@@ -537,7 +543,7 @@ def test_a_repeated_document_is_processed_once_and_has_one_result(
     )
     held_jobs.run("llm_assistant")
 
-    job = _read_job(client, job_id)
+    job = _read_job(client, job_prompt_project, job_id)
     assert job.status == JobStatus.FINISHED, job.status_message
     assert fake.asked == [TARGET, EXAMPLE]
     assert [(sdoc_id, status) for sdoc_id, status, _ in _results(job)] == [
@@ -558,7 +564,7 @@ def test_a_job_without_documents_finishes_without_results(
     job_id = _start_sentence_job(client, job_prompt_project, sdoc_ids=[])
     held_jobs.run("llm_assistant")
 
-    job = _read_job(client, job_id)
+    job = _read_job(client, job_prompt_project, job_id)
     assert job.status == JobStatus.FINISHED, job.status_message
     assert fake.asked == []
     assert _results(job) == []
@@ -582,7 +588,7 @@ def test_a_batch_for_which_the_llm_was_unavailable_fails_the_job_before_it_is_sa
     job_id = _start_sentence_job(client, job_prompt_project)
     held_jobs.run("llm_assistant")
 
-    job = _read_job(client, job_id)
+    job = _read_job(client, job_prompt_project, job_id)
     assert job.status == JobStatus.FAILED
     assert job.status_message == (
         "All 1 LLM requests of a batch of documents failed, the LLM may be "
@@ -595,11 +601,11 @@ def test_a_batch_for_which_the_llm_was_unavailable_fails_the_job_before_it_is_sa
 
     fake.down = set()
     fake.asked.clear()
-    response = client.post(f"{LLM_ASSISTANT_JOB_URL}/{job_id}/retry")
+    response = client.post(f"{_job_url(job_prompt_project)}/{job_id}/retry")
     assert response.status_code == 200, response.text
     held_jobs.run("llm_assistant")
 
-    assert _read_job(client, job_id).status == JobStatus.FINISHED
+    assert _read_job(client, job_prompt_project, job_id).status == JobStatus.FINISHED
     assert fake.asked == [NO_MATCH]
 
 
@@ -620,7 +626,7 @@ def test_a_batch_whose_requests_partly_failed_saves_an_error_result(
     job_id = _start_sentence_job(client, job_prompt_project)
     held_jobs.run("llm_assistant")
 
-    job = _read_job(client, job_id)
+    job = _read_job(client, job_prompt_project, job_id)
     assert job.status == JobStatus.FINISHED, job.status_message
     assert [(sdoc_id, status) for sdoc_id, status, _ in _results(job)] == [
         (base["target_sdoc"].id, "finished"),
@@ -646,17 +652,17 @@ def test_a_retry_processes_the_documents_with_an_error_result_again(
     fake.failing = {NO_MATCH}
     job_id = _start_sentence_job(client, job_prompt_project)
     held_jobs.run("llm_assistant")
-    assert _read_job(client, job_id).status == JobStatus.FAILED
+    assert _read_job(client, job_prompt_project, job_id).status == JobStatus.FAILED
     assert _run_a_annotations(client, job_prompt_project, EXAMPLE) == []
     fake.unparseable = set()
     fake.failing = set()
     fake.asked.clear()
 
-    response = client.post(f"{LLM_ASSISTANT_JOB_URL}/{job_id}/retry")
+    response = client.post(f"{_job_url(job_prompt_project)}/{job_id}/retry")
     assert response.status_code == 200, response.text
     held_jobs.run("llm_assistant")
 
-    job = _read_job(client, job_id)
+    job = _read_job(client, job_prompt_project, job_id)
     assert job.status == JobStatus.FINISHED, job.status_message
     assert fake.asked == [EXAMPLE, NO_MATCH]
     assert _ranges(_run_a_annotations(client, job_prompt_project, EXAMPLE)) == [
@@ -695,7 +701,7 @@ def test_a_timeout_while_a_document_is_processed_fails_the_job(
     job_id = _start_sentence_job(client, job_prompt_project)
     held_jobs.run("llm_assistant")
 
-    job = _read_job(client, job_id)
+    job = _read_job(client, job_prompt_project, job_id)
     assert job.status == JobStatus.FAILED
     assert job.status_message == "Task exceeded maximum timeout value"
     target = _run_a_annotations(client, job_prompt_project, TARGET)
@@ -720,7 +726,7 @@ def test_a_batch_whose_requests_all_were_rejected_saves_error_results(
     job_id = _start_sentence_job(client, job_prompt_project)
     held_jobs.run("llm_assistant")
 
-    job = _read_job(client, job_id)
+    job = _read_job(client, job_prompt_project, job_id)
     assert job.status == JobStatus.FINISHED, job.status_message
     assert job.output is not None
     assert [
@@ -752,19 +758,19 @@ def test_a_job_whose_document_was_deleted_can_be_retried(
     fake.failing = {NO_MATCH}
     job_id = _start_sentence_job(client, job_prompt_project)
     held_jobs.run("llm_assistant")
-    assert _read_job(client, job_id).status == JobStatus.FAILED
+    assert _read_job(client, job_prompt_project, job_id).status == JobStatus.FAILED
     response = client.delete(
         f"/projects/{base['project'].id}/source-documents/{no_match_id}"
     )
     assert response.status_code == 200, response.text
     fake.failing = set()
 
-    response = client.post(f"{LLM_ASSISTANT_JOB_URL}/{job_id}/retry")
+    response = client.post(f"{_job_url(job_prompt_project)}/{job_id}/retry")
     assert response.status_code == 200, response.text
     assert response.json() is True
     held_jobs.run("llm_assistant")
 
-    job = _read_job(client, job_id)
+    job = _read_job(client, job_prompt_project, job_id)
     assert job.status == JobStatus.FINISHED, job.status_message
     assert job.output is not None
     assert [
