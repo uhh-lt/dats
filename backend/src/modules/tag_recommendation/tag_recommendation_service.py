@@ -118,7 +118,9 @@ class TagRecommendationService(metaclass=SingletonMeta):
         dtos = self._deduplicate_document_classifications(dto_iter, multi_class)
 
         # Insert all generated tag recommendation DTOs into the database at once.
-        crud_tag_recommendation_link.create_multi(db=db, create_dtos=dtos)
+        crud_tag_recommendation_link.create_multi(
+            db=db, project_id=project_id, create_dtos=dtos
+        )
 
     def group_by_document(
         self, *, db: Session, project_id: int, links: list[TagRecommendationLinkORM]
@@ -272,7 +274,6 @@ class TagRecommendationService(metaclass=SingletonMeta):
         for tag, similar_docs_per_tag in tag_to_similar.items():
             for hit in similar_docs_per_tag:
                 yield TagRecommendationLinkCreate(
-                    project_id=project_id,
                     ml_job_id=ml_job_id,
                     source_document_id=hit.sdoc_id,
                     predicted_tag_id=tag,
@@ -323,7 +324,6 @@ class TagRecommendationService(metaclass=SingletonMeta):
                 continue
             best = max(scores.items(), key=lambda x: sum(x[1]))
             yield TagRecommendationLinkCreate(
-                project_id=project_id,
                 ml_job_id=ml_job_id,
                 source_document_id=sdoc,
                 predicted_tag_id=best[0],
@@ -362,7 +362,6 @@ class TagRecommendationService(metaclass=SingletonMeta):
             # For each tag associated with the compared (tagged) document, create a prediction.
             for tag in tags:
                 yield TagRecommendationLinkCreate(
-                    project_id=project_id,
                     ml_job_id=ml_job_id,
                     source_document_id=similar_doc.sdoc_id,
                     predicted_tag_id=tag.id,

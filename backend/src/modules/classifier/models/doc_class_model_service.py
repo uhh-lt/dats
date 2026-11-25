@@ -816,11 +816,11 @@ class DocClassificationModelService(TextClassificationModelService):
         # 6.1 store the classifier in the db
         classifier = crud_classifier.create(
             db=db,
+            project_id=payload.project_id,
             create_dto=ClassifierCreate(
                 name=parameters.classifier_name,
                 base_model=parameters.base_name,
                 type=payload.model_type,
-                project_id=payload.project_id,
                 labelid2classid={v: k for k, v in tagid2labelid.items()},
                 train_data_stats=[
                     ClassifierData(class_id=code_id, num_examples=count)
@@ -840,15 +840,18 @@ class DocClassificationModelService(TextClassificationModelService):
             name=MODEL_FILENAME,
         )
         crud_classifier.link_tags(
-            db=db, id=classifier.id, tag_ids=[tag.id for tag in tags]
+            db=db,
+            project_id=classifier.project_id,
+            id=classifier.id,
+            tag_ids=[tag.id for tag in tags],
         )
 
         # 6.2 store the evaluation in the db
         labelid2tagid = {v: k for k, v in tagid2labelid.items()}
         classifier_db_obj = crud_classifier.add_evaluation(
             db=db,
+            project_id=classifier.project_id,
             create_dto=ClassifierEvaluationCreate(
-                project_id=classifier.project_id,
                 classifier_id=classifier.id,
                 f1=eval_results["eval_f1"],
                 precision=eval_results["eval_precision"],
@@ -907,7 +910,9 @@ class DocClassificationModelService(TextClassificationModelService):
 
         # 1. Get the trained classifier and its label mappings from the database
         job.update(current_step=1)
-        classifier = crud_classifier.read(db=db, id=parameters.classifier_id)
+        classifier = crud_classifier.read(
+            db=db, project_id=payload.project_id, id=parameters.classifier_id
+        )
         tagid2labelid = {v: int(k) for k, v in classifier.labelid2classid.items()}
         tokenizer = AutoTokenizer.from_pretrained(classifier.base_model)
         tokenizer.model_max_length = classifier.train_params["chunk_size"]
@@ -984,8 +989,8 @@ class DocClassificationModelService(TextClassificationModelService):
         labelid2tagid = {v: k for k, v in tagid2labelid.items()}
         classifier_db_obj = crud_classifier.add_evaluation(
             db=db,
+            project_id=classifier.project_id,
             create_dto=ClassifierEvaluationCreate(
-                project_id=classifier.project_id,
                 classifier_id=classifier.id,
                 f1=eval_results["test_f1"],
                 precision=eval_results["test_precision"],
@@ -1047,7 +1052,9 @@ class DocClassificationModelService(TextClassificationModelService):
 
         # 1. Get the trained classifier and its label mappings from the database
         job.update(current_step=1)
-        classifier = crud_classifier.read(db=db, id=parameters.classifier_id)
+        classifier = crud_classifier.read(
+            db=db, project_id=payload.project_id, id=parameters.classifier_id
+        )
         labelid2tagid = {
             int(label): c for label, c in classifier.labelid2classid.items()
         }

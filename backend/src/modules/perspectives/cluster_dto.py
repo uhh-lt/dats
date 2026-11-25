@@ -16,7 +16,6 @@ class ClusterCreate(BaseModel):
 
 # Properties for internal creation (if some fields are system-set)
 class ClusterCreateIntern(BaseModel):
-    project_id: int = Field(description="Project the cluster belongs to")
     aspect_id: int = Field(description="ID of the aspect this cluster belongs to")
     is_outlier: bool = Field(description="Whether the cluster is an outlier")
     level: int = Field(description="Hierarchical level of the cluster")

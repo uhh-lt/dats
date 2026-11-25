@@ -924,11 +924,11 @@ class SpanClassificationModelService(TextClassificationModelService):
         # 6.1 store the classifier in the db
         classifier = crud_classifier.create(
             db=db,
+            project_id=payload.project_id,
             create_dto=ClassifierCreate(
                 name=parameters.classifier_name,
                 base_model=parameters.base_name,
                 type=payload.model_type,
-                project_id=payload.project_id,
                 labelid2classid={v: k for k, v in codeid2labelid.items()},
                 train_data_stats=[
                     ClassifierData(class_id=code_id, num_examples=count)
@@ -948,15 +948,18 @@ class SpanClassificationModelService(TextClassificationModelService):
             name=MODEL_FILENAME,
         )
         crud_classifier.link_codes(
-            db=db, id=classifier.id, code_ids=[code.id for code in codes]
+            db=db,
+            project_id=classifier.project_id,
+            id=classifier.id,
+            code_ids=[code.id for code in codes],
         )
 
         # 6.2 store the evaluation in the db
         labelid2codeid = {v: k for k, v in codeid2labelid.items()}
         classifier_db_obj = crud_classifier.add_evaluation(
             db=db,
+            project_id=classifier.project_id,
             create_dto=ClassifierEvaluationCreate(
-                project_id=classifier.project_id,
                 classifier_id=classifier.id,
                 f1=eval_results["eval_f1"],
                 precision=eval_results["eval_precision"],
@@ -1015,7 +1018,9 @@ class SpanClassificationModelService(TextClassificationModelService):
         job.update(current_step=1)
 
         # load classifier
-        classifier = crud_classifier.read(db=db, id=parameters.classifier_id)
+        classifier = crud_classifier.read(
+            db=db, project_id=payload.project_id, id=parameters.classifier_id
+        )
         codeid2labelid = {v: int(k) for k, v in classifier.labelid2classid.items()}
 
         # init tokenizer, restoring the chunk size used during training so that eval sees the same input distribution
@@ -1105,8 +1110,8 @@ class SpanClassificationModelService(TextClassificationModelService):
         labelid2codeid = {v: k for k, v in codeid2labelid.items()}
         classifier_db_obj = crud_classifier.add_evaluation(
             db=db,
+            project_id=classifier.project_id,
             create_dto=ClassifierEvaluationCreate(
-                project_id=classifier.project_id,
                 classifier_id=classifier.id,
                 f1=eval_results["test_f1"],
                 precision=eval_results["test_precision"],
@@ -1166,7 +1171,9 @@ class SpanClassificationModelService(TextClassificationModelService):
 
         # 1. Get the trained classifier and its label mappings from the database
         job.update(current_step=1)
-        classifier = crud_classifier.read(db=db, id=parameters.classifier_id)
+        classifier = crud_classifier.read(
+            db=db, project_id=payload.project_id, id=parameters.classifier_id
+        )
         labelid2codeid = {
             int(label): c for label, c in classifier.labelid2classid.items()
         }

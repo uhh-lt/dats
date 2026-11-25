@@ -153,11 +153,17 @@ def test_classifier_link_to_another_project_fails(
         db_session,
         lambda: (
             crud_classifier.link_codes(
-                db=db_session, id=classifier_id, code_ids=[foreign["code"].id]
+                db=db_session,
+                project_id=own["project"].id,
+                id=classifier_id,
+                code_ids=[foreign["code"].id],
             )
             if link == "codes"
             else crud_classifier.link_tags(
-                db=db_session, id=classifier_id, tag_ids=[foreign["tag"].id]
+                db=db_session,
+                project_id=own["project"].id,
+                id=classifier_id,
+                tag_ids=[foreign["tag"].id],
             )
         ),
     )

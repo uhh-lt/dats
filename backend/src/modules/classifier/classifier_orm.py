@@ -8,6 +8,7 @@ from sqlalchemy import (
     ForeignKey,
     ForeignKeyConstraint,
     Integer,
+    PrimaryKeyConstraint,
     String,
     UniqueConstraint,
     func,
@@ -24,7 +25,8 @@ if TYPE_CHECKING:
 
 
 class ClassifierORM(ORMBase):
-    id: Mapped[int] = mapped_column(Integer, primary_key=True, index=True)
+    # the primary key is (project_id, id), see __table_args__
+    id: Mapped[int] = mapped_column(Integer, autoincrement=True, index=True)
     created: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), server_default=func.now(), index=True
     )
@@ -58,7 +60,6 @@ class ClassifierORM(ORMBase):
         Integer,
         ForeignKey("project.id", ondelete="CASCADE"),
         nullable=False,
-        index=True,
     )
     project: Mapped["ProjectORM"] = relationship(
         "ProjectORM",
@@ -78,6 +79,7 @@ class ClassifierORM(ORMBase):
     )
 
     __table_args__ = (
+        PrimaryKeyConstraint("project_id", "id", name="classifier_pkey"),
         UniqueConstraint("project_id", "name", name="UC_unique_name_in_project"),
         UniqueConstraint("project_id", "id", name="UC_classifier_project_id_id"),
     )
@@ -88,12 +90,10 @@ class ClassifierORM(ORMBase):
             return [tag.id for tag in self.tags]
         return [code.id for code in self.codes]
 
-    def get_project_id(self) -> int:
-        return self.project_id
-
 
 class ClassifierEvaluationORM(ORMBase):
-    id: Mapped[int] = mapped_column(Integer, primary_key=True, index=True)
+    # the primary key is (project_id, id), see __table_args__
+    id: Mapped[int] = mapped_column(Integer, autoincrement=True, index=True)
     created: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), server_default=func.now(), index=True
     )
@@ -120,7 +120,6 @@ class ClassifierEvaluationORM(ORMBase):
         Integer,
         ForeignKey("project.id", ondelete="CASCADE"),
         nullable=False,
-        index=True,
     )
 
     classifier_id: Mapped[int] = mapped_column(Integer, nullable=False, index=True)
@@ -131,6 +130,7 @@ class ClassifierEvaluationORM(ORMBase):
     )
 
     __table_args__ = (
+        PrimaryKeyConstraint("project_id", "id", name="classifierevaluation_pkey"),
         UniqueConstraint(
             "project_id", "id", name="UC_classifierevaluation_project_id_id"
         ),
@@ -141,9 +141,6 @@ class ClassifierEvaluationORM(ORMBase):
             name="FK_classifierevaluation_classifier_id",
         ),
     )
-
-    def get_project_id(self) -> int:
-        return self.project_id
 
 
 class ClassifierCodeLinkTable(ORMBase):

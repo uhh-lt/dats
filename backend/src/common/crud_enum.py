@@ -19,22 +19,14 @@ from core.tag.tag_crud import crud_tag
 from core.user.user_crud import crud_user
 from modules.classifier.classifier_crud import crud_classifier
 from modules.perspectives.aspect_crud import crud_aspect
-from modules.perspectives.cluster_crud import crud_cluster
-from modules.perspectives.document_aspect_crud import crud_document_aspect
-from modules.tag_recommendation.tag_recommendation_crud import (
-    crud_tag_recommendation_link,
-)
 
 
 class Crud(Enum):
     ASPECT = crud_aspect
     BBOX_ANNOTATION = crud_bbox_anno
     CLASSIFIER = crud_classifier
-    CLUSTER = crud_cluster
     CODE = crud_code
-    DOCUMENT_ASPECT = crud_document_aspect
     TAG = crud_tag
-    TAG_RECOMMENDATION = crud_tag_recommendation_link
     PROJECT = crud_project
     PROMPT = crud_prompt
     PROMPT_VERSION = crud_prompt_version

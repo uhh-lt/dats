@@ -6,6 +6,7 @@ import pytest
 from datasets import load_dataset
 
 from common.doc_type_enum import DocType
+from composite_keys_test_utils import TwoTenants, create_two_tenants
 from core.annotation.sentence_annotation_dto import SentenceAnnotationCreate
 from core.annotation.sentence_annotation_service import SentenceAnnotationService
 from core.annotation.span_annotation_dto import SpanAnnotationCreate
@@ -168,8 +169,8 @@ def persisted_classifier(db_session, test_project) -> PersistedClassifier:
     """Persist a minimal ClassifierORM row with a dummy model in its folder."""
     clf = crud_classifier.create(
         db=db_session,
+        project_id=test_project.id,
         create_dto=ClassifierCreate(
-            project_id=test_project.id,
             name="Test Classifier",
             base_model="test-base",
             type=ClassifierModel.SPAN,
@@ -858,3 +859,18 @@ def csabstruct_sent_dataset(db_session, test_project, test_user) -> SentDataset:
         "tags": subset_tags,
         "subset2sdoc_ids": subsets,
     }
+
+
+@pytest.fixture(scope="function")
+def tenants(db_session, test_user, test_project) -> TwoTenants:
+    """
+    This fixture sets up two projects with one row of every project-owned table
+    each (see `composite_keys_test_utils.TenantRows` for the full inventory):
+
+    - `own`: the rows in the test project, among them the classifier "Classifier <p>".
+    - `foreign`: the same rows in the project "Foreign Project" (no features).
+
+    Non-obvious derived behavior: the test user is a member of both projects, so
+    an id of the other project is the only reason a request finds nothing.
+    """
+    return create_two_tenants(db_session, user=test_user, project=test_project)

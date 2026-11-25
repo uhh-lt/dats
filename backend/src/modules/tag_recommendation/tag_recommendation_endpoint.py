@@ -1,9 +1,8 @@
-from fastapi import APIRouter, Depends
+from fastapi import Depends
 
-from common.crud_enum import Crud
 from common.dats_event import DATSEvent
-from common.dependencies import DBSession, get_current_user
-from core.auth.authz_user import AuthzUser
+from common.dependencies import DBSession
+from common.project_router import project_router
 from modules.tag_recommendation.tag_recommendation_crud import (
     crud_tag_recommendation_link,
 )
@@ -12,13 +11,12 @@ from modules.tag_recommendation.tag_recommendation_dto import (
     TagRecommendationLinkUpdate,
 )
 from modules.tag_recommendation.tag_recommendation_feature import TAG_RECOMMENDATION
-from systems.feature_system.feature_service import FeatureService
 from systems.websocket_system.websocket_dependency import WebsocketEmitter
 
-router = APIRouter(
-    prefix="/tagrecommendation",
-    dependencies=[Depends(get_current_user)],
+router = project_router(
+    "/tag-recommendations",
     tags=["TagRecommendation"],
+    feature=TAG_RECOMMENDATION,
 )
 
 
@@ -26,30 +24,20 @@ router = APIRouter(
 
 
 @router.patch(
-    "/review_recommendations",
+    "/review",
     response_model=list[TagRecommendationLinkRead],
     summary="The endpoint receives IDs of wrongly and correctly tagged document recommendations and sets `is_accepted` to `true` or `false`, while setting the corresponding document tags if `true`.",
 )
 def update_recommendations(
     *,
     db: DBSession,
+    project_id: int,
     reviewd_recommendation_ids: list[int],
-    authz_user: AuthzUser = Depends(),
     ws: WebsocketEmitter = Depends(),
 ) -> list[TagRecommendationLinkRead]:
-    authz_user.assert_in_same_project_as_many(
-        Crud.TAG_RECOMMENDATION, reviewd_recommendation_ids
-    )
-    reviewed = crud_tag_recommendation_link.read_by_ids(
-        db=db, ids=reviewd_recommendation_ids
-    )
-    for project_id in {link.get_project_id() for link in reviewed}:
-        FeatureService().assert_enabled(
-            db=db, project_id=project_id, feature=TAG_RECOMMENDATION
-        )
-
     modifications = crud_tag_recommendation_link.update_multi(
         db=db,
+        project_id=project_id,
         ids=reviewd_recommendation_ids,
         update_dtos=[
             TagRecommendationLinkUpdate(is_reviewed=True)
@@ -58,9 +46,9 @@ def update_recommendations(
     )
     results = [TagRecommendationLinkRead.model_validate(m) for m in modifications]
     if results:
-        ws.emit_to_projects_grouped(
+        ws.emit_to_project(
             DATSEvent.TAG_RECOMMENDATION_REVIEWED_BATCH,
-            modifications,
-            to_dto=TagRecommendationLinkRead.model_validate,
+            results,
+            project_id=project_id,
         )
     return results

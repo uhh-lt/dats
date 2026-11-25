@@ -51,18 +51,18 @@ class ClassifierService(metaclass=SingletonMeta):
         job.update(status_message=description)
 
     def delete_classifier_by_id(
-        self, db: Session, classifier_id: int
+        self, db: Session, project_id: int, classifier_id: int
     ) -> ClassifierRead:
         # make sure that classifier exists
-        db_obj = crud_classifier.read(db=db, id=classifier_id)
+        db_obj = crud_classifier.read(db=db, project_id=project_id, id=classifier_id)
         c_read = ClassifierRead.model_validate(db_obj)
 
         # delete classifier from db
-        crud_classifier.delete(db=db, id=classifier_id)
+        crud_classifier.delete(db=db, project_id=project_id, id=classifier_id)
 
         # delete its files
         FileCRUDBase.delete_by_entity(
-            Crud.CLASSIFIER, project_id=c_read.project_id, ids=[classifier_id]
+            Crud.CLASSIFIER, project_id=project_id, ids=[classifier_id]
         )
         return c_read
 

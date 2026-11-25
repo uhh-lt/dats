@@ -5,6 +5,7 @@ from sqlalchemy import (
     ForeignKey,
     ForeignKeyConstraint,
     Integer,
+    PrimaryKeyConstraint,
     String,
     Text,
     UniqueConstraint,
@@ -24,7 +25,8 @@ if TYPE_CHECKING:
 
 
 class AspectORM(ORMBase):
-    id: Mapped[int] = mapped_column(Integer, primary_key=True, index=True)
+    # the primary key is (project_id, id), see __table_args__
+    id: Mapped[int] = mapped_column(Integer, autoincrement=True, index=True)
 
     name: Mapped[str] = mapped_column(String, nullable=False)
     doc_embedding_prompt: Mapped[str] = mapped_column(Text, nullable=False)
@@ -46,7 +48,6 @@ class AspectORM(ORMBase):
         Integer,
         ForeignKey("project.id", ondelete="CASCADE"),
         nullable=False,
-        index=True,
     )
     project: Mapped["ProjectORM"] = relationship("ProjectORM", back_populates="aspects")
 
@@ -78,6 +79,7 @@ class AspectORM(ORMBase):
     )
 
     __table_args__ = (
+        PrimaryKeyConstraint("project_id", "id", name="aspect_pkey"),
         UniqueConstraint("project_id", "id", name="UC_aspect_project_id_id"),
         ForeignKeyConstraint(
             ["project_id", "tag_id"],
@@ -89,6 +91,3 @@ class AspectORM(ORMBase):
 
     def __repr__(self) -> str:
         return f"<AspectORM(id={self.id}, name='{self.name}')>"
-
-    def get_project_id(self) -> int:
-        return self.project_id

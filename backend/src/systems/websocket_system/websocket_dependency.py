@@ -1,16 +1,12 @@
-from collections.abc import Callable, Sequence
-from typing import Protocol, TypeVar
+from collections.abc import Sequence
+from typing import Protocol
 
 from fastapi import BackgroundTasks, Depends
 from loguru import logger
-from pydantic import BaseModel
 
 from common.dats_event import DATS_EVENT_TO_MODEL, DATSEvent, DATSEventBase
 from core.auth.authz_user import AuthzUser
-from repos.db.orm_base import ORMBase
 from systems.websocket_system.websocket_service import WebsocketService
-
-ORMT = TypeVar("ORMT", bound=ORMBase)
 
 
 class ProjectScopedDTO(Protocol):
@@ -93,30 +89,6 @@ class WebsocketEmitter:
             f"Queued event '{event_type}' for project {project_id} "
             f"(exclude_user_id={exclude_user_id})"
         )
-
-    def emit_to_projects_grouped(
-        self,
-        event_type: DATSEvent,
-        db_objs: Sequence[ORMT],
-        *,
-        to_dto: Callable[[ORMT], BaseModel],
-    ) -> None:
-        """Group `db_objs` by project and emit one batch event per project.
-
-        Each emitted event carries only the DTOs of that project's objects.
-
-        Args:
-            event_type: The batch event type.
-            db_objs: The mutated ORM objects.
-            to_dto: Converts one ORM object to its read DTO.
-        """
-        groups: dict[int, list[ORMT]] = {}
-        for db_obj in db_objs:
-            groups.setdefault(db_obj.get_project_id(), []).append(db_obj)
-        for project_id, group in groups.items():
-            self.emit_to_project(
-                event_type, [to_dto(db_obj) for db_obj in group], project_id=project_id
-            )
 
     def emit_dtos_to_projects(
         self, event_type: DATSEvent, dtos: Sequence[ProjectScopedDTO]

@@ -7,6 +7,7 @@ from sqlalchemy import (
     ForeignKey,
     ForeignKeyConstraint,
     Integer,
+    PrimaryKeyConstraint,
     String,
     Text,
     UniqueConstraint,
@@ -22,7 +23,8 @@ if TYPE_CHECKING:
 
 
 class ClusterORM(ORMBase):
-    id: Mapped[int] = mapped_column(Integer, primary_key=True, index=True)
+    # the primary key is (project_id, id), see __table_args__
+    id: Mapped[int] = mapped_column(Integer, autoincrement=True, index=True)
 
     is_outlier: Mapped[bool] = mapped_column(Boolean, nullable=False)
     is_user_edited: Mapped[bool] = mapped_column(Boolean, default=False, nullable=False)
@@ -56,7 +58,6 @@ class ClusterORM(ORMBase):
         Integer,
         ForeignKey("project.id", ondelete="CASCADE"),
         nullable=False,
-        index=True,
     )
 
     aspect_id: Mapped[int] = mapped_column(Integer, nullable=False, index=True)
@@ -80,6 +81,7 @@ class ClusterORM(ORMBase):
     )
 
     __table_args__ = (
+        PrimaryKeyConstraint("project_id", "id", name="cluster_pkey"),
         UniqueConstraint("project_id", "id", name="UC_cluster_project_id_id"),
         ForeignKeyConstraint(
             ["project_id", "aspect_id"],
@@ -97,6 +99,3 @@ class ClusterORM(ORMBase):
 
     def __repr__(self) -> str:
         return f"<ClusterORM(id={self.id}, name='{self.name}')>"
-
-    def get_project_id(self) -> int:
-        return self.project_id
