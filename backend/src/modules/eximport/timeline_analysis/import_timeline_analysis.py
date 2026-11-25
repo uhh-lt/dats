@@ -95,7 +95,6 @@ def import_timeline_analysis_to_proj(
         transformed_tas.append(
             TimelineAnalysisCreateIntern(
                 name=ta.name,
-                project_id=project_id,
                 timeline_analysis_type=TimelineAnalysisType(ta.type),
                 concepts=jsonable_encoder(transformed_concepts),
                 settings=transformed_settings.model_dump(mode="json"),
@@ -115,6 +114,7 @@ def import_timeline_analysis_to_proj(
     for ta in transformed_tas:
         created_analysis = crud_timeline_analysis.create(
             db=db,
+            project_id=project_id,
             create_dto=ta,
         )
         imported_timeline_analysis_ids.append(created_analysis.id)

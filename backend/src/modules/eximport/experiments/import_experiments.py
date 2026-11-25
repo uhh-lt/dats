@@ -166,7 +166,7 @@ def _merge_experiment(
     """Merge an imported experiment and its runs into the project (see
     `import_experiments_to_proj`). Returns the ID of the created or changed
     experiment, None if nothing changed."""
-    create_dto = remapper.experiment(row, project_id=project_id)
+    create_dto = remapper.experiment(row)
     if create_dto is None:
         return None
 
@@ -174,7 +174,9 @@ def _merge_experiment(
     experiment = existing_by_name.get(row.experiment_name)
     changed = experiment is None
     if experiment is None:
-        experiment = crud_experiment.create(db=db, create_dto=create_dto)
+        experiment = crud_experiment.create(
+            db=db, project_id=project_id, create_dto=create_dto
+        )
         existing_by_name[experiment.name] = experiment
     elif (
         experiment.task_type,
@@ -216,10 +218,11 @@ def _merge_experiment(
         return experiment.id if changed else None
 
     db_objs = crud_experiment_run.create_multi(
-        db=db, create_dtos=[run.create_dto for run in runs]
+        db=db, project_id=project_id, create_dtos=[run.create_dto for run in runs]
     )
     crud_experiment_run.update_multi(
         db=db,
+        project_id=project_id,
         ids=[db_obj.id for db_obj in db_objs],
         update_dtos=[run.update_dto for run in runs],
     )
@@ -317,9 +320,7 @@ class _Remapper:
             },
         )
 
-    def experiment(
-        self, row: ExperimentExportSchema, *, project_id: int
-    ) -> ExperimentCreateIntern | None:
+    def experiment(self, row: ExperimentExportSchema) -> ExperimentCreateIntern | None:
         """The experiment of a row in the project, None (skipped with a warning) if
         a reference cannot be resolved."""
         missing: list[str] = []
@@ -345,7 +346,6 @@ class _Remapper:
             return None
         return ExperimentCreateIntern(
             name=row.experiment_name,
-            project_id=project_id,
             task_type=row.task_type,
             sdoc_ids=sdoc_ids,
             code_ids=code_ids,
@@ -399,7 +399,6 @@ class _Remapper:
 
         return _ImportedRun(
             create_dto=ExperimentRunCreateIntern(
-                project_id=experiment.project_id,
                 experiment_id=experiment.id,
                 name=row.run_name,
                 prompt_version_id=prompt_version_id,

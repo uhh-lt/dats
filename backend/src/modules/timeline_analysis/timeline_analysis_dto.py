@@ -126,7 +126,7 @@ class TimelineAnalysisBaseDTO(BaseModel):
 
 
 class TimelineAnalysisCreate(TimelineAnalysisBaseDTO):
-    project_id: int = Field(description="Project the TimelineAnalysis belongs to")
+    pass
 
 
 class TimelineAnalysisCreateIntern(TimelineAnalysisCreate):

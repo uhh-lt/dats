@@ -105,7 +105,6 @@ Resources of a project move under `/projects/{project_id}/...` module group by m
 
 - **Project router**: a project router of a feature gates every route (`project_router(..., feature=FEATURE)`); the rules below apply to routes not yet under `/projects/{project_id}`.
 - **Gate the router**: routes of a toggleable feature declare `dependencies=[Depends(require_feature(FEATURE))]`, with the object `register_feature` returned (imported from the module's `*_feature.py`), when they have a `project_id` path or query parameter (`simsearch_endpoint.py`).
-- **Gate by object**: routes that identify an object by a path parameter use `require_feature_of(FEATURE, Crud.Y, "y_id")` (`cota_endpoint.py`).
 - **Gate by body**: routes that carry the project id only in the body call `FeatureService().assert_enabled(db=db, project_id=..., feature=FEATURE)` right after the authz check.
 - **Generated job routes**: jobs with generated endpoints (`/projects/{project_id}/jobs/<job-type>`) are gated by their `validate_input` hook, not by a dependency.
 - **Job routes**: a hand-written route that reads or controls a job lives under `/projects/{project_id}/jobs/<job-type>` and reads the job with `JobService().read_project_job(...)` (404 for a job of another project); a job that a module route starts generates its reads with `EndpointGeneration.READ`.

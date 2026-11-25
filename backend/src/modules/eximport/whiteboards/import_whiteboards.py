@@ -63,7 +63,6 @@ def import_whiteboards_to_proj(
         transformed_wbs.append(
             WhiteboardCreateIntern(
                 title=wb.title,
-                project_id=project_id,
                 content=transformed_content.model_dump(mode="json"),
             )
         )
@@ -81,6 +80,7 @@ def import_whiteboards_to_proj(
     for wb in transformed_wbs:
         created_whiteboard = crud_whiteboard.create(
             db=db,
+            project_id=project_id,
             create_dto=wb,
         )
         imported_whiteboard_ids.append(created_whiteboard.id)

@@ -6,6 +6,7 @@ from sqlalchemy import (
     ForeignKey,
     ForeignKeyConstraint,
     Integer,
+    PrimaryKeyConstraint,
     String,
     UniqueConstraint,
     func,
@@ -25,7 +26,8 @@ if TYPE_CHECKING:
 class ExperimentORM(ORMBase):
     """Fixed documents, codes, task and gold annotator, on which runs are compared."""
 
-    id: Mapped[int] = mapped_column(Integer, primary_key=True, index=True)
+    # the primary key is (project_id, id), see __table_args__
+    id: Mapped[int] = mapped_column(Integer, autoincrement=True, index=True)
     name: Mapped[str] = mapped_column(String, nullable=False, index=True)
     # span or sentence annotation
     task_type: Mapped[TaskType] = mapped_column(String, nullable=False, index=False)
@@ -50,7 +52,6 @@ class ExperimentORM(ORMBase):
         Integer,
         ForeignKey("project.id", ondelete="CASCADE"),
         nullable=False,
-        index=True,
     )
     project: Mapped["ProjectORM"] = relationship(
         "ProjectORM", back_populates="experiments"
@@ -81,11 +82,9 @@ class ExperimentORM(ORMBase):
             "name",
             name="UC_experiment_name_unique_per_project",
         ),
+        PrimaryKeyConstraint("project_id", "id", name="experiment_pkey"),
         UniqueConstraint("project_id", "id", name="UC_experiment_project_id_id"),
     )
-
-    def get_project_id(self) -> int:
-        return self.project_id
 
 
 class ExperimentRunORM(ORMBase):
@@ -95,7 +94,8 @@ class ExperimentRunORM(ORMBase):
     state of the job and the stored scores do.
     """
 
-    id: Mapped[int] = mapped_column(Integer, primary_key=True, index=True)
+    # the primary key is (project_id, id), see __table_args__
+    id: Mapped[int] = mapped_column(Integer, autoincrement=True, index=True)
     # unique per experiment; the virtual user of the run is named <experiment>-<run>
     name: Mapped[str] = mapped_column(String, nullable=False, index=True)
     model: Mapped[str] = mapped_column(String, nullable=False, index=False)
@@ -136,7 +136,6 @@ class ExperimentRunORM(ORMBase):
         Integer,
         ForeignKey("project.id", ondelete="CASCADE"),
         nullable=False,
-        index=True,
     )
 
     experiment_id: Mapped[int] = mapped_column(Integer, nullable=False, index=True)
@@ -176,6 +175,7 @@ class ExperimentRunORM(ORMBase):
             "name",
             name="UC_experiment_run_name_unique_per_experiment",
         ),
+        PrimaryKeyConstraint("project_id", "id", name="experimentrun_pkey"),
         UniqueConstraint("project_id", "id", name="UC_experimentrun_project_id_id"),
         ForeignKeyConstraint(
             ["project_id", "experiment_id"],
@@ -190,6 +190,3 @@ class ExperimentRunORM(ORMBase):
             name="FK_experimentrun_prompt_version_id",
         ),
     )
-
-    def get_project_id(self) -> int:
-        return self.project_id

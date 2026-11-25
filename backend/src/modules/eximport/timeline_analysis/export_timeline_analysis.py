@@ -43,7 +43,7 @@ def export_selected_timeline_analyses(
         NoDataToExportError: If no timeline analyses are found
     """
     timeline_analyses = crud_timeline_analysis.read_by_ids(
-        db=db, ids=timeline_analysis_ids
+        db=db, project_id=project_id, ids=timeline_analysis_ids
     )
     return __export_timeline_analyses(
         db=db,

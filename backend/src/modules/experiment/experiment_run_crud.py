@@ -3,11 +3,13 @@ from modules.experiment.experiment_run_dto import (
     ExperimentRunCreateIntern,
     ExperimentRunUpdateIntern,
 )
-from repos.db.crud_base import SQLCRUDBase
+from repos.db.project_crud_base import ProjectCRUDBase
 
 
 class CRUDExperimentRun(
-    SQLCRUDBase[ExperimentRunORM, ExperimentRunCreateIntern, ExperimentRunUpdateIntern]
+    ProjectCRUDBase[
+        ExperimentRunORM, ExperimentRunCreateIntern, ExperimentRunUpdateIntern
+    ]
 ):
     pass
 

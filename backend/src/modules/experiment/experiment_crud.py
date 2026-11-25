@@ -6,11 +6,11 @@ from modules.experiment.experiment_dto import (
     ExperimentUpdate,
 )
 from modules.experiment.experiment_orm import ExperimentORM
-from repos.db.crud_base import SQLCRUDBase
+from repos.db.project_crud_base import ProjectCRUDBase
 
 
 class CRUDExperiment(
-    SQLCRUDBase[ExperimentORM, ExperimentCreateIntern, ExperimentUpdate]
+    ProjectCRUDBase[ExperimentORM, ExperimentCreateIntern, ExperimentUpdate]
 ):
     ### READ OPERATIONS ###
 

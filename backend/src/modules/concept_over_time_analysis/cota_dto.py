@@ -95,9 +95,7 @@ class ConceptOverTimeAnalysisBaseDTO(BaseModel):
 
 
 class COTACreate(ConceptOverTimeAnalysisBaseDTO):
-    project_id: int = Field(
-        description="Project the ConceptOverTimeAnalysis belongs to"
-    )
+    pass
 
 
 class COTACreateIntern(COTACreate):

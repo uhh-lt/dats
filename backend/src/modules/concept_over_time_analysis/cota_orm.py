@@ -5,6 +5,7 @@ from sqlalchemy import (
     DateTime,
     ForeignKey,
     Integer,
+    PrimaryKeyConstraint,
     String,
     UniqueConstraint,
     func,
@@ -17,7 +18,8 @@ from repos.db.orm_base import ORMBase
 
 
 class ConceptOverTimeAnalysisORM(ORMBase):
-    id: Mapped[int] = mapped_column(Integer, primary_key=True, index=True)
+    # the primary key is (project_id, id), see __table_args__
+    id: Mapped[int] = mapped_column(Integer, autoincrement=True, index=True)
     name: Mapped[str] = mapped_column(String, nullable=False, index=True)
     last_refinement_job_id: Mapped[str | None] = mapped_column(String, index=False)
 
@@ -68,14 +70,11 @@ class ConceptOverTimeAnalysisORM(ORMBase):
         Integer,
         ForeignKey("project.id", ondelete="CASCADE"),
         nullable=False,
-        index=True,
     )
 
     __table_args__ = (
+        PrimaryKeyConstraint("project_id", "id", name="conceptovertimeanalysis_pkey"),
         UniqueConstraint(
             "project_id", "id", name="UC_conceptovertimeanalysis_project_id_id"
         ),
     )
-
-    def get_project_id(self) -> int:
-        return self.project_id

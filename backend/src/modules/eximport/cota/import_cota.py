@@ -98,7 +98,6 @@ def import_cota_to_proj(
         transformed_cotas.append(
             COTACreateIntern(
                 name=cota.name,
-                project_id=project_id,
                 concepts=jsonable_encoder(transformed_concepts),
                 timeline_settings=transformed_timeline_settings.model_dump(mode="json"),
                 training_settings=transformed_training_settings.model_dump(mode="json"),
@@ -118,6 +117,7 @@ def import_cota_to_proj(
     for cota in transformed_cotas:
         created_analysis = crud_cota.create(
             db=db,
+            project_id=project_id,
             create_dto=cota,
         )
         imported_cota_ids.append(created_analysis.id)

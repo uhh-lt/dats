@@ -37,7 +37,6 @@ def _create_dto(p: ExperimentProject, **changes: object) -> ExperimentCreate:
     gold annotator `gold_user`."""
     dto = ExperimentCreate(
         name="ExperimentC",
-        project_id=p["project"].id,
         task_type=TaskType.ANNOTATION,
         sdoc_ids=[p["sdoc_a"].id, p["sdoc_b"].id],
         code_ids=[p["code_claim"].id, p["code_evidence"].id],
@@ -46,8 +45,15 @@ def _create_dto(p: ExperimentProject, **changes: object) -> ExperimentCreate:
     return dto.model_copy(update=changes)
 
 
-def _get_experiment(client: TestClient, experiment_id: int) -> ExperimentRead:
-    response = client.get(f"/experiment/{experiment_id}")
+def _url(project_id: int, path: str = "") -> str:
+    """The URL of the experiment routes of the project."""
+    return f"/projects/{project_id}/experiments{path}"
+
+
+def _get_experiment(
+    client: TestClient, project_id: int, experiment_id: int
+) -> ExperimentRead:
+    response = client.get(_url(project_id, f"/{experiment_id}"))
     assert response.status_code == 200, response.text
     return ExperimentRead.model_validate(response.json())
 
@@ -65,6 +71,7 @@ def _virtual_user_names(client: TestClient, project_id: int) -> set[str]:
 
 def _wait_for_run(
     client: TestClient,
+    project_id: int,
     experiment_id: int,
     run_id: int,
     *,
@@ -73,7 +80,7 @@ def _wait_for_run(
     """Poll the experiment until the run is finished or failed."""
     deadline = time.monotonic() + timeout
     while True:
-        experiment = _get_experiment(client, experiment_id)
+        experiment = _get_experiment(client, project_id, experiment_id)
         run = next(run for run in experiment.runs if run.id == run_id)
         if run.status in {JobStatus.FINISHED, JobStatus.FAILED}:
             return run
@@ -83,7 +90,7 @@ def _wait_for_run(
 
 
 # ===========================================================================
-# CREATE EXPERIMENT (PUT /experiment) TESTS
+# CREATE EXPERIMENT (PUT /projects/{project_id}/experiments) TESTS
 # ===========================================================================
 
 
@@ -93,7 +100,7 @@ def test_create_experiment_stores_documents_codes_task_and_gold_annotator(
     """A new experiment stores the document ids, codes, task and gold annotator."""
     p = experiment_project
     dto = _create_dto(p)
-    response = client.put("/experiment", json=dto.model_dump(mode="json"))
+    response = client.put(_url(p["project"].id), json=dto.model_dump(mode="json"))
     assert response.status_code == 200, response.text
     experiment = ExperimentRead.model_validate(response.json())
 
@@ -104,7 +111,7 @@ def test_create_experiment_stores_documents_codes_task_and_gold_annotator(
     assert experiment.code_ids == dto.code_ids
     assert experiment.gold_user_id == p["gold_user"].id
     assert experiment.runs == []
-    assert _get_experiment(client, experiment.id) == experiment
+    assert _get_experiment(client, p["project"].id, experiment.id) == experiment
 
 
 @pytest.mark.parametrize(
@@ -129,7 +136,7 @@ def test_create_experiment_accepts_any_annotator_of_the_project_as_gold(
         gold_user_id=p[gold_key].id,  # type: ignore[literal-required]
         sdoc_ids=[p[key].id for key in sdoc_keys],  # type: ignore[literal-required]
     )
-    response = client.put("/experiment", json=dto.model_dump(mode="json"))
+    response = client.put(_url(p["project"].id), json=dto.model_dump(mode="json"))
     assert response.status_code == 200, response.text
     assert (
         ExperimentRead.model_validate(response.json()).gold_user_id == dto.gold_user_id
@@ -161,20 +168,24 @@ def test_create_experiment_requires_every_document_annotated_by_the_gold_annotat
         gold_user_id=p[gold_key].id,  # type: ignore[literal-required]
         sdoc_ids=[p[key].id for key in sdoc_keys],  # type: ignore[literal-required]
     )
-    response = client.put("/experiment", json=dto.model_dump(mode="json"))
+    response = client.put(_url(p["project"].id), json=dto.model_dump(mode="json"))
     assert response.status_code == 400, response.text
     assert f"did not annotate the documents [{p[missing_key].id}]" in response.text  # type: ignore[literal-required]
 
 
 @pytest.mark.parametrize(
-    "field,key,message",
+    "field,key,status,message",
     [
         # A document of another project.
-        pytest.param("sdoc_ids", "foreign_sdoc", "do not belong", id="foreign-sdoc"),
+        pytest.param(
+            "sdoc_ids", "foreign_sdoc", 404, "no SourceDocument", id="foreign-sdoc"
+        ),
         # A code of another project.
-        pytest.param("code_ids", "foreign_code", "do not belong", id="foreign-code"),
+        pytest.param("code_ids", "foreign_code", 404, "no Code", id="foreign-code"),
         # A user who is no annotator of the project.
-        pytest.param("gold_user_id", "outsider", "no annotator", id="outsider-gold"),
+        pytest.param(
+            "gold_user_id", "outsider", 400, "no annotator", id="outsider-gold"
+        ),
     ],
 )
 def test_create_experiment_rejects_objects_of_other_projects(
@@ -182,15 +193,18 @@ def test_create_experiment_rejects_objects_of_other_projects(
     experiment_project: ExperimentProject,
     field: str,
     key: str,
+    status: int,
     message: str,
 ) -> None:
-    """Documents, codes and gold annotator must belong to the experiment's project."""
+    """Documents and codes are read within the path's project (404 for one of
+    another project: the experiment stores them as id lists, which no foreign key
+    checks); the gold annotator must be an annotator of the project (400)."""
     p = experiment_project
     object_id = p[key].id  # type: ignore[literal-required]
     value = object_id if field == "gold_user_id" else [object_id]
     dto = _create_dto(p, **{field: value})
-    response = client.put("/experiment", json=dto.model_dump(mode="json"))
-    assert response.status_code == 400, response.text
+    response = client.put(_url(p["project"].id), json=dto.model_dump(mode="json"))
+    assert response.status_code == status, response.text
     assert message in response.text
 
 
@@ -212,7 +226,7 @@ def test_create_experiment_rejects_malformed_payloads(
 ) -> None:
     """Malformed payloads fail validation with HTTP 422."""
     payload = _create_dto(experiment_project).model_dump(mode="json") | changes
-    response = client.put("/experiment", json=payload)
+    response = client.put(_url(experiment_project["project"].id), json=payload)
     assert response.status_code == 422, response.text
 
 
@@ -221,28 +235,30 @@ def test_create_experiment_rejects_a_duplicate_name(
 ) -> None:
     """Experiment names are unique per project."""
     dto = _create_dto(experiment_project, name="ExperimentA")
-    response = client.put("/experiment", json=dto.model_dump(mode="json"))
+    response = client.put(
+        _url(experiment_project["project"].id), json=dto.model_dump(mode="json")
+    )
     assert response.status_code == 409, response.text
 
 
 def test_create_experiment_rejects_a_foreign_project(
     client: TestClient, experiment_project: ExperimentProject
 ) -> None:
-    """Experiments can only be created in the user's projects."""
+    """Experiments can only be created in the user's projects: the user is no
+    member of the project of the path."""
     p = experiment_project
     dto = _create_dto(
         p,
-        project_id=p["other_project"].id,
         sdoc_ids=[p["foreign_sdoc"].id],
         code_ids=[p["foreign_code"].id],
         gold_user_id=p["outsider"].id,
     )
-    response = client.put("/experiment", json=dto.model_dump(mode="json"))
+    response = client.put(_url(p["other_project"].id), json=dto.model_dump(mode="json"))
     assert response.status_code == 403, response.text
 
 
 # ===========================================================================
-# CREATE RUN (PUT /experiment/run) TESTS
+# CREATE RUN (PUT /projects/{project_id}/experiments/runs) TESTS
 # ===========================================================================
 
 
@@ -260,7 +276,9 @@ def test_create_run_writes_into_a_new_virtual_user_and_fails_with_an_invalid_mod
         prompt_version_id=p["span_prompt"].versions[0].id,
         model=INVALID_MODEL,
     )
-    response = client.put("/experiment/run", json=dto.model_dump(mode="json"))
+    response = client.put(
+        _url(p["project"].id, "/runs"), json=dto.model_dump(mode="json")
+    )
     assert response.status_code == 200, response.text
     result = ExperimentRead.model_validate(response.json())
 
@@ -279,7 +297,7 @@ def test_create_run_writes_into_a_new_virtual_user_and_fails_with_an_invalid_mod
     assert virtual_user["first_name"] == "ExperimentA-Zero-shot"
     assert virtual_user["is_virtual"]
 
-    ended = _wait_for_run(client, experiment.id, run.id)
+    ended = _wait_for_run(client, p["project"].id, experiment.id, run.id)
     assert ended.status == JobStatus.FAILED
     assert ended.job_id is not None
     assert ended.started is not None
@@ -307,7 +325,9 @@ def test_create_run_rejects_a_taken_name(
     <experiment>-<run> is unique per project; no run is created."""
     p = experiment_project
     experiment = p[experiment_key]  # type: ignore[literal-required]
-    run_ids = [run.id for run in _get_experiment(client, experiment.id).runs]
+    run_ids = [
+        run.id for run in _get_experiment(client, p["project"].id, experiment.id).runs
+    ]
 
     dto = ExperimentRunCreate(
         experiment_id=experiment.id,
@@ -315,9 +335,13 @@ def test_create_run_rejects_a_taken_name(
         prompt_version_id=p["span_prompt"].versions[0].id,
         model=INVALID_MODEL,
     )
-    response = client.put("/experiment/run", json=dto.model_dump(mode="json"))
+    response = client.put(
+        _url(p["project"].id, "/runs"), json=dto.model_dump(mode="json")
+    )
     assert response.status_code == 409, response.text
-    assert [run.id for run in _get_experiment(client, experiment.id).runs] == run_ids
+    assert [
+        run.id for run in _get_experiment(client, p["project"].id, experiment.id).runs
+    ] == run_ids
 
 
 @pytest.mark.parametrize(
@@ -348,10 +372,12 @@ def test_create_run_rejects_ineligible_prompt_versions(
         prompt_version_id=prompt.versions[version_index].id,
         model=INVALID_MODEL,
     )
-    response = client.put("/experiment/run", json=dto.model_dump(mode="json"))
+    response = client.put(
+        _url(p["project"].id, "/runs"), json=dto.model_dump(mode="json")
+    )
     assert response.status_code == 400, response.text
     assert message in response.text
-    assert _get_experiment(client, p["experiment"].id).runs == []
+    assert _get_experiment(client, p["project"].id, p["experiment"].id).runs == []
 
 
 def test_create_run_rejects_nonexistent_prompt_versions_and_foreign_experiments(
@@ -366,7 +392,7 @@ def test_create_run_rejects_nonexistent_prompt_versions_and_foreign_experiments(
         model="m",
     )
     response = client.put(
-        "/experiment/run", json=unknown_version.model_dump(mode="json")
+        _url(p["project"].id, "/runs"), json=unknown_version.model_dump(mode="json")
     )
     assert response.status_code == 404, response.text
 
@@ -376,8 +402,10 @@ def test_create_run_rejects_nonexistent_prompt_versions_and_foreign_experiments(
         prompt_version_id=p["span_prompt"].versions[0].id,
         model="m",
     )
-    response = client.put("/experiment/run", json=foreign.model_dump(mode="json"))
-    assert response.status_code == 403, response.text
+    response = client.put(
+        _url(p["project"].id, "/runs"), json=foreign.model_dump(mode="json")
+    )
+    assert response.status_code == 404, response.text
 
 
 def test_create_run_is_refused_without_a_gold_annotator(
@@ -387,7 +415,7 @@ def test_create_run_is_refused_without_a_gold_annotator(
     even with an eligible prompt version: no run and no virtual user is created."""
     p = gold_deleted_project
     experiment_id = p["virtual_gold_experiment"].id
-    runs_before = _get_experiment(client, experiment_id).runs
+    runs_before = _get_experiment(client, p["project"].id, experiment_id).runs
     users_before = _virtual_user_names(client, p["project"].id)
     dto = ExperimentRunCreate(
         experiment_id=experiment_id,
@@ -396,11 +424,13 @@ def test_create_run_is_refused_without_a_gold_annotator(
         model=INVALID_MODEL,
     )
 
-    response = client.put("/experiment/run", json=dto.model_dump(mode="json"))
+    response = client.put(
+        _url(p["project"].id, "/runs"), json=dto.model_dump(mode="json")
+    )
 
     assert response.status_code == 409, response.text
     assert "gold annotator" in response.text
-    assert _get_experiment(client, experiment_id).runs == runs_before
+    assert _get_experiment(client, p["project"].id, experiment_id).runs == runs_before
     assert _virtual_user_names(client, p["project"].id) == users_before
 
 
@@ -418,11 +448,13 @@ def test_create_run_stores_the_agreement_when_the_run_finished(
         prompt_version_id=p["span_prompt"].versions[0].id,
         model="default",
     )
-    response = client.put("/experiment/run", json=dto.model_dump(mode="json"))
+    response = client.put(
+        _url(p["project"].id, "/runs"), json=dto.model_dump(mode="json")
+    )
     assert response.status_code == 200, response.text
     run = ExperimentRead.model_validate(response.json()).runs[0]
 
-    ended = _wait_for_run(client, experiment.id, run.id)
+    ended = _wait_for_run(client, p["project"].id, experiment.id, run.id)
     assert ended.status == JobStatus.FINISHED
     assert ended.scores_computed is not None
     assert [scores.scoring for scores in ended.scores] == list(AgreementScoring)
@@ -431,7 +463,7 @@ def test_create_run_stores_the_agreement_when_the_run_finished(
 
 
 # ===========================================================================
-# GET EXPERIMENT (/experiment/{experiment_id}, /experiment/project/{id}) TESTS
+# GET EXPERIMENT (/projects/{project_id}/experiments/{experiment_id}, /projects/{project_id}/experiments) TESTS
 # ===========================================================================
 
 
@@ -440,7 +472,7 @@ def test_get_by_project_lists_all_experiments_with_their_runs_newest_first(
 ) -> None:
     """Both experiments were created in one transaction, so the newer id comes first."""
     p = experiment_project
-    response = client.get(f"/experiment/project/{p['project'].id}")
+    response = client.get(_url(p["project"].id))
     assert response.status_code == 200, response.text
     experiments = TypeAdapter(list[ExperimentRead]).validate_python(response.json())
 
@@ -452,19 +484,19 @@ def test_get_by_project_lists_all_experiments_with_their_runs_newest_first(
 def test_get_experiment_rejects_foreign_and_unknown_experiments(
     client: TestClient, experiment_project: ExperimentProject
 ) -> None:
-    """Experiments and experiment lists of other projects and unknown experiments
-    are forbidden."""
+    """Experiments of other projects and unknown experiments are not found; the
+    list of a project of which the user is no member is forbidden."""
     p = experiment_project
-    response = client.get(f"/experiment/{p['foreign_experiment'].id}")
+    response = client.get(_url(p["project"].id, f"/{p['foreign_experiment'].id}"))
+    assert response.status_code == 404, response.text
+    response = client.get(_url(p["other_project"].id))
     assert response.status_code == 403, response.text
-    response = client.get(f"/experiment/project/{p['other_project'].id}")
-    assert response.status_code == 403, response.text
-    response = client.get("/experiment/999999")
-    assert response.status_code == 403, response.text
+    response = client.get(_url(p["project"].id, "/999999"))
+    assert response.status_code == 404, response.text
 
 
 # ===========================================================================
-# UPDATE EXPERIMENT (PATCH /experiment/{experiment_id}) TESTS
+# UPDATE EXPERIMENT (PATCH /projects/{project_id}/experiments/{experiment_id}) TESTS
 # ===========================================================================
 
 
@@ -482,7 +514,10 @@ def test_update_experiment_renames_with_and_without_runs(
 ) -> None:
     """Renaming keeps everything else."""
     experiment = experiment_project[experiment_key]  # type: ignore[literal-required]
-    response = client.patch(f"/experiment/{experiment.id}", json={"name": "Stage 2"})
+    response = client.patch(
+        _url(experiment_project["project"].id, f"/{experiment.id}"),
+        json={"name": "Stage 2"},
+    )
     assert response.status_code == 200, response.text
     result = ExperimentRead.model_validate(response.json())
     assert result.name == "Stage 2"
@@ -497,7 +532,8 @@ def test_update_experiment_renames_the_virtual_users_of_its_runs(
     p = experiment_project
     run_user_id = p["run_user"].id
     response = client.patch(
-        f"/experiment/{p['experiment_with_run'].id}", json={"name": "Stage 2"}
+        _url(p["project"].id, f"/{p['experiment_with_run'].id}"),
+        json={"name": "Stage 2"},
     )
     assert response.status_code == 200, response.text
     response = client.get(f"/user/by_id/{run_user_id}")
@@ -513,9 +549,11 @@ def test_update_experiment_rejects_a_name_whose_run_user_name_is_taken(
     p = experiment_project
     experiment = p["experiment_with_run"]
     run_user_id = p["run_user"].id
-    response = client.patch(f"/experiment/{experiment.id}", json={"name": "Stage 3"})
+    response = client.patch(
+        _url(p["project"].id, f"/{experiment.id}"), json={"name": "Stage 3"}
+    )
     assert response.status_code == 409, response.text
-    assert _get_experiment(client, experiment.id).name == "ExperimentB"
+    assert _get_experiment(client, p["project"].id, experiment.id).name == "ExperimentB"
     response = client.get(f"/user/by_id/{run_user_id}")
     assert response.status_code == 200, response.text
     assert response.json()["first_name"] == "ExperimentB-Baseline"
@@ -545,10 +583,11 @@ def test_update_experiment_rejects_every_field_but_the_name(
     }
     experiment = p["experiment"]
     response = client.patch(
-        f"/experiment/{experiment.id}", json={"name": "Renamed", field: values[field]}
+        _url(p["project"].id, f"/{experiment.id}"),
+        json={"name": "Renamed", field: values[field]},
     )
     assert response.status_code == 422, response.text
-    unchanged = _get_experiment(client, experiment.id)
+    unchanged = _get_experiment(client, p["project"].id, experiment.id)
     assert unchanged.name == experiment.name
     assert unchanged.sdoc_ids == experiment.sdoc_ids
     assert unchanged.code_ids == experiment.code_ids
@@ -559,18 +598,18 @@ def test_update_experiment_rejects_every_field_but_the_name(
 def test_update_experiment_rejects_empty_and_foreign_updates(
     client: TestClient, experiment_project: ExperimentProject
 ) -> None:
-    """An empty update is 422, an experiment of another project 403."""
+    """An empty update is 422, an experiment of another project 404."""
     p = experiment_project
-    response = client.patch(f"/experiment/{p['experiment'].id}", json={})
+    response = client.patch(_url(p["project"].id, f"/{p['experiment'].id}"), json={})
     assert response.status_code == 422, response.text
     response = client.patch(
-        f"/experiment/{p['foreign_experiment'].id}", json={"name": "x"}
+        _url(p["project"].id, f"/{p['foreign_experiment'].id}"), json={"name": "x"}
     )
-    assert response.status_code == 403, response.text
+    assert response.status_code == 404, response.text
 
 
 # ===========================================================================
-# REFRESH RUN SCORES (PATCH /experiment/run/{run_id}/scores) TESTS
+# REFRESH RUN SCORES (PATCH /projects/{project_id}/experiments/runs/{run_id}/scores) TESTS
 # ===========================================================================
 
 
@@ -581,7 +620,7 @@ def test_refresh_run_scores_stores_the_agreement_with_the_gold_annotator(
     counts are those of the fixture docstring."""
     p = experiment_project
     run = p["run"]
-    response = client.patch(f"/experiment/run/{run.id}/scores")
+    response = client.patch(_url(p["project"].id, f"/runs/{run.id}/scores"))
     assert response.status_code == 200, response.text
     result = ExperimentRead.model_validate(response.json())
     stored = next(r for r in result.runs if r.id == run.id)
@@ -601,7 +640,7 @@ def test_refresh_run_scores_stores_the_agreement_with_the_gold_annotator(
         assert scores.total.f1 == pytest.approx(0.4)
 
     # the run log holds the stored scores as well
-    path = _export(client, run.id, ExperimentRunLogFormat.JSON.value)
+    path = _export(client, p["project"].id, run.id, ExperimentRunLogFormat.JSON.value)
     log = ExperimentRunLog.model_validate(json.loads(path.read_text()))
     assert log.scores == stored.scores
     assert log.scores_computed == stored.scores_computed
@@ -614,25 +653,29 @@ def test_refresh_run_scores_is_refused_without_a_gold_annotator(
     scores: the refresh is refused (HTTP 409)."""
     p = gold_deleted_project
     experiment_id = p["virtual_gold_experiment"].id
-    runs_before = _get_experiment(client, experiment_id).runs
+    runs_before = _get_experiment(client, p["project"].id, experiment_id).runs
 
-    response = client.patch(f"/experiment/run/{p['virtual_gold_run'].id}/scores")
+    response = client.patch(
+        _url(p["project"].id, f"/runs/{p['virtual_gold_run'].id}/scores")
+    )
 
     assert response.status_code == 409, response.text
     assert "gold annotator" in response.text
-    assert _get_experiment(client, experiment_id).runs == runs_before
+    assert _get_experiment(client, p["project"].id, experiment_id).runs == runs_before
 
 
 def test_refresh_run_scores_rejects_unknown_runs(
     client: TestClient, experiment_project: ExperimentProject
 ) -> None:
-    """An unknown run is forbidden, like every object the user cannot see."""
-    response = client.patch("/experiment/run/999999/scores")
-    assert response.status_code == 403, response.text
+    """An unknown run is not found."""
+    response = client.patch(
+        _url(experiment_project["project"].id, "/runs/999999/scores")
+    )
+    assert response.status_code == 404, response.text
 
 
 # ===========================================================================
-# REFRESH ALL RUN SCORES (PATCH /experiment/{experiment_id}/scores) TESTS
+# REFRESH ALL RUN SCORES (PATCH /projects/{project_id}/experiments/{experiment_id}/scores) TESTS
 # ===========================================================================
 
 
@@ -647,11 +690,14 @@ def test_refresh_all_run_scores_recomputes_every_finished_run(
     baseline_id = p["virtual_gold_run"].id
     second_id = p["second_run"].id
     failed_id = p["failed_run"].id
-    before = {run.id: run for run in _get_experiment(client, experiment_id).runs}
+    before = {
+        run.id: run
+        for run in _get_experiment(client, p["project"].id, experiment_id).runs
+    }
     baseline_computed = before[baseline_id].scores_computed
     assert baseline_computed is not None
 
-    response = client.patch(f"/experiment/{experiment_id}/scores")
+    response = client.patch(_url(p["project"].id, f"/{experiment_id}/scores"))
 
     assert response.status_code == 200, response.text
     result = ExperimentRead.model_validate(response.json())
@@ -671,7 +717,7 @@ def test_refresh_all_run_scores_recomputes_every_finished_run(
     assert baseline.scores_computed > baseline_computed
     assert runs[failed_id].scores == []
     assert runs[failed_id].scores_computed is None
-    assert _get_experiment(client, experiment_id).runs == result.runs
+    assert _get_experiment(client, p["project"].id, experiment_id).runs == result.runs
 
 
 def test_refresh_all_run_scores_is_refused_without_a_gold_annotator(
@@ -681,13 +727,13 @@ def test_refresh_all_run_scores_is_refused_without_a_gold_annotator(
     runs: the refresh is refused (HTTP 409)."""
     p = gold_deleted_project
     experiment_id = p["virtual_gold_experiment"].id
-    runs_before = _get_experiment(client, experiment_id).runs
+    runs_before = _get_experiment(client, p["project"].id, experiment_id).runs
 
-    response = client.patch(f"/experiment/{experiment_id}/scores")
+    response = client.patch(_url(p["project"].id, f"/{experiment_id}/scores"))
 
     assert response.status_code == 409, response.text
     assert "gold annotator" in response.text
-    assert _get_experiment(client, experiment_id).runs == runs_before
+    assert _get_experiment(client, p["project"].id, experiment_id).runs == runs_before
 
 
 @pytest.mark.parametrize(
@@ -704,20 +750,22 @@ def test_refresh_all_run_scores_rejects_foreign_and_unknown_experiments(
     experiment_project: ExperimentProject,
     experiment_id_key: str | None,
 ) -> None:
-    """Unknown experiments are forbidden, like every object the user cannot see."""
+    """Experiments of other projects and unknown experiments are not found."""
     experiment_id = (
         999999
         if experiment_id_key is None
         else experiment_project[experiment_id_key].id  # type: ignore[literal-required]
     )
 
-    response = client.patch(f"/experiment/{experiment_id}/scores")
+    response = client.patch(
+        _url(experiment_project["project"].id, f"/{experiment_id}/scores")
+    )
 
-    assert response.status_code == 403, response.text
+    assert response.status_code == 404, response.text
 
 
 # ===========================================================================
-# DELETE EXPERIMENT (DELETE /experiment/{experiment_id}) TESTS
+# DELETE EXPERIMENT (DELETE /projects/{project_id}/experiments/{experiment_id}) TESTS
 # ===========================================================================
 
 
@@ -729,17 +777,17 @@ def test_delete_experiment_deletes_its_runs_virtual_users_and_their_annotations(
     experiment_id = p["experiment_with_run"].id
     run_user_id = p["run_user"].id
     run_anna_id = p["run_anna"].id
-    response = client.delete(f"/experiment/{experiment_id}")
+    response = client.delete(_url(p["project"].id, f"/{experiment_id}"))
     assert response.status_code == 200, response.text
     assert ExperimentRead.model_validate(response.json()).id == experiment_id
 
-    assert client.get(f"/experiment/{experiment_id}").status_code == 403
+    assert client.get(_url(p["project"].id, f"/{experiment_id}")).status_code == 404
     assert client.get(f"/user/by_id/{run_user_id}").status_code == 404
     spans_url = f"/projects/{p['project'].id}/span-annotations"
     assert client.get(f"{spans_url}/{run_anna_id}").status_code == 404
     gold_response = client.get(f"{spans_url}/{p['gold_anna'].id}")
     assert gold_response.status_code == 200, gold_response.text
-    assert _get_experiment(client, p["experiment"].id).runs == []
+    assert _get_experiment(client, p["project"].id, p["experiment"].id).runs == []
 
 
 def test_delete_experiment_deletes_all_run_users_and_leaves_no_virtual_user_behind(
@@ -751,10 +799,10 @@ def test_delete_experiment_deletes_all_run_users_and_leaves_no_virtual_user_behi
     experiment_id = p["virtual_gold_experiment"].id
     span_id = p["virtual_gold_anna"].id
 
-    response = client.delete(f"/experiment/{experiment_id}")
+    response = client.delete(_url(p["project"].id, f"/{experiment_id}"))
 
     assert response.status_code == 200, response.text
-    assert client.get(f"/experiment/{experiment_id}").status_code == 403
+    assert client.get(_url(p["project"].id, f"/{experiment_id}")).status_code == 404
     assert (
         client.get(
             f"/projects/{p['project'].id}/span-annotations/{span_id}"
@@ -775,7 +823,7 @@ def test_delete_experiment_without_a_gold_annotator_deletes_its_run_users(
     p = gold_deleted_project
     experiment_id = p["virtual_gold_experiment"].id
 
-    response = client.delete(f"/experiment/{experiment_id}")
+    response = client.delete(_url(p["project"].id, f"/{experiment_id}"))
 
     assert response.status_code == 200, response.text
     assert ExperimentRead.model_validate(response.json()).gold_user_id is None
@@ -787,12 +835,12 @@ def test_delete_experiment_rejects_foreign_experiments(
 ) -> None:
     """Experiments of other projects cannot be deleted."""
     p = experiment_project
-    response = client.delete(f"/experiment/{p['foreign_experiment'].id}")
-    assert response.status_code == 403, response.text
+    response = client.delete(_url(p["project"].id, f"/{p['foreign_experiment'].id}"))
+    assert response.status_code == 404, response.text
 
 
 # ===========================================================================
-# DELETE RUN (DELETE /experiment/run/{run_id}) TESTS
+# DELETE RUN (DELETE /projects/{project_id}/experiments/runs/{run_id}) TESTS
 # ===========================================================================
 
 
@@ -805,7 +853,7 @@ def test_delete_run_deletes_its_virtual_user_and_annotations(
     experiment_id = p["experiment_with_run"].id
     run_user_id = p["run_user"].id
     run_met_id = p["run_met"].id
-    response = client.delete(f"/experiment/run/{p['run'].id}")
+    response = client.delete(_url(p["project"].id, f"/runs/{p['run'].id}"))
     assert response.status_code == 200, response.text
     result = ExperimentRead.model_validate(response.json())
 
@@ -815,7 +863,7 @@ def test_delete_run_deletes_its_virtual_user_and_annotations(
     spans_url = f"/projects/{p['project'].id}/span-annotations"
     assert client.get(f"{spans_url}/{run_met_id}").status_code == 404
     assert client.get(f"{spans_url}/{p['gold_bob'].id}").status_code == 200
-    assert _get_experiment(client, result.id).runs == []
+    assert _get_experiment(client, p["project"].id, result.id).runs == []
 
 
 def test_delete_run_deletes_only_its_own_run_user(
@@ -828,7 +876,7 @@ def test_delete_run_deletes_only_its_own_run_user(
     second_id = p["second_run"].id
     baseline_span_id = p["virtual_gold_anna"].id
 
-    response = client.delete(f"/experiment/run/{second_id}")
+    response = client.delete(_url(p["project"].id, f"/runs/{second_id}"))
 
     assert response.status_code == 200, response.text
     result = ExperimentRead.model_validate(response.json())
@@ -845,25 +893,27 @@ def test_delete_run_deletes_only_its_own_run_user(
         "VirtualGold-Baseline",
         "VirtualGold-Broken",
     }
-    assert _get_experiment(client, experiment_id).runs == result.runs
+    assert _get_experiment(client, p["project"].id, experiment_id).runs == result.runs
 
 
 def test_delete_run_rejects_unknown_runs(
     client: TestClient, experiment_project: ExperimentProject
 ) -> None:
-    """An unknown run is forbidden, like every object the user cannot see."""
-    response = client.delete("/experiment/run/999999")
-    assert response.status_code == 403, response.text
+    """An unknown run is not found."""
+    response = client.delete(_url(experiment_project["project"].id, "/runs/999999"))
+    assert response.status_code == 404, response.text
 
 
 # ===========================================================================
-# EXPORT RUN LOG (/experiment/run/{run_id}/export_log) TESTS
+# EXPORT RUN LOG (/projects/{project_id}/experiments/runs/{run_id}/export-log) TESTS
 # ===========================================================================
 
 
-def _export(client: TestClient, run_id: int, export_format: str) -> Path:
+def _export(
+    client: TestClient, project_id: int, run_id: int, export_format: str
+) -> Path:
     response = client.post(
-        f"/experiment/run/{run_id}/export_log",
+        _url(project_id, f"/runs/{run_id}/export-log"),
         params={"export_format": export_format},
     )
     assert response.status_code == 200, response.text
@@ -878,7 +928,7 @@ def test_export_run_log_as_json_is_self_contained(
     """The log names the experiment, users, prompt and holds the full version."""
     p = experiment_project
     run = p["run"]
-    path = _export(client, run.id, ExperimentRunLogFormat.JSON.value)
+    path = _export(client, p["project"].id, run.id, ExperimentRunLogFormat.JSON.value)
     log = ExperimentRunLog.model_validate(json.loads(path.read_text()))
 
     version = p["span_prompt"].versions[0]
@@ -905,7 +955,12 @@ def test_export_run_log_without_a_gold_annotator_keeps_the_scores(
     """The log of a run whose gold annotator was deleted names no gold annotator
     and holds the stored scores."""
     p = gold_deleted_project
-    path = _export(client, p["virtual_gold_run"].id, ExperimentRunLogFormat.JSON.value)
+    path = _export(
+        client,
+        p["project"].id,
+        p["virtual_gold_run"].id,
+        ExperimentRunLogFormat.JSON.value,
+    )
     log = ExperimentRunLog.model_validate(json.loads(path.read_text()))
 
     assert log.gold_user_id is None
@@ -923,14 +978,18 @@ def test_export_run_log_as_csv_has_a_row_per_scoring_and_code(
     before, one row without scores."""
     p = experiment_project
     run = p["run"]
-    before = pd.read_csv(_export(client, run.id, ExperimentRunLogFormat.CSV.value))
+    before = pd.read_csv(
+        _export(client, p["project"].id, run.id, ExperimentRunLogFormat.CSV.value)
+    )
     assert len(before) == 1
     assert bool(before["scoring"].isna().all())
     assert before["virtual_user"].tolist() == ["ExperimentB-Baseline"]
 
-    response = client.patch(f"/experiment/run/{run.id}/scores")
+    response = client.patch(_url(p["project"].id, f"/runs/{run.id}/scores"))
     assert response.status_code == 200, response.text
-    after = pd.read_csv(_export(client, run.id, ExperimentRunLogFormat.CSV.value))
+    after = pd.read_csv(
+        _export(client, p["project"].id, run.id, ExperimentRunLogFormat.CSV.value)
+    )
     assert list(zip(after["scoring"], after["code_name"])) == [
         (scoring.value, code_name)
         for scoring in AgreementScoring
@@ -952,13 +1011,15 @@ def test_export_run_log_as_csv_has_a_row_per_scoring_and_code(
 def test_export_run_log_rejects_unknown_formats_and_runs(
     client: TestClient, experiment_project: ExperimentProject
 ) -> None:
-    """An unknown format is 422, an unknown run 403."""
+    """An unknown format is 422, an unknown run 404."""
     run = experiment_project["run"]
     response = client.post(
-        f"/experiment/run/{run.id}/export_log", params={"export_format": "xml"}
+        _url(experiment_project["project"].id, f"/runs/{run.id}/export-log"),
+        params={"export_format": "xml"},
     )
     assert response.status_code == 422, response.text
     response = client.post(
-        "/experiment/run/999999/export_log", params={"export_format": "json"}
+        _url(experiment_project["project"].id, "/runs/999999/export-log"),
+        params={"export_format": "json"},
     )
-    assert response.status_code == 403, response.text
+    assert response.status_code == 404, response.text

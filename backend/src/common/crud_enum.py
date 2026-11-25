@@ -18,21 +18,12 @@ from core.prompt.prompt_version_crud import (
 from core.tag.tag_crud import crud_tag
 from core.user.user_crud import crud_user
 from modules.classifier.classifier_crud import crud_classifier
-from modules.concept_over_time_analysis.cota_crud import (
-    crud_cota,
-)
-from modules.experiment.experiment_crud import crud_experiment
-from modules.experiment.experiment_run_crud import crud_experiment_run
 from modules.perspectives.aspect_crud import crud_aspect
 from modules.perspectives.cluster_crud import crud_cluster
 from modules.perspectives.document_aspect_crud import crud_document_aspect
 from modules.tag_recommendation.tag_recommendation_crud import (
     crud_tag_recommendation_link,
 )
-from modules.timeline_analysis.timeline_analysis_crud import (
-    crud_timeline_analysis,
-)
-from modules.whiteboard.whiteboard_crud import crud_whiteboard
 
 
 class Crud(Enum):
@@ -41,10 +32,7 @@ class Crud(Enum):
     CLASSIFIER = crud_classifier
     CLUSTER = crud_cluster
     CODE = crud_code
-    COTA_ANALYSIS = crud_cota
     DOCUMENT_ASPECT = crud_document_aspect
-    EXPERIMENT = crud_experiment
-    EXPERIMENT_RUN = crud_experiment_run
     TAG = crud_tag
     TAG_RECOMMENDATION = crud_tag_recommendation_link
     PROJECT = crud_project
@@ -56,9 +44,7 @@ class Crud(Enum):
     SPAN_ANNOTATION = crud_span_anno
     SPAN_GROUP = crud_span_group
     SPAN_TEXT = crud_span_text
-    TIMELINE_ANALYSIS = crud_timeline_analysis
     USER = crud_user
-    WHITEBOARD = crud_whiteboard
     WORD_FREQUENCY = crud_word_frequency
 
 

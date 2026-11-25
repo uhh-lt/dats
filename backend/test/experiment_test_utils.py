@@ -109,9 +109,9 @@ def _create_experiment(
 ) -> ExperimentORM:
     return crud_experiment.create(
         db=db,
+        project_id=project.id,
         create_dto=ExperimentCreateIntern(
             name=name,
-            project_id=project.id,
             task_type=TaskType.ANNOTATION,
             sdoc_ids=[sdoc.id],
             code_ids=[code.id],
@@ -135,8 +135,8 @@ def _create_run(
     )
     run = crud_experiment_run.create(
         db=db,
+        project_id=experiment.project_id,
         create_dto=ExperimentRunCreateIntern(
-            project_id=experiment.project_id,
             experiment_id=experiment.id,
             name=name,
             prompt_version_id=prompt.versions[0].id,
@@ -278,7 +278,9 @@ def create_run_user_project(
 
     # the stored scores of the "Baseline" runs
     for run in (human_gold_run, virtual_gold_run):
-        ExperimentService().store_run_scores(db=db, run_id=run.id)
+        ExperimentService().store_run_scores(
+            db=db, project_id=project.id, run_id=run.id
+        )
 
     db.commit()
     return {

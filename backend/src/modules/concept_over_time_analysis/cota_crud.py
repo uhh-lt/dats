@@ -7,11 +7,11 @@ from modules.concept_over_time_analysis.cota_dto import (
 from modules.concept_over_time_analysis.cota_orm import (
     ConceptOverTimeAnalysisORM,
 )
-from repos.db.crud_base import SQLCRUDBase
+from repos.db.project_crud_base import ProjectCRUDBase
 
 
 class CRUDConceptOverTimeAnalysis(
-    SQLCRUDBase[ConceptOverTimeAnalysisORM, COTACreateIntern, COTAUpdateIntern]
+    ProjectCRUDBase[ConceptOverTimeAnalysisORM, COTACreateIntern, COTAUpdateIntern]
 ):
     ### READ OPERATIONS ###
 
@@ -30,13 +30,13 @@ class CRUDConceptOverTimeAnalysis(
     ### OTHER OPERATIONS ###
 
     def duplicate_by_id(
-        self, db: Session, *, cota_id: int
+        self, db: Session, *, project_id: int, cota_id: int
     ) -> ConceptOverTimeAnalysisORM:
-        db_obj = self.read(db=db, id=cota_id)
+        db_obj = self.read(db=db, project_id=project_id, id=cota_id)
         return self.create(
             db=db,
+            project_id=project_id,
             create_dto=COTACreateIntern(
-                project_id=db_obj.project_id,
                 name=db_obj.name + " (Copy)",
                 concepts=db_obj.concepts,
                 timeline_settings=db_obj.timeline_settings,

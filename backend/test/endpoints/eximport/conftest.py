@@ -495,10 +495,10 @@ def experiment_eximport_projects(
     # 3) the experiments and the runs of Stage1
     stage1, stage2 = crud_experiment.create_multi(
         db=db,
+        project_id=project.id,
         create_dtos=[
             ExperimentCreateIntern(
                 name="Stage1",
-                project_id=project.id,
                 task_type=TaskType.ANNOTATION,
                 sdoc_ids=[sdoc_a.id, sdoc_b.id],
                 code_ids=[code_claim.id, code_evidence.id],
@@ -506,7 +506,6 @@ def experiment_eximport_projects(
             ),
             ExperimentCreateIntern(
                 name="Stage2",
-                project_id=project.id,
                 task_type=TaskType.SENTENCE_ANNOTATION,
                 sdoc_ids=[sdoc_a.id],
                 code_ids=[code_claim.id],
@@ -516,9 +515,9 @@ def experiment_eximport_projects(
     )
     run1, run2 = crud_experiment_run.create_multi(
         db=db,
+        project_id=stage1.project_id,
         create_dtos=[
             ExperimentRunCreateIntern(
-                project_id=stage1.project_id,
                 experiment_id=stage1.id,
                 name=name,
                 prompt_version_id=version.id,
@@ -536,6 +535,7 @@ def experiment_eximport_projects(
     )
     crud_experiment_run.update_multi(
         db=db,
+        project_id=project.id,
         ids=[run1.id, run2.id],
         update_dtos=[
             ExperimentRunUpdateIntern(

@@ -271,7 +271,7 @@ class WhiteboardBaseDTO(BaseModel):
 
 # Properties for creation
 class WhiteboardCreate(WhiteboardBaseDTO):
-    project_id: int = Field(description="Project the Whiteboard belongs to")
+    pass
 
 
 class WhiteboardCreateIntern(WhiteboardCreate):

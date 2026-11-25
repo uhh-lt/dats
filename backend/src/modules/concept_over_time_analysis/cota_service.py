@@ -10,6 +10,7 @@ from modules.concept_over_time_analysis.cota_crud import crud_cota
 from modules.concept_over_time_analysis.cota_dto import (
     COTACreateIntern,
     COTARead,
+    COTARefinementHyperparameters,
     COTARefinementJobInput,
     COTASentence,
     COTASentenceID,
@@ -25,15 +26,15 @@ class COTAService(metaclass=SingletonMeta):
         cls.js = JobService()
         return super(COTAService, cls).__new__(cls)
 
-    def create(self, db: Session, cota_create: COTACreateIntern) -> COTARead:
-        db_obj = crud_cota.create(db=db, create_dto=cota_create)
+    def create(
+        self, *, db: Session, project_id: int, cota_create: COTACreateIntern
+    ) -> COTARead:
+        db_obj = crud_cota.create(db=db, project_id=project_id, create_dto=cota_create)
 
         # initialize the date metadata if possible
         project_metadata = [
             ProjectMetadataRead.model_validate(pm)
-            for pm in crud_project_meta.read_by_project(
-                db=db, project_id=cota_create.project_id
-            )
+            for pm in crud_project_meta.read_by_project(db=db, project_id=project_id)
         ]
         project_metadata = [
             pm
@@ -43,6 +44,7 @@ class COTAService(metaclass=SingletonMeta):
         if len(project_metadata) > 0:
             db_obj = self.update(
                 db=db,
+                project_id=project_id,
                 cota_id=db_obj.id,
                 cota_update=COTAUpdate(
                     timeline_settings=COTATimelineSettings(
@@ -57,11 +59,10 @@ class COTAService(metaclass=SingletonMeta):
         self,
         *,
         db: Session,
+        project_id: int,
         cota_id: int,
         cota_update: COTAUpdate,
     ) -> COTARead:
-        # make sure that cota with cota_id exists
-        crud_cota.read(db=db, id=cota_id)
 
         update_data = cota_update.model_dump(
             exclude={
@@ -89,7 +90,9 @@ class COTAService(metaclass=SingletonMeta):
         update_dto_as_in_db = COTAUpdateIntern(**update_data)
 
         # update the cota in db
-        db_obj = crud_cota.update(db=db, id=cota_id, update_dto=update_dto_as_in_db)
+        db_obj = crud_cota.update(
+            db=db, project_id=project_id, id=cota_id, update_dto=update_dto_as_in_db
+        )
 
         # return the results
         return COTARead.model_validate(db_obj)
@@ -98,13 +101,13 @@ class COTAService(metaclass=SingletonMeta):
         self,
         *,
         db: Session,
+        project_id: int,
         cota_id: int,
     ) -> COTARead:
-        # make sure that cota with cota_id exists
-        crud_cota.read(db=db, id=cota_id)
         # reset the search space & refinement job
         db_obj = crud_cota.update(
             db=db,
+            project_id=project_id,
             id=cota_id,
             update_dto=COTAUpdateIntern(
                 search_space=[],
@@ -118,11 +121,12 @@ class COTAService(metaclass=SingletonMeta):
         self,
         *,
         db: Session,
+        project_id: int,
         cota_id: int,
         cota_sentence_ids: list[COTASentenceID],
         concept_id: str | None = None,
     ) -> COTARead:  # noqa: F821
-        db_obj = crud_cota.read(db=db, id=cota_id)
+        db_obj = crud_cota.read(db=db, project_id=project_id, id=cota_id)
         cota = COTARead.model_validate(db_obj)
 
         # create map
@@ -142,6 +146,7 @@ class COTAService(metaclass=SingletonMeta):
         # update the cota in db
         db_obj = crud_cota.update(
             db=db,
+            project_id=project_id,
             id=cota_id,
             update_dto=COTAUpdateIntern(
                 search_space=search_space,
@@ -155,10 +160,11 @@ class COTAService(metaclass=SingletonMeta):
         self,
         *,
         db: Session,
+        project_id: int,
         cota_id: int,
         cota_sentence_ids: list[COTASentenceID],
     ) -> COTARead:
-        db_obj = crud_cota.read(db=db, id=cota_id)
+        db_obj = crud_cota.read(db=db, project_id=project_id, id=cota_id)
         cota = COTARead.model_validate(db_obj)
 
         # create map
@@ -178,6 +184,7 @@ class COTAService(metaclass=SingletonMeta):
         # update the cota in db
         db_obj = crud_cota.update(
             db=db,
+            project_id=project_id,
             id=cota_id,
             update_dto=COTAUpdateIntern(
                 search_space=search_space,
@@ -191,21 +198,26 @@ class COTAService(metaclass=SingletonMeta):
         self,
         *,
         db: Session,
-        payload: COTARefinementJobInput,
+        project_id: int,
+        cota_id: int,
+        hyperparams: COTARefinementHyperparameters,
     ) -> COTARead:
-        # make sure the cota exists
-        crud_cota.read(db=db, id=payload.cota_id)
+        # make sure the cota exists in the project
+        crud_cota.read(db=db, project_id=project_id, id=cota_id)
 
         # start the refinement job
         job = self.js.start_job(
             job_type="cota_refinement",
-            payload=payload,
+            payload=COTARefinementJobInput(
+                project_id=project_id, cota_id=cota_id, hyperparams=hyperparams
+            ),
         )
 
         # update last refinement job id
         db_obj = crud_cota.update(
             db=db,
-            id=payload.cota_id,
+            project_id=project_id,
+            id=cota_id,
             update_dto=COTAUpdateIntern(
                 last_refinement_job_id=job.get_id(),
             ),

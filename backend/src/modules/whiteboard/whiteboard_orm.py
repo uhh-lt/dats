@@ -5,6 +5,7 @@ from sqlalchemy import (
     DateTime,
     ForeignKey,
     Integer,
+    PrimaryKeyConstraint,
     String,
     UniqueConstraint,
     func,
@@ -20,7 +21,8 @@ if TYPE_CHECKING:
 
 
 class WhiteboardORM(ORMBase):
-    id: Mapped[int] = mapped_column(Integer, primary_key=True, index=True)
+    # the primary key is (project_id, id), see __table_args__
+    id: Mapped[int] = mapped_column(Integer, autoincrement=True, index=True)
     created: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), server_default=func.now(), index=True
     )
@@ -44,15 +46,12 @@ class WhiteboardORM(ORMBase):
         Integer,
         ForeignKey("project.id", ondelete="CASCADE"),
         nullable=False,
-        index=True,
     )
     project: Mapped["ProjectORM"] = relationship(
         "ProjectORM", back_populates="whiteboards"
     )
 
     __table_args__ = (
+        PrimaryKeyConstraint("project_id", "id", name="whiteboard_pkey"),
         UniqueConstraint("project_id", "id", name="UC_whiteboard_project_id_id"),
     )
-
-    def get_project_id(self) -> int:
-        return self.project_id

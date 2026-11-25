@@ -33,9 +33,9 @@ class WhiteboardService(metaclass=SingletonMeta):
         return super(WhiteboardService, cls).__new__(cls)
 
     def read_whiteboard_data(
-        self, *, db: Session, whiteboard_id: int
+        self, *, db: Session, project_id: int, whiteboard_id: int
     ) -> WhiteboardData:
-        db_obj = crud_whiteboard.read(db=db, id=whiteboard_id)
+        db_obj = crud_whiteboard.read(db=db, project_id=project_id, id=whiteboard_id)
         whiteboard = WhiteboardRead.model_validate(db_obj)
 
         # group nodes by their type

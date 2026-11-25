@@ -37,12 +37,16 @@ from modules.classifier.classifier_orm import (
     ClassifierORM,
     ClassifierTagLinkTable,
 )
+from modules.concept_over_time_analysis.cota_orm import ConceptOverTimeAnalysisORM
 from modules.experiment.experiment_orm import ExperimentORM, ExperimentRunORM
 from modules.perspectives.aspect_orm import AspectORM
 from modules.perspectives.cluster_orm import ClusterORM
 from modules.perspectives.document_aspect_orm import DocumentAspectORM
 from modules.perspectives.document_cluster_orm import DocumentClusterORM
 from modules.tag_recommendation.tag_recommendation_orm import TagRecommendationLinkORM
+from modules.timeline_analysis.timeline_analysis_enum import TimelineAnalysisType
+from modules.timeline_analysis.timeline_analysis_orm import TimelineAnalysisORM
+from modules.whiteboard.whiteboard_orm import WhiteboardORM
 from systems.artefact_system.source_document_step_status_orm import (
     SourceDocumentStepStatusORM,
 )
@@ -101,6 +105,9 @@ class TenantRows(TypedDict):
       "Child cluster <p>"; the document has a document aspect and is in the
       cluster
     - a tag recommendation of "Tag <p>" for the document
+    - the analyses without project-owned parent: whiteboard "Whiteboard <p>",
+      timeline analysis "Timeline <p>" (documents) and concept over time
+      analysis "COTA <p>", each empty
 
     `<p>` is the project id.
     """
@@ -141,6 +148,9 @@ class TenantRows(TypedDict):
     document_aspect: DocumentAspectORM
     document_cluster: DocumentClusterORM
     tag_recommendation: TagRecommendationLinkORM
+    whiteboard: WhiteboardORM
+    timeline_analysis: TimelineAnalysisORM
+    cota: ConceptOverTimeAnalysisORM
 
 
 T = TypeVar("T")
@@ -529,6 +539,16 @@ def create_tenant_rows(
         "document_aspect": document_aspect,
         "document_cluster": document_cluster,
         "tag_recommendation": tag_recommendation,
+        "whiteboard": _add(db, WhiteboardORM(title=f"Whiteboard {p}", project_id=p)),
+        "timeline_analysis": _add(
+            db,
+            TimelineAnalysisORM(
+                name=f"Timeline {p}",
+                timeline_analysis_type=TimelineAnalysisType.DOCUMENT,
+                project_id=p,
+            ),
+        ),
+        "cota": _add(db, ConceptOverTimeAnalysisORM(name=f"COTA {p}", project_id=p)),
     }
 
 

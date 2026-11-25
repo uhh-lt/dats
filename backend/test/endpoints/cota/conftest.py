@@ -32,7 +32,8 @@ def project_with_cota(db_session, test_project) -> ProjectWithCota:
     """
     cota = COTAService().create(
         db=db_session,
-        cota_create=COTACreateIntern(name="Test COTA", project_id=test_project.id),
+        project_id=test_project.id,
+        cota_create=COTACreateIntern(name="Test COTA"),
     )
     db_session.commit()
     db_session.refresh(test_project)
@@ -54,7 +55,8 @@ def featureless_project_with_cota(db_session, test_user: UserORM) -> ProjectWith
     project = create_featureless_project(db_session, test_user)["project"]
     cota = COTAService().create(
         db=db_session,
-        cota_create=COTACreateIntern(name="Featureless COTA", project_id=project.id),
+        project_id=project.id,
+        cota_create=COTACreateIntern(name="Featureless COTA"),
     )
     db_session.commit()
     return {"project": project, "cota": cota}
@@ -75,9 +77,8 @@ def embedded_cota(
     )
     cota = COTAService().create(
         db=db_session,
-        cota_create=COTACreateIntern(
-            name="Embedded COTA", project_id=project["project"].id
-        ),
+        project_id=project["project"].id,
+        cota_create=COTACreateIntern(name="Embedded COTA"),
     )
     db_session.commit()
     concepts = [
