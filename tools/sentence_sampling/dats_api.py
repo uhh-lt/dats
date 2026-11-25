@@ -107,7 +107,7 @@ class DATSAPI:
         return self._get(f"user/{project_id}/user")
 
     def read_project_codes(self, project_id: int) -> list[dict[str, Any]]:
-        return self._get(f"code/project/{project_id}")
+        return self._get(f"projects/{project_id}/codes")
 
     # PROJECT METADATA
 

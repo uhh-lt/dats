@@ -385,6 +385,7 @@ def __apply_tags_to_documents(api: DATSAPI, project: dict, df: pd.DataFrame) -> 
                 logger.warning(f"Invalid Tag ID {tag_id_str}!")
                 continue
         api.bulk_apply_tags(
+            proj_id=project["id"],
             tag_ids=tag_ids,
             sdoc_ids=list(sdoc_ids),
         )

@@ -344,13 +344,12 @@ class DATSAPI:
 
     def create_tag(self, name: str, description: str, color: str, proj_id: int):
         r = requests.put(
-            self.BASE_PATH + "tag",
+            self.BASE_PATH + f"projects/{proj_id}/tags",
             data=json.dumps(
                 {
                     "name": name,
                     "description": description,
                     "color": color,
-                    "project_id": proj_id,
                 }
             ),
             headers={
@@ -365,7 +364,7 @@ class DATSAPI:
 
     def read_all_tags(self, proj_id: int):
         r = requests.get(
-            self.BASE_PATH + f"tag/project/{proj_id}",
+            self.BASE_PATH + f"projects/{proj_id}/tags",
             headers={"Authorization": f"Bearer {self.access_token}"},
         )
         r.raise_for_status()
@@ -379,13 +378,13 @@ class DATSAPI:
         except ValueError:
             return None
 
-    def bulk_apply_tags(self, sdoc_ids: list[int], tag_ids: list[int]):
+    def bulk_apply_tags(self, proj_id: int, sdoc_ids: list[int], tag_ids: list[int]):
         if len(sdoc_ids) == 0 or len(tag_ids) == 0:
             logger.info(f"Could not apply tags {tag_ids} to documents {sdoc_ids}!")
             return
 
-        r = requests.patch(
-            self.BASE_PATH + "tag/bulk/link",
+        r = requests.put(
+            self.BASE_PATH + f"projects/{proj_id}/tags/bulk/source-documents",
             data=json.dumps({"source_document_ids": sdoc_ids, "tag_ids": tag_ids}),
             headers={
                 "Authorization": f"Bearer {self.access_token}",
@@ -568,7 +567,7 @@ if __name__ == "__main__":
     logger.info("got all sdocs ids", sdoc_ids)
 
     # bulk apply tags
-    dats.bulk_apply_tags(sdoc_ids=sdoc_ids, tag_ids=[tag["id"]])
+    dats.bulk_apply_tags(proj_id=project["id"], sdoc_ids=sdoc_ids, tag_ids=[tag["id"]])
 
     # read all sdocs by tags
     sdoc_ids = dats.read_all_sdoc_ids_by_tags(proj_id=project["id"], tags=[tag["id"]])
