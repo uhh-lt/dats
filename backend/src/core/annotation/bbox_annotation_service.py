@@ -128,6 +128,7 @@ class BBoxAnnotationService(metaclass=SingletonMeta):
         # 4) copy the memos of the source annotations onto their copies
         copy_annotation_source_memos(
             db=db,
+            project_id=project_id,
             attached_object_type=AttachedObjectType.bbox_annotation,
             sources=[source for _, source in annotations],
             copies=db_objs,

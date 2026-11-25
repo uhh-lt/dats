@@ -504,8 +504,11 @@ def test_annotation_job_stores_a_reasoning_memo_per_annotation_only_when_request
     assert result.annotation_count_by_code_id == _count_by_code_id(annotations)
     for annotation in annotations:
         response = client.get(
-            f"/memo/attached_obj/{attached_object_type.value}/to/{annotation.id}",
-            params={"project_id": base["project"].id},
+            f"/projects/{base['project'].id}/memos",
+            params={
+                "attached_object_type": attached_object_type.value,
+                "attached_object_id": annotation.id,
+            },
         )
         assert response.status_code == 200, response.text
         memos = [MemoRead.model_validate(memo) for memo in response.json()]

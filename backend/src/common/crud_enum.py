@@ -9,9 +9,7 @@ from core.artefacts.word_frequencies.word_frequency_crud import crud_word_freque
 from core.auth.refresh_token_crud import crud_refresh_token
 from core.code.code_crud import crud_code
 from core.doc.source_document_crud import crud_sdoc
-from core.memo.memo_crud import crud_memo
 from core.memo.memo_enum import AttachedObjectType
-from core.memo.object_handle_crud import crud_object_handle
 from core.project.project_crud import crud_project
 from core.prompt.prompt_crud import crud_prompt
 from core.prompt.prompt_version_crud import (
@@ -49,8 +47,6 @@ class Crud(Enum):
     EXPERIMENT_RUN = crud_experiment_run
     TAG = crud_tag
     TAG_RECOMMENDATION = crud_tag_recommendation_link
-    MEMO = crud_memo
-    OBJECT_HANDLE = crud_object_handle
     PROJECT = crud_project
     PROMPT = crud_prompt
     PROMPT_VERSION = crud_prompt_version
@@ -65,28 +61,6 @@ class Crud(Enum):
     WHITEBOARD = crud_whiteboard
     WORD_FREQUENCY = crud_word_frequency
 
-
-class MemoCrud(Enum):
-    PROJECT = crud_project
-    SOURCE_DOCUMENT = crud_sdoc
-    TAG = crud_tag
-    CODE = crud_code
-    SPAN_ANNOTATION = crud_span_anno
-    BBOX_ANNOTATION = crud_bbox_anno
-    SENTENCE_ANNOTATION = crud_sentence_anno
-    SPAN_GROUP = crud_span_group
-
-
-attached_object_type_to_memo_crud: dict[AttachedObjectType, MemoCrud] = {
-    AttachedObjectType.project: MemoCrud.PROJECT,
-    AttachedObjectType.source_document: MemoCrud.SOURCE_DOCUMENT,
-    AttachedObjectType.tag: MemoCrud.TAG,
-    AttachedObjectType.code: MemoCrud.CODE,
-    AttachedObjectType.span_annotation: MemoCrud.SPAN_ANNOTATION,
-    AttachedObjectType.bbox_annotation: MemoCrud.BBOX_ANNOTATION,
-    AttachedObjectType.sentence_annotation: MemoCrud.SENTENCE_ANNOTATION,
-    AttachedObjectType.span_group: MemoCrud.SPAN_GROUP,
-}
 
 attached_object_type_to_crud: dict[AttachedObjectType, Crud] = {
     AttachedObjectType.project: Crud.PROJECT,

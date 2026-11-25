@@ -246,6 +246,7 @@ def sdoc_with_memos_and_span_group(
     memos = [
         crud_memo.create_for_attached_object(
             db=db_session,
+            project_id=test_project.id,
             attached_object_id=object_id,
             attached_object_type=object_type,
             create_dto=MemoCreateIntern(
@@ -254,14 +255,16 @@ def sdoc_with_memos_and_span_group(
                 content=f"content {i}",
                 content_json='{"blocks": []}',
                 user_id=user_id,
-                project_id=test_project.id,
             ),
         )
         for i, (object_id, object_type) in enumerate(targets)
     ]
     favorite_memo_ids = {memo.id for i, memo in enumerate(memos) if i % 2 == 0}
     crud_memo.favorite_multi(
-        db=db_session, memo_ids=list(favorite_memo_ids), user_id=user_id
+        db=db_session,
+        project_id=test_project.id,
+        memo_ids=list(favorite_memo_ids),
+        user_id=user_id,
     )
     db_session.commit()
 

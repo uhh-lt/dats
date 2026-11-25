@@ -6,11 +6,13 @@ from sqlalchemy import (
     ForeignKeyConstraint,
     Index,
     Integer,
+    PrimaryKeyConstraint,
     UniqueConstraint,
 )
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 from sqlalchemy.sql.functions import coalesce
 
+from core.memo.memo_enum import AttachedObjectType
 from repos.db.orm_base import ORMBase
 
 if TYPE_CHECKING:
@@ -24,9 +26,22 @@ if TYPE_CHECKING:
     from core.project.project_orm import ProjectORM
     from core.tag.tag_orm import TagORM
 
+# the column of the object handle that refers to each type a memo can be attached to
+ATTACHED_OBJECT_TYPE_TO_HANDLE_COLUMN: dict[AttachedObjectType, str] = {
+    AttachedObjectType.source_document: "source_document_id",
+    AttachedObjectType.code: "code_id",
+    AttachedObjectType.tag: "tag_id",
+    AttachedObjectType.span_annotation: "span_annotation_id",
+    AttachedObjectType.sentence_annotation: "sentence_annotation_id",
+    AttachedObjectType.bbox_annotation: "bbox_annotation_id",
+    AttachedObjectType.span_group: "span_group_id",
+    AttachedObjectType.project: "attached_project_id",
+}
+
 
 class ObjectHandleORM(ORMBase):
-    id: Mapped[int] = mapped_column(Integer, primary_key=True, index=True)
+    # the primary key is (project_id, id), see __table_args__
+    id: Mapped[int] = mapped_column(Integer, autoincrement=True, index=True)
 
     # one to many
     attached_memos: Mapped[list["MemoORM"]] = relationship(
@@ -42,7 +57,6 @@ class ObjectHandleORM(ORMBase):
         Integer,
         ForeignKey("project.id", ondelete="CASCADE"),
         nullable=False,
-        index=True,
     )
 
     # one to one (ObjectHandle is child): exactly one attached object
@@ -98,8 +112,10 @@ class ObjectHandleORM(ORMBase):
         "TagORM", back_populates="object_handle", foreign_keys=[tag_id]
     )
 
+    # one handle per object of a project
     Index(
         "idx_for_uc_work_with_null",
+        project_id,
         coalesce(attached_project_id, 0),
         coalesce(code_id, 0),
         coalesce(source_document_id, 0),
@@ -112,6 +128,7 @@ class ObjectHandleORM(ORMBase):
     )
 
     __table_args__ = (
+        PrimaryKeyConstraint("project_id", "id", name="objecthandle_pkey"),
         CheckConstraint(
             """(
                         CASE WHEN attached_project_id IS NULL THEN 0 ELSE 1 END
@@ -185,6 +202,3 @@ class ObjectHandleORM(ORMBase):
             name="FK_objecthandle_tag_id",
         ),
     )
-
-    def get_project_id(self) -> int:
-        return self.project_id

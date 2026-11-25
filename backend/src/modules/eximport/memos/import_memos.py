@@ -94,7 +94,6 @@ def import_memos_to_proj(
 
         memo_create = MemoCreateIntern(
             uuid=memo.uuid,
-            project_id=project_id,
             user_id=user.id,
             title=memo.title,
             icon=memo.icon,
@@ -205,6 +204,7 @@ def import_memos_to_proj(
     for memo in resolved_memos:
         created_memo = crud_memo.create_for_attached_object(
             db=db,
+            project_id=project_id,
             attached_object_type=memo["attached_type"],
             attached_object_id=memo["attached_to"],
             create_dto=memo["create_dto"],
@@ -214,7 +214,12 @@ def import_memos_to_proj(
         # Restore favorites
         for email in memo["favorited_by_emails"]:
             favorite_user = project_user_emails[email]
-            crud_memo.favorite(db=db, memo_id=created_memo.id, user_id=favorite_user.id)
+            crud_memo.favorite(
+                db=db,
+                project_id=project_id,
+                memo_id=created_memo.id,
+                user_id=favorite_user.id,
+            )
 
         logger.info(f"Successfully imported memo: {created_memo.title}")
     logger.info(

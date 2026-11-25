@@ -11,11 +11,13 @@ from core.doc.source_document_orm import SourceDocumentORM
 from core.memo.memo_enum import AttachedObjectType
 from core.memo.memo_orm import MemoFavoriteLinkTable, MemoORM
 from core.memo.object_handle_orm import ObjectHandleORM
+from core.project.project_crud import crud_project
 from core.project.project_orm import ProjectORM
 from core.tag.tag_crud import crud_tag
 from core.tag.tag_orm import TagORM
 from core.user.user_crud import crud_user
 from core.user.user_orm import UserORM
+from repos.db.sql_exceptions import NoSuchElementError
 from systems.search_system.column_info import AbstractColumns
 from systems.search_system.filtering_operators import FilterOperator, FilterValueType
 from systems.search_system.grouping import (
@@ -115,12 +117,35 @@ def build_memo_subquery(db, project_id: int, user_id: int):
             ),
             func.concat(author.first_name, " ", author.last_name).label("author_label"),
         )
-        .join(handle, MemoORM.attached_to_id == handle.id)
+        .join(
+            handle,
+            and_(
+                handle.project_id == MemoORM.project_id,
+                handle.id == MemoORM.attached_to_id,
+            ),
+        )
         .join(author, author.id == MemoORM.user_id)
-        .outerjoin(span_group, span_group.id == handle.span_group_id)
-        .outerjoin(source_document, source_document.id == handle.source_document_id)
-        .outerjoin(code, code.id == handle.code_id)
-        .outerjoin(tag, tag.id == handle.tag_id)
+        .outerjoin(
+            span_group,
+            and_(
+                span_group.project_id == handle.project_id,
+                span_group.id == handle.span_group_id,
+            ),
+        )
+        .outerjoin(
+            source_document,
+            and_(
+                source_document.project_id == handle.project_id,
+                source_document.id == handle.source_document_id,
+            ),
+        )
+        .outerjoin(
+            code,
+            and_(code.project_id == handle.project_id, code.id == handle.code_id),
+        )
+        .outerjoin(
+            tag, and_(tag.project_id == handle.project_id, tag.id == handle.tag_id)
+        )
         .outerjoin(project, project.id == handle.attached_project_id)
         .outerjoin(
             favorite,
@@ -351,7 +376,10 @@ class MemoColumns(str, AbstractColumns):
             case Crud.SOURCE_DOCUMENT:
                 return crud_sdoc.read(db=db, project_id=project_id, id=object_id).name
             case Crud.PROJECT:
-                return crud.value.read(db=db, id=object_id).title
+                # a memo is attached to its own project only
+                if object_id != project_id:
+                    raise NoSuchElementError(ProjectORM, id=object_id)
+                return crud_project.read(db=db, id=project_id).title
             case Crud.SPAN_ANNOTATION | Crud.SENTENCE_ANNOTATION | Crud.BBOX_ANNOTATION:
                 return str(object_id)
             case _:
@@ -392,7 +420,9 @@ class MemoColumns(str, AbstractColumns):
                     db, name=name, project_id=project_id
                 )
             case Crud.PROJECT:
-                found = crud.value.read_by_title(db, title=name)  # type: ignore
+                # a memo is attached to its own project only
+                project = crud_project.read(db=db, id=project_id)
+                found = project if project.title == name else None
             case Crud.SPAN_GROUP:
                 found = crud_span_group.read_by_name(
                     db, project_id=project_id, name=name

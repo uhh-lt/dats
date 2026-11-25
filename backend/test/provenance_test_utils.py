@@ -118,8 +118,11 @@ def get_memos(
     client: TestClient, kind: AnnotationKind, project_id: int, annotation_id: int
 ) -> list[MemoRead]:
     response = client.get(
-        f"/memo/attached_obj/{ATTACHED_OBJECT_TYPE[kind].value}/to/{annotation_id}",
-        params={"project_id": project_id},
+        f"/projects/{project_id}/memos",
+        params={
+            "attached_object_type": ATTACHED_OBJECT_TYPE[kind].value,
+            "attached_object_id": annotation_id,
+        },
     )
     assert response.status_code == 200, response.text
     return [MemoRead.model_validate(memo) for memo in response.json()]
@@ -415,6 +418,7 @@ def create_provenance_project(
         source_memos = [
             crud_memo.create_for_attached_object(
                 db=db_session,
+                project_id=project.id,
                 attached_object_id=source_id,
                 attached_object_type=ATTACHED_OBJECT_TYPE[kind],
                 create_dto=MemoCreateIntern(
@@ -424,7 +428,6 @@ def create_provenance_project(
                     content=f"{title} content",
                     content_json='{"blocks": []}',
                     user_id=author.id,
-                    project_id=project.id,
                 ),
             )
             for title, icon, author in [

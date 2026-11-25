@@ -1,85 +1,18 @@
 from sqlalchemy.orm import Session
 
-from core.annotation.bbox_annotation_orm import BBoxAnnotationORM
-from core.annotation.sentence_annotation_orm import SentenceAnnotationORM
-from core.annotation.span_annotation_orm import SpanAnnotationORM
-from core.annotation.span_group_orm import SpanGroupORM
-from core.code.code_orm import CodeORM
-from core.doc.source_document_orm import SourceDocumentORM
 from core.memo.memo_crud import crud_memo
 from core.memo.memo_dto import MemoInDB, MemoRead
 from core.memo.memo_enum import AttachedObjectType
 from core.memo.memo_orm import MemoORM
-from core.memo.object_handle_orm import ObjectHandleORM
-from core.project.project_orm import ProjectORM
-from core.tag.tag_orm import TagORM
-
-
-def get_object_memos(
-    db_obj: (
-        SourceDocumentORM
-        | TagORM
-        | CodeORM
-        | ProjectORM
-        | BBoxAnnotationORM
-        | SentenceAnnotationORM
-        | SpanAnnotationORM
-        | SpanGroupORM
-    ),
-    db: Session,
-    user_id: int,
-) -> list[MemoRead]:
-    if db_obj.object_handle is None:
-        return []
-
-    memo_as_in_db_dtos = [
-        MemoInDB.model_validate(memo_db_obj)
-        for memo_db_obj in db_obj.object_handle.attached_memos
-    ]
-    favorite_ids = crud_memo.read_favorite_ids(
-        db=db, memo_ids=[memo.id for memo in memo_as_in_db_dtos], user_id=user_id
-    )
-
-    object_types = {
-        SourceDocumentORM: AttachedObjectType.source_document,
-        TagORM: AttachedObjectType.tag,
-        CodeORM: AttachedObjectType.code,
-        ProjectORM: AttachedObjectType.project,
-        BBoxAnnotationORM: AttachedObjectType.bbox_annotation,
-        SpanAnnotationORM: AttachedObjectType.span_annotation,
-        SentenceAnnotationORM: AttachedObjectType.sentence_annotation,
-        SpanGroupORM: AttachedObjectType.span_group,
-    }
-
-    memos = [
-        MemoRead(
-            **memo_as_in_db_dto.model_dump(exclude={"attached_to", "is_favorite"}),
-            is_favorite=memo_as_in_db_dto.id in favorite_ids,
-            attached_object_id=db_obj.id,
-            attached_object_type=object_types[type(db_obj)],
-        )
-        for memo_as_in_db_dto in memo_as_in_db_dtos
-    ]
-
-    return memos
-
-
-# the ObjectHandle column that refers to each type a memo can be attached to
-_HANDLE_COLUMN_TO_ATTACHED_OBJECT_TYPE = {
-    "code_id": AttachedObjectType.code,
-    "span_annotation_id": AttachedObjectType.span_annotation,
-    "span_group_id": AttachedObjectType.span_group,
-    "bbox_annotation_id": AttachedObjectType.bbox_annotation,
-    "sentence_annotation_id": AttachedObjectType.sentence_annotation,
-    "source_document_id": AttachedObjectType.source_document,
-    "attached_project_id": AttachedObjectType.project,
-    "tag_id": AttachedObjectType.tag,
-}
+from core.memo.object_handle_orm import (
+    ATTACHED_OBJECT_TYPE_TO_HANDLE_COLUMN,
+    ObjectHandleORM,
+)
 
 
 def _get_attached_object(handle: ObjectHandleORM) -> tuple[int, AttachedObjectType]:
     """The id and type of the object a memo's handle refers to."""
-    for column, attached_object_type in _HANDLE_COLUMN_TO_ATTACHED_OBJECT_TYPE.items():
+    for attached_object_type, column in ATTACHED_OBJECT_TYPE_TO_HANDLE_COLUMN.items():
         object_id = getattr(handle, column)
         if object_id is not None:
             return object_id, attached_object_type
@@ -87,13 +20,15 @@ def _get_attached_object(handle: ObjectHandleORM) -> tuple[int, AttachedObjectTy
 
 
 def get_memo_read_dto_from_orm(
-    db: Session, *, db_obj: MemoORM, user_id: int | None = None
+    db: Session, *, project_id: int, db_obj: MemoORM, user_id: int | None = None
 ) -> MemoRead:
-    return get_memo_read_dtos_from_orms(db=db, db_objs=[db_obj], user_id=user_id)[0]
+    return get_memo_read_dtos_from_orms(
+        db=db, project_id=project_id, db_objs=[db_obj], user_id=user_id
+    )[0]
 
 
 def get_memo_read_dtos_from_orms(
-    db: Session, *, db_objs: list[MemoORM], user_id: int | None = None
+    db: Session, *, project_id: int, db_objs: list[MemoORM], user_id: int | None = None
 ) -> list[MemoRead]:
     """
     Build the Read DTOs of memos with a constant number of queries: the attached
@@ -101,6 +36,7 @@ def get_memo_read_dtos_from_orms(
     the favorites of the user are read in one batch.
 
     Args:
+        project_id: The project of the memos.
         db_objs: The memos.
         user_id: The requesting user, whose favorites `is_favorite` shows. Without
             one, no memo is a favorite.
@@ -110,7 +46,10 @@ def get_memo_read_dtos_from_orms(
     """
     favorite_ids = (
         crud_memo.read_favorite_ids(
-            db=db, memo_ids=[db_obj.id for db_obj in db_objs], user_id=user_id
+            db=db,
+            project_id=project_id,
+            memo_ids=[db_obj.id for db_obj in db_objs],
+            user_id=user_id,
         )
         if user_id is not None
         else set()

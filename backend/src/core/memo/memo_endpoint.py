@@ -1,16 +1,12 @@
-from uuid import uuid4
+from fastapi import Depends
 
-from fastapi import APIRouter, Depends
-
-from common.crud_enum import Crud
 from common.dats_event import DATSEvent
-from common.dependencies import DBSession, get_current_user
+from common.dependencies import DBSession
+from common.project_router import project_router
 from core.auth.authz_user import AuthzUser
 from core.memo.memo_crud import crud_memo
 from core.memo.memo_dto import (
     MemoCreate,
-    MemoCreateIntern,
-    MemoInDB,
     MemoRead,
     MemoUpdate,
     MemoUpdateBulk,
@@ -21,13 +17,10 @@ from core.memo.memo_service import MemoService
 from core.memo.memo_utils import (
     get_memo_read_dto_from_orm,
     get_memo_read_dtos_from_orms,
-    get_object_memos,
 )
 from systems.websocket_system.websocket_dependency import WebsocketEmitter
 
-router = APIRouter(
-    prefix="/memo", dependencies=[Depends(get_current_user)], tags=["memo", "mcp"]
-)
+router = project_router("/memos", tags=["memo", "mcp"])
 
 
 # --- create operations
@@ -36,48 +29,48 @@ router = APIRouter(
 @router.put(
     "",
     response_model=MemoRead,
-    summary="Adds a Memo to the Attached Object with the given ID if it exists",
+    summary="Creates a Memo attached to the given object and returns it.",
 )
 def create_memo(
     *,
     db: DBSession,
     project_id: int,
-    attached_object_id: int,
-    attached_object_type: AttachedObjectType,
     memo: MemoCreate,
     authz_user: AuthzUser = Depends(),
     ws: WebsocketEmitter = Depends(),
 ) -> MemoRead:
-    authz_user.assert_in_project(project_id)
-    MemoService().read_attached_object(
-        db=db,
-        project_id=project_id,
-        attached_object_type=attached_object_type,
-        attached_object_id=attached_object_id,
-    )
-
-    db_obj = crud_memo.create_for_attached_object(
-        db=db,
-        attached_object_id=attached_object_id,
-        attached_object_type=attached_object_type,
-        create_dto=MemoCreateIntern(
-            **memo.model_dump(),
-            user_id=authz_user.user.id,
-            project_id=project_id,
-            uuid=str(uuid4()),
-        ),
-    )
-    memo_as_in_db_dto = MemoInDB.model_validate(db_obj)
-    result = MemoRead(
-        **memo_as_in_db_dto.model_dump(exclude={"attached_to"}),
-        attached_object_id=attached_object_id,
-        attached_object_type=attached_object_type,
+    result = MemoService().create(
+        db=db, project_id=project_id, user_id=authz_user.user.id, create_dto=memo
     )
     ws.emit_to_project(DATSEvent.MEMO_CREATED, result, project_id=project_id)
     return result
 
 
 # --- read operations
+
+
+@router.get(
+    "",
+    response_model=list[MemoRead],
+    summary="Returns the Memos of the Project, optionally filtered by the attached object (attached_object_id needs attached_object_type) and the author (user_id).",
+)
+def get_by_project(
+    *,
+    db: DBSession,
+    project_id: int,
+    attached_object_type: AttachedObjectType | None = None,
+    attached_object_id: int | None = None,
+    user_id: int | None = None,
+    authz_user: AuthzUser = Depends(),
+) -> list[MemoRead]:
+    return MemoService().read_by_project(
+        db=db,
+        project_id=project_id,
+        user_id=authz_user.user.id,
+        attached_object_type=attached_object_type,
+        attached_object_id=attached_object_id,
+        author_id=user_id,
+    )
 
 
 @router.get(
@@ -92,106 +85,50 @@ def get_recent_memos(
     limit: int = 10,
     authz_user: AuthzUser = Depends(),
 ) -> list[MemoRead]:
-    authz_user.assert_in_project(project_id=project_id)
-
     db_objs = crud_memo.read_recents(
-        db=db, user_id=authz_user.user.id, project_id=project_id, limit=limit
+        db=db, project_id=project_id, user_id=authz_user.user.id, limit=limit
     )
     return get_memo_read_dtos_from_orms(
-        db=db, db_objs=db_objs, user_id=authz_user.user.id
+        db=db, project_id=project_id, db_objs=db_objs, user_id=authz_user.user.id
     )
 
 
 @router.get(
     "/{memo_id}",
     response_model=MemoRead,
-    summary="Returns the Memo with the given ID if it exists",
+    summary="Returns the Memo with the given ID.",
 )
 def get_by_id(
     *,
     db: DBSession,
+    project_id: int,
     memo_id: int,
     authz_user: AuthzUser = Depends(),
 ) -> MemoRead:
-    authz_user.assert_in_same_project_as(Crud.MEMO, memo_id)
-
-    db_obj = crud_memo.read(db=db, id=memo_id)
-    return get_memo_read_dto_from_orm(db=db, db_obj=db_obj, user_id=authz_user.user.id)
-
-
-@router.get(
-    "/attached_obj/{attached_obj_type}/to/{attached_obj_id}",
-    response_model=list[MemoRead],
-    summary="Returns all Memos attached to the object if it exists",
-)
-def get_memos_by_attached_object_id(
-    *,
-    db: DBSession,
-    project_id: int,
-    attached_obj_id: int,
-    attached_obj_type: AttachedObjectType,
-    authz_user: AuthzUser = Depends(),
-) -> list[MemoRead]:
-    authz_user.assert_in_project(project_id)
-    attached_object = MemoService().read_attached_object(
-        db=db,
-        project_id=project_id,
-        attached_object_type=attached_obj_type,
-        attached_object_id=attached_obj_id,
+    db_obj = crud_memo.read(db=db, project_id=project_id, id=memo_id)
+    return get_memo_read_dto_from_orm(
+        db=db, project_id=project_id, db_obj=db_obj, user_id=authz_user.user.id
     )
-
-    return get_object_memos(db_obj=attached_object, db=db, user_id=authz_user.user.id)
 
 
 # --- update operations
 
 
 @router.patch(
-    "/{memo_id}",
-    response_model=MemoRead,
-    summary="Updates the Memo with the given ID if it exists",
-)
-def update_by_id(
-    *,
-    db: DBSession,
-    memo_id: int,
-    memo: MemoUpdate,
-    authz_user: AuthzUser = Depends(),
-    ws: WebsocketEmitter = Depends(),
-) -> MemoRead:
-    authz_user.assert_in_same_project_as(Crud.MEMO, memo_id)
-
-    result = MemoService().update(
-        db=db, user_id=authz_user.user.id, id=memo_id, update_dto=memo
-    )
-
-    # shared field changes are visible project-wide (which already reaches the
-    # requesting user); only send a user-scoped event when there are exclusively
-    # favorite changes, so we never emit twice.
-    if memo.shared_fields_set():
-        ws.emit_to_project(DATSEvent.MEMO_UPDATED, result, project_id=result.project_id)
-    elif memo.is_favorite is not None:
-        ws.emit_to_user(DATSEvent.MEMO_UPDATED, result, user_id=authz_user.user.id)
-    return result
-
-
-@router.patch(
-    "/bulk/update",
+    "/bulk",
     response_model=list[MemoRead],
-    summary="Updates Memos in Bulk",
+    summary="Updates the Memos with the given IDs.",
 )
 def update_memos_bulk(
     *,
     db: DBSession,
+    project_id: int,
     memos: list[MemoUpdateBulk],
     authz_user: AuthzUser = Depends(),
     ws: WebsocketEmitter = Depends(),
 ) -> list[MemoRead]:
-    for memo in memos:
-        authz_user.assert_in_same_project_as(Crud.MEMO, memo.memo_id)
-
     results = MemoService().update_multi(
-        db=db, user_id=authz_user.user.id, update_dtos=memos
+        db=db, project_id=project_id, user_id=authz_user.user.id, update_dtos=memos
     )
     if not results:
         return results
@@ -199,14 +136,45 @@ def update_memos_bulk(
     # shared field changes are visible project-wide (which already reaches the
     # requesting user); only send a user-scoped event when there are exclusively
     # favorite changes, so we never emit twice.
-    has_shared_changes = any(m.shared_fields_set() for m in memos)
-    if has_shared_changes:
-        ws.emit_dtos_to_projects(DATSEvent.MEMO_UPDATED_BATCH, results)
+    if any(m.shared_fields_set() for m in memos):
+        ws.emit_to_project(DATSEvent.MEMO_UPDATED_BATCH, results, project_id=project_id)
     elif any(m.is_favorite is not None for m in memos):
         ws.emit_to_user(
             DATSEvent.MEMO_UPDATED_BATCH, results, user_id=authz_user.user.id
         )
     return results
+
+
+@router.patch(
+    "/{memo_id}",
+    response_model=MemoRead,
+    summary="Updates the Memo with the given ID.",
+)
+def update_by_id(
+    *,
+    db: DBSession,
+    project_id: int,
+    memo_id: int,
+    memo: MemoUpdate,
+    authz_user: AuthzUser = Depends(),
+    ws: WebsocketEmitter = Depends(),
+) -> MemoRead:
+    result = MemoService().update(
+        db=db,
+        project_id=project_id,
+        user_id=authz_user.user.id,
+        id=memo_id,
+        update_dto=memo,
+    )
+
+    # shared field changes are visible project-wide (which already reaches the
+    # requesting user); only send a user-scoped event when there are exclusively
+    # favorite changes, so we never emit twice.
+    if memo.shared_fields_set():
+        ws.emit_to_project(DATSEvent.MEMO_UPDATED, result, project_id=project_id)
+    elif memo.is_favorite is not None:
+        ws.emit_to_user(DATSEvent.MEMO_UPDATED, result, user_id=authz_user.user.id)
+    return result
 
 
 @router.post(
@@ -217,67 +185,64 @@ def update_memos_bulk(
 def record_recent_memo(
     *,
     db: DBSession,
+    project_id: int,
     memo_id: int,
     authz_user: AuthzUser = Depends(),
 ) -> None:
-    authz_user.assert_in_same_project_as(Crud.MEMO, memo_id)
-
-    crud_memo.update_recent(db=db, memo_id=memo_id, user_id=authz_user.user.id)
+    crud_memo.update_recent(
+        db=db, project_id=project_id, memo_id=memo_id, user_id=authz_user.user.id
+    )
 
 
 # --- delete operations
 
 
 @router.delete(
-    "/{memo_id}",
-    response_model=MemoRead,
-    summary="Removes the Memo with the given ID if it exists",
-)
-def delete_by_id(
-    *,
-    db: DBSession,
-    memo_id: int,
-    authz_user: AuthzUser = Depends(),
-    ws: WebsocketEmitter = Depends(),
-) -> MemoRead:
-    authz_user.assert_in_same_project_as(Crud.MEMO, memo_id)
-    memo = crud_memo.read(db=db, id=memo_id)
-    memo_read = get_memo_read_dto_from_orm(
-        db=db, db_obj=memo, user_id=authz_user.user.id
-    )
-    crud_memo.delete(db=db, id=memo_id)
-
-    ws.emit_to_project(DATSEvent.MEMO_DELETED, memo_read, project_id=memo.project_id)
-    return memo_read
-
-
-@router.delete(
-    "/bulk/delete",
+    "/bulk",
     response_model=list[MemoRead],
-    summary="Deletes all Memos with the given IDs.",
+    summary="Deletes the Memos with the given IDs.",
 )
 def delete_memos_bulk(
     *,
     db: DBSession,
+    project_id: int,
     memo_ids: list[int],
     authz_user: AuthzUser = Depends(),
     ws: WebsocketEmitter = Depends(),
 ) -> list[MemoRead]:
-    authz_user.assert_in_same_project_as_many(Crud.MEMO, memo_ids)
-
     results = MemoService().delete_multi(
-        db=db, user_id=authz_user.user.id, ids=memo_ids
+        db=db, project_id=project_id, user_id=authz_user.user.id, ids=memo_ids
     )
     if results:
-        ws.emit_dtos_to_projects(DATSEvent.MEMO_DELETED_BATCH, results)
+        ws.emit_to_project(DATSEvent.MEMO_DELETED_BATCH, results, project_id=project_id)
     return results
+
+
+@router.delete(
+    "/{memo_id}",
+    response_model=MemoRead,
+    summary="Deletes the Memo with the given ID.",
+)
+def delete_by_id(
+    *,
+    db: DBSession,
+    project_id: int,
+    memo_id: int,
+    authz_user: AuthzUser = Depends(),
+    ws: WebsocketEmitter = Depends(),
+) -> MemoRead:
+    result = MemoService().delete_multi(
+        db=db, project_id=project_id, user_id=authz_user.user.id, ids=[memo_id]
+    )[0]
+    ws.emit_to_project(DATSEvent.MEMO_DELETED, result, project_id=project_id)
+    return result
 
 
 # --- other operations
 
 
-@router.get(
-    "/generate_suggestion/{attached_obj_type}/{attached_obj_id}",
+@router.post(
+    "/suggest",
     response_model=str,
     summary="Generates a 1–2 sentence memo suggestion using LLM based on the attached object",
 )
@@ -285,19 +250,16 @@ def generate_memo_suggestion(
     *,
     db: DBSession,
     project_id: int,
-    attached_obj_id: int,
-    attached_obj_type: AttachedObjectType,
+    attached_object_type: AttachedObjectType,
+    attached_object_id: int,
     model: str,
-    authz_user: AuthzUser = Depends(),
 ) -> str:
-    authz_user.assert_in_project(project_id)
     attached_object = MemoService().read_attached_object(
         db=db,
         project_id=project_id,
-        attached_object_type=attached_obj_type,
-        attached_object_id=attached_obj_id,
+        attached_object_type=attached_object_type,
+        attached_object_id=attached_object_id,
     )
-
     return MemoGenerationService().generate_memo_suggestion(
         db=db, obj=attached_object, model=model
     )

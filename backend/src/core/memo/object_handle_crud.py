@@ -1,4 +1,4 @@
-from sqlalchemy import select
+from sqlalchemy import and_, select
 from sqlalchemy.dialects.postgresql import insert
 from sqlalchemy.orm import Session
 
@@ -11,49 +11,32 @@ from core.doc.source_document_orm import SourceDocumentORM
 from core.memo.memo_enum import AttachedObjectType
 from core.memo.memo_orm import MemoORM
 from core.memo.object_handle_dto import ObjectHandleCreate
-from core.memo.object_handle_orm import ObjectHandleORM
+from core.memo.object_handle_orm import (
+    ATTACHED_OBJECT_TYPE_TO_HANDLE_COLUMN,
+    ObjectHandleORM,
+)
 from core.project.project_orm import ProjectORM
 from core.tag.tag_orm import TagORM
-from repos.db.crud_base import BATCH_SIZE, SQLCRUDBase, UpdateNotAllowed
-from repos.db.sql_exceptions import NoSuchElementError
+from repos.db.crud_base import BATCH_SIZE, UpdateNotAllowed
+from repos.db.project_crud_base import ProjectCRUDBase
 from repos.db.sql_utils import aggregate_ids
 
 
 class CRUDObjectHandle(
-    SQLCRUDBase[ObjectHandleORM, ObjectHandleCreate, UpdateNotAllowed]
+    ProjectCRUDBase[ObjectHandleORM, ObjectHandleCreate, UpdateNotAllowed]
 ):
-    __obj_id_orm_type_map = {
-        "code_id": CodeORM,
-        "tag_id": TagORM,
-        "attached_project_id": ProjectORM,
-        "source_document_id": SourceDocumentORM,
-        "span_annotation_id": SpanAnnotationORM,
-        "bbox_annotation_id": BBoxAnnotationORM,
-        "sentence_annotation_id": SentenceAnnotationORM,
-        "span_group_id": SpanGroupORM,
-    }
-
-    __attached_obj_type_2_obj_id_key = {
-        AttachedObjectType.source_document: "source_document_id",
-        AttachedObjectType.code: "code_id",
-        AttachedObjectType.tag: "tag_id",
-        AttachedObjectType.span_annotation: "span_annotation_id",
-        AttachedObjectType.sentence_annotation: "sentence_annotation_id",
-        AttachedObjectType.bbox_annotation: "bbox_annotation_id",
-        AttachedObjectType.span_group: "span_group_id",
-        AttachedObjectType.project: "attached_project_id",
-    }
-
     ### CREATE OPERATIONS ###
 
     def create_multi(
-        self, db: Session, *, create_dtos: list[ObjectHandleCreate]
+        self, db: Session, *, project_id: int, create_dtos: list[ObjectHandleCreate]
     ) -> list[ObjectHandleORM]:
         """
         Create the object handles in one batch. An object has at most one handle, so
         for an object that already has one, the existing handle is returned instead.
+        An object of another project violates the composite foreign key (409).
 
         Args:
+            project_id: The project of the handles and their objects.
             create_dtos: The handles to create, each referring to one object.
 
         Returns:
@@ -63,7 +46,10 @@ class CRUDObjectHandle(
             return []
 
         # 1) insert the handles, skipping the objects that already have one
-        rows = [create_dto.model_dump() for create_dto in create_dtos]
+        rows = [
+            {**create_dto.model_dump(), "project_id": project_id}
+            for create_dto in create_dtos
+        ]
         for i in range(0, len(rows), BATCH_SIZE):
             db.execute(
                 insert(self.model)
@@ -82,7 +68,10 @@ class CRUDObjectHandle(
             for i in range(0, len(object_ids), BATCH_SIZE):
                 batch_ids = object_ids[i : i + BATCH_SIZE]
                 for db_obj in db.scalars(
-                    select(self.model).where(getattr(self.model, column).in_(batch_ids))
+                    select(self.model).where(
+                        self.model.project_id == project_id,
+                        getattr(self.model, column).in_(batch_ids),
+                    )
                 ):
                     handle_by_object_key[(column, getattr(db_obj, column))] = db_obj
 
@@ -90,42 +79,25 @@ class CRUDObjectHandle(
 
     ### READ OPERATIONS ###
 
-    def read_by_attached_object_id(
-        self, db: Session, *, obj_id_key: str, obj_id_val: int
-    ) -> ObjectHandleORM:
-        if obj_id_key not in self.__obj_id_orm_type_map.keys():
-            raise ValueError("Unknown Object ID!")
-
-        obj_type = self.__obj_id_orm_type_map[obj_id_key]
-
-        db_obj = (
-            db.query(self.model)
-            .filter(getattr(self.model, obj_id_key) == obj_id_val)
-            .first()
-        )
-        if db_obj is None:
-            raise NoSuchElementError(obj_type, id=obj_id_val)
-        return db_obj
-
     def read_memo_ids_by_objects(
         self,
         db: Session,
         *,
+        project_id: int,
         attached_object_type: AttachedObjectType,
         object_ids: list[int],
     ) -> dict[int, list[int]]:
         """
         Returns a mapping of object ID -> list of attached memo IDs for all given
-        objects of the given type, in one batched query (no N+1).
+        objects of the given type in the project, in one batched query (no N+1).
         """
         # Pre-check: If the list is empty, return an empty dictionary immediately.
         if not object_ids:
             return {}
 
-        obj_id_key = self.__attached_obj_type_2_obj_id_key.get(attached_object_type)
-        if obj_id_key is None:
-            raise ValueError(f"Unknown AttachedObjectType: {attached_object_type}")
-        obj_id_column = getattr(self.model, obj_id_key)
+        obj_id_column = getattr(
+            self.model, ATTACHED_OBJECT_TYPE_TO_HANDLE_COLUMN[attached_object_type]
+        )
 
         # Dictionary to store the final results: {object_id: [memo_ids]}
         results: dict[int, list[int]] = {}
@@ -140,10 +112,16 @@ class CRUDObjectHandle(
                 select(obj_id_column, memo_ids_agg)
                 .join(
                     MemoORM,
-                    MemoORM.attached_to_id == self.model.id,
+                    and_(
+                        MemoORM.project_id == self.model.project_id,
+                        MemoORM.attached_to_id == self.model.id,
+                    ),
                     isouter=True,
                 )
-                .filter(obj_id_column.in_(batch_ids))
+                .filter(
+                    self.model.project_id == project_id,
+                    obj_id_column.in_(batch_ids),
+                )
                 .group_by(obj_id_column)
             )
 
@@ -170,7 +148,7 @@ class CRUDObjectHandle(
         | None
     ):
         # the relationship of the one id column that is set, e.g. span_annotation
-        for target_id in self.__obj_id_orm_type_map.keys():
+        for target_id in ATTACHED_OBJECT_TYPE_TO_HANDLE_COLUMN.values():
             if getattr(handle, target_id) is not None:
                 return getattr(handle, target_id.removesuffix("_id"))
 

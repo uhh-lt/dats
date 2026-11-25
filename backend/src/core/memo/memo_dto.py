@@ -73,11 +73,15 @@ class MemoUpdateBulk(MemoUpdate):
 
 # Properties to create
 class MemoCreate(MemoBaseDTO):
-    pass
+    attached_object_id: int = Field(
+        description="ID of the Object the Memo is attached to"
+    )
+    attached_object_type: AttachedObjectType = Field(
+        description="Type of the Object the ID refers to"
+    )
 
 
-class MemoCreateIntern(MemoCreate):
-    project_id: int = Field(description="Project the Memo belongs to")
+class MemoCreateIntern(MemoBaseDTO):
     uuid: str = Field(description="UUID of the Memo")
     user_id: int = Field(description="User the Memo belongs to")
 

@@ -19,6 +19,7 @@ def _create_memos(
     with count_queries(db) as queries:
         memos = MemoService().create_multi_for_attached_objects(
             db=db,
+            project_id=fixture["project_id"],
             attached_object_type=AttachedObjectType.span_annotation,
             attached_object_ids=span_ids,
             create_dtos=[
@@ -28,7 +29,6 @@ def _create_memos(
                     content=f"content {i}",
                     content_json="[]",
                     user_id=fixture["user_id"],
-                    project_id=fixture["project_id"],
                 )
                 for i in range(len(span_ids))
             ],

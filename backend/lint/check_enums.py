@@ -23,7 +23,7 @@ Rules (the rule id is printed with every violation):
     value-type     Enums are `(str, Enum)` or `StrEnum`, so they serialize as their
                    value. Int-valued enums (`IntEnum`, `(int, Enum)`) are allowed because
                    their values are ints; a plain `Enum` without a value type is not.
-                   Exempt: the CRUD registries `Crud` and `MemoCrud` (common/crud_enum.py).
+                   Exempt: the CRUD registry `Crud` (common/crud_enum.py).
 
 A class is an enum class if one of its bases is Enum, StrEnum, IntEnum, Flag,
 IntFlag (also as `enum.Enum`), or another enum class defined in backend/src.
@@ -45,7 +45,7 @@ SRC_ROOT = REPO_ROOT / "backend" / "src"
 ENUM_BASES = {"Enum", "StrEnum", "IntEnum", "Flag", "IntFlag"}
 VALUE_TYPE_BASES = {"StrEnum", "str", "IntEnum", "IntFlag", "int"}
 # registries whose member values are objects (the CRUD singletons), not wire values
-VALUE_TYPE_EXEMPT = {"Crud", "MemoCrud"}
+VALUE_TYPE_EXEMPT = {"Crud"}
 EXEMPT_FILES = ("common/dats_event.py",)
 EXEMPT_DIRS = ("systems/search_system/",)
 EXEMPT_SUFFIXES = ("_columns.py",)

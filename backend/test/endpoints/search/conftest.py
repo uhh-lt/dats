@@ -176,6 +176,7 @@ def _make_memo(
 ) -> MemoORM:
     return crud_memo.create_for_attached_object(
         db=db_session,
+        project_id=project.id,
         attached_object_id=attached_object_id,
         attached_object_type=attached_object_type,
         create_dto=MemoCreateIntern(
@@ -184,7 +185,6 @@ def _make_memo(
             content=content,
             content_json='{"blocks": []}',
             user_id=user.id,
-            project_id=project.id,
         ),
     )
 

@@ -208,13 +208,13 @@ def test_memo_attaches_to_no_object_of_another_project(
         db_session,
         lambda: crud_memo.create_for_attached_object(
             db=db_session,
+            project_id=own["project"].id,
             attached_object_id=foreign["child_code"].id,
             attached_object_type=AttachedObjectType.code,
             create_dto=MemoCreateIntern(
                 title="Cross-project memo",
                 content="",
                 content_json="",
-                project_id=own["project"].id,
                 user_id=test_user.id,
                 uuid="cross-project-memo",
             ),

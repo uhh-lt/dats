@@ -36,7 +36,10 @@ def test_read_by_ids_dtos_use_constant_queries(
     with count_queries(db_session) as queries:
         dtos = get_memo_read_dtos_from_orms(
             db=db_session,
-            db_objs=crud_memo.read_by_ids(db=db_session, ids=ids),
+            project_id=fixture["project_id"],
+            db_objs=crud_memo.read_by_ids(
+                db=db_session, project_id=fixture["project_id"], ids=ids
+            ),
             user_id=fixture["user_id"],
         )
 
@@ -55,6 +58,7 @@ def test_read_by_project_dtos_use_constant_queries(
     with count_queries(db_session) as queries:
         dtos = get_memo_read_dtos_from_orms(
             db=db_session,
+            project_id=fixture["project_id"],
             db_objs=crud_memo.read_by_project(
                 db=db_session, project_id=fixture["project_id"]
             ),
@@ -77,6 +81,7 @@ def test_service_update_multi_dtos_use_constant_queries(
     with count_queries(db_session) as queries:
         dtos = MemoService().update_multi(
             db=db_session,
+            project_id=fixture["project_id"],
             user_id=fixture["user_id"],
             update_dtos=[
                 MemoUpdateBulk(memo_id=id, title=f"new {id}", is_favorite=True)
@@ -87,8 +92,9 @@ def test_service_update_multi_dtos_use_constant_queries(
     assert [dto.id for dto in dtos] == ids
     assert all(dto.is_favorite for dto in dtos)
     assert [dto.title for dto in dtos] == [f"new {id}" for id in ids]
-    # favorite + update (read + UPDATE) + the eager re-read for the DTOs
-    assert queries() <= MAX_READ_QUERIES + 6
+    # the existence read + favorite + update (read + UPDATE) + the eager re-read
+    # for the DTOs
+    assert queries() <= MAX_READ_QUERIES + 8
 
 
 def test_service_delete_multi_dtos_use_constant_queries(
@@ -101,7 +107,10 @@ def test_service_delete_multi_dtos_use_constant_queries(
 
     with count_queries(db_session) as queries:
         dtos = MemoService().delete_multi(
-            db=db_session, user_id=fixture["user_id"], ids=ids
+            db=db_session,
+            project_id=fixture["project_id"],
+            user_id=fixture["user_id"],
+            ids=ids,
         )
 
     assert [dto.id for dto in dtos] == ids
