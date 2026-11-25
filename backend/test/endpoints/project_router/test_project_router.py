@@ -59,7 +59,13 @@ BODIES: dict[str, Callable[[TenantRows], Any]] = {
         lambda rows: {"description": "changed"}
     ),
     "PATCH /projects/{project_id}/source-document-metadata/{sdoc_metadata_id}": (
-        lambda rows: {"str_value": "changed"}
+        lambda rows: {
+            "str_value": "changed",
+            "int_value": None,
+            "boolean_value": None,
+            "date_value": None,
+            "list_value": None,
+        }
     ),
 }
 
