@@ -40,10 +40,10 @@ export function AnnotationScalingView() {
   const handleSubmit = () => {
     confirmHook.mutate(
       {
+        projectId,
         requestBody: {
           code_id: code!.id,
           reject_code_id: opposingCode!.id,
-          project_id: projectId,
           accept: accept.map((r) => ({ sdoc_id: r.sdoc_id, sentence: r.sentence_id })),
           reject: reject.map((r) => ({ sdoc_id: r.sdoc_id, sentence: r.sentence_id })),
         },

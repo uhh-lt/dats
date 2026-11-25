@@ -19,7 +19,8 @@ export const annoscalingQueries = {
           ? skipToken
           : () =>
               AnnoscalingService.suggest({
-                requestBody: { code_id: codeId, project_id: projectId, reject_cide_id: antiCodeId, top_k: 10 },
+                projectId,
+                requestBody: { code_id: codeId, reject_cide_id: antiCodeId, top_k: 10 },
               }),
     }),
 };

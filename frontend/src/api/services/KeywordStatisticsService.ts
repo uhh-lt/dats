@@ -25,9 +25,11 @@ export class KeywordStatisticsService {
   }): CancelablePromise<Array<KeywordStat>> {
     return __request(OpenAPI, {
       method: "POST",
-      url: "/keyword_statistics/keyword",
-      query: {
+      url: "/projects/{project_id}/keyword-statistics/keywords",
+      path: {
         project_id: projectId,
+      },
+      query: {
         sort_by_global: sortByGlobal,
         top_k: topK,
       },

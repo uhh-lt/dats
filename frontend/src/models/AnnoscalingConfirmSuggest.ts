@@ -5,10 +5,6 @@
 import type { SdocSentencePair } from "./SdocSentencePair";
 export type AnnoscalingConfirmSuggest = {
   /**
-   * Project to apply suggestions
-   */
-  project_id: number;
-  /**
    * Code to apply on accepted spans
    */
   code_id: number;

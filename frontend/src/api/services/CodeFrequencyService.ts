@@ -24,8 +24,8 @@ export class CodeFrequencyService {
   }): CancelablePromise<Array<CodeFrequency>> {
     return __request(OpenAPI, {
       method: "POST",
-      url: "/code_frequency/code_frequencies",
-      query: {
+      url: "/projects/{project_id}/code-frequency/frequencies",
+      path: {
         project_id: projectId,
       },
       body: requestBody,
@@ -53,9 +53,11 @@ export class CodeFrequencyService {
   }): CancelablePromise<Array<CodeOccurrence>> {
     return __request(OpenAPI, {
       method: "POST",
-      url: "/code_frequency/code_occurrences",
-      query: {
+      url: "/projects/{project_id}/code-frequency/occurrences",
+      path: {
         project_id: projectId,
+      },
+      query: {
         code_id: codeId,
         return_children: returnChildren,
       },

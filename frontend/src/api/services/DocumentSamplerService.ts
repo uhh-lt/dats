@@ -25,9 +25,11 @@ export class DocumentSamplerService {
   }): CancelablePromise<Array<SampledSdocsResults>> {
     return __request(OpenAPI, {
       method: "POST",
-      url: "/document_sampler/sample_sdocs_by_tags",
-      query: {
+      url: "/projects/{project_id}/document-sampler/sample-by-tags",
+      path: {
         project_id: projectId,
+      },
+      query: {
         n: n,
         frac: frac,
       },

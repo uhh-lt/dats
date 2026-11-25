@@ -17,13 +17,18 @@ export class AnnoscalingService {
    * @throws ApiError
    */
   public static suggest({
+    projectId,
     requestBody,
   }: {
+    projectId: number;
     requestBody: AnnoscalingSuggest;
   }): CancelablePromise<Array<AnnoscalingResult>> {
     return __request(OpenAPI, {
       method: "POST",
-      url: "/annoscaling/suggest",
+      url: "/projects/{project_id}/annotation-scaling/suggest",
+      path: {
+        project_id: projectId,
+      },
       body: requestBody,
       mediaType: "application/json",
       errors: {
@@ -38,13 +43,18 @@ export class AnnoscalingService {
    * @throws ApiError
    */
   public static confirmSuggestions({
+    projectId,
     requestBody,
   }: {
+    projectId: number;
     requestBody: AnnoscalingConfirmSuggest;
   }): CancelablePromise<Array<SpanAnnotationRead>> {
     return __request(OpenAPI, {
       method: "POST",
-      url: "/annoscaling/confirm_suggestions",
+      url: "/projects/{project_id}/annotation-scaling/confirm-suggestions",
+      path: {
+        project_id: projectId,
+      },
       body: requestBody,
       mediaType: "application/json",
       errors: {

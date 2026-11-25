@@ -23,7 +23,7 @@ export class WordFrequencyService {
   }): CancelablePromise<Array<ColumnInfo_WordFrequencyColumns_>> {
     return __request(OpenAPI, {
       method: "GET",
-      url: "/word_frequency/info/{project_id}",
+      url: "/projects/{project_id}/word-frequencies/info",
       path: {
         project_id: projectId,
       },
@@ -33,25 +33,25 @@ export class WordFrequencyService {
     });
   }
   /**
-   * Returns the SourceDocument's word frequencies with the given ID if it exists
+   * Returns the word frequencies of the SourceDocument
    * @returns WordFrequencyRead Successful Response
    * @throws ApiError
    */
   public static getWordFrequencies({
-    sdocId,
     projectId,
+    sdocId,
   }: {
-    sdocId: number;
     projectId: number;
+    sdocId: number;
   }): CancelablePromise<Array<WordFrequencyRead>> {
     return __request(OpenAPI, {
       method: "GET",
-      url: "/word_frequency/sdoc/{sdoc_id}",
+      url: "/projects/{project_id}/word-frequencies",
       path: {
-        sdoc_id: sdocId,
+        project_id: projectId,
       },
       query: {
-        project_id: projectId,
+        sdoc_id: sdocId,
       },
       errors: {
         422: `Validation Error`,
@@ -76,9 +76,11 @@ export class WordFrequencyService {
   }): CancelablePromise<WordFrequencyResult> {
     return __request(OpenAPI, {
       method: "POST",
-      url: "/word_frequency/analysis",
-      query: {
+      url: "/projects/{project_id}/word-frequencies/analysis",
+      path: {
         project_id: projectId,
+      },
+      query: {
         page: page,
         page_size: pageSize,
       },
@@ -103,8 +105,8 @@ export class WordFrequencyService {
   }): CancelablePromise<string> {
     return __request(OpenAPI, {
       method: "POST",
-      url: "/word_frequency/export",
-      query: {
+      url: "/projects/{project_id}/word-frequencies/export",
+      path: {
         project_id: projectId,
       },
       body: requestBody,
