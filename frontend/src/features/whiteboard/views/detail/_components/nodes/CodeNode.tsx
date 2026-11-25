@@ -1,4 +1,5 @@
 import { GenericPositionMenu, GenericPositionMenuHandle } from "@components/GenericPositionMenu";
+import { useAuth } from "@core/auth";
 import { bboxAnnotationQueries } from "@core/bbox-annotation";
 import { CodeHooks, CodeRenderer } from "@core/code";
 import { memoQueries, useOpenMemoDialog } from "@core/memo";
@@ -26,6 +27,7 @@ import {
   isMemoCodeEdge,
 } from "../../_utils/whiteboardUtils";
 import { BaseCardNode } from "./BaseCardNode";
+import { WhiteboardRouteAPI } from "../../_hooks/whiteboardRouteAPI";
 
 export type CodeNode = Node<CodeNodeData, WhiteboardNodeType.CODE>;
 export function CodeNode(props: NodeProps<CodeNode>) {
@@ -43,10 +45,12 @@ export function CodeNode(props: NodeProps<CodeNode>) {
 
   // global server state (react-query)
   const code = CodeHooks.useGetCode(props.data.codeId);
-  const bboxAnnotations = useQuery(bboxAnnotationQueries.byUserCode(props.data.codeId));
-  const spanAnnotations = useQuery(spanAnnotationQueries.byUserCode(props.data.codeId));
+  const projectId = WhiteboardRouteAPI.useParams({ select: (params) => params.projectId });
+  const { user } = useAuth();
+  const bboxAnnotations = useQuery(bboxAnnotationQueries.byUserCode(projectId, props.data.codeId, user?.id));
+  const spanAnnotations = useQuery(spanAnnotationQueries.byUserCode(projectId, props.data.codeId, user?.id));
   const parentCode = CodeHooks.useGetCode(code.data?.parent_id);
-  const memos = useQuery(memoQueries.byAttachedObject(AttachedObjectType.CODE, props.data.codeId));
+  const memos = useQuery(memoQueries.byAttachedObject(projectId, AttachedObjectType.CODE, props.data.codeId));
 
   // TODO: This is not optimal!
   // we need a new route to get all child codes

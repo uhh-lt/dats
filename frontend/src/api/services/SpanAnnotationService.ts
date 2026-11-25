@@ -19,9 +19,11 @@ export class SpanAnnotationService {
    * @throws ApiError
    */
   public static createSpanAnnotation({
+    projectId,
     requestBody,
     userId,
   }: {
+    projectId: number;
     requestBody: SpanAnnotationCreate;
     /**
      * The current user (default) or a virtual user of the project
@@ -30,12 +32,47 @@ export class SpanAnnotationService {
   }): CancelablePromise<SpanAnnotationRead> {
     return __request(OpenAPI, {
       method: "PUT",
-      url: "/span",
+      url: "/projects/{project_id}/span-annotations",
+      path: {
+        project_id: projectId,
+      },
       query: {
         user_id: userId,
       },
       body: requestBody,
       mediaType: "application/json",
+      errors: {
+        422: `Validation Error`,
+      },
+    });
+  }
+  /**
+   * Returns the SpanAnnotations of the User, optionally only those in the SourceDocument or with the Code
+   * @returns SpanAnnotationRead Successful Response
+   * @throws ApiError
+   */
+  public static getSpanAnnotations({
+    projectId,
+    userId,
+    sdocId,
+    codeId,
+  }: {
+    projectId: number;
+    userId: number;
+    sdocId?: number | null;
+    codeId?: number | null;
+  }): CancelablePromise<Array<SpanAnnotationRead>> {
+    return __request(OpenAPI, {
+      method: "GET",
+      url: "/projects/{project_id}/span-annotations",
+      path: {
+        project_id: projectId,
+      },
+      query: {
+        user_id: userId,
+        sdoc_id: sdocId,
+        code_id: codeId,
+      },
       errors: {
         422: `Validation Error`,
       },
@@ -47,9 +84,11 @@ export class SpanAnnotationService {
    * @throws ApiError
    */
   public static createSpanAnnotationsBulk({
+    projectId,
     requestBody,
     userId,
   }: {
+    projectId: number;
     requestBody: Array<SpanAnnotationCreate>;
     /**
      * The current user (default) or a virtual user of the project
@@ -58,7 +97,10 @@ export class SpanAnnotationService {
   }): CancelablePromise<Array<SpanAnnotationRead>> {
     return __request(OpenAPI, {
       method: "PUT",
-      url: "/span/bulk/create",
+      url: "/projects/{project_id}/span-annotations/bulk",
+      path: {
+        project_id: projectId,
+      },
       query: {
         user_id: userId,
       },
@@ -70,16 +112,127 @@ export class SpanAnnotationService {
     });
   }
   /**
+   * Updates SpanAnnotations in Bulk
+   * @returns SpanAnnotationRead Successful Response
+   * @throws ApiError
+   */
+  public static updateSpanAnnotationsBulk({
+    projectId,
+    requestBody,
+  }: {
+    projectId: number;
+    requestBody: Array<SpanAnnotationUpdateBulk>;
+  }): CancelablePromise<Array<SpanAnnotationRead>> {
+    return __request(OpenAPI, {
+      method: "PATCH",
+      url: "/projects/{project_id}/span-annotations/bulk",
+      path: {
+        project_id: projectId,
+      },
+      body: requestBody,
+      mediaType: "application/json",
+      errors: {
+        422: `Validation Error`,
+      },
+    });
+  }
+  /**
+   * Deletes all SpanAnnotations with the given IDs.
+   * @returns SpanAnnotationDeleted Successful Response
+   * @throws ApiError
+   */
+  public static deleteSpanAnnotationsBulk({
+    projectId,
+    requestBody,
+  }: {
+    projectId: number;
+    requestBody: Array<number>;
+  }): CancelablePromise<Array<SpanAnnotationDeleted>> {
+    return __request(OpenAPI, {
+      method: "DELETE",
+      url: "/projects/{project_id}/span-annotations/bulk",
+      path: {
+        project_id: projectId,
+      },
+      body: requestBody,
+      mediaType: "application/json",
+      errors: {
+        422: `Validation Error`,
+      },
+    });
+  }
+  /**
+   * Adds the SpanAnnotation to the SpanGroup
+   * @returns SpanAnnotationRead Successful Response
+   * @throws ApiError
+   */
+  public static addToSpanGroup({
+    projectId,
+    spanAnnotationId,
+    spanGroupId,
+  }: {
+    projectId: number;
+    spanAnnotationId: number;
+    spanGroupId: number;
+  }): CancelablePromise<SpanAnnotationRead> {
+    return __request(OpenAPI, {
+      method: "PUT",
+      url: "/projects/{project_id}/span-annotations/{span_annotation_id}/span-groups/{span_group_id}",
+      path: {
+        project_id: projectId,
+        span_annotation_id: spanAnnotationId,
+        span_group_id: spanGroupId,
+      },
+      errors: {
+        422: `Validation Error`,
+      },
+    });
+  }
+  /**
+   * Removes the SpanAnnotation from the SpanGroup
+   * @returns SpanAnnotationRead Successful Response
+   * @throws ApiError
+   */
+  public static removeFromSpanGroup({
+    projectId,
+    spanAnnotationId,
+    spanGroupId,
+  }: {
+    projectId: number;
+    spanAnnotationId: number;
+    spanGroupId: number;
+  }): CancelablePromise<SpanAnnotationRead> {
+    return __request(OpenAPI, {
+      method: "DELETE",
+      url: "/projects/{project_id}/span-annotations/{span_annotation_id}/span-groups/{span_group_id}",
+      path: {
+        project_id: projectId,
+        span_annotation_id: spanAnnotationId,
+        span_group_id: spanGroupId,
+      },
+      errors: {
+        422: `Validation Error`,
+      },
+    });
+  }
+  /**
    * Returns the SpanAnnotation with the given ID.
    * @returns SpanAnnotationRead Successful Response
    * @throws ApiError
    */
-  public static getById({ spanId }: { spanId: number }): CancelablePromise<SpanAnnotationRead> {
+  public static getById({
+    projectId,
+    spanAnnotationId,
+  }: {
+    projectId: number;
+    spanAnnotationId: number;
+  }): CancelablePromise<SpanAnnotationRead> {
     return __request(OpenAPI, {
       method: "GET",
-      url: "/span/{span_id}",
+      url: "/projects/{project_id}/span-annotations/{span_annotation_id}",
       path: {
-        span_id: spanId,
+        project_id: projectId,
+        span_annotation_id: spanAnnotationId,
       },
       errors: {
         422: `Validation Error`,
@@ -92,17 +245,20 @@ export class SpanAnnotationService {
    * @throws ApiError
    */
   public static updateById({
-    spanId,
+    projectId,
+    spanAnnotationId,
     requestBody,
   }: {
-    spanId: number;
+    projectId: number;
+    spanAnnotationId: number;
     requestBody: SpanAnnotationUpdate;
   }): CancelablePromise<SpanAnnotationRead> {
     return __request(OpenAPI, {
       method: "PATCH",
-      url: "/span/{span_id}",
+      url: "/projects/{project_id}/span-annotations/{span_annotation_id}",
       path: {
-        span_id: spanId,
+        project_id: projectId,
+        span_annotation_id: spanAnnotationId,
       },
       body: requestBody,
       mediaType: "application/json",
@@ -116,12 +272,19 @@ export class SpanAnnotationService {
    * @returns SpanAnnotationDeleted Successful Response
    * @throws ApiError
    */
-  public static deleteById({ spanId }: { spanId: number }): CancelablePromise<SpanAnnotationDeleted> {
+  public static deleteById({
+    projectId,
+    spanAnnotationId,
+  }: {
+    projectId: number;
+    spanAnnotationId: number;
+  }): CancelablePromise<SpanAnnotationDeleted> {
     return __request(OpenAPI, {
       method: "DELETE",
-      url: "/span/{span_id}",
+      url: "/projects/{project_id}/span-annotations/{span_annotation_id}",
       path: {
-        span_id: spanId,
+        project_id: projectId,
+        span_annotation_id: spanAnnotationId,
       },
       errors: {
         422: `Validation Error`,
@@ -129,40 +292,23 @@ export class SpanAnnotationService {
     });
   }
   /**
-   * Returns all SpanAnnotations of the User for the SourceDocument
-   * @returns SpanAnnotationRead Successful Response
-   * @throws ApiError
-   */
-  public static getBySdocAndUser({
-    sdocId,
-    userId,
-  }: {
-    sdocId: number;
-    userId: number;
-  }): CancelablePromise<Array<SpanAnnotationRead>> {
-    return __request(OpenAPI, {
-      method: "GET",
-      url: "/span/sdoc/{sdoc_id}/user/{user_id}",
-      path: {
-        sdoc_id: sdocId,
-        user_id: userId,
-      },
-      errors: {
-        422: `Validation Error`,
-      },
-    });
-  }
-  /**
-   * Returns all SpanGroups that contain the the SpanAnnotation.
+   * Returns all SpanGroups that contain the SpanAnnotation.
    * @returns SpanGroupRead Successful Response
    * @throws ApiError
    */
-  public static getAllGroups({ spanId }: { spanId: number }): CancelablePromise<Array<SpanGroupRead>> {
+  public static getSpanGroups({
+    projectId,
+    spanAnnotationId,
+  }: {
+    projectId: number;
+    spanAnnotationId: number;
+  }): CancelablePromise<Array<SpanGroupRead>> {
     return __request(OpenAPI, {
       method: "GET",
-      url: "/span/{span_id}/groups",
+      url: "/projects/{project_id}/span-annotations/{span_annotation_id}/span-groups",
       path: {
-        span_id: spanId,
+        project_id: projectId,
+        span_annotation_id: spanAnnotationId,
       },
       errors: {
         422: `Validation Error`,
@@ -171,100 +317,22 @@ export class SpanAnnotationService {
   }
   /**
    * Removes the SpanAnnotation from all SpanGroups
-   * @returns SpanAnnotationDeleted Successful Response
-   * @throws ApiError
-   */
-  public static removeFromAllGroups({ spanId }: { spanId: number }): CancelablePromise<SpanAnnotationDeleted> {
-    return __request(OpenAPI, {
-      method: "DELETE",
-      url: "/span/{span_id}/groups",
-      path: {
-        span_id: spanId,
-      },
-      errors: {
-        422: `Validation Error`,
-      },
-    });
-  }
-  /**
-   * Returns SpanAnnotations with the given Code of the logged-in User
    * @returns SpanAnnotationRead Successful Response
    * @throws ApiError
    */
-  public static getByUserCode({ codeId }: { codeId: number }): CancelablePromise<Array<SpanAnnotationRead>> {
-    return __request(OpenAPI, {
-      method: "GET",
-      url: "/span/code/{code_id}/user",
-      path: {
-        code_id: codeId,
-      },
-      errors: {
-        422: `Validation Error`,
-      },
-    });
-  }
-  /**
-   * Updates SpanAnnotations in Bulk
-   * @returns SpanAnnotationRead Successful Response
-   * @throws ApiError
-   */
-  public static updateSpanAnnotationsBulk({
-    requestBody,
+  public static removeFromAllSpanGroups({
+    projectId,
+    spanAnnotationId,
   }: {
-    requestBody: Array<SpanAnnotationUpdateBulk>;
-  }): CancelablePromise<Array<SpanAnnotationRead>> {
-    return __request(OpenAPI, {
-      method: "PATCH",
-      url: "/span/bulk/update",
-      body: requestBody,
-      mediaType: "application/json",
-      errors: {
-        422: `Validation Error`,
-      },
-    });
-  }
-  /**
-   * Adds the SpanAnnotation to the SpanGroup
-   * @returns SpanAnnotationRead Successful Response
-   * @throws ApiError
-   */
-  public static addToGroup({
-    spanId,
-    groupId,
-  }: {
-    spanId: number;
-    groupId: number;
-  }): CancelablePromise<SpanAnnotationRead> {
-    return __request(OpenAPI, {
-      method: "PATCH",
-      url: "/span/{span_id}/group/{group_id}",
-      path: {
-        span_id: spanId,
-        group_id: groupId,
-      },
-      errors: {
-        422: `Validation Error`,
-      },
-    });
-  }
-  /**
-   * Removes the SpanAnnotation from the SpanGroup
-   * @returns SpanAnnotationRead Successful Response
-   * @throws ApiError
-   */
-  public static removeFromGroup({
-    spanId,
-    groupId,
-  }: {
-    spanId: number;
-    groupId: number;
+    projectId: number;
+    spanAnnotationId: number;
   }): CancelablePromise<SpanAnnotationRead> {
     return __request(OpenAPI, {
       method: "DELETE",
-      url: "/span/{span_id}/group/{group_id}",
+      url: "/projects/{project_id}/span-annotations/{span_annotation_id}/span-groups",
       path: {
-        span_id: spanId,
-        group_id: groupId,
+        project_id: projectId,
+        span_annotation_id: spanAnnotationId,
       },
       errors: {
         422: `Validation Error`,
@@ -272,41 +340,26 @@ export class SpanAnnotationService {
     });
   }
   /**
-   * Deletes all SpanAnnotations with the given IDs.
-   * @returns SpanAnnotationDeleted Successful Response
-   * @throws ApiError
-   */
-  public static deleteSpanAnnotationsBulk({
-    requestBody,
-  }: {
-    requestBody: Array<number>;
-  }): CancelablePromise<Array<SpanAnnotationDeleted>> {
-    return __request(OpenAPI, {
-      method: "DELETE",
-      url: "/span/bulk/delete",
-      body: requestBody,
-      mediaType: "application/json",
-      errors: {
-        422: `Validation Error`,
-      },
-    });
-  }
-  /**
-   * Counts the SpanAnnotations of the User (by user_id) per Codes (by class_ids) in Documents (by sdoc_ids)
+   * Counts the SpanAnnotations of the User per Code (by code_ids) in the SourceDocuments (by sdoc_ids)
    * @returns number Successful Response
    * @throws ApiError
    */
   public static countAnnotations({
+    projectId,
     userId,
     requestBody,
   }: {
+    projectId: number;
     userId: number;
     requestBody: Body_spanAnnotation_count_annotations;
   }): CancelablePromise<Record<string, number>> {
     return __request(OpenAPI, {
       method: "POST",
-      url: "/span/count_annotations/{user_id}",
+      url: "/projects/{project_id}/span-annotations/count",
       path: {
+        project_id: projectId,
+      },
+      query: {
         user_id: userId,
       },
       body: requestBody,

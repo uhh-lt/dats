@@ -24,6 +24,7 @@ import {
   isTagSdocEdge,
 } from "../../_utils/whiteboardUtils";
 import { BaseCardNode } from "./BaseCardNode";
+import { WhiteboardRouteAPI } from "../../_hooks/whiteboardRouteAPI";
 
 export type TagNode = Node<TagNodeData, WhiteboardNodeType.TAG>;
 export function TagNode(props: NodeProps<TagNode>) {
@@ -40,8 +41,9 @@ export function TagNode(props: NodeProps<TagNode>) {
 
   // global server state (react-query)
   const tag = TagHooks.useGetTag(props.data.tagId);
+  const projectId = WhiteboardRouteAPI.useParams({ select: (params) => params.projectId });
   const sdocIds = useQuery(sdocQueries.idsByTag(props.data.tagId));
-  const memos = useQuery(memoQueries.byAttachedObject(AttachedObjectType.TAG, props.data.tagId));
+  const memos = useQuery(memoQueries.byAttachedObject(projectId, AttachedObjectType.TAG, props.data.tagId));
 
   // effects
   useEffect(() => {

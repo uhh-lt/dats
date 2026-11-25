@@ -5,6 +5,7 @@ import DeleteIcon from "@mui/icons-material/Delete";
 import { IconButton, Tooltip } from "@mui/material";
 import { useAppDispatch } from "@store/storeHooks";
 import { SentAnnotationAnalysisActions } from "../../../store/sentAnnotationAnalysisSlice";
+import { SentAnnotationAnalysisRouteAPI } from "../_hooks/sentAnnotationAnalysisRouteAPI";
 
 interface BulkDeleteSentAnnotationsButtonProps {
   selectedData: SentenceAnnotationRow[];
@@ -14,6 +15,7 @@ export function BulkDeleteSentAnnotationsButton({ selectedData }: BulkDeleteSent
   // actions
   const dispatch = useAppDispatch();
   const openConfirmationDialog = useOpenConfirmationDialog();
+  const projectId = SentAnnotationAnalysisRouteAPI.useParams({ select: (params) => params.projectId });
   const deleteBulkMutation = SentenceAnnotationHooks.useDeleteBulkSentenceAnnotation();
   const handleDeleteAnnotationsClick = () => {
     openConfirmationDialog({
@@ -21,7 +23,7 @@ export function BulkDeleteSentAnnotationsButton({ selectedData }: BulkDeleteSent
       type: "DELETE",
       onAccept: () => {
         deleteBulkMutation.mutate(
-          { requestBody: selectedData.map((row) => row.id) },
+          { projectId, requestBody: selectedData.map((row) => row.id) },
           {
             onSuccess: () => {
               dispatch(SentAnnotationAnalysisActions.onClearRowSelection());

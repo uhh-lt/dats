@@ -107,6 +107,8 @@ export function useMemoPersistence({
             await updateMemo({ memoId: currentMemoIdRef.current, requestBody });
           } else {
             const savedMemo = await createMemo({
+              // the project of the attached object; a project memo is attached to the project itself
+              projectId: "project_id" in attachedObject ? attachedObject.project_id : attachedObject.id,
               attachedObjectId: attachedObject.id,
               attachedObjectType,
               requestBody,
@@ -116,7 +118,7 @@ export function useMemoPersistence({
           }
         });
     },
-    [attachedObject.id, attachedObjectType, createMemo, onMemoCreateSuccess, updateMemo],
+    [attachedObject, attachedObjectType, createMemo, onMemoCreateSuccess, updateMemo],
   );
 
   const persistPendingChanges = useCallback(() => {

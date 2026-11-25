@@ -7,12 +7,15 @@ import { infiniteQueryOptions, queryOptions, skipToken } from "@tanstack/react-q
 /**
  * Query factory for span annotations.
  *
- *   spanAnnotationQueries.all()                   ["spanAnnotation"]
- *   spanAnnotationQueries.byId(spanId)            ["spanAnnotation", "detail", spanId]
- *   spanAnnotationQueries.byUserCode(codeId)      ["spanAnnotation", "userCode", codeId]
- *   spanAnnotationQueries.bySdoc(sdocId, userId)  ["spanAnnotation", "sdoc", sdocId, userId]
- *   spanAnnotationQueries.tableInfo(projectId)    ["tableInfo", "span", projectId]
- *   spanAnnotationQueries.search(request)         ["spanAnnotation", "search", request]
+ *   spanAnnotationQueries.all()                                  ["spanAnnotation"]
+ *   spanAnnotationQueries.byId(projectId, spanId)                ["spanAnnotation", "detail", spanId, projectId]
+ *   spanAnnotationQueries.byUserCode(projectId, codeId, userId)  ["spanAnnotation", "userCode", codeId, userId, projectId]
+ *   spanAnnotationQueries.bySdoc(projectId, sdocId, userId)      ["spanAnnotation", "sdoc", sdocId, userId, projectId]
+ *   spanAnnotationQueries.tableInfo(projectId)                   ["tableInfo", "span", projectId]
+ *   spanAnnotationQueries.search(request)                        ["spanAnnotation", "search", request]
+ *
+ * The routes need the project, but the ids already determine it: the project comes last in the keys, so the prefixes
+ * by id (bySdocOfSdocScope, byUserCodeOfCodeScope) cover it.
  */
 export const spanAnnotationQueries = {
   all: () => ["spanAnnotation"] as const,
@@ -22,29 +25,48 @@ export const spanAnnotationQueries = {
 
   // a single span annotation
   byIdScope: () => [...spanAnnotationQueries.all(), "detail"] as const,
-  byId: (spanId: number | null | undefined) =>
+  byId: (projectId: number | null | undefined, spanId: number | null | undefined) =>
     queryOptions({
-      queryKey: [...spanAnnotationQueries.byIdScope(), spanId] as const,
-      queryFn: !spanId ? skipToken : () => SpanAnnotationService.getById({ spanId }),
+      queryKey: [...spanAnnotationQueries.byIdScope(), spanId, projectId] as const,
+      queryFn:
+        !projectId || !spanId
+          ? skipToken
+          : () => SpanAnnotationService.getById({ projectId, spanAnnotationId: spanId }),
       staleTime: 1000 * 60 * 5,
     }),
 
-  // all span annotations of the logged-in user that use a code
+  // all span annotations of one user that use a code
   byUserCodeScope: () => [...spanAnnotationQueries.all(), "userCode"] as const,
-  byUserCode: (codeId: number | null | undefined) =>
+  // prefix of all span annotation queries of one code (any user), for invalidation
+  byUserCodeOfCodeScope: (codeId: number) => [...spanAnnotationQueries.byUserCodeScope(), codeId] as const,
+  byUserCode: (
+    projectId: number | null | undefined,
+    codeId: number | null | undefined,
+    userId: number | null | undefined,
+  ) =>
     queryOptions({
-      queryKey: [...spanAnnotationQueries.byUserCodeScope(), codeId] as const,
-      queryFn: !codeId ? skipToken : () => SpanAnnotationService.getByUserCode({ codeId }),
+      queryKey: [...spanAnnotationQueries.byUserCodeScope(), codeId, userId, projectId] as const,
+      queryFn:
+        !projectId || !codeId || !userId
+          ? skipToken
+          : () => SpanAnnotationService.getSpanAnnotations({ projectId, userId, codeId }),
     }),
 
   // all span annotations of one user in one sdoc
   bySdocScope: () => [...spanAnnotationQueries.all(), "sdoc"] as const,
   // prefix of all span annotation queries of one sdoc (any user), for invalidation
   bySdocOfSdocScope: (sdocId: number) => [...spanAnnotationQueries.bySdocScope(), sdocId] as const,
-  bySdoc: (sdocId: number | null | undefined, userId: number | null | undefined) =>
+  bySdoc: (
+    projectId: number | null | undefined,
+    sdocId: number | null | undefined,
+    userId: number | null | undefined,
+  ) =>
     queryOptions({
-      queryKey: [...spanAnnotationQueries.bySdocScope(), sdocId, userId] as const,
-      queryFn: !sdocId || !userId ? skipToken : () => SpanAnnotationService.getBySdocAndUser({ sdocId, userId }),
+      queryKey: [...spanAnnotationQueries.bySdocScope(), sdocId, userId, projectId] as const,
+      queryFn:
+        !projectId || !sdocId || !userId
+          ? skipToken
+          : () => SpanAnnotationService.getSpanAnnotations({ projectId, userId, sdocId }),
     }),
   // the column infos of the span annotation filter table
   tableInfo: (projectId: number) =>

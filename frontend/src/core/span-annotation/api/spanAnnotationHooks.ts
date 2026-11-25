@@ -34,11 +34,13 @@ const useUpdateSpanAnnotation = () =>
   useMutation({
     mutationKey: [...spanAnnotationQueries.optimisticMutationScope(), "updateSpanAnnotation"],
     mutationFn: (variables: {
+      projectId: number;
       spanAnnotationToUpdate: SpanAnnotationRead | number;
       requestBody: SpanAnnotationUpdate;
     }) =>
       SpanAnnotationService.updateById({
-        spanId:
+        projectId: variables.projectId,
+        spanAnnotationId:
           typeof variables.spanAnnotationToUpdate === "number"
             ? variables.spanAnnotationToUpdate
             : variables.spanAnnotationToUpdate.id,
@@ -49,6 +51,7 @@ const useUpdateSpanAnnotation = () =>
     onMutate: async ({ spanAnnotationToUpdate, requestBody }) => {
       if (typeof spanAnnotationToUpdate === "number") return;
       const affectedQueryKey = spanAnnotationQueries.bySdoc(
+        spanAnnotationToUpdate.project_id,
         spanAnnotationToUpdate.sdoc_id,
         spanAnnotationToUpdate.user_id,
       ).queryKey;
@@ -101,9 +104,10 @@ const useUpdateBulkSpan = () =>
 const useDeleteSpanAnnotation = () =>
   useMutation({
     mutationKey: [...spanAnnotationQueries.optimisticMutationScope(), "deleteSpanAnnotation"],
-    mutationFn: (variables: { spanAnnotationToDelete: SpanAnnotationRead | number }) =>
+    mutationFn: (variables: { projectId: number; spanAnnotationToDelete: SpanAnnotationRead | number }) =>
       SpanAnnotationService.deleteById({
-        spanId:
+        projectId: variables.projectId,
+        spanAnnotationId:
           typeof variables.spanAnnotationToDelete === "number"
             ? variables.spanAnnotationToDelete
             : variables.spanAnnotationToDelete.id,
@@ -112,6 +116,7 @@ const useDeleteSpanAnnotation = () =>
     onMutate: async ({ spanAnnotationToDelete }) => {
       if (typeof spanAnnotationToDelete === "number") return;
       const affectedQueryKey = spanAnnotationQueries.bySdoc(
+        spanAnnotationToDelete.project_id,
         spanAnnotationToDelete.sdoc_id,
         spanAnnotationToDelete.user_id,
       ).queryKey;

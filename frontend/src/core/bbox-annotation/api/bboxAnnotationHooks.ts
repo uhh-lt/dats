@@ -22,16 +22,26 @@ const useCreateBBoxAnnotation = () =>
 const useUpdateBBoxAnnotation = () =>
   useMutation({
     mutationKey: [...bboxAnnotationQueries.optimisticMutationScope(), "updateBBoxAnnotation"],
-    mutationFn: (variables: { bboxToUpdate: BBoxAnnotationRead | number; requestBody: BBoxAnnotationUpdate }) =>
+    mutationFn: (variables: {
+      projectId: number;
+      bboxToUpdate: BBoxAnnotationRead | number;
+      requestBody: BBoxAnnotationUpdate;
+    }) =>
       BboxAnnotationService.updateById({
-        bboxId: typeof variables.bboxToUpdate === "number" ? variables.bboxToUpdate : variables.bboxToUpdate.id,
+        projectId: variables.projectId,
+        bboxAnnotationId:
+          typeof variables.bboxToUpdate === "number" ? variables.bboxToUpdate : variables.bboxToUpdate.id,
         requestBody: variables.requestBody,
       }),
     // optimistic update if bboxToUpdate is a proper BBoxAnnotationRead
     // todo: rework to only update the bbox annotation detail query (we need to change the rendering for this...)
     onMutate: async ({ bboxToUpdate, requestBody }) => {
       if (typeof bboxToUpdate === "number") return;
-      const affectedQueryKey = bboxAnnotationQueries.bySdoc(bboxToUpdate.sdoc_id, bboxToUpdate.user_id).queryKey;
+      const affectedQueryKey = bboxAnnotationQueries.bySdoc(
+        bboxToUpdate.project_id,
+        bboxToUpdate.sdoc_id,
+        bboxToUpdate.user_id,
+      ).queryKey;
       await queryClient.cancelQueries({ queryKey: affectedQueryKey });
       const previousBboxes = queryClient.getQueryData(affectedQueryKey);
       queryClient.setQueryData(affectedQueryKey, (old) => {
@@ -80,14 +90,20 @@ const useUpdateBulkBBoxAnnotation = () =>
 const useDeleteBBoxAnnotation = () =>
   useMutation({
     mutationKey: [...bboxAnnotationQueries.optimisticMutationScope(), "deleteBBoxAnnotation"],
-    mutationFn: (variables: { bboxToDelete: BBoxAnnotationRead | number }) =>
+    mutationFn: (variables: { projectId: number; bboxToDelete: BBoxAnnotationRead | number }) =>
       BboxAnnotationService.deleteById({
-        bboxId: typeof variables.bboxToDelete === "number" ? variables.bboxToDelete : variables.bboxToDelete.id,
+        projectId: variables.projectId,
+        bboxAnnotationId:
+          typeof variables.bboxToDelete === "number" ? variables.bboxToDelete : variables.bboxToDelete.id,
       }),
     // optimistic update if bboxToDelete is a proper BBoxAnnotationRead
     onMutate: async ({ bboxToDelete }) => {
       if (typeof bboxToDelete === "number") return;
-      const affectedQueryKey = bboxAnnotationQueries.bySdoc(bboxToDelete.sdoc_id, bboxToDelete.user_id).queryKey;
+      const affectedQueryKey = bboxAnnotationQueries.bySdoc(
+        bboxToDelete.project_id,
+        bboxToDelete.sdoc_id,
+        bboxToDelete.user_id,
+      ).queryKey;
       await queryClient.cancelQueries({ queryKey: affectedQueryKey });
       const previousBboxes = queryClient.getQueryData(affectedQueryKey);
       queryClient.setQueryData(affectedQueryKey, (old) =>

@@ -47,13 +47,13 @@ export const whiteboardQueries = {
         const whiteboardData = await WhiteboardService.getDataById({ whiteboardId });
 
         whiteboardData.span_annotations.forEach((sa) => {
-          queryClient.setQueryData(spanAnnotationQueries.byId(sa.id).queryKey, sa);
+          queryClient.setQueryData(spanAnnotationQueries.byId(sa.project_id, sa.id).queryKey, sa);
         });
         whiteboardData.sent_annotations.forEach((sa) => {
-          queryClient.setQueryData(sentenceAnnotationQueries.byId(sa.id).queryKey, sa);
+          queryClient.setQueryData(sentenceAnnotationQueries.byId(sa.project_id, sa.id).queryKey, sa);
         });
         whiteboardData.bbox_annotations.forEach((ba) => {
-          queryClient.setQueryData(bboxAnnotationQueries.byId(ba.id).queryKey, ba);
+          queryClient.setQueryData(bboxAnnotationQueries.byId(ba.project_id, ba.id).queryKey, ba);
         });
         whiteboardData.memos.forEach((memo) => {
           queryClient.setQueryData(memoQueries.byId(memo.id).queryKey, memo);

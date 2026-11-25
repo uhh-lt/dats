@@ -3,6 +3,12 @@
 /* tslint:disable */
 /* eslint-disable */
 export type Body_spanAnnotation_count_annotations = {
+  /**
+   * The SourceDocuments to count in
+   */
   sdoc_ids: Array<number>;
-  class_ids: Array<number>;
+  /**
+   * The Codes to count
+   */
+  code_ids: Array<number>;
 };

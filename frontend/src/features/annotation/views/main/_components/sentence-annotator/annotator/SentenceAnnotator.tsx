@@ -100,12 +100,16 @@ export const SentenceAnnotator = memo(
         text: `Do you really want to remove the SentenceAnnotation ${annotation.id}? You can reassign it later!`,
         type: "DELETE",
         onAccept: () => {
-          deleteMutation.mutate(annotation as SentenceAnnotationRead);
+          deleteMutation.mutate({
+            projectId: sdocData.project_id,
+            sentAnnoToDelete: annotation as SentenceAnnotationRead,
+          });
         },
       });
     };
     const handleCodeSelectorEditCode = (annotation: Annotation, codeId: number) => {
       updateMutation.mutate({
+        projectId: sdocData.project_id,
         sentenceAnnoToUpdate: annotation as SentenceAnnotationRead,
         update: {
           code_id: codeId,
@@ -116,7 +120,7 @@ export const SentenceAnnotator = memo(
       const pending = toPendingSentenceAnnotation(requestBody, visibleUserId, sdocData.project_id);
       setPendingAnnotations((prev) => [...prev, pending]);
       createMutation.mutate(
-        { requestBody, userId: visibleUserId },
+        { projectId: sdocData.project_id, requestBody, userId: visibleUserId },
         {
           onSuccess,
           onSettled: () => {

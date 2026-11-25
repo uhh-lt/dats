@@ -15,9 +15,10 @@ const filterByText = (text: string) => (annotation: SentenceAnnotationRead) =>
 
 export function SentenceAnnotationExplorer({ sdocId }: { sdocId: number }) {
   // data
+  const projectId = AnnotationRouteAPI.useParams({ select: (params) => params.projectId });
   const { visibleUserId, compareWithUserId } = AnnotationRouteAPI.useSearch();
-  const annotatorLeft = useQuery(sentenceAnnotationQueries.bySdoc(sdocId, visibleUserId));
-  const annotatorRight = useQuery(sentenceAnnotationQueries.bySdoc(sdocId, compareWithUserId));
+  const annotatorLeft = useQuery(sentenceAnnotationQueries.bySdoc(projectId, sdocId, visibleUserId));
+  const annotatorRight = useQuery(sentenceAnnotationQueries.bySdoc(projectId, sdocId, compareWithUserId));
 
   const annotations = useMemo(() => {
     const result: SentenceAnnotationRead[] = [];

@@ -5,6 +5,7 @@ import DeleteIcon from "@mui/icons-material/Delete";
 import { IconButton, Tooltip } from "@mui/material";
 import { useAppDispatch } from "@store/storeHooks";
 import { SpanAnnotationAnalysisActions } from "../../../store/spanAnnotationAnalysisSlice";
+import { SpanAnnotationAnalysisRouteAPI } from "../_hooks/spanAnnotationAnalysisRouteAPI";
 
 interface BulkDeleteSpanAnnotationsButtonProps {
   selectedData: SpanAnnotationRow[];
@@ -14,6 +15,7 @@ export function BulkDeleteSpanAnnotationsButton({ selectedData }: BulkDeleteSpan
   // actions
   const dispatch = useAppDispatch();
   const openConfirmationDialog = useOpenConfirmationDialog();
+  const projectId = SpanAnnotationAnalysisRouteAPI.useParams({ select: (params) => params.projectId });
   const deleteBulkMutation = SpanAnnotationHooks.useDeleteBulkSpanAnnotation();
   const handleDeleteAnnotationsClick = () => {
     openConfirmationDialog({
@@ -21,7 +23,7 @@ export function BulkDeleteSpanAnnotationsButton({ selectedData }: BulkDeleteSpan
       type: "DELETE",
       onAccept: () => {
         deleteBulkMutation.mutate(
-          { requestBody: selectedData.map((row) => row.id) },
+          { projectId, requestBody: selectedData.map((row) => row.id) },
           {
             onSuccess: () => {
               dispatch(SpanAnnotationAnalysisActions.onClearRowSelection());

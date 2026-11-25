@@ -17,10 +17,12 @@ export class MemoService {
    * @throws ApiError
    */
   public static createMemo({
+    projectId,
     attachedObjectId,
     attachedObjectType,
     requestBody,
   }: {
+    projectId: number;
     attachedObjectId: number;
     attachedObjectType: AttachedObjectType;
     requestBody: MemoCreate;
@@ -29,6 +31,7 @@ export class MemoService {
       method: "PUT",
       url: "/memo",
       query: {
+        project_id: projectId,
         attached_object_id: attachedObjectId,
         attached_object_type: attachedObjectType,
       },
@@ -130,9 +133,11 @@ export class MemoService {
   public static getMemosByAttachedObjectId({
     attachedObjId,
     attachedObjType,
+    projectId,
   }: {
     attachedObjId: number;
     attachedObjType: AttachedObjectType;
+    projectId: number;
   }): CancelablePromise<Array<MemoRead>> {
     return __request(OpenAPI, {
       method: "GET",
@@ -140,6 +145,9 @@ export class MemoService {
       path: {
         attached_obj_id: attachedObjId,
         attached_obj_type: attachedObjType,
+      },
+      query: {
+        project_id: projectId,
       },
       errors: {
         422: `Validation Error`,
@@ -207,10 +215,12 @@ export class MemoService {
   public static generateMemoSuggestion({
     attachedObjId,
     attachedObjType,
+    projectId,
     model,
   }: {
     attachedObjId: number;
     attachedObjType: AttachedObjectType;
+    projectId: number;
     model: string;
   }): CancelablePromise<string> {
     return __request(OpenAPI, {
@@ -221,6 +231,7 @@ export class MemoService {
         attached_obj_type: attachedObjType,
       },
       query: {
+        project_id: projectId,
         model: model,
       },
       errors: {

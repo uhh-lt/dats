@@ -27,6 +27,7 @@ import {
   isSdocSentenceAnnotationEdge,
 } from "../../_utils/whiteboardUtils";
 import { BaseCardNode } from "./BaseCardNode";
+import { WhiteboardRouteAPI } from "../../_hooks/whiteboardRouteAPI";
 
 export type SentenceAnnotationNode = Node<SentenceAnnotationNodeData, WhiteboardNodeType.SENTENCE_ANNOTATION>;
 export function SentenceAnnotationNode(props: NodeProps<SentenceAnnotationNode>) {
@@ -42,10 +43,11 @@ export function SentenceAnnotationNode(props: NodeProps<SentenceAnnotationNode>)
   const readonly = !props.isConnectable;
 
   // global server state (react-query)
-  const annotation = useQuery(sentenceAnnotationQueries.byId(props.data.sentenceAnnotationId));
+  const projectId = WhiteboardRouteAPI.useParams({ select: (params) => params.projectId });
+  const annotation = useQuery(sentenceAnnotationQueries.byId(projectId, props.data.sentenceAnnotationId));
   const code = CodeHooks.useGetCode(annotation.data?.code_id);
   const memos = useQuery(
-    memoQueries.byAttachedObject(AttachedObjectType.SENTENCE_ANNOTATION, props.data.sentenceAnnotationId),
+    memoQueries.byAttachedObject(projectId, AttachedObjectType.SENTENCE_ANNOTATION, props.data.sentenceAnnotationId),
   );
 
   // effects

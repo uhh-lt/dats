@@ -8,11 +8,14 @@ import { infiniteQueryOptions, queryOptions, skipToken } from "@tanstack/react-q
  * Query factory for sentence annotations. The per-sdoc query returns the annotations grouped by sentence
  * (SentenceAnnotatorResult), not a flat list.
  *
- *   sentenceAnnotationQueries.all()                   ["sentenceAnnotation"]
- *   sentenceAnnotationQueries.byId(sentenceAnnoId)    ["sentenceAnnotation", "detail", sentenceAnnoId]
- *   sentenceAnnotationQueries.bySdoc(sdocId, userId)  ["sentenceAnnotation", "sdoc", sdocId, userId]
- *   sentenceAnnotationQueries.tableInfo(projectId)    ["tableInfo", "sentence", projectId]
- *   sentenceAnnotationQueries.search(request)         ["sentenceAnnotation", "search", request]
+ *   sentenceAnnotationQueries.all()                              ["sentenceAnnotation"]
+ *   sentenceAnnotationQueries.byId(projectId, sentenceAnnoId)    ["sentenceAnnotation", "detail", sentenceAnnoId, projectId]
+ *   sentenceAnnotationQueries.bySdoc(projectId, sdocId, userId)  ["sentenceAnnotation", "sdoc", sdocId, userId, projectId]
+ *   sentenceAnnotationQueries.tableInfo(projectId)               ["tableInfo", "sentence", projectId]
+ *   sentenceAnnotationQueries.search(request)                    ["sentenceAnnotation", "search", request]
+ *
+ * The routes need the project, but the ids already determine it: the project comes last in the keys, so the prefixes
+ * by id cover it.
  */
 export const sentenceAnnotationQueries = {
   all: () => ["sentenceAnnotation"] as const,
@@ -21,18 +24,28 @@ export const sentenceAnnotationQueries = {
   optimisticMutationScope: () => [...sentenceAnnotationQueries.all(), "optimistic"] as const,
 
   byIdScope: () => [...sentenceAnnotationQueries.all(), "detail"] as const,
-  byId: (sentenceAnnoId: number | null | undefined) =>
+  byId: (projectId: number | null | undefined, sentenceAnnoId: number | null | undefined) =>
     queryOptions({
-      queryKey: [...sentenceAnnotationQueries.byIdScope(), sentenceAnnoId] as const,
-      queryFn: !sentenceAnnoId ? skipToken : () => SentenceAnnotationService.getById({ sentenceAnnoId }),
+      queryKey: [...sentenceAnnotationQueries.byIdScope(), sentenceAnnoId, projectId] as const,
+      queryFn:
+        !projectId || !sentenceAnnoId
+          ? skipToken
+          : () => SentenceAnnotationService.getById({ projectId, sentenceAnnotationId: sentenceAnnoId }),
       staleTime: 1000 * 60 * 5,
     }),
 
   bySdocScope: () => [...sentenceAnnotationQueries.all(), "sdoc"] as const,
-  bySdoc: (sdocId: number | null | undefined, userId: number | null | undefined) =>
+  bySdoc: (
+    projectId: number | null | undefined,
+    sdocId: number | null | undefined,
+    userId: number | null | undefined,
+  ) =>
     queryOptions({
-      queryKey: [...sentenceAnnotationQueries.bySdocScope(), sdocId, userId] as const,
-      queryFn: !sdocId || !userId ? skipToken : () => SentenceAnnotationService.getBySdocAndUser({ sdocId, userId }),
+      queryKey: [...sentenceAnnotationQueries.bySdocScope(), sdocId, userId, projectId] as const,
+      queryFn:
+        !projectId || !sdocId || !userId
+          ? skipToken
+          : () => SentenceAnnotationService.getSentenceAnnotationsBySentence({ projectId, userId, sdocId }),
     }),
   // the column infos of the sentence annotation filter table
   tableInfo: (projectId: number) =>

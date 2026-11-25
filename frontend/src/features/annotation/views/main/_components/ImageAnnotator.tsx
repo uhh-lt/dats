@@ -60,7 +60,7 @@ function ImageAnnotatorWithHeight({ sdocData, height }: ImageAnnotatorProps & { 
   const dispatch = useAppDispatch();
 
   // global server state (react query)
-  const annotations = useQuery(bboxAnnotationQueries.bySdoc(sdocData.id, visibleUserId));
+  const annotations = useQuery(bboxAnnotationQueries.bySdoc(sdocData.project_id, sdocData.id, visibleUserId));
   const sdocUrls = SdocHooks.useGetURLs(sdocData.id);
 
   // resize controller
@@ -242,7 +242,7 @@ function ImageAnnotatorWithHeight({ sdocData, height }: ImageAnnotatorProps & { 
     const pending = toPendingBboxAnnotation(requestBody, visibleUserId, sdocData.project_id);
     setPendingAnnotations((prev) => [...prev, pending]);
     createMutation.mutate(
-      { requestBody, userId: visibleUserId },
+      { projectId: sdocData.project_id, requestBody, userId: visibleUserId },
       {
         onSuccess,
         // remove the pending preview once the real annotation is in the cache (or the request failed)
@@ -271,6 +271,7 @@ function ImageAnnotatorWithHeight({ sdocData, height }: ImageAnnotatorProps & { 
   const onCodeSelectorEditCode = (_annotationToEdit: Annotation, codeId: number) => {
     if (selectedBbox) {
       updateMutation.mutate({
+        projectId: sdocData.project_id,
         bboxToUpdate: selectedBbox,
         requestBody: {
           code_id: codeId,
@@ -287,7 +288,7 @@ function ImageAnnotatorWithHeight({ sdocData, height }: ImageAnnotatorProps & { 
       openConfirmationDialog({
         text: `Do you really want to remove the BBoxAnnotation ${selectedBbox.id}? You can reassign it later!`,
         onAccept: () => {
-          deleteMutation.mutate({ bboxToDelete: selectedBbox });
+          deleteMutation.mutate({ projectId: sdocData.project_id, bboxToDelete: selectedBbox });
         },
       });
     } else {

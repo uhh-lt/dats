@@ -11,8 +11,9 @@ const estimateSize = () => 190;
 
 export function BBoxAnnotationExplorer({ sdocId }: { sdocId: number }) {
   // data
+  const projectId = AnnotationRouteAPI.useParams({ select: (params) => params.projectId });
   const { visibleUserId } = AnnotationRouteAPI.useSearch();
-  const annotations = useQuery(bboxAnnotationQueries.bySdoc(sdocId, visibleUserId));
+  const annotations = useQuery(bboxAnnotationQueries.bySdoc(projectId, sdocId, visibleUserId));
 
   return (
     <AnnotationExplorer

@@ -18,9 +18,11 @@ export class SentenceAnnotationService {
    * @throws ApiError
    */
   public static createSentenceAnnotation({
+    projectId,
     requestBody,
     userId,
   }: {
+    projectId: number;
     requestBody: SentenceAnnotationCreate;
     /**
      * The current user (default) or a virtual user of the project
@@ -29,12 +31,47 @@ export class SentenceAnnotationService {
   }): CancelablePromise<SentenceAnnotationRead> {
     return __request(OpenAPI, {
       method: "PUT",
-      url: "/sentence",
+      url: "/projects/{project_id}/sentence-annotations",
+      path: {
+        project_id: projectId,
+      },
       query: {
         user_id: userId,
       },
       body: requestBody,
       mediaType: "application/json",
+      errors: {
+        422: `Validation Error`,
+      },
+    });
+  }
+  /**
+   * Returns the SentenceAnnotations of the User, optionally only those in the SourceDocument or with the Code
+   * @returns SentenceAnnotationRead Successful Response
+   * @throws ApiError
+   */
+  public static getSentenceAnnotations({
+    projectId,
+    userId,
+    sdocId,
+    codeId,
+  }: {
+    projectId: number;
+    userId: number;
+    sdocId?: number | null;
+    codeId?: number | null;
+  }): CancelablePromise<Array<SentenceAnnotationRead>> {
+    return __request(OpenAPI, {
+      method: "GET",
+      url: "/projects/{project_id}/sentence-annotations",
+      path: {
+        project_id: projectId,
+      },
+      query: {
+        user_id: userId,
+        sdoc_id: sdocId,
+        code_id: codeId,
+      },
       errors: {
         422: `Validation Error`,
       },
@@ -46,9 +83,11 @@ export class SentenceAnnotationService {
    * @throws ApiError
    */
   public static createSentenceAnnotationsBulk({
+    projectId,
     requestBody,
     userId,
   }: {
+    projectId: number;
     requestBody: Array<SentenceAnnotationCreate>;
     /**
      * The current user (default) or a virtual user of the project
@@ -57,7 +96,10 @@ export class SentenceAnnotationService {
   }): CancelablePromise<Array<SentenceAnnotationRead>> {
     return __request(OpenAPI, {
       method: "PUT",
-      url: "/sentence/bulk/create",
+      url: "/projects/{project_id}/sentence-annotations/bulk",
+      path: {
+        project_id: projectId,
+      },
       query: {
         user_id: userId,
       },
@@ -69,118 +111,23 @@ export class SentenceAnnotationService {
     });
   }
   /**
-   * Returns the SentenceAnnotation with the given ID.
-   * @returns SentenceAnnotationRead Successful Response
-   * @throws ApiError
-   */
-  public static getById({ sentenceAnnoId }: { sentenceAnnoId: number }): CancelablePromise<SentenceAnnotationRead> {
-    return __request(OpenAPI, {
-      method: "GET",
-      url: "/sentence/{sentence_anno_id}",
-      path: {
-        sentence_anno_id: sentenceAnnoId,
-      },
-      errors: {
-        422: `Validation Error`,
-      },
-    });
-  }
-  /**
-   * Updates the SentenceAnnotation with the given ID.
-   * @returns SentenceAnnotationRead Successful Response
-   * @throws ApiError
-   */
-  public static updateById({
-    sentenceAnnoId,
-    requestBody,
-  }: {
-    sentenceAnnoId: number;
-    requestBody: SentenceAnnotationUpdate;
-  }): CancelablePromise<SentenceAnnotationRead> {
-    return __request(OpenAPI, {
-      method: "PATCH",
-      url: "/sentence/{sentence_anno_id}",
-      path: {
-        sentence_anno_id: sentenceAnnoId,
-      },
-      body: requestBody,
-      mediaType: "application/json",
-      errors: {
-        422: `Validation Error`,
-      },
-    });
-  }
-  /**
-   * Deletes the SentenceAnnotation with the given ID.
-   * @returns SentenceAnnotationRead Successful Response
-   * @throws ApiError
-   */
-  public static deleteById({ sentenceAnnoId }: { sentenceAnnoId: number }): CancelablePromise<SentenceAnnotationRead> {
-    return __request(OpenAPI, {
-      method: "DELETE",
-      url: "/sentence/{sentence_anno_id}",
-      path: {
-        sentence_anno_id: sentenceAnnoId,
-      },
-      errors: {
-        422: `Validation Error`,
-      },
-    });
-  }
-  /**
-   * Returns all SentenceAnnotations of the User for the SourceDocument
-   * @returns SentenceAnnotatorResult Successful Response
-   * @throws ApiError
-   */
-  public static getBySdocAndUser({
-    sdocId,
-    userId,
-  }: {
-    sdocId: number;
-    userId: number;
-  }): CancelablePromise<SentenceAnnotatorResult> {
-    return __request(OpenAPI, {
-      method: "GET",
-      url: "/sentence/sdoc/{sdoc_id}/user/{user_id}",
-      path: {
-        sdoc_id: sdocId,
-        user_id: userId,
-      },
-      errors: {
-        422: `Validation Error`,
-      },
-    });
-  }
-  /**
-   * Returns SentenceAnnotations with the given Code of the logged-in User
-   * @returns SentenceAnnotationRead Successful Response
-   * @throws ApiError
-   */
-  public static getByUserCode({ codeId }: { codeId: number }): CancelablePromise<Array<SentenceAnnotationRead>> {
-    return __request(OpenAPI, {
-      method: "GET",
-      url: "/sentence/code/{code_id}/user",
-      path: {
-        code_id: codeId,
-      },
-      errors: {
-        422: `Validation Error`,
-      },
-    });
-  }
-  /**
-   * Updates SentenceAnnotation in Bulk
+   * Updates SentenceAnnotations in Bulk
    * @returns SentenceAnnotationRead Successful Response
    * @throws ApiError
    */
   public static updateSentenceAnnotationsBulk({
+    projectId,
     requestBody,
   }: {
+    projectId: number;
     requestBody: Array<SentenceAnnotationUpdateBulk>;
   }): CancelablePromise<Array<SentenceAnnotationRead>> {
     return __request(OpenAPI, {
       method: "PATCH",
-      url: "/sentence/bulk/update",
+      url: "/projects/{project_id}/sentence-annotations/bulk",
+      path: {
+        project_id: projectId,
+      },
       body: requestBody,
       mediaType: "application/json",
       errors: {
@@ -194,13 +141,18 @@ export class SentenceAnnotationService {
    * @throws ApiError
    */
   public static deleteSentenceAnnotationsBulk({
+    projectId,
     requestBody,
   }: {
+    projectId: number;
     requestBody: Array<number>;
   }): CancelablePromise<Array<SentenceAnnotationRead>> {
     return __request(OpenAPI, {
       method: "DELETE",
-      url: "/sentence/bulk/delete",
+      url: "/projects/{project_id}/sentence-annotations/bulk",
+      path: {
+        project_id: projectId,
+      },
       body: requestBody,
       mediaType: "application/json",
       errors: {
@@ -209,21 +161,131 @@ export class SentenceAnnotationService {
     });
   }
   /**
-   * Counts the SentenceAnnotations of the User (by user_id) per Codes (by class_ids) in Documents (by sdoc_ids)
+   * Returns the SentenceAnnotations of the User in the SourceDocument, grouped by sentence
+   * @returns SentenceAnnotatorResult Successful Response
+   * @throws ApiError
+   */
+  public static getSentenceAnnotationsBySentence({
+    projectId,
+    userId,
+    sdocId,
+  }: {
+    projectId: number;
+    userId: number;
+    sdocId: number;
+  }): CancelablePromise<SentenceAnnotatorResult> {
+    return __request(OpenAPI, {
+      method: "GET",
+      url: "/projects/{project_id}/sentence-annotations/by-sentence",
+      path: {
+        project_id: projectId,
+      },
+      query: {
+        user_id: userId,
+        sdoc_id: sdocId,
+      },
+      errors: {
+        422: `Validation Error`,
+      },
+    });
+  }
+  /**
+   * Returns the SentenceAnnotation with the given ID.
+   * @returns SentenceAnnotationRead Successful Response
+   * @throws ApiError
+   */
+  public static getById({
+    projectId,
+    sentenceAnnotationId,
+  }: {
+    projectId: number;
+    sentenceAnnotationId: number;
+  }): CancelablePromise<SentenceAnnotationRead> {
+    return __request(OpenAPI, {
+      method: "GET",
+      url: "/projects/{project_id}/sentence-annotations/{sentence_annotation_id}",
+      path: {
+        project_id: projectId,
+        sentence_annotation_id: sentenceAnnotationId,
+      },
+      errors: {
+        422: `Validation Error`,
+      },
+    });
+  }
+  /**
+   * Updates the SentenceAnnotation with the given ID.
+   * @returns SentenceAnnotationRead Successful Response
+   * @throws ApiError
+   */
+  public static updateById({
+    projectId,
+    sentenceAnnotationId,
+    requestBody,
+  }: {
+    projectId: number;
+    sentenceAnnotationId: number;
+    requestBody: SentenceAnnotationUpdate;
+  }): CancelablePromise<SentenceAnnotationRead> {
+    return __request(OpenAPI, {
+      method: "PATCH",
+      url: "/projects/{project_id}/sentence-annotations/{sentence_annotation_id}",
+      path: {
+        project_id: projectId,
+        sentence_annotation_id: sentenceAnnotationId,
+      },
+      body: requestBody,
+      mediaType: "application/json",
+      errors: {
+        422: `Validation Error`,
+      },
+    });
+  }
+  /**
+   * Deletes the SentenceAnnotation with the given ID.
+   * @returns SentenceAnnotationRead Successful Response
+   * @throws ApiError
+   */
+  public static deleteById({
+    projectId,
+    sentenceAnnotationId,
+  }: {
+    projectId: number;
+    sentenceAnnotationId: number;
+  }): CancelablePromise<SentenceAnnotationRead> {
+    return __request(OpenAPI, {
+      method: "DELETE",
+      url: "/projects/{project_id}/sentence-annotations/{sentence_annotation_id}",
+      path: {
+        project_id: projectId,
+        sentence_annotation_id: sentenceAnnotationId,
+      },
+      errors: {
+        422: `Validation Error`,
+      },
+    });
+  }
+  /**
+   * Counts the SentenceAnnotations of the User per Code (by code_ids) in the SourceDocuments (by sdoc_ids)
    * @returns number Successful Response
    * @throws ApiError
    */
   public static countAnnotations({
+    projectId,
     userId,
     requestBody,
   }: {
+    projectId: number;
     userId: number;
     requestBody: Body_sentenceAnnotation_count_annotations;
   }): CancelablePromise<Record<string, number>> {
     return __request(OpenAPI, {
       method: "POST",
-      url: "/sentence/count_annotations/{user_id}",
+      url: "/projects/{project_id}/sentence-annotations/count",
       path: {
+        project_id: projectId,
+      },
+      query: {
         user_id: userId,
       },
       body: requestBody,

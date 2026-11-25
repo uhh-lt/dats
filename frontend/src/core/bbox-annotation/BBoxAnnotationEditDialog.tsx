@@ -38,6 +38,7 @@ export function BBoxAnnotationEditDialog({ projectId }: BBoxAnnotationEditDialog
 
     updateAnnotationBulkMutation(
       {
+        projectId,
         requestBody: dialogData.annotationIds.map((annotation) => ({
           bbox_annotation_id: annotation,
           code_id: selectedCodeId,
@@ -50,7 +51,7 @@ export function BBoxAnnotationEditDialog({ projectId }: BBoxAnnotationEditDialog
         },
       },
     );
-  }, [selectedCodeId, dialogData, updateAnnotationBulkMutation, handleClose, onSuccess]);
+  }, [selectedCodeId, dialogData, updateAnnotationBulkMutation, projectId, handleClose, onSuccess]);
 
   // maximize
   const { isMaximized, toggleMaximize } = useDialogMaximize();

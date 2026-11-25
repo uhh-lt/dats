@@ -34,11 +34,13 @@ const useUpdateSentenceAnnotation = () =>
   useMutation({
     mutationKey: [...sentenceAnnotationQueries.optimisticMutationScope(), "updateSentenceAnnotation"],
     mutationFn: (variables: {
+      projectId: number;
       sentenceAnnoToUpdate: SentenceAnnotationRead | number;
       update: SentenceAnnotationUpdate;
     }) =>
       SentenceAnnotationService.updateById({
-        sentenceAnnoId:
+        projectId: variables.projectId,
+        sentenceAnnotationId:
           typeof variables.sentenceAnnoToUpdate === "number"
             ? variables.sentenceAnnoToUpdate
             : variables.sentenceAnnoToUpdate.id,
@@ -61,6 +63,7 @@ const useUpdateSentenceAnnotation = () =>
     onMutate: async ({ sentenceAnnoToUpdate, update }) => {
       if (typeof sentenceAnnoToUpdate === "number") return;
       const affectedQueryKey = sentenceAnnotationQueries.bySdoc(
+        sentenceAnnoToUpdate.project_id,
         sentenceAnnoToUpdate.sdoc_id,
         sentenceAnnoToUpdate.user_id,
       ).queryKey;
@@ -136,14 +139,17 @@ const useUpdateBulkSentenceAnno = () =>
 const useDeleteSentenceAnnotation = () =>
   useMutation({
     mutationKey: [...sentenceAnnotationQueries.optimisticMutationScope(), "deleteSentenceAnnotation"],
-    mutationFn: (sentAnnoToDelete: SentenceAnnotationRead | number) =>
+    mutationFn: (variables: { projectId: number; sentAnnoToDelete: SentenceAnnotationRead | number }) =>
       SentenceAnnotationService.deleteById({
-        sentenceAnnoId: typeof sentAnnoToDelete === "number" ? sentAnnoToDelete : sentAnnoToDelete.id,
+        projectId: variables.projectId,
+        sentenceAnnotationId:
+          typeof variables.sentAnnoToDelete === "number" ? variables.sentAnnoToDelete : variables.sentAnnoToDelete.id,
       }),
     // optimistic updates
-    onMutate: async (sentAnnoToDelete) => {
+    onMutate: async ({ sentAnnoToDelete }) => {
       if (typeof sentAnnoToDelete === "number") return;
       const affectedQueryKey = sentenceAnnotationQueries.bySdoc(
+        sentAnnoToDelete.project_id,
         sentAnnoToDelete.sdoc_id,
         sentAnnoToDelete.user_id,
       ).queryKey;
@@ -192,12 +198,13 @@ const useDeleteBulkSentenceAnnotation = () =>
 const useDeleteBulkSentenceAnnotationSingleSdoc = () =>
   useMutation({
     mutationKey: [...sentenceAnnotationQueries.optimisticMutationScope(), "deleteBulkSentenceAnnotationSingleSdoc"],
-    mutationFn: (sentAnnosToDelete: SentenceAnnotationRead[]) =>
+    mutationFn: (variables: { projectId: number; sentAnnosToDelete: SentenceAnnotationRead[] }) =>
       SentenceAnnotationService.deleteSentenceAnnotationsBulk({
-        requestBody: sentAnnosToDelete.map((anno) => anno.id),
+        projectId: variables.projectId,
+        requestBody: variables.sentAnnosToDelete.map((anno) => anno.id),
       }),
     // optimistic updates
-    onMutate: async (sentAnnosToDelete) => {
+    onMutate: async ({ projectId, sentAnnosToDelete }) => {
       if (sentAnnosToDelete.length === 0) return;
       const sdocId = sentAnnosToDelete[0].sdoc_id;
       if (sentAnnosToDelete.some((annotation) => annotation.sdoc_id !== sdocId)) {
@@ -210,7 +217,7 @@ const useDeleteBulkSentenceAnnotationSingleSdoc = () =>
         return;
       }
 
-      const affectedQueryKey = sentenceAnnotationQueries.bySdoc(sdocId, userId).queryKey;
+      const affectedQueryKey = sentenceAnnotationQueries.bySdoc(projectId, sdocId, userId).queryKey;
       await queryClient.cancelQueries({ queryKey: affectedQueryKey });
       const previousSentenceAnnotator = queryClient.getQueryData(affectedQueryKey);
       const idsToDelete = sentAnnosToDelete.map((anno) => anno.id);

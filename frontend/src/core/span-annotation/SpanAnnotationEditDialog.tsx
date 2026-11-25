@@ -38,6 +38,7 @@ export function SpanAnnotationEditDialog({ projectId }: SpanAnnotationEditDialog
 
     updateAnnotationBulkMutation(
       {
+        projectId,
         requestBody: dialogData.annotationIds.map((annotation) => ({
           span_annotation_id: annotation,
           code_id: selectedCodeId,
@@ -50,7 +51,7 @@ export function SpanAnnotationEditDialog({ projectId }: SpanAnnotationEditDialog
         },
       },
     );
-  }, [dialogData, handleClose, onSuccess, selectedCodeId, updateAnnotationBulkMutation]);
+  }, [dialogData, handleClose, onSuccess, projectId, selectedCodeId, updateAnnotationBulkMutation]);
 
   // maximize
   const { isMaximized, toggleMaximize } = useDialogMaximize();

@@ -50,7 +50,7 @@ function ImageViewerWithData({ sdocData, height, width }: ImageViewerProps & { h
   const hiddenCodeIds = useAppSelector((state) => state.annotations.hiddenCodeIds);
 
   // global server state (react query)
-  const annotations = useQuery(bboxAnnotationQueries.bySdoc(sdocData.id, visibleUserId));
+  const annotations = useQuery(bboxAnnotationQueries.bySdoc(sdocData.project_id, sdocData.id, visibleUserId));
   const sdocUrls = SdocHooks.useGetURLs(sdocData.id);
 
   const annotationData = useMemo(() => {

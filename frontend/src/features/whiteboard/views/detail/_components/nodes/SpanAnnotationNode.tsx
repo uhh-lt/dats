@@ -27,6 +27,7 @@ import {
   isSdocSpanAnnotationEdge,
 } from "../../_utils/whiteboardUtils";
 import { BaseCardNode } from "./BaseCardNode";
+import { WhiteboardRouteAPI } from "../../_hooks/whiteboardRouteAPI";
 
 export type SpanAnnotationNode = Node<SpanAnnotationNodeData, WhiteboardNodeType.SPAN_ANNOTATION>;
 export function SpanAnnotationNode(props: NodeProps<SpanAnnotationNode>) {
@@ -42,9 +43,12 @@ export function SpanAnnotationNode(props: NodeProps<SpanAnnotationNode>) {
   const readonly = !props.isConnectable;
 
   // global server state (react-query)
-  const annotation = useQuery(spanAnnotationQueries.byId(props.data.spanAnnotationId));
+  const projectId = WhiteboardRouteAPI.useParams({ select: (params) => params.projectId });
+  const annotation = useQuery(spanAnnotationQueries.byId(projectId, props.data.spanAnnotationId));
   const code = CodeHooks.useGetCode(annotation.data?.code_id);
-  const memos = useQuery(memoQueries.byAttachedObject(AttachedObjectType.SPAN_ANNOTATION, props.data.spanAnnotationId));
+  const memos = useQuery(
+    memoQueries.byAttachedObject(projectId, AttachedObjectType.SPAN_ANNOTATION, props.data.spanAnnotationId),
+  );
 
   // effects
   useEffect(() => {
