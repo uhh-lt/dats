@@ -5,6 +5,9 @@ from pathlib import Path
 
 from dats_api import DATSAPI
 
+# every script reads and writes the files of one sample in one data folder
+DEFAULT_DATA_DIR = Path(__file__).parent / "data"
+
 
 def sha256_of(path: Path) -> str:
     digest = hashlib.sha256()

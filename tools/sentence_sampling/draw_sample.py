@@ -1,10 +1,11 @@
-"""Draws the validation sample from a sentence export (see README.md for the strategy).
+"""Draws a sentence sample from a sentence export (see README.md for the strategy).
 
-Draw 1 (background) samples the whole frame, Draw 2 (proxy) the sentences with a
-proxy term but without "fresh", Draw 3 (fresh) the sentences with "fresh". Every
-draw takes an equal number of sentences per decade and leaves out the sentences
-of Draw 1. The sample CSV and a log JSON with everything needed to reproduce and
-weight it are written next to the export.
+The draws are defined by sample.json in the data folder: each draw takes n sentences
+from its pool, an equal number per decade. A pool is the frame (sentences with a year
+in one of the decades and at least min_words words), narrowed to the sentences that
+match the draw's term list or substring, without those that match the draws it
+excludes, and without the sentences of the earlier draws. The sample CSV and a log
+JSON with everything needed to reproduce and weight it are written to the data folder.
 """
 
 import argparse
@@ -12,18 +13,18 @@ import json
 import platform
 import re
 from pathlib import Path
+from typing import Any
 
 import numpy as np
 import pandas as pd
 from loguru import logger
-from sampling_utils import sha256_of
+from sampling_utils import DEFAULT_DATA_DIR, sha256_of
 
-DEFAULT_PROXY_TERMS = Path(__file__).parent / "proxy_terms.json"
-DEFAULT_DECADES = [1880, 1890, 1900, 1910, 1920, 1930, 1940, 1950]
-FRESH_SUBSTRING = "fresh"
+CONFIG_FILE = "sample.json"
 # a word is a whitespace-separated token with at least one letter
 WORD_PATTERN = r"\S*[^\W\d_]\S*"
-OUTPUT_COLUMNS = [
+DRAW_NAME_PATTERN = re.compile(r"[a-z][a-z0-9_]*")
+SAMPLE_COLUMNS = [
     "draw",
     "sentence_uid",
     "sdoc_id",
@@ -32,9 +33,6 @@ OUTPUT_COLUMNS = [
     "year",
     "decade",
     "n_words",
-    "contains_fresh",
-    "matched_proxy_terms",
-    "sentence_text",
 ]
 
 
@@ -45,6 +43,44 @@ def term_pattern(forms: list[str]) -> str:
         r"[\s-]+".join(re.escape(w) for w in form.split()) for form in forms
     ]
     return r"\b(?:" + "|".join(alternatives) + r")\b"
+
+
+def load_config(
+    data_dir: Path,
+) -> tuple[dict[str, Any], dict[str, dict[str, list[str]]]]:
+    """Reads and checks sample.json and the term lists it names (relative to the data
+    folder). Returns the config and the term lists by file name."""
+    config_path = data_dir / CONFIG_FILE
+    if not config_path.exists():
+        raise SystemExit(
+            f"{config_path} does not exist; copy the files of an example in examples/ "
+            "into the data folder"
+        )
+    config: dict[str, Any] = json.loads(config_path.read_text())
+    draws: list[dict[str, Any]] = config["draws"]
+    names = [d["name"] for d in draws]
+    if len(set(names)) != len(names):
+        raise SystemExit(f"The draw names in {config_path} are not unique")
+    criteria = {d["name"] for d in draws if "terms" in d or "substring" in d}
+    term_lists: dict[str, dict[str, list[str]]] = {}
+    for d in draws:
+        if not DRAW_NAME_PATTERN.fullmatch(d["name"]):
+            raise SystemExit(f"Draw names are lowercase identifiers, not '{d['name']}'")
+        if not isinstance(d["n"], int) or d["n"] <= 0:
+            raise SystemExit(f"Draw '{d['name']}' needs a positive n")
+        if "terms" in d and "substring" in d:
+            raise SystemExit(f"Draw '{d['name']}' has both terms and a substring")
+        invalid = [
+            e for e in d.get("exclude", []) if e == d["name"] or e not in criteria
+        ]
+        if invalid:
+            raise SystemExit(
+                f"Draw '{d['name']}' can only exclude other draws with terms or a "
+                f"substring, not {invalid}"
+            )
+        if "terms" in d:
+            term_lists[d["terms"]] = json.loads((data_dir / d["terms"]).read_text())
+    return config, term_lists
 
 
 def load_frame(
@@ -88,23 +124,24 @@ def load_frame(
     return df, counts
 
 
-def mark_matches(df: pd.DataFrame, proxy_terms: dict[str, list[str]]) -> pd.DataFrame:
-    """Adds contains_fresh (case-insensitive substring) and matched_proxy_terms (the
-    list terms whose forms occur as whole words, case-insensitive, ';'-separated)."""
-    text = df["sentence_text"]
-    contains_fresh = text.str.contains(FRESH_SUBSTRING, case=False, regex=False)
-
+def match_terms(text: pd.Series, terms: dict[str, list[str]]) -> pd.Series:
+    """The list terms whose forms occur as whole words (case-insensitive),
+    ';'-separated, "" if none."""
     # match all terms at once, then find out which ones for the matching sentences only
-    any_term = term_pattern([f for forms in proxy_terms.values() for f in forms])
+    any_term = term_pattern([f for forms in terms.values() for f in forms])
     candidates = text[text.str.contains(any_term, case=False, regex=True)]
-    matched = pd.Series("", index=df.index, dtype=object)
-    for term, forms in proxy_terms.items():
+    matched = pd.Series("", index=text.index, dtype=object)
+    for term, forms in terms.items():
         hits = candidates.str.contains(term_pattern(forms), case=False, regex=True)
         hit_index = hits[hits].index
         matched[hit_index] = matched[hit_index] + term + ";"
-    return df.assign(
-        contains_fresh=contains_fresh, matched_proxy_terms=matched.str.rstrip(";")
-    )
+    return matched.str.rstrip(";")
+
+
+def match_substring(text: pd.Series, substring: str) -> pd.Series:
+    """The substring where it occurs (case-insensitive), "" elsewhere."""
+    hits = text.str.contains(substring, case=False, regex=False)
+    return hits.map({True: substring, False: ""})
 
 
 def allocate(
@@ -135,7 +172,7 @@ def allocate(
 
 def draw(
     name: str, pool: pd.DataFrame, n: int, decades: list[int], rng: np.random.Generator
-) -> tuple[pd.DataFrame, dict[str, dict[str, int]]]:
+) -> tuple[pd.DataFrame, dict[str, Any]]:
     """Draws n sentences of the pool, equally per decade, uniformly within a decade."""
     groups = {d: pool[pool["decade"] == d] for d in decades}
     quotas = allocate(n, {d: len(g) for d, g in groups.items()}, rng)
@@ -146,6 +183,7 @@ def draw(
         drawn.append(group.iloc[np.sort(positions)])
     sample = pd.concat(drawn).assign(draw=name)
     log = {
+        "n": n,
         "pool_per_decade": {str(d): len(g) for d, g in groups.items()},
         "drawn_per_decade": {str(d): quotas[d] for d in decades},
     }
@@ -156,101 +194,95 @@ def draw(
 def main() -> None:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument(
-        "--input", type=Path, required=True, help="the CSV of export_sentences.py"
+        "--data_dir",
+        type=Path,
+        default=DEFAULT_DATA_DIR,
+        help="the folder with the export and sample.json, which receives the sample",
     )
+    parser.add_argument("--project_id", type=int, required=True)
     parser.add_argument(
         "--seed", type=int, required=True, help="the seed of the draw, log it"
-    )
-    parser.add_argument("--proxy_terms", type=Path, default=DEFAULT_PROXY_TERMS)
-    parser.add_argument(
-        "--min_words",
-        type=int,
-        default=5,
-        help="sentences with fewer words are not in the frame",
-    )
-    parser.add_argument("--decades", type=int, nargs="+", default=DEFAULT_DECADES)
-    parser.add_argument("--n_background", type=int, default=100)
-    parser.add_argument("--n_proxy", type=int, default=200)
-    parser.add_argument("--n_fresh", type=int, default=100)
-    parser.add_argument(
-        "--output",
-        type=Path,
-        default=None,
-        help="defaults to data/sentence_sample_project_<project_id>.csv",
     )
     parser.add_argument(
         "--overwrite", action="store_true", help="replace an existing sample"
     )
     args = parser.parse_args()
+    data_dir: Path = args.data_dir
 
     # the export must be the one its manifest describes
-    manifest = json.loads(args.input.with_suffix(".manifest.json").read_text())
-    input_sha256 = sha256_of(args.input)
-    if input_sha256 != manifest["csv_sha256"]:
-        raise SystemExit(f"{args.input} does not match the SHA-256 of its manifest")
-    project_id = manifest["project_id"]
+    export_path = data_dir / f"sentence_export_project_{args.project_id}.csv"
+    manifest = json.loads(export_path.with_suffix(".manifest.json").read_text())
+    export_sha256 = sha256_of(export_path)
+    if export_sha256 != manifest["csv_sha256"]:
+        raise SystemExit(f"{export_path} does not match the SHA-256 of its manifest")
 
-    output: Path = (
-        args.output or args.input.parent / f"sentence_sample_project_{project_id}.csv"
-    )
+    output = data_dir / f"sentence_sample_project_{args.project_id}.csv"
     log_path = output.with_suffix(".log.json")
     if output.exists() and not args.overwrite:
         raise SystemExit(f"{output} exists; pass --overwrite to draw again")
 
-    proxy_terms: dict[str, list[str]] = json.loads(args.proxy_terms.read_text())
-    decades = sorted(args.decades)
+    config, term_lists = load_config(data_dir)
+    decades = sorted(config["decades"])
+    draws: list[dict[str, Any]] = config["draws"]
 
-    frame, frame_counts = load_frame(args.input, decades, args.min_words)
+    frame, frame_counts = load_frame(export_path, decades, config["min_words"])
     empty = [d for d in decades if not (frame["decade"] == d).any()]
     if empty:
         raise SystemExit(f"The frame has no sentences in the decades {empty}")
-    frame = mark_matches(frame, proxy_terms)
     logger.info(f"Frame: {frame_counts}")
 
-    rng_background, rng_proxy, rng_fresh = (
-        np.random.default_rng(s) for s in np.random.SeedSequence(args.seed).spawn(3)
-    )
-    background, background_log = draw(
-        "background", frame, args.n_background, decades, rng_background
-    )
-    rest = frame.drop(background.index)
-    has_proxy = rest["matched_proxy_terms"] != ""
-    # a sentence with "fresh" and a proxy term belongs to the fresh pool only
-    proxy, proxy_log = draw(
-        "proxy",
-        rest[has_proxy & ~rest["contains_fresh"]],
-        args.n_proxy,
-        decades,
-        rng_proxy,
-    )
-    fresh, fresh_log = draw(
-        "fresh", rest[rest["contains_fresh"]], args.n_fresh, decades, rng_fresh
-    )
+    # one column per draw with a criterion: what of it the sentence matches
+    match_columns = []
+    for d in draws:
+        column = f"matches_{d['name']}"
+        if "terms" in d:
+            frame[column] = match_terms(frame["sentence_text"], term_lists[d["terms"]])
+        elif "substring" in d:
+            frame[column] = match_substring(frame["sentence_text"], d["substring"])
+        else:
+            continue
+        match_columns.append(column)
 
-    sample = pd.concat([background, proxy, fresh])[OUTPUT_COLUMNS]
-    output.parent.mkdir(parents=True, exist_ok=True)
+    # one random generator per draw, in the order of the draws
+    rngs = [
+        np.random.default_rng(s)
+        for s in np.random.SeedSequence(args.seed).spawn(len(draws))
+    ]
+    samples = []
+    draws_log = {}
+    rest = frame
+    for d, rng in zip(draws, rngs):
+        pool = rest
+        if f"matches_{d['name']}" in match_columns:
+            pool = pool[pool[f"matches_{d['name']}"] != ""]
+        for excluded in d.get("exclude", []):
+            pool = pool[pool[f"matches_{excluded}"] == ""]
+        sample, draws_log[d["name"]] = draw(d["name"], pool, d["n"], decades, rng)
+        samples.append(sample)
+        # a sentence is drawn at most once
+        rest = rest.drop(sample.index)
+
+    sample = pd.concat(samples)[SAMPLE_COLUMNS + match_columns + ["sentence_text"]]
+    data_dir.mkdir(parents=True, exist_ok=True)
     sample.to_csv(output, index=False, lineterminator="\n")
 
     log = {
-        "input_file": args.input.name,
-        "input_sha256": input_sha256,
-        "project_id": project_id,
-        "proxy_terms_file": args.proxy_terms.name,
-        "proxy_terms_sha256": sha256_of(args.proxy_terms),
-        "proxy_terms": proxy_terms,
-        "fresh_substring": FRESH_SUBSTRING,
+        "export_file": export_path.name,
+        "export_sha256": export_sha256,
+        "project_id": args.project_id,
+        "config_file": CONFIG_FILE,
+        "config_sha256": sha256_of(data_dir / CONFIG_FILE),
+        "config": config,
+        "term_files": {
+            name: {"sha256": sha256_of(data_dir / name), "terms": terms}
+            for name, terms in term_lists.items()
+        },
         "seed": args.seed,
-        "min_words": args.min_words,
-        "decades": decades,
         "frame": {
             **frame_counts,
             "per_decade": {str(d): int((frame["decade"] == d).sum()) for d in decades},
         },
-        "draws": {
-            "background": {"n": args.n_background, **background_log},
-            "proxy": {"n": args.n_proxy, **proxy_log},
-            "fresh": {"n": args.n_fresh, **fresh_log},
-        },
+        "draws": draws_log,
         "sample_file": output.name,
         "sample_sha256": sha256_of(output),
         "versions": {

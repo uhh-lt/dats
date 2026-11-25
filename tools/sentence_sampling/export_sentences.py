@@ -18,10 +18,9 @@ from typing import Any
 
 from dats_api import DATSAPI
 from loguru import logger
-from sampling_utils import connect, sha256_of
+from sampling_utils import DEFAULT_DATA_DIR, connect, sha256_of
 from tqdm import tqdm
 
-DATA_DIR = Path(__file__).parent / "data"
 COLUMNS = [
     "sentence_uid",
     "sdoc_id",
@@ -137,16 +136,14 @@ def main() -> None:
         "--workers", type=int, default=4, help="number of parallel requests"
     )
     parser.add_argument(
-        "--output",
+        "--data_dir",
         type=Path,
-        default=None,
-        help="defaults to data/sentence_export_project_<project_id>.csv",
+        default=DEFAULT_DATA_DIR,
+        help="the folder that receives the export",
     )
     args = parser.parse_args()
 
-    output: Path = (
-        args.output or DATA_DIR / f"sentence_export_project_{args.project_id}.csv"
-    )
+    output: Path = args.data_dir / f"sentence_export_project_{args.project_id}.csv"
     manifest_path = output.with_suffix(".manifest.json")
     api = connect(args.backend_url, args.username)
 
