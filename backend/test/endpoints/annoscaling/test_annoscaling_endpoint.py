@@ -9,6 +9,7 @@ from modules.annoscaling.annoscaling_dto import (
     AnnoscalingConfirmSuggest,
     AnnoscalingResult,
     AnnoscalingSuggest,
+    SdocSentencePair,
 )
 from pipeline_test_utils import artefact_named
 from systems.feature_system.feature_registry import feature_registry
@@ -20,7 +21,7 @@ CODE_ID = 1
 REJECT_CODE_ID = 2
 
 # ===========================================================================
-# SUGGEST (/annoscaling/suggest) TESTS
+# SUGGEST (/projects/{project_id}/annotation-scaling/suggest) TESTS
 # ===========================================================================
 
 
@@ -28,13 +29,15 @@ def test_suggest_is_rejected_when_annotation_scaling_is_disabled(
     client: TestClient, featureless_project: FeaturelessProject
 ):
     dto = AnnoscalingSuggest(
-        project_id=featureless_project["project"].id,
         code_id=CODE_ID,
         reject_cide_id=REJECT_CODE_ID,
         top_k=10,
     )
 
-    response = client.post("/annoscaling/suggest", json=dto.model_dump())
+    response = client.post(
+        f"/projects/{featureless_project['project'].id}/annotation-scaling/suggest",
+        json=dto.model_dump(),
+    )
 
     assert_feature_disabled(response, "annotation_scaling")
 
@@ -47,13 +50,15 @@ def test_suggest_finds_the_nearest_sentences_without_semantic_search(
     p = annotated_scaling_project
     text = p["project"]["text"]
     dto = AnnoscalingSuggest(
-        project_id=p["project"]["project"].id,
         code_id=p["accept"].id,
         reject_cide_id=p["reject"].id,
         top_k=10,
     )
 
-    response = client.post("/annoscaling/suggest", json=dto.model_dump())
+    response = client.post(
+        f"/projects/{p['project']['project'].id}/annotation-scaling/suggest",
+        json=dto.model_dump(),
+    )
 
     assert response.status_code == 200, response.text
     results = [AnnoscalingResult.model_validate(r) for r in response.json()]
@@ -63,7 +68,7 @@ def test_suggest_finds_the_nearest_sentences_without_semantic_search(
 
 
 # ===========================================================================
-# CONFIRM SUGGESTIONS (/annoscaling/confirm_suggestions) TESTS
+# CONFIRM SUGGESTIONS (/projects/{project_id}/annotation-scaling/confirm-suggestions) TESTS
 # ===========================================================================
 
 
@@ -71,16 +76,41 @@ def test_confirm_suggestions_is_rejected_when_annotation_scaling_is_disabled(
     client: TestClient, featureless_project: FeaturelessProject
 ):
     dto = AnnoscalingConfirmSuggest(
-        project_id=featureless_project["project"].id,
         code_id=CODE_ID,
         reject_code_id=REJECT_CODE_ID,
         accept=[],
         reject=[],
     )
 
-    response = client.post("/annoscaling/confirm_suggestions", json=dto.model_dump())
+    response = client.post(
+        f"/projects/{featureless_project['project'].id}"
+        "/annotation-scaling/confirm-suggestions",
+        json=dto.model_dump(),
+    )
 
     assert_feature_disabled(response, "annotation_scaling")
+
+
+def test_confirm_suggestions_with_a_code_of_another_project_is_a_conflict(
+    client: TestClient, annotated_scaling_project: AnnotatedScalingProject
+):
+    """The code of the new annotations is a body id of a write: a code of another
+    project is rejected by the composite foreign key (409)."""
+    p = annotated_scaling_project
+    dto = AnnoscalingConfirmSuggest(
+        code_id=p["foreign_code"].id,
+        reject_code_id=p["reject"].id,
+        accept=[SdocSentencePair(sdoc_id=p["project"]["text"].id, sentence=1)],
+        reject=[],
+    )
+
+    response = client.post(
+        f"/projects/{p['project']['project'].id}"
+        "/annotation-scaling/confirm-suggestions",
+        json=dto.model_dump(),
+    )
+
+    assert response.status_code == 409, response.text
 
 
 # ===========================================================================

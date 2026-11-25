@@ -2,7 +2,7 @@
   "openapi": "3.1.0",
   "info": { "title": "Discourse Analysis Tool Suite API", "version": "1.14.1" },
   "paths": {
-    "/agreement/compute": {
+    "/projects/{project_id}/agreement/compute": {
       "post": {
         "tags": ["agreement"],
         "summary": "Compare the annotations of two annotators: scores, confusion matrix and segments.",
@@ -11,7 +11,7 @@
         "parameters": [
           {
             "name": "project_id",
-            "in": "query",
+            "in": "path",
             "required": true,
             "schema": { "type": "integer", "title": "Project Id" }
           }
@@ -32,7 +32,7 @@
         }
       }
     },
-    "/agreement/export_counts": {
+    "/projects/{project_id}/agreement/export-counts": {
       "post": {
         "tags": ["agreement"],
         "summary": "Export the raw agreement counts (TP, FP, FN) per document and code as CSV.",
@@ -41,7 +41,7 @@
         "parameters": [
           {
             "name": "project_id",
-            "in": "query",
+            "in": "path",
             "required": true,
             "schema": { "type": "integer", "title": "Project Id" }
           }
@@ -66,7 +66,7 @@
         }
       }
     },
-    "/agreement/segment_texts": {
+    "/projects/{project_id}/agreement/segment-texts": {
       "post": {
         "tags": ["agreement"],
         "summary": "Returns the texts of segments (character ranges of documents), in the order of the request.",
@@ -75,7 +75,7 @@
         "parameters": [
           {
             "name": "project_id",
-            "in": "query",
+            "in": "path",
             "required": true,
             "schema": { "type": "integer", "title": "Project Id" }
           }
@@ -112,15 +112,24 @@
         }
       }
     },
-    "/annoscaling/suggest": {
+    "/projects/{project_id}/annotation-scaling/suggest": {
       "post": {
         "tags": ["annoscaling"],
         "summary": "Suggest annotations",
         "description": "Suggest annotations",
         "operationId": "suggest",
+        "security": [{ "OAuth2PasswordBearer": [] }],
+        "parameters": [
+          {
+            "name": "project_id",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "integer", "title": "Project Id" }
+          }
+        ],
         "requestBody": {
-          "content": { "application/json": { "schema": { "$ref": "#/components/schemas/AnnoscalingSuggest" } } },
-          "required": true
+          "required": true,
+          "content": { "application/json": { "schema": { "$ref": "#/components/schemas/AnnoscalingSuggest" } } }
         },
         "responses": {
           "200": {
@@ -128,8 +137,8 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "items": { "$ref": "#/components/schemas/AnnoscalingResult" },
                   "type": "array",
+                  "items": { "$ref": "#/components/schemas/AnnoscalingResult" },
                   "title": "Response Annoscaling-Suggest"
                 }
               }
@@ -139,19 +148,27 @@
             "description": "Validation Error",
             "content": { "application/json": { "schema": { "$ref": "#/components/schemas/HTTPValidationError" } } }
           }
-        },
-        "security": [{ "OAuth2PasswordBearer": [] }]
+        }
       }
     },
-    "/annoscaling/confirm_suggestions": {
+    "/projects/{project_id}/annotation-scaling/confirm-suggestions": {
       "post": {
         "tags": ["annoscaling"],
         "summary": "Suggest annotations",
         "description": "Suggest annotations",
         "operationId": "confirm_suggestions",
+        "security": [{ "OAuth2PasswordBearer": [] }],
+        "parameters": [
+          {
+            "name": "project_id",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "integer", "title": "Project Id" }
+          }
+        ],
         "requestBody": {
-          "content": { "application/json": { "schema": { "$ref": "#/components/schemas/AnnoscalingConfirmSuggest" } } },
-          "required": true
+          "required": true,
+          "content": { "application/json": { "schema": { "$ref": "#/components/schemas/AnnoscalingConfirmSuggest" } } }
         },
         "responses": {
           "200": {
@@ -159,8 +176,8 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "items": { "$ref": "#/components/schemas/SpanAnnotationRead" },
                   "type": "array",
+                  "items": { "$ref": "#/components/schemas/SpanAnnotationRead" },
                   "title": "Response Annoscaling-Confirm Suggestions"
                 }
               }
@@ -170,8 +187,7 @@
             "description": "Validation Error",
             "content": { "application/json": { "schema": { "$ref": "#/components/schemas/HTTPValidationError" } } }
           }
-        },
-        "security": [{ "OAuth2PasswordBearer": [] }]
+        }
       }
     },
     "/api-keys": {
@@ -1005,7 +1021,7 @@
         }
       }
     },
-    "/code_frequency/code_frequencies": {
+    "/projects/{project_id}/code-frequency/frequencies": {
       "post": {
         "tags": ["code_frequency"],
         "summary": "Returns all SourceDocument IDs that match the query parameters.",
@@ -1014,7 +1030,7 @@
         "parameters": [
           {
             "name": "project_id",
-            "in": "query",
+            "in": "path",
             "required": true,
             "schema": { "type": "integer", "title": "Project Id" }
           }
@@ -1045,7 +1061,7 @@
         }
       }
     },
-    "/code_frequency/code_occurrences": {
+    "/projects/{project_id}/code-frequency/occurrences": {
       "post": {
         "tags": ["code_frequency"],
         "summary": "Returns all SourceDocument IDs that match the query parameters.",
@@ -1054,7 +1070,7 @@
         "parameters": [
           {
             "name": "project_id",
-            "in": "query",
+            "in": "path",
             "required": true,
             "schema": { "type": "integer", "title": "Project Id" }
           },
@@ -1585,7 +1601,7 @@
         }
       }
     },
-    "/document_sampler/sample_sdocs_by_tags": {
+    "/projects/{project_id}/document-sampler/sample-by-tags": {
       "post": {
         "tags": ["document_sampler"],
         "summary": "Sample & Aggregate Source Documents by tags.",
@@ -1594,7 +1610,7 @@
         "parameters": [
           {
             "name": "project_id",
-            "in": "query",
+            "in": "path",
             "required": true,
             "schema": { "type": "integer", "title": "Project Id" }
           },
@@ -3243,7 +3259,7 @@
         }
       }
     },
-    "/keyword_statistics/keyword": {
+    "/projects/{project_id}/keyword-statistics/keywords": {
       "post": {
         "tags": ["keyword_statistics"],
         "summary": "Returns KeywordStats for the given SourceDocuments.",
@@ -3252,7 +3268,7 @@
         "parameters": [
           {
             "name": "project_id",
-            "in": "query",
+            "in": "path",
             "required": true,
             "schema": { "type": "integer", "title": "Project Id" }
           },
@@ -7258,7 +7274,7 @@
         }
       }
     },
-    "/statistics/code": {
+    "/projects/{project_id}/statistics/codes": {
       "post": {
         "tags": ["statistics"],
         "summary": "Returns SpanEntityStats for the given SourceDocuments.",
@@ -7267,7 +7283,7 @@
         "parameters": [
           {
             "name": "project_id",
-            "in": "query",
+            "in": "path",
             "required": true,
             "schema": { "type": "integer", "title": "Project Id" }
           },
@@ -7311,7 +7327,7 @@
         }
       }
     },
-    "/statistics/tag": {
+    "/projects/{project_id}/statistics/tags": {
       "post": {
         "tags": ["statistics"],
         "summary": "Returns Stat for the given SourceDocuments.",
@@ -7320,7 +7336,7 @@
         "parameters": [
           {
             "name": "project_id",
-            "in": "query",
+            "in": "path",
             "required": true,
             "schema": { "type": "integer", "title": "Project Id" }
           },
@@ -8468,7 +8484,7 @@
         }
       }
     },
-    "/word_frequency/info/{project_id}": {
+    "/projects/{project_id}/word-frequencies/info": {
       "get": {
         "tags": ["word_frequency"],
         "summary": "Returns WordFrequency Info.",
@@ -8502,20 +8518,20 @@
         }
       }
     },
-    "/word_frequency/sdoc/{sdoc_id}": {
+    "/projects/{project_id}/word-frequencies": {
       "get": {
         "tags": ["word_frequency"],
-        "summary": "Returns the SourceDocument's word frequencies with the given ID if it exists",
+        "summary": "Returns the word frequencies of the SourceDocument",
         "operationId": "get_word_frequencies",
         "security": [{ "OAuth2PasswordBearer": [] }],
         "parameters": [
-          { "name": "sdoc_id", "in": "path", "required": true, "schema": { "type": "integer", "title": "Sdoc Id" } },
           {
             "name": "project_id",
-            "in": "query",
+            "in": "path",
             "required": true,
             "schema": { "type": "integer", "title": "Project Id" }
-          }
+          },
+          { "name": "sdoc_id", "in": "query", "required": true, "schema": { "type": "integer", "title": "Sdoc Id" } }
         ],
         "responses": {
           "200": {
@@ -8537,7 +8553,7 @@
         }
       }
     },
-    "/word_frequency/analysis": {
+    "/projects/{project_id}/word-frequencies/analysis": {
       "post": {
         "tags": ["word_frequency"],
         "summary": "Perform word frequency analysis.",
@@ -8546,7 +8562,7 @@
         "parameters": [
           {
             "name": "project_id",
-            "in": "query",
+            "in": "path",
             "required": true,
             "schema": { "type": "integer", "title": "Project Id" }
           },
@@ -8578,7 +8594,7 @@
         }
       }
     },
-    "/word_frequency/export": {
+    "/projects/{project_id}/word-frequencies/export": {
       "post": {
         "tags": ["word_frequency"],
         "summary": "Export the word frequency analysis.",
@@ -8587,7 +8603,7 @@
         "parameters": [
           {
             "name": "project_id",
-            "in": "query",
+            "in": "path",
             "required": true,
             "schema": { "type": "integer", "title": "Project Id" }
           }
@@ -9997,7 +10013,6 @@
       },
       "AnnoscalingConfirmSuggest": {
         "properties": {
-          "project_id": { "type": "integer", "title": "Project Id", "description": "Project to apply suggestions" },
           "code_id": { "type": "integer", "title": "Code Id", "description": "Code to apply on accepted spans" },
           "reject_code_id": {
             "type": "integer",
@@ -10018,7 +10033,7 @@
           }
         },
         "type": "object",
-        "required": ["project_id", "code_id", "reject_code_id", "accept", "reject"],
+        "required": ["code_id", "reject_code_id", "accept", "reject"],
         "title": "AnnoscalingConfirmSuggest"
       },
       "AnnoscalingResult": {
@@ -10037,7 +10052,6 @@
       },
       "AnnoscalingSuggest": {
         "properties": {
-          "project_id": { "type": "integer", "title": "Project Id", "description": "Project to retrieve suggestions" },
           "code_id": { "type": "integer", "title": "Code Id", "description": "Code to provide suggestions for" },
           "reject_cide_id": {
             "type": "integer",
@@ -10047,7 +10061,7 @@
           "top_k": { "type": "integer", "title": "Top K", "description": "Number of suggestions to provide" }
         },
         "type": "object",
-        "required": ["project_id", "code_id", "reject_cide_id", "top_k"],
+        "required": ["code_id", "reject_cide_id", "top_k"],
         "title": "AnnoscalingSuggest"
       },
       "AnnotationLLMAssistantJobResult": {

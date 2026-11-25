@@ -23,8 +23,8 @@ export class AgreementService {
   }): CancelablePromise<AgreementResult> {
     return __request(OpenAPI, {
       method: "POST",
-      url: "/agreement/compute",
-      query: {
+      url: "/projects/{project_id}/agreement/compute",
+      path: {
         project_id: projectId,
       },
       body: requestBody,
@@ -48,8 +48,8 @@ export class AgreementService {
   }): CancelablePromise<string> {
     return __request(OpenAPI, {
       method: "POST",
-      url: "/agreement/export_counts",
-      query: {
+      url: "/projects/{project_id}/agreement/export-counts",
+      path: {
         project_id: projectId,
       },
       body: requestBody,
@@ -73,8 +73,8 @@ export class AgreementService {
   }): CancelablePromise<Array<string>> {
     return __request(OpenAPI, {
       method: "POST",
-      url: "/agreement/segment_texts",
-      query: {
+      url: "/projects/{project_id}/agreement/segment-texts",
+      path: {
         project_id: projectId,
       },
       body: requestBody,

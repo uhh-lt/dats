@@ -1,8 +1,6 @@
-from fastapi import APIRouter, Depends
-
-from common.dependencies import DBSession, get_current_user
-from core.auth.authz_user import AuthzUser
-from core.doc.source_document_crud import crud_sdoc
+from common.dependencies import DBSession
+from common.project_router import project_router
+from core.artefacts.word_frequencies.word_frequency_crud import crud_word_frequency
 from modules.word_frequency.word_frequency_columns import WordFrequencyColumns
 from modules.word_frequency.word_frequency_dto import (
     WordFrequencyRead,
@@ -10,17 +8,12 @@ from modules.word_frequency.word_frequency_dto import (
 )
 from modules.word_frequency.word_frequency_feature import WORD_FREQUENCY
 from modules.word_frequency.word_frequency_service import WordFrequencyService
-from systems.feature_system.feature_dependency import (
-    require_feature,
-)
 from systems.search_system.column_info import ColumnInfo
 from systems.search_system.filtering import Filter
 from systems.search_system.sorting import Sort
 
-router = APIRouter(
-    prefix="/word_frequency",
-    dependencies=[Depends(get_current_user)],
-    tags=["word_frequency"],
+router = project_router(
+    "/word-frequencies", tags=["word_frequency"], feature=WORD_FREQUENCY
 )
 
 
@@ -28,8 +21,7 @@ router = APIRouter(
 
 
 @router.get(
-    "/info/{project_id}",
-    dependencies=[Depends(require_feature(WORD_FREQUENCY))],
+    "/info",
     response_model=list[ColumnInfo[WordFrequencyColumns]],
     summary="Returns WordFrequency Info.",
 )
@@ -37,9 +29,7 @@ def word_frequency_analysis_info(
     *,
     db: DBSession,
     project_id: int,
-    authz_user: AuthzUser = Depends(),
 ) -> list[ColumnInfo[WordFrequencyColumns]]:
-    authz_user.assert_in_project(project_id)
 
     return WordFrequencyService().word_frequency_info(
         db=db,
@@ -48,22 +38,22 @@ def word_frequency_analysis_info(
 
 
 @router.get(
-    "/sdoc/{sdoc_id}",
-    dependencies=[Depends(require_feature(WORD_FREQUENCY))],
+    "",
     response_model=list[WordFrequencyRead],
-    summary="Returns the SourceDocument's word frequencies with the given ID if it exists",
+    summary="Returns the word frequencies of the SourceDocument",
 )
 def get_word_frequencies(
     *,
     db: DBSession,
-    sdoc_id: int,
     project_id: int,
-    authz_user: AuthzUser = Depends(),
+    sdoc_id: int,
 ) -> list[WordFrequencyRead]:
-    authz_user.assert_in_project(project_id)
-
-    sdoc = crud_sdoc.read(db=db, project_id=project_id, id=sdoc_id)
-    return [WordFrequencyRead.model_validate(wf) for wf in sdoc.word_frequencies]
+    return [
+        WordFrequencyRead.model_validate(wf)
+        for wf in crud_word_frequency.read_by_sdoc(
+            db=db, project_id=project_id, sdoc_id=sdoc_id
+        )
+    ]
 
 
 # --- other operations
@@ -71,7 +61,6 @@ def get_word_frequencies(
 
 @router.post(
     "/analysis",
-    dependencies=[Depends(require_feature(WORD_FREQUENCY))],
     response_model=WordFrequencyResult,
     summary="Perform word frequency analysis.",
 )
@@ -83,9 +72,7 @@ def word_frequency_analysis(
     page: int,
     page_size: int,
     sorts: list[Sort[WordFrequencyColumns]],
-    authz_user: AuthzUser = Depends(),
 ) -> WordFrequencyResult:
-    authz_user.assert_in_project(project_id)
 
     return WordFrequencyService().word_frequency(
         db=db,
@@ -99,7 +86,6 @@ def word_frequency_analysis(
 
 @router.post(
     "/export",
-    dependencies=[Depends(require_feature(WORD_FREQUENCY))],
     response_model=str,
     summary="Export the word frequency analysis.",
 )
@@ -109,9 +95,7 @@ def word_frequency_analysis_export(
     project_id: int,
     filter: Filter[WordFrequencyColumns],
     sorts: list[Sort[WordFrequencyColumns]],
-    authz_user: AuthzUser = Depends(),
 ) -> str:
-    authz_user.assert_in_project(project_id)
 
     return WordFrequencyService().word_frequency_export(
         db=db,

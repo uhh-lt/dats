@@ -4,10 +4,6 @@
 /* eslint-disable */
 export type AnnoscalingSuggest = {
   /**
-   * Project to retrieve suggestions
-   */
-  project_id: number;
-  /**
    * Code to provide suggestions for
    */
   code_id: number;

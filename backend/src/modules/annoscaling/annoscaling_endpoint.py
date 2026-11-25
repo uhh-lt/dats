@@ -1,7 +1,8 @@
-from fastapi import APIRouter, Depends
+from fastapi import Depends
 
 from common.dats_event import DATSEvent
-from common.dependencies import DBSession, get_current_user
+from common.dependencies import DBSession
+from common.project_router import project_router
 from core.annotation.span_annotation_dto import SpanAnnotationRead
 from core.auth.authz_user import AuthzUser
 from modules.annoscaling.annoscaling_dto import (
@@ -11,13 +12,10 @@ from modules.annoscaling.annoscaling_dto import (
 )
 from modules.annoscaling.annoscaling_feature import ANNOTATION_SCALING
 from modules.annoscaling.annoscaling_service import AnnoScalingService
-from systems.feature_system.feature_service import FeatureService
 from systems.websocket_system.websocket_dependency import WebsocketEmitter
 
-router = APIRouter(
-    prefix="/annoscaling",
-    tags=["annoscaling"],
-    dependencies=[Depends(get_current_user)],
+router = project_router(
+    "/annotation-scaling", tags=["annoscaling"], feature=ANNOTATION_SCALING
 )
 
 ass: AnnoScalingService = AnnoScalingService()
@@ -31,17 +29,14 @@ ass: AnnoScalingService = AnnoScalingService()
 def suggest(
     *,
     db: DBSession,
+    project_id: int,
     dto: AnnoscalingSuggest,
     authz_user: AuthzUser = Depends(),
 ) -> list[AnnoscalingResult]:
-    authz_user.assert_in_project(dto.project_id)
-    FeatureService().assert_enabled(
-        db=db, project_id=dto.project_id, feature=ANNOTATION_SCALING
-    )
 
     return ass.suggest(
         db=db,
-        project_id=dto.project_id,
+        project_id=project_id,
         user_ids=[authz_user.user.id],
         code_id=dto.code_id,
         reject_code_id=dto.reject_cide_id,
@@ -50,7 +45,7 @@ def suggest(
 
 
 @router.post(
-    "/confirm_suggestions",
+    "/confirm-suggestions",
     response_model=list[SpanAnnotationRead],
     summary="Suggest annotations",
     description="Suggest annotations",
@@ -58,18 +53,15 @@ def suggest(
 def confirm_suggestions(
     *,
     db: DBSession,
+    project_id: int,
     dto: AnnoscalingConfirmSuggest,
     authz_user: AuthzUser = Depends(),
     ws: WebsocketEmitter = Depends(),
 ) -> list[SpanAnnotationRead]:
-    authz_user.assert_in_project(dto.project_id)
-    FeatureService().assert_enabled(
-        db=db, project_id=dto.project_id, feature=ANNOTATION_SCALING
-    )
 
     results = ass.confirm_suggestions(
         db=db,
-        project_id=dto.project_id,
+        project_id=project_id,
         user_id=authz_user.user.id,
         code_id=dto.code_id,
         reject_code_id=dto.reject_code_id,
@@ -80,6 +72,6 @@ def confirm_suggestions(
         ws.emit_to_project(
             DATSEvent.SPAN_ANNOTATION_CREATED_BATCH,
             results,
-            project_id=dto.project_id,
+            project_id=project_id,
         )
     return results

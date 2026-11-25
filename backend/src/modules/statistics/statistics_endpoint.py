@@ -1,26 +1,19 @@
-from fastapi import APIRouter, Depends
-
-from common.dependencies import DBSession, get_current_user
-from core.auth.authz_user import AuthzUser
+from common.dependencies import DBSession
+from common.project_router import project_router
 from modules.statistics.statistics_dto import SpanEntityStat, TagStat
 from modules.statistics.statistics_service import StatisticsService
 
-router = APIRouter(
-    prefix="/statistics",
-    dependencies=[Depends(get_current_user)],
-    tags=["statistics"],
-)
+router = project_router("/statistics", tags=["statistics"])
 
 
 @router.post(
-    "/code",
+    "/codes",
     response_model=list[SpanEntityStat],
     summary="Returns SpanEntityStats for the given SourceDocuments.",
 )
 def filter_code_stats(
     *,
     db: DBSession,
-    authz_user: AuthzUser = Depends(),
     # code stat params
     project_id: int,
     code_id: int,
@@ -33,7 +26,6 @@ def filter_code_stats(
         return []
 
     # compute code stats
-    authz_user.assert_in_project(project_id)
     code_stats = StatisticsService().compute_code_statistics(
         db=db,
         project_id=project_id,
@@ -47,14 +39,13 @@ def filter_code_stats(
 
 
 @router.post(
-    "/tag",
+    "/tags",
     response_model=list[TagStat],
     summary="Returns Stat for the given SourceDocuments.",
 )
 def filter_tag_stats(
     *,
     db: DBSession,
-    authz_user: AuthzUser = Depends(),
     project_id: int,
     # keyword stat params
     sort_by_global: bool = False,
@@ -62,7 +53,6 @@ def filter_tag_stats(
     # filter params
     sdoc_ids: list[int],
 ) -> list[TagStat]:
-    authz_user.assert_in_project(project_id)
     if len(sdoc_ids) == 0:
         return []
 

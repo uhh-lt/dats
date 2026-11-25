@@ -55,6 +55,7 @@ class CodeFrequencyService(metaclass=SingletonMeta):
         )
         # noinspection PyUnresolvedReferences
         query = query.filter(
+            SourceDocumentORM.project_id == project_id,
             AnnotationDocumentORM.user_id.in_(user_ids),
             SpanAnnotationORM.code_id.in_(codes_of_interest),
             SourceDocumentORM.doctype.in_(doctypes),
@@ -80,6 +81,7 @@ class CodeFrequencyService(metaclass=SingletonMeta):
         )
         # noinspection PyUnresolvedReferences
         query = query.filter(
+            SourceDocumentORM.project_id == project_id,
             AnnotationDocumentORM.user_id.in_(user_ids),
             SentenceAnnotationORM.code_id.in_(codes_of_interest),
             SourceDocumentORM.doctype.in_(doctypes),
@@ -104,6 +106,7 @@ class CodeFrequencyService(metaclass=SingletonMeta):
         )
         # noinspection PyUnresolvedReferences
         query = query.filter(
+            SourceDocumentORM.project_id == project_id,
             AnnotationDocumentORM.user_id.in_(user_ids),
             BBoxAnnotationORM.code_id.in_(codes_of_interest),
             SourceDocumentORM.doctype.in_(doctypes),
@@ -111,8 +114,9 @@ class CodeFrequencyService(metaclass=SingletonMeta):
         bbox_res = query.all()
 
         # 4. count & aggregate the occurrences of each code and their children
-        res = span_res + bbox_res + sent_res
-        res_dict = {code_id: count for code_id, count in res}
+        res_dict: dict[int, int] = {}
+        for code_id, count in span_res + bbox_res + sent_res:
+            res_dict[code_id] = res_dict.get(code_id, 0) + count
 
         results: list[CodeFrequency] = []
         for code_id, group in zip(code_ids, child_code_id_groups):
@@ -173,7 +177,13 @@ class CodeFrequencyService(metaclass=SingletonMeta):
                 SourceDocumentORM.doctype.in_(doctypes),
             )
         )
-        query = query.group_by(SourceDocumentORM.id, CodeORM.id, SpanTextORM.text)
+        query = query.group_by(
+            SourceDocumentORM.project_id,
+            SourceDocumentORM.id,
+            CodeORM.project_id,
+            CodeORM.id,
+            SpanTextORM.text,
+        )
         res = query.all()
         span_code_occurrences = [
             CodeOccurrence(
@@ -220,10 +230,13 @@ class CodeFrequencyService(metaclass=SingletonMeta):
             )
         )
         query = query.group_by(
+            SourceDocumentORM.project_id,
             SourceDocumentORM.id,
+            SourceDocumentDataORM.project_id,
             SourceDocumentDataORM.id,
             SentenceAnnotationORM.sentence_id_start,
             SentenceAnnotationORM.sentence_id_end,
+            CodeORM.project_id,
             CodeORM.id,
         )
         res = query.all()
@@ -273,7 +286,9 @@ class CodeFrequencyService(metaclass=SingletonMeta):
             )
         )
         query = query.group_by(
+            SourceDocumentORM.project_id,
             SourceDocumentORM.id,
+            CodeORM.project_id,
             CodeORM.id,
             BBoxAnnotationORM.annotation_document_id,
         )

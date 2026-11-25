@@ -5,6 +5,7 @@ import pytest
 from core.code.code_crud import crud_code
 from core.code.code_dto import CodeCreate
 from core.code.code_orm import CodeORM
+from core.project.project_orm import ProjectORM
 from core.user.user_orm import UserORM
 from dats_test_utils import create_span_for_text
 from feature_test_utils import (
@@ -36,6 +37,8 @@ class AnnotatedScalingProject(TypedDict):
     - accept: user code "ACCEPT" of the project
     - reject: user code "REJECT" of the project
     - `test_user` annotated "Hello world." (sentence 0 of `text`) with ACCEPT
+    - foreign_code: user code "FOREIGN" of `test_project`, another project of
+      `test_user`
 
     Non-obvious derived behavior:
 
@@ -46,11 +49,12 @@ class AnnotatedScalingProject(TypedDict):
     project: SentenceEmbeddingProject
     accept: CodeORM
     reject: CodeORM
+    foreign_code: CodeORM
 
 
 @pytest.fixture(scope="function")
 def annotated_scaling_project(
-    db_session, test_user: UserORM
+    db_session, test_user: UserORM, test_project: ProjectORM
 ) -> AnnotatedScalingProject:
     """See `AnnotatedScalingProject`."""
     project = create_sentence_embedding_project(
@@ -81,5 +85,21 @@ def annotated_scaling_project(
         code_id=accept.id,
         user_id=test_user.id,
     )
+    foreign_code = crud_code.create(
+        db=db_session,
+        project_id=test_project.id,
+        create_dto=CodeCreate(
+            name="FOREIGN",
+            color="#00ff00",
+            description="",
+            is_system=False,
+            enabled=True,
+        ),
+    )
     db_session.commit()
-    return {"project": project, "accept": accept, "reject": reject}
+    return {
+        "project": project,
+        "accept": accept,
+        "reject": reject,
+        "foreign_code": foreign_code,
+    }

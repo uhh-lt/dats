@@ -11,6 +11,7 @@ from fastapi.routing import APIRoute, iter_route_contexts
 from fastapi.testclient import TestClient
 
 from composite_keys_test_utils import TenantRows, TwoTenants
+from core.project.project_orm import ProjectORM
 
 from .conftest import TenantJobs
 
@@ -181,6 +182,24 @@ def test_path_id_of_another_project_is_not_found(
                     f"{method} {url} ({foreign_name} foreign): "
                     f"{response.status_code} {response.text[:200]}"
                 )
+    assert not failures, "\n".join(failures)
+
+
+def test_every_project_route_rejects_a_non_member(
+    non_member_client: TestClient, test_project: ProjectORM
+) -> None:
+    """Every project route answers 403 to a user who is not a member of the
+    project of the path, before it reads its path ids or its body."""
+    failures: list[str] = []
+    for method, route in _project_routes(non_member_client):
+        url = re.sub(
+            r"{(\w+)}", "0", route.path.replace("{project_id}", str(test_project.id))
+        )
+        response = non_member_client.request(method, url)
+        if response.status_code != 403:
+            failures.append(
+                f"{method} {url}: {response.status_code} {response.text[:200]}"
+            )
     assert not failures, "\n".join(failures)
 
 

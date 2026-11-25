@@ -28,9 +28,11 @@ export class StatisticsService {
   }): CancelablePromise<Array<SpanEntityStat>> {
     return __request(OpenAPI, {
       method: "POST",
-      url: "/statistics/code",
-      query: {
+      url: "/projects/{project_id}/statistics/codes",
+      path: {
         project_id: projectId,
+      },
+      query: {
         code_id: codeId,
         sort_by_global: sortByGlobal,
         top_k: topK,
@@ -60,9 +62,11 @@ export class StatisticsService {
   }): CancelablePromise<Array<TagStat>> {
     return __request(OpenAPI, {
       method: "POST",
-      url: "/statistics/tag",
-      query: {
+      url: "/projects/{project_id}/statistics/tags",
+      path: {
         project_id: projectId,
+      },
+      query: {
         sort_by_global: sortByGlobal,
         top_k: topK,
       },

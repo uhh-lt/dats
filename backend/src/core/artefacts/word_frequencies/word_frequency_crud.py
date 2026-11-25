@@ -18,6 +18,26 @@ class CRUDWordFrequency(
 ):
     ### READ OPERATIONS ###
 
+    def read_by_sdoc(
+        self, db: Session, *, project_id: int, sdoc_id: int
+    ) -> list[WordFrequencyORM]:
+        """
+        Read the word frequencies of a document of the project.
+
+        Args:
+            project_id: The project of the document.
+            sdoc_id: The document.
+
+        Returns:
+            The word frequencies of the document, none for a document of another
+            project.
+        """
+        return (
+            db.query(self.model)
+            .filter(self.model.project_id == project_id, self.model.sdoc_id == sdoc_id)
+            .all()
+        )
+
     def read_by_project_and_doctype(
         self, db: Session, *, project_id: int, doctype: DocType
     ) -> list[WordFrequencyORM]:
