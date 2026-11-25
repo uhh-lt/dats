@@ -1,7 +1,16 @@
 from datetime import datetime
 from typing import TYPE_CHECKING
 
-from sqlalchemy import JSON, DateTime, ForeignKey, Index, Integer, String, func
+from sqlalchemy import (
+    JSON,
+    DateTime,
+    ForeignKey,
+    Index,
+    Integer,
+    String,
+    UniqueConstraint,
+    func,
+)
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from repos.db.orm_base import ORMBase
@@ -77,6 +86,7 @@ class SearchViewORM(ORMBase):
             entity_type,
             position,
         ),
+        UniqueConstraint("project_id", "id", name="UC_searchview_project_id_id"),
     )
 
     def get_project_id(self) -> int:

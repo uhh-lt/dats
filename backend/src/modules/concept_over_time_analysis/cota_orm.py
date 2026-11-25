@@ -1,7 +1,15 @@
 from datetime import datetime
 from typing import Any
 
-from sqlalchemy import DateTime, ForeignKey, Integer, String, func, text
+from sqlalchemy import (
+    DateTime,
+    ForeignKey,
+    Integer,
+    String,
+    UniqueConstraint,
+    func,
+    text,
+)
 from sqlalchemy.dialects.postgresql import JSONB
 from sqlalchemy.orm import Mapped, mapped_column
 
@@ -61,6 +69,12 @@ class ConceptOverTimeAnalysisORM(ORMBase):
         ForeignKey("project.id", ondelete="CASCADE"),
         nullable=False,
         index=True,
+    )
+
+    __table_args__ = (
+        UniqueConstraint(
+            "project_id", "id", name="UC_conceptovertimeanalysis_project_id_id"
+        ),
     )
 
     def get_project_id(self) -> int:

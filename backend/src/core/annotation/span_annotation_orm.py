@@ -1,7 +1,15 @@
 from datetime import datetime
 from typing import TYPE_CHECKING
 
-from sqlalchemy import DateTime, ForeignKey, Integer, String, UniqueConstraint, func
+from sqlalchemy import (
+    DateTime,
+    ForeignKey,
+    ForeignKeyConstraint,
+    Integer,
+    String,
+    UniqueConstraint,
+    func,
+)
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from repos.db.orm_base import ORMBase
@@ -38,6 +46,7 @@ class SpanAnnotationORM(ORMBase):
         back_populates="span_annotation",
         cascade="all, delete-orphan",
         passive_deletes=True,
+        foreign_keys="ObjectHandleORM.span_annotation_id",
     )
 
     # many to one
@@ -53,12 +62,7 @@ class SpanAnnotationORM(ORMBase):
         "ProjectORM", back_populates="span_annotations"
     )
 
-    code_id: Mapped[int] = mapped_column(
-        Integer,
-        ForeignKey("code.id", ondelete="CASCADE"),
-        nullable=False,
-        index=True,
-    )
+    code_id: Mapped[int] = mapped_column(Integer, nullable=False, index=True)
     code: Mapped["CodeORM"] = relationship(
         "CodeORM",
         back_populates="span_annotations",
@@ -66,27 +70,18 @@ class SpanAnnotationORM(ORMBase):
     )
 
     annotation_document_id: Mapped[int] = mapped_column(
-        Integer,
-        ForeignKey("annotationdocument.id", ondelete="CASCADE"),
-        nullable=False,
-        index=True,
+        Integer, nullable=False, index=True
     )
     annotation_document: Mapped["AnnotationDocumentORM"] = relationship(
-        "AnnotationDocumentORM", back_populates="span_annotations"
+        "AnnotationDocumentORM",
+        back_populates="span_annotations",
+        foreign_keys=[annotation_document_id],
     )
 
     # provenance: set when the annotation was copied from another annotation
     # (e.g. accepted in the annotation comparison); SET NULL keeps the record
     # when the source annotation, its user or its code is deleted
-    source_annotation_id: Mapped[int | None] = mapped_column(
-        Integer,
-        ForeignKey(
-            "spanannotation.id",
-            ondelete="SET NULL",
-            name="FK_span_annotation_source_annotation_id",
-        ),
-        index=True,
-    )
+    source_annotation_id: Mapped[int | None] = mapped_column(Integer, index=True)
     source_user_id: Mapped[int | None] = mapped_column(
         Integer,
         ForeignKey(
@@ -96,15 +91,7 @@ class SpanAnnotationORM(ORMBase):
         ),
         index=True,
     )
-    source_code_id: Mapped[int | None] = mapped_column(
-        Integer,
-        ForeignKey(
-            "code.id",
-            ondelete="SET NULL",
-            name="FK_span_annotation_source_code_id",
-        ),
-        index=True,
-    )
+    source_code_id: Mapped[int | None] = mapped_column(Integer, index=True)
 
     span_text_id: Mapped[int] = mapped_column(
         Integer,
@@ -116,11 +103,12 @@ class SpanAnnotationORM(ORMBase):
         "SpanTextORM", back_populates="span_annotations"
     )
 
-    # many to many
+    # many to many (read only: links are written by id columns)
     span_groups: Mapped[list["SpanGroupORM"]] = relationship(
         "SpanGroupORM",
         secondary="SpanAnnotationSpanGroupLinkTable".lower(),
         back_populates="span_annotations",
+        viewonly=True,
     )
 
     __table_args__ = (
@@ -128,6 +116,31 @@ class SpanAnnotationORM(ORMBase):
             "project_id",
             "uuid",
             name="UC_span_annotation_uuid_unique_per_project",
+        ),
+        UniqueConstraint("project_id", "id", name="UC_spanannotation_project_id_id"),
+        ForeignKeyConstraint(
+            ["project_id", "code_id"],
+            ["code.project_id", "code.id"],
+            ondelete="CASCADE",
+            name="FK_spanannotation_code_id",
+        ),
+        ForeignKeyConstraint(
+            ["project_id", "annotation_document_id"],
+            ["annotationdocument.project_id", "annotationdocument.id"],
+            ondelete="CASCADE",
+            name="FK_spanannotation_annotation_document_id",
+        ),
+        ForeignKeyConstraint(
+            ["project_id", "source_annotation_id"],
+            ["spanannotation.project_id", "spanannotation.id"],
+            ondelete="SET NULL (source_annotation_id)",
+            name="FK_spanannotation_source_annotation_id",
+        ),
+        ForeignKeyConstraint(
+            ["project_id", "source_code_id"],
+            ["code.project_id", "code.id"],
+            ondelete="SET NULL (source_code_id)",
+            name="FK_spanannotation_source_code_id",
         ),
     )
 

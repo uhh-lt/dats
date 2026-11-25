@@ -54,9 +54,10 @@ class ProjectORM(ORMBase):
     object_handle: Mapped["ObjectHandleORM"] = relationship(
         "ObjectHandleORM",
         uselist=False,
-        back_populates="project",
+        back_populates="attached_project",
         cascade="all, delete-orphan",
         passive_deletes=True,
+        foreign_keys="ObjectHandleORM.attached_project_id",
     )
 
     # one to many

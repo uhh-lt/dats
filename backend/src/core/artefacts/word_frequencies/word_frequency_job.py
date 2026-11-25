@@ -51,12 +51,14 @@ def handle_word_frequency_job(payload: WordFrequencyJobInput, job: Job) -> None:
         crud_word_frequency.delete_by_sdoc_id(db=db, sdoc_id=payload.sdoc_id)
         crud_word_frequency.create_multi(
             db=db,
-            create_dtos=extract_word_frequencies(payload.sdoc_id, spacy_output),
+            create_dtos=extract_word_frequencies(
+                payload.project_id, payload.sdoc_id, spacy_output
+            ),
         )
 
 
 def extract_word_frequencies(
-    sdoc_id: int, spacy_output: SpacyPipelineOutput
+    project_id: int, sdoc_id: int, spacy_output: SpacyPipelineOutput
 ) -> list[WordFrequencyCreate]:
     word_freqs: Counter[str] = Counter()
     for token in spacy_output.tokens:
@@ -66,6 +68,8 @@ def extract_word_frequencies(
             word_freqs.update((token.text,))
 
     return [
-        WordFrequencyCreate(sdoc_id=sdoc_id, word=word, count=count)
+        WordFrequencyCreate(
+            project_id=project_id, sdoc_id=sdoc_id, word=word, count=count
+        )
         for word, count in word_freqs.items()
     ]

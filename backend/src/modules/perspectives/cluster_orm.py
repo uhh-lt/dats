@@ -1,6 +1,16 @@
 from typing import TYPE_CHECKING
 
-from sqlalchemy import ARRAY, Boolean, Float, ForeignKey, Integer, String, Text
+from sqlalchemy import (
+    ARRAY,
+    Boolean,
+    Float,
+    ForeignKey,
+    ForeignKeyConstraint,
+    Integer,
+    String,
+    Text,
+    UniqueConstraint,
+)
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from repos.db.orm_base import ORMBase
@@ -28,23 +38,31 @@ class ClusterORM(ORMBase):
     y: Mapped[float | None] = mapped_column(Float)
 
     # hierarchy reference
-    parent_cluster_id: Mapped[int | None] = mapped_column(
-        Integer,
-        ForeignKey("cluster.id", ondelete="SET NULL"),
-        index=True,
-    )
+    parent_cluster_id: Mapped[int | None] = mapped_column(Integer, index=True)
     parent_cluster: Mapped["ClusterORM | None"] = relationship(
-        "ClusterORM", remote_side=[id], back_populates="child_clusters"
+        "ClusterORM",
+        remote_side=[id],
+        back_populates="child_clusters",
+        foreign_keys=[parent_cluster_id],
     )
     child_clusters: Mapped[list["ClusterORM"]] = relationship(
-        "ClusterORM", back_populates="parent_cluster"
+        "ClusterORM",
+        back_populates="parent_cluster",
+        foreign_keys=[parent_cluster_id],
     )
 
     # many to one
-    aspect_id: Mapped[int] = mapped_column(
-        Integer, ForeignKey("aspect.id", ondelete="CASCADE"), nullable=False, index=True
+    project_id: Mapped[int] = mapped_column(
+        Integer,
+        ForeignKey("project.id", ondelete="CASCADE"),
+        nullable=False,
+        index=True,
     )
-    aspect: Mapped["AspectORM"] = relationship("AspectORM", back_populates="clusters")
+
+    aspect_id: Mapped[int] = mapped_column(Integer, nullable=False, index=True)
+    aspect: Mapped["AspectORM"] = relationship(
+        "AspectORM", back_populates="clusters", foreign_keys=[aspect_id]
+    )
 
     # many to many
     document_clusters: Mapped[list["DocumentClusterORM"]] = relationship(
@@ -52,16 +70,33 @@ class ClusterORM(ORMBase):
         back_populates="cluster",
         cascade="all, delete-orphan",
         passive_deletes=True,
+        foreign_keys="DocumentClusterORM.cluster_id",
     )
     source_documents: Mapped[list["SourceDocumentORM"]] = relationship(
         "SourceDocumentORM",
         secondary="documentcluster",
         back_populates="clusters",
-        overlaps="document_clusters,source_document,cluster",
+        viewonly=True,
+    )
+
+    __table_args__ = (
+        UniqueConstraint("project_id", "id", name="UC_cluster_project_id_id"),
+        ForeignKeyConstraint(
+            ["project_id", "aspect_id"],
+            ["aspect.project_id", "aspect.id"],
+            ondelete="CASCADE",
+            name="FK_cluster_aspect_id",
+        ),
+        ForeignKeyConstraint(
+            ["project_id", "parent_cluster_id"],
+            ["cluster.project_id", "cluster.id"],
+            ondelete="SET NULL (parent_cluster_id)",
+            name="FK_cluster_parent_cluster_id",
+        ),
     )
 
     def __repr__(self) -> str:
         return f"<ClusterORM(id={self.id}, name='{self.name}')>"
 
     def get_project_id(self) -> int:
-        return self.aspect.get_project_id()
+        return self.project_id

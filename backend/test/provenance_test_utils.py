@@ -333,6 +333,7 @@ def create_provenance_project(
         db=db_session,
         create_dto=SourceDocumentDataCreate(
             id=other_text_sdoc.id,
+            project_id=other_text_sdoc.project_id,
             content=text_sdoc_data.content,
             raw_html=text_sdoc_data.raw_html,
             html=text_sdoc_data.html,

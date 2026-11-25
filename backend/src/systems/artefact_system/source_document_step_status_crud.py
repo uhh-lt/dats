@@ -1,12 +1,16 @@
 from typing import Iterable
 
 from sqlalchemy import (
+    ARRAY,
     BigInteger,
+    String,
     and_,
     case,
     cast,
     func,
+    literal,
     select,
+    true,
     update,
 )
 from sqlalchemy.dialects.postgresql import insert
@@ -162,12 +166,21 @@ class CRUDSourceDocumentStepStatus(
         self._lock_sdocs(db=db, sdoc_ids=sdoc_ids)
         for i in range(0, len(sdoc_ids), BATCH_SIZE):
             batch_ids = sdoc_ids[i : i + BATCH_SIZE]
-            stmt = insert(self.model).values(
-                [
-                    {"sdoc_id": sdoc_id, "step": step, "status": status.value}
-                    for sdoc_id in batch_ids
-                    for step in steps
-                ]
+            step_values = (
+                func.unnest(literal(steps, ARRAY(String)))
+                .table_valued("step")
+                .render_derived()
+            )
+            stmt = insert(self.model).from_select(
+                ["sdoc_id", "step", "status", "project_id"],
+                select(
+                    SourceDocumentORM.id,
+                    step_values.c.step,
+                    literal(status.value),
+                    SourceDocumentORM.project_id,
+                )
+                .join(step_values, true())
+                .where(SourceDocumentORM.id.in_(batch_ids)),
             )
             db.execute(
                 stmt.on_conflict_do_update(

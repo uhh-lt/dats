@@ -1,6 +1,7 @@
 import pytest
 from fastapi.testclient import TestClient
 
+from composite_keys_test_utils import TwoTenants
 from core.annotation.span_annotation_dto import (
     SpanAnnotationCreate,
     SpanAnnotationDeleted,
@@ -663,6 +664,25 @@ def test_add_to_group_not_found(client: TestClient):
     resp = client.patch("/span/999999/group/888888")
 
     assert resp.status_code == 403, resp.text
+
+
+def test_add_to_group_rejects_a_span_group_of_another_project(
+    client: TestClient, two_tenants: TwoTenants
+):
+    """A span annotation cannot join the span group of another project, also when
+    the user is a member of both: the composite foreign key rejects the link
+    (409) and the span annotation keeps its groups."""
+    span = two_tenants["own"]["span"]
+    foreign_group = two_tenants["foreign"]["span_group"]
+
+    resp = client.patch(f"/span/{span.id}/group/{foreign_group.id}")
+
+    assert resp.status_code == 409, resp.text
+    resp = client.get(f"/span/{span.id}/groups")
+    assert resp.status_code == 200, resp.text
+    assert [group["id"] for group in resp.json()] == [
+        two_tenants["own"]["span_group"].id
+    ]
 
 
 def test_remove_from_group_ok(

@@ -200,6 +200,7 @@ def _merge_prompt(
                     return None
                 _create_versions(
                     db=db,
+                    project_id=existing.project_id,
                     prompt_id=existing.id,
                     prompt=prompt,
                     start=len(current),
@@ -219,7 +220,13 @@ def _merge_prompt(
                     db=db, ids=[version.id for version in existing.versions]
                 )
                 db.expire(existing, ["versions"])
-                _create_versions(db=db, prompt_id=existing.id, prompt=prompt, start=0)
+                _create_versions(
+                    db=db,
+                    project_id=existing.project_id,
+                    prompt_id=existing.id,
+                    prompt=prompt,
+                    start=0,
+                )
                 _set_archived(
                     db=db, prompt_id=existing.id, is_archived=prompt.is_archived
                 )
@@ -240,7 +247,9 @@ def _merge_prompt(
         ),
     )
     existing_by_name[name] = db_obj
-    _create_versions(db=db, prompt_id=db_obj.id, prompt=prompt, start=0)
+    _create_versions(
+        db=db, project_id=project_id, prompt_id=db_obj.id, prompt=prompt, start=0
+    )
     _set_archived(db=db, prompt_id=db_obj.id, is_archived=prompt.is_archived)
     if name != prompt.name:
         logger.warning(
@@ -251,13 +260,14 @@ def _merge_prompt(
 
 
 def _create_versions(
-    db: Session, *, prompt_id: int, prompt: _ImportedPrompt, start: int
+    db: Session, *, project_id: int, prompt_id: int, prompt: _ImportedPrompt, start: int
 ) -> None:
     """Create the versions of an imported prompt from position `start` on."""
     crud_prompt_version.create_multi(
         db=db,
         create_dtos=[
             PromptVersionCreateIntern(
+                project_id=project_id,
                 prompt_id=prompt_id,
                 version=i + 1,
                 user_id=user_id,

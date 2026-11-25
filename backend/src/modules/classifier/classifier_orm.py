@@ -6,6 +6,7 @@ from sqlalchemy import (
     DateTime,
     Float,
     ForeignKey,
+    ForeignKeyConstraint,
     Integer,
     String,
     UniqueConstraint,
@@ -49,6 +50,7 @@ class ClassifierORM(ORMBase):
         back_populates="classifier",
         cascade="all, delete-orphan",
         passive_deletes=True,
+        foreign_keys="ClassifierEvaluationORM.classifier_id",
     )
 
     # many to one
@@ -67,16 +69,17 @@ class ClassifierORM(ORMBase):
     codes: Mapped[list["CodeORM"]] = relationship(
         "CodeORM",
         secondary="ClassifierCodeLinkTable".lower(),
-        passive_deletes=True,
+        viewonly=True,
     )
     tags: Mapped[list["TagORM"]] = relationship(
         "TagORM",
         secondary="ClassifierTagLinkTable".lower(),
-        passive_deletes=True,
+        viewonly=True,
     )
 
     __table_args__ = (
         UniqueConstraint("project_id", "name", name="UC_unique_name_in_project"),
+        UniqueConstraint("project_id", "id", name="UC_classifier_project_id_id"),
     )
 
     @property
@@ -113,46 +116,83 @@ class ClassifierEvaluationORM(ORMBase):
     )
 
     # many to one
-    classifier_id: Mapped[int] = mapped_column(
+    project_id: Mapped[int] = mapped_column(
         Integer,
-        ForeignKey("classifier.id", ondelete="CASCADE"),
+        ForeignKey("project.id", ondelete="CASCADE"),
         nullable=False,
         index=True,
     )
+
+    classifier_id: Mapped[int] = mapped_column(Integer, nullable=False, index=True)
     classifier: Mapped["ClassifierORM"] = relationship(
         "ClassifierORM",
         back_populates="evaluations",
+        foreign_keys=[classifier_id],
+    )
+
+    __table_args__ = (
+        UniqueConstraint(
+            "project_id", "id", name="UC_classifierevaluation_project_id_id"
+        ),
+        ForeignKeyConstraint(
+            ["project_id", "classifier_id"],
+            ["classifier.project_id", "classifier.id"],
+            ondelete="CASCADE",
+            name="FK_classifierevaluation_classifier_id",
+        ),
     )
 
     def get_project_id(self) -> int:
-        return self.classifier.get_project_id()
+        return self.project_id
 
 
 class ClassifierCodeLinkTable(ORMBase):
-    classifier_id: Mapped[int] = mapped_column(
+    classifier_id: Mapped[int] = mapped_column(Integer, primary_key=True, index=True)
+    code_id: Mapped[int] = mapped_column(Integer, primary_key=True, index=True)
+    project_id: Mapped[int] = mapped_column(
         Integer,
-        ForeignKey("classifier.id", ondelete="CASCADE"),
-        primary_key=True,
+        ForeignKey("project.id", ondelete="CASCADE"),
+        nullable=False,
         index=True,
     )
-    code_id: Mapped[int] = mapped_column(
-        Integer,
-        ForeignKey("code.id", ondelete="CASCADE"),
-        primary_key=True,
-        index=True,
+
+    __table_args__ = (
+        ForeignKeyConstraint(
+            ["project_id", "classifier_id"],
+            ["classifier.project_id", "classifier.id"],
+            ondelete="CASCADE",
+            name="FK_classifiercodelinktable_classifier_id",
+        ),
+        ForeignKeyConstraint(
+            ["project_id", "code_id"],
+            ["code.project_id", "code.id"],
+            ondelete="CASCADE",
+            name="FK_classifiercodelinktable_code_id",
+        ),
     )
 
 
 class ClassifierTagLinkTable(ORMBase):
-    classifier_id: Mapped[int] = mapped_column(
+    classifier_id: Mapped[int] = mapped_column(Integer, primary_key=True, index=True)
+    tag_id: Mapped[int] = mapped_column(Integer, primary_key=True, index=True)
+    project_id: Mapped[int] = mapped_column(
         Integer,
-        ForeignKey("classifier.id", ondelete="CASCADE"),
-        primary_key=True,
+        ForeignKey("project.id", ondelete="CASCADE"),
+        nullable=False,
         index=True,
     )
-    tag_id: Mapped[int] = mapped_column(
-        Integer,
-        ForeignKey("tag.id", ondelete="CASCADE"),
-        primary_key=True,
-        index=True,
+
+    __table_args__ = (
+        ForeignKeyConstraint(
+            ["project_id", "classifier_id"],
+            ["classifier.project_id", "classifier.id"],
+            ondelete="CASCADE",
+            name="FK_classifiertaglinktable_classifier_id",
+        ),
+        ForeignKeyConstraint(
+            ["project_id", "tag_id"],
+            ["tag.project_id", "tag.id"],
+            ondelete="CASCADE",
+            name="FK_classifiertaglinktable_tag_id",
+        ),
     )

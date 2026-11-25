@@ -113,6 +113,7 @@ class PromptService(metaclass=SingletonMeta):
         crud_prompt_version.create(
             db=db,
             create_dto=PromptVersionCreateIntern(
+                project_id=db_obj.project_id,
                 prompt_id=db_obj.id,
                 version=1,
                 user_id=user_id,
@@ -147,6 +148,7 @@ class PromptService(metaclass=SingletonMeta):
         crud_prompt_version.create(
             db=db,
             create_dto=PromptVersionCreateIntern(
+                project_id=db_obj.project_id,
                 prompt_id=prompt_id,
                 version=num_versions + 1,
                 user_id=user_id,

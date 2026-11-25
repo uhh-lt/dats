@@ -9,4 +9,4 @@ class WordFrequencyBase(BaseModel):
 
 # Properties for creation
 class WordFrequencyCreate(WordFrequencyBase):
-    pass
+    project_id: int = Field(description="Project the SourceDocument belongs to")

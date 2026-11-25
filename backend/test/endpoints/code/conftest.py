@@ -2,6 +2,7 @@ from typing import TypedDict
 
 import pytest
 
+from composite_keys_test_utils import TwoTenants, create_two_tenants
 from core.code.code_crud import crud_code
 from core.code.code_dto import CodeCreate
 from core.code.code_orm import CodeORM
@@ -166,3 +167,10 @@ def provenance_project_with_copies(
     return create_provenance_copies(
         db_session, create_provenance_project(db_session, test_user, project_with_sdoc)
     )
+
+
+@pytest.fixture(scope="function")
+def two_tenants(db_session, test_user, test_project) -> TwoTenants:
+    """The rows of every project-owned table in the test project and in "Foreign
+    Project" (composite_keys_test_utils.TwoTenants and TenantRows list them)."""
+    return create_two_tenants(db_session, user=test_user, project=test_project)

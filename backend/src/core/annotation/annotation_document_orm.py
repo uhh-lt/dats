@@ -1,7 +1,15 @@
 from datetime import datetime
 from typing import TYPE_CHECKING
 
-from sqlalchemy import DateTime, ForeignKey, Integer, Sequence, func
+from sqlalchemy import (
+    DateTime,
+    ForeignKey,
+    ForeignKeyConstraint,
+    Integer,
+    Sequence,
+    UniqueConstraint,
+    func,
+)
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from repos.db.orm_base import ORMBase
@@ -40,6 +48,7 @@ class AnnotationDocumentORM(ORMBase):
         back_populates="annotation_document",
         cascade="all, delete-orphan",
         passive_deletes=True,
+        foreign_keys="SpanAnnotationORM.annotation_document_id",
     )
 
     span_groups: Mapped[list["SpanGroupORM"]] = relationship(
@@ -47,6 +56,7 @@ class AnnotationDocumentORM(ORMBase):
         back_populates="annotation_document",
         cascade="all, delete-orphan",
         passive_deletes=True,
+        foreign_keys="SpanGroupORM.annotation_document_id",
     )
 
     bbox_annotations: Mapped[list["BBoxAnnotationORM"]] = relationship(
@@ -54,6 +64,7 @@ class AnnotationDocumentORM(ORMBase):
         back_populates="annotation_document",
         cascade="all, delete-orphan",
         passive_deletes=True,
+        foreign_keys="BBoxAnnotationORM.annotation_document_id",
     )
 
     sentence_annotations: Mapped[list["SentenceAnnotationORM"]] = relationship(
@@ -61,17 +72,23 @@ class AnnotationDocumentORM(ORMBase):
         back_populates="annotation_document",
         cascade="all, delete-orphan",
         passive_deletes=True,
+        foreign_keys="SentenceAnnotationORM.annotation_document_id",
     )
 
     # many to one
-    source_document_id: Mapped[int] = mapped_column(
+    project_id: Mapped[int] = mapped_column(
         Integer,
-        ForeignKey("sourcedocument.id", ondelete="CASCADE"),
-        primary_key=True,
+        ForeignKey("project.id", ondelete="CASCADE"),
+        nullable=False,
         index=True,
     )
+    source_document_id: Mapped[int] = mapped_column(
+        Integer, primary_key=True, index=True
+    )
     source_document: Mapped["SourceDocumentORM"] = relationship(
-        "SourceDocumentORM", back_populates="annotation_documents"
+        "SourceDocumentORM",
+        back_populates="annotation_documents",
+        foreign_keys=[source_document_id],
     )
 
     user_id: Mapped[int] = mapped_column(
@@ -81,5 +98,17 @@ class AnnotationDocumentORM(ORMBase):
         "UserORM", back_populates="annotation_documents"
     )
 
+    __table_args__ = (
+        UniqueConstraint(
+            "project_id", "id", name="UC_annotationdocument_project_id_id"
+        ),
+        ForeignKeyConstraint(
+            ["project_id", "source_document_id"],
+            ["sourcedocument.project_id", "sourcedocument.id"],
+            ondelete="CASCADE",
+            name="FK_annotationdocument_source_document_id",
+        ),
+    )
+
     def get_project_id(self) -> int:
-        return self.source_document.get_project_id()
+        return self.project_id

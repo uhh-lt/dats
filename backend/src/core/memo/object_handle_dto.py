@@ -3,10 +3,8 @@ from pydantic import BaseModel, ConfigDict, Field, model_validator
 
 # Properties shared across all DTOs
 class ObjectHandleBaseDTO(BaseModel):
-    user_id: int | None = Field(
-        description="User the ObjectHandle refers to", default=None
-    )
-    project_id: int | None = Field(
+    project_id: int = Field(description="Project the ObjectHandle belongs to")
+    attached_project_id: int | None = Field(
         description="Project the ObjectHandle refers to", default=None
     )
     code_id: int | None = Field(
@@ -30,14 +28,11 @@ class ObjectHandleBaseDTO(BaseModel):
     tag_id: int | None = Field(
         description="Tag the ObjectHandle refers to", default=None
     )
-    memo_id: int | None = Field(
-        description="Memo the ObjectHandle refers to", default=None
-    )
 
     @model_validator(mode="after")
     def check_at_least_one_not_null(self):
-        # make sure that at least one of the fields is not null
-        values = self.model_dump()
+        # make sure that the handle refers to an object
+        values = self.model_dump(exclude={"project_id"})
         for val in values.values():
             if val is not None:
                 return self

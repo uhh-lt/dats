@@ -418,6 +418,7 @@ def _create_video_document_with_file(
         db=db,
         create_dto=SourceDocumentDataCreate(
             id=video.id,
+            project_id=video.project_id,
             content="Hello world.",
             raw_html="<html><body><p>Hello world.</p></body></html>",
             html="<p>Hello world.</p>",
@@ -517,6 +518,7 @@ def experiment_eximport_projects(
         db=db,
         create_dtos=[
             ExperimentRunCreateIntern(
+                project_id=stage1.project_id,
                 experiment_id=stage1.id,
                 name=name,
                 prompt_version_id=version.id,
@@ -724,6 +726,7 @@ def feature_toggle_eximport_projects(
         db=db_session,
         create_dto=SourceDocumentDataCreate(
             id=image.id,
+            project_id=image.project_id,
             content="",
             raw_html="",
             html="",
@@ -754,7 +757,9 @@ def feature_toggle_eximport_projects(
     crud_word_frequency.create_multi(
         db=db_session,
         create_dtos=[
-            WordFrequencyCreate(sdoc_id=text.id, word=word, count=count)
+            WordFrequencyCreate(
+                project_id=text.project_id, sdoc_id=text.id, word=word, count=count
+            )
             for word, count in (("sentence", 30), ("29", 1))
         ],
     )
@@ -856,8 +861,12 @@ def sdoc_eximport_projects(
     crud_word_frequency.create_multi(
         db=db_session,
         create_dtos=[
-            WordFrequencyCreate(sdoc_id=sdoc.id, word="alpha", count=2),
-            WordFrequencyCreate(sdoc_id=sdoc.id, word="beta", count=1),
+            WordFrequencyCreate(
+                project_id=sdoc.project_id, sdoc_id=sdoc.id, word="alpha", count=2
+            ),
+            WordFrequencyCreate(
+                project_id=sdoc.project_id, sdoc_id=sdoc.id, word="beta", count=1
+            ),
         ],
     )
     client = WeaviateRepo().get_client()

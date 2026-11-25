@@ -6,6 +6,7 @@ from sqlalchemy import (
     CheckConstraint,
     Date,
     ForeignKey,
+    ForeignKeyConstraint,
     Integer,
     String,
     UniqueConstraint,
@@ -30,24 +31,27 @@ class SourceDocumentMetadataORM(ORMBase):
     list_value: Mapped[list[str] | None] = mapped_column(ARRAY(String))
 
     # many to one
-    project_metadata_id: Mapped[int] = mapped_column(
+    project_id: Mapped[int] = mapped_column(
         Integer,
-        ForeignKey("projectmetadata.id", ondelete="CASCADE"),
+        ForeignKey("project.id", ondelete="CASCADE"),
         nullable=False,
         index=True,
-    )
-    project_metadata: Mapped["ProjectMetadataORM"] = relationship(
-        "ProjectMetadataORM", back_populates="sdoc_metadata"
     )
 
-    source_document_id: Mapped[int] = mapped_column(
-        Integer,
-        ForeignKey("sourcedocument.id", ondelete="CASCADE"),
-        nullable=False,
-        index=True,
+    project_metadata_id: Mapped[int] = mapped_column(
+        Integer, nullable=False, index=True
     )
+    project_metadata: Mapped["ProjectMetadataORM"] = relationship(
+        "ProjectMetadataORM",
+        back_populates="sdoc_metadata",
+        foreign_keys=[project_metadata_id],
+    )
+
+    source_document_id: Mapped[int] = mapped_column(Integer, nullable=False, index=True)
     source_document: Mapped["SourceDocumentORM"] = relationship(
-        "SourceDocumentORM", back_populates="metadata_"
+        "SourceDocumentORM",
+        back_populates="metadata_",
+        foreign_keys=[source_document_id],
     )
 
     __table_args__ = (
@@ -68,11 +72,22 @@ class SourceDocumentMetadataORM(ORMBase):
             "project_metadata_id",
             name="UC_unique_metadata_sdoc_id_project_metadata_id",
         ),
+        UniqueConstraint(
+            "project_id", "id", name="UC_sourcedocumentmetadata_project_id_id"
+        ),
+        ForeignKeyConstraint(
+            ["project_id", "project_metadata_id"],
+            ["projectmetadata.project_id", "projectmetadata.id"],
+            ondelete="CASCADE",
+            name="FK_sourcedocumentmetadata_project_metadata_id",
+        ),
+        ForeignKeyConstraint(
+            ["project_id", "source_document_id"],
+            ["sourcedocument.project_id", "sourcedocument.id"],
+            ondelete="CASCADE",
+            name="FK_sourcedocumentmetadata_source_document_id",
+        ),
     )
 
-    @property
-    def project_id(self) -> int:
-        return self.project_metadata.project_id
-
     def get_project_id(self) -> int:
-        return self.project_metadata.get_project_id()
+        return self.project_id

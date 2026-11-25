@@ -1,6 +1,12 @@
 from typing import TYPE_CHECKING
 
-from sqlalchemy import ForeignKey, Integer, String
+from sqlalchemy import (
+    ForeignKey,
+    ForeignKeyConstraint,
+    Integer,
+    String,
+    UniqueConstraint,
+)
 from sqlalchemy.dialects.postgresql import ARRAY
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
@@ -14,14 +20,16 @@ if TYPE_CHECKING:
 class SourceDocumentDataORM(ORMBase):
     # one to one (dependent table: the id is the source document's id)
     id: Mapped[int] = mapped_column(
-        Integer,
-        ForeignKey("sourcedocument.id", ondelete="CASCADE"),
-        primary_key=True,
-        nullable=False,
-        index=True,
+        Integer, primary_key=True, nullable=False, index=True
     )
     source_document: Mapped["SourceDocumentORM"] = relationship(
-        "SourceDocumentORM", back_populates="data"
+        "SourceDocumentORM", back_populates="data", foreign_keys=[id]
+    )
+    project_id: Mapped[int] = mapped_column(
+        Integer,
+        ForeignKey("project.id", ondelete="CASCADE"),
+        nullable=False,
+        index=True,
     )
 
     content: Mapped[str] = mapped_column(String, nullable=False, index=False)
@@ -46,9 +54,17 @@ class SourceDocumentDataORM(ORMBase):
         ARRAY(Integer), index=False
     )
 
-    @property
-    def project_id(self) -> int:
-        return self.source_document.project_id
+    __table_args__ = (
+        UniqueConstraint(
+            "project_id", "id", name="UC_sourcedocumentdata_project_id_id"
+        ),
+        ForeignKeyConstraint(
+            ["project_id", "id"],
+            ["sourcedocument.project_id", "sourcedocument.id"],
+            ondelete="CASCADE",
+            name="FK_sourcedocumentdata_id",
+        ),
+    )
 
     @property
     def tokens(self):

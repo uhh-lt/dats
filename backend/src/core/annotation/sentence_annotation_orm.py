@@ -1,7 +1,15 @@
 from datetime import datetime
 from typing import TYPE_CHECKING
 
-from sqlalchemy import DateTime, ForeignKey, Integer, String, UniqueConstraint, func
+from sqlalchemy import (
+    DateTime,
+    ForeignKey,
+    ForeignKeyConstraint,
+    Integer,
+    String,
+    UniqueConstraint,
+    func,
+)
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from repos.db.orm_base import ORMBase
@@ -34,6 +42,7 @@ class SentenceAnnotationORM(ORMBase):
         back_populates="sentence_annotation",
         cascade="all, delete-orphan",
         passive_deletes=True,
+        foreign_keys="ObjectHandleORM.sentence_annotation_id",
     )
 
     # many to one
@@ -49,12 +58,7 @@ class SentenceAnnotationORM(ORMBase):
         "ProjectORM", back_populates="sentence_annotations"
     )
 
-    code_id: Mapped[int] = mapped_column(
-        Integer,
-        ForeignKey("code.id", ondelete="CASCADE"),
-        nullable=False,
-        index=True,
-    )
+    code_id: Mapped[int] = mapped_column(Integer, nullable=False, index=True)
     code: Mapped["CodeORM"] = relationship(
         "CodeORM",
         back_populates="sentence_annotations",
@@ -62,27 +66,18 @@ class SentenceAnnotationORM(ORMBase):
     )
 
     annotation_document_id: Mapped[int] = mapped_column(
-        Integer,
-        ForeignKey("annotationdocument.id", ondelete="CASCADE"),
-        nullable=False,
-        index=True,
+        Integer, nullable=False, index=True
     )
     annotation_document: Mapped["AnnotationDocumentORM"] = relationship(
-        "AnnotationDocumentORM", back_populates="sentence_annotations"
+        "AnnotationDocumentORM",
+        back_populates="sentence_annotations",
+        foreign_keys=[annotation_document_id],
     )
 
     # provenance: set when the annotation was copied from another annotation
     # (e.g. accepted in the annotation comparison); SET NULL keeps the record
     # when the source annotation, its user or its code is deleted
-    source_annotation_id: Mapped[int | None] = mapped_column(
-        Integer,
-        ForeignKey(
-            "sentenceannotation.id",
-            ondelete="SET NULL",
-            name="FK_sentence_annotation_source_annotation_id",
-        ),
-        index=True,
-    )
+    source_annotation_id: Mapped[int | None] = mapped_column(Integer, index=True)
     source_user_id: Mapped[int | None] = mapped_column(
         Integer,
         ForeignKey(
@@ -92,21 +87,40 @@ class SentenceAnnotationORM(ORMBase):
         ),
         index=True,
     )
-    source_code_id: Mapped[int | None] = mapped_column(
-        Integer,
-        ForeignKey(
-            "code.id",
-            ondelete="SET NULL",
-            name="FK_sentence_annotation_source_code_id",
-        ),
-        index=True,
-    )
+    source_code_id: Mapped[int | None] = mapped_column(Integer, index=True)
 
     __table_args__ = (
         UniqueConstraint(
             "project_id",
             "uuid",
             name="UC_sentence_annotation_uuid_unique_per_project",
+        ),
+        UniqueConstraint(
+            "project_id", "id", name="UC_sentenceannotation_project_id_id"
+        ),
+        ForeignKeyConstraint(
+            ["project_id", "code_id"],
+            ["code.project_id", "code.id"],
+            ondelete="CASCADE",
+            name="FK_sentenceannotation_code_id",
+        ),
+        ForeignKeyConstraint(
+            ["project_id", "annotation_document_id"],
+            ["annotationdocument.project_id", "annotationdocument.id"],
+            ondelete="CASCADE",
+            name="FK_sentenceannotation_annotation_document_id",
+        ),
+        ForeignKeyConstraint(
+            ["project_id", "source_annotation_id"],
+            ["sentenceannotation.project_id", "sentenceannotation.id"],
+            ondelete="SET NULL (source_annotation_id)",
+            name="FK_sentenceannotation_source_annotation_id",
+        ),
+        ForeignKeyConstraint(
+            ["project_id", "source_code_id"],
+            ["code.project_id", "code.id"],
+            ondelete="SET NULL (source_code_id)",
+            name="FK_sentenceannotation_source_code_id",
         ),
     )
 

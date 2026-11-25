@@ -1,7 +1,15 @@
 from datetime import datetime
 from typing import TYPE_CHECKING, Any
 
-from sqlalchemy import DateTime, ForeignKey, Integer, String, func, text
+from sqlalchemy import (
+    DateTime,
+    ForeignKey,
+    Integer,
+    String,
+    UniqueConstraint,
+    func,
+    text,
+)
 from sqlalchemy.dialects.postgresql import JSONB
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
@@ -40,6 +48,10 @@ class WhiteboardORM(ORMBase):
     )
     project: Mapped["ProjectORM"] = relationship(
         "ProjectORM", back_populates="whiteboards"
+    )
+
+    __table_args__ = (
+        UniqueConstraint("project_id", "id", name="UC_whiteboard_project_id_id"),
     )
 
     def get_project_id(self) -> int:

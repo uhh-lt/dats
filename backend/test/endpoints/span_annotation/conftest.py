@@ -2,6 +2,7 @@ from typing import TypedDict
 
 import pytest
 
+from composite_keys_test_utils import TwoTenants, create_two_tenants
 from core.annotation.span_annotation_crud import crud_span_anno
 from core.annotation.span_annotation_dto import SpanAnnotationCreate
 from core.annotation.span_annotation_orm import SpanAnnotationORM
@@ -304,3 +305,10 @@ def virtual_user_project(
 ) -> VirtualUserProject:
     """The projects described in `VirtualUserProject`."""
     return create_virtual_user_project(db_session, test_user, test_project)
+
+
+@pytest.fixture(scope="function")
+def two_tenants(db_session, test_user, test_project) -> TwoTenants:
+    """The rows of every project-owned table in the test project and in "Foreign
+    Project" (composite_keys_test_utils.TwoTenants and TenantRows list them)."""
+    return create_two_tenants(db_session, user=test_user, project=test_project)

@@ -4,6 +4,7 @@ from typing import TYPE_CHECKING
 from sqlalchemy import (
     DateTime,
     ForeignKey,
+    ForeignKeyConstraint,
     Index,
     Integer,
     String,
@@ -36,32 +37,13 @@ class MemoORM(ORMBase):
         onupdate=func.current_timestamp(),
     )
 
-    # one to one
-    object_handle: Mapped["ObjectHandleORM"] = relationship(
-        "ObjectHandleORM",
-        uselist=False,
-        back_populates="memo",
-        cascade="all, delete-orphan",
-        passive_deletes=True,
-        foreign_keys="objecthandle.c.memo_id",
-    )
-
     # many to one
-    attached_to_id: Mapped[int] = mapped_column(
-        Integer,
-        ForeignKey(
-            "objecthandle.id",
-            ondelete="CASCADE",
-            name="fk_memo_attached_to_objecthandle",
-        ),
-        nullable=False,
-        index=True,
-    )
+    attached_to_id: Mapped[int] = mapped_column(Integer, nullable=False, index=True)
     attached_to: Mapped["ObjectHandleORM"] = relationship(
         "ObjectHandleORM",
         uselist=False,
         back_populates="attached_memos",
-        foreign_keys="memo.c.attached_to_id",
+        foreign_keys=[attached_to_id],
     )
 
     project_id: Mapped[int] = mapped_column(
@@ -77,12 +59,12 @@ class MemoORM(ORMBase):
     )
     user: Mapped["UserORM"] = relationship("UserORM", back_populates="memos")
 
-    # many to many
+    # many to many (read only: links are written by id columns)
     favorited_by_users: Mapped[list["UserORM"]] = relationship(
         "UserORM",
         secondary="MemoFavoriteLinkTable".lower(),
         back_populates="favorite_memos",
-        passive_deletes=True,
+        viewonly=True,
     )
 
     __table_args__ = (
@@ -92,6 +74,13 @@ class MemoORM(ORMBase):
             "uuid",
             name="UC_memo_uuid_unique_per_project",
         ),
+        UniqueConstraint("project_id", "id", name="UC_memo_project_id_id"),
+        ForeignKeyConstraint(
+            ["project_id", "attached_to_id"],
+            ["objecthandle.project_id", "objecthandle.id"],
+            ondelete="CASCADE",
+            name="FK_memo_attached_to_id",
+        ),
     )
 
     def get_project_id(self) -> int:
@@ -99,17 +88,27 @@ class MemoORM(ORMBase):
 
 
 class MemoFavoriteLinkTable(ORMBase):
-    memo_id: Mapped[int] = mapped_column(
-        Integer,
-        ForeignKey("memo.id", ondelete="CASCADE"),
-        primary_key=True,
-        index=True,
-    )
+    memo_id: Mapped[int] = mapped_column(Integer, primary_key=True, index=True)
     user_id: Mapped[int] = mapped_column(
         Integer,
         ForeignKey("user.id", ondelete="CASCADE"),
         primary_key=True,
         index=True,
+    )
+    project_id: Mapped[int] = mapped_column(
+        Integer,
+        ForeignKey("project.id", ondelete="CASCADE"),
+        nullable=False,
+        index=True,
+    )
+
+    __table_args__ = (
+        ForeignKeyConstraint(
+            ["project_id", "memo_id"],
+            ["memo.project_id", "memo.id"],
+            ondelete="CASCADE",
+            name="FK_memofavoritelinktable_memo_id",
+        ),
     )
 
 
@@ -126,10 +125,11 @@ class MemoRecentORM(ORMBase):
         primary_key=True,
         index=True,
     )
-    memo_id: Mapped[int] = mapped_column(
+    memo_id: Mapped[int] = mapped_column(Integer, primary_key=True, index=True)
+    project_id: Mapped[int] = mapped_column(
         Integer,
-        ForeignKey("memo.id", ondelete="CASCADE"),
-        primary_key=True,
+        ForeignKey("project.id", ondelete="CASCADE"),
+        nullable=False,
         index=True,
     )
     last_opened: Mapped[datetime] = mapped_column(
@@ -140,11 +140,17 @@ class MemoRecentORM(ORMBase):
     )
 
     # many to one
-    memo: Mapped["MemoORM"] = relationship("MemoORM")
+    memo: Mapped["MemoORM"] = relationship("MemoORM", foreign_keys=[memo_id])
 
     __table_args__ = (
         Index("ix_memorecent_user_last_opened", "user_id", "last_opened"),
+        ForeignKeyConstraint(
+            ["project_id", "memo_id"],
+            ["memo.project_id", "memo.id"],
+            ondelete="CASCADE",
+            name="FK_memorecent_memo_id",
+        ),
     )
 
     def get_project_id(self) -> int:
-        return self.memo.get_project_id()
+        return self.project_id

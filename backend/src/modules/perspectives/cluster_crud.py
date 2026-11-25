@@ -1,5 +1,6 @@
 from sqlalchemy.orm import Session
 
+from modules.perspectives.aspect_crud import crud_aspect
 from modules.perspectives.cluster_dto import ClusterCreateIntern, ClusterUpdateIntern
 from modules.perspectives.cluster_orm import ClusterORM
 from modules.perspectives.document_cluster_orm import DocumentClusterORM
@@ -25,6 +26,7 @@ class CRUDCluster(SQLCRUDBase[ClusterORM, ClusterCreateIntern, ClusterUpdateInte
             db_obj = self.create(
                 db=db,
                 create_dto=ClusterCreateIntern(
+                    project_id=crud_aspect.read(db=db, id=aspect_id).project_id,
                     aspect_id=aspect_id,
                     level=level,
                     name="Outlier",

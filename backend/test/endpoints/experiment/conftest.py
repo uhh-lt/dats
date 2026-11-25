@@ -338,6 +338,7 @@ def experiment_project(
     run = crud_experiment_run.create(
         db=db,
         create_dto=ExperimentRunCreateIntern(
+            project_id=experiment_with_run.project_id,
             experiment_id=experiment_with_run.id,
             name="Baseline",
             prompt_version_id=span_prompt.versions[0].id,

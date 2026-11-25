@@ -965,6 +965,7 @@ class SentClassificationModelService(TextClassificationModelService):
         classifier_db_obj = crud_classifier.add_evaluation(
             db=db,
             create_dto=ClassifierEvaluationCreate(
+                project_id=classifier.project_id,
                 classifier_id=classifier.id,
                 f1=eval_results["eval_f1"],
                 precision=eval_results["eval_precision"],
@@ -1099,6 +1100,7 @@ class SentClassificationModelService(TextClassificationModelService):
         classifier_db_obj = crud_classifier.add_evaluation(
             db=db,
             create_dto=ClassifierEvaluationCreate(
+                project_id=classifier.project_id,
                 classifier_id=classifier.id,
                 f1=eval_results["test_f1"],
                 precision=eval_results["test_precision"],

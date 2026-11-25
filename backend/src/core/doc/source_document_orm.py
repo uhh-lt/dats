@@ -1,7 +1,15 @@
 from datetime import datetime
 from typing import TYPE_CHECKING
 
-from sqlalchemy import DateTime, ForeignKey, Integer, String, UniqueConstraint, func
+from sqlalchemy import (
+    DateTime,
+    ForeignKey,
+    ForeignKeyConstraint,
+    Integer,
+    String,
+    UniqueConstraint,
+    func,
+)
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from repos.db.orm_base import ORMBase
@@ -50,6 +58,7 @@ class SourceDocumentORM(ORMBase):
         back_populates="source_document",
         cascade="all, delete-orphan",
         passive_deletes=True,
+        foreign_keys="ObjectHandleORM.source_document_id",
     )
     data: Mapped["SourceDocumentDataORM"] = relationship(
         "SourceDocumentDataORM",
@@ -57,6 +66,7 @@ class SourceDocumentORM(ORMBase):
         back_populates="source_document",
         cascade="all, delete-orphan",
         passive_deletes=True,
+        foreign_keys="SourceDocumentDataORM.id",
     )
 
     # many to one
@@ -70,14 +80,9 @@ class SourceDocumentORM(ORMBase):
         "ProjectORM", back_populates="source_documents"
     )
 
-    folder_id: Mapped[int] = mapped_column(
-        Integer,
-        ForeignKey("folder.id", ondelete="CASCADE"),
-        nullable=False,
-        index=True,
-    )
+    folder_id: Mapped[int] = mapped_column(Integer, nullable=False, index=True)
     folder: Mapped["FolderORM"] = relationship(
-        "FolderORM", back_populates="source_documents"
+        "FolderORM", back_populates="source_documents", foreign_keys=[folder_id]
     )
 
     # one to many
@@ -86,6 +91,7 @@ class SourceDocumentORM(ORMBase):
         back_populates="source_document",
         cascade="all, delete-orphan",
         passive_deletes=True,
+        foreign_keys="SourceDocumentMetadataORM.source_document_id",
     )
 
     annotation_documents: Mapped[list["AnnotationDocumentORM"]] = relationship(
@@ -93,6 +99,7 @@ class SourceDocumentORM(ORMBase):
         back_populates="source_document",
         cascade="all, delete-orphan",
         passive_deletes=True,
+        foreign_keys="AnnotationDocumentORM.source_document_id",
     )
 
     word_frequencies: Mapped[list["WordFrequencyORM"]] = relationship(
@@ -100,6 +107,7 @@ class SourceDocumentORM(ORMBase):
         back_populates="source_document",
         cascade="all, delete-orphan",
         passive_deletes=True,
+        foreign_keys="WordFrequencyORM.sdoc_id",
     )
 
     # the status of the planned pipeline steps (crud_sdoc_step_status)
@@ -108,6 +116,7 @@ class SourceDocumentORM(ORMBase):
         back_populates="source_document",
         cascade="all, delete-orphan",
         passive_deletes=True,
+        foreign_keys="SourceDocumentStepStatusORM.sdoc_id",
     )
 
     tag_recommendation_link: Mapped[list["TagRecommendationLinkORM"]] = relationship(
@@ -115,6 +124,7 @@ class SourceDocumentORM(ORMBase):
         back_populates="source_document",
         cascade="all, delete-orphan",
         passive_deletes=True,
+        foreign_keys="TagRecommendationLinkORM.source_document_id",
     )
 
     # many to many
@@ -122,7 +132,7 @@ class SourceDocumentORM(ORMBase):
         "TagORM",
         secondary="SourceDocumentTagLinkTable".lower(),
         back_populates="source_documents",
-        passive_deletes=True,
+        viewonly=True,
     )
 
     document_aspects: Mapped[list["DocumentAspectORM"]] = relationship(
@@ -130,12 +140,13 @@ class SourceDocumentORM(ORMBase):
         back_populates="source_document",
         cascade="all, delete-orphan",
         passive_deletes=True,
+        foreign_keys="DocumentAspectORM.sdoc_id",
     )
     aspects: Mapped[list["AspectORM"]] = relationship(
         "AspectORM",
         secondary="documentaspect",
         back_populates="source_documents",
-        overlaps="document_aspects,aspect,source_document",
+        viewonly=True,
     )
 
     document_clusters: Mapped[list["DocumentClusterORM"]] = relationship(
@@ -143,12 +154,13 @@ class SourceDocumentORM(ORMBase):
         back_populates="source_document",
         cascade="all, delete-orphan",
         passive_deletes=True,
+        foreign_keys="DocumentClusterORM.sdoc_id",
     )
     clusters: Mapped[list["ClusterORM"]] = relationship(
         "ClusterORM",
         secondary="documentcluster",
         back_populates="source_documents",
-        overlaps="document_clusters,cluster,source_document",
+        viewonly=True,
     )
 
     @property
@@ -160,6 +172,13 @@ class SourceDocumentORM(ORMBase):
     __table_args__ = (
         UniqueConstraint(
             "project_id", "filename", name="UC_unique_filename_in_project"
+        ),
+        UniqueConstraint("project_id", "id", name="UC_sourcedocument_project_id_id"),
+        ForeignKeyConstraint(
+            ["project_id", "folder_id"],
+            ["folder.project_id", "folder.id"],
+            ondelete="CASCADE",
+            name="FK_sourcedocument_folder_id",
         ),
     )
 

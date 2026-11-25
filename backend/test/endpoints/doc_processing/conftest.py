@@ -94,6 +94,7 @@ def audio_project(db_session: Session, test_project: ProjectORM) -> AudioProject
         db=db_session,
         create_dto=SourceDocumentDataCreate(
             id=sdoc.id,
+            project_id=sdoc.project_id,
             content="",
             raw_html="",
             html="",

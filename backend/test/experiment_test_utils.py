@@ -136,6 +136,7 @@ def _create_run(
     run = crud_experiment_run.create(
         db=db,
         create_dto=ExperimentRunCreateIntern(
+            project_id=experiment.project_id,
             experiment_id=experiment.id,
             name=name,
             prompt_version_id=prompt.versions[0].id,

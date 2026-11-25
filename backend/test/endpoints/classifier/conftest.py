@@ -132,6 +132,7 @@ def _import_text_sdocs(
         data_dtos.append(
             SourceDocumentDataCreate(
                 id=sdoc.id,
+                project_id=sdoc.project_id,
                 content=content,
                 raw_html=f"<p>{content}</p>",
                 html=f"<p>{content}</p>",

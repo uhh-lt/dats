@@ -110,11 +110,29 @@ class CRUDSpanGroup(SQLCRUDBase[SpanGroupORM, SpanGroupCreateIntern, SpanGroupUp
         Links the spans to their groups
         """
 
-        # insert links (group <-> span)
+        # insert links (group <-> span), in the project of the group
         from sqlalchemy.dialects.postgresql import insert
 
+        group_ids = list(links)
+        project_id_by_group: dict[int, int] = {}
+        for i in range(0, len(group_ids), BATCH_SIZE):
+            batch_ids = group_ids[i : i + BATCH_SIZE]
+            project_id_by_group.update(
+                {
+                    group_id: project_id
+                    for group_id, project_id in db.execute(
+                        select(self.model.id, self.model.project_id).where(
+                            self.model.id.in_(batch_ids)
+                        )
+                    ).tuples()
+                }
+            )
         insert_values = [
-            {"span_group_id": str(group_id), "span_annotation_id": str(span_id)}
+            {
+                "project_id": project_id_by_group[group_id],
+                "span_group_id": group_id,
+                "span_annotation_id": span_id,
+            }
             for group_id, span_ids in links.items()
             for span_id in span_ids
         ]

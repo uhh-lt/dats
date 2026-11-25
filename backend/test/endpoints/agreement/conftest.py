@@ -202,6 +202,7 @@ def _create_sdoc(db, project_id: int, name: str, content: str) -> SourceDocument
         db=db,
         create_dto=SourceDocumentDataCreate(
             id=sdoc.id,
+            project_id=sdoc.project_id,
             content=content,
             raw_html=f"<p>{content}</p>",
             html=f"<p>{content}</p>",

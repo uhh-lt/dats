@@ -54,6 +54,7 @@ class ExperimentRunCreate(ExperimentRunBaseDTO):
 
 
 class ExperimentRunCreateIntern(ExperimentRunCreate):
+    project_id: int = Field(description="Project the run belongs to")
     sdoc_ids: list[int] = Field(description="IDs of the documents the run runs on")
     virtual_user_id: int = Field(
         description="ID of the virtual user the run writes its annotations into"

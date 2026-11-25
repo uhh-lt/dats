@@ -91,4 +91,4 @@ class SourceDocumentDataUpdate(BaseModel, UpdateDTOBase):
 
 # Properties for creation
 class SourceDocumentDataCreate(SourceDocumentDataBase):
-    pass
+    project_id: int = Field(description="Project the SourceDocument belongs to")

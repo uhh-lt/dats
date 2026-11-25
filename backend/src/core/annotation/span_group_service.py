@@ -42,7 +42,9 @@ class SpanGroupService(metaclass=SingletonMeta):
         db_obj = crud_span_group.create(
             db=db,
             create_dto=SpanGroupCreateIntern(
-                name=create_dto.name, annotation_document_id=adoc.id
+                name=create_dto.name,
+                annotation_document_id=adoc.id,
+                project_id=adoc.project_id,
             ),
         )
         return SpanGroupRead.model_validate(db_obj)
@@ -152,11 +154,14 @@ class SpanGroupService(metaclass=SingletonMeta):
 
         # 2) create the span annotations and one span group per inner list
         db_spans = iter(crud_span_anno.create_multi(db=db, create_dtos=spans))
+        project_id = crud_adoc.read_by_id(db=db, id=annotation_document_id).project_id
         db_groups = crud_span_group.create_multi(
             db=db,
             create_dtos=[
                 SpanGroupCreateIntern(
-                    name=name, annotation_document_id=annotation_document_id
+                    name=name,
+                    annotation_document_id=annotation_document_id,
+                    project_id=project_id,
                 )
                 for _ in groups
             ],
