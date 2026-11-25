@@ -1,6 +1,7 @@
 from sqlalchemy.orm import Session
 
 from core.auth.auth_exceptions import InvalidError
+from core.doc.source_document_crud import crud_sdoc
 from core.prompt.prompt_service import PromptService
 from core.user.user_crud import crud_user
 from modules.llm_assistant.llm_assistant_endpoint import router
@@ -8,7 +9,6 @@ from modules.llm_assistant.llm_assistant_job_dto import (
     LLMAssistantJobInput,
     LLMAssistantJobOutput,
 )
-from modules.llm_assistant.llm_assistant_service import LLMAssistantService
 from modules.llm_assistant.strategies.llm_assistant_strategy import LLMAssistantStrategy
 from modules.llm_assistant.strategies.strategy_factory import build_strategy
 from modules.llm_assistant.tasks.task_factory import build_task
@@ -22,24 +22,17 @@ sqlr = SQLRepo()
 
 
 def validate_llm_assistant_input(db: Session, payload: LLMAssistantJobInput) -> None:
-    """Reject documents of other projects and users that are no virtual user of
-    the project before the job is enqueued: the LLM Assistant never writes into
-    another user's annotations."""
-    LLMAssistantService().assert_documents_in_project(
-        db=db, project_id=payload.project_id, sdoc_ids=payload.sdoc_ids
-    )
+    """Reject documents that do not exist in the project (404) and users that are
+    no virtual user of the project before the job is enqueued: the LLM Assistant
+    never writes into another user's annotations."""
+    crud_sdoc.read_by_ids(db=db, project_id=payload.project_id, ids=payload.sdoc_ids)
     _assert_virtual_user_of_project(db=db, payload=payload)
 
 
 def validate_llm_assistant_retry(db: Session, payload: LLMAssistantJobInput) -> None:
     """Like `validate_llm_assistant_input`, but documents deleted since the job
-    started do not block its retry: the retry gives them an error result."""
-    LLMAssistantService().assert_documents_in_project(
-        db=db,
-        project_id=payload.project_id,
-        sdoc_ids=payload.sdoc_ids,
-        allow_missing=True,
-    )
+    started do not block its retry: the job reads the documents within its project
+    and gives the missing ones an error result."""
     _assert_virtual_user_of_project(db=db, payload=payload)
 
 

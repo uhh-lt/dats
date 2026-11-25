@@ -71,11 +71,11 @@ def audio_project(db_session: Session, test_project: ProjectORM) -> AudioProject
 
     sdoc = crud_sdoc.create(
         db=db_session,
+        project_id=test_project.id,
         create_dto=SourceDocumentCreate(
             filename="silence.wav",
             name="Test Audio",
             doctype=DocType.audio,
-            project_id=test_project.id,
             folder_id=None,
         ),
     )
@@ -92,9 +92,9 @@ def audio_project(db_session: Session, test_project: ProjectORM) -> AudioProject
 
     crud_sdoc_data.create(
         db=db_session,
+        project_id=sdoc.project_id,
         create_dto=SourceDocumentDataCreate(
             id=sdoc.id,
-            project_id=sdoc.project_id,
             content="",
             raw_html="",
             html="",
@@ -307,11 +307,11 @@ def recompute_project(db_session: Session, test_user: UserORM) -> RecomputeProje
     )
     no_data = crud_sdoc.create(
         db=db_session,
+        project_id=project.id,
         create_dto=SourceDocumentCreate(
             filename="no_data.txt",
             name="no_data.txt",
             doctype=DocType.text,
-            project_id=project.id,
         ),
     )
     set_step_status(
@@ -364,7 +364,9 @@ _DUMMY_COMPUTED: dict[int, str] = {}
 
 def _enrich_dummy(payload: SdocProcessingJobInput) -> DummyJobInput:
     with SQLRepo().transaction() as db:
-        content = crud_sdoc_data.read(db=db, id=payload.sdoc_id).content
+        content = crud_sdoc_data.read(
+            db=db, project_id=payload.project_id, id=payload.sdoc_id
+        ).content
     return DummyJobInput(**payload.model_dump(), text=content)
 
 

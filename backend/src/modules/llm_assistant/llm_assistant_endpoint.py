@@ -26,13 +26,14 @@ llmas: LLMAssistantService = LLMAssistantService()
 def count_existing_assistant_annotations(
     *,
     db: DBSession,
+    project_id: int,
     sdoc_ids: list[int],
     code_ids: list[int],
     task_type: TaskType,
     virtual_user_id: int,
     authz_user: AuthzUser = Depends(),
 ) -> dict[int, int]:
-    authz_user.assert_in_same_project_as_many(Crud.SOURCE_DOCUMENT, sdoc_ids)
+    authz_user.assert_in_project(project_id)
     authz_user.assert_in_same_project_as(Crud.USER, virtual_user_id)
 
     return llmas.count_existing_assistant_annotations(

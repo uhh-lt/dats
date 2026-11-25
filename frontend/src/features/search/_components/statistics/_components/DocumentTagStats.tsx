@@ -28,7 +28,7 @@ export function DocumentTagStats(props: DocumentTagStatsProps) {
 
 function DocumentTagStatsContent({ ...props }: DocumentTagStatsProps) {
   const sortStatsByGlobal = useAppSelector((state) => state.documentSearch.sortStatsByGlobal);
-  const tagStats = useQuery(statisticsQueries.tagStats(props.sdocIds, sortStatsByGlobal));
+  const tagStats = useQuery(statisticsQueries.tagStats(props.projectId, props.sdocIds, sortStatsByGlobal));
   return (
     <>
       {tagStats.isSuccess ? (

@@ -18,28 +18,32 @@ export const sdocMetadataQueries = {
 
   // metadata values of one sdoc, as a map by project metadata id
   bySdocScope: () => [...sdocMetadataQueries.all(), "sdoc"] as const,
-  bySdoc: (sdocId: number | null | undefined) =>
+  bySdoc: (projectId: number | null | undefined, sdocId: number | null | undefined) =>
     queryOptions({
-      queryKey: [...sdocMetadataQueries.bySdocScope(), sdocId] as const,
-      queryFn: !sdocId
-        ? skipToken
-        : async () => {
-            const metadata = await SdocMetadataService.getBySdoc({ sdocId });
-            return metadata.reduce<SdocMetadataMap>((acc, m) => {
-              acc[m.project_metadata_id] = m;
-              return acc;
-            }, {});
-          },
+      queryKey: [...sdocMetadataQueries.bySdocScope(), sdocId, projectId] as const,
+      queryFn:
+        !projectId || !sdocId
+          ? skipToken
+          : async () => {
+              const metadata = await SdocMetadataService.getBySdoc({ projectId, sdocId });
+              return metadata.reduce<SdocMetadataMap>((acc, m) => {
+                acc[m.project_metadata_id] = m;
+                return acc;
+              }, {});
+            },
       staleTime: 1000 * 60 * 5,
     }),
 
   // legacy: one metadata value of an sdoc by its key (TODO: remove together with its hook)
   bySdocAndKeyScope: () => [...sdocMetadataQueries.all(), "sdocByKey"] as const,
   bySdocAndKeyOfSdocScope: (sdocId: number) => [...sdocMetadataQueries.bySdocAndKeyScope(), sdocId] as const,
-  bySdocAndKey: (sdocId: number | null | undefined, key: string) =>
+  bySdocAndKey: (projectId: number | null | undefined, sdocId: number | null | undefined, key: string) =>
     queryOptions({
-      queryKey: [...sdocMetadataQueries.bySdocAndKeyScope(), sdocId, key] as const,
-      queryFn: !sdocId ? skipToken : () => SdocMetadataService.getBySdocAndKey({ sdocId, metadataKey: key }),
+      queryKey: [...sdocMetadataQueries.bySdocAndKeyScope(), sdocId, key, projectId] as const,
+      queryFn:
+        !projectId || !sdocId
+          ? skipToken
+          : () => SdocMetadataService.getBySdocAndKey({ projectId, sdocId, metadataKey: key }),
     }),
 
   // number of sdocs that have a valid date for a date metadata

@@ -36,6 +36,7 @@ def enrich_for_recompute(
     with sqlr.transaction() as db:
         sdoc_data = crud_sdoc_data.read(
             db=db,
+            project_id=payload.project_id,
             id=payload.sdoc_id,
         )
 

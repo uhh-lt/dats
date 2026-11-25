@@ -32,6 +32,7 @@ def enrich_for_recompute(
     with sqlr.transaction() as db:
         sdoc_data = crud_sdoc_data.read(
             db=db,
+            project_id=payload.project_id,
             id=payload.sdoc_id,
         )
 
@@ -103,6 +104,7 @@ def handle_html_mapping_job(payload: TextHTMLMappingJobInput, job: Job) -> None:
         # update source document data in db
         crud_sdoc_data.update(
             db=db,
+            project_id=payload.project_id,
             id=payload.sdoc_id,
             update_dto=SourceDocumentDataUpdate(
                 html=new_html.build(),

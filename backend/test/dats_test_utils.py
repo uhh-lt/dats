@@ -336,20 +336,20 @@ def create_project_with_sdoc(db: Session, test_project: ProjectORM) -> ProjectWi
 
     sdoc = crud_sdoc.create(
         db=db,
+        project_id=test_project.id,
         create_dto=SourceDocumentCreate(
             filename="test_document.txt",
             name="Test Document",
             doctype=DocType.text,
-            project_id=test_project.id,
             folder_id=None,
         ),
     )
 
     sdoc_data = crud_sdoc_data.create(
         db=db,
+        project_id=sdoc.project_id,
         create_dto=SourceDocumentDataCreate(
             id=sdoc.id,
-            project_id=sdoc.project_id,
             content="This is a test document. It has two sentences.",
             raw_html="<p>This is a test document. It has two sentences.</p>",
             html="<p><sent>This is a test document.</sent> <sent>It has two sentences.</sent></p>",
@@ -436,18 +436,18 @@ def create_text_document(
     token_starts, token_ends = _token_offsets(content)
     sdoc = crud_sdoc.create(
         db=db,
+        project_id=project.id,
         create_dto=SourceDocumentCreate(
             filename=filename,
             name=name,
             doctype=doctype,
-            project_id=project.id,
         ),
     )
     crud_sdoc_data.create(
         db=db,
+        project_id=sdoc.project_id,
         create_dto=SourceDocumentDataCreate(
             id=sdoc.id,
-            project_id=sdoc.project_id,
             content=content,
             raw_html=f"<p>{content}</p>",
             html="<p>"
@@ -489,7 +489,7 @@ def create_span_for_text(
     from core.annotation.span_annotation_service import SpanAnnotationService
     from core.doc.source_document_data_crud import crud_sdoc_data
 
-    data = crud_sdoc_data.read(db=db, id=sdoc.id)
+    data = crud_sdoc_data.read(db=db, project_id=sdoc.project_id, id=sdoc.id)
     begin = data.content.index(text)
     end = begin + len(text)
     begin_token = next(

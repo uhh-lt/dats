@@ -1,8 +1,8 @@
 from fastapi import APIRouter, Depends
 
-from common.crud_enum import Crud
 from common.dependencies import DBSession, get_current_user
 from core.auth.authz_user import AuthzUser
+from core.doc.source_document_crud import crud_sdoc
 from modules.word_frequency.word_frequency_columns import WordFrequencyColumns
 from modules.word_frequency.word_frequency_dto import (
     WordFrequencyRead,
@@ -12,7 +12,6 @@ from modules.word_frequency.word_frequency_feature import WORD_FREQUENCY
 from modules.word_frequency.word_frequency_service import WordFrequencyService
 from systems.feature_system.feature_dependency import (
     require_feature,
-    require_feature_of,
 )
 from systems.search_system.column_info import ColumnInfo
 from systems.search_system.filtering import Filter
@@ -50,9 +49,7 @@ def word_frequency_analysis_info(
 
 @router.get(
     "/sdoc/{sdoc_id}",
-    dependencies=[
-        Depends(require_feature_of(WORD_FREQUENCY, Crud.SOURCE_DOCUMENT, "sdoc_id"))
-    ],
+    dependencies=[Depends(require_feature(WORD_FREQUENCY))],
     response_model=list[WordFrequencyRead],
     summary="Returns the SourceDocument's word frequencies with the given ID if it exists",
 )
@@ -60,11 +57,12 @@ def get_word_frequencies(
     *,
     db: DBSession,
     sdoc_id: int,
+    project_id: int,
     authz_user: AuthzUser = Depends(),
 ) -> list[WordFrequencyRead]:
-    authz_user.assert_in_same_project_as(Crud.SOURCE_DOCUMENT, sdoc_id)
+    authz_user.assert_in_project(project_id)
 
-    sdoc = Crud.SOURCE_DOCUMENT.value.read(db=db, id=sdoc_id)
+    sdoc = crud_sdoc.read(db=db, project_id=project_id, id=sdoc_id)
     return [WordFrequencyRead.model_validate(wf) for wf in sdoc.word_frequencies]
 
 

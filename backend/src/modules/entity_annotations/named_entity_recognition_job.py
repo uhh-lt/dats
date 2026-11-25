@@ -31,7 +31,7 @@ class NerJobInput(SdocProcessingJobInput):
 
 
 def enrich_for_recompute(payload: SdocProcessingJobInput) -> NerJobInput:
-    stored = read_stored_text(payload.sdoc_id)
+    stored = read_stored_text(payload.project_id, payload.sdoc_id)
     return NerJobInput(
         **payload.model_dump(), text=stored.text, language=stored.language
     )
@@ -64,7 +64,10 @@ def handle_named_entity_recognition_job(payload: NerJobInput, job: Job) -> None:
             if ner_parent_id is not None and code.parent_id == ner_parent_id
         ]
         adoc = crud_adoc.exists_or_create(
-            db=db, user_id=SYSTEM_USER_ID, sdoc_id=payload.sdoc_id
+            db=db,
+            project_id=payload.project_id,
+            user_id=SYSTEM_USER_ID,
+            sdoc_id=payload.sdoc_id,
         )
         # replace only the system user's named entities, keeping the annotations
         # of all users and of other automatic annotators (quotation, coreference)

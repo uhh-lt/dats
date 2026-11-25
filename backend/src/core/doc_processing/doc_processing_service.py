@@ -295,11 +295,8 @@ class DocProcessingService(metaclass=SingletonMeta):
         processing_step: str,
     ) -> list[Job]:
         # Validate inputs
-        # 1. check that sdoc_ids are in the given project
-        sdocs = crud_sdoc.read_by_ids(db=db, ids=sdoc_ids)
-        for sdoc in sdocs:
-            if sdoc.project_id != project_id:
-                raise ValueError(f"SDOC '{sdoc.id}' is not in project '{project_id}'")
+        # 1. read the documents within the project (raises NoSuchElementError)
+        sdocs = crud_sdoc.read_by_ids(db=db, project_id=project_id, ids=sdoc_ids)
 
         # 2. check that sdocs all have the same doctype
         doctype = sdocs[0].doctype

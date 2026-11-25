@@ -367,11 +367,11 @@ def step_status_project(db_session, test_project, test_user) -> StepStatusProjec
     for key, (project, doctype, status) in statuses.items():
         sdoc = crud_sdoc.create(
             db=db_session,
+            project_id=project.id,
             create_dto=SourceDocumentCreate(
                 filename=names[key],
                 name=names[key],
                 doctype=doctype,
-                project_id=project.id,
             ),
         )
         set_step_status(db_session, sdoc.id, status)

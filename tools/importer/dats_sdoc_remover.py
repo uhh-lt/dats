@@ -72,6 +72,6 @@ if confirm.lower() != "yes":
 # Delete all sdocs with the given tag
 for sdoc_id in tqdm(sdoc_ids, desc="Deleting documents..."):
     try:
-        api.delete_sdoc_by_id(sdoc_id)
+        api.delete_sdoc_by_id(proj_id=args.project_id, sdoc_id=sdoc_id)
     except Exception as e:
         print(f"Error deleting sdoc with ID {sdoc_id}: {e}")

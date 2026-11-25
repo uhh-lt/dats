@@ -616,7 +616,9 @@ class SentClassificationModelService(TextClassificationModelService):
         # Sentence models require at least one sentence per row. Filter unusable
         # documents before retrieving annotations so they cannot reach collation,
         # sequence packing, or the CRF.
-        sdoc_datas = crud_sdoc_data.read_by_ids(db=db, ids=sdoc_ids)
+        sdoc_datas = crud_sdoc_data.read_by_ids(
+            db=db, project_id=project_id, ids=sdoc_ids
+        )
         sdocid2data = {
             sdoc_data.id: sdoc_data for sdoc_data in sdoc_datas if sdoc_data.sentences
         }
@@ -1187,7 +1189,9 @@ class SentClassificationModelService(TextClassificationModelService):
         # 2. Create dataset
         job.update(current_step=2)
         # Get source document data
-        sdoc_datas = crud_sdoc_data.read_by_ids(db=db, ids=parameters.sdoc_ids)
+        sdoc_datas = crud_sdoc_data.read_by_ids(
+            db=db, project_id=payload.project_id, ids=parameters.sdoc_ids
+        )
         usable_sdoc_datas = [
             sdoc_data for sdoc_data in sdoc_datas if sdoc_data.sentences
         ]

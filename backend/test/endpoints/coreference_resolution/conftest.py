@@ -100,8 +100,10 @@ def _store_earlier_mentions(
 ) -> None:
     """Store the words (single tokens) as MENTION spans of the system user in one
     span group "coref", as a run of the step does."""
-    data = crud_sdoc_data.read(db=db, id=sdoc.id)
-    adoc = crud_adoc.exists_or_create(db=db, user_id=SYSTEM_USER_ID, sdoc_id=sdoc.id)
+    data = crud_sdoc_data.read(db=db, project_id=sdoc.project_id, id=sdoc.id)
+    adoc = crud_adoc.exists_or_create(
+        db=db, project_id=sdoc.project_id, user_id=SYSTEM_USER_ID, sdoc_id=sdoc.id
+    )
     spans = []
     for word in words:
         begin = data.content.index(word)

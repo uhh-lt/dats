@@ -30,7 +30,9 @@ const isBboxAnnotation = (annotation: Annotation): annotation is BBoxAnnotationR
 };
 
 export function ImageAnnotator(props: ImageAnnotatorProps) {
-  const heightMetadata = useQuery(sdocMetadataQueries.bySdocAndKey(props.sdocData.id, "height"));
+  const heightMetadata = useQuery(
+    sdocMetadataQueries.bySdocAndKey(props.sdocData.project_id, props.sdocData.id, "height"),
+  );
 
   if (heightMetadata.isSuccess) {
     return <ImageAnnotatorWithHeight sdocData={props.sdocData} height={heightMetadata.data.int_value!} />;

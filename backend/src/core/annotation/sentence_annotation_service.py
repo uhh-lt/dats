@@ -22,7 +22,6 @@ from core.annotation.sentence_annotation_orm import SentenceAnnotationORM
 from core.doc.source_document_data_crud import crud_sdoc_data
 from core.memo.memo_enum import AttachedObjectType
 from repos.db.sql_exceptions import NoSuchElementError
-from repos.db.sql_utils import assert_in_project
 
 
 class SentenceAnnotationService(metaclass=SingletonMeta):
@@ -101,6 +100,7 @@ class SentenceAnnotationService(metaclass=SingletonMeta):
         # 2) find or create the user's annotation document of every source document
         adoc_by_sdoc_id = crud_adoc.exists_or_create_multi(
             db=db,
+            project_id=project_id,
             user_id=user_id,
             sdoc_ids=list(
                 dict.fromkeys(create_dto.sdoc_id for create_dto, _ in annotations)
@@ -208,8 +208,7 @@ class SentenceAnnotationService(metaclass=SingletonMeta):
             NoSuchElementError: If the document has no text data in the project.
         """
         # 1) the sentences of the document
-        sdoc_data = crud_sdoc_data.read(db=db, id=sdoc_id)
-        assert_in_project([sdoc_data], project_id=project_id)
+        sdoc_data = crud_sdoc_data.read(db=db, project_id=project_id, id=sdoc_id)
         result: dict[int, list[SentenceAnnotationRead]] = {
             idx: [] for idx in range(len(sdoc_data.sentences))
         }

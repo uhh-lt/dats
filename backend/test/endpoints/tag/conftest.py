@@ -119,21 +119,21 @@ def project_with_multiple_sdocs_and_multiple_tags(
     # Create two source documents in the project
     sdoc1 = crud_sdoc.create(
         db=db_session,
+        project_id=test_project.id,
         create_dto=SourceDocumentCreate(
             filename="a.txt",
             name="A",
             doctype=DocType.text,
-            project_id=test_project.id,
             folder_id=None,
         ),
     )
     sdoc2 = crud_sdoc.create(
         db=db_session,
+        project_id=test_project.id,
         create_dto=SourceDocumentCreate(
             filename="b.txt",
             name="B",
             doctype=DocType.text,
-            project_id=test_project.id,
             folder_id=None,
         ),
     )

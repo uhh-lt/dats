@@ -22,7 +22,7 @@ export const Route = createFileRoute("/_auth/project/$projectId/tools/health")({
   validateSearch: zodValidator(healthSearchSchema),
   loaderDeps: ({ search }) => search,
   context: ({ params, deps }) => ({
-    healthColumnsOptions: healthQueries.columns(deps.doctype),
+    healthColumnsOptions: healthQueries.columns(params.projectId, deps.doctype),
     healthSearchOptions: healthQueries.search({
       projectId: params.projectId,
       doctype: deps.doctype,

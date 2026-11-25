@@ -1824,7 +1824,8 @@ def test_preview_rejects_a_document_of_another_project(
     client: TestClient,
     prompt_project: PromptProject,
 ) -> None:
-    """Only documents of the request's project can be rendered (HTTP 400)."""
+    """A document of another project is not found in the request's project (HTTP
+    404)."""
     project = prompt_project
     draft = _draft(
         TaskType.ANNOTATION,
@@ -1834,8 +1835,7 @@ def test_preview_rejects_a_document_of_another_project(
     response = _post_preview(
         client, _request(project, draft=draft, sdoc_id=project["foreign_sdoc"].id)
     )
-    assert response.status_code == 400, response.text
-    assert "does not belong to project" in response.text
+    assert response.status_code == 404, response.text
 
 
 def test_preview_rejects_a_version_of_another_project(

@@ -153,7 +153,11 @@ for idx, (sdoc_id, data) in enumerate(
     for metakey, metatype in zip(args.metadata_keys, args.metadata_types):
         if metakey in data:
             api.update_sdoc_metadata(
-                sdoc_id=sdoc_id, key=metakey, metatype=metatype, value=data[metakey]
+                proj_id=project["id"],
+                sdoc_id=sdoc_id,
+                key=metakey,
+                metatype=metatype,
+                value=data[metakey],
             )
 
 print("(: FINISHED :)")

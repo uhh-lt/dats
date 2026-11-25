@@ -44,7 +44,7 @@ def enrich_for_recompute(
 def handle_image_embedding_job(payload: ImageEmbeddingJobInput, job: Job) -> None:
     with SQLRepo().transaction() as db:
         sdoc = SourceDocumentRead.model_validate(
-            crud_sdoc.read(db=db, id=payload.sdoc_id)
+            crud_sdoc.read(db=db, project_id=payload.project_id, id=payload.sdoc_id)
         )
 
     embedding = encode_image(sdoc).tolist()

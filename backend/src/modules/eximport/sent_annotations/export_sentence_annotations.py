@@ -88,7 +88,9 @@ def __generate_export_df_for_sentence_annotations(
     # find all sdoc_data
     sdoc_data = {
         sdoc_data.id: sdoc_data
-        for sdoc_data in crud_sdoc_data.read_by_ids(db=db, ids=list(unique_sdoc_ids))
+        for sdoc_data in crud_sdoc_data.read_by_ids(
+            db=db, project_id=project_id, ids=list(unique_sdoc_ids)
+        )
         if sdoc_data is not None
     }
 

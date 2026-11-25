@@ -1,19 +1,22 @@
 import { SdocMetadataService } from "@api/services/SdocMetadataService";
 import { SourceDocumentMetadataRead } from "@models/SourceDocumentMetadataRead";
+import { useAppSelector } from "@store/storeHooks";
 import { useMutation, useQueries, useQuery, UseQueryResult } from "@tanstack/react-query";
 import { SdocMetadataMap, sdocMetadataQueries } from "./sdocMetadataQueries";
 
 // SDOC METADATA QUERIES
 
+const useProjectId = () => useAppSelector((state) => state.project.projectId);
+
 const useGetSdocMetadata = (sdocId: number | null | undefined) =>
   useQuery({
-    ...sdocMetadataQueries.bySdoc(sdocId),
+    ...sdocMetadataQueries.bySdoc(useProjectId(), sdocId),
     select: (data) => Object.values(data),
   });
 
 const useGetSdocMetadataByProjectMetadataId = (sdocId: number | null | undefined, projectMetadataId: number) =>
   useQuery({
-    ...sdocMetadataQueries.bySdoc(sdocId),
+    ...sdocMetadataQueries.bySdoc(useProjectId(), sdocId),
     select: (data) => data[projectMetadataId],
   });
 
@@ -75,11 +78,13 @@ const combineBulkData = (results: UseQueryResult<SdocMetadataMap, Error>[]) => {
   };
 };
 
-const useGetSdocMetadataBulk = (sdocIds: number[]) =>
-  useQueries({
-    queries: sdocIds.map((sdocId) => sdocMetadataQueries.bySdoc(sdocId)),
+const useGetSdocMetadataBulk = (sdocIds: number[]) => {
+  const projectId = useProjectId();
+  return useQueries({
+    queries: sdocIds.map((sdocId) => sdocMetadataQueries.bySdoc(projectId, sdocId)),
     combine: combineBulkData,
   });
+};
 
 // SDOC METADATA MUTATIONS
 

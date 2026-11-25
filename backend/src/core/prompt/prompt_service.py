@@ -5,7 +5,6 @@ from sqlalchemy.orm import Session
 from common.singleton_meta import SingletonMeta
 from core.annotation.sentence_annotation_crud import crud_sentence_anno
 from core.annotation.span_annotation_crud import crud_span_anno
-from core.doc.source_document_crud import crud_sdoc
 from core.doc.source_document_data_crud import crud_sdoc_data
 from core.project.project_crud import crud_project
 from core.prompt.prompt_crud import crud_prompt
@@ -336,12 +335,11 @@ class PromptService(metaclass=SingletonMeta):
                 is_fewshot=renderer.is_fewshot,
                 unknown_placeholders=unknown_placeholders,
             )
-        if crud_sdoc.read(db=db, id=request.sdoc_id).project_id != request.project_id:
-            raise InvalidPromptPreviewError(
-                f"Document {request.sdoc_id} does not belong to project "
-                f"{request.project_id}."
-            )
-        segments = renderer.segments(crud_sdoc_data.read(db=db, id=request.sdoc_id))
+        # raises NoSuchElementError for a document of another project
+        sdoc_data = crud_sdoc_data.read(
+            db=db, project_id=request.project_id, id=request.sdoc_id
+        )
+        segments = renderer.segments(sdoc_data)
         if request.message_index >= len(segments):
             raise InvalidPromptPreviewError(
                 f"Message {request.message_index} does not exist, document "
@@ -562,7 +560,9 @@ class PromptService(metaclass=SingletonMeta):
         sdoc_datas = {
             sdoc_data.id: sdoc_data
             for sdoc_data in crud_sdoc_data.read_by_ids(
-                db=db, ids=[annotation.sdoc_id for annotation in annotations]
+                db=db,
+                project_id=project_id,
+                ids=[annotation.sdoc_id for annotation in annotations],
             )
         }
 
@@ -617,7 +617,9 @@ class PromptService(metaclass=SingletonMeta):
             db=db, project_id=project_id, ids=annotation_ids
         )
         sdoc_datas = crud_sdoc_data.read_by_ids(
-            db=db, ids=[annotation.sdoc_id for annotation in annotations]
+            db=db,
+            project_id=project_id,
+            ids=[annotation.sdoc_id for annotation in annotations],
         )
         return [
             SentencePromptExample(

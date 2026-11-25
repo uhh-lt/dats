@@ -2,10 +2,7 @@ from fastapi import APIRouter, Depends
 
 from common.dats_event import DATSEvent
 from common.dependencies import DBSession, get_current_user
-from common.sdoc_status_enum import SDocStatus
 from core.auth.authz_user import AuthzUser
-from core.doc.source_document_crud import crud_sdoc
-from core.doc.source_document_orm import SourceDocumentORM
 from core.project.project_crud import crud_project
 from core.project.project_dto import (
     ProjectCreate,
@@ -15,7 +12,6 @@ from core.project.project_dto import (
 from core.project.project_service import ProjectService
 from core.user.user_crud import crud_user
 from core.user.user_orm import UserORM
-from repos.db.sql_exceptions import NoSuchElementError
 from systems.websocket_system.websocket_dependency import WebsocketEmitter
 
 router = APIRouter(
@@ -68,33 +64,6 @@ def get_project(
 
 
 @router.get(
-    "/{project_id}/resolve_filename/{filename}",
-    response_model=int,
-    summary=(
-        "Returns the Id of the SourceDocument identified by project_id and filename if it exists"
-    ),
-)
-def resolve_filename(
-    *,
-    db: DBSession,
-    project_id: int,
-    filename: str,
-    only_finished: bool = True,
-    authz_user: AuthzUser = Depends(),
-) -> int:
-    authz_user.assert_in_project(project_id)
-
-    sdoc = crud_sdoc.read_by_filename(
-        db=db, project_id=project_id, only_finished=only_finished, filename=filename
-    )
-    if sdoc is None:
-        raise NoSuchElementError(
-            SourceDocumentORM, project_id=project_id, filename=filename
-        )
-    return sdoc.id
-
-
-@router.get(
     "/user/projects",
     response_model=list[ProjectRead],
     summary="Returns all Projects of the logged-in User",
@@ -106,24 +75,6 @@ def get_user_projects(
 ) -> list[ProjectRead]:
     db_obj = crud_user.read(db=db, id=authz_user.user.id)
     return [ProjectRead.model_validate(proj) for proj in db_obj.projects]
-
-
-@router.get(
-    "/{project_id}/sdoc/status/{status}",
-    response_model=int,
-    summary="Returns count of SourceDocuments with the given status in the given project.",
-)
-def count_sdocs_with_status(
-    *,
-    db: DBSession,
-    project_id: int,
-    status: SDocStatus,
-    authz_user: AuthzUser = Depends(),
-) -> int:
-    authz_user.assert_in_project(project_id)
-    return crud_sdoc.count_by_project_and_status(
-        db=db, project_id=project_id, status=status
-    )
 
 
 # --- update operations

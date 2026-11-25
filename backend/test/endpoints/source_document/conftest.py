@@ -30,7 +30,11 @@ from core.doc.source_document_dto import (
 )
 from core.doc.source_document_file_crud import crud_sdoc_file
 from core.doc.source_document_orm import SourceDocumentORM
+from core.project.project_crud import crud_project
+from core.project.project_dto import ProjectCreate
 from core.project.project_orm import ProjectORM
+from core.project.project_service import ProjectService
+from dats_test_utils import ProjectWithSdoc, create_project_with_sdoc
 
 
 class ProjectWithSdocsInSameFolder(TypedDict):
@@ -59,20 +63,20 @@ def project_with_sdocs_in_same_folder(
     # Create a source document in the folder
     sdoc1 = crud_sdoc.create(
         db=db_session,
+        project_id=test_project.id,
         create_dto=SourceDocumentCreate(
             filename="test_document1.txt",
             name="Test Document 1",
             doctype=DocType.text,
-            project_id=test_project.id,
             folder_id=folder.id,
         ),
     )
 
     crud_sdoc_data.create(
         db=db_session,
+        project_id=sdoc1.project_id,
         create_dto=SourceDocumentDataCreate(
             id=sdoc1.id,
-            project_id=sdoc1.project_id,
             content="This is a test document. It has two sentences.",
             raw_html="<p>This is a test document. It has two sentences.</p>",
             html="<p><sent>This is a test document.</sent> <sent>It has two sentences.</sent></p>",
@@ -88,20 +92,20 @@ def project_with_sdocs_in_same_folder(
     # Create another source document in the same folder
     sdoc2 = crud_sdoc.create(
         db=db_session,
+        project_id=test_project.id,
         create_dto=SourceDocumentCreate(
             filename="test_document2.txt",
             name="Test Document 2",
             doctype=DocType.text,
-            project_id=test_project.id,
             folder_id=folder.id,
         ),
     )
 
     crud_sdoc_data.create(
         db=db_session,
+        project_id=sdoc2.project_id,
         create_dto=SourceDocumentDataCreate(
             id=sdoc2.id,
-            project_id=sdoc2.project_id,
             content="This is a test document. It has two sentences.",
             raw_html="<p>This is a test document. It has two sentences.</p>",
             html="<p><sent>This is a test document.</sent> <sent>It has two sentences.</sent></p>",
@@ -207,11 +211,11 @@ def project_with_image(db_session, test_project) -> ProjectWithImage:
     """
     image = crud_sdoc.create(
         db=db_session,
+        project_id=test_project.id,
         create_dto=SourceDocumentCreate(
             filename="photo.png",
             name="photo.png",
             doctype=DocType.image,
-            project_id=test_project.id,
         ),
     )
     db_session.commit()
@@ -228,3 +232,21 @@ def project_with_image(db_session, test_project) -> ProjectWithImage:
         data=b"thumbnail",
     )
     return {"project": test_project, "image": image}
+
+
+@pytest.fixture(scope="function")
+def foreign_project_with_sdoc(db_session, test_user) -> ProjectWithSdoc:
+    """
+    This fixture sets up a second project "Foreign Project" of `test_user` (so
+    the user is a member of both) with the text document "test_document.txt"
+    ("Test Document", in its own SDOC_FOLDER), its data and its file, like
+    `project_with_sdoc`. Its ids belong to another project than `test_project`.
+    """
+    project_read = ProjectService().create_project(
+        db=db_session,
+        create_dto=ProjectCreate(title="Foreign Project", description="foreign"),
+        creating_user_id=test_user.id,
+    )
+    db_session.commit()
+    project = crud_project.read(db=db_session, id=project_read.id)
+    return create_project_with_sdoc(db_session, project)

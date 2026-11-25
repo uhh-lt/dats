@@ -69,9 +69,9 @@ def _create_dataset_folder(db_session, project: ProjectORM, name: str) -> int:
         db=db_session,
         create_dto=FolderCreate(
             name=name,
+            project_id=project.id,
             folder_type=FolderType.SDOC_FOLDER,
             parent_id=None,
-            project_id=project.id,
         ),
     )
     return folder.id
@@ -98,12 +98,13 @@ def _import_text_sdocs(
             filename=filename,
             name=name,
             doctype=DocType.text,
-            project_id=project.id,
             folder_id=folder_id,
         )
         for filename, name, _ in docs
     ]
-    sdocs = crud_sdoc.create_multi(db=db_session, create_dtos=sdoc_dtos)
+    sdocs = crud_sdoc.create_multi(
+        db=db_session, project_id=project.id, create_dtos=sdoc_dtos
+    )
 
     # 2. Build sdoc_data rows. Classifier tests read content from PostgreSQL,
     # so creating thousands of duplicate files would only add test overhead.
@@ -132,7 +133,6 @@ def _import_text_sdocs(
         data_dtos.append(
             SourceDocumentDataCreate(
                 id=sdoc.id,
-                project_id=sdoc.project_id,
                 content=content,
                 raw_html=f"<p>{content}</p>",
                 html=f"<p>{content}</p>",
@@ -146,7 +146,9 @@ def _import_text_sdocs(
         )
 
     # 3. Bulk-create the sdoc_data rows (single flush).
-    crud_sdoc_data.create_multi(db=db_session, create_dtos=data_dtos)
+    crud_sdoc_data.create_multi(
+        db=db_session, project_id=project.id, create_dtos=data_dtos
+    )
 
     return sdocs
 

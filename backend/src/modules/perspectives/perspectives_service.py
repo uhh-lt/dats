@@ -423,7 +423,9 @@ class PerspectivesService:
                 document_data = [da.content for da in doc_aspects]
             case DocType.image:
                 sdocs = crud_sdoc.read_by_ids(
-                    db=db, ids=[da.sdoc_id for da in doc_aspects]
+                    db=db,
+                    project_id=aspect.project_id,
+                    ids=[da.sdoc_id for da in doc_aspects],
                 )
                 sdoc_reads = [SourceDocumentRead.model_validate(sdoc) for sdoc in sdocs]
                 document_data = [

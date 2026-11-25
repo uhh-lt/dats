@@ -473,7 +473,9 @@ class SpanClassificationModelService(TextClassificationModelService):
         unannotated_sdocs = sorted(set(sdoc_ids) - included_sdoc_ids)
 
         # Get source document data
-        sdoc_datas = crud_sdoc_data.read_by_ids(db=db, ids=sdoc_ids)
+        sdoc_datas = crud_sdoc_data.read_by_ids(
+            db=db, project_id=project_id, ids=sdoc_ids
+        )
         sdocid2data = {sdoc_data.id: sdoc_data for sdoc_data in sdoc_datas}
 
         # Overlay annotations onto all-O token labels.
@@ -1191,7 +1193,9 @@ class SpanClassificationModelService(TextClassificationModelService):
         # 2. Create dataset
         job.update(current_step=2)
         # Get source document data
-        sdoc_datas = crud_sdoc_data.read_by_ids(db=db, ids=parameters.sdoc_ids)
+        sdoc_datas = crud_sdoc_data.read_by_ids(
+            db=db, project_id=payload.project_id, ids=parameters.sdoc_ids
+        )
         sdoc_id2data = {sdoc_data.id: sdoc_data for sdoc_data in sdoc_datas}
         inference_dataset: list[InferenceDatasetRow] = [
             {"sdoc_id": sdoc_data.id, "words": sdoc_data.tokens}

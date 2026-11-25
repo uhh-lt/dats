@@ -1,6 +1,5 @@
 from fastapi import APIRouter, Depends
 
-from common.crud_enum import Crud
 from common.dependencies import DBSession, get_current_user
 from core.auth.authz_user import AuthzUser
 from modules.statistics.statistics_dto import SpanEntityStat, TagStat
@@ -56,19 +55,20 @@ def filter_tag_stats(
     *,
     db: DBSession,
     authz_user: AuthzUser = Depends(),
+    project_id: int,
     # keyword stat params
     sort_by_global: bool = False,
     top_k: int = 20,
     # filter params
     sdoc_ids: list[int],
 ) -> list[TagStat]:
+    authz_user.assert_in_project(project_id)
     if len(sdoc_ids) == 0:
         return []
 
     # compute tag stats
-    authz_user.assert_in_same_project_as_many(Crud.SOURCE_DOCUMENT, sdoc_ids)
     tag_stats = StatisticsService().compute_tag_statistics(
-        db=db, sdoc_ids=set(sdoc_ids), top_k=top_k
+        db=db, project_id=project_id, sdoc_ids=set(sdoc_ids), top_k=top_k
     )
     if sort_by_global:
         tag_stats.sort(key=lambda x: x.global_count, reverse=True)

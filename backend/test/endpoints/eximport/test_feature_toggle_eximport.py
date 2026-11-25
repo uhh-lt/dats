@@ -416,7 +416,7 @@ def _recompute(
     client: TestClient, projects: FeatureToggleEximportProjects, step: str, sdoc_id: int
 ):
     return client.post(
-        f"/docprocessing/project/{projects['target_project'].id}/recompute",
+        f"/projects/{projects['target_project'].id}/doc-processing/recompute",
         params={"processing_step": step},
         json={"sdoc_ids": [sdoc_id], "settings": SETTINGS.model_dump(mode="json")},
     )

@@ -24,7 +24,8 @@ export const RelatedPanel = memo((props: RelatedPanelProps) => {
 });
 
 function RelatedPanelContent({ sdocId }: RelatedPanelProps) {
-  const relatedSdocIds = useQuery(sdocQueries.sameFolder(sdocId));
+  const projectId = useAppSelector((state) => state.project.projectId);
+  const relatedSdocIds = useQuery(sdocQueries.sameFolder(projectId, sdocId));
 
   // virtualization
   const parentRef = useRef<HTMLDivElement>(null);
@@ -35,7 +36,6 @@ function RelatedPanelContent({ sdocId }: RelatedPanelProps) {
   });
 
   // check if we are in annotation view
-  const projectId = useAppSelector((state) => state.project.projectId);
   const tabNavigate = useTabNavigate();
   const relatedIds = relatedSdocIds.data ?? [];
   const currentIndex = relatedIds.findIndex((id) => id === sdocId);

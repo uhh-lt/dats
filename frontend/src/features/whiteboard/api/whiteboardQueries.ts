@@ -59,7 +59,7 @@ export const whiteboardQueries = {
           queryClient.setQueryData(memoQueries.byId(memo.id).queryKey, memo);
         });
         whiteboardData.sdocs.forEach((sdoc) => {
-          queryClient.setQueryData(sdocQueries.byId(sdoc.id).queryKey, sdoc);
+          queryClient.setQueryData(sdocQueries.byId(sdoc.project_id, sdoc.id).queryKey, sdoc);
         });
         if (whiteboardData.codes.length > 0) {
           const codeMap = whiteboardData.codes.reduce((acc, code) => {

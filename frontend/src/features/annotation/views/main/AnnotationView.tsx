@@ -192,6 +192,7 @@ export function AnnotationView() {
       return;
     }
     updateNameMutation.mutate({
+      projectId: sdoc.project_id,
       sdocId: sdoc.id,
       requestBody: {
         name: newName,

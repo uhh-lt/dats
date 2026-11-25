@@ -20,7 +20,8 @@ export function CompareWithSelector({ sdocId }: CompareWithSelector) {
   const [compareWithUserId, setCompareWithUserId] = useURLConnector(AnnotationRouteAPI, "compareWithUserId");
 
   // global server state (react query)
-  const annotatorUserIds = useQuery(sdocQueries.annotators(sdocId));
+  const projectId = AnnotationRouteAPI.useParams({ select: (params) => params.projectId });
+  const annotatorUserIds = useQuery(sdocQueries.annotators(projectId, sdocId));
   // the virtual users of the project are listed even without annotations, to annotate as them
   const virtualUsers = UserHooks.useGetVirtualUsers();
   const userIds = Array.from(

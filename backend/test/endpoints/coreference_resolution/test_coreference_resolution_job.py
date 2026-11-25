@@ -219,13 +219,13 @@ def test_enable_finishes_documents_it_does_not_resolve_without_output(
 
 
 # ===========================================================================
-# RECOMPUTE (/docprocessing/project/{project_id}/recompute) TESTS
+# RECOMPUTE (/projects/{project_id}/doc-processing/recompute) TESTS
 # ===========================================================================
 
 
 def _recompute(client: TestClient, project_id: int, sdoc_id: int) -> None:
     response = client.post(
-        f"/docprocessing/project/{project_id}/recompute",
+        f"/projects/{project_id}/doc-processing/recompute",
         params={"processing_step": STEP},
         json={"sdoc_ids": [sdoc_id], "settings": SETTINGS.model_dump(mode="json")},
     )

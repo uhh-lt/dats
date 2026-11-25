@@ -42,7 +42,7 @@ class SpanGroupService(metaclass=SingletonMeta):
         """
         # 1) find or create the user's annotation document
         adoc = crud_adoc.exists_or_create(
-            db=db, user_id=user_id, sdoc_id=create_dto.sdoc_id
+            db=db, project_id=project_id, user_id=user_id, sdoc_id=create_dto.sdoc_id
         )
 
         # 2) create the span group

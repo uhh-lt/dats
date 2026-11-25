@@ -1,9 +1,9 @@
-from fastapi import APIRouter, Depends
+from fastapi import Depends
 
-from common.crud_enum import Crud
 from common.dats_event import DATSEvent
-from common.dependencies import DBSession, get_current_user
-from core.auth.authz_user import AuthzUser
+from common.dependencies import DBSession
+from common.project_router import project_router
+from common.sdoc_status_enum import SDocStatus
 from core.doc.source_document_crud import crud_sdoc
 from core.doc.source_document_data_crud import crud_sdoc_data
 from core.doc.source_document_data_dto import SourceDocumentDataRead
@@ -12,17 +12,53 @@ from core.doc.source_document_dto import (
     SourceDocumentUpdate,
     SourceDocumentUrls,
 )
+from core.doc.source_document_orm import SourceDocumentORM
 from core.doc.source_document_service import SourceDocumentService
+from repos.db.sql_exceptions import NoSuchElementError
 from systems.websocket_system.websocket_dependency import WebsocketEmitter
 
-router = APIRouter(
-    prefix="/sdoc",
-    dependencies=[Depends(get_current_user)],
-    tags=["sourceDocument", "mcp"],
-)
+router = project_router("/source-documents", tags=["sourceDocument", "mcp"])
 
 
 # --- read operations
+
+
+@router.get(
+    "/count",
+    response_model=int,
+    summary="Returns the number of SourceDocuments of the Project, optionally only those with the given status",
+)
+def count_sdocs(
+    *,
+    db: DBSession,
+    project_id: int,
+    status: SDocStatus | None = None,
+) -> int:
+    return crud_sdoc.count_by_project_and_status(
+        db=db, project_id=project_id, status=status
+    )
+
+
+@router.get(
+    "/by-filename",
+    response_model=int,
+    summary="Returns the ID of the SourceDocument of the Project with the given filename",
+)
+def resolve_filename(
+    *,
+    db: DBSession,
+    project_id: int,
+    filename: str,
+    only_finished: bool = True,
+) -> int:
+    sdoc = crud_sdoc.read_by_filename(
+        db=db, project_id=project_id, only_finished=only_finished, filename=filename
+    )
+    if sdoc is None:
+        raise NoSuchElementError(
+            SourceDocumentORM, project_id=project_id, filename=filename
+        )
+    return sdoc.id
 
 
 @router.get(
@@ -33,52 +69,59 @@ router = APIRouter(
 def get_by_id(
     *,
     db: DBSession,
+    project_id: int,
     sdoc_id: int,
     only_if_finished: bool = True,
-    authz_user: AuthzUser = Depends(),
 ) -> SourceDocumentRead:
-    authz_user.assert_in_same_project_as(Crud.SOURCE_DOCUMENT, sdoc_id)
-
     if not only_if_finished:
-        crud_sdoc.read_status(db=db, sdoc_id=sdoc_id, raise_error_on_unfinished=True)
+        crud_sdoc.read_status(
+            db=db,
+            project_id=project_id,
+            sdoc_id=sdoc_id,
+            raise_error_on_unfinished=True,
+        )
 
-    return SourceDocumentRead.model_validate(crud_sdoc.read(db=db, id=sdoc_id))
+    return SourceDocumentRead.model_validate(
+        crud_sdoc.read(db=db, project_id=project_id, id=sdoc_id)
+    )
 
 
 @router.get(
-    "/data/{sdoc_id}",
+    "/{sdoc_id}/data",
     response_model=SourceDocumentDataRead,
-    summary="Returns the SourceDocumentData with the given ID if it exists",
+    summary="Returns the SourceDocumentData of the SourceDocument with the given ID if it exists",
 )
 def get_by_id_with_data(
     *,
     db: DBSession,
+    project_id: int,
     sdoc_id: int,
     only_if_finished: bool = True,
-    authz_user: AuthzUser = Depends(),
 ) -> SourceDocumentDataRead:
-    authz_user.assert_in_same_project_as(Crud.SOURCE_DOCUMENT, sdoc_id)
-
     if not only_if_finished:
-        crud_sdoc.read_status(db=db, sdoc_id=sdoc_id, raise_error_on_unfinished=True)
+        crud_sdoc.read_status(
+            db=db,
+            project_id=project_id,
+            sdoc_id=sdoc_id,
+            raise_error_on_unfinished=True,
+        )
 
-    sdoc_data = crud_sdoc_data.read(db=db, id=sdoc_id)
+    sdoc_data = crud_sdoc_data.read(db=db, project_id=project_id, id=sdoc_id)
     return SourceDocumentDataRead.model_validate(sdoc_data)
 
 
 @router.get(
-    "/{sdoc_id}/same_folder",
+    "/{sdoc_id}/same-folder",
     response_model=list[int],
     summary="Returns the ids of SourceDocuments in the same folder as the SourceDocument with the given id.",
 )
 def get_same_folder_sdocs(
     *,
     db: DBSession,
+    project_id: int,
     sdoc_id: int,
-    authz_user: AuthzUser = Depends(),
 ) -> list[int]:
-    authz_user.assert_in_same_project_as(Crud.SOURCE_DOCUMENT, sdoc_id)
-    sdoc = crud_sdoc.read(db=db, id=sdoc_id)
+    sdoc = crud_sdoc.read(db=db, project_id=project_id, id=sdoc_id)
     same_folder_sdocs = sdoc.folder.source_documents
     doctype_order = {"text": 0, "img": 1, "audio": 2, "video": 3}
     same_folder_sdocs.sort(key=lambda s: (doctype_order.get(s.doctype, 99), s.filename))
@@ -93,12 +136,12 @@ def get_same_folder_sdocs(
 def get_urls(
     *,
     db: DBSession,
+    project_id: int,
     sdoc_id: int,
-    authz_user: AuthzUser = Depends(),
 ) -> SourceDocumentUrls:
-    authz_user.assert_in_same_project_as(Crud.SOURCE_DOCUMENT, sdoc_id)
-
-    return SourceDocumentService().read_urls(db=db, sdoc_id=sdoc_id)
+    return SourceDocumentService().read_urls(
+        db=db, project_id=project_id, sdoc_id=sdoc_id
+    )
 
 
 @router.get(
@@ -109,14 +152,11 @@ def get_urls(
 def get_annotators(
     *,
     db: DBSession,
+    project_id: int,
     sdoc_id: int,
-    authz_user: AuthzUser = Depends(),
 ) -> list[int]:
-    authz_user.assert_in_same_project_as(Crud.SOURCE_DOCUMENT, sdoc_id)
-
-    return [
-        adoc.user_id for adoc in crud_sdoc.read(db=db, id=sdoc_id).annotation_documents
-    ]
+    sdoc = crud_sdoc.read(db=db, project_id=project_id, id=sdoc_id)
+    return [adoc.user_id for adoc in sdoc.annotation_documents]
 
 
 # --- update operations
@@ -130,22 +170,44 @@ def get_annotators(
 def update_by_id(
     *,
     db: DBSession,
+    project_id: int,
     sdoc_id: int,
     sdoc: SourceDocumentUpdate,
-    authz_user: AuthzUser = Depends(),
     ws: WebsocketEmitter = Depends(),
 ) -> SourceDocumentRead:
-    authz_user.assert_in_same_project_as(Crud.SOURCE_DOCUMENT, sdoc_id)
-
-    db_obj = crud_sdoc.update(db=db, id=sdoc_id, update_dto=sdoc)
+    db_obj = crud_sdoc.update(db=db, project_id=project_id, id=sdoc_id, update_dto=sdoc)
     result = SourceDocumentRead.model_validate(db_obj)
-    ws.emit_to_project(
-        DATSEvent.SDOC_UPDATED, result, project_id=db_obj.get_project_id()
-    )
+    ws.emit_to_project(DATSEvent.SDOC_UPDATED, result, project_id=project_id)
     return result
 
 
 # --- delete operations
+
+
+@router.delete(
+    "/bulk",
+    response_model=list[SourceDocumentRead],
+    summary="Removes all SourceDocuments with the given IDs if they exist",
+)
+def delete_sdocs_bulk(
+    *,
+    db: DBSession,
+    project_id: int,
+    sdoc_ids: list[int],
+    ws: WebsocketEmitter = Depends(),
+) -> list[SourceDocumentRead]:
+    result = SourceDocumentService().delete_multi(
+        db=db, project_id=project_id, sdoc_ids=sdoc_ids
+    )
+    if result.sdocs:
+        ws.emit_to_project(
+            DATSEvent.SDOC_DELETED_BATCH, result.sdocs, project_id=project_id
+        )
+    if result.folders:
+        ws.emit_to_project(
+            DATSEvent.FOLDER_DELETED_BATCH, result.folders, project_id=project_id
+        )
+    return result.sdocs
 
 
 @router.delete(
@@ -156,39 +218,15 @@ def update_by_id(
 def delete_by_id(
     *,
     db: DBSession,
+    project_id: int,
     sdoc_id: int,
-    authz_user: AuthzUser = Depends(),
     ws: WebsocketEmitter = Depends(),
 ) -> SourceDocumentRead:
-    authz_user.assert_in_same_project_as(Crud.SOURCE_DOCUMENT, sdoc_id)
-
-    result = SourceDocumentService().delete(db=db, sdoc_id=sdoc_id)
+    result = SourceDocumentService().delete_multi(
+        db=db, project_id=project_id, sdoc_ids=[sdoc_id]
+    )
     sdoc = result.sdocs[0]
-    ws.emit_to_project(DATSEvent.SDOC_DELETED, sdoc, project_id=sdoc.project_id)
+    ws.emit_to_project(DATSEvent.SDOC_DELETED, sdoc, project_id=project_id)
     for folder in result.folders:
-        ws.emit_to_project(
-            DATSEvent.FOLDER_DELETED, folder, project_id=folder.project_id
-        )
+        ws.emit_to_project(DATSEvent.FOLDER_DELETED, folder, project_id=project_id)
     return sdoc
-
-
-@router.delete(
-    "/bulk/delete",
-    response_model=list[SourceDocumentRead],
-    summary="Removes all SourceDocuments with the given IDs if they exist",
-)
-def delete_sdocs_bulk(
-    *,
-    db: DBSession,
-    sdoc_ids: list[int],
-    authz_user: AuthzUser = Depends(),
-    ws: WebsocketEmitter = Depends(),
-) -> list[SourceDocumentRead]:
-    authz_user.assert_in_same_project_as_many(Crud.SOURCE_DOCUMENT, sdoc_ids)
-
-    result = SourceDocumentService().delete_multi(db=db, sdoc_ids=sdoc_ids)
-    if result.sdocs:
-        ws.emit_dtos_to_projects(DATSEvent.SDOC_DELETED_BATCH, result.sdocs)
-    if result.folders:
-        ws.emit_dtos_to_projects(DATSEvent.FOLDER_DELETED_BATCH, result.folders)
-    return result.sdocs

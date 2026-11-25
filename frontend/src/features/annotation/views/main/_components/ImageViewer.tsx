@@ -19,8 +19,12 @@ interface ImageViewerProps {
 }
 
 export function ImageViewer(props: ImageViewerProps) {
-  const heightMetadata = useQuery(sdocMetadataQueries.bySdocAndKey(props.sdocData.id, "height"));
-  const widthMetadata = useQuery(sdocMetadataQueries.bySdocAndKey(props.sdocData.id, "width"));
+  const heightMetadata = useQuery(
+    sdocMetadataQueries.bySdocAndKey(props.sdocData.project_id, props.sdocData.id, "height"),
+  );
+  const widthMetadata = useQuery(
+    sdocMetadataQueries.bySdocAndKey(props.sdocData.project_id, props.sdocData.id, "width"),
+  );
 
   if (heightMetadata.isSuccess && widthMetadata.isSuccess) {
     return (

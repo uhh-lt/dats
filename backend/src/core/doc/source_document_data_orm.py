@@ -4,6 +4,7 @@ from sqlalchemy import (
     ForeignKey,
     ForeignKeyConstraint,
     Integer,
+    PrimaryKeyConstraint,
     String,
     UniqueConstraint,
 )
@@ -18,9 +19,10 @@ if TYPE_CHECKING:
 
 
 class SourceDocumentDataORM(ORMBase):
-    # one to one (dependent table: the id is the source document's id)
+    # one to one (dependent table: the id is the source document's id); the
+    # primary key is (project_id, id), see __table_args__
     id: Mapped[int] = mapped_column(
-        Integer, primary_key=True, nullable=False, index=True
+        Integer, autoincrement=False, nullable=False, index=True
     )
     source_document: Mapped["SourceDocumentORM"] = relationship(
         "SourceDocumentORM", back_populates="data", foreign_keys=[id]
@@ -29,7 +31,6 @@ class SourceDocumentDataORM(ORMBase):
         Integer,
         ForeignKey("project.id", ondelete="CASCADE"),
         nullable=False,
-        index=True,
     )
 
     content: Mapped[str] = mapped_column(String, nullable=False, index=False)
@@ -55,6 +56,7 @@ class SourceDocumentDataORM(ORMBase):
     )
 
     __table_args__ = (
+        PrimaryKeyConstraint("project_id", "id", name="sourcedocumentdata_pkey"),
         UniqueConstraint(
             "project_id", "id", name="UC_sourcedocumentdata_project_id_id"
         ),
@@ -131,6 +133,3 @@ class SourceDocumentDataORM(ORMBase):
                 current_sent_end = self.sentence_ends[current_sent]
             sentence_ids.append(current_sent)
         return sentence_ids
-
-    def get_project_id(self) -> int:
-        return self.project_id

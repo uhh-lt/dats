@@ -1,5 +1,4 @@
 import { queryClient } from "@api/queryClient";
-import { ProjectService } from "@api/services/ProjectService";
 import { SearchService } from "@api/services/SearchService";
 import { SourceDocumentService } from "@api/services/SourceDocumentService";
 import { TagService } from "@api/services/TagService";
@@ -16,34 +15,39 @@ type SdocSearchRequest = Omit<Parameters<typeof SearchService.searchSdocs>[0], "
  * Query factory for source documents (sdocs).
  *
  *   sdocQueries.all()                        ["sdoc"]
- *   sdocQueries.byId(sdocId)                 ["sdoc", "detail", sdocId]
- *   sdocQueries.data(sdocId)                 ["sdoc", "data", sdocId]
- *   sdocQueries.idByFilename(pid, filename)  ["sdoc", "idByFilename", pid, filename]
- *   sdocQueries.sameFolder(sdocId)           ["sdoc", "sameFolder", sdocId]
- *   sdocQueries.urls(sdocId)                 ["sdoc", "urls", sdocId]
- *   sdocQueries.idsByTag(projectId, tagId)   ["sdoc", "idsByTag", tagId, projectId]
- *   sdocQueries.annotators(sdocId)           ["sdoc", "annotators", sdocId]
- *   sdocQueries.tableInfo(projectId)         ["tableInfo", "sdoc", projectId]
- *   sdocQueries.search(request)              ["sdoc", "search", projectId, request]
+ *   sdocQueries.byId(projectId, sdocId)        ["sdoc", "detail", sdocId, projectId]
+ *   sdocQueries.data(projectId, sdocId)        ["sdoc", "data", sdocId, projectId]
+ *   sdocQueries.idByFilename(pid, filename)    ["sdoc", "idByFilename", pid, filename]
+ *   sdocQueries.sameFolder(projectId, sdocId)  ["sdoc", "sameFolder", sdocId, projectId]
+ *   sdocQueries.urls(projectId, sdocId)        ["sdoc", "urls", sdocId, projectId]
+ *   sdocQueries.idsByTag(projectId, tagId)     ["sdoc", "idsByTag", tagId, projectId]
+ *   sdocQueries.annotators(projectId, sdocId)  ["sdoc", "annotators", sdocId, projectId]
+ *   sdocQueries.tableInfo(projectId)           ["tableInfo", "sdoc", projectId]
+ *   sdocQueries.search(request)                ["sdoc", "search", projectId, request]
+ *
+ * The routes need the project, but the sdoc id already determines it: the project comes last in the keys, so the
+ * prefixes by sdoc id (e.g. [...byIdScope(), sdocId]) cover it.
  */
 export const sdocQueries = {
   all: () => ["sdoc"] as const,
 
   // a single sdoc
   byIdScope: () => [...sdocQueries.all(), "detail"] as const,
-  byId: (sdocId: number) =>
+  // prefix of the detail query of one sdoc, for invalidation
+  byIdOfSdocScope: (sdocId: number) => [...sdocQueries.byIdScope(), sdocId] as const,
+  byId: (projectId: number, sdocId: number) =>
     queryOptions({
-      queryKey: [...sdocQueries.byIdScope(), sdocId] as const,
-      queryFn: () => SourceDocumentService.getById({ sdocId }),
+      queryKey: [...sdocQueries.byIdOfSdocScope(sdocId), projectId] as const,
+      queryFn: () => SourceDocumentService.getById({ projectId, sdocId }),
       staleTime: Infinity,
     }),
 
   // an sdoc including its data (text, html, ...)
   dataScope: () => [...sdocQueries.all(), "data"] as const,
-  data: (sdocId: number) =>
+  data: (projectId: number, sdocId: number) =>
     queryOptions({
-      queryKey: [...sdocQueries.dataScope(), sdocId] as const,
-      queryFn: () => SourceDocumentService.getByIdWithData({ sdocId }),
+      queryKey: [...sdocQueries.dataScope(), sdocId, projectId] as const,
+      queryFn: () => SourceDocumentService.getByIdWithData({ projectId, sdocId }),
       staleTime: Infinity,
     }),
 
@@ -54,26 +58,27 @@ export const sdocQueries = {
       queryKey: [...sdocQueries.idByFilenameScope(), projectId, filename] as const,
       queryFn: !filename
         ? skipToken
-        : () => ProjectService.resolveFilename({ projectId, filename, onlyFinished: true }),
+        : () => SourceDocumentService.resolveFilename({ projectId, filename, onlyFinished: true }),
       staleTime: Infinity,
     }),
 
   // ids of the sdocs in the same folder
   sameFolderScope: () => [...sdocQueries.all(), "sameFolder"] as const,
-  sameFolder: (sdocId: number | null | undefined) =>
+  sameFolder: (projectId: number | null | undefined, sdocId: number | null | undefined) =>
     queryOptions({
-      queryKey: [...sdocQueries.sameFolderScope(), sdocId] as const,
-      queryFn: !sdocId ? skipToken : () => SourceDocumentService.getSameFolderSdocs({ sdocId }),
+      queryKey: [...sdocQueries.sameFolderScope(), sdocId, projectId] as const,
+      queryFn:
+        !projectId || !sdocId ? skipToken : () => SourceDocumentService.getSameFolderSdocs({ projectId, sdocId }),
       staleTime: Infinity,
     }),
 
   // relative urls of the files: the upload, the WebP image and the thumbnail
   // (raw; the hooks add the /content/ prefix)
   urlsScope: () => [...sdocQueries.all(), "urls"] as const,
-  urls: (sdocId: number | null | undefined) =>
+  urls: (projectId: number | null | undefined, sdocId: number | null | undefined) =>
     queryOptions({
-      queryKey: [...sdocQueries.urlsScope(), sdocId] as const,
-      queryFn: !sdocId ? skipToken : () => SourceDocumentService.getUrls({ sdocId }),
+      queryKey: [...sdocQueries.urlsScope(), sdocId, projectId] as const,
+      queryFn: !projectId || !sdocId ? skipToken : () => SourceDocumentService.getUrls({ projectId, sdocId }),
     }),
 
   // ids of the sdocs that carry a tag
@@ -86,10 +91,10 @@ export const sdocQueries = {
 
   // user ids that annotated the sdoc
   annotatorsScope: () => [...sdocQueries.all(), "annotators"] as const,
-  annotators: (sdocId: number | null | undefined) =>
+  annotators: (projectId: number | null | undefined, sdocId: number | null | undefined) =>
     queryOptions({
-      queryKey: [...sdocQueries.annotatorsScope(), sdocId] as const,
-      queryFn: !sdocId ? skipToken : () => SourceDocumentService.getAnnotators({ sdocId }),
+      queryKey: [...sdocQueries.annotatorsScope(), sdocId, projectId] as const,
+      queryFn: !projectId || !sdocId ? skipToken : () => SourceDocumentService.getAnnotators({ projectId, sdocId }),
       staleTime: 1000 * 60 * 5,
     }),
 
@@ -114,12 +119,12 @@ export const sdocQueries = {
         const data = await SearchService.searchSdocs({ ...request, highlight: true, pageNumber: pageParam });
 
         Object.entries(data.sdocs).forEach(([sdocId, sdoc]) => {
-          queryClient.setQueryData(sdocQueries.byId(parseInt(sdocId)).queryKey, sdoc);
+          queryClient.setQueryData(sdocQueries.byId(projectId, parseInt(sdocId)).queryKey, sdoc);
           queryClient.setQueryData(sdocQueries.idByFilename(projectId, sdoc.filename).queryKey, sdoc.id);
         });
 
         Object.entries(data.annotators).forEach(([sdocId, annotators]) => {
-          queryClient.setQueryData(sdocQueries.annotators(parseInt(sdocId)).queryKey, annotators);
+          queryClient.setQueryData(sdocQueries.annotators(projectId, parseInt(sdocId)).queryKey, annotators);
         });
 
         Object.entries(data.tags).forEach(([sdocId, tags]) => {

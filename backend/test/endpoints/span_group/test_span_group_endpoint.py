@@ -64,17 +64,18 @@ def test_create_span_group_with_a_document_of_another_project_is_a_conflict(
     ]
 
 
-def test_create_span_group_with_a_document_that_does_not_exist_is_not_found(
+def test_create_span_group_with_a_document_that_does_not_exist_is_a_conflict(
     client: TestClient, two_tenants: TwoTenants
 ) -> None:
-    """A document that exists in no project has no annotation document (404)."""
+    """A document that exists in no project is rejected by the composite foreign key
+    of the user's annotation document (409)."""
     payload = SpanGroupCreate(name="Lost group", sdoc_id=999999)
 
     response = client.put(
         _url(two_tenants["own"]["project"].id), json=payload.model_dump()
     )
 
-    assert response.status_code == 404, response.text
+    assert response.status_code == 409, response.text
 
 
 # ===========================================================================

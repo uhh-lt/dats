@@ -48,10 +48,12 @@ export class StatisticsService {
    * @throws ApiError
    */
   public static filterTagStats({
+    projectId,
     requestBody,
     sortByGlobal = false,
     topK = 20,
   }: {
+    projectId: number;
     requestBody: Array<number>;
     sortByGlobal?: boolean;
     topK?: number;
@@ -60,6 +62,7 @@ export class StatisticsService {
       method: "POST",
       url: "/statistics/tag",
       query: {
+        project_id: projectId,
         sort_by_global: sortByGlobal,
         top_k: topK,
       },

@@ -1,6 +1,7 @@
 import { DocprocessingService } from "@api/services/DocprocessingService";
 import { FeatureService } from "@api/services/FeatureService";
 import { ProjectService } from "@api/services/ProjectService";
+import { SourceDocumentService } from "@api/services/SourceDocumentService";
 import { FeatureStatus } from "@models/FeatureStatus";
 import type { ProjectFeatureRead } from "@models/ProjectFeatureRead";
 import type { SDocStatus } from "@models/SDocStatus";
@@ -33,7 +34,7 @@ export const projectQueries = {
   sdocStatusCount: (projectId: number, status: SDocStatus) =>
     queryOptions({
       queryKey: [...projectQueries.sdocStatusCountScope(), projectId, status] as const,
-      queryFn: () => ProjectService.countSdocsWithStatus({ projectId, status }),
+      queryFn: () => SourceDocumentService.countSdocs({ projectId, status }),
     }),
 
   // simple processing status of all documents of a project with the given status

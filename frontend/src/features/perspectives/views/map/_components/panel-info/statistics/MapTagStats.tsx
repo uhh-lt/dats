@@ -17,7 +17,7 @@ interface MapTagStatsProps {
 
 export function MapTagStats(props: MapTagStatsProps) {
   const sortStatsByGlobal = useAppSelector((state) => state.perspectives.sortStatsByGlobal);
-  const tagStatsQuery = useQuery(statisticsQueries.tagStats(props.sdocIds, sortStatsByGlobal));
+  const tagStatsQuery = useQuery(statisticsQueries.tagStats(props.projectId, props.sdocIds, sortStatsByGlobal));
   return (
     <>
       {tagStatsQuery.isSuccess ? (

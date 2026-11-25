@@ -33,3 +33,17 @@ class EmptySpanAnnotationError(Exception):
             f"tokens {begin_token}-{end_token} (exclusive ends) must each cover at "
             "least one."
         )
+
+
+@exception_handler(status.HTTP_409_CONFLICT)
+class AnnotationDocumentOfAnotherProjectError(Exception):
+    """
+    Raised when a user's annotation document of a source document belongs to another
+    project than the request's: the source document is of another project, like a
+    reference that fails at a composite foreign key.
+    """
+
+    def __init__(self, project_id: int, sdoc_ids: list[int]) -> None:
+        super().__init__(
+            f"The source documents {sdoc_ids} do not belong to project {project_id}."
+        )

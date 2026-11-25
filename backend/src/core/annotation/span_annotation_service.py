@@ -98,6 +98,7 @@ class SpanAnnotationService(metaclass=SingletonMeta):
         # 2) find or create the user's annotation document of every source document
         adoc_by_sdoc_id = crud_adoc.exists_or_create_multi(
             db=db,
+            project_id=project_id,
             user_id=user_id,
             sdoc_ids=list(
                 dict.fromkeys(create_dto.sdoc_id for create_dto, _ in annotations)

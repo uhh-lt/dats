@@ -43,6 +43,7 @@ def enrich_for_recompute(
     with sqlr.transaction() as db:
         sdoc_data = crud_sdoc_data.read(
             db=db,
+            project_id=payload.project_id,
             id=payload.sdoc_id,
         )
         sdoc = sdoc_data.source_document
@@ -111,6 +112,7 @@ def handle_html_extraction_job(
     with sqlr.transaction() as db:
         crud_sdoc_data.update(
             db=db,
+            project_id=payload.project_id,
             id=payload.sdoc_id,
             update_dto=SourceDocumentDataUpdate(
                 raw_html=raw_html,

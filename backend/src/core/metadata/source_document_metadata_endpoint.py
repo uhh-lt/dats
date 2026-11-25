@@ -53,11 +53,12 @@ def get_by_sdoc(
     *,
     db: DBSession,
     sdoc_id: int,
+    project_id: int,
     authz_user: AuthzUser = Depends(),
 ) -> list[SourceDocumentMetadataRead]:
-    authz_user.assert_in_same_project_as(Crud.SOURCE_DOCUMENT, sdoc_id)
+    authz_user.assert_in_project(project_id)
 
-    sdoc_db_obj = crud_sdoc.read(db=db, id=sdoc_id)
+    sdoc_db_obj = crud_sdoc.read(db=db, project_id=project_id, id=sdoc_id)
     return [
         SourceDocumentMetadataRead.model_validate(meta)
         for meta in sdoc_db_obj.metadata_
@@ -74,9 +75,11 @@ def get_by_sdoc_and_key(
     db: DBSession,
     sdoc_id: int,
     metadata_key: str,
+    project_id: int,
     authz_user: AuthzUser = Depends(),
 ) -> SourceDocumentMetadataRead:
-    authz_user.assert_in_same_project_as(Crud.SOURCE_DOCUMENT, sdoc_id)
+    authz_user.assert_in_project(project_id)
+    crud_sdoc.exists(db=db, project_id=project_id, id=sdoc_id, raise_error=True)
 
     metadata_db_obj = crud_sdoc_meta.read_by_sdoc_and_key(
         db=db, sdoc_id=sdoc_id, key=metadata_key

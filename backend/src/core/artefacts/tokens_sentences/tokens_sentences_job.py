@@ -31,7 +31,7 @@ class SpacyJobInput(SdocProcessingJobInput):
 def enrich_for_recompute(
     payload: SdocProcessingJobInput,
 ) -> SpacyJobInput:
-    stored = read_stored_text(payload.sdoc_id)
+    stored = read_stored_text(payload.project_id, payload.sdoc_id)
     return SpacyJobInput(
         **payload.model_dump(),
         doctype=stored.doctype,
@@ -61,6 +61,7 @@ def handle_tokens_sentences_job(payload: SpacyJobInput, job: Job) -> None:
         if payload.doctype in {DocType.text, DocType.image}:
             crud_sdoc_data.update(
                 db=db,
+                project_id=payload.project_id,
                 id=payload.sdoc_id,
                 update_dto=SourceDocumentDataUpdate(
                     token_starts=sdoc_data["token_starts"],
@@ -73,6 +74,7 @@ def handle_tokens_sentences_job(payload: SpacyJobInput, job: Job) -> None:
             # if coming from audio or video pipeline, we are only interested in sentence splitting (tokenization already done by whisper)
             crud_sdoc_data.update(
                 db=db,
+                project_id=payload.project_id,
                 id=payload.sdoc_id,
                 update_dto=SourceDocumentDataUpdate(
                     sentence_starts=sdoc_data["sentence_starts"],

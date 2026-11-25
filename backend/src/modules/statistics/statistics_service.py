@@ -15,9 +15,9 @@ class StatisticsService(metaclass=SingletonMeta):
         return super(StatisticsService, cls).__new__(cls)
 
     def compute_tag_statistics(
-        self, *, db: Session, sdoc_ids: set[int], top_k: int = 20
+        self, *, db: Session, project_id: int, sdoc_ids: set[int], top_k: int = 20
     ) -> list[TagStat]:
-        # tag statistics for the sdoc_ids
+        # tag statistics for the sdoc_ids of the project
         count = func.count().label("count")
         query = (
             db.query(TagORM, count)
@@ -25,7 +25,10 @@ class StatisticsService(metaclass=SingletonMeta):
                 SourceDocumentTagLinkTable,
                 SourceDocumentTagLinkTable.tag_id == TagORM.id,
             )
-            .filter(SourceDocumentTagLinkTable.source_document_id.in_(list(sdoc_ids)))
+            .filter(
+                SourceDocumentTagLinkTable.project_id == project_id,
+                SourceDocumentTagLinkTable.source_document_id.in_(list(sdoc_ids)),
+            )
             .group_by(TagORM.id)
             .order_by(count.desc())
             .limit(top_k)

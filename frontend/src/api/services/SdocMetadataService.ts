@@ -74,12 +74,21 @@ export class SdocMetadataService {
    * @returns SourceDocumentMetadataRead Successful Response
    * @throws ApiError
    */
-  public static getBySdoc({ sdocId }: { sdocId: number }): CancelablePromise<Array<SourceDocumentMetadataRead>> {
+  public static getBySdoc({
+    sdocId,
+    projectId,
+  }: {
+    sdocId: number;
+    projectId: number;
+  }): CancelablePromise<Array<SourceDocumentMetadataRead>> {
     return __request(OpenAPI, {
       method: "GET",
       url: "/sdocmeta/sdoc/{sdoc_id}",
       path: {
         sdoc_id: sdocId,
+      },
+      query: {
+        project_id: projectId,
       },
       errors: {
         422: `Validation Error`,
@@ -94,9 +103,11 @@ export class SdocMetadataService {
   public static getBySdocAndKey({
     sdocId,
     metadataKey,
+    projectId,
   }: {
     sdocId: number;
     metadataKey: string;
+    projectId: number;
   }): CancelablePromise<SourceDocumentMetadataRead> {
     return __request(OpenAPI, {
       method: "GET",
@@ -104,6 +115,9 @@ export class SdocMetadataService {
       path: {
         sdoc_id: sdocId,
         metadata_key: metadataKey,
+      },
+      query: {
+        project_id: projectId,
       },
       errors: {
         422: `Validation Error`,

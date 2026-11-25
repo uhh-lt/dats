@@ -37,7 +37,11 @@ class TaggingTask(LLMAssistantTask[TaggingStrategy, LLMTaggingResult, TaggingRes
     ) -> TaggingResult:
         current_tag_ids = [
             tag.id
-            for tag in crud_sdoc.read(db=context.db, id=document.sdoc_data.id).tags
+            for tag in crud_sdoc.read(
+                db=context.db,
+                project_id=document.sdoc_data.project_id,
+                id=document.sdoc_data.id,
+            ).tags
         ]
         logger.info(
             "Document {} currently has {} tag(s).",

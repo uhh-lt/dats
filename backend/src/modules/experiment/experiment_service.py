@@ -374,8 +374,10 @@ class ExperimentService(metaclass=SingletonMeta):
         """Check that the documents, codes and the gold annotator belong to the
         project, and that the gold annotator annotated every document."""
         # 1) documents and codes of the project
-        sdocs = crud_sdoc.read_by_ids(db=db, ids=sdoc_ids)  # raises NoSuchElementError
-        foreign_sdoc_ids = [sdoc.id for sdoc in sdocs if sdoc.project_id != project_id]
+        sdocs = crud_sdoc.read_existing_by_ids(
+            db=db, project_id=project_id, ids=sdoc_ids
+        )
+        foreign_sdoc_ids = [sdoc_id for sdoc_id in sdoc_ids if sdoc_id not in sdocs]
         if foreign_sdoc_ids:
             raise ExperimentInvalidSelectionError(
                 f"the documents {foreign_sdoc_ids} do not belong to project {project_id}"

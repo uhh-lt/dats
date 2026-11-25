@@ -111,7 +111,10 @@ def test_transcription_job_stores_and_returns_the_transcript(
     assert output.language == "en"
     assert output.language_probability == 0.9
 
-    response = client.get(f"/sdoc/data/{sdoc_id}")
+    response = client.get(
+        f"/projects/{audio_project['audio_document'].project_id}"
+        f"/source-documents/{sdoc_id}/data"
+    )
     assert response.status_code == 200, response.text
     data = SourceDocumentDataRead.model_validate(response.json())
     assert data.tokens == ["Hello", "world"]

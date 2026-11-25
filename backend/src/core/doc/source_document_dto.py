@@ -21,7 +21,6 @@ class SourceDocumentBaseDTO(BaseModel):
         description="User-defined name of the document (default is the filename)"
     )
     doctype: DocType = Field(description="DOCTYPE of the SourceDocument")
-    project_id: int = Field(description="Project the SourceDocument belongs to")
 
 
 # Properties for updating
@@ -41,6 +40,7 @@ class SourceDocumentUpdate(BaseModel, UpdateDTOBase):
 # Properties for reading (as in ORM)
 class SourceDocumentRead(SourceDocumentBaseDTO):
     id: int = Field(description="ID of the SourceDocument")
+    project_id: int = Field(description="Project the SourceDocument belongs to")
     created: datetime = Field(description="The created timestamp of the SourceDocument")
     updated: datetime = Field(description="Updated timestamp of the SourceDocument")
     folder_id: int = Field(

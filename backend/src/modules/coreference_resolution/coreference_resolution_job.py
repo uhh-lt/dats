@@ -49,7 +49,9 @@ def enrich_for_recompute(
     payload: SdocProcessingJobInput,
 ) -> CoreferenceResolutionJobInput:
     with sqlr.transaction() as db:
-        sdoc_data = crud_sdoc_data.read(db=db, id=payload.sdoc_id)
+        sdoc_data = crud_sdoc_data.read(
+            db=db, project_id=payload.project_id, id=payload.sdoc_id
+        )
         language = crud_sdoc_meta.read_by_sdoc_and_key(
             db=db, key="language", sdoc_id=payload.sdoc_id
         )
@@ -115,7 +117,10 @@ def handle_coreference_resolution_job(
             groups = []
         else:
             adoc_id = crud_adoc.exists_or_create(
-                db=db, user_id=SYSTEM_USER_ID, sdoc_id=payload.sdoc_id
+                db=db,
+                project_id=payload.project_id,
+                user_id=SYSTEM_USER_ID,
+                sdoc_id=payload.sdoc_id,
             ).id
             groups = [
                 [

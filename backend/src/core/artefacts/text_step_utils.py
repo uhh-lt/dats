@@ -19,10 +19,10 @@ class StoredText(NamedTuple):
     language: str
 
 
-def read_stored_text(sdoc_id: int) -> StoredText:
+def read_stored_text(project_id: int, sdoc_id: int) -> StoredText:
     """The text, raw HTML, doctype and detected language of the document."""
     with sqlr.transaction() as db:
-        sdoc_data = crud_sdoc_data.read(db=db, id=sdoc_id)
+        sdoc_data = crud_sdoc_data.read(db=db, project_id=project_id, id=sdoc_id)
         language = crud_sdoc_meta.read_by_sdoc_and_key(
             db=db, key="language", sdoc_id=sdoc_id
         )

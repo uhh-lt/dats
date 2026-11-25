@@ -28,7 +28,7 @@ def enrich_for_recompute(
 ) -> VideoAudioExtractionJobInput:
     with sqlr.transaction() as db:
         sdoc = SourceDocumentRead.model_validate(
-            crud_sdoc.read(db=db, id=payload.sdoc_id)
+            crud_sdoc.read(db=db, project_id=payload.project_id, id=payload.sdoc_id)
         )
         assert sdoc.doctype == DocType.video, (
             f"SourceDocument with {payload.sdoc_id=} is not a video file!"

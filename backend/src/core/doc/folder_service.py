@@ -26,7 +26,7 @@ class FolderService(metaclass=SingletonMeta):
         sdoc_ids = crud_sdoc.read_ids_by_folder_ids(db=db, folder_ids=folder_ids)
 
         # 3) delete them from all stores (the cascade would only delete the rows)
-        self.sdocs.delete_multi(db=db, sdoc_ids=sdoc_ids)
+        self.sdocs.delete_multi(db=db, project_id=folder.project_id, sdoc_ids=sdoc_ids)
 
         # 4) delete the folder and its subfolders via cascading delete (step 3
         #    already removed the folder if it was an SDOC_FOLDER)

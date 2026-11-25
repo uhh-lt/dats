@@ -37,12 +37,21 @@ export class WordFrequencyService {
    * @returns WordFrequencyRead Successful Response
    * @throws ApiError
    */
-  public static getWordFrequencies({ sdocId }: { sdocId: number }): CancelablePromise<Array<WordFrequencyRead>> {
+  public static getWordFrequencies({
+    sdocId,
+    projectId,
+  }: {
+    sdocId: number;
+    projectId: number;
+  }): CancelablePromise<Array<WordFrequencyRead>> {
     return __request(OpenAPI, {
       method: "GET",
       url: "/word_frequency/sdoc/{sdoc_id}",
       path: {
         sdoc_id: sdocId,
+      },
+      query: {
+        project_id: projectId,
       },
       errors: {
         422: `Validation Error`,

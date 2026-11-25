@@ -22,7 +22,7 @@ const uniqueSentenceAnnotations = (result: SentenceAnnotatorResult): SentenceAnn
 export function useSnippetData(sdocId: number, annotationType: AgreementAnnotationType, userId: number) {
   const isSpan = annotationType === AgreementAnnotationType.SPAN;
   const projectId = AgreementAnalysisRouteAPI.useParams({ select: (params) => params.projectId });
-  const sdocData = useQuery(sdocQueries.data(sdocId));
+  const sdocData = useQuery(sdocQueries.data(projectId, sdocId));
   const spanAnnotations = useQuery(spanAnnotationQueries.bySdoc(projectId, isSpan ? sdocId : undefined, userId));
   const sentenceAnnotations = useQuery({
     ...sentenceAnnotationQueries.bySdoc(projectId, isSpan ? undefined : sdocId, userId),

@@ -92,6 +92,7 @@ export function ReviewStep() {
     if (value) setDeletionStrategy(value);
   }, []);
   const existingAnnotations = LlmAssistantHooks.useGetExistingAnnotationCount({
+    projectId,
     taskType: method,
     virtualUserId,
     sdocIds,

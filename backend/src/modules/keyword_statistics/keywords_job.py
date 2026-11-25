@@ -32,7 +32,7 @@ class KeywordsJobInput(SdocProcessingJobInput):
 
 
 def enrich_for_recompute(payload: SdocProcessingJobInput) -> KeywordsJobInput:
-    stored = read_stored_text(payload.sdoc_id)
+    stored = read_stored_text(payload.project_id, payload.sdoc_id)
     return KeywordsJobInput(
         **payload.model_dump(),
         doctype=stored.doctype,

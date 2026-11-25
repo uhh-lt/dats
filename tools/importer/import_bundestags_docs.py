@@ -338,10 +338,10 @@ def __upload_documents(
     return df
 
 
-def __get_tags_of_sdoc(api: DATSAPI, sdoc_id: int) -> set[str]:
+def __get_tags_of_sdoc(api: DATSAPI, proj_id: int, sdoc_id: int) -> set[str]:
     # build the tag regex for all tags
     tag_regex = "|".join([t.replace(" ", r"\s+") for t in PROJECT_TAGS])
-    sdoc_content = "\n".join(api.get_sdoc_data(sdoc_id=sdoc_id)["sentences"])
+    sdoc_content = "\n".join(api.get_sdoc_data(proj_id=proj_id, sdoc_id=sdoc_id)["sentences"])
     found_tags = set(
         " ".join(t.split()) for t in set(re.findall(tag_regex, sdoc_content))
     )
@@ -365,7 +365,9 @@ def __apply_tags_to_documents(api: DATSAPI, project: dict, df: pd.DataFrame) -> 
         sdoc_id = row["sdoc_id"]
         if sdoc_id == -1:
             continue
-        found_tags = __get_tags_of_sdoc(api=api, sdoc_id=sdoc_id)
+        found_tags = __get_tags_of_sdoc(
+            api=api, proj_id=project["id"], sdoc_id=sdoc_id
+        )
         # we need to stringify the tag ids to use them as dict keys
         tag_ids_str = ";".join(
             {str(tagname2tagid[t]) for t in found_tags if t in tagname2tagid}
@@ -402,6 +404,7 @@ def __apply_metadata_to_documents(
         for metadata_key, metadata_type in PROJECT_METADATA.items():
             if metadata_key in metadata:
                 api.update_sdoc_metadata(
+                    proj_id=project["id"],
                     sdoc_id=sdoc_id,
                     key=metadata_key,
                     metatype=metadata_type,
@@ -420,6 +423,7 @@ def __apply_sdoc_names_to_documents(
         sdoc_id = row["sdoc_id"]
         name = row["titel"]
         api.set_sdoc_name(
+            proj_id=project["id"],
             sdoc_id=sdoc_id,
             name=name,
         )
