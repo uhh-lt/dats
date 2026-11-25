@@ -18,7 +18,7 @@ from modules.concept_over_time_analysis.cota_dto import (
     COTARead,
     COTASentence,
 )
-from modules.concept_over_time_analysis.cota_file_crud import crud_cota_file
+from repos.filesystem.temporary_file_crud import crud_temporary_file
 from repos.vector.weaviate_repo import WeaviateRepo
 
 MODEL = conf.cota.model
@@ -33,16 +33,14 @@ def finetune_apply_compute(
     # if we do not have sentence annotations, the ranking / similarities were already computed by the initial similarity search (in the first step)
     if __has_min_concept_sentence_annotations(cota=cota, search_space=search_space):
         concept_ids: list[str] = [concept.id for concept in cota.concepts]
-        model_path = crud_cota_file.path(
-            project_id=cota.project_id, id=cota.id, name="model"
-        )
 
-        # 1. train model
-        model, sentences = __train_model(
-            model_output_dir=model_path,
-            concept_ids=concept_ids,
-            search_space=search_space,
-        )
+        # 1. train model, its checkpoints go to a scratch folder
+        with crud_temporary_file.folder() as model_output_dir:
+            model, sentences = __train_model(
+                model_output_dir=model_output_dir,
+                concept_ids=concept_ids,
+                search_space=search_space,
+            )
 
         # 2. apply model
         embeddings, probabilities = __apply_model(model, sentences)
@@ -53,9 +51,6 @@ def finetune_apply_compute(
             search_space=search_space,
             search_space_embeddings=embeddings,
         )
-
-        # 4. remove the model files
-        crud_cota_file.delete(project_id=cota.project_id, id=cota.id)
 
         # update search_space with the concept similarities
         for concept_id, similarities in concept_similarities.items():

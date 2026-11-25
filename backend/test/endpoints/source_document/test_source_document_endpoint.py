@@ -5,6 +5,7 @@ from fastapi.testclient import TestClient
 
 from common.doc_type_enum import DocType
 from core.artefacts.thumbnail.thumbnail_file_crud import crud_thumbnail_file
+from core.artefacts.thumbnail.web_image_file_crud import crud_web_image_file
 from core.doc.folder_crud import crud_folder
 from core.doc.folder_dto import FolderCreate
 from core.doc.folder_enum import FolderType
@@ -120,11 +121,12 @@ def test_delete_source_document_by_id(
 def test_delete_image_removes_all_its_files(
     client: TestClient, project_with_image: ProjectWithImage
 ):
-    """Deleting an image removes the folders of its uploaded file and of its
-    thumbnails."""
+    """Deleting an image removes the folders of its uploaded file, its web
+    image and its thumbnail."""
     image = project_with_image["image"]
     folders = [
         crud_sdoc_file.dir(project_id=image.project_id, id=image.id),
+        crud_web_image_file.dir(project_id=image.project_id, id=image.id),
         crud_thumbnail_file.dir(project_id=image.project_id, id=image.id),
     ]
     assert all(folder.is_dir() for folder in folders)
@@ -132,7 +134,7 @@ def test_delete_image_removes_all_its_files(
     response = client.delete(f"/sdoc/{image.id}")
 
     assert response.status_code == 200, response.text
-    assert [folder.exists() for folder in folders] == [False, False]
+    assert [folder.exists() for folder in folders] == [False, False, False]
 
 
 def test_delete_source_document_by_id_short_if_not_exists(
@@ -328,7 +330,8 @@ def test_get_urls_of_a_text_document(client: TestClient, project_with_sdoc):
 def test_get_urls_of_an_image_with_its_thumbnails(
     client: TestClient, project_with_image: ProjectWithImage
 ):
-    """An image has the URLs of its uploaded file, its WebP and its thumbnail."""
+    """An image has the URLs of its uploaded file, its web image and its
+    thumbnail."""
     image = project_with_image["image"]
     folder = f"projects/{image.project_id}"
 
@@ -337,7 +340,7 @@ def test_get_urls_of_an_image_with_its_thumbnails(
     assert response.status_code == 200, response.text
     assert SourceDocumentUrls.model_validate(response.json()) == SourceDocumentUrls(
         file_url=f"{folder}/sdoc_files/{image.id}/photo.png",
-        image_url=f"{folder}/thumbnails/{image.id}/image.webp",
+        image_url=f"{folder}/web_images/{image.id}/image.webp",
         thumbnail_url=f"{folder}/thumbnails/{image.id}/thumbnail.webp",
     )
 

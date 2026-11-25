@@ -838,7 +838,8 @@ def old_file_layout_database(
       doc_classifier_abc/epoch=1-step=2.ckpt`: that file and
       `models/doc_classifier_abc/train_logs/metrics.csv`
     - concept over time analysis `cota_id`: `models/cota_<cota_id>` (a folder with
-      `weights.bin`) and `models/cota_<cota_id>-best-model` (with `weights.bin`)
+      `weights.bin`) and `models/cota_<cota_id>-best-model` (with `weights.bin`),
+      training leftovers of a refinement that nothing reads
     - aspect `aspect_id`: `models/umap_aspect_<aspect_id>_default`,
       `models/prompt_embedder_DocType.text_project_<id>_aspect_<aspect_id>_20250101_120000`
       (a folder with `model.safetensors`), the checkpoints

@@ -16,6 +16,7 @@ from core.artefacts.sentence_embeddings.sentence_embedding_crud import (
     crud_sentence_embedding,
 )
 from core.artefacts.thumbnail.thumbnail_file_crud import crud_thumbnail_file
+from core.artefacts.thumbnail.web_image_file_crud import crud_web_image_file
 from core.doc.sdoc_elastic_crud import crud_sdoc_elastic
 from core.doc.source_document_crud import crud_sdoc
 from core.doc.source_document_file_crud import crud_sdoc_file
@@ -308,9 +309,16 @@ def _index_entry(db: Session, sdoc: SourceDocumentORM) -> object:
 
 
 def _thumbnails(db: Session, sdoc: SourceDocumentORM) -> object:
-    """The WebP and thumbnail files that exist."""
-    folder = crud_thumbnail_file.dir(project_id=sdoc.project_id, id=sdoc.id)
-    return {file.name: file.read_bytes() for file in sorted(folder.glob("*"))}
+    """The web image and thumbnail files that exist."""
+    folders = [
+        crud_web_image_file.dir(project_id=sdoc.project_id, id=sdoc.id),
+        crud_thumbnail_file.dir(project_id=sdoc.project_id, id=sdoc.id),
+    ]
+    return {
+        f"{folder.parent.name}/{file.name}": file.read_bytes()
+        for folder in folders
+        for file in sorted(folder.glob("*"))
+    }
 
 
 def _audio_stream(db: Session, sdoc: SourceDocumentORM) -> object:

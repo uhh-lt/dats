@@ -4,14 +4,12 @@ Moves the files of every project from the flat folders `docs/`, `models/`,
 `plots/` and `dataloaders/` into one folder per entity:
 
 - `docs/<filename>` -> `sdoc_files/<sdoc_id>/<filename>`
-- images: `docs/<filename>.webp` -> `thumbnails/<sdoc_id>/image.webp`,
+- images: `docs/<filename>.webp` -> `web_images/<sdoc_id>/image.webp`,
   `docs/<filename>.thumbnail.webp` -> `thumbnails/<sdoc_id>/thumbnail.webp`
 - videos: `docs/<filename>.thumbnail.webp` -> `thumbnails/<sdoc_id>/thumbnail.webp`,
   `docs/<stem>.mp3` -> `audio/<sdoc_id>/audio.mp3`
 - the folder of `classifier.path` -> `classifier_models/<classifier_id>/`, its
   checkpoint renamed to `model.ckpt`
-- `models/cota_<id>` and `models/cota_<id>-best-model` ->
-  `cota_models/<id>/model` and `cota_models/<id>/best_model`
 - `models/umap_aspect_<id>_<model>` -> `perspectives_models/<id>/umap_<model>`,
   `models/prompt_embedder_<modality>_<model>` (model named
   `project_<p>_aspect_<id>_<timestamp>`) ->
@@ -19,10 +17,11 @@ Moves the files of every project from the flat folders `docs/`, `models/`,
   `plots/aspect_<id>_map_thumbnail.png` -> `perspectives_plots/<id>/map_thumbnail.png`
 
 What is left in `docs/`, `models/` and `plots/` belongs to no entity
-(e.g. split uploads, extracted archives, training checkpoints, files of deleted
-entities) and is deleted with them and `dataloaders/`. The moves are renames
-and skip what is already moved, so the step can run again. Then the columns
-`classifier.path` and `sourcedocumentdata.repo_url` are dropped.
+(e.g. split uploads, extracted archives, training checkpoints such as those of
+the concept over time analyses, files of deleted entities) and is deleted with
+them and `dataloaders/`. The moves are renames and skip what is already moved,
+so the step can run again. Then the columns `classifier.path` and
+`sourcedocumentdata.repo_url` are dropped.
 
 Revision ID: 807bab97f373
 Revises: 10b8dac1fdd6
@@ -51,7 +50,6 @@ depends_on: str | Sequence[str] | None = None
 UMAP_RE = re.compile(r"^umap_aspect_(\d+)_(.+)$")
 PROMPT_EMBEDDER_RE = re.compile(r"^prompt_embedder_.+?_(project_\d+_aspect_(\d+)_.+)$")
 MAP_THUMBNAIL_RE = re.compile(r"^aspect_(\d+)_map_thumbnail\.png$")
-COTA_RE = re.compile(r"^cota_(\d+)(-best-model)?$")
 
 
 def _move(src: Path, dst: Path, counts: Counter, kind: str) -> None:
@@ -98,9 +96,9 @@ def _migrate_project(conn: sa.Connection, project_dir: Path, project_id: int) ->
         if sdoc.doctype == "image":
             _move(
                 docs / f"{sdoc.filename}.webp",
-                thumbnails / "image.webp",
+                project_dir / "web_images" / str(sdoc.id) / "image.webp",
                 counts,
-                "images",
+                "web images",
             )
         if sdoc.doctype in ("image", "video"):
             _move(
@@ -133,15 +131,7 @@ def _migrate_project(conn: sa.Connection, project_dir: Path, project_id: int) ->
         _move(models / checkpoint.parent.name, dst, counts, "classifier models")
         _move(dst / checkpoint.name, dst / "model.ckpt", counts, "checkpoints")
 
-    # 3) the models of the concept over time analyses
-    cota_ids = set(
-        conn.execute(
-            sa.text(
-                "SELECT id FROM conceptovertimeanalysis WHERE project_id = :project_id"
-            ),
-            {"project_id": project_id},
-        ).scalars()
-    )
+    # 3) the models and plots of the aspects
     aspect_ids = set(
         conn.execute(
             sa.text("SELECT id FROM aspect WHERE project_id = :project_id"),
@@ -149,15 +139,7 @@ def _migrate_project(conn: sa.Connection, project_dir: Path, project_id: int) ->
         ).scalars()
     )
     for path in sorted(models.iterdir()) if models.exists() else []:
-        if (m := COTA_RE.match(path.name)) and int(m[1]) in cota_ids:
-            name = "best_model" if m[2] else "model"
-            _move(
-                path,
-                project_dir / "cota_models" / m[1] / name,
-                counts,
-                "cota models",
-            )
-        elif (m := UMAP_RE.match(path.name)) and int(m[1]) in aspect_ids:
+        if (m := UMAP_RE.match(path.name)) and int(m[1]) in aspect_ids:
             _move(
                 path,
                 project_dir / "perspectives_models" / m[1] / f"umap_{m[2]}",

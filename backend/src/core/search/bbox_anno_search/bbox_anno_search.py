@@ -3,9 +3,9 @@ from sqlalchemy.orm import Session
 from common.doc_type_enum import DocType
 from core.annotation.annotation_document_orm import AnnotationDocumentORM
 from core.annotation.bbox_annotation_orm import BBoxAnnotationORM
-from core.artefacts.thumbnail.thumbnail_file_crud import (
-    IMAGE_FILENAME,
-    crud_thumbnail_file,
+from core.artefacts.thumbnail.web_image_file_crud import (
+    WEB_IMAGE_FILENAME,
+    crud_web_image_file,
 )
 from core.code.code_dto import CodeRead
 from core.code.code_orm import CodeORM
@@ -115,8 +115,10 @@ def find_bbox_annotations(
                 y=bbox_orm.y_min,
                 width=bbox_orm.x_max - bbox_orm.x_min,
                 height=bbox_orm.y_max - bbox_orm.y_min,
-                url=crud_thumbnail_file.url(
-                    project_id=sdoc_orm.project_id, id=sdoc_orm.id, name=IMAGE_FILENAME
+                url=crud_web_image_file.url(
+                    project_id=sdoc_orm.project_id,
+                    id=sdoc_orm.id,
+                    name=WEB_IMAGE_FILENAME,
                 ),
                 code=CodeRead.model_validate(code_orm),
                 sdoc=SourceDocumentRead.model_validate(sdoc_orm),
