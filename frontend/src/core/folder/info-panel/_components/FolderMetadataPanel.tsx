@@ -8,6 +8,7 @@ import { Box, CircularProgress, Stack, Tab, Tabs } from "@mui/material";
 import { useQuery } from "@tanstack/react-query";
 import { memo, useCallback, useState } from "react";
 import { folderQueries } from "../../api/folderQueries";
+import { useAppSelector } from "@store/storeHooks";
 
 interface FolderMetadataPanelProps {
   sdocFolderId: number;
@@ -15,7 +16,8 @@ interface FolderMetadataPanelProps {
 }
 
 export const FolderMetadataPanel = memo(({ sdocFolderId, onAddMetadataFilter }: FolderMetadataPanelProps) => {
-  const sdocIdsPerDoctype = useQuery(folderQueries.sdocIdsPerDoctype(sdocFolderId));
+  const projectId = useAppSelector((state) => state.project.projectId);
+  const sdocIdsPerDoctype = useQuery(folderQueries.sdocIdsPerDoctype(projectId, sdocFolderId));
 
   // tabs
   const [tab, setTab] = useState(DocType.TEXT);
@@ -71,10 +73,13 @@ function FolderDoctypeMetadataPanel({ doctype, sdocIds, onAddMetadataFilter }: F
   const metadata = SdocMetadataHooks.useGetSdocMetadataBulk(sdocIds);
 
   // mutation
+  const projectId = useAppSelector((state) => state.project.projectId);
   const { mutate: updateMetadataMutation } = SdocMetadataHooks.useUpdateBulkSdocMetadata();
   const handleMetadataUpdate = useCallback(
     (metadataIds: number[]) => (data: SourceDocumentMetadataUpdate) => {
+      if (!projectId) return;
       updateMetadataMutation({
+        projectId,
         requestBody: metadataIds.map((sdocMetadataId) => ({
           sdoc_metadata_id: sdocMetadataId,
           str_value: data.str_value,
@@ -85,7 +90,7 @@ function FolderDoctypeMetadataPanel({ doctype, sdocIds, onAddMetadataFilter }: F
         })),
       });
     },
-    [updateMetadataMutation],
+    [projectId, updateMetadataMutation],
   );
 
   return (

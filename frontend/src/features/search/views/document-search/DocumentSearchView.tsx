@@ -175,6 +175,7 @@ export function DocumentSearchView() {
     (folderIds: number[], targetFolderId: number) => {
       updateFoldersBulkMutation(
         {
+          projectId,
           requestBody: folderIds.map((folderId) => ({
             folder_id: folderId,
             parent_id: targetFolderId === -1 ? null : targetFolderId,
@@ -187,7 +188,7 @@ export function DocumentSearchView() {
         },
       );
     },
-    [dispatch, updateFoldersBulkMutation],
+    [dispatch, projectId, updateFoldersBulkMutation],
   );
 
   // Drag and drop handler for moving sdoc_folders into normal folders (dnd-kit)

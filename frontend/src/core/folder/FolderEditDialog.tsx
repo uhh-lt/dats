@@ -56,6 +56,7 @@ export function FolderEditDialog() {
       if (dialogData?.folder) {
         updateFolderMutation(
           {
+            projectId: dialogData.folder.project_id,
             requestBody: {
               name: updateData.name,
               parent_id: updateData.parent_id === -1 ? null : updateData.parent_id,
@@ -83,7 +84,7 @@ export function FolderEditDialog() {
         text: `Do you really want to delete the folder "${dialogData.folder.name}"? This will delete ALL contained documents, their annotations, memos, etc. This action cannot be undone!`,
         onAccept: () => {
           deleteFolderMutation(
-            { folderId: dialogData.folder.id },
+            { projectId: dialogData.folder.project_id, folderId: dialogData.folder.id },
             {
               onSuccess: () => {
                 handleClose();

@@ -16,15 +16,37 @@ export class ProjectMetadataService {
    * @throws ApiError
    */
   public static createMetadata({
+    projectId,
     requestBody,
   }: {
+    projectId: number;
     requestBody: ProjectMetadataCreate;
   }): CancelablePromise<ProjectMetadataRead> {
     return __request(OpenAPI, {
       method: "PUT",
-      url: "/projmeta",
+      url: "/projects/{project_id}/project-metadata",
+      path: {
+        project_id: projectId,
+      },
       body: requestBody,
       mediaType: "application/json",
+      errors: {
+        422: `Validation Error`,
+      },
+    });
+  }
+  /**
+   * Returns all ProjectMetadata of the Project
+   * @returns ProjectMetadataRead Successful Response
+   * @throws ApiError
+   */
+  public static getByProject({ projectId }: { projectId: number }): CancelablePromise<Array<ProjectMetadataRead>> {
+    return __request(OpenAPI, {
+      method: "GET",
+      url: "/projects/{project_id}/project-metadata",
+      path: {
+        project_id: projectId,
+      },
       errors: {
         422: `Validation Error`,
       },
@@ -35,12 +57,19 @@ export class ProjectMetadataService {
    * @returns ProjectMetadataRead Successful Response
    * @throws ApiError
    */
-  public static getById({ metadataId }: { metadataId: number }): CancelablePromise<ProjectMetadataRead> {
+  public static getById({
+    projectId,
+    projectMetadataId,
+  }: {
+    projectId: number;
+    projectMetadataId: number;
+  }): CancelablePromise<ProjectMetadataRead> {
     return __request(OpenAPI, {
       method: "GET",
-      url: "/projmeta/{metadata_id}",
+      url: "/projects/{project_id}/project-metadata/{project_metadata_id}",
       path: {
-        metadata_id: metadataId,
+        project_id: projectId,
+        project_metadata_id: projectMetadataId,
       },
       errors: {
         422: `Validation Error`,
@@ -53,17 +82,20 @@ export class ProjectMetadataService {
    * @throws ApiError
    */
   public static updateById({
-    metadataId,
+    projectId,
+    projectMetadataId,
     requestBody,
   }: {
-    metadataId: number;
+    projectId: number;
+    projectMetadataId: number;
     requestBody: ProjectMetadataUpdate;
   }): CancelablePromise<ProjectMetadataRead> {
     return __request(OpenAPI, {
       method: "PATCH",
-      url: "/projmeta/{metadata_id}",
+      url: "/projects/{project_id}/project-metadata/{project_metadata_id}",
       path: {
-        metadata_id: metadataId,
+        project_id: projectId,
+        project_metadata_id: projectMetadataId,
       },
       body: requestBody,
       mediaType: "application/json",
@@ -77,29 +109,19 @@ export class ProjectMetadataService {
    * @returns ProjectMetadataRead Successful Response
    * @throws ApiError
    */
-  public static deleteById({ metadataId }: { metadataId: number }): CancelablePromise<ProjectMetadataRead> {
+  public static deleteById({
+    projectId,
+    projectMetadataId,
+  }: {
+    projectId: number;
+    projectMetadataId: number;
+  }): CancelablePromise<ProjectMetadataRead> {
     return __request(OpenAPI, {
       method: "DELETE",
-      url: "/projmeta/{metadata_id}",
-      path: {
-        metadata_id: metadataId,
-      },
-      errors: {
-        422: `Validation Error`,
-      },
-    });
-  }
-  /**
-   * Returns all ProjectMetadata of the Project with the given ID if it exists
-   * @returns ProjectMetadataRead Successful Response
-   * @throws ApiError
-   */
-  public static getByProject({ projectId }: { projectId: number }): CancelablePromise<Array<ProjectMetadataRead>> {
-    return __request(OpenAPI, {
-      method: "GET",
-      url: "/projmeta/project/{project_id}",
+      url: "/projects/{project_id}/project-metadata/{project_metadata_id}",
       path: {
         project_id: projectId,
+        project_metadata_id: projectMetadataId,
       },
       errors: {
         422: `Validation Error`,
@@ -112,13 +134,18 @@ export class ProjectMetadataService {
    * @throws ApiError
    */
   public static updateProjectMetadataBulk({
+    projectId,
     requestBody,
   }: {
+    projectId: number;
     requestBody: Array<ProjectMetadataUpdateBulk>;
   }): CancelablePromise<Array<ProjectMetadataRead>> {
     return __request(OpenAPI, {
       method: "PATCH",
-      url: "/projmeta/bulk/update",
+      url: "/projects/{project_id}/project-metadata/bulk",
+      path: {
+        project_id: projectId,
+      },
       body: requestBody,
       mediaType: "application/json",
       errors: {

@@ -16,12 +16,47 @@ export class FolderService {
    * @returns FolderRead Successful Response
    * @throws ApiError
    */
-  public static createFolder({ requestBody }: { requestBody: FolderCreate }): CancelablePromise<FolderRead> {
+  public static createFolder({
+    projectId,
+    requestBody,
+  }: {
+    projectId: number;
+    requestBody: FolderCreate;
+  }): CancelablePromise<FolderRead> {
     return __request(OpenAPI, {
       method: "PUT",
-      url: "/folder",
+      url: "/projects/{project_id}/folders",
+      path: {
+        project_id: projectId,
+      },
       body: requestBody,
       mediaType: "application/json",
+      errors: {
+        422: `Validation Error`,
+      },
+    });
+  }
+  /**
+   * Returns the folders of the project, optionally only those of the folder_type
+   * @returns FolderRead Successful Response
+   * @throws ApiError
+   */
+  public static getByProject({
+    projectId,
+    folderType,
+  }: {
+    projectId: number;
+    folderType?: FolderType | null;
+  }): CancelablePromise<Array<FolderRead>> {
+    return __request(OpenAPI, {
+      method: "GET",
+      url: "/projects/{project_id}/folders",
+      path: {
+        project_id: projectId,
+      },
+      query: {
+        folder_type: folderType,
+      },
       errors: {
         422: `Validation Error`,
       },
@@ -32,11 +67,18 @@ export class FolderService {
    * @returns FolderRead Successful Response
    * @throws ApiError
    */
-  public static getById({ folderId }: { folderId: number }): CancelablePromise<FolderRead> {
+  public static getById({
+    projectId,
+    folderId,
+  }: {
+    projectId: number;
+    folderId: number;
+  }): CancelablePromise<FolderRead> {
     return __request(OpenAPI, {
       method: "GET",
-      url: "/folder/{folder_id}",
+      url: "/projects/{project_id}/folders/{folder_id}",
       path: {
+        project_id: projectId,
         folder_id: folderId,
       },
       errors: {
@@ -50,16 +92,19 @@ export class FolderService {
    * @throws ApiError
    */
   public static updateById({
+    projectId,
     folderId,
     requestBody,
   }: {
+    projectId: number;
     folderId: number;
     requestBody: FolderUpdate;
   }): CancelablePromise<FolderRead> {
     return __request(OpenAPI, {
       method: "PATCH",
-      url: "/folder/{folder_id}",
+      url: "/projects/{project_id}/folders/{folder_id}",
       path: {
+        project_id: projectId,
         folder_id: folderId,
       },
       body: requestBody,
@@ -74,11 +119,18 @@ export class FolderService {
    * @returns FolderRead Successful Response
    * @throws ApiError
    */
-  public static deleteById({ folderId }: { folderId: number }): CancelablePromise<FolderRead> {
+  public static deleteById({
+    projectId,
+    folderId,
+  }: {
+    projectId: number;
+    folderId: number;
+  }): CancelablePromise<FolderRead> {
     return __request(OpenAPI, {
       method: "DELETE",
-      url: "/folder/{folder_id}",
+      url: "/projects/{project_id}/folders/{folder_id}",
       path: {
+        project_id: projectId,
         folder_id: folderId,
       },
       errors: {
@@ -92,39 +144,18 @@ export class FolderService {
    * @throws ApiError
    */
   public static getSdocIdsInFolderByDoctype({
+    projectId,
     folderId,
   }: {
+    projectId: number;
     folderId: number;
   }): CancelablePromise<Record<string, Array<number>>> {
     return __request(OpenAPI, {
       method: "GET",
-      url: "/folder/sdocids/{folder_id}",
-      path: {
-        folder_id: folderId,
-      },
-      errors: {
-        422: `Validation Error`,
-      },
-    });
-  }
-  /**
-   * Returns the folders of the folder_type of the project with the given ID
-   * @returns FolderRead Successful Response
-   * @throws ApiError
-   */
-  public static getFoldersByProjectAndType({
-    projectId,
-    folderType,
-  }: {
-    projectId: number;
-    folderType: FolderType;
-  }): CancelablePromise<Array<FolderRead>> {
-    return __request(OpenAPI, {
-      method: "GET",
-      url: "/folder/project/{project_id}/folder/{folder_type}",
+      url: "/projects/{project_id}/folders/{folder_id}/source-documents",
       path: {
         project_id: projectId,
-        folder_type: folderType,
+        folder_id: folderId,
       },
       errors: {
         422: `Validation Error`,
@@ -137,13 +168,18 @@ export class FolderService {
    * @throws ApiError
    */
   public static updateFoldersBulk({
+    projectId,
     requestBody,
   }: {
+    projectId: number;
     requestBody: Array<FolderUpdateBulk>;
   }): CancelablePromise<Array<FolderRead>> {
     return __request(OpenAPI, {
       method: "PATCH",
-      url: "/folder/bulk/update",
+      url: "/projects/{project_id}/folders/bulk",
+      path: {
+        project_id: projectId,
+      },
       body: requestBody,
       mediaType: "application/json",
       errors: {

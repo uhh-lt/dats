@@ -6,7 +6,7 @@ import { SourceDocumentMetadataUpdateBulk } from "@models/SourceDocumentMetadata
 import { SourceDocumentMetadataReadResolved } from "@models/SourceDocumentMetadataReadResolved";
 import LabelIcon from "@mui/icons-material/Label";
 import { Box, Button, DialogActions, Stack, Typography } from "@mui/material";
-import { useAppDispatch } from "@store/storeHooks";
+import { useAppDispatch, useAppSelector } from "@store/storeHooks";
 import {
   MaterialReactTable,
   MRT_ColumnDef,
@@ -160,6 +160,7 @@ export const MetadataExtractionResultStepTable = memo(({ data }: { data: Metadat
     dispatch(LLMAssistantActions.closeDialog());
   }, [dispatch]);
 
+  const projectId = useAppSelector((state) => state.llmAssistant.projectId);
   const { mutate: updateBulkMetadataMutation, isPending: isUpdatePending } =
     SdocMetadataHooks.useUpdateBulkSdocMetadata();
 
@@ -181,14 +182,14 @@ export const MetadataExtractionResultStepTable = memo(({ data }: { data: Metadat
     }, [] as SourceDocumentMetadataUpdateBulk[]);
 
     updateBulkMetadataMutation(
-      { requestBody: metadataToUpdate },
+      { projectId, requestBody: metadataToUpdate },
       {
         onSuccess() {
           dispatch(LLMAssistantActions.closeDialog());
         },
       },
     );
-  }, [theRows, updateBulkMetadataMutation, dispatch]);
+  }, [theRows, projectId, updateBulkMetadataMutation, dispatch]);
 
   // columns
   const columns = useMemo<MRT_ColumnDef<MetadataExtractionResultRow>[]>(() => {

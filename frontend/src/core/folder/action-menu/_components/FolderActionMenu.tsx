@@ -21,6 +21,7 @@ import { isEqual } from "lodash";
 import { Dispatch, SetStateAction, useCallback, useMemo, useState } from "react";
 import { FolderHooks } from "../../api/folderHooks";
 import { FolderCreateButton } from "../../FolderCreateButton";
+import { useAppSelector } from "@store/storeHooks";
 
 interface FolderMenuProps {
   popoverOrigin: PopoverOrigin | undefined;
@@ -134,6 +135,7 @@ function FolderMenuContent({
   };
 
   // actions
+  const projectId = useAppSelector((state) => state.project.projectId);
   const { mutate: updateFoldersBulkMutation, isPending } = FolderHooks.useUpdateFoldersBulk();
   const handleMoveToFolder = useCallback(() => {
     // find entry where CheckboxState is Checked
@@ -143,8 +145,10 @@ function FolderMenuContent({
       return;
     }
     const targetFolderId = checkedFolders[0][0];
+    if (!projectId) return;
     updateFoldersBulkMutation(
       {
+        projectId,
         requestBody: folderIds.map((folderId) => ({
           folder_id: folderId,
           parent_id: targetFolderId === -1 ? null : targetFolderId,
@@ -157,7 +161,7 @@ function FolderMenuContent({
         },
       },
     );
-  }, [checked, updateFoldersBulkMutation, folderIds, onMoveFolder, handleClose]);
+  }, [checked, projectId, updateFoldersBulkMutation, folderIds, onMoveFolder, handleClose]);
 
   // Display buttons depending on state
   const actionMenu: React.ReactNode = useMemo(() => {

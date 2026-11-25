@@ -74,7 +74,9 @@ export function SelectionInformation({ aspectId }: SelectionInformationProps) {
   const { mutate: updateMetadataMutation } = SdocMetadataHooks.useUpdateBulkSdocMetadata();
   const handleMetadataUpdate = useCallback(
     (metadataId: number) => (data: SourceDocumentMetadataUpdate) => {
+      if (!projectId) return;
       updateMetadataMutation({
+        projectId,
         requestBody: [
           {
             sdoc_metadata_id: metadataId,
@@ -87,7 +89,7 @@ export function SelectionInformation({ aspectId }: SelectionInformationProps) {
         ],
       });
     },
-    [updateMetadataMutation],
+    [projectId, updateMetadataMutation],
   );
 
   return (

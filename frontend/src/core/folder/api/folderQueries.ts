@@ -10,7 +10,7 @@ export type FolderMap = Record<number, FolderRead>;
  *
  *   folderQueries.all()                                   ["folder"]
  *   folderQueries.byProject(projectId, folderType)        ["folder", "project", projectId, folderType]
- *   folderQueries.sdocIdsPerDoctype(sdocFolderId)         ["folder", "sdocIdsPerDoctype", sdocFolderId]
+ *   folderQueries.sdocIdsPerDoctype(projectId, sdocFolderId) ["folder", "sdocIdsPerDoctype", sdocFolderId, projectId]
  */
 export const folderQueries = {
   all: () => ["folder"] as const,
@@ -26,7 +26,7 @@ export const folderQueries = {
         projectId === undefined
           ? skipToken
           : async () => {
-              const folders = await FolderService.getFoldersByProjectAndType({ projectId, folderType });
+              const folders = await FolderService.getByProject({ projectId, folderType });
               return folders.reduce<FolderMap>((acc, folder) => {
                 acc[folder.id] = folder;
                 return acc;
@@ -37,10 +37,13 @@ export const folderQueries = {
 
   // ids of the sdocs in a folder, grouped by doctype
   sdocIdsPerDoctypeScope: () => [...folderQueries.all(), "sdocIdsPerDoctype"] as const,
-  sdocIdsPerDoctype: (sdocFolderId: number | null | undefined) =>
+  sdocIdsPerDoctype: (projectId: number | null | undefined, sdocFolderId: number | null | undefined) =>
     queryOptions({
-      queryKey: [...folderQueries.sdocIdsPerDoctypeScope(), sdocFolderId] as const,
-      queryFn: !sdocFolderId ? skipToken : () => FolderService.getSdocIdsInFolderByDoctype({ folderId: sdocFolderId }),
+      queryKey: [...folderQueries.sdocIdsPerDoctypeScope(), sdocFolderId, projectId] as const,
+      queryFn:
+        !projectId || !sdocFolderId
+          ? skipToken
+          : () => FolderService.getSdocIdsInFolderByDoctype({ projectId, folderId: sdocFolderId }),
       staleTime: 1000 * 60 * 5,
     }),
 };

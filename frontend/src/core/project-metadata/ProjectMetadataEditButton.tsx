@@ -71,7 +71,8 @@ export function ProjectMetadataEditMenu({ projectMetadata }: ProjectMetadataEdit
       const mutation = updateMutation.mutate;
       const actuallyMutate = () =>
         mutation({
-          metadataId: projectMetadata.id,
+          projectId: projectMetadata.project_id,
+          projectMetadataId: projectMetadata.id,
           requestBody: {
             metatype: metatype,
             key: name,
@@ -101,11 +102,12 @@ export function ProjectMetadataEditMenu({ projectMetadata }: ProjectMetadataEdit
       onAccept: () => {
         const mutation = deleteMutation.mutate;
         mutation({
-          metadataId: projectMetadata.id,
+          projectId: projectMetadata.project_id,
+          projectMetadataId: projectMetadata.id,
         });
       },
     });
-  }, [deleteMutation.mutate, openConfirmationDialog, projectMetadata.id]);
+  }, [deleteMutation.mutate, openConfirmationDialog, projectMetadata.id, projectMetadata.project_id]);
 
   return (
     <>

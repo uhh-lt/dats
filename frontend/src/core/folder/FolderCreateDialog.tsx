@@ -44,10 +44,9 @@ export function FolderCreateDialog({ projectId, onFoldersCreated }: FolderCreate
         name: dialogData?.folderName || "",
         folder_type: FolderType.NORMAL,
         parent_id: dialogData?.parentFolderId ?? -1,
-        project_id: projectId,
       });
     }
-  }, [isOpen, dialogData, reset, projectId]);
+  }, [isOpen, dialogData, reset]);
 
   // form actions
   const { mutate: createFolderMutation, isPending } = FolderHooks.useCreateFolder();
@@ -55,11 +54,11 @@ export function FolderCreateDialog({ projectId, onFoldersCreated }: FolderCreate
     (data) => {
       createFolderMutation(
         {
+          projectId,
           requestBody: {
             name: data.name,
             folder_type: FolderType.NORMAL,
             parent_id: data.parent_id === -1 ? null : data.parent_id,
-            project_id: projectId,
           },
         },
         {
