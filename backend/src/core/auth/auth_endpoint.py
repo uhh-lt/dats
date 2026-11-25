@@ -1,6 +1,8 @@
 import json
+import re
 from datetime import UTC, datetime, timedelta
 from typing import Annotated
+from urllib.parse import unquote, urlsplit
 
 from fastapi import (
     APIRouter,
@@ -41,7 +43,7 @@ from core.user.user_orm import UserORM
 from repos.db.sql_exceptions import NoSuchElementError
 from repos.mail_repo import MailRepo
 
-CONTENT_PREFIX = "/content/projects/"
+CONTENT_PATH = re.compile(r"/content/projects/([0-9]+)/")
 AUTHORIZATION = "Authorization"
 
 oauth_service = OAuthService()
@@ -191,12 +193,10 @@ def auth_content(
 ) -> None:
     # returns None on purpose
     authz = AuthzUser(request=request, db=db, user=user)
-    if x_original_uri is None or not x_original_uri.startswith(CONTENT_PREFIX):
-        return
-
-    index = x_original_uri.find("/", len(CONTENT_PREFIX))
-    project = int(x_original_uri[len(CONTENT_PREFIX) : index])
-    authz.assert_in_project(project)
+    project_id = _content_project_id(x_original_uri)
+    if project_id is None:
+        authz.deny_access(f"Content path {x_original_uri} is no project file")
+    authz.assert_in_project(project_id)
 
 
 @router.get("/oidc/login")
@@ -287,3 +287,19 @@ def _new_refresh_token(*, user_id: int) -> RefreshTokenCreate:
         expires_at=datetime.now(UTC) + timedelta(seconds=conf.auth.jwt.refresh_ttl),
         user_id=user_id,
     )
+
+
+def _content_project_id(original_uri: str | None) -> int | None:
+    """The id of the project whose file nginx serves for the raw request URI,
+    or None if it serves no project file. nginx serves the percent-decoded path
+    with its dot segments resolved, so a path with dot segments is no project
+    file: its first project id need not be the served one."""
+    if original_uri is None:
+        return None
+    path = unquote(urlsplit(original_uri, allow_fragments=False).path)
+    if any(segment in (".", "..") for segment in path.split("/")):
+        return None
+    match = CONTENT_PATH.match(path)
+    if match is None:
+        return None
+    return int(match.group(1))
