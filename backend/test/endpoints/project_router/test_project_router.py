@@ -6,7 +6,7 @@ import re
 from typing import Any, Callable
 
 import pytest
-from fastapi.routing import APIRoute
+from fastapi.routing import APIRoute, iter_route_contexts
 from fastapi.testclient import TestClient
 
 from composite_keys_test_utils import TenantRows, TwoTenants
@@ -57,12 +57,14 @@ ANNOTATION_GROUPS: dict[str, tuple[str, str, dict[str, Any]]] = {
 
 
 def _project_routes(client: TestClient) -> list[tuple[str, APIRoute]]:
-    """The routes of the app the client runs (its lifespan mounts the routers)."""
+    """The routes of the app the client runs. `include_router` keeps the routers
+    as they are, so the routes are found through their route contexts."""
     return [
-        (method, route)
-        for route in client.app.routes  # type: ignore[attr-defined]
-        if isinstance(route, APIRoute) and route.path.startswith(PROJECT_PREFIX)
-        for method in sorted(route.methods or ())
+        (method, context.original_route)
+        for context in iter_route_contexts(client.app.routes)  # type: ignore[attr-defined]
+        if isinstance(context.original_route, APIRoute)
+        and context.original_route.path.startswith(PROJECT_PREFIX)
+        for method in sorted(context.original_route.methods or ())
     ]
 
 
