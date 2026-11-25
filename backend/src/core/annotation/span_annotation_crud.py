@@ -432,7 +432,8 @@ class CRUDSpanAnnotation(
     def add_to_span_group(
         self, db: Session, *, project_id: int, span_id: int, group_id: int
     ) -> SpanAnnotationORM:
-        # a span group of another project violates the link's foreign key
+        # a span group of another project is not found (404) before the link's
+        # composite foreign key would reject it
         span_db_obj = self.read(db=db, project_id=project_id, id=span_id)
         assert_in_project(
             [crud_span_group.read(db=db, id=group_id)], project_id=project_id
