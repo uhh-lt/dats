@@ -9,7 +9,10 @@ from core.doc_processing.entrypoints.archive_extraction_job import (
     ArchiveExtractionJobInput,
 )
 from core.project.project_crud import crud_project
-from modules.crawler.crawler_exceptions import NoDataToCrawlError
+from modules.crawler.crawler_exceptions import (
+    CrawlerScriptFailedError,
+    NoDataToCrawlError,
+)
 from repos.db.sql_repo import SQLRepo
 from repos.filesystem.temporary_file_crud import crud_temporary_file
 from systems.artefact_system.artefact_dto import ProcessingJobInput
@@ -82,8 +85,14 @@ def handle_crawler_job(payload: CrawlerJobInput, job: Job) -> CrawlerJobOutput:
             str(image_dir),
             str(archive_path),
         ] + payload.urls
-        subprocess.run(args, env=script_env, capture_output=True, text=True)
+        result = subprocess.run(args, env=script_env, capture_output=True, text=True)
         logger.info("Finished Scrapy Crawler Script! ")
+
+    # a failed crawl hands nothing over
+    if result.returncode != 0 or not archive_path.is_file():
+        logger.error(f"The crawler script failed: {result.stderr}")
+        crud_temporary_file.delete(id=staging_id)
+        raise CrawlerScriptFailedError(returncode=result.returncode)
 
     # import the crawled data; a queue outage leaves the crawl finished
     try:
