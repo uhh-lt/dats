@@ -3,8 +3,9 @@
 The doctor only depends on what stays stable across DATS versions: the backend
 config files and their environment variables, the database tables, the naming
 of the Elasticsearch indices and Weaviate tenants, and the filesystem layout.
-`verify_schema` checks the tables and columns before the doctor uses them, so
-an incompatible DATS version fails early instead of half-way.
+`verify_schema` and `verify_file_layout` check the tables, columns and folders
+before the doctor uses them, so an incompatible DATS version fails early
+instead of half-way.
 """
 
 import os
@@ -79,10 +80,39 @@ EMBEDDING_STEPS = {
 }
 ES_INDEX_STEP = "es_index"
 IMAGE_THUMBNAIL_STEP = "image_thumbnail"
+VIDEO_THUMBNAIL_STEP = "video_thumbnail"
+VIDEO_AUDIO_STEP = "video_audio_extraction"
 # The artefacts with their own store in the project export (the artefacts with
 # an archive, backend/src/systems/artefact_system/artefact_registry.py) that the doctor does
-# not check: the word frequencies and the audio stream extracted from a video.
-UNCHECKED_STORES = ["word_frequencies", "audio"]
+# not check: the word frequencies.
+UNCHECKED_STORES = ["word_frequencies"]
+
+# The file store: one folder per entity, `projects/<project_id>/<folder>/<id>/`
+# (the `folder` of the *_file_crud.py classes of the backend), mapped to the
+# table whose ids name the subfolders (None: the files belong to no row, an
+# export is kept for minutes). A copy, like the steps above.
+ENTITY_FOLDERS: dict[str, str | None] = {
+    "sdoc_files": "sourcedocument",
+    "web_images": "sourcedocument",
+    "thumbnails": "sourcedocument",
+    "audio": "sourcedocument",
+    "classifier_models": "classifier",
+    "perspectives_models": "aspect",
+    "perspectives_plots": "aspect",
+    "exports": None,
+}
+# The uploaded file of a document, `sdoc_files/<sdoc_id>/<filename>`, and the
+# files the processing derives from it, as (folder, file name)
+SDOC_FILES_FOLDER = "sdoc_files"
+WEB_IMAGE_FILE = ("web_images", "image.webp")
+THUMBNAIL_FILE = ("thumbnails", "thumbnail.webp")
+AUDIO_FILE = ("audio", "audio.mp3")
+# The folders of the legacy layout, which the migration of the file store
+# (807bab97f373_file_store) emptied into the entity folders and deleted, and the
+# columns it dropped: a database that still has them has the legacy layout
+LEGACY_DOCS_FOLDER = "docs"
+LEGACY_FOLDERS = [LEGACY_DOCS_FOLDER, "models", "plots", "dataloaders"]
+LEGACY_COLUMNS = [("classifier", "path"), ("sourcedocumentdata", "repo_url")]
 STEP_STATUS_TABLE = "sourcedocumentstepstatus"
 
 # The Weaviate collections (the `name` of the *_collection.py classes) and
@@ -145,10 +175,6 @@ CSV_NA_VALUES = frozenset(
         "null",
     }
 )
-
-# The filename limits of the uploaded files (core/doc/source_document_dto.py)
-_SDOC_FILENAME_MAX_LENGTH = 200
-_SDOC_SUFFIX_MAX_LENGTH = 30
 
 # The tables and columns the doctor reads or writes
 REQUIRED_COLUMNS: dict[str, list[str]] = {
@@ -231,11 +257,14 @@ REQUIRED_COLUMNS: dict[str, list[str]] = {
     "timelineanalysis": ["id", "name", "concepts", "project_id"],
     "conceptovertimeanalysis": ["id", "name", "project_id"],
     "sourcedocumentstepstatus": ["sdoc_id", "step", "status"],
+    "classifier": ["id", "project_id"],
+    "aspect": ["id", "project_id"],
 }
 
 
 class UnsupportedSchemaError(Exception):
-    pass
+    """The database or the file layout of the DATS version is not the one the
+    doctor knows."""
 
 
 @dataclass
@@ -256,8 +285,12 @@ class Stores:
     def projects_dir(self) -> Path:
         return self.root_dir / "projects"
 
-    def docs_dir(self, project_id: int) -> Path:
-        return self.projects_dir / str(project_id) / "docs"
+    def project_dir(self, project_id: int) -> Path:
+        return self.projects_dir / str(project_id)
+
+    def entity_dir(self, project_id: int, folder: str, entity_id: int) -> Path:
+        """The folder of an entity's files in the file store."""
+        return self.project_dir(project_id) / folder / str(entity_id)
 
     def index_name(self, project_id: int) -> str:
         return f"{self.index_prefix}_project_{project_id}_docs"
@@ -268,38 +301,6 @@ class Stores:
     @staticmethod
     def tenant_name(project_id: int) -> str:
         return f"Project{project_id}"
-
-    @staticmethod
-    def truncate_filename(filename: str) -> str:
-        """The name under which DATS stores an uploaded file
-        (FilesystemRepo.truncate_filename)."""
-        path = Path(filename)
-        if len(path.name) <= _SDOC_FILENAME_MAX_LENGTH + _SDOC_SUFFIX_MAX_LENGTH:
-            return str(path)
-        suffix = "".join(path.suffixes[-3:])[-_SDOC_SUFFIX_MAX_LENGTH:]
-        return str(
-            path.with_name(
-                path.name.removesuffix(suffix)[:_SDOC_FILENAME_MAX_LENGTH]
-            ).with_suffix(suffix)
-        )
-
-    def owned_filenames(self, filename: str, doctype: str) -> set[str]:
-        """The files in the docs folder that belong to a document: the original,
-        and the files the processing derives from it
-        (FilesystemRepo.generate_sdoc_filename)."""
-        name = self.truncate_filename(filename)
-        owned = {name}
-        if doctype in ("image", "audio", "video"):
-            path = Path(name)
-            owned |= {
-                f"{name}.webp",
-                f"{name}.thumbnail.webp",
-                f"{path.stem}.thumbnail{path.suffix}",
-            }
-        if doctype == "video":
-            # the audio stream extracted for the transcription
-            owned.add(Path(name).with_suffix(".mp3").name)
-        return owned
 
     # ==========================================================================
     # LIFECYCLE
@@ -335,6 +336,33 @@ class Stores:
             raise UnsupportedSchemaError(
                 "This DATS version is not supported by the doctor: the database "
                 f"(revision {self.schema_revision()}) lacks {', '.join(missing)}"
+            )
+        legacy = [f"{t}.{c}" for t, c in LEGACY_COLUMNS if (t, c) in existing]
+        if legacy:
+            raise UnsupportedSchemaError(
+                "This DATS version is not supported by the doctor: the database "
+                f"(revision {self.schema_revision()}) still has {', '.join(legacy)}, "
+                "so its files lie in the legacy layout (docs/, models/, ...)"
+            )
+
+    def verify_file_layout(self) -> None:
+        """Raises if a project folder holds an entry that is neither a folder of
+        the file store nor a legacy folder (which check reports)."""
+        if not self.projects_dir.is_dir():
+            return
+        known = {*ENTITY_FOLDERS, *LEGACY_FOLDERS}
+        unknown = sorted(
+            str(entry)
+            for project_dir in self.projects_dir.iterdir()
+            if project_dir.is_dir() and project_dir.name.isdigit()
+            for entry in project_dir.iterdir()
+            if entry.name not in known
+        )
+        if unknown:
+            raise UnsupportedSchemaError(
+                "This DATS version is not supported by the doctor: its file "
+                f"layout has unknown entries {', '.join(unknown[:10])}"
+                + (f", ... ({len(unknown) - 10} more)" if len(unknown) > 10 else "")
             )
 
 
@@ -438,6 +466,7 @@ def connect() -> Stores:
     )
     try:
         stores.verify_schema()
+        stores.verify_file_layout()
     except Exception:
         stores.close()
         raise

@@ -8,10 +8,6 @@ SourceDocumentNotFoundInFilesystemError: The original file of SourceDocument 647
 
 The project doctor (`tools/project_doctor`) finds these inconsistencies and heals them, in two steps:
 
-!!! warning "File-store compatibility"
-
-    This version of the doctor expects the legacy `projects/<project_id>/docs/` layout. Do not run `check` or `heal` against an instance that has run migration `807bab97f373_file_store`; its file checks do not support the entity-based layout.
-
 1. `check` reads all stores, prints the issues and writes them to a JSON report. It changes nothing.
 2. `heal` takes the report and applies the fix of each issue. Without `--apply` it only shows what it would do.
 
@@ -19,7 +15,7 @@ The project doctor (`tools/project_doctor`) finds these inconsistencies and heal
 
 Run the doctor on the host of the deployment, from the checkout whose `docker/` folder runs DATS. The wrapper script starts a one-off container of the backend image with the same environment and volumes as the API (like the scripts in `bin/prod`), so it reaches all stores with the instance's own configuration.
 
-The doctor imports no DATS code, only the libraries of the backend image (SQLAlchemy, Elasticsearch, Weaviate). Apart from the file-store compatibility restriction above, it therefore works with the DATS version the deployment runs, also when the checkout is newer than the deployment: copy `tools/project_doctor` into the checkout of the deployment if it is missing there. Before it touches anything, the doctor verifies that the database has every table and column it uses; on an incompatible version it stops with an error that names the missing columns.
+The doctor imports no DATS code, only the libraries of the backend image (SQLAlchemy, Elasticsearch, Weaviate). It therefore works with the DATS version the deployment runs, also when the checkout is newer than the deployment: copy `tools/project_doctor` into the checkout of the deployment if it is missing there. Before it touches anything, the doctor verifies that the database has every table and column it uses and that the files lie in the layout it knows, one folder per entity (`projects/<project_id>/<folder>/<entity_id>/`); on an incompatible version it stops with an error that names the missing columns or the unknown folders. It does not support the legacy layout (`projects/<project_id>/docs/`) of the DATS versions before the file store.
 
 ```bash
 # 1) check one project (or omit --project to check all projects and the leftovers of deleted ones)
@@ -40,15 +36,17 @@ tools/project_doctor/dats-doctor.sh check --project 27
 In development, `just doctor check|heal ...` runs the doctor against the dev stack of the checkout (`backend/.env`).
 
 !!! warning
-Stop uploads and processing in the affected projects while you heal them. `check` skips files younger than `--min-file-age` minutes (default 60), as they may still be processed.
+Stop uploads and processing in the affected projects while you heal them. `check` skips files and folders younger than `--min-file-age` minutes (default 60), as they may still be processed or downloaded.
 
 ## Checks
 
 | Check                      | Finds                                                                                                           | Heal                                                                            |
 | -------------------------- | --------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------- |
 | `missing_original_file`    | Documents whose uploaded file is missing (breaks the export)                                                    | Deletes the document from all stores                                            |
-| `missing_thumbnail`        | Images whose `.webp` or thumbnail is missing                                                                    | None: recompute in the document health view                                     |
-| `orphaned_file`            | Files in a project's `docs/` folder that belong to no document (see below)                                      | Moves the file to the quarantine folder                                         |
+| `missing_thumbnail`        | Images whose WebP image or thumbnail is missing, videos whose thumbnail is missing                              | None: recompute in the document health view                                     |
+| `missing_audio`            | Videos whose extracted audio stream is missing                                                                  | None: recompute in the document health view                                     |
+| `orphaned_file`            | Folders of the file store whose document, classifier or aspect no longer exists, and expired exports            | Moves the folder to the quarantine folder                                       |
+| `legacy_folder`            | Folders of the legacy file layout (`docs/`, `models/`, `plots/`, `dataloaders/`), which DATS no longer reads    | Moves the folder to the quarantine folder                                       |
 | `orphaned_project_dir`     | Project folders of deleted projects                                                                             | Moves the folder to the quarantine folder                                       |
 | `missing_sdoc_data`        | Documents without processed data (content, sentences) after a failed or finished processing (breaks the export) | Deletes the document (retry its processing first to keep it)                    |
 | `failed_processing`        | Documents with failed processing steps                                                                          | None: retry in the document health view                                         |
@@ -63,11 +61,9 @@ Stop uploads and processing in the affected projects while you heal them. `check
 
 A project only computes the data of the features it enables. The steps of the other features are not planned for its documents (they have no row in `sourcedocumentstepstatus`), and their data is missing on purpose: the doctor checks no data of a step that is not planned, and prints the steps it skipped per project ("Not checked, as the step is not planned"). Enable or complete the feature in the project settings to compute the data of a feature's step; a core step without a row (the search index of a document imported while it was being indexed, for example) is computed by **Recompute** in the document health view.
 
-The doctor does not check the word frequencies, the thumbnail of a video or the audio stream extracted from a video: recompute their steps in the document health view if they are missing.
+The doctor does not check the word frequencies: recompute their step in the document health view if they are missing.
 
-DATS keeps some files that no document references, so `orphaned_file` skips them: the original of an upload that the chunking split into several documents (named like the folder of its chunks) and uploaded `.zip` archives, whose content became documents.
-
-If the file of a document is missing, but a file exists whose name differs only in case or unicode normalization, the doctor proposes to rename that file instead of deleting the document.
+If the file of a document is missing, but a file of its name exists in the legacy `docs/` folder, or one in its folder whose name differs only in case or unicode normalization, the doctor proposes to move that file instead of deleting the document.
 
 ## Export and import
 

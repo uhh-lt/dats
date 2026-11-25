@@ -14,7 +14,9 @@ class CheckName(str, Enum):
     # Postgres <-> filesystem
     MISSING_ORIGINAL_FILE = "missing_original_file"
     MISSING_THUMBNAIL = "missing_thumbnail"
+    MISSING_AUDIO = "missing_audio"
     ORPHANED_FILE = "orphaned_file"
+    LEGACY_FOLDER = "legacy_folder"
     ORPHANED_PROJECT_DIR = "orphaned_project_dir"
     # Postgres
     MISSING_SDOC_DATA = "missing_sdoc_data"
