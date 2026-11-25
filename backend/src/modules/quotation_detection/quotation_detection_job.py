@@ -155,7 +155,10 @@ def handle_quotation_detection_job(
             adoc = next(
                 iter(
                     crud_adoc.read_by_user_and_sdocs(
-                        db=db, user_id=SYSTEM_USER_ID, sdoc_ids=[payload.sdoc_id]
+                        db=db,
+                        project_id=payload.project_id,
+                        user_id=SYSTEM_USER_ID,
+                        sdoc_ids=[payload.sdoc_id],
                     )
                 ),
                 None,
@@ -186,6 +189,7 @@ def handle_quotation_detection_job(
 
         SpanGroupService().replace_groups(
             db=db,
+            project_id=payload.project_id,
             annotation_document_id=adoc.id,
             name=SPAN_GROUP_NAME,
             code_ids=list(codes),

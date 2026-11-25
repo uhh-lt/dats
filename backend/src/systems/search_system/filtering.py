@@ -136,7 +136,7 @@ class FilterExpression(BaseModel, Generic[T]):
                 self.column.get_filter_column(subquery_dict), value=self.value
             )
 
-    def resolve_ids(self, db: Session) -> "FilterExpression[T]":
+    def resolve_ids(self, db: Session, project_id: int) -> "FilterExpression[T]":
         # We don't need to resolve IDs for metadata columns
         if isinstance(self.column, int):
             return self
@@ -155,7 +155,9 @@ class FilterExpression(BaseModel, Generic[T]):
             type_value, id_value = self.value
             assert isinstance(type_value, str) and isinstance(id_value, str)
             crud = attached_object_type_to_crud[AttachedObjectType(type_value)]
-            resolved = self.column.resolve_ids(db=db, ids=[int(id_value)], types=[crud])
+            resolved = self.column.resolve_ids(
+                db=db, project_id=project_id, ids=[int(id_value)], types=[crud]
+            )
             if len(resolved) == 0:
                 raise FilterValueNotFoundError(self.value, self.column)
             self.value = [type_value, resolved[0]]
@@ -164,7 +166,9 @@ class FilterExpression(BaseModel, Generic[T]):
         # Resolve IDs for IDOperator
         if self.operator == IDOperator.EQUALS or self.operator == IDOperator.NOT_EQUALS:
             assert isinstance(self.value, int), f"Expected int, got {type(self.value)}"
-            resolved_ids = self.column.resolve_ids(db=db, ids=[int(self.value)])
+            resolved_ids = self.column.resolve_ids(
+                db=db, project_id=project_id, ids=[int(self.value)]
+            )
             if len(resolved_ids) == 0:
                 raise FilterValueNotFoundError(self.value, self.column)
             self.value = resolved_ids[0]
@@ -190,7 +194,9 @@ class FilterExpression(BaseModel, Generic[T]):
             else:
                 ids = []
 
-            resolved_ids = self.column.resolve_ids(db=db, ids=ids)
+            resolved_ids = self.column.resolve_ids(
+                db=db, project_id=project_id, ids=ids
+            )
             if len(ids) > 1 and len(resolved_ids) == 0:
                 raise FilterValueNotFoundError(ids, self.column)
             self.value = resolved_ids
@@ -288,11 +294,14 @@ class Filter(BaseModel, Generic[T]):
         return op(*[f.get_sqlalchemy_expression(subquery_dict) for f in self.items])
 
     @classmethod
-    def resolve_ids(cls, filter: "Filter[T]", db: Session) -> "Filter[T]":
+    def resolve_ids(
+        cls, filter: "Filter[T]", db: Session, project_id: int
+    ) -> "Filter[T]":
         """
         Resolve IDs for all FilterExpressions in the filter tree.
         Args:
             db: Database session
+            project_id: The project of the ids
         Returns:
             Filter: A new Filter instance with resolved IDs.
         """
@@ -303,9 +312,11 @@ class Filter(BaseModel, Generic[T]):
         # Resolve IDs for each FilterExpression in the filter
         for item in filter.items:
             if isinstance(item, FilterExpression):
-                resolved_items.append(item.resolve_ids(db=db))
+                resolved_items.append(item.resolve_ids(db=db, project_id=project_id))
             else:
-                resolved_items.append(Filter.resolve_ids(item, db=db))
+                resolved_items.append(
+                    Filter.resolve_ids(item, db=db, project_id=project_id)
+                )
         resolved.items = resolved_items
 
         return resolved

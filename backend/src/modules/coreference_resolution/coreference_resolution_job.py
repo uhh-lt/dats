@@ -104,7 +104,10 @@ def handle_coreference_resolution_job(
             # without an annotation document of the system user there is nothing
             # to clear, and none is created
             adocs = crud_adoc.read_by_user_and_sdocs(
-                db=db, user_id=SYSTEM_USER_ID, sdoc_ids=[payload.sdoc_id]
+                db=db,
+                project_id=payload.project_id,
+                user_id=SYSTEM_USER_ID,
+                sdoc_ids=[payload.sdoc_id],
             )
             if not adocs:
                 return
@@ -123,6 +126,7 @@ def handle_coreference_resolution_job(
             ]
         SpanGroupService().replace_groups(
             db=db,
+            project_id=payload.project_id,
             annotation_document_id=adoc_id,
             name=COREF_GROUP_NAME,
             code_ids=[mention.id],

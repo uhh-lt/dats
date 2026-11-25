@@ -18,7 +18,10 @@ GROUP_NAME = "replaced"
 
 def _adoc_id(db: Session, fixture: SdocWithMemosAndSpanGroup) -> int:
     [adoc] = crud_adoc.read_by_user_and_sdocs(
-        db=db, user_id=fixture["user_id"], sdoc_ids=[fixture["sdoc_id"]]
+        db=db,
+        project_id=fixture["project_id"],
+        user_id=fixture["user_id"],
+        sdoc_ids=[fixture["sdoc_id"]],
     )
     return adoc.id
 
@@ -47,8 +50,11 @@ def _groups_by_name(
     db: Session, fixture: SdocWithMemosAndSpanGroup
 ) -> dict[str, list[list[str]]]:
     """The texts of the spans of each group, by group name."""
-    groups = SpanGroupService().read_with_annotations_by_user_and_sdoc(
-        db=db, user_id=fixture["user_id"], sdoc_id=fixture["sdoc_id"]
+    groups = SpanGroupService().read_with_annotations_by_user(
+        db=db,
+        project_id=fixture["project_id"],
+        user_id=fixture["user_id"],
+        sdoc_id=fixture["sdoc_id"],
     )
     by_name: dict[str, list[list[str]]] = {}
     for group in groups:
@@ -75,6 +81,7 @@ def test_replace_groups_twice_leaves_exactly_the_second_set(
         spans = iter(_spans(fixture, adoc_id, flat_texts))
         SpanGroupService().replace_groups(
             db=db_session,
+            project_id=fixture["project_id"],
             annotation_document_id=adoc_id,
             name=GROUP_NAME,
             code_ids=[fixture["code_id"]],
@@ -107,6 +114,7 @@ def test_replace_groups_rejects_a_span_with_another_code(
     with pytest.raises(ValueError, match=span.uuid):
         SpanGroupService().replace_groups(
             db=db_session,
+            project_id=fixture["project_id"],
             annotation_document_id=adoc_id,
             name=GROUP_NAME,
             code_ids=[fixture["code_id"] + 1],
@@ -128,6 +136,7 @@ def test_replace_groups_without_codes_deletes_only_the_groups_of_that_name(
 
     SpanGroupService().replace_groups(
         db=db_session,
+        project_id=fixture["project_id"],
         annotation_document_id=adoc_id,
         name="crud-group",
         code_ids=[],
@@ -155,6 +164,7 @@ def test_replace_groups_with_only_empty_groups_creates_them_without_spans(
 
     SpanGroupService().replace_groups(
         db=db_session,
+        project_id=fixture["project_id"],
         annotation_document_id=adoc_id,
         name=GROUP_NAME,
         code_ids=[fixture["code_id"]],

@@ -14,6 +14,7 @@ from core.memo.memo_enum import AttachedObjectType
 from core.tag.tag_crud import crud_tag
 from modules.classifier.classifier_crud import crud_classifier
 from repos.db.orm_base import ORMBase
+from repos.db.sql_exceptions import NoSuchElementError
 
 # (row, relationship, target): every relationship over a composite foreign key,
 # named by the keys of TenantRows; a target never holds a row with the same unique
@@ -162,31 +163,33 @@ def test_classifier_link_to_another_project_fails(
 def test_span_annotation_joins_no_span_group_of_another_project(
     db_session: Session, two_tenants: TwoTenants
 ):
-    """add_to_span_group links within the project of the span annotation, so the
-    composite foreign key of the link rejects a span group of another project."""
+    """add_to_span_group reads the span group within the project of the span
+    annotation, so a span group of another project is not found."""
     own, foreign = two_tenants["own"], two_tenants["foreign"]
 
-    _assert_foreign_key_violation(
-        db_session,
-        lambda: crud_span_anno.add_to_span_group(
+    with pytest.raises(NoSuchElementError):
+        crud_span_anno.add_to_span_group(
             db=db_session,
             project_id=own["project"].id,
             span_id=own["span"].id,
             group_id=foreign["span_group"].id,
-        ),
-    )
+        )
 
 
 def test_span_group_links_no_span_annotation_of_another_project(
     db_session: Session, two_tenants: TwoTenants
 ):
-    """link_groups_spans_batch writes the links in the project of the group."""
+    """link_groups_spans_batch writes the links in the project it is given, so the
+    composite foreign key of the link rejects a span annotation of another
+    project."""
     own, foreign = two_tenants["own"], two_tenants["foreign"]
 
     _assert_foreign_key_violation(
         db_session,
         lambda: crud_span_group.link_groups_spans_batch(
-            db=db_session, links={own["span_group"].id: [foreign["span"].id]}
+            db=db_session,
+            project_id=own["project"].id,
+            links={own["span_group"].id: [foreign["span"].id]},
         ),
     )
 

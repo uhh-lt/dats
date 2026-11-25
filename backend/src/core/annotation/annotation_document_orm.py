@@ -6,6 +6,7 @@ from sqlalchemy import (
     ForeignKey,
     ForeignKeyConstraint,
     Integer,
+    PrimaryKeyConstraint,
     Sequence,
     UniqueConstraint,
     func,
@@ -26,11 +27,11 @@ annotation_document_id_sequence = Sequence(name="annotation_document_id_sequence
 
 
 class AnnotationDocumentORM(ORMBase):
+    # the primary key is (project_id, id), see __table_args__
     id: Mapped[int] = mapped_column(
         Integer,
         annotation_document_id_sequence,
         server_default=annotation_document_id_sequence.next_value(),
-        unique=True,
         index=True,
     )
     created: Mapped[datetime] = mapped_column(
@@ -80,11 +81,8 @@ class AnnotationDocumentORM(ORMBase):
         Integer,
         ForeignKey("project.id", ondelete="CASCADE"),
         nullable=False,
-        index=True,
     )
-    source_document_id: Mapped[int] = mapped_column(
-        Integer, primary_key=True, index=True
-    )
+    source_document_id: Mapped[int] = mapped_column(Integer, index=True)
     source_document: Mapped["SourceDocumentORM"] = relationship(
         "SourceDocumentORM",
         back_populates="annotation_documents",
@@ -92,13 +90,23 @@ class AnnotationDocumentORM(ORMBase):
     )
 
     user_id: Mapped[int] = mapped_column(
-        Integer, ForeignKey("user.id", ondelete="CASCADE"), primary_key=True, index=True
+        Integer,
+        ForeignKey("user.id", ondelete="CASCADE"),
+        nullable=False,
+        index=True,
     )
     user: Mapped["UserORM"] = relationship(
         "UserORM", back_populates="annotation_documents"
     )
 
     __table_args__ = (
+        PrimaryKeyConstraint("project_id", "id", name="annotationdocument_pkey"),
+        # one annotation document per user and document
+        UniqueConstraint(
+            "source_document_id",
+            "user_id",
+            name="UC_annotationdocument_source_document_id_user_id",
+        ),
         UniqueConstraint(
             "project_id", "id", name="UC_annotationdocument_project_id_id"
         ),
@@ -109,6 +117,3 @@ class AnnotationDocumentORM(ORMBase):
             name="FK_annotationdocument_source_document_id",
         ),
     )
-
-    def get_project_id(self) -> int:
-        return self.project_id

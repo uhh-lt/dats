@@ -13,7 +13,7 @@ from .conftest import SdocWithMemosAndSpanGroup, count_queries
 MAX_READ_QUERIES = 10
 
 
-def test_read_with_annotations_by_user_and_sdoc_uses_constant_queries(
+def test_read_with_annotations_by_user_uses_constant_queries(
     db_session: Session, sdoc_with_memos_and_span_group: SdocWithMemosAndSpanGroup
 ) -> None:
     """The spans of the groups are read through crud_span_anno's eager loading."""
@@ -21,8 +21,11 @@ def test_read_with_annotations_by_user_and_sdoc_uses_constant_queries(
     db_session.expire_all()
 
     with count_queries(db_session) as queries:
-        groups = SpanGroupService().read_with_annotations_by_user_and_sdoc(
-            db=db_session, user_id=fixture["user_id"], sdoc_id=fixture["sdoc_id"]
+        groups = SpanGroupService().read_with_annotations_by_user(
+            db=db_session,
+            project_id=fixture["project_id"],
+            user_id=fixture["user_id"],
+            sdoc_id=fixture["sdoc_id"],
         )
 
     assert [group.id for group in groups] == [fixture["span_group_id"]]
@@ -45,7 +48,7 @@ def test_read_annotations_uses_constant_queries(
 
     with count_queries(db_session) as queries:
         spans = SpanGroupService().read_annotations(
-            db=db_session, id=fixture["span_group_id"]
+            db=db_session, project_id=fixture["project_id"], id=fixture["span_group_id"]
         )
 
     assert [span.id for span in spans] == fixture["span_ids"]

@@ -258,7 +258,7 @@ class WordFrequencyColumns(str, AbstractColumns):
     def add_query_filter_statements(self, query_builder: SearchBuilder):
         pass
 
-    def resolve_ids(self, db: Session, ids: list[int]) -> list[str]:
+    def resolve_ids(self, db: Session, project_id: int, ids: list[int]) -> list[str]:
         match self:
             case WordFrequencyColumns.TAG_ID_LIST_RECURSIVE:
                 tags = crud_tag.read_by_ids(db, ids=ids)

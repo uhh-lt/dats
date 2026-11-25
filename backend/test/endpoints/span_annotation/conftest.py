@@ -228,9 +228,11 @@ def project_with_span_annotations_and_group(
     # Create a span group
     span_group = crud_span_group.read(
         db=db_session,
+        project_id=project.id,
         id=SpanGroupService()
         .create(
             db=db_session,
+            project_id=project.id,
             user_id=test_user.id,
             create_dto=SpanGroupCreate(name="g1", sdoc_id=sdoc.id),
         )
@@ -264,9 +266,11 @@ def project_with_span_annotations_and_linked_group(
     # Create a span group
     span_group = crud_span_group.read(
         db=db_session,
+        project_id=project.id,
         id=SpanGroupService()
         .create(
             db=db_session,
+            project_id=project.id,
             user_id=test_user.id,
             create_dto=SpanGroupCreate(name="g1", sdoc_id=sdoc.id),
         )
@@ -275,7 +279,9 @@ def project_with_span_annotations_and_linked_group(
 
     # Link the span annotation to the group
     crud_span_group.link_groups_spans_batch(
-        db=db_session, links={span_group.id: [span_annotation.id]}
+        db=db_session,
+        project_id=project.id,
+        links={span_group.id: [span_annotation.id]},
     )
 
     # Commit the changes to the database and refresh the objects

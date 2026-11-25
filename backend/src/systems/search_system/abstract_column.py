@@ -111,9 +111,14 @@ class AbstractColumns(Enum, metaclass=EnumMeta):
         return self.get_filter_operator() == FilterOperator.DATE
 
     def resolve_ids(
-        self, db: Session, ids: list[int], types: list["Crud"] | None = None
+        self,
+        db: Session,
+        project_id: int,
+        ids: list[int],
+        types: list["Crud"] | None = None,
     ) -> list[str]:
-        """Map database ids to display names (for filter round-trips).
+        """Map database ids within a project to display names (for filter
+        round-trips).
 
         `types` is only set for polymorphic columns (e.g. memo ATTACHED_OBJECT): it
         carries the Crud entity token aligned with each id, so the column can resolve

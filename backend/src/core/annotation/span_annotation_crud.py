@@ -11,6 +11,7 @@ from core.annotation.span_annotation_dto import (
     SpanAnnotationUpdate,
 )
 from core.annotation.span_annotation_orm import SpanAnnotationORM
+from core.annotation.span_group_crud import crud_span_group
 from core.annotation.span_group_orm import SpanAnnotationSpanGroupLinkTable
 from core.annotation.span_text_crud import crud_span_text
 from core.annotation.span_text_dto import SpanTextCreate
@@ -72,7 +73,7 @@ class CRUDSpanAnnotation(
         adoc_ids = list(
             {create_dto.annotation_document_id for create_dto in create_dtos}
         )
-        crud_adoc.update_timestamps(db=db, ids=adoc_ids)
+        crud_adoc.update_timestamps(db=db, project_id=project_id, ids=adoc_ids)
 
         return db_objs
 
@@ -329,6 +330,7 @@ class CRUDSpanAnnotation(
         # update the annotation documents' timestamp
         crud_adoc.update_timestamps(
             db=db,
+            project_id=project_id,
             ids=list({span_anno.annotation_document_id for span_anno in span_annos}),
         )
 
@@ -341,7 +343,7 @@ class CRUDSpanAnnotation(
         num_deletions = super().delete_multi(db=db, project_id=project_id, ids=ids)
 
         # update the annotation documents' timestamp
-        crud_adoc.update_timestamps(db=db, ids=adoc_ids)
+        crud_adoc.update_timestamps(db=db, project_id=project_id, ids=adoc_ids)
 
         return num_deletions
 
@@ -430,8 +432,10 @@ class CRUDSpanAnnotation(
     def add_to_span_group(
         self, db: Session, *, project_id: int, span_id: int, group_id: int
     ) -> SpanAnnotationORM:
-        # the link's composite foreign key rejects a span group of another project
         span_db_obj = self.read(db=db, project_id=project_id, id=span_id)
+        crud_span_group.exists(
+            db=db, project_id=project_id, id=group_id, raise_error=True
+        )
         db.execute(
             insert(SpanAnnotationSpanGroupLinkTable).values(
                 project_id=project_id,
@@ -446,9 +450,10 @@ class CRUDSpanAnnotation(
     def remove_from_span_group(
         self, db: Session, *, project_id: int, span_id: int, group_id: int
     ) -> SpanAnnotationORM:
-        # the delete filters on the project, so a span group of another project
-        # removes no link
         span_db_obj = self.read(db=db, project_id=project_id, id=span_id)
+        crud_span_group.exists(
+            db=db, project_id=project_id, id=group_id, raise_error=True
+        )
         db.execute(
             delete(SpanAnnotationSpanGroupLinkTable).where(
                 SpanAnnotationSpanGroupLinkTable.project_id == project_id,

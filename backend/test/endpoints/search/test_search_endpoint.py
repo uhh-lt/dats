@@ -657,7 +657,9 @@ def test_memo_attached_object_resolve_round_trip_returns_original_pair(
     )
 
     # Export direction: ids -> names (portable across projects).
-    named = Filter.resolve_ids(original, db=db_session)
+    named = Filter.resolve_ids(
+        original, db=db_session, project_id=search_project["project"].id
+    )
     # Import direction: names -> ids (in the target project).
     round_tripped = Filter.resolve_names(
         named, db=db_session, project_id=search_project["project"].id
@@ -703,8 +705,12 @@ def test_memo_attached_object_resolve_disambiguates_shared_id_across_types(
         ]
     )
 
-    code_expr = Filter.resolve_ids(code_filter, db=db_session).items[0]
-    tag_expr = Filter.resolve_ids(tag_filter, db=db_session).items[0]
+    code_expr = Filter.resolve_ids(
+        code_filter, db=db_session, project_id=search_project["project"].id
+    ).items[0]
+    tag_expr = Filter.resolve_ids(
+        tag_filter, db=db_session, project_id=search_project["project"].id
+    ).items[0]
     assert isinstance(code_expr, FilterExpression)
     assert isinstance(tag_expr, FilterExpression)
     code_named = code_expr.value

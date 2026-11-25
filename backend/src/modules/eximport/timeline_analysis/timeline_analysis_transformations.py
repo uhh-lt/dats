@@ -49,13 +49,14 @@ def transform_settings_for_import(
 
 
 def transform_concept_for_export(
-    db: Session, concept: TimelineAnalysisConcept
+    db: Session, project_id: int, concept: TimelineAnalysisConcept
 ) -> TimelineAnalysisConceptForExport:
     """
     Transform a single timeline analysis concept for export.
 
     Args:
         db: Database session
+        project_id: The project of the concept
         concept: The concept to transform
 
     Returns:
@@ -66,7 +67,7 @@ def transform_concept_for_export(
 
     # Transform the ta_specific_filter: Resolve IDs to names
     transformed.ta_specific_filter.filter = Filter.resolve_ids(
-        transformed.ta_specific_filter.filter, db=db
+        transformed.ta_specific_filter.filter, db=db, project_id=project_id
     )
 
     return TimelineAnalysisConceptForExport(

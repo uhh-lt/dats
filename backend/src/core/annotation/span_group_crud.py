@@ -1,4 +1,5 @@
 from sqlalchemy import delete, select
+from sqlalchemy.dialects.postgresql import insert
 from sqlalchemy.orm import Session, selectinload
 from sqlalchemy.sql.base import ExecutableOption
 
@@ -11,53 +12,69 @@ from core.annotation.span_group_orm import (
     SpanAnnotationSpanGroupLinkTable,
     SpanGroupORM,
 )
-from repos.db.crud_base import BATCH_SIZE, SQLCRUDBase
+from repos.db.crud_base import BATCH_SIZE
+from repos.db.project_crud_base import ProjectCRUDBase
 
 
-class CRUDSpanGroup(SQLCRUDBase[SpanGroupORM, SpanGroupCreateIntern, SpanGroupUpdate]):
+class CRUDSpanGroup(
+    ProjectCRUDBase[SpanGroupORM, SpanGroupCreateIntern, SpanGroupUpdate]
+):
     ### CREATE OPERATIONS ###
-    # Inherited from SQLCRUDBase
+    # Inherited from ProjectCRUDBase
 
     ### READ OPERATIONS ###
 
-    def read_by_user_and_sdoc(
+    def read_by_user(
         self,
         db: Session,
         *,
+        project_id: int,
         user_id: int,
-        sdoc_id: int,
-        skip: int = 0,
-        limit: int = 1000,
+        sdoc_id: int | None = None,
     ) -> list[SpanGroupORM]:
+        """
+        Read the span groups of a user in the project, optionally only those in a
+        document.
+
+        Args:
+            project_id: The project of the span groups.
+            user_id: The user the span groups belong to.
+            sdoc_id: Only the span groups in this document.
+
+        Returns:
+            The matching span groups, ordered by id.
+        """
         query = (
             db.query(self.model)
             .options(*self._load_options())
             .join(self.model.annotation_document)
             .where(
+                self.model.project_id == project_id,
                 AnnotationDocumentORM.user_id == user_id,
-                AnnotationDocumentORM.source_document_id == sdoc_id,
             )
-            .offset(skip)
-            .limit(limit)
         )
+        if sdoc_id is not None:
+            query = query.where(AnnotationDocumentORM.source_document_id == sdoc_id)
+        return query.order_by(self.model.id).all()
 
-        return query.all()
-
-    def read_by_name(self, db: Session, *, name: str) -> SpanGroupORM | None:
+    def read_by_name(
+        self, db: Session, *, project_id: int, name: str
+    ) -> SpanGroupORM | None:
         return (
             db.query(self.model)
             .options(*self._load_options())
-            .filter(self.model.name == name)
+            .filter(self.model.project_id == project_id, self.model.name == name)
             .first()
         )
 
     def read_span_annotation_ids(
-        self, db: Session, *, ids: list[int]
+        self, db: Session, *, project_id: int, ids: list[int]
     ) -> dict[int, list[int]]:
         """
         Read the span annotation ids of span groups.
 
         Args:
+            project_id: The project of the span groups.
             ids: The span groups.
 
         Returns:
@@ -73,7 +90,10 @@ class CRUDSpanGroup(SQLCRUDBase[SpanGroupORM, SpanGroupCreateIntern, SpanGroupUp
                     SpanAnnotationSpanGroupLinkTable.span_group_id,
                     SpanAnnotationSpanGroupLinkTable.span_annotation_id,
                 )
-                .where(SpanAnnotationSpanGroupLinkTable.span_group_id.in_(batch_ids))
+                .where(
+                    SpanAnnotationSpanGroupLinkTable.project_id == project_id,
+                    SpanAnnotationSpanGroupLinkTable.span_group_id.in_(batch_ids),
+                )
                 .order_by(SpanAnnotationSpanGroupLinkTable.span_annotation_id)
             ).all()
             for group_id, span_id in rows:
@@ -83,18 +103,20 @@ class CRUDSpanGroup(SQLCRUDBase[SpanGroupORM, SpanGroupCreateIntern, SpanGroupUp
     ### DELETE OPERATIONS ###
 
     def delete_by_adoc_and_name(
-        self, db: Session, *, annotation_document_id: int, name: str
+        self, db: Session, *, project_id: int, annotation_document_id: int, name: str
     ) -> None:
         """
         Delete the span groups of that name in an annotation document. Their links to
         span annotations go with them; the span annotations stay.
 
         Args:
+            project_id: The project of the annotation document.
             annotation_document_id: The annotation document of the span groups.
             name: The name of the span groups.
         """
         db.execute(
             delete(self.model).where(
+                self.model.project_id == project_id,
                 self.model.annotation_document_id == annotation_document_id,
                 self.model.name == name,
             )
@@ -104,32 +126,22 @@ class CRUDSpanGroup(SQLCRUDBase[SpanGroupORM, SpanGroupCreateIntern, SpanGroupUp
     ### OTHER OPERATIONS ###
 
     def link_groups_spans_batch(
-        self, db: Session, *, links: dict[int, list[int]]
+        self, db: Session, *, project_id: int, links: dict[int, list[int]]
     ) -> int:
         """
-        Links the spans to their groups
+        Link span groups to span annotations of the project. The composite foreign
+        keys of the links reject a group or span annotation of another project.
+
+        Args:
+            project_id: The project of the span groups and span annotations.
+            links: The span annotation ids by span group id.
+
+        Returns:
+            The number of new links; existing links are skipped.
         """
-
-        # insert links (group <-> span), in the project of the group
-        from sqlalchemy.dialects.postgresql import insert
-
-        group_ids = list(links)
-        project_id_by_group: dict[int, int] = {}
-        for i in range(0, len(group_ids), BATCH_SIZE):
-            batch_ids = group_ids[i : i + BATCH_SIZE]
-            project_id_by_group.update(
-                {
-                    group_id: project_id
-                    for group_id, project_id in db.execute(
-                        select(self.model.id, self.model.project_id).where(
-                            self.model.id.in_(batch_ids)
-                        )
-                    ).tuples()
-                }
-            )
         insert_values = [
             {
-                "project_id": project_id_by_group[group_id],
+                "project_id": project_id,
                 "span_group_id": group_id,
                 "span_annotation_id": span_id,
             }

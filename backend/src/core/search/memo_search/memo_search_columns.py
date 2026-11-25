@@ -2,6 +2,7 @@ from sqlalchemy import String, and_, case, cast, func
 from sqlalchemy.orm import aliased
 
 from common.crud_enum import Crud
+from core.annotation.span_group_crud import crud_span_group
 from core.annotation.span_group_orm import SpanGroupORM
 from core.code.code_orm import CodeORM
 from core.doc.source_document_orm import SourceDocumentORM
@@ -314,7 +315,7 @@ class MemoColumns(str, AbstractColumns):
                 raise NotImplementedError(f"Cannot determine groupability for {self}!")  # type: ignore
 
     def resolve_ids(
-        self, db, ids: list[int], types: list[Crud] | None = None
+        self, db, project_id: int, ids: list[int], types: list[Crud] | None = None
     ) -> list[str]:
         match self:
             case MemoColumns.ATTACHED_OBJECT_ID:
@@ -322,7 +323,7 @@ class MemoColumns(str, AbstractColumns):
                     "ATTACHED_OBJECT resolution requires the entity type per id"
                 )
                 return [
-                    self._resolve_attached_object_name(db, crud, i)
+                    self._resolve_attached_object_name(db, project_id, crud, i)
                     for crud, i in zip(types, ids)
                 ]
             case MemoColumns.USER_ID:
@@ -332,9 +333,15 @@ class MemoColumns(str, AbstractColumns):
                 raise NotImplementedError(f"Cannot resolve ID for {self}!")
 
     @staticmethod
-    def _resolve_attached_object_name(db, crud: Crud, object_id: int) -> str:
+    def _resolve_attached_object_name(
+        db, project_id: int, crud: Crud, object_id: int
+    ) -> str:
         match crud:
-            case Crud.SOURCE_DOCUMENT | Crud.CODE | Crud.TAG | Crud.SPAN_GROUP:
+            case Crud.SPAN_GROUP:
+                return crud_span_group.read(
+                    db=db, project_id=project_id, id=object_id
+                ).name
+            case Crud.SOURCE_DOCUMENT | Crud.CODE | Crud.TAG:
                 return crud.value.read(db=db, id=object_id).name
             case Crud.PROJECT:
                 return crud.value.read(db=db, id=object_id).title
@@ -380,7 +387,9 @@ class MemoColumns(str, AbstractColumns):
             case Crud.PROJECT:
                 found = crud.value.read_by_title(db, title=name)  # type: ignore
             case Crud.SPAN_GROUP:
-                found = crud.value.read_by_name(db, name=name)  # type: ignore
+                found = crud_span_group.read_by_name(
+                    db, project_id=project_id, name=name
+                )
             case _:
                 raise NotImplementedError(f"Cannot resolve id for {crud}!")
         if found is None:
