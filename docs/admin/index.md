@@ -35,4 +35,5 @@ The unused `filesystem.content_server` configuration has been removed. The conte
 Migration `807bab97f373_file_store` moves existing uploads, derived media, models and plots from the legacy `docs/`, `models/` and `plots/` folders into the entity folders. It then deletes the files left in those legacy folders and in `dataloaders/`, including split uploads, extracted archives, training checkpoints and files of deleted entities. The migration also drops the `sourcedocumentdata.repo_url` and `classifier.path` database columns.
 
 !!! warning "Back up before upgrading"
+
     Back up both the database and the filesystem before running this migration. It cannot be downgraded: the old file layout and dropped database columns are not restored.
