@@ -6652,23 +6652,64 @@
         }
       }
     },
-    "/spangroup": {
+    "/projects/{project_id}/span-groups": {
       "put": {
         "tags": ["spanGroup"],
         "summary": "Creates a new SpanGroup and returns it with the generated ID.",
         "operationId": "create_span_group",
+        "security": [{ "OAuth2PasswordBearer": [] }],
+        "parameters": [
+          {
+            "name": "project_id",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "integer", "title": "Project Id" }
+          }
+        ],
         "requestBody": {
-          "content": { "application/json": { "schema": { "$ref": "#/components/schemas/SpanGroupCreate" } } },
-          "required": true
+          "required": true,
+          "content": { "application/json": { "schema": { "$ref": "#/components/schemas/SpanGroupCreate" } } }
         },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/SpanGroupRead" } } }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/HTTPValidationError" } } }
+          }
+        }
+      },
+      "get": {
+        "tags": ["spanGroup"],
+        "summary": "Returns the SpanGroups of the User with their SpanAnnotations, optionally only those in the SourceDocument",
+        "operationId": "get_span_groups",
+        "security": [{ "OAuth2PasswordBearer": [] }],
+        "parameters": [
+          {
+            "name": "project_id",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "integer", "title": "Project Id" }
+          },
+          { "name": "user_id", "in": "query", "required": true, "schema": { "type": "integer", "title": "User Id" } },
+          {
+            "name": "sdoc_id",
+            "in": "query",
+            "required": false,
+            "schema": { "anyOf": [{ "type": "integer" }, { "type": "null" }], "title": "Sdoc Id" }
+          }
+        ],
         "responses": {
           "200": {
             "description": "Successful Response",
             "content": {
               "application/json": {
                 "schema": {
-                  "anyOf": [{ "$ref": "#/components/schemas/SpanGroupRead" }, { "type": "null" }],
-                  "title": "Response Spangroup-Create Span Group"
+                  "type": "array",
+                  "items": { "$ref": "#/components/schemas/SpanGroupWithAnnotationsRead" },
+                  "title": "Response Spangroup-Get Span Groups"
                 }
               }
             }
@@ -6677,17 +6718,22 @@
             "description": "Validation Error",
             "content": { "application/json": { "schema": { "$ref": "#/components/schemas/HTTPValidationError" } } }
           }
-        },
-        "security": [{ "OAuth2PasswordBearer": [] }]
+        }
       }
     },
-    "/spangroup/{span_group_id}": {
+    "/projects/{project_id}/span-groups/{span_group_id}": {
       "get": {
         "tags": ["spanGroup"],
         "summary": "Returns the SpanGroup with the given ID.",
         "operationId": "get_by_id",
         "security": [{ "OAuth2PasswordBearer": [] }],
         "parameters": [
+          {
+            "name": "project_id",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "integer", "title": "Project Id" }
+          },
           {
             "name": "span_group_id",
             "in": "path",
@@ -6698,14 +6744,7 @@
         "responses": {
           "200": {
             "description": "Successful Response",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "anyOf": [{ "$ref": "#/components/schemas/SpanGroupRead" }, { "type": "null" }],
-                  "title": "Response Spangroup-Get By Id"
-                }
-              }
-            }
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/SpanGroupRead" } } }
           },
           "422": {
             "description": "Validation Error",
@@ -6720,6 +6759,12 @@
         "security": [{ "OAuth2PasswordBearer": [] }],
         "parameters": [
           {
+            "name": "project_id",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "integer", "title": "Project Id" }
+          },
+          {
             "name": "span_group_id",
             "in": "path",
             "required": true,
@@ -6733,14 +6778,7 @@
         "responses": {
           "200": {
             "description": "Successful Response",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "anyOf": [{ "$ref": "#/components/schemas/SpanGroupRead" }, { "type": "null" }],
-                  "title": "Response Spangroup-Update By Id"
-                }
-              }
-            }
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/SpanGroupRead" } } }
           },
           "422": {
             "description": "Validation Error",
@@ -6755,6 +6793,12 @@
         "security": [{ "OAuth2PasswordBearer": [] }],
         "parameters": [
           {
+            "name": "project_id",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "integer", "title": "Project Id" }
+          },
+          {
             "name": "span_group_id",
             "in": "path",
             "required": true,
@@ -6764,14 +6808,7 @@
         "responses": {
           "200": {
             "description": "Successful Response",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "anyOf": [{ "$ref": "#/components/schemas/SpanGroupRead" }, { "type": "null" }],
-                  "title": "Response Spangroup-Delete By Id"
-                }
-              }
-            }
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/SpanGroupRead" } } }
           },
           "422": {
             "description": "Validation Error",
@@ -6780,13 +6817,19 @@
         }
       }
     },
-    "/spangroup/{span_group_id}/span_annotations": {
+    "/projects/{project_id}/span-groups/{span_group_id}/span-annotations": {
       "get": {
         "tags": ["spanGroup"],
-        "summary": "Returns all SpanAnnotations in the SpanGroup with the given ID if it exists",
+        "summary": "Returns all SpanAnnotations in the SpanGroup with the given ID",
         "operationId": "get_annotations",
         "security": [{ "OAuth2PasswordBearer": [] }],
         "parameters": [
+          {
+            "name": "project_id",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "integer", "title": "Project Id" }
+          },
           {
             "name": "span_group_id",
             "in": "path",
@@ -6803,87 +6846,6 @@
                   "type": "array",
                   "items": { "$ref": "#/components/schemas/SpanAnnotationRead" },
                   "title": "Response Spangroup-Get Annotations"
-                }
-              }
-            }
-          },
-          "422": {
-            "description": "Validation Error",
-            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/HTTPValidationError" } } }
-          }
-        }
-      }
-    },
-    "/spangroup/sdoc/{sdoc_id}": {
-      "get": {
-        "tags": ["spanGroup"],
-        "summary": "Returns all SpanGroups of the logged-in User if it exists",
-        "operationId": "get_by_sdoc",
-        "security": [{ "OAuth2PasswordBearer": [] }],
-        "parameters": [
-          { "name": "sdoc_id", "in": "path", "required": true, "schema": { "type": "integer", "title": "Sdoc Id" } },
-          {
-            "name": "skip",
-            "in": "query",
-            "required": false,
-            "schema": {
-              "anyOf": [{ "type": "integer", "maximum": 10000000, "minimum": 0 }, { "type": "null" }],
-              "title": "Skip",
-              "description": "The number of elements to skip (offset)"
-            },
-            "description": "The number of elements to skip (offset)"
-          },
-          {
-            "name": "limit",
-            "in": "query",
-            "required": false,
-            "schema": {
-              "anyOf": [{ "type": "integer", "maximum": 1000, "minimum": 1 }, { "type": "null" }],
-              "title": "Limit",
-              "description": "The maximum number of returned elements"
-            },
-            "description": "The maximum number of returned elements"
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "Successful Response",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "array",
-                  "items": { "$ref": "#/components/schemas/SpanGroupRead" },
-                  "title": "Response Spangroup-Get By Sdoc"
-                }
-              }
-            }
-          },
-          "422": {
-            "description": "Validation Error",
-            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/HTTPValidationError" } } }
-          }
-        }
-      }
-    },
-    "/spangroup/sdoc/{sdoc}/user/{user_id}": {
-      "get": {
-        "tags": ["spanGroup"],
-        "summary": "Returns all SpanGroupWithAnnotations of the User in the sDoc",
-        "operationId": "get_by_sdoc_and_user",
-        "security": [{ "OAuth2PasswordBearer": [] }],
-        "parameters": [
-          { "name": "user_id", "in": "path", "required": true, "schema": { "type": "integer", "title": "User Id" } },
-          { "name": "sdoc_id", "in": "query", "required": true, "schema": { "type": "integer", "title": "Sdoc Id" } }
-        ],
-        "responses": {
-          "200": {
-            "description": "Successful Response",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "array",
-                  "items": { "$ref": "#/components/schemas/SpanGroupWithAnnotationsRead" },
-                  "title": "Response Spangroup-Get By Sdoc And User"
                 }
               }
             }
