@@ -351,12 +351,12 @@ export function usePromptEditor(
       switch (kind) {
         case "codes":
           return updateCodesMutation(
-            { requestBody: pushed.map(({ id, name, description }) => ({ code_id: id, name, description })) },
+            { projectId, requestBody: pushed.map(({ id, name, description }) => ({ code_id: id, name, description })) },
             { onSuccess },
           );
         case "tags":
           return updateTagsMutation(
-            { requestBody: pushed.map(({ id, name, description }) => ({ tag_id: id, name, description })) },
+            { projectId, requestBody: pushed.map(({ id, name, description }) => ({ tag_id: id, name, description })) },
             { onSuccess },
           );
         case "metadataFields":
@@ -372,7 +372,7 @@ export function usePromptEditor(
           );
       }
     },
-    [selections, updateCodesMutation, updateTagsMutation, updateMetadataMutation],
+    [projectId, selections, updateCodesMutation, updateTagsMutation, updateMetadataMutation],
   );
 
   // save the draft as the next version, which is shown afterwards

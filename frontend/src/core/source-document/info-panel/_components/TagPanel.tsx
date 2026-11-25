@@ -2,6 +2,7 @@ import { TagMenuButton, tagQueries, TagRow } from "@core/tag";
 import { TabPanel } from "@mui/lab";
 import { Box, CircularProgress, Stack } from "@mui/material";
 import { useQuery } from "@tanstack/react-query";
+import { useAppSelector } from "@store/storeHooks";
 import { memo } from "react";
 
 interface TagPanelProps {
@@ -18,7 +19,8 @@ export const TagPanel = memo((props: TagPanelProps) => {
 });
 
 function TagPanelContent({ sdocId }: TagPanelProps) {
-  const documentTagIds = useQuery(tagQueries.idsBySdoc(sdocId));
+  const projectId = useAppSelector((state) => state.project.projectId);
+  const documentTagIds = useQuery(tagQueries.idsBySdoc(projectId, sdocId));
 
   return (
     <TabPanel value="tags" sx={{ p: 1 }} className="h100">

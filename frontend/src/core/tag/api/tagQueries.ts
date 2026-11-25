@@ -6,8 +6,11 @@ import { queryOptions, skipToken } from "@tanstack/react-query";
  *
  *   tagQueries.all()                         ["tag"]
  *   tagQueries.byProject(projectId)          ["tag", "project", projectId]
- *   tagQueries.idsBySdoc(sdocId)             ["tag", "sdoc", sdocId]
+ *   tagQueries.idsBySdoc(projectId, sdocId)  ["tag", "sdoc", sdocId, projectId]
  *   tagQueries.sdocCount(projectId, sdocIds) ["tag", "sdocCount", projectId, sdocIds]
+ *
+ * The routes need the project, but the sdoc id already determines it: the project comes last in the idsBySdoc key, so
+ * the prefix by sdoc (idsBySdocOfSdocScope) covers it.
  */
 export const tagQueries = {
   all: () => ["tag"] as const,
@@ -23,10 +26,18 @@ export const tagQueries = {
 
   // tag ids of source documents
   idsBySdocScope: () => [...tagQueries.all(), "sdoc"] as const,
-  idsBySdoc: (sdocId: number | null | undefined) =>
+  // prefix of the tag ids of one sdoc, for cache writes
+  idsBySdocOfSdocScope: (sdocId: number) => [...tagQueries.idsBySdocScope(), sdocId] as const,
+  idsBySdoc: (projectId: number | null | undefined, sdocId: number | null | undefined) =>
     queryOptions({
-      queryKey: [...tagQueries.idsBySdocScope(), sdocId] as const,
-      queryFn: !sdocId ? skipToken : () => TagService.getBySdoc({ sdocId }),
+      queryKey: [...tagQueries.idsBySdocScope(), sdocId, projectId] as const,
+      queryFn:
+        !projectId || !sdocId
+          ? skipToken
+          : async () => {
+              const tags = await TagService.getByProject({ projectId, sdocId });
+              return tags.map((tag) => tag.id);
+            },
       staleTime: 1000 * 60 * 5,
     }),
 
@@ -36,7 +47,7 @@ export const tagQueries = {
     queryOptions({
       queryKey: [...tagQueries.sdocCountScope(), projectId, sdocIds] as const,
       queryFn: async () => {
-        const stringRecord = await TagService.getSdocCounts({ projectId, requestBody: sdocIds });
+        const stringRecord = await TagService.countTags({ projectId, requestBody: { sdoc_ids: sdocIds } });
         return new Map(Object.entries(stringRecord).map(([key, val]) => [parseInt(key, 10), val]));
       },
     }),

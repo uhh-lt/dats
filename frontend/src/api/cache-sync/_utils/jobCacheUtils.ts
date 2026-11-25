@@ -257,7 +257,7 @@ function handleClassifierJobFinished(job: ClassifierJobRead) {
     job.output
   ) {
     (job.input.task_parameters as ClassifierInferenceParams).sdoc_ids.forEach((sdocId) => {
-      queryClient.invalidateQueries({ queryKey: tagQueries.idsBySdoc(sdocId).queryKey });
+      queryClient.invalidateQueries({ queryKey: tagQueries.idsBySdocOfSdocScope(sdocId) });
     });
   }
 }

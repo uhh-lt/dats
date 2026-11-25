@@ -592,7 +592,7 @@ export function handleDATSEvent(event: DATSEvent, source: DATSEventSource): void
     // those are invalidated.
     case "SDOC_TAGS_LINKED":
       Object.entries(event.payload.links).forEach(([sdocId, tagIds]) => {
-        queryClient.setQueryData(tagQueries.idsBySdoc(Number(sdocId)).queryKey, tagIds);
+        queryClient.setQueriesData({ queryKey: tagQueries.idsBySdocOfSdocScope(Number(sdocId)) }, tagIds);
       });
       queryClient.invalidateQueries({ queryKey: tagQueries.sdocCountScope() });
       queryClient.invalidateQueries({ queryKey: statisticsQueries.tagStatsScope() });

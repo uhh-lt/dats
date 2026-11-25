@@ -9,6 +9,7 @@ export const BulkDocTagger = memo(() => {
   // global client state (redux)
   const isFixedSamplingStrategy = useAppSelector((state) => state.documentSampler.isFixedSamplingStrategy);
   const chartData = useAppSelector((state) => state.documentSampler.chartData);
+  const projectId = useAppSelector((state) => state.project.projectId);
 
   // global server state (react query)
   const documentTags = TagHooks.useGetAllTags();
@@ -25,7 +26,9 @@ export const BulkDocTagger = memo(() => {
   }, []);
 
   const bulkTagDocuments = useCallback(() => {
+    if (!projectId) return;
     linkTags({
+      projectId,
       requestBody: {
         source_document_ids: chartData
           .map((x) => (isFixedSamplingStrategy ? x.fixedSampleSdocIds : x.relativeSampleSdocIds))
@@ -33,7 +36,7 @@ export const BulkDocTagger = memo(() => {
         tag_ids: [selectedDocumentTagId],
       },
     });
-  }, [chartData, isFixedSamplingStrategy, linkTags, selectedDocumentTagId]);
+  }, [chartData, isFixedSamplingStrategy, linkTags, projectId, selectedDocumentTagId]);
 
   return (
     <Stack direction="row" spacing={1}>

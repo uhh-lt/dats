@@ -1,6 +1,7 @@
 import { tagQueries, TagRenderer } from "@core/tag";
 import { Stack } from "@mui/material";
 import { useQuery } from "@tanstack/react-query";
+import { useAppSelector } from "@store/storeHooks";
 import { memo } from "react";
 
 // the tags of a document: loaded by the document's id, or given as tag ids
@@ -15,7 +16,8 @@ export const SdocTagsRenderer = memo((props: SdocTagsRendererProps) => {
 });
 
 const SdocTagsRendererWithoutData = memo(({ sdocId }: { sdocId: number }) => {
-  const tags = useQuery(tagQueries.idsBySdoc(sdocId));
+  const projectId = useAppSelector((state) => state.project.projectId);
+  const tags = useQuery(tagQueries.idsBySdoc(projectId, sdocId));
 
   if (tags.isSuccess) {
     return <SdocTagsRendererWithData tagIds={tags.data} />;

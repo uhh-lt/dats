@@ -3,7 +3,7 @@
 /* tslint:disable */
 /* eslint-disable */
 import type { Body_tag_count_tags } from "@models/Body_tag_count_tags";
-import type { Body_tag_update_tags_batch } from "@models/Body_tag_update_tags_batch";
+import type { Body_tag_update_sdoc_tags_bulk } from "@models/Body_tag_update_sdoc_tags_bulk";
 import type { SdocTagLinks } from "@models/SdocTagLinks";
 import type { SourceDocumentTagMultiLink } from "@models/SourceDocumentTagMultiLink";
 import type { TagCreate } from "@models/TagCreate";
@@ -19,10 +19,120 @@ export class TagService {
    * @returns TagRead Successful Response
    * @throws ApiError
    */
-  public static createDocTag({ requestBody }: { requestBody: TagCreate }): CancelablePromise<TagRead> {
+  public static createTag({
+    projectId,
+    requestBody,
+  }: {
+    projectId: number;
+    requestBody: TagCreate;
+  }): CancelablePromise<TagRead> {
     return __request(OpenAPI, {
       method: "PUT",
-      url: "/tag",
+      url: "/projects/{project_id}/tags",
+      path: {
+        project_id: projectId,
+      },
+      body: requestBody,
+      mediaType: "application/json",
+      errors: {
+        422: `Validation Error`,
+      },
+    });
+  }
+  /**
+   * Returns the Tags of the Project, optionally only those of the SourceDocument
+   * @returns TagRead Successful Response
+   * @throws ApiError
+   */
+  public static getByProject({
+    projectId,
+    sdocId,
+  }: {
+    projectId: number;
+    sdocId?: number | null;
+  }): CancelablePromise<Array<TagRead>> {
+    return __request(OpenAPI, {
+      method: "GET",
+      url: "/projects/{project_id}/tags",
+      path: {
+        project_id: projectId,
+      },
+      query: {
+        sdoc_id: sdocId,
+      },
+      errors: {
+        422: `Validation Error`,
+      },
+    });
+  }
+  /**
+   * Links the Tags with the SourceDocuments and returns the resulting tags per document
+   * @returns SdocTagLinks Successful Response
+   * @throws ApiError
+   */
+  public static linkTagsBulk({
+    projectId,
+    requestBody,
+  }: {
+    projectId: number;
+    requestBody: SourceDocumentTagMultiLink;
+  }): CancelablePromise<SdocTagLinks> {
+    return __request(OpenAPI, {
+      method: "PUT",
+      url: "/projects/{project_id}/tags/bulk/source-documents",
+      path: {
+        project_id: projectId,
+      },
+      body: requestBody,
+      mediaType: "application/json",
+      errors: {
+        422: `Validation Error`,
+      },
+    });
+  }
+  /**
+   * Links and unlinks Tags of the SourceDocuments and returns the resulting tags per document
+   * @returns SdocTagLinks Successful Response
+   * @throws ApiError
+   */
+  public static updateSdocTagsBulk({
+    projectId,
+    requestBody,
+  }: {
+    projectId: number;
+    requestBody: Body_tag_update_sdoc_tags_bulk;
+  }): CancelablePromise<SdocTagLinks> {
+    return __request(OpenAPI, {
+      method: "PATCH",
+      url: "/projects/{project_id}/tags/bulk/source-documents",
+      path: {
+        project_id: projectId,
+      },
+      body: requestBody,
+      mediaType: "application/json",
+      errors: {
+        422: `Validation Error`,
+      },
+    });
+  }
+  /**
+   * Unlinks the Tags from the SourceDocuments and returns the resulting tags per document
+   * @returns SdocTagLinks Successful Response
+   * @throws ApiError
+   */
+  public static unlinkTagsBulk({
+    projectId,
+    requestBody,
+  }: {
+    projectId: number;
+    requestBody: SourceDocumentTagMultiLink;
+  }): CancelablePromise<SdocTagLinks> {
+    return __request(OpenAPI, {
+      method: "DELETE",
+      url: "/projects/{project_id}/tags/bulk/source-documents",
+      path: {
+        project_id: projectId,
+      },
       body: requestBody,
       mediaType: "application/json",
       errors: {
@@ -35,11 +145,12 @@ export class TagService {
    * @returns TagRead Successful Response
    * @throws ApiError
    */
-  public static getById({ tagId }: { tagId: number }): CancelablePromise<TagRead> {
+  public static getById({ projectId, tagId }: { projectId: number; tagId: number }): CancelablePromise<TagRead> {
     return __request(OpenAPI, {
       method: "GET",
-      url: "/tag/{tag_id}",
+      url: "/projects/{project_id}/tags/{tag_id}",
       path: {
+        project_id: projectId,
         tag_id: tagId,
       },
       errors: {
@@ -53,16 +164,19 @@ export class TagService {
    * @throws ApiError
    */
   public static updateById({
+    projectId,
     tagId,
     requestBody,
   }: {
+    projectId: number;
     tagId: number;
     requestBody: TagUpdate;
   }): CancelablePromise<TagRead> {
     return __request(OpenAPI, {
       method: "PATCH",
-      url: "/tag/{tag_id}",
+      url: "/projects/{project_id}/tags/{tag_id}",
       path: {
+        project_id: projectId,
         tag_id: tagId,
       },
       body: requestBody,
@@ -77,11 +191,12 @@ export class TagService {
    * @returns TagRead Successful Response
    * @throws ApiError
    */
-  public static deleteById({ tagId }: { tagId: number }): CancelablePromise<TagRead> {
+  public static deleteById({ projectId, tagId }: { projectId: number; tagId: number }): CancelablePromise<TagRead> {
     return __request(OpenAPI, {
       method: "DELETE",
-      url: "/tag/{tag_id}",
+      url: "/projects/{project_id}/tags/{tag_id}",
       path: {
+        project_id: projectId,
         tag_id: tagId,
       },
       errors: {
@@ -90,49 +205,22 @@ export class TagService {
     });
   }
   /**
-   * Returns all Tags of the Project with the given ID
-   * @returns TagRead Successful Response
+   * Returns the IDs of the SourceDocuments linked with the Tag.
+   * @returns number Successful Response
    * @throws ApiError
    */
-  public static getByProject({ projectId }: { projectId: number }): CancelablePromise<Array<TagRead>> {
+  public static getSdocIdsByTagId({
+    projectId,
+    tagId,
+  }: {
+    projectId: number;
+    tagId: number;
+  }): CancelablePromise<Array<number>> {
     return __request(OpenAPI, {
       method: "GET",
-      url: "/tag/project/{project_id}",
+      url: "/projects/{project_id}/tags/{tag_id}/source-documents",
       path: {
         project_id: projectId,
-      },
-      errors: {
-        422: `Validation Error`,
-      },
-    });
-  }
-  /**
-   * Returns all TagIDs linked with the SourceDocument.
-   * @returns number Successful Response
-   * @throws ApiError
-   */
-  public static getBySdoc({ sdocId }: { sdocId: number }): CancelablePromise<Array<number>> {
-    return __request(OpenAPI, {
-      method: "GET",
-      url: "/tag/sdoc/{sdoc_id}",
-      path: {
-        sdoc_id: sdocId,
-      },
-      errors: {
-        422: `Validation Error`,
-      },
-    });
-  }
-  /**
-   * Returns all SourceDocument IDs attached to the Tag with the given ID if it exists.
-   * @returns number Successful Response
-   * @throws ApiError
-   */
-  public static getSdocIdsByTagId({ tagId }: { tagId: number }): CancelablePromise<Array<number>> {
-    return __request(OpenAPI, {
-      method: "GET",
-      url: "/tag/{tag_id}/sdocs",
-      path: {
         tag_id: tagId,
       },
       errors: {
@@ -146,111 +234,15 @@ export class TagService {
    * @throws ApiError
    */
   public static updateTagsBulk({
-    requestBody,
-  }: {
-    requestBody: Array<TagUpdateBulk>;
-  }): CancelablePromise<Array<TagRead>> {
-    return __request(OpenAPI, {
-      method: "PATCH",
-      url: "/tag/bulk/update_tags",
-      body: requestBody,
-      mediaType: "application/json",
-      errors: {
-        422: `Validation Error`,
-      },
-    });
-  }
-  /**
-   * Links multiple Tags with the SourceDocuments and returns the resulting tags per document
-   * @returns SdocTagLinks Successful Response
-   * @throws ApiError
-   */
-  public static linkMultipleTags({
-    requestBody,
-  }: {
-    requestBody: SourceDocumentTagMultiLink;
-  }): CancelablePromise<SdocTagLinks> {
-    return __request(OpenAPI, {
-      method: "PATCH",
-      url: "/tag/bulk/link",
-      body: requestBody,
-      mediaType: "application/json",
-      errors: {
-        422: `Validation Error`,
-      },
-    });
-  }
-  /**
-   * Sets SourceDocuments' tags to the provided tags and returns the resulting tags per document
-   * @returns SdocTagLinks Successful Response
-   * @throws ApiError
-   */
-  public static setTagsBatch({ requestBody }: { requestBody: SdocTagLinks }): CancelablePromise<SdocTagLinks> {
-    return __request(OpenAPI, {
-      method: "PATCH",
-      url: "/tag/bulk/set",
-      body: requestBody,
-      mediaType: "application/json",
-      errors: {
-        422: `Validation Error`,
-      },
-    });
-  }
-  /**
-   * Updates SourceDocuments' tags and returns the resulting tags per document
-   * @returns SdocTagLinks Successful Response
-   * @throws ApiError
-   */
-  public static updateTagsBatch({
-    requestBody,
-  }: {
-    requestBody: Body_tag_update_tags_batch;
-  }): CancelablePromise<SdocTagLinks> {
-    return __request(OpenAPI, {
-      method: "PATCH",
-      url: "/tag/bulk/update",
-      body: requestBody,
-      mediaType: "application/json",
-      errors: {
-        422: `Validation Error`,
-      },
-    });
-  }
-  /**
-   * Unlinks all Tags with the SourceDocuments and returns the resulting tags per document
-   * @returns SdocTagLinks Successful Response
-   * @throws ApiError
-   */
-  public static unlinkMultipleTags({
-    requestBody,
-  }: {
-    requestBody: SourceDocumentTagMultiLink;
-  }): CancelablePromise<SdocTagLinks> {
-    return __request(OpenAPI, {
-      method: "DELETE",
-      url: "/tag/bulk/unlink",
-      body: requestBody,
-      mediaType: "application/json",
-      errors: {
-        422: `Validation Error`,
-      },
-    });
-  }
-  /**
-   * Returns a dict of all tag ids with their count of assigned source documents, counting only source documents in the given id list
-   * @returns number Successful Response
-   * @throws ApiError
-   */
-  public static getSdocCounts({
     projectId,
     requestBody,
   }: {
     projectId: number;
-    requestBody: Array<number>;
-  }): CancelablePromise<Record<string, number>> {
+    requestBody: Array<TagUpdateBulk>;
+  }): CancelablePromise<Array<TagRead>> {
     return __request(OpenAPI, {
-      method: "POST",
-      url: "/tag/sdoc_counts/{project_id}",
+      method: "PATCH",
+      url: "/projects/{project_id}/tags/bulk",
       path: {
         project_id: projectId,
       },
@@ -262,22 +254,47 @@ export class TagService {
     });
   }
   /**
-   * Counts the Tags of the User (by user_id) per Tags (by class_ids) in Documents (by sdoc_ids)
+   * Sets the Tags of each SourceDocument to the given Tags and returns the resulting tags per document
+   * @returns SdocTagLinks Successful Response
+   * @throws ApiError
+   */
+  public static setSdocTagsBulk({
+    projectId,
+    requestBody,
+  }: {
+    projectId: number;
+    requestBody: SdocTagLinks;
+  }): CancelablePromise<SdocTagLinks> {
+    return __request(OpenAPI, {
+      method: "PATCH",
+      url: "/projects/{project_id}/tags/bulk/source-documents/set",
+      path: {
+        project_id: projectId,
+      },
+      body: requestBody,
+      mediaType: "application/json",
+      errors: {
+        422: `Validation Error`,
+      },
+    });
+  }
+  /**
+   * Counts per Tag how many of the SourceDocuments carry it, for the given Tags or all Tags of the Project
    * @returns number Successful Response
    * @throws ApiError
    */
   public static countTags({
-    userId,
+    projectId,
     requestBody,
   }: {
-    userId: number;
+    projectId: number;
     requestBody: Body_tag_count_tags;
   }): CancelablePromise<Record<string, number>> {
     return __request(OpenAPI, {
       method: "POST",
-      url: "/tag/count_tags/{user_id}",
+      url: "/projects/{project_id}/tags/count",
       path: {
-        user_id: userId,
+        project_id: projectId,
       },
       body: requestBody,
       mediaType: "application/json",

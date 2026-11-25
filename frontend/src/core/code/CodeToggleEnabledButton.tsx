@@ -17,6 +17,7 @@ export const CodeToggleEnabledButton = memo(
         event.stopPropagation();
         if (!code) return;
         updateCodeMutation.mutate({
+          projectId: code.data.project_id,
           codeId: code.data.id,
           requestBody: {
             enabled: !(code.data as CodeRead).enabled,

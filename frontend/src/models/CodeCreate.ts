@@ -24,10 +24,6 @@ export type CodeCreate = {
    */
   enabled?: boolean;
   /**
-   * Project the Code belongs to
-   */
-  project_id: number;
-  /**
    * Is the Code a system code
    */
   is_system: boolean;

@@ -6,7 +6,7 @@ import { queryOptions, skipToken } from "@tanstack/react-query";
  * Query factory for the statistics of a set of sdocs (`sdocIds` is null/undefined until the sdocs are known).
  *
  *   statisticsQueries.all()                                  ["statistics"]
- *   statisticsQueries.codeStats(codeId, sdocIds, global)     ["statistics", "code", codeId, sdocIds, global]
+ *   statisticsQueries.codeStats(projId, codeId, sdocIds, global)  ["statistics", "code", codeId, sdocIds, global, projId]
  *   statisticsQueries.keywordStats(projId, sdocIds, global)  ["statistics", "keyword", projId, sdocIds, global]
  *   statisticsQueries.tagStats(sdocIds, global)              ["statistics", "tag", sdocIds, global]
  */
@@ -16,12 +16,18 @@ export const statisticsQueries = {
   codeStatsScope: () => [...statisticsQueries.all(), "code"] as const,
   // prefix of all code statistics of one code, for invalidation
   codeStatsOfCodeScope: (codeId: number) => [...statisticsQueries.codeStatsScope(), codeId] as const,
-  codeStats: (codeId: number, sdocIds: number[] | null | undefined, sortByGlobal: boolean | undefined) =>
+  codeStats: (
+    projectId: number | undefined,
+    codeId: number,
+    sdocIds: number[] | null | undefined,
+    sortByGlobal: boolean | undefined,
+  ) =>
     queryOptions({
-      queryKey: [...statisticsQueries.codeStatsOfCodeScope(codeId), sdocIds, sortByGlobal] as const,
-      queryFn: !sdocIds
-        ? skipToken
-        : () => StatisticsService.filterCodeStats({ codeId, requestBody: sdocIds, sortByGlobal }),
+      queryKey: [...statisticsQueries.codeStatsOfCodeScope(codeId), sdocIds, sortByGlobal, projectId] as const,
+      queryFn:
+        !projectId || !sdocIds
+          ? skipToken
+          : () => StatisticsService.filterCodeStats({ projectId, codeId, requestBody: sdocIds, sortByGlobal }),
       staleTime: 1000 * 60 * 5,
     }),
 

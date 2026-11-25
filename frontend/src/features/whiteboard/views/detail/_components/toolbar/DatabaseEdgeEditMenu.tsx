@@ -3,6 +3,7 @@ import { TagHooks } from "@core/tag";
 import { Button, ButtonGroup, Paper, Stack } from "@mui/material";
 import { Edge, useReactFlow } from "@xyflow/react";
 import { Ref, useImperativeHandle, useState } from "react";
+import { WhiteboardRouteAPI } from "../../_hooks/whiteboardRouteAPI";
 import { DATSEdge } from "../../_types/DATSEdge";
 import { DATSNode } from "../../_types/DATSNode";
 import { isCodeNode, isSdocNode, isTagNode } from "../../_types/typeGuards";
@@ -38,6 +39,7 @@ export const DatabaseEdgeEditMenu = ({ ref }: DatabaseEdgeEditMenuProps) => {
   }));
 
   // actions
+  const projectId = WhiteboardRouteAPI.useParams({ select: (params) => params.projectId });
   const bulkUnlinkTagsMutation = TagHooks.useBulkUnlinkTags();
   const handleDeleteTagSdocEdges = () => {
     if (edges.length === 0) return;
@@ -50,6 +52,7 @@ export const DatabaseEdgeEditMenu = ({ ref }: DatabaseEdgeEditMenuProps) => {
 
       if (isSdocNode(targetNode) && isTagNode(sourceNode)) {
         bulkUnlinkTagsMutation.mutate({
+          projectId,
           requestBody: {
             tag_ids: [sourceNode.data.tagId],
             source_document_ids: [targetNode.data.sdocId],
@@ -73,6 +76,7 @@ export const DatabaseEdgeEditMenu = ({ ref }: DatabaseEdgeEditMenuProps) => {
 
       if (isCodeNode(targetNode) && isCodeNode(sourceNode)) {
         updateCodeMutation.mutate({
+          projectId,
           codeId: sourceNode.data.codeId,
           requestBody: {
             parent_id: null,

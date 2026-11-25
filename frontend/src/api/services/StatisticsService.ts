@@ -14,11 +14,13 @@ export class StatisticsService {
    * @throws ApiError
    */
   public static filterCodeStats({
+    projectId,
     codeId,
     requestBody,
     sortByGlobal = false,
     topK = 20,
   }: {
+    projectId: number;
     codeId: number;
     requestBody: Array<number>;
     sortByGlobal?: boolean;
@@ -28,6 +30,7 @@ export class StatisticsService {
       method: "POST",
       url: "/statistics/code",
       query: {
+        project_id: projectId,
         code_id: codeId,
         sort_by_global: sortByGlobal,
         top_k: topK,

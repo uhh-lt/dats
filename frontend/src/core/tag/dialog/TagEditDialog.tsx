@@ -64,6 +64,7 @@ export function TagEditDialog() {
               color: updateData.color,
               parent_id: updateData.parent_id === -1 ? null : updateData.parent_id,
             },
+            projectId: dialogData.tag.project_id,
             tagId: dialogData.tag.id,
           },
           {
@@ -87,7 +88,7 @@ export function TagEditDialog() {
         text: `Do you really want to delete the tag "${dialogData.tag.name}"? This action cannot be undone!`,
         onAccept: () => {
           deleteTagMutation(
-            { tagId: dialogData.tag.id },
+            { projectId: dialogData.tag.project_id, tagId: dialogData.tag.id },
             {
               onSuccess: () => {
                 handleClose();

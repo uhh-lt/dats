@@ -90,6 +90,7 @@ export function CodeEditDialog({ onCodeUpdated, onCodeDeleted }: CodeEditDialogP
         }
         updateCodeMutation(
           {
+            projectId: dialogData.code.project_id,
             requestBody,
             codeId: dialogData.code.id,
           },
@@ -125,7 +126,7 @@ export function CodeEditDialog({ onCodeUpdated, onCodeDeleted }: CodeEditDialogP
         text: `Do you really want to delete the code "${dialogData.code.name}"? This action cannot be undone!`,
         onAccept: () => {
           deleteCodeMutation(
-            { codeId: dialogData.code.id },
+            { projectId: dialogData.code.project_id, codeId: dialogData.code.id },
             {
               onSuccess: () => {
                 onCodeDeleted?.(dialogData.code.id);

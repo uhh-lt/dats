@@ -58,7 +58,7 @@ export function InferenceSettingsStep() {
   const countUserId = isAnnotationModel ? virtualUserId : user?.id;
 
   // count existing classes by that user
-  const { mutate: countTags, ...tagCount } = TagHooks.useCountBySdocsAndUser();
+  const { mutate: countTags, ...tagCount } = TagHooks.useCountTags();
   const { mutate: countSentenceAnnotations, ...sentenceAnnotationCount } =
     SentenceAnnotationHooks.useCountBySdocsAndUser();
   const { mutate: countSpanAnnotations, ...spanAnnotationCount } = SpanAnnotationHooks.useCountBySdocsAndUser();
@@ -76,7 +76,7 @@ export function InferenceSettingsStep() {
     if (countUserId === undefined) return;
     switch (model) {
       case ClassifierModel.DOCUMENT:
-        countTags({ userId: countUserId, requestBody: { sdoc_ids: sdocIds, class_ids: classIds } });
+        countTags({ projectId, requestBody: { sdoc_ids: sdocIds, tag_ids: classIds } });
         break;
       case ClassifierModel.SENTENCE:
         countSentenceAnnotations({
