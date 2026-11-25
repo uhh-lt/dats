@@ -37,9 +37,9 @@ def create_keywords_metadata(
         return
     crud_project_meta.create_multi(
         db=db,
+        project_id=project_id,
         create_dtos=[
             ProjectMetadataCreate(
-                project_id=project_id,
                 key=KEYWORDS_METADATA_KEY,
                 metatype=MetaType.LIST,
                 read_only=True,

@@ -358,7 +358,9 @@ tagged_sdoc_ids = set(
     api.read_all_sdoc_ids_by_tags(proj_id=project["id"], tags=tag_ids)
 )
 untagged_sdoc_ids = sdoc_ids - tagged_sdoc_ids
-api.bulk_apply_tags(sdoc_ids=list(untagged_sdoc_ids), tag_ids=[tag["id"]])
+api.bulk_apply_tags(
+    proj_id=project["id"], sdoc_ids=list(untagged_sdoc_ids), tag_ids=[tag["id"]]
+)
 
 # apply tag to all documents with tag_key
 if args.tag_key != "":
@@ -389,7 +391,9 @@ if args.tag_key != "":
         )
         if len(sdoc_ids) > 0:
             tag_ids = [tag_name2_ids[tag_name] for tag_name in tags_to_apply]
-            api.bulk_apply_tags(sdoc_ids=sdoc_ids, tag_ids=tag_ids)
+            api.bulk_apply_tags(
+                proj_id=project["id"], sdoc_ids=sdoc_ids, tag_ids=tag_ids
+            )
 
 # apply sdoc metadata
 applied = set()

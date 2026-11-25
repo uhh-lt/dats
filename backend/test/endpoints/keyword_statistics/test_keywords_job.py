@@ -42,7 +42,10 @@ def test_keywords_job_stores_the_keywords_as_metadata(
 
     db_session.expire_all()
     keywords = crud_sdoc_meta.read_by_sdoc_and_key(
-        db=db_session, sdoc_id=sdoc_id, key="keywords"
+        db=db_session,
+        project_id=text_steps_project["project"].id,
+        sdoc_id=sdoc_id,
+        key="keywords",
     ).list_value
     assert keywords is not None
     assert 0 < len(keywords) <= 5

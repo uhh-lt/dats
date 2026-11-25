@@ -31,8 +31,8 @@ def project_with_sdoc_and_projmeta_and_sdocmeta(
     # Create project metadata for the project
     new_project_metadata = crud_project_meta.create(
         db=db_session,
+        project_id=project.id,
         create_dto=ProjectMetadataCreate(
-            project_id=project.id,
             key="text_metadata",
             description="Test project metadata",
             metatype=MetaType.STRING,
@@ -89,8 +89,8 @@ def project_with_date_metadata(
     )
     date_metadata = crud_project_meta.create(
         db=db_session,
+        project_id=project.id,
         create_dto=ProjectMetadataCreate(
-            project_id=project.id,
             key="published",
             description="Test date metadata",
             metatype=MetaType.DATE,

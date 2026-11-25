@@ -8,6 +8,7 @@ transient failures.
 import threading
 import time
 from typing import Any
+from urllib.parse import quote
 
 import requests
 from loguru import logger
@@ -72,8 +73,8 @@ class DATSAPI:
             self._local.session = session
         return session
 
-    def _get(self, path: str, allow_404: bool = False) -> Any:
-        """GETs the path and returns its JSON; None for a 404 if allow_404."""
+    def _get(self, path: str) -> Any:
+        """GETs the path and returns its JSON."""
         for attempt in range(1, MAX_ATTEMPTS + 1):
             access_token = self.access_token
             try:
@@ -95,8 +96,6 @@ class DATSAPI:
                 )
                 time.sleep(2**attempt)
                 continue
-            if r.status_code == 404 and allow_404:
-                return None
             r.raise_for_status()
             return r.json()
         raise DATSAPIError(f"GET {path} failed after {MAX_ATTEMPTS} attempts")
@@ -108,12 +107,12 @@ class DATSAPI:
         return self._get(f"user/{project_id}/user")
 
     def read_project_codes(self, project_id: int) -> list[dict[str, Any]]:
-        return self._get(f"code/project/{project_id}")
+        return self._get(f"projects/{project_id}/codes")
 
     # PROJECT METADATA
 
     def read_all_project_metadata(self, project_id: int) -> list[dict[str, Any]]:
-        return self._get(f"projmeta/project/{project_id}")
+        return self._get(f"projects/{project_id}/project-metadata")
 
     # SOURCE DOCUMENTS
 
@@ -133,7 +132,8 @@ class DATSAPI:
         self, project_id: int, sdoc_id: int, key: str
     ) -> dict[str, Any] | None:
         """The metadata value of the document, None if it has none for the key."""
-        return self._get(
-            f"sdocmeta/sdoc/{sdoc_id}/metadata/{key}?project_id={project_id}",
-            allow_404=True,
+        metadata = self._get(
+            f"projects/{project_id}/source-document-metadata"
+            f"?sdoc_id={sdoc_id}&key={quote(key)}"
         )
+        return metadata[0] if metadata else None

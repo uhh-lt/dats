@@ -23,9 +23,9 @@ def project_with_metadata(db_session, test_project, test_user) -> ProjectWithMet
     # Create project metadata for the project
     metadata = crud_project_meta.create_multi(
         db=db_session,
+        project_id=test_project.id,
         create_dtos=[
             ProjectMetadataCreate(
-                project_id=test_project.id,
                 key="category",
                 metatype=MetaType.STRING,
                 read_only=False,
@@ -33,7 +33,6 @@ def project_with_metadata(db_session, test_project, test_user) -> ProjectWithMet
                 description="The category of the document",
             ),
             ProjectMetadataCreate(
-                project_id=test_project.id,
                 key="date",
                 metatype=MetaType.DATE,
                 read_only=False,
@@ -41,7 +40,6 @@ def project_with_metadata(db_session, test_project, test_user) -> ProjectWithMet
                 description="The date of the document",
             ),
             ProjectMetadataCreate(
-                project_id=test_project.id,
                 key="likes",
                 metatype=MetaType.NUMBER,
                 read_only=False,
@@ -49,7 +47,6 @@ def project_with_metadata(db_session, test_project, test_user) -> ProjectWithMet
                 description="The number of likes for the document",
             ),
             ProjectMetadataCreate(
-                project_id=test_project.id,
                 key="topics",
                 metatype=MetaType.LIST,
                 read_only=False,
@@ -57,7 +54,6 @@ def project_with_metadata(db_session, test_project, test_user) -> ProjectWithMet
                 description="The list of topics for the document",
             ),
             ProjectMetadataCreate(
-                project_id=test_project.id,
                 key="relevant",
                 metatype=MetaType.BOOLEAN,
                 read_only=False,
@@ -65,7 +61,6 @@ def project_with_metadata(db_session, test_project, test_user) -> ProjectWithMet
                 description="The relevance of the document",
             ),
             ProjectMetadataCreate(
-                project_id=test_project.id,
                 key="category_ro",
                 metatype=MetaType.STRING,
                 read_only=True,

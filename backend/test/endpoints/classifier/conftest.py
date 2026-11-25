@@ -67,9 +67,9 @@ def _create_dataset_folder(db_session, project: ProjectORM, name: str) -> int:
     """
     folder = crud_folder.create(
         db=db_session,
+        project_id=project.id,
         create_dto=FolderCreate(
             name=name,
-            project_id=project.id,
             folder_type=FolderType.SDOC_FOLDER,
             parent_id=None,
         ),

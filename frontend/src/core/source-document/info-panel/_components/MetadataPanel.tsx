@@ -5,6 +5,7 @@ import { SourceDocumentMetadataUpdate } from "@models/SourceDocumentMetadataUpda
 import { TabPanel } from "@mui/lab";
 import { Box, CircularProgress, Stack } from "@mui/material";
 import { memo, useCallback } from "react";
+import { useAppSelector } from "@store/storeHooks";
 
 interface MetadataPanelProps {
   currentTab: string;
@@ -24,10 +25,13 @@ function MetadataPanelContent({ sdocId, onAddFilterClick }: MetadataPanelProps) 
   const metadata = SdocMetadataHooks.useGetSdocMetadata(sdocId);
 
   // mutation
+  const projectId = useAppSelector((state) => state.project.projectId);
   const { mutate: updateMetadataMutation } = SdocMetadataHooks.useUpdateBulkSdocMetadata();
   const handleMetadataUpdate = useCallback(
     (metadataId: number) => (data: SourceDocumentMetadataUpdate) => {
+      if (!projectId) return;
       updateMetadataMutation({
+        projectId,
         requestBody: [
           {
             sdoc_metadata_id: metadataId,
@@ -40,7 +44,7 @@ function MetadataPanelContent({ sdocId, onAddFilterClick }: MetadataPanelProps) 
         ],
       });
     },
-    [updateMetadataMutation],
+    [projectId, updateMetadataMutation],
   );
 
   return (

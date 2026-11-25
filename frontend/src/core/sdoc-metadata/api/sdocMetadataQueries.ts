@@ -43,7 +43,11 @@ export const sdocMetadataQueries = {
       queryFn:
         !projectId || !sdocId
           ? skipToken
-          : () => SdocMetadataService.getBySdocAndKey({ projectId, sdocId, metadataKey: key }),
+          : async () => {
+              const [metadata] = await SdocMetadataService.getBySdoc({ projectId, sdocId, key });
+              if (!metadata) throw new Error(`The document has no metadata "${key}"`);
+              return metadata;
+            },
     }),
 
   // number of sdocs that have a valid date for a date metadata

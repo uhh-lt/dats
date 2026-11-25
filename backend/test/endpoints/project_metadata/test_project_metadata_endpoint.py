@@ -13,18 +13,19 @@ from core.metadata.project_metadata_dto import (
 
 def test_create_new_metadata(client: TestClient, test_project):
     payload = ProjectMetadataCreate(
-        project_id=test_project.id,
         key="new_field",
         metatype=MetaType.BOOLEAN,
         read_only=False,
         doctype=list(DocType)[0],
         description="A brand new metadata field",
     )
-    resp = client.put("/projmeta", json=payload.model_dump())
+    resp = client.put(
+        f"/projects/{test_project.id}/project-metadata", json=payload.model_dump()
+    )
 
     assert resp.status_code == 200, resp.text
     new_metadata = ProjectMetadataRead.model_validate(resp.json())
-    assert new_metadata.project_id == payload.project_id
+    assert new_metadata.project_id == test_project.id
     assert new_metadata.key == payload.key
     assert new_metadata.metatype == payload.metatype
     assert new_metadata.read_only == payload.read_only
@@ -34,14 +35,13 @@ def test_create_new_metadata(client: TestClient, test_project):
 
 def test_create_new_metadata_if_not_exists(client: TestClient):
     payload = ProjectMetadataCreate(
-        project_id=99999,
         key="test_forbidden",
         metatype=MetaType.STRING,
         read_only=False,
         doctype=list(DocType)[0],
         description="Forbidden test",
     )
-    resp = client.put("/projmeta", json=payload.model_dump())
+    resp = client.put("/projects/99999/project-metadata", json=payload.model_dump())
 
     assert resp.status_code == 403, resp.text
 
@@ -53,7 +53,7 @@ def test_get_by_id(
     project = project_with_metadata["project"]
     metadata = project_with_metadata["metadata"][0]
 
-    resp = client.get(f"/projmeta/{metadata.id}")
+    resp = client.get(f"/projects/{metadata.project_id}/project-metadata/{metadata.id}")
 
     assert resp.status_code == 200, resp.text
     meta_read = ProjectMetadataRead.model_validate(resp.json())
@@ -66,11 +66,11 @@ def test_get_by_id(
     assert meta_read.description == metadata.description
 
 
-def test_get_by_id_if_not_exists(client: TestClient):
+def test_get_by_id_if_not_exists(client: TestClient, test_project):
     non_existing_id = 99999
-    resp = client.get(f"/projmeta/{non_existing_id}")
+    resp = client.get(f"/projects/{test_project.id}/project-metadata/{non_existing_id}")
 
-    assert resp.status_code == 403, resp.text
+    assert resp.status_code == 404, resp.text
 
 
 def test_get_by_project(
@@ -80,7 +80,7 @@ def test_get_by_project(
     project = project_with_metadata["project"]
     metadata = project_with_metadata["metadata"]
 
-    resp = client.get(f"/projmeta/project/{project.id}")
+    resp = client.get(f"/projects/{project.id}/project-metadata")
 
     assert resp.status_code == 200, resp.text
     meta_list = resp.json()
@@ -89,7 +89,7 @@ def test_get_by_project(
 
 def test_get_by_project_if_not_exists(client: TestClient):
     non_existing_project_id = 777777
-    resp = client.get(f"/projmeta/project/{non_existing_project_id}")
+    resp = client.get(f"/projects/{non_existing_project_id}/project-metadata")
 
     assert resp.status_code == 403, resp.text
 
@@ -111,7 +111,9 @@ def test_update_by_id(
     project = project_with_metadata["project"]
     metadata = project_with_metadata["metadata"][0]
 
-    resp = client.patch(f"/projmeta/{metadata.id}", json=payload)
+    resp = client.patch(
+        f"/projects/{metadata.project_id}/project-metadata/{metadata.id}", json=payload
+    )
 
     assert resp.status_code == 200, resp.text
     updated = ProjectMetadataRead.model_validate(resp.json())
@@ -143,7 +145,9 @@ def test_update_by_id_rejects_update_without_updatable_field(
     """A PATCH that sets none of key, metatype or description is rejected with 422."""
     metadata = project_with_metadata["metadata"][0]
 
-    resp = client.patch(f"/projmeta/{metadata.id}", json=payload)
+    resp = client.patch(
+        f"/projects/{metadata.project_id}/project-metadata/{metadata.id}", json=payload
+    )
 
     assert resp.status_code == 422, resp.text
     assert "At least one field to update has to be set" in resp.text
@@ -151,14 +155,16 @@ def test_update_by_id_rejects_update_without_updatable_field(
 
 def test_update_by_id_if_not_exists(
     client: TestClient,
+    test_project,
 ):
     payload = ProjectMetadataUpdate(description="Updated", key="new_key")
     non_exists_id = 99999
     resp = client.patch(
-        f"/projmeta/{non_exists_id}", json=payload.model_dump(exclude_none=True)
+        f"/projects/{test_project.id}/project-metadata/{non_exists_id}",
+        json=payload.model_dump(exclude_none=True),
     )
 
-    assert resp.status_code == 403, resp.text
+    assert resp.status_code == 404, resp.text
 
 
 def test_update_read_only(
@@ -176,14 +182,17 @@ def test_update_read_only(
 
     payload = ProjectMetadataUpdate(key="ignored_key_change")
     resp = client.patch(
-        f"/projmeta/{ro_meta.id}", json=payload.model_dump(exclude_none=True)
+        f"/projects/{ro_meta.project_id}/project-metadata/{ro_meta.id}",
+        json=payload.model_dump(exclude_none=True),
     )
 
     # read-only keys belong to the system: the update is rejected, nothing changes
     assert resp.status_code == 400, resp.text
     assert ro_meta.key in resp.text
     unchanged = ProjectMetadataRead.model_validate(
-        client.get(f"/projmeta/{ro_meta.id}").json()
+        client.get(
+            f"/projects/{ro_meta.project_id}/project-metadata/{ro_meta.id}"
+        ).json()
     )
     assert unchanged.key == ro_meta.key
 
@@ -195,22 +204,31 @@ def test_delete_read_only(
     """Deleting a read-only key is rejected and the key stays."""
     ro_meta = next(m for m in project_with_metadata["metadata"] if m.read_only)
 
-    resp = client.delete(f"/projmeta/{ro_meta.id}")
+    resp = client.delete(
+        f"/projects/{ro_meta.project_id}/project-metadata/{ro_meta.id}"
+    )
 
     assert resp.status_code == 400, resp.text
-    assert client.get(f"/projmeta/{ro_meta.id}").status_code == 200
+    assert (
+        client.get(
+            f"/projects/{ro_meta.project_id}/project-metadata/{ro_meta.id}"
+        ).status_code
+        == 200
+    )
 
 
 def test_update_read_only_if_not_exists(
     client: TestClient,
+    test_project,
 ):
     non_exists_id = 99999
     payload = ProjectMetadataUpdate(key="Key of the ProjectMetadata")
     resp = client.patch(
-        f"/projmeta/{non_exists_id}", json=payload.model_dump(exclude_none=True)
+        f"/projects/{test_project.id}/project-metadata/{non_exists_id}",
+        json=payload.model_dump(exclude_none=True),
     )
 
-    assert resp.status_code == 403, resp.text
+    assert resp.status_code == 404, resp.text
 
 
 def test_delete_by_id(
@@ -219,22 +237,27 @@ def test_delete_by_id(
 ):
     metadata = project_with_metadata["metadata"][0]
 
-    resp = client.delete(f"/projmeta/{metadata.id}")
+    resp = client.delete(
+        f"/projects/{metadata.project_id}/project-metadata/{metadata.id}"
+    )
 
     assert resp.status_code == 200, resp.text
 
 
 def test_delete_by_id_if_not_exists(
     client: TestClient,
+    test_project,
 ):
     non_exists_id = 99999
-    resp = client.delete(f"/projmeta/{non_exists_id}")
+    resp = client.delete(
+        f"/projects/{test_project.id}/project-metadata/{non_exists_id}"
+    )
 
-    assert resp.status_code == 403, resp.text
+    assert resp.status_code == 404, resp.text
 
 
 # ===========================================================================
-# UPDATE PROJECT METADATA BULK (/projmeta/bulk/update) TESTS
+# UPDATE PROJECT METADATA BULK (/projects/{project_id}/project-metadata/bulk) TESTS
 # ===========================================================================
 
 
@@ -252,7 +275,7 @@ def test_update_project_metadata_bulk_updates_each_key(
     ]
 
     response = client.patch(
-        "/projmeta/bulk/update",
+        f"/projects/{project_with_metadata['project'].id}/project-metadata/bulk",
         json=[update.model_dump(exclude_unset=True) for update in request],
     )
 
@@ -272,7 +295,7 @@ def test_update_project_metadata_bulk_rejects_read_only_keys_without_changes(
     category_ro = project_with_metadata["metadata"][5]
 
     response = client.patch(
-        "/projmeta/bulk/update",
+        f"/projects/{project_with_metadata['project'].id}/project-metadata/bulk",
         json=[
             {"project_metadata_id": category.id, "description": "changed"},
             {"project_metadata_id": category_ro.id, "description": "changed"},
@@ -281,7 +304,9 @@ def test_update_project_metadata_bulk_rejects_read_only_keys_without_changes(
 
     assert response.status_code == 400, response.text
     assert "category_ro" in response.text
-    response = client.get(f"/projmeta/{category.id}")
+    response = client.get(
+        f"/projects/{category.project_id}/project-metadata/{category.id}"
+    )
     assert response.status_code == 200, response.text
     assert ProjectMetadataRead.model_validate(response.json()).description == (
         "The category of the document"
@@ -295,7 +320,7 @@ def test_update_project_metadata_bulk_rejects_a_taken_key(
     category, date = project_with_metadata["metadata"][:2]
 
     response = client.patch(
-        "/projmeta/bulk/update",
+        f"/projects/{project_with_metadata['project'].id}/project-metadata/bulk",
         json=[{"project_metadata_id": date.id, "key": category.key}],
     )
 
@@ -305,15 +330,16 @@ def test_update_project_metadata_bulk_rejects_a_taken_key(
 def test_update_project_metadata_bulk_rejects_unknown_keys(
     client: TestClient, project_with_metadata
 ):
-    """A key that does not exist (or belongs to a foreign project) is forbidden."""
+    """A key that does not exist in the project (or belongs to another project) is
+    not found (404)."""
     category = project_with_metadata["metadata"][0]
 
     response = client.patch(
-        "/projmeta/bulk/update",
+        f"/projects/{project_with_metadata['project'].id}/project-metadata/bulk",
         json=[
             {"project_metadata_id": category.id, "key": "a"},
             {"project_metadata_id": 999999, "key": "b"},
         ],
     )
 
-    assert response.status_code == 403, response.text
+    assert response.status_code == 404, response.text

@@ -76,8 +76,8 @@ def handle_pdf_chunking_job(
         with sqlr.transaction() as db:
             folder = crud_folder.create(
                 db,
+                project_id=payload.project_id,
                 create_dto=FolderCreate(
-                    project_id=payload.project_id,
                     folder_type=FolderType.SDOC_FOLDER,
                     name=filepath.name,
                 ),

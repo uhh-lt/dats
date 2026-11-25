@@ -52,9 +52,9 @@ def project_with_sdocs_in_same_folder(
     # Create a folder in the project
     folder = crud_folder.create(
         db=db_session,
+        project_id=test_project.id,
         create_dto=FolderCreate(
             name="Test Folder",
-            project_id=test_project.id,
             parent_id=None,
             folder_type=FolderType.SDOC_FOLDER,
         ),

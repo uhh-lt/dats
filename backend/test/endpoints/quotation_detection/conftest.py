@@ -85,7 +85,7 @@ def _create_document(
         doctype=doctype,
     )
     crud_sdoc_meta.read_by_sdoc_and_key(
-        db=db, sdoc_id=sdoc.id, key="language"
+        db=db, project_id=sdoc.project_id, sdoc_id=sdoc.id, key="language"
     ).str_value = language
     set_step_status(
         db,

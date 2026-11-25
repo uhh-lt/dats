@@ -10,7 +10,8 @@ from core.metadata.source_document_metadata_dto import (
     SourceDocumentMetadataUpdate,
 )
 from core.metadata.source_document_metadata_orm import SourceDocumentMetadataORM
-from repos.db.crud_base import BATCH_SIZE, SQLCRUDBase
+from repos.db.crud_base import BATCH_SIZE
+from repos.db.project_crud_base import ProjectCRUDBase
 from repos.db.sql_exceptions import NoSuchElementError
 
 
@@ -32,7 +33,7 @@ def is_correct_type(
 
 
 class CRUDSourceDocumentMetadata(
-    SQLCRUDBase[
+    ProjectCRUDBase[
         SourceDocumentMetadataORM,
         SourceDocumentMetadataCreate,
         SourceDocumentMetadataUpdate,
@@ -41,26 +42,32 @@ class CRUDSourceDocumentMetadata(
     ### CREATE OPERATIONS ###
 
     def create_multi(
-        self, db: Session, *, create_dtos: list[SourceDocumentMetadataCreate]
+        self,
+        db: Session,
+        *,
+        project_id: int,
+        create_dtos: list[SourceDocumentMetadataCreate],
     ) -> list[SourceDocumentMetadataORM]:
         from core.metadata.project_metadata_crud import crud_project_meta
 
-        # check that every ProjectMetadata exists and every value has its type
-        project_metadatas = {
-            pm.id: ProjectMetadataRead.model_validate(pm)
-            for pm in crud_project_meta.read_by_ids(
-                db=db,
-                ids=list(
-                    {create_dto.project_metadata_id for create_dto in create_dtos}
-                ),
-            )
-        }
+        # every value must have the type of its ProjectMetadata; a ProjectMetadata
+        # that does not exist in the project fails at the composite foreign key
+        project_metadatas = crud_project_meta.read_existing_by_ids(
+            db=db,
+            project_id=project_id,
+            ids=list({create_dto.project_metadata_id for create_dto in create_dtos}),
+        )
         for create_dto in create_dtos:
-            metatype = project_metadatas[create_dto.project_metadata_id].metatype
+            project_metadata = project_metadatas.get(create_dto.project_metadata_id)
+            if project_metadata is None:
+                continue
+            metatype = ProjectMetadataRead.model_validate(project_metadata).metatype
             if not is_correct_type(metatype, create_dto):
                 raise ValueError(f"provided value has the wrong type (need {metatype})")
 
-        return super().create_multi(db=db, create_dtos=create_dtos)
+        return super().create_multi(
+            db=db, project_id=project_id, create_dtos=create_dtos
+        )
 
     def create_initial_metadata(
         self,
@@ -84,17 +91,13 @@ class CRUDSourceDocumentMetadata(
         for pm in project_metadatas.values():
             create_dtos.append(
                 SourceDocumentMetadataCreate.with_metatype(
-                    project_id=project_id,
                     metatype=pm.metatype,
                     project_metadata_id=pm.id,
                     source_document_id=sdoc_id,
                 )
             )
 
-        return self.create_multi(
-            db=db,
-            create_dtos=create_dtos,
-        )
+        return self.create_multi(db=db, project_id=project_id, create_dtos=create_dtos)
 
     ### READ OPERATIONS ###
 
@@ -106,11 +109,7 @@ class CRUDSourceDocumentMetadata(
         skip: int | None = None,
         limit: int | None = None,
     ) -> list[SourceDocumentMetadataORM]:
-        query = (
-            db.query(self.model)
-            .join(SourceDocumentMetadataORM.project_metadata)
-            .filter(ProjectMetadataORM.project_id == project_id)
-        )
+        query = db.query(self.model).filter(self.model.project_id == project_id)
         if skip is not None:
             query = query.offset(skip)
         if limit is not None:
@@ -123,6 +122,7 @@ class CRUDSourceDocumentMetadata(
         self,
         db: Session,
         *,
+        project_id: int,
         key: str,
         sdoc_id: int,
     ) -> SourceDocumentMetadataORM:
@@ -130,6 +130,7 @@ class CRUDSourceDocumentMetadata(
             db.query(self.model)
             .join(SourceDocumentMetadataORM.project_metadata)
             .filter(
+                SourceDocumentMetadataORM.project_id == project_id,
                 ProjectMetadataORM.key == key,
                 SourceDocumentMetadataORM.source_document_id == sdoc_id,
             )
@@ -143,6 +144,7 @@ class CRUDSourceDocumentMetadata(
         self,
         db: Session,
         *,
+        project_id: int,
         keys: list[str],
         sdoc_id: int,
     ) -> list[tuple[ProjectMetadataORM, SourceDocumentMetadataORM]]:
@@ -156,6 +158,7 @@ class CRUDSourceDocumentMetadata(
                 db.query(ProjectMetadataORM, SourceDocumentMetadataORM)
                 .join(SourceDocumentMetadataORM.project_metadata)
                 .filter(
+                    SourceDocumentMetadataORM.project_id == project_id,
                     ProjectMetadataORM.key.in_(batch_keys),
                     SourceDocumentMetadataORM.source_document_id == sdoc_id,
                 )
@@ -164,11 +167,14 @@ class CRUDSourceDocumentMetadata(
         return results
 
     def read_by_sdoc(
-        self, db: Session, *, sdoc_id: int
+        self, db: Session, *, project_id: int, sdoc_id: int
     ) -> list[SourceDocumentMetadataORM]:
         db_objs = (
             db.query(self.model)
-            .filter(SourceDocumentMetadataORM.source_document_id == sdoc_id)
+            .filter(
+                self.model.project_id == project_id,
+                self.model.source_document_id == sdoc_id,
+            )
             .all()
         )
         return db_objs
@@ -179,17 +185,22 @@ class CRUDSourceDocumentMetadata(
         self,
         db: Session,
         *,
+        project_id: int,
         ids: list[int],
         update_dtos: list[SourceDocumentMetadataUpdate],
     ) -> list[SourceDocumentMetadataORM]:
         # every value must have the type of its project metadata
-        for db_obj, update_dto in zip(self.read_by_ids(db=db, ids=ids), update_dtos):
+        for db_obj, update_dto in zip(
+            self.read_by_ids(db=db, project_id=project_id, ids=ids), update_dtos
+        ):
             metatype = ProjectMetadataRead.model_validate(
                 db_obj.project_metadata
             ).metatype
             if not is_correct_type(metatype, update_dto):
                 raise ValueError(f"provided value has the wrong type (need {metatype})")
-        return super().update_multi(db=db, ids=ids, update_dtos=update_dtos)
+        return super().update_multi(
+            db=db, project_id=project_id, ids=ids, update_dtos=update_dtos
+        )
 
     def update_multi_with_doctype(
         self,
@@ -207,7 +218,7 @@ class CRUDSourceDocumentMetadata(
         metadatas = {
             pm.key: (pm, sm)
             for (pm, sm) in self.read_by_sdoc_and_keys(
-                db=db, sdoc_id=sdoc_id, keys=keys
+                db=db, project_id=project_id, sdoc_id=sdoc_id, keys=keys
             )
         }
 
@@ -236,6 +247,7 @@ class CRUDSourceDocumentMetadata(
 
         return self.update_multi(
             db=db,
+            project_id=project_id,
             ids=sdoc_metadata_ids,
             update_dtos=update_dtos,
         )
@@ -243,10 +255,11 @@ class CRUDSourceDocumentMetadata(
     ### DELETE OPERATIONS ###
 
     def delete_by_project_metadata(
-        self, db: Session, *, project_metadata_id: int
+        self, db: Session, *, project_id: int, project_metadata_id: int
     ) -> None:
         db.query(self.model).filter(
-            SourceDocumentMetadataORM.project_metadata_id == project_metadata_id
+            self.model.project_id == project_id,
+            self.model.project_metadata_id == project_metadata_id,
         ).delete()
 
 

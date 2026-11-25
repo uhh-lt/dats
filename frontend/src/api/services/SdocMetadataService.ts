@@ -11,113 +11,28 @@ import { OpenAPI } from "../core/OpenAPI";
 import { request as __request } from "../core/request";
 export class SdocMetadataService {
   /**
-   * Returns the Metadata with the given ID.
-   * @returns SourceDocumentMetadataRead Successful Response
-   * @throws ApiError
-   */
-  public static getById({ metadataId }: { metadataId: number }): CancelablePromise<SourceDocumentMetadataRead> {
-    return __request(OpenAPI, {
-      method: "GET",
-      url: "/sdocmeta/{metadata_id}",
-      path: {
-        metadata_id: metadataId,
-      },
-      errors: {
-        422: `Validation Error`,
-      },
-    });
-  }
-  /**
-   * Updates the Metadata with the given ID.
-   * @returns SourceDocumentMetadataRead Successful Response
-   * @throws ApiError
-   */
-  public static updateById({
-    metadataId,
-    requestBody,
-  }: {
-    metadataId: number;
-    requestBody: SourceDocumentMetadataUpdate;
-  }): CancelablePromise<SourceDocumentMetadataRead> {
-    return __request(OpenAPI, {
-      method: "PATCH",
-      url: "/sdocmeta/{metadata_id}",
-      path: {
-        metadata_id: metadataId,
-      },
-      body: requestBody,
-      mediaType: "application/json",
-      errors: {
-        422: `Validation Error`,
-      },
-    });
-  }
-  /**
-   * Deletes the Metadata with the given ID.
-   * @returns SourceDocumentMetadataRead Successful Response
-   * @throws ApiError
-   */
-  public static deleteById({ metadataId }: { metadataId: number }): CancelablePromise<SourceDocumentMetadataRead> {
-    return __request(OpenAPI, {
-      method: "DELETE",
-      url: "/sdocmeta/{metadata_id}",
-      path: {
-        metadata_id: metadataId,
-      },
-      errors: {
-        422: `Validation Error`,
-      },
-    });
-  }
-  /**
-   * Returns all SourceDocumentMetadata of the SourceDocument with the given ID if it exists
+   * Returns the SourceDocumentMetadata of the SourceDocument, optionally only the one with the given key
    * @returns SourceDocumentMetadataRead Successful Response
    * @throws ApiError
    */
   public static getBySdoc({
-    sdocId,
     projectId,
+    sdocId,
+    key,
   }: {
-    sdocId: number;
     projectId: number;
+    sdocId: number;
+    key?: string | null;
   }): CancelablePromise<Array<SourceDocumentMetadataRead>> {
     return __request(OpenAPI, {
       method: "GET",
-      url: "/sdocmeta/sdoc/{sdoc_id}",
+      url: "/projects/{project_id}/source-document-metadata",
       path: {
-        sdoc_id: sdocId,
-      },
-      query: {
         project_id: projectId,
       },
-      errors: {
-        422: `Validation Error`,
-      },
-    });
-  }
-  /**
-   * Returns the SourceDocumentMetadata with the given Key if it exists.
-   * @returns SourceDocumentMetadataRead Successful Response
-   * @throws ApiError
-   */
-  public static getBySdocAndKey({
-    sdocId,
-    metadataKey,
-    projectId,
-  }: {
-    sdocId: number;
-    metadataKey: string;
-    projectId: number;
-  }): CancelablePromise<SourceDocumentMetadataRead> {
-    return __request(OpenAPI, {
-      method: "GET",
-      url: "/sdocmeta/sdoc/{sdoc_id}/metadata/{metadata_key}",
-      path: {
-        sdoc_id: sdocId,
-        metadata_key: metadataKey,
-      },
       query: {
-        project_id: projectId,
+        sdoc_id: sdocId,
+        key: key,
       },
       errors: {
         422: `Validation Error`,
@@ -138,10 +53,88 @@ export class SdocMetadataService {
   }): CancelablePromise<DateMetadataCountResult> {
     return __request(OpenAPI, {
       method: "GET",
-      url: "/sdocmeta/count_sdocs_with_date_metadata/{project_id}/metadata/{date_metadata_id}",
+      url: "/projects/{project_id}/source-document-metadata/date-count",
       path: {
         project_id: projectId,
+      },
+      query: {
         date_metadata_id: dateMetadataId,
+      },
+      errors: {
+        422: `Validation Error`,
+      },
+    });
+  }
+  /**
+   * Returns the SourceDocumentMetadata with the given ID if it exists
+   * @returns SourceDocumentMetadataRead Successful Response
+   * @throws ApiError
+   */
+  public static getById({
+    projectId,
+    sdocMetadataId,
+  }: {
+    projectId: number;
+    sdocMetadataId: number;
+  }): CancelablePromise<SourceDocumentMetadataRead> {
+    return __request(OpenAPI, {
+      method: "GET",
+      url: "/projects/{project_id}/source-document-metadata/{sdoc_metadata_id}",
+      path: {
+        project_id: projectId,
+        sdoc_metadata_id: sdocMetadataId,
+      },
+      errors: {
+        422: `Validation Error`,
+      },
+    });
+  }
+  /**
+   * Updates the Metadata with the given ID.
+   * @returns SourceDocumentMetadataRead Successful Response
+   * @throws ApiError
+   */
+  public static updateById({
+    projectId,
+    sdocMetadataId,
+    requestBody,
+  }: {
+    projectId: number;
+    sdocMetadataId: number;
+    requestBody: SourceDocumentMetadataUpdate;
+  }): CancelablePromise<SourceDocumentMetadataRead> {
+    return __request(OpenAPI, {
+      method: "PATCH",
+      url: "/projects/{project_id}/source-document-metadata/{sdoc_metadata_id}",
+      path: {
+        project_id: projectId,
+        sdoc_metadata_id: sdocMetadataId,
+      },
+      body: requestBody,
+      mediaType: "application/json",
+      errors: {
+        422: `Validation Error`,
+      },
+    });
+  }
+  /**
+   * Deletes the Metadata with the given ID.
+   * @returns SourceDocumentMetadataRead Successful Response
+   * @throws ApiError
+   */
+  public static deleteById({
+    projectId,
+    sdocMetadataId,
+  }: {
+    projectId: number;
+    sdocMetadataId: number;
+  }): CancelablePromise<SourceDocumentMetadataRead> {
+    return __request(OpenAPI, {
+      method: "DELETE",
+      url: "/projects/{project_id}/source-document-metadata/{sdoc_metadata_id}",
+      path: {
+        project_id: projectId,
+        sdoc_metadata_id: sdocMetadataId,
       },
       errors: {
         422: `Validation Error`,
@@ -154,13 +147,18 @@ export class SdocMetadataService {
    * @throws ApiError
    */
   public static updateBulk({
+    projectId,
     requestBody,
   }: {
+    projectId: number;
     requestBody: Array<SourceDocumentMetadataUpdateBulk>;
   }): CancelablePromise<Array<SourceDocumentMetadataRead>> {
     return __request(OpenAPI, {
       method: "PATCH",
-      url: "/sdocmeta/bulk/update",
+      url: "/projects/{project_id}/source-document-metadata/bulk",
+      path: {
+        project_id: projectId,
+      },
       body: requestBody,
       mediaType: "application/json",
       errors: {

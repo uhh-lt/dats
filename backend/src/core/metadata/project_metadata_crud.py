@@ -10,11 +10,11 @@ from core.metadata.project_metadata_dto import (
 from core.metadata.project_metadata_orm import ProjectMetadataORM
 from core.metadata.source_document_metadata_crud import crud_sdoc_meta
 from core.metadata.source_document_metadata_dto import SourceDocumentMetadataCreate
-from repos.db.crud_base import SQLCRUDBase
+from repos.db.project_crud_base import ProjectCRUDBase
 
 
 class CRUDProjectMetadata(
-    SQLCRUDBase[
+    ProjectCRUDBase[
         ProjectMetadataORM,
         ProjectMetadataCreate,
         ProjectMetadataUpdate,
@@ -23,9 +23,11 @@ class CRUDProjectMetadata(
     ### CREATE OPERATIONS ###
 
     def create_multi(
-        self, db: Session, *, create_dtos: list[ProjectMetadataCreate]
+        self, db: Session, *, project_id: int, create_dtos: list[ProjectMetadataCreate]
     ) -> list[ProjectMetadataORM]:
-        db_objs = super().create_multi(db=db, create_dtos=create_dtos)
+        db_objs = super().create_multi(
+            db=db, project_id=project_id, create_dtos=create_dtos
+        )
 
         # we have to create sdoc metadata for all existing sdocs
         for db_obj, create_dto in zip(db_objs, create_dtos):
@@ -44,7 +46,6 @@ class CRUDProjectMetadata(
     ) -> None:
         metadata_create_dtos = [
             SourceDocumentMetadataCreate.with_metatype(
-                project_id=project_metadata.project_id,
                 source_document_id=sdoc.id,
                 project_metadata_id=project_metadata.id,
                 metatype=metatype,
@@ -52,26 +53,29 @@ class CRUDProjectMetadata(
             for sdoc in project_metadata.project.source_documents
             if sdoc.doctype == project_metadata.doctype
         ]
-        crud_sdoc_meta.create_multi(db=db, create_dtos=metadata_create_dtos)
+        crud_sdoc_meta.create_multi(
+            db=db,
+            project_id=project_metadata.project_id,
+            create_dtos=metadata_create_dtos,
+        )
 
     def create_project_metadata_for_project(
         self, db: Session, *, project_id: int
     ) -> list[ProjectMetadataORM]:
-        created: list[ProjectMetadataORM] = []
-
-        for project_metadata in conf.project_metadata:
-            create_dto = ProjectMetadataCreate(
-                project_id=project_id,
-                key=project_metadata.key,
-                metatype=project_metadata.metatype,
-                read_only=project_metadata.read_only,
-                doctype=project_metadata.doctype,
-                description=project_metadata.description,
-            )
-            db_obj = self.create(db=db, create_dto=create_dto)
-            created.append(db_obj)
-
-        return created
+        return self.create_multi(
+            db=db,
+            project_id=project_id,
+            create_dtos=[
+                ProjectMetadataCreate(
+                    key=project_metadata.key,
+                    metatype=project_metadata.metatype,
+                    read_only=project_metadata.read_only,
+                    doctype=project_metadata.doctype,
+                    description=project_metadata.description,
+                )
+                for project_metadata in conf.project_metadata
+            ],
+        )
 
     ### READ OPERATIONS ###
 
@@ -140,9 +144,16 @@ class CRUDProjectMetadata(
     ### UPDATE OPERATIONS ###
 
     def update_multi(
-        self, db: Session, *, ids: list[int], update_dtos: list[ProjectMetadataUpdate]
+        self,
+        db: Session,
+        *,
+        project_id: int,
+        ids: list[int],
+        update_dtos: list[ProjectMetadataUpdate],
     ) -> list[ProjectMetadataORM]:
-        for db_obj, update_dto in zip(self.read_by_ids(db=db, ids=ids), update_dtos):
+        for db_obj, update_dto in zip(
+            self.read_by_ids(db=db, project_id=project_id, ids=ids), update_dtos
+        ):
             # If the user wants to change the type of a metadata,
             # there's no way to reasonably convert the
             # values of existing sdoc metadatas,
@@ -153,7 +164,7 @@ class CRUDProjectMetadata(
                 and db_obj.metatype != update_dto.metatype
             ):
                 crud_sdoc_meta.delete_by_project_metadata(
-                    db=db, project_metadata_id=db_obj.id
+                    db=db, project_id=project_id, project_metadata_id=db_obj.id
                 )
 
                 # we have to create sdoc metadata for all existing sdocs (as we deleted them before)
@@ -164,7 +175,9 @@ class CRUDProjectMetadata(
                 )
 
         # update metadata
-        return super().update_multi(db=db, ids=ids, update_dtos=update_dtos)
+        return super().update_multi(
+            db=db, project_id=project_id, ids=ids, update_dtos=update_dtos
+        )
 
     ### OTHER OPERATIONS ###
 

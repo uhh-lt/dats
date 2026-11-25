@@ -2205,14 +2205,23 @@
         }
       }
     },
-    "/folder": {
+    "/projects/{project_id}/folders": {
       "put": {
         "tags": ["folder"],
         "summary": "Creates a new Folder and returns it with the generated ID.",
         "operationId": "create_folder",
+        "security": [{ "OAuth2PasswordBearer": [] }],
+        "parameters": [
+          {
+            "name": "project_id",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "integer", "title": "Project Id" }
+          }
+        ],
         "requestBody": {
-          "content": { "application/json": { "schema": { "$ref": "#/components/schemas/FolderCreate" } } },
-          "required": true
+          "required": true,
+          "content": { "application/json": { "schema": { "$ref": "#/components/schemas/FolderCreate" } } }
         },
         "responses": {
           "200": {
@@ -2223,17 +2232,63 @@
             "description": "Validation Error",
             "content": { "application/json": { "schema": { "$ref": "#/components/schemas/HTTPValidationError" } } }
           }
-        },
-        "security": [{ "OAuth2PasswordBearer": [] }]
+        }
+      },
+      "get": {
+        "tags": ["folder"],
+        "summary": "Returns the folders of the project, optionally only those of the folder_type",
+        "operationId": "get_by_project",
+        "security": [{ "OAuth2PasswordBearer": [] }],
+        "parameters": [
+          {
+            "name": "project_id",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "integer", "title": "Project Id" }
+          },
+          {
+            "name": "folder_type",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [{ "$ref": "#/components/schemas/FolderType" }, { "type": "null" }],
+              "title": "Folder Type"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": { "$ref": "#/components/schemas/FolderRead" },
+                  "title": "Response Folder-Get By Project"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/HTTPValidationError" } } }
+          }
+        }
       }
     },
-    "/folder/{folder_id}": {
+    "/projects/{project_id}/folders/{folder_id}": {
       "get": {
         "tags": ["folder"],
         "summary": "Returns the Folder with the given ID.",
         "operationId": "get_by_id",
         "security": [{ "OAuth2PasswordBearer": [] }],
         "parameters": [
+          {
+            "name": "project_id",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "integer", "title": "Project Id" }
+          },
           { "name": "folder_id", "in": "path", "required": true, "schema": { "type": "integer", "title": "Folder Id" } }
         ],
         "responses": {
@@ -2253,6 +2308,12 @@
         "operationId": "update_by_id",
         "security": [{ "OAuth2PasswordBearer": [] }],
         "parameters": [
+          {
+            "name": "project_id",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "integer", "title": "Project Id" }
+          },
           { "name": "folder_id", "in": "path", "required": true, "schema": { "type": "integer", "title": "Folder Id" } }
         ],
         "requestBody": {
@@ -2276,6 +2337,12 @@
         "operationId": "delete_by_id",
         "security": [{ "OAuth2PasswordBearer": [] }],
         "parameters": [
+          {
+            "name": "project_id",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "integer", "title": "Project Id" }
+          },
           { "name": "folder_id", "in": "path", "required": true, "schema": { "type": "integer", "title": "Folder Id" } }
         ],
         "responses": {
@@ -2290,13 +2357,19 @@
         }
       }
     },
-    "/folder/sdocids/{folder_id}": {
+    "/projects/{project_id}/folders/{folder_id}/source-documents": {
       "get": {
         "tags": ["folder"],
         "summary": "Returns lists of source document ids per doctype in the specified sdoc folder",
         "operationId": "get_sdoc_ids_in_folder_by_doctype",
         "security": [{ "OAuth2PasswordBearer": [] }],
         "parameters": [
+          {
+            "name": "project_id",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "integer", "title": "Project Id" }
+          },
           { "name": "folder_id", "in": "path", "required": true, "schema": { "type": "integer", "title": "Folder Id" } }
         ],
         "responses": {
@@ -2320,11 +2393,11 @@
         }
       }
     },
-    "/folder/project/{project_id}/folder/{folder_type}": {
-      "get": {
+    "/projects/{project_id}/folders/bulk": {
+      "patch": {
         "tags": ["folder"],
-        "summary": "Returns the folders of the folder_type of the project with the given ID",
-        "operationId": "get_folders_by_project_and_type",
+        "summary": "Updates the Folders with the given IDs.",
+        "operationId": "update_folders_bulk",
         "security": [{ "OAuth2PasswordBearer": [] }],
         "parameters": [
           {
@@ -2332,50 +2405,19 @@
             "in": "path",
             "required": true,
             "schema": { "type": "integer", "title": "Project Id" }
-          },
-          {
-            "name": "folder_type",
-            "in": "path",
-            "required": true,
-            "schema": { "$ref": "#/components/schemas/FolderType" }
           }
         ],
-        "responses": {
-          "200": {
-            "description": "Successful Response",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "array",
-                  "items": { "$ref": "#/components/schemas/FolderRead" },
-                  "title": "Response Folder-Get Folders By Project And Type"
-                }
-              }
-            }
-          },
-          "422": {
-            "description": "Validation Error",
-            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/HTTPValidationError" } } }
-          }
-        }
-      }
-    },
-    "/folder/bulk/update": {
-      "patch": {
-        "tags": ["folder"],
-        "summary": "Updates the Folders with the given IDs.",
-        "operationId": "update_folders_bulk",
         "requestBody": {
+          "required": true,
           "content": {
             "application/json": {
               "schema": {
-                "items": { "$ref": "#/components/schemas/FolderUpdateBulk" },
                 "type": "array",
+                "items": { "$ref": "#/components/schemas/FolderUpdateBulk" },
                 "title": "Folder Updates"
               }
             }
-          },
-          "required": true
+          }
         },
         "responses": {
           "200": {
@@ -2383,8 +2425,8 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "items": { "$ref": "#/components/schemas/FolderRead" },
                   "type": "array",
+                  "items": { "$ref": "#/components/schemas/FolderRead" },
                   "title": "Response Folder-Update Folders Bulk"
                 }
               }
@@ -2394,8 +2436,7 @@
             "description": "Validation Error",
             "content": { "application/json": { "schema": { "$ref": "#/components/schemas/HTTPValidationError" } } }
           }
-        },
-        "security": [{ "OAuth2PasswordBearer": [] }]
+        }
       }
     },
     "/import/{project_id}/type/{import_job_type}": {
@@ -3995,69 +4036,23 @@
         "security": [{ "OAuth2PasswordBearer": [] }]
       }
     },
-    "/projmeta": {
+    "/projects/{project_id}/project-metadata": {
       "put": {
         "tags": ["projectMetadata"],
         "summary": "Creates a new Metadata and returns it with the generated ID.",
         "operationId": "create_metadata",
-        "requestBody": {
-          "content": { "application/json": { "schema": { "$ref": "#/components/schemas/ProjectMetadataCreate" } } },
-          "required": true
-        },
-        "responses": {
-          "200": {
-            "description": "Successful Response",
-            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/ProjectMetadataRead" } } }
-          },
-          "422": {
-            "description": "Validation Error",
-            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/HTTPValidationError" } } }
-          }
-        },
-        "security": [{ "OAuth2PasswordBearer": [] }]
-      }
-    },
-    "/projmeta/{metadata_id}": {
-      "get": {
-        "tags": ["projectMetadata"],
-        "summary": "Returns the Metadata with the given ID.",
-        "operationId": "get_by_id",
         "security": [{ "OAuth2PasswordBearer": [] }],
         "parameters": [
           {
-            "name": "metadata_id",
+            "name": "project_id",
             "in": "path",
             "required": true,
-            "schema": { "type": "integer", "title": "Metadata Id" }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "Successful Response",
-            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/ProjectMetadataRead" } } }
-          },
-          "422": {
-            "description": "Validation Error",
-            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/HTTPValidationError" } } }
-          }
-        }
-      },
-      "patch": {
-        "tags": ["projectMetadata"],
-        "summary": "Updates the Metadata with the given ID.",
-        "operationId": "update_by_id",
-        "security": [{ "OAuth2PasswordBearer": [] }],
-        "parameters": [
-          {
-            "name": "metadata_id",
-            "in": "path",
-            "required": true,
-            "schema": { "type": "integer", "title": "Metadata Id" }
+            "schema": { "type": "integer", "title": "Project Id" }
           }
         ],
         "requestBody": {
           "required": true,
-          "content": { "application/json": { "schema": { "$ref": "#/components/schemas/ProjectMetadataUpdate" } } }
+          "content": { "application/json": { "schema": { "$ref": "#/components/schemas/ProjectMetadataCreate" } } }
         },
         "responses": {
           "200": {
@@ -4070,35 +4065,9 @@
           }
         }
       },
-      "delete": {
-        "tags": ["projectMetadata"],
-        "summary": "Deletes the Metadata with the given ID.",
-        "operationId": "delete_by_id",
-        "security": [{ "OAuth2PasswordBearer": [] }],
-        "parameters": [
-          {
-            "name": "metadata_id",
-            "in": "path",
-            "required": true,
-            "schema": { "type": "integer", "title": "Metadata Id" }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "Successful Response",
-            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/ProjectMetadataRead" } } }
-          },
-          "422": {
-            "description": "Validation Error",
-            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/HTTPValidationError" } } }
-          }
-        }
-      }
-    },
-    "/projmeta/project/{project_id}": {
       "get": {
         "tags": ["projectMetadata"],
-        "summary": "Returns all ProjectMetadata of the Project with the given ID if it exists",
+        "summary": "Returns all ProjectMetadata of the Project",
         "operationId": "get_by_project",
         "security": [{ "OAuth2PasswordBearer": [] }],
         "parameters": [
@@ -4129,22 +4098,127 @@
         }
       }
     },
-    "/projmeta/bulk/update": {
+    "/projects/{project_id}/project-metadata/{project_metadata_id}": {
+      "get": {
+        "tags": ["projectMetadata"],
+        "summary": "Returns the Metadata with the given ID.",
+        "operationId": "get_by_id",
+        "security": [{ "OAuth2PasswordBearer": [] }],
+        "parameters": [
+          {
+            "name": "project_id",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "integer", "title": "Project Id" }
+          },
+          {
+            "name": "project_metadata_id",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "integer", "title": "Project Metadata Id" }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/ProjectMetadataRead" } } }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/HTTPValidationError" } } }
+          }
+        }
+      },
+      "patch": {
+        "tags": ["projectMetadata"],
+        "summary": "Updates the Metadata with the given ID.",
+        "operationId": "update_by_id",
+        "security": [{ "OAuth2PasswordBearer": [] }],
+        "parameters": [
+          {
+            "name": "project_id",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "integer", "title": "Project Id" }
+          },
+          {
+            "name": "project_metadata_id",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "integer", "title": "Project Metadata Id" }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": { "application/json": { "schema": { "$ref": "#/components/schemas/ProjectMetadataUpdate" } } }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/ProjectMetadataRead" } } }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/HTTPValidationError" } } }
+          }
+        }
+      },
+      "delete": {
+        "tags": ["projectMetadata"],
+        "summary": "Deletes the Metadata with the given ID.",
+        "operationId": "delete_by_id",
+        "security": [{ "OAuth2PasswordBearer": [] }],
+        "parameters": [
+          {
+            "name": "project_id",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "integer", "title": "Project Id" }
+          },
+          {
+            "name": "project_metadata_id",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "integer", "title": "Project Metadata Id" }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/ProjectMetadataRead" } } }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/HTTPValidationError" } } }
+          }
+        }
+      }
+    },
+    "/projects/{project_id}/project-metadata/bulk": {
       "patch": {
         "tags": ["projectMetadata"],
         "summary": "Updates the Metadata with the given IDs.",
         "operationId": "update_project_metadata_bulk",
+        "security": [{ "OAuth2PasswordBearer": [] }],
+        "parameters": [
+          {
+            "name": "project_id",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "integer", "title": "Project Id" }
+          }
+        ],
         "requestBody": {
+          "required": true,
           "content": {
             "application/json": {
               "schema": {
-                "items": { "$ref": "#/components/schemas/ProjectMetadataUpdateBulk" },
                 "type": "array",
+                "items": { "$ref": "#/components/schemas/ProjectMetadataUpdateBulk" },
                 "title": "Metadata"
               }
             }
-          },
-          "required": true
+          }
         },
         "responses": {
           "200": {
@@ -4152,8 +4226,8 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "items": { "$ref": "#/components/schemas/ProjectMetadataRead" },
                   "type": "array",
+                  "items": { "$ref": "#/components/schemas/ProjectMetadataRead" },
                   "title": "Response Projectmetadata-Update Project Metadata Bulk"
                 }
               }
@@ -4163,8 +4237,7 @@
             "description": "Validation Error",
             "content": { "application/json": { "schema": { "$ref": "#/components/schemas/HTTPValidationError" } } }
           }
-        },
-        "security": [{ "OAuth2PasswordBearer": [] }]
+        }
       }
     },
     "/prompt": {
@@ -6032,18 +6105,97 @@
         }
       }
     },
-    "/sdocmeta/{metadata_id}": {
+    "/projects/{project_id}/source-document-metadata": {
       "get": {
         "tags": ["sdocMetadata"],
-        "summary": "Returns the Metadata with the given ID.",
+        "summary": "Returns the SourceDocumentMetadata of the SourceDocument, optionally only the one with the given key",
+        "operationId": "get_by_sdoc",
+        "security": [{ "OAuth2PasswordBearer": [] }],
+        "parameters": [
+          {
+            "name": "project_id",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "integer", "title": "Project Id" }
+          },
+          { "name": "sdoc_id", "in": "query", "required": true, "schema": { "type": "integer", "title": "Sdoc Id" } },
+          {
+            "name": "key",
+            "in": "query",
+            "required": false,
+            "schema": { "anyOf": [{ "type": "string" }, { "type": "null" }], "title": "Key" }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": { "$ref": "#/components/schemas/SourceDocumentMetadataRead" },
+                  "title": "Response Sdocmetadata-Get By Sdoc"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/HTTPValidationError" } } }
+          }
+        }
+      }
+    },
+    "/projects/{project_id}/source-document-metadata/date-count": {
+      "get": {
+        "tags": ["sdocMetadata"],
+        "summary": "Returns the number of SourceDocuments with a value for the date metadata and of all SourceDocuments of the Project.",
+        "operationId": "count_sdocs_with_date_metadata",
+        "security": [{ "OAuth2PasswordBearer": [] }],
+        "parameters": [
+          {
+            "name": "project_id",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "integer", "title": "Project Id" }
+          },
+          {
+            "name": "date_metadata_id",
+            "in": "query",
+            "required": true,
+            "schema": { "type": "integer", "title": "Date Metadata Id" }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/DateMetadataCountResult" } } }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/HTTPValidationError" } } }
+          }
+        }
+      }
+    },
+    "/projects/{project_id}/source-document-metadata/{sdoc_metadata_id}": {
+      "get": {
+        "tags": ["sdocMetadata"],
+        "summary": "Returns the SourceDocumentMetadata with the given ID if it exists",
         "operationId": "get_by_id",
         "security": [{ "OAuth2PasswordBearer": [] }],
         "parameters": [
           {
-            "name": "metadata_id",
+            "name": "project_id",
             "in": "path",
             "required": true,
-            "schema": { "type": "integer", "title": "Metadata Id" }
+            "schema": { "type": "integer", "title": "Project Id" }
+          },
+          {
+            "name": "sdoc_metadata_id",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "integer", "title": "Sdoc Metadata Id" }
           }
         ],
         "responses": {
@@ -6066,10 +6218,16 @@
         "security": [{ "OAuth2PasswordBearer": [] }],
         "parameters": [
           {
-            "name": "metadata_id",
+            "name": "project_id",
             "in": "path",
             "required": true,
-            "schema": { "type": "integer", "title": "Metadata Id" }
+            "schema": { "type": "integer", "title": "Project Id" }
+          },
+          {
+            "name": "sdoc_metadata_id",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "integer", "title": "Sdoc Metadata Id" }
           }
         ],
         "requestBody": {
@@ -6098,10 +6256,16 @@
         "security": [{ "OAuth2PasswordBearer": [] }],
         "parameters": [
           {
-            "name": "metadata_id",
+            "name": "project_id",
             "in": "path",
             "required": true,
-            "schema": { "type": "integer", "title": "Metadata Id" }
+            "schema": { "type": "integer", "title": "Project Id" }
+          },
+          {
+            "name": "sdoc_metadata_id",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "integer", "title": "Sdoc Metadata Id" }
           }
         ],
         "responses": {
@@ -6118,124 +6282,31 @@
         }
       }
     },
-    "/sdocmeta/sdoc/{sdoc_id}": {
-      "get": {
-        "tags": ["sdocMetadata"],
-        "summary": "Returns all SourceDocumentMetadata of the SourceDocument with the given ID if it exists",
-        "operationId": "get_by_sdoc",
-        "security": [{ "OAuth2PasswordBearer": [] }],
-        "parameters": [
-          { "name": "sdoc_id", "in": "path", "required": true, "schema": { "type": "integer", "title": "Sdoc Id" } },
-          {
-            "name": "project_id",
-            "in": "query",
-            "required": true,
-            "schema": { "type": "integer", "title": "Project Id" }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "Successful Response",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "array",
-                  "items": { "$ref": "#/components/schemas/SourceDocumentMetadataRead" },
-                  "title": "Response Sdocmetadata-Get By Sdoc"
-                }
-              }
-            }
-          },
-          "422": {
-            "description": "Validation Error",
-            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/HTTPValidationError" } } }
-          }
-        }
-      }
-    },
-    "/sdocmeta/sdoc/{sdoc_id}/metadata/{metadata_key}": {
-      "get": {
-        "tags": ["sdocMetadata"],
-        "summary": "Returns the SourceDocumentMetadata with the given Key if it exists.",
-        "operationId": "get_by_sdoc_and_key",
-        "security": [{ "OAuth2PasswordBearer": [] }],
-        "parameters": [
-          { "name": "sdoc_id", "in": "path", "required": true, "schema": { "type": "integer", "title": "Sdoc Id" } },
-          {
-            "name": "metadata_key",
-            "in": "path",
-            "required": true,
-            "schema": { "type": "string", "title": "Metadata Key" }
-          },
-          {
-            "name": "project_id",
-            "in": "query",
-            "required": true,
-            "schema": { "type": "integer", "title": "Project Id" }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "Successful Response",
-            "content": {
-              "application/json": { "schema": { "$ref": "#/components/schemas/SourceDocumentMetadataRead" } }
-            }
-          },
-          "422": {
-            "description": "Validation Error",
-            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/HTTPValidationError" } } }
-          }
-        }
-      }
-    },
-    "/sdocmeta/count_sdocs_with_date_metadata/{project_id}/metadata/{date_metadata_id}": {
-      "get": {
-        "tags": ["sdocMetadata"],
-        "summary": "Returns the number of SourceDocuments with a value for the date metadata and of all SourceDocuments of the Project.",
-        "operationId": "count_sdocs_with_date_metadata",
-        "security": [{ "OAuth2PasswordBearer": [] }],
-        "parameters": [
-          {
-            "name": "project_id",
-            "in": "path",
-            "required": true,
-            "schema": { "type": "integer", "title": "Project Id" }
-          },
-          {
-            "name": "date_metadata_id",
-            "in": "path",
-            "required": true,
-            "schema": { "type": "integer", "title": "Date Metadata Id" }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "Successful Response",
-            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/DateMetadataCountResult" } } }
-          },
-          "422": {
-            "description": "Validation Error",
-            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/HTTPValidationError" } } }
-          }
-        }
-      }
-    },
-    "/sdocmeta/bulk/update": {
+    "/projects/{project_id}/source-document-metadata/bulk": {
       "patch": {
         "tags": ["sdocMetadata"],
         "summary": "Updates multiple metadata objects at once.",
         "operationId": "update_bulk",
+        "security": [{ "OAuth2PasswordBearer": [] }],
+        "parameters": [
+          {
+            "name": "project_id",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "integer", "title": "Project Id" }
+          }
+        ],
         "requestBody": {
+          "required": true,
           "content": {
             "application/json": {
               "schema": {
-                "items": { "$ref": "#/components/schemas/SourceDocumentMetadataUpdateBulk" },
                 "type": "array",
+                "items": { "$ref": "#/components/schemas/SourceDocumentMetadataUpdateBulk" },
                 "title": "Metadatas"
               }
             }
-          },
-          "required": true
+          }
         },
         "responses": {
           "200": {
@@ -6243,8 +6314,8 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "items": { "$ref": "#/components/schemas/SourceDocumentMetadataRead" },
                   "type": "array",
+                  "items": { "$ref": "#/components/schemas/SourceDocumentMetadataRead" },
                   "title": "Response Sdocmetadata-Update Bulk"
                 }
               }
@@ -6254,8 +6325,7 @@
             "description": "Validation Error",
             "content": { "application/json": { "schema": { "$ref": "#/components/schemas/HTTPValidationError" } } }
           }
-        },
-        "security": [{ "OAuth2PasswordBearer": [] }]
+        }
       }
     },
     "/projects/{project_id}/span-annotations": {
@@ -14288,15 +14358,10 @@
             "anyOf": [{ "type": "integer" }, { "type": "null" }],
             "title": "Parent Id",
             "description": "ID of the parent folder (nullable)"
-          },
-          "project_id": {
-            "type": "integer",
-            "title": "Project Id",
-            "description": "ID of the project this folder belongs to (nullable)"
           }
         },
         "type": "object",
-        "required": ["name", "folder_type", "project_id"],
+        "required": ["name", "folder_type"],
         "title": "FolderCreate"
       },
       "FolderCreatedEvent": {
@@ -14343,12 +14408,12 @@
             "title": "Parent Id",
             "description": "ID of the parent folder (nullable)"
           },
+          "id": { "type": "integer", "title": "Id", "description": "ID of the Folder" },
           "project_id": {
             "type": "integer",
             "title": "Project Id",
-            "description": "ID of the project this folder belongs to (nullable)"
+            "description": "ID of the project this folder belongs to"
           },
-          "id": { "type": "integer", "title": "Id", "description": "ID of the Folder" },
           "created": {
             "type": "string",
             "format": "date-time",
@@ -14363,7 +14428,7 @@
           }
         },
         "type": "object",
-        "required": ["name", "folder_type", "project_id", "id", "created", "updated"],
+        "required": ["name", "folder_type", "id", "project_id", "created", "updated"],
         "title": "FolderRead"
       },
       "FolderType": { "type": "string", "enum": ["normal", "sdoc_folder"], "title": "FolderType" },
@@ -16117,15 +16182,10 @@
             "type": "string",
             "title": "Description",
             "description": "Description of the ProjectMetadata"
-          },
-          "project_id": {
-            "type": "integer",
-            "title": "Project Id",
-            "description": "Project the ProjectMetadata belongs to"
           }
         },
         "type": "object",
-        "required": ["key", "metatype", "doctype", "description", "project_id"],
+        "required": ["key", "metatype", "doctype", "description"],
         "title": "ProjectMetadataCreate"
       },
       "ProjectMetadataCreatedEvent": {

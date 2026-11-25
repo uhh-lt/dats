@@ -131,8 +131,8 @@ def _create_metadata_field(
     """Create one user-editable text metadata field."""
     return crud_project_meta.create(
         db=db,
+        project_id=project_id,
         create_dto=ProjectMetadataCreate(
-            project_id=project_id,
             key=key,
             metatype=metatype,
             read_only=False,

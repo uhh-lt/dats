@@ -49,11 +49,11 @@ function MetadataCreateButtonContent({ docType }: { docType: DocType | undefined
       if (!docType || !projectId) return;
 
       createMetadataMutation({
+        projectId,
         requestBody: {
           doctype: docType,
           metatype: metaType as MetaType,
           key: `${metaType.toLowerCase()} (new)`,
-          project_id: projectId,
           read_only: false,
           description: "Placeholder description",
         },

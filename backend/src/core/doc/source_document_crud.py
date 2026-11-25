@@ -39,11 +39,11 @@ class CRUDSourceDocument(
         without_folder = [dto for dto in create_dtos if dto.folder_id is None]
         folders = crud_folder.create_multi(
             db=db,
+            project_id=project_id,
             create_dtos=[
                 FolderCreate(
                     name=dto.filename,
                     folder_type=FolderType.SDOC_FOLDER,
-                    project_id=project_id,
                 )
                 for dto in without_folder
             ],
@@ -297,15 +297,19 @@ class CRUDSourceDocument(
         return results
 
     def read_ids_by_folder_ids(
-        self, db: Session, *, folder_ids: list[int]
+        self, db: Session, *, project_id: int, folder_ids: list[int]
     ) -> list[int]:
-        """IDs of all SourceDocuments directly inside the given folders."""
+        """IDs of all SourceDocuments of the project directly inside the given
+        folders."""
         if not folder_ids:
             return []
         return [
             row[0]
             for row in db.query(self.model.id)
-            .filter(self.model.folder_id.in_(folder_ids))
+            .filter(
+                self.model.project_id == project_id,
+                self.model.folder_id.in_(folder_ids),
+            )
             .all()
         ]
 

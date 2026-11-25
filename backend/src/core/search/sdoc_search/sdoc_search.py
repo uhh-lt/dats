@@ -224,7 +224,9 @@ def find_sdocs(
 
     # 2. the sdoc folders
     folder_ids = [sdoc.folder_id for sdoc in sdoc_db_objs]
-    folders = crud_folder.read_by_ids(db=db, ids=list(OrderedDict.fromkeys(folder_ids)))
+    folders = crud_folder.read_by_ids(
+        db=db, project_id=project_id, ids=list(OrderedDict.fromkeys(folder_ids))
+    )
 
     # 3. the annotators
     annotators = crud_sdoc.read_annotators(

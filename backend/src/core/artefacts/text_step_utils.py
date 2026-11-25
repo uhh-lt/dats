@@ -24,7 +24,7 @@ def read_stored_text(project_id: int, sdoc_id: int) -> StoredText:
     with sqlr.transaction() as db:
         sdoc_data = crud_sdoc_data.read(db=db, project_id=project_id, id=sdoc_id)
         language = crud_sdoc_meta.read_by_sdoc_and_key(
-            db=db, key="language", sdoc_id=sdoc_id
+            db=db, project_id=project_id, key="language", sdoc_id=sdoc_id
         )
         assert language.str_value is not None, (
             "The language must be detected before the text steps run!"

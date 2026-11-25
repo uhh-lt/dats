@@ -17,13 +17,13 @@ export type FolderRead = {
    */
   parent_id?: number | null;
   /**
-   * ID of the project this folder belongs to (nullable)
-   */
-  project_id: number;
-  /**
    * ID of the Folder
    */
   id: number;
+  /**
+   * ID of the project this folder belongs to
+   */
+  project_id: number;
   /**
    * Creation timestamp of the folder
    */

@@ -16,8 +16,4 @@ export type FolderCreate = {
    * ID of the parent folder (nullable)
    */
   parent_id?: number | null;
-  /**
-   * ID of the project this folder belongs to (nullable)
-   */
-  project_id: number;
 };

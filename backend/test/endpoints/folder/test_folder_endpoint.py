@@ -8,43 +8,58 @@ from core.doc.source_document_crud import crud_sdoc
 from core.doc.source_document_dto import SourceDocumentCreate
 
 
+def _url(project_id: int, path: str = "") -> str:
+    return f"/projects/{project_id}/folders{path}"
+
+
 def test_create_folder(client: TestClient, test_project):
     payload = FolderCreate(
         name="Test Folder",
         folder_type=FolderType.NORMAL,
         parent_id=None,
-        project_id=test_project.id,
     )
-    response = client.put("/folder", json=payload.model_dump())
+    response = client.put(_url(test_project.id), json=payload.model_dump())
 
     assert response.status_code == 200, response.text
     folder = FolderRead.model_validate(response.json())
     assert folder.name == payload.name
     assert folder.folder_type == payload.folder_type
     assert folder.parent_id == payload.parent_id
-    assert folder.project_id == payload.project_id
-
-
-# test/endpoints/test_folder_endpoint.py  (replace this test)
+    assert folder.project_id == test_project.id
 
 
 def test_create_folder_if_not_exists(client: TestClient):
+    """A project the user is no member of answers 403."""
     non_existing_project_id = 9999999
     payload = FolderCreate(
         name="My Folder",
         folder_type=FolderType.NORMAL,
         parent_id=None,
-        project_id=non_existing_project_id,
     )
-    response = client.put("/folder", json=payload.model_dump())
+    response = client.put(_url(non_existing_project_id), json=payload.model_dump())
 
     assert response.status_code == 403, response.text
+
+
+def test_create_folder_below_a_folder_of_another_project_is_a_conflict(
+    client: TestClient, test_project, foreign_project_with_folder
+):
+    """A parent folder of another project is rejected by the composite foreign key
+    (409)."""
+    payload = FolderCreate(
+        name="My Folder",
+        folder_type=FolderType.NORMAL,
+        parent_id=foreign_project_with_folder["folder"].id,
+    )
+    response = client.put(_url(test_project.id), json=payload.model_dump())
+
+    assert response.status_code == 409, response.text
 
 
 def test_get_folder_by_id(client: TestClient, project_with_folder):
     folder = project_with_folder["folder"]
 
-    response = client.get(f"/folder/{folder.id}")
+    response = client.get(_url(folder.project_id, f"/{folder.id}"))
 
     assert response.status_code == 200, response.text
     folder_read = FolderRead.model_validate(response.json())
@@ -55,11 +70,15 @@ def test_get_folder_by_id(client: TestClient, project_with_folder):
     assert folder_read.project_id == folder.project_id
 
 
-def test_get_folder_by_id_if_not_exists(client: TestClient):
-    non_existing_folder_id = 999999
-    response = client.get(f"/folder/{non_existing_folder_id}")
+def test_get_folder_of_another_project_is_not_found(
+    client: TestClient, test_project, foreign_project_with_folder
+):
+    """A folder of another project is not found in the project of the path (404)."""
+    foreign = foreign_project_with_folder["folder"]
 
-    assert response.status_code == 403, response.text
+    response = client.get(_url(test_project.id, f"/{foreign.id}"))
+
+    assert response.status_code == 404, response.text
 
 
 testdata = [
@@ -75,7 +94,7 @@ def test_update_folder_parametrized(
     folder = project_with_folder["folder"]
     project = project_with_folder["project"]
 
-    response = client.patch(f"/folder/{folder.id}", json=payload)
+    response = client.patch(_url(project.id, f"/{folder.id}"), json=payload)
 
     assert response.status_code == 200, response.text
     updated = FolderRead.model_validate(response.json())
@@ -92,7 +111,9 @@ def test_update_folder(client: TestClient, project_with_folder):
         name="Updated Name",
         parent_id=None,
     )
-    response = client.patch(f"/folder/{folder.id}", json=update.model_dump())
+    response = client.patch(
+        _url(folder.project_id, f"/{folder.id}"), json=update.model_dump()
+    )
 
     assert response.status_code == 200, response.text
     updated = FolderRead.model_validate(response.json())
@@ -100,23 +121,45 @@ def test_update_folder(client: TestClient, project_with_folder):
     assert updated.parent_id == update.parent_id
 
 
-def test_update_folder_if_not_exists(client: TestClient):
-    non_existing_folder_id = 999
+def test_update_folder_of_another_project_is_not_found(
+    client: TestClient, test_project, foreign_project_with_folder
+):
+    foreign = foreign_project_with_folder["folder"]
     update = FolderUpdate(
         name="Updated Name",
         parent_id=None,
     )
     response = client.patch(
-        f"/folder/{non_existing_folder_id}", json=update.model_dump()
+        _url(test_project.id, f"/{foreign.id}"), json=update.model_dump()
     )
 
-    assert response.status_code == 403, response.text
+    assert response.status_code == 404, response.text
+
+
+def test_move_folder_into_a_folder_of_another_project_is_a_conflict(
+    client: TestClient, project_with_folder, foreign_project_with_folder
+):
+    """A target folder of another project is rejected by the composite foreign key
+    (409), also in the bulk update."""
+    folder = project_with_folder["folder"]
+    foreign = foreign_project_with_folder["folder"]
+
+    response = client.patch(
+        _url(folder.project_id, f"/{folder.id}"), json={"parent_id": foreign.id}
+    )
+    bulk_response = client.patch(
+        _url(folder.project_id, "/bulk"),
+        json=[{"folder_id": folder.id, "parent_id": foreign.id}],
+    )
+
+    assert response.status_code == 409, response.text
+    assert bulk_response.status_code == 409, bulk_response.text
 
 
 def test_delete_folder(client: TestClient, project_with_folder):
     folder = project_with_folder["folder"]
 
-    response = client.delete(f"/folder/{folder.id}")
+    response = client.delete(_url(folder.project_id, f"/{folder.id}"))
 
     assert response.status_code == 200, response.text
     deleted = FolderRead.model_validate(response.json())
@@ -148,7 +191,7 @@ def test_delete_folder_deletes_sdocs_of_all_subfolders(
     parent_id = project_with_nested_folders["parent"].id
     grandchild_id = project_with_nested_folders["grandchild"].id
 
-    response = client.delete(f"/folder/{parent_id}")
+    response = client.delete(_url(project.id, f"/{parent_id}"))
 
     assert response.status_code == 200, response.text
     for sdoc_id in sdoc_ids:
@@ -156,7 +199,7 @@ def test_delete_folder_deletes_sdocs_of_all_subfolders(
             client.get(f"/projects/{project.id}/source-documents/{sdoc_id}").status_code
             == 404
         )
-    assert client.get(f"/folder/{grandchild_id}").status_code == 403
+    assert client.get(_url(project.id, f"/{grandchild_id}")).status_code == 404
 
 
 def test_delete_sdoc_folder(client: TestClient, db_session, test_project):
@@ -173,7 +216,7 @@ def test_delete_sdoc_folder(client: TestClient, db_session, test_project):
     db_session.commit()
     folder_id = sdoc.folder_id
 
-    response = client.delete(f"/folder/{folder_id}")
+    response = client.delete(_url(test_project.id, f"/{folder_id}"))
 
     assert response.status_code == 200, response.text
     deleted = FolderRead.model_validate(response.json())
@@ -185,14 +228,17 @@ def test_delete_sdoc_folder(client: TestClient, db_session, test_project):
         ).status_code
         == 404
     )
-    assert client.get(f"/folder/{folder_id}").status_code == 403
+    assert client.get(_url(test_project.id, f"/{folder_id}")).status_code == 404
 
 
-def test_delete_folder_if_not_exists(client: TestClient):
-    non_existing_folder_id = 999999
-    resp = client.delete(f"/folder/{non_existing_folder_id}")
+def test_delete_folder_of_another_project_is_not_found(
+    client: TestClient, test_project, foreign_project_with_folder
+):
+    foreign = foreign_project_with_folder["folder"]
 
-    assert resp.status_code == 403, resp.text
+    resp = client.delete(_url(test_project.id, f"/{foreign.id}"))
+
+    assert resp.status_code == 404, resp.text
 
 
 def test_get_folders_by_project_and_type(
@@ -202,7 +248,7 @@ def test_get_folders_by_project_and_type(
     folders = project_with_multiple_folders["folders"]
 
     response = client.get(
-        f"/folder/project/{project.id}/folder/{FolderType.NORMAL.value}"
+        _url(project.id), params={"folder_type": FolderType.NORMAL.value}
     )
 
     assert response.status_code == 200, response.text
@@ -215,7 +261,7 @@ def test_get_folders_by_project_and_type(
 def test_get_folders_by_project_and_type_if_not_exists(client: TestClient):
     non_existing_project_id = 999999
     resp = client.get(
-        f"/folder/project/{non_existing_project_id}/folder/{FolderType.NORMAL.value}"
+        _url(non_existing_project_id), params={"folder_type": FolderType.NORMAL.value}
     )
 
     assert resp.status_code == 403, resp.text
@@ -227,7 +273,9 @@ def test_move_folder_into_itself_fails(client: TestClient, project_with_nested_f
     """Moving a folder under itself must be rejected (direct self-cycle)."""
     parent = project_with_nested_folders["parent"]
 
-    response = client.patch(f"/folder/{parent.id}", json={"parent_id": parent.id})
+    response = client.patch(
+        _url(parent.project_id, f"/{parent.id}"), json={"parent_id": parent.id}
+    )
 
     assert response.status_code == 400, response.text
 
@@ -239,7 +287,9 @@ def test_move_folder_into_descendant_fails(
     parent = project_with_nested_folders["parent"]
     grandchild = project_with_nested_folders["grandchild"]
 
-    response = client.patch(f"/folder/{parent.id}", json={"parent_id": grandchild.id})
+    response = client.patch(
+        _url(parent.project_id, f"/{parent.id}"), json={"parent_id": grandchild.id}
+    )
 
     assert response.status_code == 400, response.text
 
@@ -251,7 +301,9 @@ def test_move_folder_to_valid_parent_succeeds(
     parent = project_with_nested_folders["parent"]
     grandchild = project_with_nested_folders["grandchild"]
 
-    response = client.patch(f"/folder/{grandchild.id}", json={"parent_id": parent.id})
+    response = client.patch(
+        _url(grandchild.project_id, f"/{grandchild.id}"), json={"parent_id": parent.id}
+    )
 
     assert response.status_code == 200, response.text
     assert FolderRead.model_validate(response.json()).parent_id == parent.id
@@ -266,7 +318,7 @@ def test_update_folders_bulk_keeps_input_order(
     order = [folders[2], folders[0], folders[1]]
 
     response = client.patch(
-        "/folder/bulk/update",
+        _url(project_with_multiple_folders["project"].id, "/bulk"),
         json=[
             {"folder_id": folder.id, "name": f"Renamed {folder.id}"} for folder in order
         ],
@@ -287,7 +339,7 @@ def test_update_folders_bulk_rejects_cycle(
     grandchild = project_with_nested_folders["grandchild"]
 
     response = client.patch(
-        "/folder/bulk/update",
+        _url(project_with_nested_folders["project"].id, "/bulk"),
         json=[
             {"folder_id": child.id, "name": "Renamed Child"},
             {"folder_id": parent.id, "parent_id": grandchild.id},
@@ -295,9 +347,9 @@ def test_update_folders_bulk_rejects_cycle(
     )
 
     assert response.status_code == 400, response.text
-    assert FolderRead.model_validate(client.get(f"/folder/{child.id}").json()).name == (
-        "Child"
-    )
+    assert FolderRead.model_validate(
+        client.get(_url(child.project_id, f"/{child.id}")).json()
+    ).name == ("Child")
 
 
 def test_update_folders_bulk_rejects_cycle_across_moves(
@@ -307,7 +359,7 @@ def test_update_folders_bulk_rejects_cycle_across_moves(
     a, b, _ = project_with_multiple_folders["folders"]
 
     response = client.patch(
-        "/folder/bulk/update",
+        _url(project_with_multiple_folders["project"].id, "/bulk"),
         json=[
             {"folder_id": a.id, "parent_id": b.id},
             {"folder_id": b.id, "parent_id": a.id},
@@ -316,7 +368,9 @@ def test_update_folders_bulk_rejects_cycle_across_moves(
 
     assert response.status_code == 400, response.text
     for folder in (a, b):
-        current = FolderRead.model_validate(client.get(f"/folder/{folder.id}").json())
+        current = FolderRead.model_validate(
+            client.get(_url(folder.project_id, f"/{folder.id}")).json()
+        )
         assert current.parent_id is None
 
 
@@ -330,7 +384,7 @@ def test_update_folders_bulk_validates_against_tree_after_moves(
     grandchild = project_with_nested_folders["grandchild"]
 
     response = client.patch(
-        "/folder/bulk/update",
+        _url(project_with_nested_folders["project"].id, "/bulk"),
         json=[
             {"folder_id": parent.id, "parent_id": grandchild.id},
             {"folder_id": grandchild.id, "parent_id": None},
@@ -343,5 +397,7 @@ def test_update_folders_bulk_validates_against_tree_after_moves(
         for r in (FolderRead.model_validate(item) for item in response.json())
     }
     assert results == {parent.id: grandchild.id, grandchild.id: None}
-    current = FolderRead.model_validate(client.get(f"/folder/{child.id}").json())
+    current = FolderRead.model_validate(
+        client.get(_url(child.project_id, f"/{child.id}")).json()
+    )
     assert current.parent_id == parent.id

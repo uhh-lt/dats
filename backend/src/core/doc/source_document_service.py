@@ -81,10 +81,14 @@ class SourceDocumentService(metaclass=SingletonMeta):
         folders = [
             FolderRead.model_validate(folder)
             for folder in crud_folder.read_empty_sdoc_folders(
-                db=db, folder_ids=list({sdoc.folder_id for sdoc in sdocs})
+                db=db,
+                project_id=project_id,
+                folder_ids=list({sdoc.folder_id for sdoc in sdocs}),
             )
         ]
-        crud_folder.delete_multi(db=db, ids=[folder.id for folder in folders])
+        crud_folder.delete_multi(
+            db=db, project_id=project_id, ids=[folder.id for folder in folders]
+        )
 
         # 4) delete the files (the folders of the documents in every file CRUD),
         #    Elasticsearch documents and Weaviate objects

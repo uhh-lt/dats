@@ -75,7 +75,10 @@ def enrich_for_recompute(
             db=db, project_id=payload.project_id, id=payload.sdoc_id
         )
         language = crud_sdoc_meta.read_by_sdoc_and_key(
-            db=db, key="language", sdoc_id=payload.sdoc_id
+            db=db,
+            project_id=payload.project_id,
+            key="language",
+            sdoc_id=payload.sdoc_id,
         )
         # the quotation model handles German text documents only; the token data
         # of other documents is never read, it may not fit the model

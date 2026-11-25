@@ -362,6 +362,7 @@ export function usePromptEditor(
         case "metadataFields":
           return updateMetadataMutation(
             {
+              projectId,
               requestBody: pushed.map(({ id, name, description }) => ({
                 project_metadata_id: id,
                 key: name,

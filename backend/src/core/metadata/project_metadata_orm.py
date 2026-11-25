@@ -1,6 +1,13 @@
 from typing import TYPE_CHECKING
 
-from sqlalchemy import Boolean, ForeignKey, Integer, String, UniqueConstraint
+from sqlalchemy import (
+    Boolean,
+    ForeignKey,
+    Integer,
+    PrimaryKeyConstraint,
+    String,
+    UniqueConstraint,
+)
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from repos.db.orm_base import ORMBase
@@ -11,7 +18,8 @@ if TYPE_CHECKING:
 
 
 class ProjectMetadataORM(ORMBase):
-    id: Mapped[int] = mapped_column(Integer, primary_key=True, index=True)
+    # the primary key is (project_id, id), see __table_args__
+    id: Mapped[int] = mapped_column(Integer, autoincrement=True, index=True)
     key: Mapped[str] = mapped_column(String, nullable=False, index=False)
     metatype: Mapped[str] = mapped_column(String, nullable=False, index=False)
     read_only: Mapped[bool] = mapped_column(Boolean, nullable=False, index=False)
@@ -32,13 +40,13 @@ class ProjectMetadataORM(ORMBase):
         Integer,
         ForeignKey("project.id", ondelete="CASCADE"),
         nullable=False,
-        index=True,
     )
     project: Mapped["ProjectORM"] = relationship(
         "ProjectORM", back_populates="metadata_"
     )
 
     __table_args__ = (
+        PrimaryKeyConstraint("project_id", "id", name="projectmetadata_pkey"),
         UniqueConstraint(
             "project_id",
             "key",
@@ -47,6 +55,3 @@ class ProjectMetadataORM(ORMBase):
         ),
         UniqueConstraint("project_id", "id", name="UC_projectmetadata_project_id_id"),
     )
-
-    def get_project_id(self) -> int:
-        return self.project_id

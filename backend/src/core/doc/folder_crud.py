@@ -3,39 +3,46 @@ from sqlalchemy.orm import Session
 from core.doc.folder_dto import FolderCreate, FolderUpdate
 from core.doc.folder_enum import FolderType
 from core.doc.folder_exceptions import (
-    FolderMoveAcrossProjectsError,
     FolderMoveCycleError,
     FolderMoveToNonNormalFolderError,
 )
 from core.doc.folder_orm import FolderORM
-from repos.db.crud_base import BATCH_SIZE, SQLCRUDBase
+from repos.db.crud_base import BATCH_SIZE
+from repos.db.project_crud_base import ProjectCRUDBase
 
 
-class CRUDFolder(SQLCRUDBase[FolderORM, FolderCreate, FolderUpdate]):
+class CRUDFolder(ProjectCRUDBase[FolderORM, FolderCreate, FolderUpdate]):
     ### READ OPERATIONS ###
 
-    def read_subfolders(
-        self, db: Session, *, parent_folder_id: int | None
+    def read_with_children(
+        self, db: Session, *, project_id: int, folder_id: int
     ) -> list[FolderORM]:
-        return (
-            db.query(self.model)
-            .filter(self.model.parent_id == parent_folder_id)
-            .order_by(self.model.name)
-            .all()
-        )
+        """
+        Read the folder and all of its descendant folders.
 
-    def read_with_children(self, db: Session, *, folder_id: int) -> list[FolderORM]:
-        """The folder and all of its descendant folders."""
+        Args:
+            project_id: The project of the folder.
+            folder_id: The folder.
+
+        Returns:
+            The folder and its descendants; nothing for a folder of another project.
+        """
         topq = (
             db.query(self.model.id)
-            .filter(self.model.id == folder_id)
+            .filter(self.model.project_id == project_id, self.model.id == folder_id)
             .cte("cte", recursive=True)
         )
-        bottomq = db.query(self.model.id).join(topq, self.model.parent_id == topq.c.id)
+        bottomq = db.query(self.model.id).join(
+            topq,
+            (self.model.project_id == project_id) & (self.model.parent_id == topq.c.id),
+        )
         recursive_q = topq.union(bottomq)  # type: ignore
         return (
             db.query(self.model)
-            .filter(self.model.id.in_(db.query(recursive_q.c.id)))
+            .filter(
+                self.model.project_id == project_id,
+                self.model.id.in_(db.query(recursive_q.c.id)),
+            )
             .all()
         )
 
@@ -92,7 +99,7 @@ class CRUDFolder(SQLCRUDBase[FolderORM, FolderCreate, FolderUpdate]):
         return db_objs
 
     def read_empty_sdoc_folders(
-        self, db: Session, *, folder_ids: list[int]
+        self, db: Session, *, project_id: int, folder_ids: list[int]
     ) -> list[FolderORM]:
         """
         Reads the SDOC_FOLDERs among the given folders that contain neither
@@ -100,6 +107,7 @@ class CRUDFolder(SQLCRUDBase[FolderORM, FolderCreate, FolderUpdate]):
 
         Args:
             db: The database session.
+            project_id: The project of the folders.
             folder_ids: The candidate folder IDs; missing IDs are skipped.
 
         Returns:
@@ -114,6 +122,7 @@ class CRUDFolder(SQLCRUDBase[FolderORM, FolderCreate, FolderUpdate]):
             db_objs.extend(
                 db.query(self.model)
                 .filter(
+                    self.model.project_id == project_id,
                     self.model.id.in_(batch_ids),
                     self.model.folder_type == FolderType.SDOC_FOLDER,
                     ~self.model.source_documents.any(),
@@ -126,30 +135,45 @@ class CRUDFolder(SQLCRUDBase[FolderORM, FolderCreate, FolderUpdate]):
     ### UPDATE OPERATIONS ###
 
     def update_multi(
-        self, db: Session, *, ids: list[int], update_dtos: list[FolderUpdate]
+        self,
+        db: Session,
+        *,
+        project_id: int,
+        ids: list[int],
+        update_dtos: list[FolderUpdate],
     ) -> list[FolderORM]:
         # Guard every move before writing anything
-        folders = self.read_by_ids(db=db, ids=ids)
-        self._assert_valid_moves(db=db, folders=folders, update_dtos=update_dtos)
-        return super().update_multi(db=db, ids=ids, update_dtos=update_dtos)
+        folders = self.read_by_ids(db=db, project_id=project_id, ids=ids)
+        self._assert_valid_moves(
+            db=db, project_id=project_id, folders=folders, update_dtos=update_dtos
+        )
+        return super().update_multi(
+            db=db, project_id=project_id, ids=ids, update_dtos=update_dtos
+        )
 
     ### OTHER OPERATIONS ###
 
     def _assert_valid_moves(
-        self, db: Session, *, folders: list[FolderORM], update_dtos: list[FolderUpdate]
+        self,
+        db: Session,
+        *,
+        project_id: int,
+        folders: list[FolderORM],
+        update_dtos: list[FolderUpdate],
     ) -> None:
         """
         Guard every move (single or bulk) of one update request.
 
-        When parent_id is set to a real folder, the target must be a NORMAL folder
-        in the same project. parent_id=None (move to root) needs no target check.
+        When parent_id is set to a real folder, the target must be a NORMAL folder.
+        A target that does not exist in the project fails at the composite foreign
+        key when the update is written. parent_id=None (move to root) needs no
+        target check.
         No folder may end up inside itself or one of its descendants. This is
         checked against the folder tree after ALL moves of the request, so moves
         that only together form a cycle are rejected as well.
 
         Raises:
             FolderMoveToNonNormalFolderError: If a target folder is not NORMAL.
-            FolderMoveAcrossProjectsError: If a target folder is in another project.
             FolderMoveCycleError: If the moves would create a cycle.
         """
         moves: dict[int, int | None] = {
@@ -161,19 +185,15 @@ class CRUDFolder(SQLCRUDBase[FolderORM, FolderCreate, FolderUpdate]):
             return
 
         # Target checks
-        folder_by_id = {folder.id: folder for folder in folders}
         target_ids = [
             target_id for target_id in moves.values() if target_id is not None
         ]
-        targets = {t.id: t for t in self.read_by_ids(db=db, ids=target_ids)}
-        for folder_id, target_id in moves.items():
-            if target_id is None:
-                continue
-            target_folder = targets[target_id]
+        targets = self.read_existing_by_ids(
+            db=db, project_id=project_id, ids=target_ids
+        )
+        for target_folder in targets.values():
             if target_folder.folder_type != FolderType.NORMAL:
                 raise FolderMoveToNonNormalFolderError(target_folder.id)
-            if target_folder.project_id != folder_by_id[folder_id].project_id:
-                raise FolderMoveAcrossProjectsError(folder_id, target_folder.id)
 
         # Build the parent map of the tree after the moves: the current parents of
         # all ancestors of the targets (read level by level, in batches), overridden
@@ -183,9 +203,15 @@ class CRUDFolder(SQLCRUDBase[FolderORM, FolderCreate, FolderUpdate]):
         }
         parent_of.update({t.id: t.parent_id for t in targets.values()})
         parent_of.update(moves)
+        # a target of another project has no ancestors in the project
+        parent_of.update(
+            {target_id: None for target_id in target_ids if target_id not in targets}
+        )
         unknown = {p for p in parent_of.values() if p is not None} - parent_of.keys()
         while unknown:
-            for ancestor in self.read_by_ids(db=db, ids=list(unknown)):
+            for ancestor in self.read_by_ids(
+                db=db, project_id=project_id, ids=list(unknown)
+            ):
                 parent_of[ancestor.id] = ancestor.parent_id
             unknown = {
                 p for p in parent_of.values() if p is not None
