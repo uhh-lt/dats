@@ -55,7 +55,8 @@ def test_add_sentence_annotation(client: TestClient, project_with_sdoc_and_code)
 def test_add_sentence_annotation_attached_not_existing(
     client: TestClient, test_project: ProjectORM
 ):
-    """A document and code that do not exist are not found."""
+    """A document that does not exist is not found (404): the annotation document
+    of the user cannot be created."""
     payload = SentenceAnnotationCreate(
         sentence_id_start=0,
         sentence_id_end=0,
@@ -76,14 +77,14 @@ def test_add_sentence_annotation_attached_not_existing(
         pytest.param("own", "foreign", id="sdoc-of-other-project"),
     ],
 )
-def test_create_sentence_annotation_with_id_of_other_project_is_not_found(
+def test_create_sentence_annotation_with_id_of_other_project_is_a_conflict(
     client: TestClient,
     two_tenants: TwoTenants,
     code_tenant: Literal["own", "foreign"],
     sdoc_tenant: Literal["own", "foreign"],
 ):
-    """A code or document of another project of the user in the create body is not
-    found in the path's project, and nothing is created."""
+    """A code or document of another project of the user in the create body is
+    rejected by the composite foreign keys (409), and nothing is created."""
     own = two_tenants["own"]
     payload = SentenceAnnotationCreate(
         sentence_id_start=0,
@@ -94,7 +95,7 @@ def test_create_sentence_annotation_with_id_of_other_project_is_not_found(
 
     resp = client.put(_route(own["project"].id), json=payload.model_dump())
 
-    assert resp.status_code == 404, resp.text
+    assert resp.status_code == 409, resp.text
     assert get_user_annotation_ids(
         client, "sentence", own["project"].id, own["sdoc"].id, own["adoc"].user_id
     ) == {own["sentence"].id}
@@ -152,7 +153,8 @@ def test_add_sentence_annotations_bulk(
 def test_add_sentence_annotione_bulk_if_not_exists(
     client: TestClient, test_project: ProjectORM
 ):
-    """A document and code that do not exist are not found."""
+    """A document that does not exist is not found (404): the annotation document
+    of the user cannot be created."""
     payload = SentenceAnnotationCreate(
         sentence_id_start=0,
         sentence_id_end=0,

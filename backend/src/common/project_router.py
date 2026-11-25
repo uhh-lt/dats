@@ -15,9 +15,10 @@ def project_router(
     The router of a resource of a project: its routes live under
     `/projects/{project_id}<prefix>`, and every request needs a logged-in member of
     the project (403 otherwise) and, for the router of a feature, the feature
-    enabled in the project (403 otherwise). The routes read every id in the path,
-    query and body within the project of the path, so an id of another project is
-    not found (404).
+    enabled in the project (403 otherwise). The routes read every path id within
+    the project of the path (404 for an id of another project), leave the body ids
+    of a write to the composite foreign keys (409) and filter by the project, so a
+    filter id of another project matches nothing.
 
     Args:
         prefix: The plural, kebab-case name of the resource, e.g.

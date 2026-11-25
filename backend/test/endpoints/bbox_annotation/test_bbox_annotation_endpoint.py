@@ -66,11 +66,11 @@ def test_create_bbox_annotation(
         pytest.param("sdoc", id="sdoc-of-other-project"),
     ],
 )
-def test_create_bbox_annotation_with_id_of_other_project_is_not_found(
+def test_create_bbox_annotation_with_id_of_other_project_is_a_conflict(
     client: TestClient, two_tenants: TwoTenants, foreign_key: str
 ) -> None:
-    """A code or document of another project does not exist in the project of
-    the path, also when the user is a member of both; nothing is created."""
+    """A code or document of another project is rejected by the composite foreign
+    keys (409), also when the user is a member of both; nothing is created."""
     own = two_tenants["own"]
     foreign = two_tenants["foreign"]
     project_id = own["project"].id
@@ -85,7 +85,7 @@ def test_create_bbox_annotation_with_id_of_other_project_is_not_found(
 
     response = client.put(_url(project_id), json=payload.model_dump())
 
-    assert response.status_code == 404, response.text
+    assert response.status_code == 409, response.text
     assert get_user_annotation_ids(
         client, "bbox", project_id, own["sdoc"].id, own["adoc"].user_id
     ) == {own["bbox"].id}
@@ -527,19 +527,24 @@ def test_update_bbox_annotations_bulk(
 
 
 @pytest.mark.parametrize(
-    "foreign_key",
+    "foreign_key,expected_status",
     [
-        # the annotation belongs to the other project of the user
-        pytest.param("bbox", id="annotation-of-other-project"),
-        # the new code belongs to the other project of the user
-        pytest.param("code", id="code-of-other-project"),
+        # the annotation belongs to the other project of the user: not found
+        pytest.param("bbox", 404, id="annotation-of-other-project"),
+        # the new code belongs to the other project of the user: the composite
+        # foreign key rejects it
+        pytest.param("code", 409, id="code-of-other-project"),
     ],
 )
-def test_update_bbox_annotations_bulk_with_id_of_other_project_is_not_found(
-    client: TestClient, two_tenants: TwoTenants, foreign_key: str
+def test_update_bbox_annotations_bulk_with_id_of_other_project_is_rejected(
+    client: TestClient,
+    two_tenants: TwoTenants,
+    foreign_key: str,
+    expected_status: int,
 ) -> None:
-    """An annotation or code of another project does not exist in the project of
-    the path; the own annotation keeps its code."""
+    """An annotation of another project is not found in the project of the path
+    (404), a code of another project is rejected by the composite foreign key
+    (409); the own annotation keeps its code."""
     own = two_tenants["own"]
     foreign = two_tenants["foreign"]
     project_id = own["project"].id
@@ -552,7 +557,7 @@ def test_update_bbox_annotations_bulk_with_id_of_other_project_is_not_found(
 
     response = client.patch(_url(project_id, "/bulk"), json=payload)
 
-    assert response.status_code == 404, response.text
+    assert response.status_code == expected_status, response.text
     assert (
         get_annotation(client, "bbox", project_id, own["bbox"].id).code_id
         == own["code"].id
@@ -602,19 +607,24 @@ def test_update_bbox_annotation_by_id_if_not_exists(
 
 
 @pytest.mark.parametrize(
-    "foreign_key",
+    "foreign_key,expected_status",
     [
-        # the annotation belongs to the other project of the user
-        pytest.param("bbox", id="annotation-of-other-project"),
-        # the new code belongs to the other project of the user
-        pytest.param("code", id="code-of-other-project"),
+        # the annotation belongs to the other project of the user: not found
+        pytest.param("bbox", 404, id="annotation-of-other-project"),
+        # the new code belongs to the other project of the user: the composite
+        # foreign key rejects it
+        pytest.param("code", 409, id="code-of-other-project"),
     ],
 )
-def test_update_bbox_annotation_with_id_of_other_project_is_not_found(
-    client: TestClient, two_tenants: TwoTenants, foreign_key: str
+def test_update_bbox_annotation_with_id_of_other_project_is_rejected(
+    client: TestClient,
+    two_tenants: TwoTenants,
+    foreign_key: str,
+    expected_status: int,
 ) -> None:
-    """An annotation or code of another project does not exist in the project of
-    the path; the own annotation keeps its code."""
+    """An annotation of another project is not found in the project of the path
+    (404), a code of another project is rejected by the composite foreign key
+    (409); the own annotation keeps its code."""
     own = two_tenants["own"]
     foreign = two_tenants["foreign"]
     project_id = own["project"].id
@@ -623,7 +633,7 @@ def test_update_bbox_annotation_with_id_of_other_project_is_not_found(
 
     resp = client.patch(_url(project_id, f"/{bbox_id}"), json={"code_id": code_id})
 
-    assert resp.status_code == 404, resp.text
+    assert resp.status_code == expected_status, resp.text
     assert (
         get_annotation(client, "bbox", project_id, own["bbox"].id).code_id
         == own["code"].id

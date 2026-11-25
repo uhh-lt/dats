@@ -73,7 +73,9 @@ Resources of a project move under `/projects/{project_id}/...` module group by m
 - **Project from the path only**: every route takes `project_id: int`; request and create DTOs carry no `project_id`.
 - **Paths**: plural kebab-case collections (`/span-annotations`), one resource at `/{<entity>_id}`, links at `/{<entity>_id}/<others>/{<other>_id}` (PUT adds, DELETE removes), bulk routes at `/bulk` declared before `/{<entity>_id}`, computations at `POST /<verb>`.
 - **Filters**: optional query parameters on the collection (`GET /span-annotations?user_id=1&sdoc_id=2`), never one route per filter combination.
-- **Ids within the project**: read every id of the path, query and body within the project (`crud_x.read(db=db, project_id=project_id, id=...)`), so an id of another project answers 404 and a filter id of another project matches nothing; no `assert_in_same_project_as` or `get_project_id()`.
+- **Path ids**: read every id of the path within the project (`crud_x.read(db=db, project_id=project_id, id=...)`), so an id of another project answers 404; no `assert_in_same_project_as` or `get_project_id()`.
+- **Body ids**: a reference in the body of a write (`code_id`, `sdoc_id`) is left to the composite foreign key, so an id of another project answers 409; services do not pre-check body references.
+- **Query ids**: a filter id of another project matches nothing.
 - **Emit to the path's project**: `ws.emit_to_project(event, result, project_id=project_id)`, also for batch events.
 
 ### Mutation & Sync

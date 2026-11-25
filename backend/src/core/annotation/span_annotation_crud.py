@@ -11,7 +11,6 @@ from core.annotation.span_annotation_dto import (
     SpanAnnotationUpdate,
 )
 from core.annotation.span_annotation_orm import SpanAnnotationORM
-from core.annotation.span_group_crud import crud_span_group
 from core.annotation.span_group_orm import SpanAnnotationSpanGroupLinkTable
 from core.annotation.span_text_crud import crud_span_text
 from core.annotation.span_text_dto import SpanTextCreate
@@ -20,7 +19,6 @@ from core.doc.source_document_orm import SourceDocumentORM
 from core.memo.object_handle_orm import ObjectHandleORM
 from repos.db.crud_base import BATCH_SIZE
 from repos.db.project_crud_base import ProjectCRUDBase
-from repos.db.sql_utils import assert_in_project
 
 
 class CRUDSpanAnnotation(
@@ -432,12 +430,8 @@ class CRUDSpanAnnotation(
     def add_to_span_group(
         self, db: Session, *, project_id: int, span_id: int, group_id: int
     ) -> SpanAnnotationORM:
-        # a span group of another project is not found (404) before the link's
-        # composite foreign key would reject it
+        # the link's composite foreign key rejects a span group of another project
         span_db_obj = self.read(db=db, project_id=project_id, id=span_id)
-        assert_in_project(
-            [crud_span_group.read(db=db, id=group_id)], project_id=project_id
-        )
         db.execute(
             insert(SpanAnnotationSpanGroupLinkTable).values(
                 project_id=project_id,
@@ -452,10 +446,9 @@ class CRUDSpanAnnotation(
     def remove_from_span_group(
         self, db: Session, *, project_id: int, span_id: int, group_id: int
     ) -> SpanAnnotationORM:
+        # the delete filters on the project, so a span group of another project
+        # removes no link
         span_db_obj = self.read(db=db, project_id=project_id, id=span_id)
-        assert_in_project(
-            [crud_span_group.read(db=db, id=group_id)], project_id=project_id
-        )
         db.execute(
             delete(SpanAnnotationSpanGroupLinkTable).where(
                 SpanAnnotationSpanGroupLinkTable.project_id == project_id,

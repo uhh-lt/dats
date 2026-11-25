@@ -31,8 +31,9 @@ def aggregate_two_ids(
 
 def assert_in_project(db_objs: Sequence[ORMBase], *, project_id: int) -> None:
     """
-    For the tables whose CRUD does not take the project yet: an object of another
-    project does not exist within the project of a request.
+    For reads of the tables whose CRUD does not take the project yet: an object of
+    another project does not exist within the project of a request. Writes leave
+    the references in their body to the composite foreign keys instead.
 
     Raises:
         NoSuchElementError: For the first object of another project.
