@@ -578,7 +578,7 @@ def test_compute_agreement_deduplicates_requested_ids(
 def test_compute_agreement_rejects_document_of_other_project(
     client: TestClient, agreement_project: AgreementProject
 ) -> None:
-    """A document of another project is rejected with 400 and named in the message."""
+    """A document of another project does not exist in the project (404)."""
     p = agreement_project
     other_sdoc_id = p["other_sdoc"].id
     params = _params(p, SPAN_WORDS).model_copy(
@@ -589,8 +589,7 @@ def test_compute_agreement_rejects_document_of_other_project(
         params={"project_id": p["project"].id},
         json=params.model_dump(mode="json"),
     )
-    assert response.status_code == 400, response.text
-    assert str(other_sdoc_id) in response.text
+    assert response.status_code == 404, response.text
 
 
 def test_compute_agreement_rejects_code_of_other_project(
@@ -882,8 +881,8 @@ def test_segment_texts_of_no_ranges_are_empty(
 @pytest.mark.parametrize(
     "sdoc_key,expected_status",
     [
-        # A document of another project is rejected.
-        pytest.param("other_sdoc", 400, id="document-of-other-project"),
+        # A document of another project does not exist in the project.
+        pytest.param("other_sdoc", 404, id="document-of-other-project"),
         # A document ID that does not exist is not found.
         pytest.param(None, 404, id="unknown-document"),
     ],

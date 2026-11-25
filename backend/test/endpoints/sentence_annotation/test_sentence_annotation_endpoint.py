@@ -55,8 +55,8 @@ def test_add_sentence_annotation(client: TestClient, project_with_sdoc_and_code)
 def test_add_sentence_annotation_attached_not_existing(
     client: TestClient, test_project: ProjectORM
 ):
-    """A document that does not exist is not found (404): the annotation document
-    of the user cannot be created."""
+    """A document that does not exist is rejected by the composite foreign key of
+    the user's annotation document (409)."""
     payload = SentenceAnnotationCreate(
         sentence_id_start=0,
         sentence_id_end=0,
@@ -65,7 +65,7 @@ def test_add_sentence_annotation_attached_not_existing(
     )
     resp = client.put(_route(test_project.id), json=payload.model_dump())
 
-    assert resp.status_code == 404, resp.text
+    assert resp.status_code == 409, resp.text
 
 
 @pytest.mark.parametrize(
@@ -153,8 +153,8 @@ def test_add_sentence_annotations_bulk(
 def test_add_sentence_annotione_bulk_if_not_exists(
     client: TestClient, test_project: ProjectORM
 ):
-    """A document that does not exist is not found (404): the annotation document
-    of the user cannot be created."""
+    """A document that does not exist is rejected by the composite foreign key of
+    the user's annotation document (409)."""
     payload = SentenceAnnotationCreate(
         sentence_id_start=0,
         sentence_id_end=0,
@@ -163,7 +163,7 @@ def test_add_sentence_annotione_bulk_if_not_exists(
     )
     resp = client.put(_route(test_project.id) + "/bulk", json=[payload.model_dump()])
 
-    assert resp.status_code == 404, resp.text
+    assert resp.status_code == 409, resp.text
 
 
 # ===========================================================================

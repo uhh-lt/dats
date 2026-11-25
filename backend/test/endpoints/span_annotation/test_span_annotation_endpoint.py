@@ -41,8 +41,8 @@ def test_add_span_annotation(
 def test_add_span_annotation_if_not_exists(
     client: TestClient, test_project: ProjectORM
 ) -> None:
-    """A span annotation of a document that does not exist is not found (404): the
-    annotation document of the user cannot be created."""
+    """A span annotation of a document that does not exist is rejected by the
+    composite foreign key of the user's annotation document (409)."""
     fake_id = 3000
     payload = SpanAnnotationCreate(
         sdoc_id=fake_id,
@@ -56,7 +56,7 @@ def test_add_span_annotation_if_not_exists(
 
     resp = client.put(_url(test_project.id), json=payload.model_dump(exclude_none=True))
 
-    assert resp.status_code == 404, resp.text
+    assert resp.status_code == 409, resp.text
 
 
 def test_add_span_annotations_bulk(
@@ -103,8 +103,8 @@ def test_add_span_annotations_bulk(
 def test_add_span_annotations_bulk_if_not_exists(
     client: TestClient, test_project: ProjectORM
 ) -> None:
-    """Span annotations of a document that does not exist are not found (404): the
-    annotation document of the user cannot be created."""
+    """Span annotations of a document that does not exist are rejected by the
+    composite foreign key of the user's annotation document (409)."""
     payload = SpanAnnotationCreate(
         sdoc_id=9000,
         code_id=9000,
@@ -119,7 +119,7 @@ def test_add_span_annotations_bulk_if_not_exists(
         f"{_url(test_project.id)}/bulk", json=[payload.model_dump(exclude_none=True)]
     )
 
-    assert resp.status_code == 404, resp.text
+    assert resp.status_code == 409, resp.text
 
 
 # Character and token ends are exclusive, so a span covers begin..end - 1 and

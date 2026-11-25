@@ -9,6 +9,9 @@ from core.annotation.annotation_document_dto import (
     AnnotationDocumentUpdate,
 )
 from core.annotation.annotation_document_orm import AnnotationDocumentORM
+from core.annotation.annotation_exceptions import (
+    AnnotationDocumentOfAnotherProjectError,
+)
 from repos.db.crud_base import BATCH_SIZE
 from repos.db.project_crud_base import ProjectCRUDBase
 
@@ -118,6 +121,10 @@ class CRUDAnnotationDocument(
 
         Returns:
             The annotation document by document id.
+
+        Raises:
+            AnnotationDocumentOfAnotherProjectError: If the user's annotation
+                document of a document belongs to another project (409).
         """
         if not sdoc_ids:
             return {}
@@ -156,10 +163,18 @@ class CRUDAnnotationDocument(
             )
         db.flush()
 
-        return {
+        # a document of another project that already has an annotation document of
+        # the user is skipped by ON CONFLICT instead of failing at the foreign key
+        adoc_by_sdoc_id = {
             annotation_document.source_document_id: annotation_document
             for annotation_document in annotation_documents
         }
+        foreign_sdoc_ids = [id for id in unique_sdoc_ids if id not in adoc_by_sdoc_id]
+        if foreign_sdoc_ids:
+            raise AnnotationDocumentOfAnotherProjectError(
+                project_id=project_id, sdoc_ids=foreign_sdoc_ids
+            )
+        return adoc_by_sdoc_id
 
 
 crud_adoc = CRUDAnnotationDocument(AnnotationDocumentORM)
