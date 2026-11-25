@@ -9,6 +9,7 @@ SourceDocumentNotFoundInFilesystemError: The original file of SourceDocument 647
 The project doctor (`tools/project_doctor`) finds these inconsistencies and heals them, in two steps:
 
 !!! warning "File-store compatibility"
+
     This version of the doctor expects the legacy `projects/<project_id>/docs/` layout. Do not run `check` or `heal` against an instance that has run migration `807bab97f373_file_store`; its file checks do not support the entity-based layout.
 
 1. `check` reads all stores, prints the issues and writes them to a JSON report. It changes nothing.
