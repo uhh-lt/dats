@@ -3,9 +3,12 @@ from sqlalchemy.orm import Session
 from common.crud_enum import Crud
 from common.singleton_meta import SingletonMeta
 from core.artefacts.thumbnail.thumbnail_file_crud import (
-    IMAGE_FILENAME,
     THUMBNAIL_FILENAME,
     crud_thumbnail_file,
+)
+from core.artefacts.thumbnail.web_image_file_crud import (
+    WEB_IMAGE_FILENAME,
+    crud_web_image_file,
 )
 from core.doc.folder_crud import crud_folder
 from core.doc.folder_dto import FolderRead
@@ -33,25 +36,21 @@ class SourceDocumentService(metaclass=SingletonMeta):
         return super(SourceDocumentService, cls).__new__(cls)
 
     def read_urls(self, *, db: Session, sdoc_id: int) -> SourceDocumentUrls:
-        """The URLs of the uploaded file and of the WebP image and thumbnail
+        """The URLs of the uploaded file, the web image and the thumbnail
         (None if they do not exist)."""
         sdoc = crud_sdoc.read(db=db, id=sdoc_id)
 
-        def thumbnail_url(name: str) -> str | None:
-            if not crud_thumbnail_file.exists(
-                project_id=sdoc.project_id, id=sdoc.id, name=name
-            ):
+        def url(crud: FileCRUDBase, name: str) -> str | None:
+            if not crud.exists(project_id=sdoc.project_id, id=sdoc.id, name=name):
                 return None
-            return crud_thumbnail_file.url(
-                project_id=sdoc.project_id, id=sdoc.id, name=name
-            )
+            return crud.url(project_id=sdoc.project_id, id=sdoc.id, name=name)
 
         return SourceDocumentUrls(
             file_url=crud_sdoc_file.url(
                 project_id=sdoc.project_id, id=sdoc.id, name=sdoc.filename
             ),
-            image_url=thumbnail_url(IMAGE_FILENAME),
-            thumbnail_url=thumbnail_url(THUMBNAIL_FILENAME),
+            image_url=url(crud_web_image_file, WEB_IMAGE_FILENAME),
+            thumbnail_url=url(crud_thumbnail_file, THUMBNAIL_FILENAME),
         )
 
     def delete(self, *, db: Session, sdoc_id: int) -> SourceDocumentDeleteResult:

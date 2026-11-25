@@ -1,7 +1,6 @@
 from fastapi.encoders import jsonable_encoder
 from sqlalchemy.orm import Session
 
-from common.crud_enum import Crud
 from common.doc_type_enum import DocType
 from common.meta_type_enum import MetaType
 from common.singleton_meta import SingletonMeta
@@ -18,7 +17,6 @@ from modules.concept_over_time_analysis.cota_dto import (
     COTAUpdate,
     COTAUpdateIntern,
 )
-from repos.filesystem.file_crud_base import FileCRUDBase
 from systems.job_system.job_service import JobService
 
 
@@ -103,12 +101,7 @@ class COTAService(metaclass=SingletonMeta):
         cota_id: int,
     ) -> COTARead:
         # make sure that cota with cota_id exists
-        db_obj = crud_cota.read(db=db, id=cota_id)
-        cota = COTARead.model_validate(db_obj)
-        # delete the models
-        FileCRUDBase.delete_by_entity(
-            Crud.COTA_ANALYSIS, project_id=cota.project_id, ids=[cota.id]
-        )
+        crud_cota.read(db=db, id=cota_id)
         # reset the search space & refinement job
         db_obj = crud_cota.update(
             db=db,
@@ -120,15 +113,6 @@ class COTAService(metaclass=SingletonMeta):
         )
         # return the results
         return COTARead.model_validate(db_obj)
-
-    def delete(self, *, db: Session, cota_id: int) -> COTARead:
-        """Deletes the analysis with its models."""
-        cota = COTARead.model_validate(crud_cota.read(db=db, id=cota_id))
-        crud_cota.delete(db=db, id=cota_id)
-        FileCRUDBase.delete_by_entity(
-            Crud.COTA_ANALYSIS, project_id=cota.project_id, ids=[cota.id]
-        )
-        return cota
 
     def annotate_sentences(
         self,

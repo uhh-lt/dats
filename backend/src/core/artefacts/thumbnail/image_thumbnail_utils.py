@@ -4,9 +4,12 @@ from pathlib import Path
 from PIL import Image
 
 from core.artefacts.thumbnail.thumbnail_file_crud import (
-    IMAGE_FILENAME,
     THUMBNAIL_FILENAME,
     crud_thumbnail_file,
+)
+from core.artefacts.thumbnail.web_image_file_crud import (
+    WEB_IMAGE_FILENAME,
+    crud_web_image_file,
 )
 
 
@@ -20,8 +23,11 @@ def webp_bytes(image: Image.Image) -> bytes:
 def generate_thumbnails(*, project_id: int, sdoc_id: int, image_path: Path) -> None:
     """Writes the WebP and the thumbnail of the image document."""
     with Image.open(image_path) as im:
-        crud_thumbnail_file.write(
-            project_id=project_id, id=sdoc_id, name=IMAGE_FILENAME, data=webp_bytes(im)
+        crud_web_image_file.write(
+            project_id=project_id,
+            id=sdoc_id,
+            name=WEB_IMAGE_FILENAME,
+            data=webp_bytes(im),
         )
         im.thumbnail((256, 256))
         crud_thumbnail_file.write(

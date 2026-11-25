@@ -8,9 +8,12 @@ from core.annotation.sentence_annotation_dto import SentenceAnnotationCreate
 from core.annotation.sentence_annotation_orm import SentenceAnnotationORM
 from core.annotation.sentence_annotation_service import SentenceAnnotationService
 from core.artefacts.thumbnail.thumbnail_file_crud import (
-    IMAGE_FILENAME,
     THUMBNAIL_FILENAME,
     crud_thumbnail_file,
+)
+from core.artefacts.thumbnail.web_image_file_crud import (
+    WEB_IMAGE_FILENAME,
+    crud_web_image_file,
 )
 from core.code.code_crud import crud_code
 from core.code.code_dto import CodeCreate
@@ -195,8 +198,8 @@ def project_with_image(db_session, test_project) -> ProjectWithImage:
     """
     This fixture sets up `test_project` with the image document "photo.png"
     (`image`, no document data) and its files, as the upload and the thumbnail
-    step store them: the uploaded file "photo.png" (b"png"), and the WebP
-    `image.webp` (b"webp") and thumbnail `thumbnail.webp` (b"thumbnail").
+    step store them: the uploaded file "photo.png" (b"png"), the web image
+    `image.webp` (b"webp") and the thumbnail `thumbnail.webp` (b"thumbnail").
     """
     image = crud_sdoc.create(
         db=db_session,
@@ -211,8 +214,13 @@ def project_with_image(db_session, test_project) -> ProjectWithImage:
     crud_sdoc_file.write(
         project_id=test_project.id, id=image.id, name="photo.png", data=b"png"
     )
-    for name, data in ((IMAGE_FILENAME, b"webp"), (THUMBNAIL_FILENAME, b"thumbnail")):
-        crud_thumbnail_file.write(
-            project_id=test_project.id, id=image.id, name=name, data=data
-        )
+    crud_web_image_file.write(
+        project_id=test_project.id, id=image.id, name=WEB_IMAGE_FILENAME, data=b"webp"
+    )
+    crud_thumbnail_file.write(
+        project_id=test_project.id,
+        id=image.id,
+        name=THUMBNAIL_FILENAME,
+        data=b"thumbnail",
+    )
     return {"project": test_project, "image": image}
