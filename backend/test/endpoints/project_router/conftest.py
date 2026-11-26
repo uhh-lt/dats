@@ -4,7 +4,12 @@ from typing import Any
 import pytest
 from fastapi.testclient import TestClient
 
-from composite_keys_test_utils import TwoTenants, create_two_tenants
+from composite_keys_test_utils import (
+    TwinProjects,
+    TwoTenants,
+    create_twin_projects,
+    create_two_tenants,
+)
 from core.user.user_crud import crud_user
 from core.user.user_dto import UserCreate
 from dats_test_utils import create_user_client
@@ -77,3 +82,20 @@ def non_member_client(app_client, db_session) -> Generator[TestClient, Any, None
     client = create_user_client(app_client, user)
     yield client
     client.close()
+
+
+@pytest.fixture(scope="function")
+def twins(db_session, test_user, test_project) -> TwinProjects:
+    """
+    This fixture sets up two projects that hold the same ids (see
+    `composite_keys_test_utils.TwinProjects`):
+
+    - `project`: the test project with one row of every project-owned table
+      (`rows`, see `composite_keys_test_utils.TenantRows`).
+    - `twin`: "Twin Project" with the same features and a copy of every row of the
+      test project with the same id.
+
+    Non-obvious derived behavior: only the SQL rows are copied, so a read of
+    Elasticsearch, Weaviate or files finds nothing in either project.
+    """
+    return create_twin_projects(db_session, user=test_user, project=test_project)

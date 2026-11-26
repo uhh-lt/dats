@@ -1,5 +1,6 @@
 from typing import TypedDict, TypeVar
 
+from sqlalchemy import case, delete, insert, literal, select
 from sqlalchemy.orm import Session
 
 from common.doc_type_enum import DocType
@@ -49,6 +50,7 @@ from modules.tag_recommendation.tag_recommendation_orm import TagRecommendationL
 from modules.timeline_analysis.timeline_analysis_enum import TimelineAnalysisType
 from modules.timeline_analysis.timeline_analysis_orm import TimelineAnalysisORM
 from modules.whiteboard.whiteboard_orm import WhiteboardORM
+from repos.db.orm_base import ORMBase
 from systems.artefact_system.source_document_step_status_orm import (
     SourceDocumentStepStatusORM,
 )
@@ -593,3 +595,69 @@ def create_two_tenants(
     foreign = create_tenant_rows(db, project=foreign_project, user=user)
     db.commit()
     return {"own": own, "foreign": foreign}
+
+
+# tables with a project_id that are no rows of the project: the membership and the
+# virtual users, which are global users
+NOT_COPIED_TABLES = {"projectuserlinktable", "user"}
+
+
+def copy_project_rows(db: Session, *, source_id: int, target_id: int) -> list[str]:
+    """Replace the rows of every project-owned table of the target project with
+    copies of the rows of the source project that keep their ids, so both projects
+    hold the same ids. A copy differs from its row in project_id only (and in
+    attached_project_id, which names the own project).
+
+    Returns:
+        The names of the copied tables.
+    """
+    tables = [
+        table
+        for table in ORMBase.metadata.sorted_tables
+        if "project_id" in table.c and table.name not in NOT_COPIED_TABLES
+    ]
+    for table in reversed(tables):
+        db.execute(delete(table).where(table.c.project_id == target_id))
+    for table in tables:
+        columns = [
+            literal(target_id).label(column.name)
+            if column.name == "project_id"
+            else case((column.is_(None), None), else_=literal(target_id)).label(
+                column.name
+            )
+            if column.name == "attached_project_id"
+            else column
+            for column in table.c
+        ]
+        db.execute(
+            insert(table).from_select(
+                [column.name for column in table.c],
+                select(*columns).where(table.c.project_id == source_id),
+            )
+        )
+    db.flush()
+    return [table.name for table in tables]
+
+
+class TwinProjects(TypedDict):
+    """The rows of `create_tenant_rows` (see TenantRows) in the given project
+    (`rows`), and the project "Twin Project" of the same user with the same enabled
+    features, whose rows are copies of every row of the given project with the same
+    ids (`copy_project_rows`). Both projects hold the same ids, so a read that
+    matches a row by its id alone finds the rows of both."""
+
+    project: ProjectORM
+    twin: ProjectORM
+    rows: TenantRows
+
+
+def create_twin_projects(
+    db: Session, *, user: UserORM, project: ProjectORM
+) -> TwinProjects:
+    rows = create_tenant_rows(db, project=project, user=user)
+    twin = create_project_with_features(
+        db, user, title="Twin Project", features=list(project.enabled_features)
+    )
+    copy_project_rows(db, source_id=project.id, target_id=twin.id)
+    db.commit()
+    return {"project": project, "twin": twin, "rows": rows}

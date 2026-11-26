@@ -1,9 +1,11 @@
-from collections.abc import Callable
+from collections.abc import Callable, Iterator
+from contextlib import contextmanager
 
 import pytest
 from psycopg2.errors import ForeignKeyViolation
+from sqlalchemy import event, inspect
 from sqlalchemy.exc import IntegrityError
-from sqlalchemy.orm import Session
+from sqlalchemy.orm import MANYTOONE, RelationshipProperty, Session
 
 from composite_keys_test_utils import TwoTenants
 from core.annotation.span_annotation_crud import crud_span_anno
@@ -15,6 +17,8 @@ from core.tag.tag_crud import crud_tag
 from modules.classifier.classifier_crud import crud_classifier
 from repos.db.orm_base import ORMBase
 from repos.db.sql_exceptions import NoSuchElementError
+
+from .conftest import count_queries
 
 # (row, relationship, target): every relationship over a composite foreign key,
 # named by the keys of TenantRows; a target never holds a row with the same unique
@@ -101,14 +105,128 @@ def test_cross_project_assignment_fails(
     relationship: str,
     target_key: str,
 ):
-    """Assigning the object of another project to a relationship writes only its
-    id column, so the composite foreign key rejects the row."""
+    """Assigning the object of another project to a relationship keeps the
+    project of the row and writes only its id column, so the composite foreign key
+    rejects the row."""
     row = two_tenants["own"][row_key]
+    project_id = row.project_id
     target = two_tenants["foreign"][target_key]
 
-    _assert_foreign_key_violation(
-        db_session, lambda: setattr(row, relationship, target)
+    with _recorded_updates(db_session) as updates:
+        _assert_foreign_key_violation(
+            db_session, lambda: setattr(row, relationship, target)
+        )
+
+    assert row.project_id == project_id
+    assert updates and all("project_id" not in _set_columns(u) for u in updates)
+
+
+def test_own_project_assignment_writes_only_the_id_column(
+    db_session: Session, two_tenants: TwoTenants
+):
+    """Assigning another code of the own project to an annotation updates its
+    code_id and nothing else."""
+    own = two_tenants["own"]
+    span = own["span"]
+
+    with _recorded_updates(db_session) as updates:
+        span.code = own["child_code"]
+        db_session.flush()
+
+    assert span.code_id == own["child_code"].id
+    assert [_set_columns(update) for update in updates] == [{"code_id", "updated"}]
+
+
+@pytest.mark.parametrize(
+    "row_key,relationship,target_key",
+    [
+        pytest.param(row, relationship, target, id=f"{row}.{relationship}")
+        for row, relationship, target in RELATIONSHIPS
+    ],
+)
+def test_many_to_one_load_comes_from_the_identity_map(
+    db_session: Session,
+    two_tenants: TwoTenants,
+    row_key: str,
+    relationship: str,
+    target_key: str,
+):
+    """Accessing a many-to-one relationship whose target is already loaded in the
+    session issues no query: the relationship joins on the whole primary key of the
+    target, (project_id, id)."""
+    own_row = two_tenants["own"][row_key]
+    mapper = inspect(type(own_row))
+    target_key_of_row = _target_key(mapper.relationships[relationship])
+    db_session.expire_all()
+    row = db_session.get(mapper.class_, _identity(own_row))
+    # load the current target of the row into the identity map
+    target = db_session.get(
+        mapper.relationships[relationship].mapper.class_,
+        tuple(getattr(row, key) for key in target_key_of_row),
     )
+    assert target is not None
+
+    with count_queries(db_session) as queries:
+        getattr(row, relationship)
+
+    assert queries() == 0
+
+
+def test_every_many_to_one_over_a_composite_key_uses_the_identity_map():
+    """Every many-to-one relationship onto a project-owned table loads its target
+    by its primary key, so SQLAlchemy answers it from the identity map."""
+    lazy_loads = [
+        f"{mapper.class_.__name__}.{relationship.key}"
+        for mapper in ORMBase.registry.mappers
+        for relationship in mapper.relationships
+        if relationship.direction is MANYTOONE
+        and "project_id" in relationship.mapper.columns
+        and relationship.mapper.class_.__name__ != "UserORM"
+        and not getattr(relationship.strategy, "use_get", False)
+    ]
+
+    assert lazy_loads == []
+
+
+def _identity(obj: object) -> tuple:
+    state = inspect(obj)
+    assert state is not None and state.identity is not None
+    return state.identity
+
+
+def _target_key(relationship: RelationshipProperty) -> list[str]:
+    """The attributes of the row that hold the primary key of the target, in the
+    order of that key."""
+    local_of = {
+        remote: local for local, remote in relationship.local_remote_pairs or []
+    }
+    return [
+        relationship.parent.get_property_by_column(local_of[column]).key
+        for column in relationship.mapper.primary_key
+    ]
+
+
+def _set_columns(update: str) -> set[str]:
+    """The columns an UPDATE statement sets."""
+    assignments = update.split(" SET ")[1].split(" WHERE ")[0]
+    return {assignment.split("=")[0] for assignment in assignments.split(", ")}
+
+
+@contextmanager
+def _recorded_updates(db: Session) -> Iterator[list[str]]:
+    """Record the UPDATE statements the session executes inside the block."""
+    updates: list[str] = []
+
+    def on_execute(conn, cursor, statement: str, *args: object) -> None:
+        if statement.startswith("UPDATE"):
+            updates.append(statement)
+
+    engine = db.get_bind()
+    event.listen(engine, "before_cursor_execute", on_execute)
+    try:
+        yield updates
+    finally:
+        event.remove(engine, "before_cursor_execute", on_execute)
 
 
 # ===========================================================================
