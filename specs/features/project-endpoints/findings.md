@@ -1,15 +1,50 @@
 # Project endpoints (#928): findings
 
 Collected from the final reports and PR descriptions of all sub-sessions of the #927/#928 stack (PRs #941 to #955).
-Items that a later PR of the stack solved are not listed. Each item says where it comes from and whether it was checked against the top of the stack (`agentic/api-g8-cleanup-f7a5f1`, #955).
+Items that a later PR of the stack solved are not listed. Each item says where it comes from and whether it was checked against the top of the stack. Items the review fixes (#956) solved are kept and marked **Done in #956**.
 
-Status on 2026-11-26: 15 PRs open and stacked, nothing merged. Every endpoint file is converted; `auth`, `info` and `websocket` belong to no project and stay.
+Status on 2026-11-26: 16 PRs open and stacked (#941 to #956), nothing merged. Every endpoint file is converted; `auth`, `info` and `websocket` belong to no project and stay.
 
-## 1. Bugs seen in passing (not fixed, not caused by the stack)
+## 0. What the owner needs to review, check or decide
+
+Read this section first. Everything below it is the record. Status: the review fixes are in #956 (one PR on top of #955); the second review runs on that tip.
+
+### To decide
+
+| #   | Question                                                                                                                                                            | Where         |
+| --- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------- |
+| D1  | Run the migration on a copy of the production data before the merge? The issue asks for it; it has not been done. The owner runs production commands.               | 6             |
+| D2  | Routes without a caller in the frontend (search-and-annotate, the two unused job lists): keep or delete?                                                            | 3.1, 3.2      |
+| D3  | Any member may update or delete the project and manage members. Unchanged from before, approved as it is; listed because it is a permission question.               | 2.5           |
+| D4  | File issues for the bugs seen in passing (nested button warning, UMAP on very small maps, fixture debt, e2e tests need Ray) and for "span texts are never deleted"? | 1.3 to 1.6, 9 |
+| D5  | Old clients that still send `project_id` in a job start body are not rejected (pydantic ignores the extra field). Accept, or forbid extra fields?                   | 2.6, 10.4     |
+| D6  | How to merge: the whole stack at once as rebase merges. #944 and #945 are red on their own (fixed by #946), so they cannot be merged one by one.                    | 6             |
+
+### To review (new or changed by the review fixes, #956)
+
+| #   | What                                                                                                                                                                                                                           | Why it needs your eyes                                                               |
+| --- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | ------------------------------------------------------------------------------------ |
+| R1  | ADR 0013 (`specs/adr/0013-rows-are-identified-by-project-and-id.md`).                                                                                                                                                          | It records the id decision for good.                                                 |
+| R2  | 10 primary keys and 6 unique constraints that still left out `project_id` now start with it (link tables, `documentaspect`, `wordfrequency`, `sourcedocumentstepstatus`, `memorecent`, ...). This supersedes decision 2.11.    | Not asked for in the brief; it follows from the id decision and changes more tables. |
+| R3  | One migration `7f1bbe0f69d7` replaces the 12 revisions of the stack. A dev database on an old revision of the stack must be reset (steps in the description of #956).                                                          | It is the migration production will run.                                             |
+| R4  | Two behaviour fixes found by the new tests: COTA answers 404 for an unknown sentence (was 500) and checks its date metadata; a similarity search whose filter matches no document returns nothing (it searched all documents). | Behaviour changes outside the brief.                                                 |
+| R5  | The three changed decisions as built: job start bodies (2.6), one router per endpoint file with `me_endpoint.py` and `GET /info/features` (2.8), file owners by ORM class (2.9).                                               | You decided them; check that the result is what you meant.                           |
+
+### To check (not verified yet)
+
+| #   | What                                                                                                                                                                                                                                                                                                            |
+| --- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| C1  | CI of #956 on its final tip. The first frontend check failed while starting the CI containers (the worker was unhealthy), before any frontend step ran; it was restarted. Backend checks were still running when this was written.                                                                              |
+| C2  | Hand-written joins that still compare one id column, with the project filter elsewhere in the query: the `subquery.c.id` joins of the four searches, the timeline and the word frequency, and `SpanTextORM.id == span_text_id` in the code frequency. The second review checks them against rule 4 of ADR 0013. |
+| C3  | The agentic workflows (overview, documentation, review) failed on every PR during a model outage and were restarted on #941 to #955 on 2026-11-26. Their comments are not read yet.                                                                                                                             |
+| C4  | The UI paths nobody clicked (list in section 6).                                                                                                                                                                                                                                                                |
+| C5  | A test helper finds a document's project by its id alone (it fails loudly if the id exists twice); older tests still send `project_id` in job start bodies.                                                                                                                                                     |
+
+## 1. Bugs seen in passing (not caused by the stack)
 
 | #   | Finding                                                                                                                                                        | Source     | Checked                                                                                                                                                                  |
 | --- | -------------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| 1.1 | One click on "Create API key" sends the `PUT` twice (`ApiKeyCreateDialog.tsx`).                                                                                | #954       | Not investigated. The dialog is a form with a submit button; the cause is not obvious from the code.                                                                     |
+| 1.1 | One click on "Create API key" sends the `PUT` twice (`ApiKeyCreateDialog.tsx`).                                                                                | #954       | **Done in #956:** the dialog's two views shared DOM elements, so the click on Close became a submit. One click sends one `PUT` now.                                      |
 | 1.2 | A change made through the API does not reach the same user's open page (seen on the COTA page); a reload is needed.                                            | #950       | By design: `WebsocketEmitter` excludes the acting user (`_actor_exclusion`). It only matters when the same user works in two tabs or through the API and the UI at once. |
 | 1.3 | Nested `<button>` warning in the memo list card (console).                                                                                                     | #947, #953 | Not investigated.                                                                                                                                                        |
 | 1.4 | A perspectives map with three documents fails in UMAP.                                                                                                         | #951       | Existing limitation, no guard or error message.                                                                                                                          |
@@ -72,14 +107,14 @@ Approved by the owner on 2026-11-26; 2.6, 2.8, 2.9 and 2.11 were changed afterwa
 ## 6. Tests and checks: what was not covered
 
 - **Full backend suite**: sessions ran targeted tests only. CI ran the full suite on each PR. #944 and #945 are red on their own because their importer step calls an old tag route; the fix is in #946. This only matters if the PRs are merged one by one.
-- **CI of the top**: backend checks of #953 (re-run after the outage), #954 and #955 were still running when this was written.
+- **CI of the top**: #953, #954 and #955 are green. #956: see C1 in section 0.
 - **Importer**: never run locally on the CI test data (needs `TESTDATA_PASSWORD`); always on small own samples. CI runs the real step.
-- **Alembic downgrades**: never run by hand on a dev database (no `just` recipe). The migration tests downgrade to the revision before #941 and upgrade back, and pass at #955.
-- **Production data**: the #941 migration was not run on a copy of the production data (the issue's "Done when" asks for it). Local run with production row counts: 19 s; expect a few minutes on production. The later key swaps rewrite no rows. Deploy note: stop the stack; the migrations run when the backend starts.
-- **Generic tests**: the foreign-id test reads routes as declared, not as mounted, so it misses a wrongly added prefix; only the non-member test catches that.
+- **Alembic downgrades**: never run by hand on a dev database (no `just` recipe). The migration tests downgrade to the revision before #941 and upgrade back, and pass at #955 and with the single migration of #956.
+- **Production data**: the migration (one revision since #956) was not run on a copy of the production data (the issue's "Done when" asks for it). Local run with production row counts: 19 s; expect a few minutes on production. The later key swaps rewrite no rows. Deploy note: stop the stack; the migrations run when the backend starts.
+- **Generic tests**: the foreign-id test reads routes as declared, not as mounted, so it misses a wrongly added prefix; only the non-member test catches that. **Done in #956:** the test has a positive control, and a second test pins the routes outside `/projects/{project_id}`.
 - **Browser, never clicked in any session**: bulk delete on the annotation analysis pages; whiteboard nodes, edges and memo nodes; the classifier count step; the LLM memo suggestion; the multi-document tag menu; "apply tags" of tag recommendations; the health view; image and audio documents; folder drag and drop; project metadata in the settings; job abort and retry; COTA job results; experiment runs; annotation scaling; document sampler; exports and memo import/export; deleting a project; updating the own profile.
 
-## 7. Code that relies on globally unique ids (to fix)
+## 7. Code that relies on globally unique ids (fixed in #956)
 
 Decision of the owner (2026-11-26): ids are unique per project and will not stay globally unique. A row is identified by `(project_id, id)` everywhere, so id-only matching is a bug, not a simplification. See S1 and S2 of `review.md`.
 
@@ -90,18 +125,29 @@ Decision of the owner (2026-11-26): ids are unique per project and will not stay
 - Two primary keys carried pre-rename names (`documenttag_pkey`, `documenttagrecommendationlink_pkey`); all keys are to be named after their current tables.
 - `lint/check_endpoints.py` still reports three existing violations (e.g. `search_endpoint.py` imports `core.memo.memo_dto`). Not made worse by the stack.
 
-**Done in #956** (ADR 0013): relationships join on `(project_id, id)` and write the id column only; every key of a project-owned table starts with `project_id`; hand-written joins and reads match `project_id`; many-to-one loads come from the identity map again; the primary keys are named after their tables. Only `lint/check_endpoints.py` stays as it was.
+**Done in #956** (ADR 0013): relationships join on `(project_id, id)` and write the id column only; every key of a project-owned table starts with `project_id`; hand-written joins and reads match `project_id`; many-to-one loads come from the identity map again; the primary keys are named after their tables. Only `lint/check_endpoints.py` stays as it was. Still to check: C2 in section 0.
 
 ## 8. Process and tooling
 
-- pyright misses calls made through dicts or the `Crud` enum, and `reportIncompatibleMethodOverride` is off; changed CRUD signatures need a grep for callers.
+- pyright misses calls made through dicts (and missed those through the `Crud` enum, deleted in #956), and `reportIncompatibleMethodOverride` is off; changed CRUD signatures need a grep for callers.
 - The locked FastAPI no longer lists included routes in `app.routes`; the generic tests use `fastapi.routing.iter_route_contexts` (#942).
 - The frontend's `AssertEqual` drift guards caught the removed `project_id` at once (#953).
 - `cd .. && just …` from a worktree's root climbs to the main checkout's justfile (#944).
 - Every DATS process checks Ray, the embedding provider and Docling at start, so an outage of the shared services stops tests, the dev API and CI even for code that never calls them (#953, #954).
-- The three `agent` CI jobs (PR overview, documentation, review) failed on most PRs of the stack; one session saw 503s from their model provider. Not looked into.
+- The three `agent` CI jobs (PR overview, documentation, review) failed on most PRs of the stack; the cause was an outage of their model provider. Restarted on #941 to #955 on 2026-11-26 (C3 in section 0).
 - `backend_checks.yml` runs `tools/importer` before pytest; a tool that calls an old route hides all test results (#944).
 
 ## 9. Open from before the stack
 
 - Span texts are never deleted (no issue filed yet).
+
+## 10. Found by the review fixes (#956)
+
+| #    | Finding                                                                                                                                                                                                      | Status                        |
+| ---- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | ----------------------------- |
+| 10.1 | 10 primary keys and 6 unique constraints left out `project_id` and only worked while ids were globally unique.                                                                                               | Fixed (R2).                   |
+| 10.2 | Query counts before and after the project-keyed joins: bulk metadata update with 9 values 13 to 5 queries, export of 29 spans 36 to 8. Many-to-one loads cost 0 extra queries, checked for 32 relationships. | Fixed, covered by tests.      |
+| 10.3 | A twin project with the same ids in every table: no relationship, no CRUD read and none of the GET routes crosses projects (57 routes answer 200; the project and its members are not copied).               | Covered by tests.             |
+| 10.4 | COTA answered 500 for an unknown sentence and did not check its date metadata; the similarity search searched all documents when its filter matched none.                                                    | Fixed (R4).                   |
+| 10.5 | Old clients that send `project_id` in a job start body are not rejected.                                                                                                                                     | Open (D5).                    |
+| 10.6 | A helper sub-agent of the fixing session stopped without committing; its work was taken over.                                                                                                                | Process note, no code effect. |
