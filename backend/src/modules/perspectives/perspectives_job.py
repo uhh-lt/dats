@@ -13,7 +13,7 @@ sqlr = SQLRepo()
 @register_job(
     job_type="perspectives",
     input_type=PerspectivesJobInput,
-    # started by the job route of perspectives_endpoint.py
+    # started by perspectives_job_endpoint.py and by creating an aspect
     generate_endpoints=EndpointGeneration.READ,
     publish_updates=True,
     device="gpu",

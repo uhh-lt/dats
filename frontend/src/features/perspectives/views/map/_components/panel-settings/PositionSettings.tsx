@@ -23,6 +23,7 @@ import { useAppDispatch, useAppSelector } from "@store/storeHooks";
 import { useMemo } from "react";
 import { PerspectivesHooks } from "../../../../api/perspectivesHooks";
 import { PerspectivesActions } from "../../../../store/perspectivesSlice";
+import { PerspectivesMapRouteAPI } from "../../_hooks/perspectivesMapRouteAPI";
 interface PositionSettingsProps {
   aspectId: number;
 }
@@ -76,9 +77,11 @@ export function PositionSettings({ aspectId }: PositionSettingsProps) {
   }, [vis.data]);
 
   // refinement
+  const { projectId } = PerspectivesMapRouteAPI.useParams();
   const { mutate: startPerspectivesJob, isPending } = PerspectivesHooks.useStartPerspectivesJob();
   const handleRefineTM = () => {
     startPerspectivesJob({
+      projectId,
       aspectId,
       requestBody: {
         perspectives_job_type: PerspectivesJobType.REFINE_MODEL,

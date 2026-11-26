@@ -1,11 +1,9 @@
-from fastapi import APIRouter, Depends
+from fastapi import Depends
 
-from common.crud_enum import Crud
 from common.dats_event import DATSEvent
-from common.dependencies import DBSession, get_current_user
+from common.dependencies import DBSession
+from common.project_router import project_router
 from config import conf
-from core.auth.authz_user import AuthzUser
-from core.project.project_crud import crud_project
 from modules.classifier.classifier_crud import crud_classifier
 from modules.classifier.classifier_dto import (
     ClassifierBaseModelOption,
@@ -19,11 +17,7 @@ from modules.classifier.classifier_dto import (
 from modules.classifier.classifier_service import ClassifierService
 from systems.websocket_system.websocket_dependency import WebsocketEmitter
 
-router = APIRouter(
-    prefix="/classifier",
-    dependencies=[Depends(get_current_user)],
-    tags=["classifier"],
-)
+router = project_router("/classifiers", tags=["classifier"])
 
 
 # --- read operations
@@ -34,9 +28,7 @@ router = APIRouter(
     response_model=ClassifierInfo,
     summary="Returns classifier models, thresholds, and training defaults",
 )
-def get_classifier_info(
-    authz_user: AuthzUser = Depends(),
-) -> ClassifierInfo:
+def get_classifier_info(*, project_id: int) -> ClassifierInfo:
     return ClassifierInfo(
         weak_signal_threshold=conf.classifier.weak_signal_threshold,
         strong_signal_threshold=conf.classifier.strong_signal_threshold,
@@ -55,22 +47,17 @@ def get_classifier_info(
 
 
 @router.get(
-    "/project/{project_id}",
+    "",
     response_model=list[ClassifierRead],
-    summary="Returns all Classifiers of the Project with the given ID",
+    summary="Returns all Classifiers of the Project",
 )
 def get_by_project(
     *,
-    project_id: int,
     db: DBSession,
-    authz_user: AuthzUser = Depends(),
+    project_id: int,
 ) -> list[ClassifierRead]:
-    authz_user.assert_in_project(project_id)
-
-    proj_db_obj = crud_project.read(db=db, id=project_id)
-    result = [ClassifierRead.model_validate(c) for c in proj_db_obj.classifiers]
-    result.sort(key=lambda c: c.id)
-    return result
+    db_objs = crud_classifier.read_by_project(db=db, project_id=project_id)
+    return [ClassifierRead.model_validate(db_obj) for db_obj in db_objs]
 
 
 # --- update operations
@@ -84,19 +71,16 @@ def get_by_project(
 def update_by_id(
     *,
     db: DBSession,
+    project_id: int,
     classifier_id: int,
     classifier: ClassifierUpdate,
-    authz_user: AuthzUser = Depends(),
     ws: WebsocketEmitter = Depends(),
 ) -> ClassifierRead:
-    authz_user.assert_in_same_project_as(Crud.CLASSIFIER, classifier_id)
-    db_obj = crud_classifier.update(db=db, id=classifier_id, update_dto=classifier)
-    result = ClassifierRead.model_validate(db_obj)
-    ws.emit_to_project(
-        DATSEvent.CLASSIFIER_UPDATED,
-        result,
-        project_id=db_obj.get_project_id(),
+    db_obj = crud_classifier.update(
+        db=db, project_id=project_id, id=classifier_id, update_dto=classifier
     )
+    result = ClassifierRead.model_validate(db_obj)
+    ws.emit_to_project(DATSEvent.CLASSIFIER_UPDATED, result, project_id=project_id)
     return result
 
 
@@ -111,21 +95,14 @@ def update_by_id(
 def delete_by_id(
     *,
     db: DBSession,
+    project_id: int,
     classifier_id: int,
-    authz_user: AuthzUser = Depends(),
     ws: WebsocketEmitter = Depends(),
 ) -> ClassifierRead:
-    authz_user.assert_in_same_project_as(Crud.CLASSIFIER, classifier_id)
-
-    classifier = crud_classifier.read(db=db, id=classifier_id)
     result = ClassifierService().delete_classifier_by_id(
-        db=db, classifier_id=classifier_id
+        db=db, project_id=project_id, classifier_id=classifier_id
     )
-    ws.emit_to_project(
-        DATSEvent.CLASSIFIER_DELETED,
-        result,
-        project_id=classifier.get_project_id(),
-    )
+    ws.emit_to_project(DATSEvent.CLASSIFIER_DELETED, result, project_id=project_id)
     return result
 
 
@@ -133,19 +110,16 @@ def delete_by_id(
 
 
 @router.post(
-    "/project/{project_id}/dataset-statistics",
+    "/dataset-statistics",
     response_model=ClassifierDatasetStatistics,
     summary="Returns statistics of the dataset that would be created with these parameters",
 )
 def compute_dataset_statistics(
     *,
+    db: DBSession,
     project_id: int,
     request: ClassifierDatasetStatisticsRequest,
-    db: DBSession,
-    authz_user: AuthzUser = Depends(),
 ) -> ClassifierDatasetStatistics:
-    authz_user.assert_in_project(project_id)
-
     tcs = ClassifierService().get_model_service(request.model)
     return tcs.compute_dataset_statistics(
         db=db,

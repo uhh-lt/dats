@@ -4,7 +4,7 @@ import { ClassifierService } from "@api/services/ClassifierService";
 import type { ClassifierDatasetStatisticsRequest } from "@models/ClassifierDatasetStatisticsRequest";
 import type { ClassifierModel } from "@models/ClassifierModel";
 import type { ClassifierRead } from "@models/ClassifierRead";
-import { queryOptions } from "@tanstack/react-query";
+import { queryOptions, skipToken } from "@tanstack/react-query";
 
 export type ClassifierMap = Record<number, ClassifierRead>;
 
@@ -23,7 +23,7 @@ export interface ClassifierDatasetStatisticsParams {
  *
  *   classifierQueries.all()                     ["classifier"]
  *   classifierQueries.byProject(projectId)      ["classifier", "project", projectId]
- *   classifierQueries.info()                    ["classifier", "info"]
+ *   classifierQueries.info(projectId)           ["classifier", "info", projectId]
  *   classifierQueries.datasetStatistics(params) ["classifier", "datasetStatistics", ...params]
  */
 export const classifierQueries = {
@@ -44,10 +44,11 @@ export const classifierQueries = {
       staleTime: 1000 * 60 * 5,
     }),
 
-  info: () =>
+  infoScope: () => [...classifierQueries.all(), "info"] as const,
+  info: (projectId: number | undefined) =>
     queryOptions({
-      queryKey: [...classifierQueries.all(), "info"] as const,
-      queryFn: () => ClassifierService.getClassifierInfo(),
+      queryKey: [...classifierQueries.infoScope(), projectId] as const,
+      queryFn: projectId === undefined ? skipToken : () => ClassifierService.getClassifierInfo({ projectId }),
       // Classifier settings come from backend configuration and do not change at
       // runtime, so one response can be reused for the lifetime of the frontend.
       staleTime: Infinity,

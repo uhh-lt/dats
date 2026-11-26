@@ -23,6 +23,7 @@ export function ClusterDetailDialog({ aspectId }: ClusterDetailDialogProps) {
   const dispatch = useAppDispatch();
   const isOpen = useAppSelector((state) => state.perspectives.isClusterDetailDialogOpen);
   const clusterId = useAppSelector((state) => state.perspectives.clusterDetailDialogClusterId);
+  const projectId = useAppSelector((state) => state.project.projectId);
   const handleClose = useCallback(() => dispatch(PerspectivesActions.closeClusterDetailDialog()), [dispatch]);
 
   // get cluster information
@@ -52,9 +53,10 @@ export function ClusterDetailDialog({ aspectId }: ClusterDetailDialogProps) {
   const { mutate: updateClusterMutation, isPending } = PerspectivesHooks.useUpdateClusterDetails();
 
   const handleClusterUpdate: SubmitHandler<ClusterUpdate> = (data) => {
-    if (!cluster) return;
+    if (!cluster || projectId === undefined) return;
     updateClusterMutation(
       {
+        projectId,
         clusterId: cluster.id,
         requestBody: {
           name: data.name,

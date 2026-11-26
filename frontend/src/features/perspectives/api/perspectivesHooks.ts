@@ -33,9 +33,9 @@ const useGetAspect = (aspectId: number | null | undefined) =>
   });
 
 // the map thumbnail is served from /content/; enabled once the map is computed
-const useGetMapThumbnailURL = (aspectId: number, enabled: boolean) =>
+const useGetMapThumbnailURL = (projectId: number, aspectId: number, enabled: boolean) =>
   useQuery({
-    ...perspectivesQueries.mapThumbnailUrl(aspectId),
+    ...perspectivesQueries.mapThumbnailUrl(projectId, aspectId),
     select: (url) => (url === null ? null : encodeURI("/content/" + url)),
     enabled,
   });
@@ -97,10 +97,11 @@ const useRAGChat = () =>
   });
 
 const useGetDocVisualization = (aspectId: number) => {
+  const projectId = useAppSelector((state) => state.project.projectId);
   const searchQuery = useAppSelector((state) => state.perspectives.searchQuery);
   const filter = useAppSelector((state) => state.perspectives.filter[`aspect-${aspectId}`]);
   return useQuery({
-    ...perspectivesQueries.visualization(aspectId, searchQuery, filter as MyFilter<SdocColumns>),
+    ...perspectivesQueries.visualization(projectId, aspectId, searchQuery, filter as MyFilter<SdocColumns>),
     placeholderData: (previous) => previous,
   });
 };
@@ -109,13 +110,14 @@ const useGetDocVisualization = (aspectId: number) => {
 // return into its cache themselves: the visualization depends on the search query and filter of this user, so there
 // is no DATS event for it.
 
-const useLabelDocs = (aspectId: number) => {
+const useLabelDocs = (projectId: number, aspectId: number) => {
   const searchQuery = useAppSelector((state) => state.perspectives.searchQuery);
   const filter = useAppSelector((state) => state.perspectives.filter[`aspect-${aspectId}`]);
   return useMutation({
     mutationKey: [...perspectivesQueries.all(), "labelDocs"],
     mutationFn: (sdocIds: number[]) =>
       PerspectivesService.acceptLabel({
+        projectId,
         aspectId,
         searchQuery,
         requestBody: {
@@ -127,6 +129,7 @@ const useLabelDocs = (aspectId: number) => {
     onSuccess: (data) => {
       queryClient.setQueryData(
         perspectivesQueries.visualization(
+          projectId,
           aspectId,
           searchQuery,
           filter as Body_perspectives_visualize_documents["filter"],
@@ -140,13 +143,14 @@ const useLabelDocs = (aspectId: number) => {
   });
 };
 
-const useUnlabelDocs = (aspectId: number) => {
+const useUnlabelDocs = (projectId: number, aspectId: number) => {
   const searchQuery = useAppSelector((state) => state.perspectives.searchQuery);
   const filter = useAppSelector((state) => state.perspectives.filter[`aspect-${aspectId}`]);
   return useMutation({
     mutationKey: [...perspectivesQueries.all(), "unlabelDocs"],
     mutationFn: (sdocIds: number[]) =>
       PerspectivesService.revertLabel({
+        projectId,
         aspectId,
         searchQuery,
         requestBody: {
@@ -158,6 +162,7 @@ const useUnlabelDocs = (aspectId: number) => {
     onSuccess: (data) => {
       queryClient.setQueryData(
         perspectivesQueries.visualization(
+          projectId,
           aspectId,
           searchQuery,
           filter as Body_perspectives_visualize_documents["filter"],

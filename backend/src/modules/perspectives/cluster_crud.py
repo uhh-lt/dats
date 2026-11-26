@@ -1,21 +1,23 @@
 from sqlalchemy.orm import Session
 
-from modules.perspectives.aspect_crud import crud_aspect
 from modules.perspectives.cluster_dto import ClusterCreateIntern, ClusterUpdateIntern
 from modules.perspectives.cluster_orm import ClusterORM
 from modules.perspectives.document_cluster_orm import DocumentClusterORM
-from repos.db.crud_base import SQLCRUDBase
+from repos.db.project_crud_base import ProjectCRUDBase
 
 
-class CRUDCluster(SQLCRUDBase[ClusterORM, ClusterCreateIntern, ClusterUpdateIntern]):
+class CRUDCluster(
+    ProjectCRUDBase[ClusterORM, ClusterCreateIntern, ClusterUpdateIntern]
+):
     ### READ OPERATIONS ###
 
     def read_or_create_outlier_cluster(
-        self, db: Session, *, aspect_id: int, level: int
+        self, db: Session, *, project_id: int, aspect_id: int, level: int
     ) -> ClusterORM:
         db_obj = (
             db.query(self.model)
             .filter(
+                self.model.project_id == project_id,
                 self.model.aspect_id == aspect_id,
                 self.model.level == level,
                 self.model.is_outlier.is_(True),
@@ -25,8 +27,8 @@ class CRUDCluster(SQLCRUDBase[ClusterORM, ClusterCreateIntern, ClusterUpdateInte
         if db_obj is None:
             db_obj = self.create(
                 db=db,
+                project_id=project_id,
                 create_dto=ClusterCreateIntern(
-                    project_id=crud_aspect.read(db=db, id=aspect_id).project_id,
                     aspect_id=aspect_id,
                     level=level,
                     name="Outlier",
@@ -36,11 +38,12 @@ class CRUDCluster(SQLCRUDBase[ClusterORM, ClusterCreateIntern, ClusterUpdateInte
         return db_obj
 
     def read_by_aspect_and_level(
-        self, db: Session, *, aspect_id: int, level: int
+        self, db: Session, *, project_id: int, aspect_id: int, level: int
     ) -> list[ClusterORM]:
         return (
             db.query(self.model)
             .filter(
+                self.model.project_id == project_id,
                 self.model.aspect_id == aspect_id,
                 self.model.level == level,
             )
@@ -48,12 +51,17 @@ class CRUDCluster(SQLCRUDBase[ClusterORM, ClusterCreateIntern, ClusterUpdateInte
         )
 
     def read_by_aspect_and_sdoc(
-        self, db: Session, *, aspect_id: int, sdoc_id: int
+        self, db: Session, *, project_id: int, aspect_id: int, sdoc_id: int
     ) -> list[ClusterORM]:
         return (
             db.query(self.model)
-            .join(DocumentClusterORM, DocumentClusterORM.cluster_id == self.model.id)
+            .join(
+                DocumentClusterORM,
+                (DocumentClusterORM.project_id == self.model.project_id)
+                & (DocumentClusterORM.cluster_id == self.model.id),
+            )
             .filter(
+                self.model.project_id == project_id,
                 self.model.aspect_id == aspect_id,
                 DocumentClusterORM.sdoc_id == sdoc_id,
             )

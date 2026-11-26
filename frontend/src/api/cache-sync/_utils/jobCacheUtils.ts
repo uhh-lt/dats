@@ -280,7 +280,9 @@ function writeAspectMostRecentJob(job: PerspectivesJobRead) {
 // A finished perspectives job recomputed the aspect's visualization data.
 function handlePerspectivesJobFinished(job: PerspectivesJobRead) {
   queryClient.invalidateQueries({ queryKey: perspectivesQueries.visualizationOfAspectScope(job.input.aspect_id) });
-  queryClient.invalidateQueries({ queryKey: perspectivesQueries.clusterSimilarities(job.input.aspect_id).queryKey });
+  queryClient.invalidateQueries({
+    queryKey: perspectivesQueries.clusterSimilaritiesOfAspectScope(job.input.aspect_id),
+  });
 }
 
 // A finished COTA refinement job updated the COTA — refresh the project's COTAs.

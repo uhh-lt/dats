@@ -76,7 +76,7 @@ class AspectBase(BaseModel):
 
 # Properties for creation
 class AspectCreate(AspectBase):
-    project_id: int = Field(description="ID of the project this aspect belongs to")
+    pass
 
 
 # Properties for updating

@@ -1,13 +1,12 @@
 import numpy as np
-from fastapi import APIRouter, Depends
+from fastapi import Depends
 from sqlalchemy.orm import Session
 from weaviate import WeaviateClient
 
 from common.crud_enum import Crud
 from common.dats_event import DATSEvent
-from common.dependencies import DBSession, get_current_user, get_weaviate_client
-from core.auth.authz_user import AuthzUser
-from core.project.project_crud import crud_project
+from common.dependencies import DBSession, get_weaviate_client
+from common.project_router import project_router
 from core.search.sdoc_search.sdoc_search import find_sdoc_ids
 from core.search.sdoc_search.sdoc_search_columns import SdocColumns
 from modules.perspectives.aspect_crud import crud_aspect
@@ -36,8 +35,6 @@ from modules.perspectives.perspectives_file_crud import (
 from modules.perspectives.perspectives_job_dto import (
     CreateAspectParams,
     PerspectivesJobInput,
-    PerspectivesJobParamsNoCreate,
-    PerspectivesJobRead,
 )
 from modules.perspectives.perspectives_vis_dto import (
     PerspectivesClusterSimilarities,
@@ -45,18 +42,13 @@ from modules.perspectives.perspectives_vis_dto import (
     PerspectivesVisualization,
 )
 from repos.filesystem.file_crud_base import FileCRUDBase
-from systems.job_system.job_dto import RUNNING_JOB_STATUS
 from systems.job_system.job_service import JobService
 from systems.job_system.job_system_enum import JobStatus
 from systems.search_system.filtering import Filter
 from systems.search_system.sorting import Sort
 from systems.websocket_system.websocket_dependency import WebsocketEmitter
 
-router = APIRouter(
-    prefix="/perspectives",
-    dependencies=[Depends(get_current_user)],
-    tags=["perspectives"],
-)
+router = project_router("/perspectives", tags=["perspectives"])
 
 js = JobService()
 
@@ -65,26 +57,24 @@ js = JobService()
 
 
 @router.put(
-    "/aspect",
+    "/aspects",
     response_model=AspectRead,
     summary="Creates a new Aspect",
 )
 def create_aspect(
     *,
     db: DBSession,
+    project_id: int,
     aspect: AspectCreate,
-    authz_user: AuthzUser = Depends(),
     ws: WebsocketEmitter = Depends(),
 ) -> AspectRead:
-    authz_user.assert_in_project(aspect.project_id)
-
-    db_aspect = crud_aspect.create(db=db, create_dto=aspect)
+    db_aspect = crud_aspect.create(db=db, project_id=project_id, create_dto=aspect)
 
     params = CreateAspectParams(perspectives_job_type=PerspectivesJobType.CREATE_ASPECT)
     job = js.start_job(
         "perspectives",
         payload=PerspectivesJobInput(
-            project_id=aspect.project_id,
+            project_id=project_id,
             aspect_id=db_aspect.id,
             perspectives_job_type=params.perspectives_job_type,
             parameters=params,
@@ -93,6 +83,7 @@ def create_aspect(
 
     db_aspect = crud_aspect.update(
         db=db,
+        project_id=project_id,
         id=db_aspect.id,
         update_dto=AspectUpdateIntern(
             most_recent_job_id=job.get_id(),
@@ -100,7 +91,7 @@ def create_aspect(
     )
 
     result = AspectRead.model_validate(db_aspect)
-    ws.emit_to_project(DATSEvent.ASPECT_CREATED, result, project_id=aspect.project_id)
+    ws.emit_to_project(DATSEvent.ASPECT_CREATED, result, project_id=project_id)
     return result
 
 
@@ -108,54 +99,46 @@ def create_aspect(
 
 
 @router.get(
-    "/project/{project_id}/aspects",
+    "/aspects",
     response_model=list[AspectRead],
-    summary="Returns all Aspects of the Project with the given ID if it exists",
+    summary="Returns all Aspects of the Project",
 )
 def get_all_aspects(
     *,
     db: DBSession,
     project_id: int,
-    authz_user: AuthzUser = Depends(),
 ) -> list[AspectRead]:
-    authz_user.assert_in_project(project_id)
-
-    project = crud_project.read(db=db, id=project_id)
-    aspects = [AspectRead.model_validate(a) for a in project.aspects]
-    return aspects
+    db_objs = crud_aspect.read_by_project(db=db, project_id=project_id)
+    return [AspectRead.model_validate(db_obj) for db_obj in db_objs]
 
 
 @router.get(
-    "/aspect/{aspect_id}",
+    "/aspects/{aspect_id}",
     response_model=AspectRead,
     summary="Returns the Aspect with the given ID.",
 )
 def get_by_id(
     *,
     db: DBSession,
+    project_id: int,
     aspect_id: int,
-    authz_user: AuthzUser = Depends(),
 ) -> AspectRead:
-    authz_user.assert_in_same_project_as(Crud.ASPECT, aspect_id)
-
-    db_obj = crud_aspect.read(db=db, id=aspect_id)
+    db_obj = crud_aspect.read(db=db, project_id=project_id, id=aspect_id)
     return AspectRead.model_validate(db_obj)
 
 
 @router.get(
-    "/aspect/{aspect_id}/map_thumbnail_url",
+    "/aspects/{aspect_id}/map-thumbnail-url",
     response_model=str | None,
     summary="Returns the URL of the map thumbnail of the Aspect (relative to /content/), None until it is computed.",
 )
 def get_map_thumbnail_url(
     *,
     db: DBSession,
+    project_id: int,
     aspect_id: int,
-    authz_user: AuthzUser = Depends(),
 ) -> str | None:
-    authz_user.assert_in_same_project_as(Crud.ASPECT, aspect_id)
-
-    project_id = crud_aspect.read(db=db, id=aspect_id).project_id
+    crud_aspect.exists(db=db, project_id=project_id, id=aspect_id, raise_error=True)
     if not crud_perspectives_plot_file.exists(
         project_id=project_id, id=aspect_id, name=MAP_THUMBNAIL_FILENAME
     ):
@@ -166,40 +149,37 @@ def get_map_thumbnail_url(
 
 
 @router.get(
-    "/aspect/{aspect_id}/sdoc/{sdoc_id}",
+    "/aspects/{aspect_id}/source-documents/{sdoc_id}",
     response_model=str,
     summary="Returns the Document Aspect Content for the given IDs.",
 )
 def get_docaspect_by_id(
     *,
     db: DBSession,
+    project_id: int,
     aspect_id: int,
     sdoc_id: int,
-    authz_user: AuthzUser = Depends(),
 ) -> str:
-    authz_user.assert_in_same_project_as(Crud.ASPECT, aspect_id)
-
+    crud_aspect.exists(db=db, project_id=project_id, id=aspect_id, raise_error=True)
     db_obj = crud_document_aspect.read(id=(sdoc_id, aspect_id), db=db)
     return db_obj.content
 
 
 @router.get(
-    "/clusters/{aspect_id}/sdoc/{sdoc_id}",
+    "/aspects/{aspect_id}/clusters",
     response_model=list[ClusterRead],
     summary="Returns the clusters for the given SourceDocument (sdoc_id) in the specified Aspect (aspect_id).",
 )
 def get_clusters_for_sdoc(
     *,
     db: DBSession,
+    project_id: int,
     aspect_id: int,
     sdoc_id: int,
-    authz_user: AuthzUser = Depends(),
 ) -> list[ClusterRead]:
-    authz_user.assert_in_same_project_as(Crud.ASPECT, aspect_id)
-
-    # Fetch the clusters for the given SourceDocument
+    crud_aspect.exists(db=db, project_id=project_id, id=aspect_id, raise_error=True)
     document_clusters = crud_cluster.read_by_aspect_and_sdoc(
-        db=db, aspect_id=aspect_id, sdoc_id=sdoc_id
+        db=db, project_id=project_id, aspect_id=aspect_id, sdoc_id=sdoc_id
     )
     return [ClusterRead.model_validate(dc) for dc in document_clusters]
 
@@ -208,59 +188,53 @@ def get_clusters_for_sdoc(
 
 
 @router.patch(
-    "/aspect/{aspect_id}",
+    "/aspects/{aspect_id}",
     response_model=AspectRead,
     summary="Updates the Aspect with the given ID.",
 )
 def update_aspect_by_id(
     *,
     db: DBSession,
+    project_id: int,
     aspect_id: int,
     aspect: AspectUpdate,
-    authz_user: AuthzUser = Depends(),
     ws: WebsocketEmitter = Depends(),
 ) -> AspectRead:
-    authz_user.assert_in_same_project_as(Crud.ASPECT, aspect_id)
     db_obj = crud_aspect.update(
-        db=db, id=aspect_id, update_dto=AspectUpdateIntern(**aspect.model_dump())
+        db=db,
+        project_id=project_id,
+        id=aspect_id,
+        update_dto=AspectUpdateIntern(**aspect.model_dump()),
     )
     result = AspectRead.model_validate(db_obj)
-    ws.emit_to_project(
-        DATSEvent.ASPECT_UPDATED, result, project_id=db_obj.get_project_id()
-    )
+    ws.emit_to_project(DATSEvent.ASPECT_UPDATED, result, project_id=project_id)
     return result
 
 
 @router.patch(
-    "/cluster/{cluster_id}/details",
+    "/clusters/{cluster_id}",
     response_model=ClusterRead,
     summary="Updates the Cluster's name and description.",
 )
 def update_cluster_details(
     *,
     db: DBSession,
+    project_id: int,
     cluster_id: int,
     cluster_update: ClusterUpdate,
-    authz_user: AuthzUser = Depends(),
     ws: WebsocketEmitter = Depends(),
 ) -> ClusterRead:
-    authz_user.assert_in_same_project_as(Crud.CLUSTER, cluster_id)
-
-    # Perform update
     update_dto = ClusterUpdateIntern(
         **cluster_update.model_dump(exclude_unset=True), is_user_edited=True
     )
     updated_cluster = crud_cluster.update(
         db=db,
+        project_id=project_id,
         id=cluster_id,
         update_dto=update_dto,
     )
     result = ClusterRead.model_validate(updated_cluster)
-    ws.emit_to_project(
-        DATSEvent.CLUSTER_UPDATED,
-        result,
-        project_id=updated_cluster.get_project_id(),
-    )
+    ws.emit_to_project(DATSEvent.CLUSTER_UPDATED, result, project_id=project_id)
     return result
 
 
@@ -268,7 +242,7 @@ def update_cluster_details(
 
 
 @router.delete(
-    "/aspect/{aspect_id}",
+    "/aspects/{aspect_id}",
     response_model=AspectRead,
     summary="Removes the Aspect with the given ID.",
 )
@@ -276,85 +250,22 @@ def remove_aspect_by_id(
     *,
     db: DBSession,
     weaviate: WeaviateClient = Depends(get_weaviate_client),
+    project_id: int,
     aspect_id: int,
-    authz_user: AuthzUser = Depends(),
     ws: WebsocketEmitter = Depends(),
 ) -> AspectRead:
-    authz_user.assert_in_same_project_as(Crud.ASPECT, aspect_id)
-
-    aspect = crud_aspect.read(db=db, id=aspect_id)
-    project_id = aspect.get_project_id()
-
+    crud_aspect.exists(db=db, project_id=project_id, id=aspect_id, raise_error=True)
     crud_cluster_embedding.delete_by_aspect_id(
-        client=weaviate, project_id=aspect.project_id, aspect_id=aspect_id
+        client=weaviate, project_id=project_id, aspect_id=aspect_id
     )
     crud_aspect_embedding.delete_by_aspect_id(
-        client=weaviate, project_id=aspect.project_id, aspect_id=aspect_id
+        client=weaviate, project_id=project_id, aspect_id=aspect_id
     )
-    db_obj = crud_aspect.delete(db=db, id=aspect_id)
+    db_obj = crud_aspect.delete(db=db, project_id=project_id, id=aspect_id)
     result = AspectRead.model_validate(db_obj)
     FileCRUDBase.delete_by_entity(Crud.ASPECT, project_id=project_id, ids=[aspect_id])
     ws.emit_to_project(DATSEvent.ASPECT_DELETED, result, project_id=project_id)
     return result
-
-
-# --- job operations
-
-
-@router.post(
-    "/job/{aspect_id}",
-    response_model=PerspectivesJobRead,
-    summary="Starts the PerspectivesJob for the given Parameters. If a job is already running, this will raise an error.",
-)
-def start_perspectives_job(
-    *,
-    db: DBSession,
-    aspect_id: int,
-    perspectives_job_params: PerspectivesJobParamsNoCreate,
-    authz_user: AuthzUser = Depends(),
-    ws: WebsocketEmitter = Depends(),
-) -> PerspectivesJobRead:
-    authz_user.assert_in_same_project_as(Crud.ASPECT, aspect_id)
-
-    aspect = crud_aspect.read(db=db, id=aspect_id)
-
-    # Check if there is a job running already for this aspect
-    if aspect.most_recent_job_id:
-        most_recent_job = js.get_job(aspect.most_recent_job_id)
-        if (
-            most_recent_job
-            and JobStatus(most_recent_job.get_status()) in RUNNING_JOB_STATUS
-        ):
-            raise Exception(
-                f"PerspectivesJob {most_recent_job.get_id()} is still running. Please wait until it is finished."
-            )
-
-    # No job running, so we can start a new one
-    job = js.start_job(
-        "perspectives",
-        payload=PerspectivesJobInput(
-            project_id=aspect.project_id,
-            aspect_id=aspect_id,
-            perspectives_job_type=perspectives_job_params.perspectives_job_type,
-            parameters=perspectives_job_params,
-        ),
-    )
-
-    # Update the aspect with the new job ID
-    db_aspect = crud_aspect.update(
-        db=db,
-        id=aspect.id,
-        update_dto=AspectUpdateIntern(
-            most_recent_job_id=job.get_id(),
-        ),
-    )
-    ws.emit_to_project(
-        DATSEvent.ASPECT_UPDATED,
-        AspectRead.model_validate(db_aspect),
-        project_id=db_aspect.project_id,
-    )
-
-    return PerspectivesJobRead.from_rq_job(job)
 
 
 # --- other operations
@@ -363,6 +274,7 @@ def start_perspectives_job(
 def _build_document_visualization(
     *,
     db: Session,
+    project_id: int,
     aspect_id: int,
     search_query: str,
     filter: Filter[SdocColumns],
@@ -370,7 +282,7 @@ def _build_document_visualization(
 ) -> PerspectivesVisualization:
     """Build the document visualization for the given aspect."""
     # Fetch data for visualization
-    aspect = crud_aspect.read(db=db, id=aspect_id)
+    aspect = crud_aspect.read(db=db, project_id=project_id, id=aspect_id)
     document_aspects = aspect.document_aspects
 
     # If a job is in progress, return early with empty visualization
@@ -402,7 +314,7 @@ def _build_document_visualization(
     if len(filter.items) > 0 or search_query.strip() != "":
         hits = find_sdoc_ids(
             db=db,
-            project_id=aspect.project_id,
+            project_id=project_id,
             folder_id=None,
             search_query=search_query,
             expert_mode=False,
@@ -471,23 +383,22 @@ def _build_document_visualization(
 
 
 @router.post(
-    "/visualize_documents/{aspect_id}",
+    "/aspects/{aspect_id}/visualize",
     response_model=PerspectivesVisualization,
     summary="Returns data for visualizing the documents of the given aspect.",
 )
 def visualize_documents(
     *,
     db: DBSession,
+    project_id: int,
     aspect_id: int,
     search_query: str,
     filter: Filter[SdocColumns],
     sorts: list[Sort[SdocColumns]],
-    authz_user: AuthzUser = Depends(),
 ) -> PerspectivesVisualization:
-    authz_user.assert_in_same_project_as(Crud.ASPECT, aspect_id)
-
     return _build_document_visualization(
         db=db,
+        project_id=project_id,
         aspect_id=aspect_id,
         search_query=search_query,
         filter=filter,
@@ -496,22 +407,21 @@ def visualize_documents(
 
 
 @router.post(
-    "/label_accept/{aspect_id}",
+    "/aspects/{aspect_id}/accept-labels",
     response_model=PerspectivesVisualization,
     summary="Accept the label of the provided SourceDocuments (by ID) and return the updated visualization.",
 )
 def accept_label(
     *,
     db: DBSession,
+    project_id: int,
     aspect_id: int,
     sdoc_ids: list[int],
     search_query: str,
     filter: Filter[SdocColumns],
     sorts: list[Sort[SdocColumns]],
-    authz_user: AuthzUser = Depends(),
 ) -> PerspectivesVisualization:
-    authz_user.assert_in_same_project_as(Crud.ASPECT, aspect_id)
-
+    crud_aspect.exists(db=db, project_id=project_id, id=aspect_id, raise_error=True)
     crud_document_cluster.set_labels(
         db=db,
         aspect_id=aspect_id,
@@ -521,6 +431,7 @@ def accept_label(
 
     result = _build_document_visualization(
         db=db,
+        project_id=project_id,
         aspect_id=aspect_id,
         search_query=search_query,
         filter=filter,
@@ -530,22 +441,21 @@ def accept_label(
 
 
 @router.post(
-    "/label_revert/{aspect_id}",
+    "/aspects/{aspect_id}/revert-labels",
     response_model=PerspectivesVisualization,
     summary="Reverts the label of the provided SourceDocuments (by ID) and return the updated visualization.",
 )
 def revert_label(
     *,
     db: DBSession,
+    project_id: int,
     aspect_id: int,
     sdoc_ids: list[int],
     search_query: str,
     filter: Filter[SdocColumns],
     sorts: list[Sort[SdocColumns]],
-    authz_user: AuthzUser = Depends(),
 ) -> PerspectivesVisualization:
-    authz_user.assert_in_same_project_as(Crud.ASPECT, aspect_id)
-
+    crud_aspect.exists(db=db, project_id=project_id, id=aspect_id, raise_error=True)
     crud_document_cluster.set_labels(
         db=db,
         aspect_id=aspect_id,
@@ -555,6 +465,7 @@ def revert_label(
 
     result = _build_document_visualization(
         db=db,
+        project_id=project_id,
         aspect_id=aspect_id,
         search_query=search_query,
         filter=filter,
@@ -564,7 +475,7 @@ def revert_label(
 
 
 @router.get(
-    "/cluster_similarities/{aspect_id}",
+    "/aspects/{aspect_id}/cluster-similarities",
     response_model=PerspectivesClusterSimilarities,
     summary="Returns data for visualizing the cluster similarities of the given aspect.",
 )
@@ -572,13 +483,11 @@ def get_cluster_similarities(
     *,
     db: DBSession,
     weaviate: WeaviateClient = Depends(get_weaviate_client),
+    project_id: int,
     aspect_id: int,
-    authz_user: AuthzUser = Depends(),
 ) -> PerspectivesClusterSimilarities:
-    authz_user.assert_in_same_project_as(Crud.ASPECT, aspect_id)
-
     # Fetch the clusters for the given Aspect
-    aspect = crud_aspect.read(db=db, id=aspect_id)
+    aspect = crud_aspect.read(db=db, project_id=project_id, id=aspect_id)
     clusters = aspect.clusters
     clusters.sort(key=lambda c: c.id)
 
@@ -592,7 +501,7 @@ def get_cluster_similarities(
     # Fetch the cluster embeddings
     cluster_embeddings = crud_cluster_embedding.read_by_ids(
         client=weaviate,
-        project_id=aspect.project_id,
+        project_id=project_id,
         ids=[
             ClusterObjectIdentifier(
                 aspect_id=aspect_id,

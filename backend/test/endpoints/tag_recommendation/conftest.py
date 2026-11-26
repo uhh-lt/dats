@@ -84,8 +84,8 @@ def _create_recommendation(
 ) -> TagRecommendationLinkORM:
     return crud_tag_recommendation_link.create(
         db=db,
+        project_id=tag.project_id,
         create_dto=TagRecommendationLinkCreate(
-            project_id=tag.project_id,
             ml_job_id=ml_job_id,
             source_document_id=sdoc_id,
             predicted_tag_id=tag.id,

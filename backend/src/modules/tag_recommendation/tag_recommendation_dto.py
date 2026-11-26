@@ -33,7 +33,7 @@ class TagRecommendationLinkBaseDTO(BaseModel):
 
 
 class TagRecommendationLinkCreate(TagRecommendationLinkBaseDTO):
-    project_id: int = Field(description="Project the recommendation belongs to")
+    pass
 
 
 class TagRecommendationLinkRead(TagRecommendationLinkBaseDTO):

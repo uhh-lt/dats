@@ -696,24 +696,36 @@
         }
       }
     },
-    "/classifier/info": {
+    "/projects/{project_id}/classifiers/info": {
       "get": {
         "tags": ["classifier"],
         "summary": "Returns classifier models, thresholds, and training defaults",
         "operationId": "get_classifier_info",
+        "security": [{ "OAuth2PasswordBearer": [] }],
+        "parameters": [
+          {
+            "name": "project_id",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "integer", "title": "Project Id" }
+          }
+        ],
         "responses": {
           "200": {
             "description": "Successful Response",
             "content": { "application/json": { "schema": { "$ref": "#/components/schemas/ClassifierInfo" } } }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/HTTPValidationError" } } }
           }
-        },
-        "security": [{ "OAuth2PasswordBearer": [] }]
+        }
       }
     },
-    "/classifier/project/{project_id}": {
+    "/projects/{project_id}/classifiers": {
       "get": {
         "tags": ["classifier"],
-        "summary": "Returns all Classifiers of the Project with the given ID",
+        "summary": "Returns all Classifiers of the Project",
         "operationId": "get_by_project",
         "security": [{ "OAuth2PasswordBearer": [] }],
         "parameters": [
@@ -744,13 +756,19 @@
         }
       }
     },
-    "/classifier/{classifier_id}": {
+    "/projects/{project_id}/classifiers/{classifier_id}": {
       "patch": {
         "tags": ["classifier"],
         "summary": "Updates the Classifier with the given ID.",
         "operationId": "update_by_id",
         "security": [{ "OAuth2PasswordBearer": [] }],
         "parameters": [
+          {
+            "name": "project_id",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "integer", "title": "Project Id" }
+          },
           {
             "name": "classifier_id",
             "in": "path",
@@ -780,6 +798,12 @@
         "security": [{ "OAuth2PasswordBearer": [] }],
         "parameters": [
           {
+            "name": "project_id",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "integer", "title": "Project Id" }
+          },
+          {
             "name": "classifier_id",
             "in": "path",
             "required": true,
@@ -798,7 +822,7 @@
         }
       }
     },
-    "/classifier/project/{project_id}/dataset-statistics": {
+    "/projects/{project_id}/classifiers/dataset-statistics": {
       "post": {
         "tags": ["classifier"],
         "summary": "Returns statistics of the dataset that would be created with these parameters",
@@ -3194,6 +3218,58 @@
             "content": { "application/json": { "schema": { "$ref": "#/components/schemas/HTTPValidationError" } } }
           }
         }
+      },
+      "post": {
+        "tags": ["perspectives"],
+        "summary": "Starts the PerspectivesJob of the Aspect (aspect_id) for the given Parameters. If a job is already running, this will raise an error.",
+        "operationId": "start_perspectives_job",
+        "security": [{ "OAuth2PasswordBearer": [] }],
+        "parameters": [
+          {
+            "name": "project_id",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "integer", "title": "Project Id" }
+          },
+          {
+            "name": "aspect_id",
+            "in": "query",
+            "required": true,
+            "schema": { "type": "integer", "title": "Aspect Id" }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "anyOf": [
+                  { "$ref": "#/components/schemas/AddMissingDocsToAspectParams" },
+                  { "$ref": "#/components/schemas/CreateClusterWithNameParams" },
+                  { "$ref": "#/components/schemas/CreateClusterWithSdocsParams" },
+                  { "$ref": "#/components/schemas/RemoveClusterParams" },
+                  { "$ref": "#/components/schemas/MergeClustersParams" },
+                  { "$ref": "#/components/schemas/SplitClusterParams" },
+                  { "$ref": "#/components/schemas/ChangeClusterParams" },
+                  { "$ref": "#/components/schemas/RefineModelParams" },
+                  { "$ref": "#/components/schemas/ResetModelParams" },
+                  { "$ref": "#/components/schemas/RecomputeClusterTitleAndDescriptionParams" }
+                ],
+                "title": "Perspectives Job Params"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/PerspectivesJobRead" } } }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/HTTPValidationError" } } }
+          }
+        }
       }
     },
     "/projects/{project_id}/jobs/perspectives/{job_id}": {
@@ -3833,14 +3909,23 @@
         }
       }
     },
-    "/perspectives/aspect": {
+    "/projects/{project_id}/perspectives/aspects": {
       "put": {
         "tags": ["perspectives"],
         "summary": "Creates a new Aspect",
         "operationId": "create_aspect",
+        "security": [{ "OAuth2PasswordBearer": [] }],
+        "parameters": [
+          {
+            "name": "project_id",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "integer", "title": "Project Id" }
+          }
+        ],
         "requestBody": {
-          "content": { "application/json": { "schema": { "$ref": "#/components/schemas/AspectCreate" } } },
-          "required": true
+          "required": true,
+          "content": { "application/json": { "schema": { "$ref": "#/components/schemas/AspectCreate" } } }
         },
         "responses": {
           "200": {
@@ -3851,14 +3936,11 @@
             "description": "Validation Error",
             "content": { "application/json": { "schema": { "$ref": "#/components/schemas/HTTPValidationError" } } }
           }
-        },
-        "security": [{ "OAuth2PasswordBearer": [] }]
-      }
-    },
-    "/perspectives/project/{project_id}/aspects": {
+        }
+      },
       "get": {
         "tags": ["perspectives"],
-        "summary": "Returns all Aspects of the Project with the given ID if it exists",
+        "summary": "Returns all Aspects of the Project",
         "operationId": "get_all_aspects",
         "security": [{ "OAuth2PasswordBearer": [] }],
         "parameters": [
@@ -3889,13 +3971,19 @@
         }
       }
     },
-    "/perspectives/aspect/{aspect_id}": {
+    "/projects/{project_id}/perspectives/aspects/{aspect_id}": {
       "get": {
         "tags": ["perspectives"],
         "summary": "Returns the Aspect with the given ID.",
         "operationId": "get_by_id",
         "security": [{ "OAuth2PasswordBearer": [] }],
         "parameters": [
+          {
+            "name": "project_id",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "integer", "title": "Project Id" }
+          },
           { "name": "aspect_id", "in": "path", "required": true, "schema": { "type": "integer", "title": "Aspect Id" } }
         ],
         "responses": {
@@ -3915,6 +4003,12 @@
         "operationId": "update_aspect_by_id",
         "security": [{ "OAuth2PasswordBearer": [] }],
         "parameters": [
+          {
+            "name": "project_id",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "integer", "title": "Project Id" }
+          },
           { "name": "aspect_id", "in": "path", "required": true, "schema": { "type": "integer", "title": "Aspect Id" } }
         ],
         "requestBody": {
@@ -3938,6 +4032,12 @@
         "operationId": "remove_aspect_by_id",
         "security": [{ "OAuth2PasswordBearer": [] }],
         "parameters": [
+          {
+            "name": "project_id",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "integer", "title": "Project Id" }
+          },
           { "name": "aspect_id", "in": "path", "required": true, "schema": { "type": "integer", "title": "Aspect Id" } }
         ],
         "responses": {
@@ -3952,13 +4052,19 @@
         }
       }
     },
-    "/perspectives/aspect/{aspect_id}/map_thumbnail_url": {
+    "/projects/{project_id}/perspectives/aspects/{aspect_id}/map-thumbnail-url": {
       "get": {
         "tags": ["perspectives"],
         "summary": "Returns the URL of the map thumbnail of the Aspect (relative to /content/), None until it is computed.",
         "operationId": "get_map_thumbnail_url",
         "security": [{ "OAuth2PasswordBearer": [] }],
         "parameters": [
+          {
+            "name": "project_id",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "integer", "title": "Project Id" }
+          },
           { "name": "aspect_id", "in": "path", "required": true, "schema": { "type": "integer", "title": "Aspect Id" } }
         ],
         "responses": {
@@ -3980,13 +4086,19 @@
         }
       }
     },
-    "/perspectives/aspect/{aspect_id}/sdoc/{sdoc_id}": {
+    "/projects/{project_id}/perspectives/aspects/{aspect_id}/source-documents/{sdoc_id}": {
       "get": {
         "tags": ["perspectives"],
         "summary": "Returns the Document Aspect Content for the given IDs.",
         "operationId": "get_docaspect_by_id",
         "security": [{ "OAuth2PasswordBearer": [] }],
         "parameters": [
+          {
+            "name": "project_id",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "integer", "title": "Project Id" }
+          },
           {
             "name": "aspect_id",
             "in": "path",
@@ -4011,7 +4123,7 @@
         }
       }
     },
-    "/perspectives/clusters/{aspect_id}/sdoc/{sdoc_id}": {
+    "/projects/{project_id}/perspectives/aspects/{aspect_id}/clusters": {
       "get": {
         "tags": ["perspectives"],
         "summary": "Returns the clusters for the given SourceDocument (sdoc_id) in the specified Aspect (aspect_id).",
@@ -4019,12 +4131,18 @@
         "security": [{ "OAuth2PasswordBearer": [] }],
         "parameters": [
           {
+            "name": "project_id",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "integer", "title": "Project Id" }
+          },
+          {
             "name": "aspect_id",
             "in": "path",
             "required": true,
             "schema": { "type": "integer", "title": "Aspect Id" }
           },
-          { "name": "sdoc_id", "in": "path", "required": true, "schema": { "type": "integer", "title": "Sdoc Id" } }
+          { "name": "sdoc_id", "in": "query", "required": true, "schema": { "type": "integer", "title": "Sdoc Id" } }
         ],
         "responses": {
           "200": {
@@ -4046,13 +4164,19 @@
         }
       }
     },
-    "/perspectives/cluster/{cluster_id}/details": {
+    "/projects/{project_id}/perspectives/clusters/{cluster_id}": {
       "patch": {
         "tags": ["perspectives"],
         "summary": "Updates the Cluster's name and description.",
         "operationId": "update_cluster_details",
         "security": [{ "OAuth2PasswordBearer": [] }],
         "parameters": [
+          {
+            "name": "project_id",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "integer", "title": "Project Id" }
+          },
           {
             "name": "cluster_id",
             "in": "path",
@@ -4076,56 +4200,19 @@
         }
       }
     },
-    "/perspectives/job/{aspect_id}": {
-      "post": {
-        "tags": ["perspectives"],
-        "summary": "Starts the PerspectivesJob for the given Parameters. If a job is already running, this will raise an error.",
-        "operationId": "start_perspectives_job",
-        "security": [{ "OAuth2PasswordBearer": [] }],
-        "parameters": [
-          { "name": "aspect_id", "in": "path", "required": true, "schema": { "type": "integer", "title": "Aspect Id" } }
-        ],
-        "requestBody": {
-          "required": true,
-          "content": {
-            "application/json": {
-              "schema": {
-                "anyOf": [
-                  { "$ref": "#/components/schemas/AddMissingDocsToAspectParams" },
-                  { "$ref": "#/components/schemas/CreateClusterWithNameParams" },
-                  { "$ref": "#/components/schemas/CreateClusterWithSdocsParams" },
-                  { "$ref": "#/components/schemas/RemoveClusterParams" },
-                  { "$ref": "#/components/schemas/MergeClustersParams" },
-                  { "$ref": "#/components/schemas/SplitClusterParams" },
-                  { "$ref": "#/components/schemas/ChangeClusterParams" },
-                  { "$ref": "#/components/schemas/RefineModelParams" },
-                  { "$ref": "#/components/schemas/ResetModelParams" },
-                  { "$ref": "#/components/schemas/RecomputeClusterTitleAndDescriptionParams" }
-                ],
-                "title": "Perspectives Job Params"
-              }
-            }
-          }
-        },
-        "responses": {
-          "200": {
-            "description": "Successful Response",
-            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/PerspectivesJobRead" } } }
-          },
-          "422": {
-            "description": "Validation Error",
-            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/HTTPValidationError" } } }
-          }
-        }
-      }
-    },
-    "/perspectives/visualize_documents/{aspect_id}": {
+    "/projects/{project_id}/perspectives/aspects/{aspect_id}/visualize": {
       "post": {
         "tags": ["perspectives"],
         "summary": "Returns data for visualizing the documents of the given aspect.",
         "operationId": "visualize_documents",
         "security": [{ "OAuth2PasswordBearer": [] }],
         "parameters": [
+          {
+            "name": "project_id",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "integer", "title": "Project Id" }
+          },
           {
             "name": "aspect_id",
             "in": "path",
@@ -4159,13 +4246,19 @@
         }
       }
     },
-    "/perspectives/label_accept/{aspect_id}": {
+    "/projects/{project_id}/perspectives/aspects/{aspect_id}/accept-labels": {
       "post": {
         "tags": ["perspectives"],
         "summary": "Accept the label of the provided SourceDocuments (by ID) and return the updated visualization.",
         "operationId": "accept_label",
         "security": [{ "OAuth2PasswordBearer": [] }],
         "parameters": [
+          {
+            "name": "project_id",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "integer", "title": "Project Id" }
+          },
           {
             "name": "aspect_id",
             "in": "path",
@@ -4199,13 +4292,19 @@
         }
       }
     },
-    "/perspectives/label_revert/{aspect_id}": {
+    "/projects/{project_id}/perspectives/aspects/{aspect_id}/revert-labels": {
       "post": {
         "tags": ["perspectives"],
         "summary": "Reverts the label of the provided SourceDocuments (by ID) and return the updated visualization.",
         "operationId": "revert_label",
         "security": [{ "OAuth2PasswordBearer": [] }],
         "parameters": [
+          {
+            "name": "project_id",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "integer", "title": "Project Id" }
+          },
           {
             "name": "aspect_id",
             "in": "path",
@@ -4239,13 +4338,19 @@
         }
       }
     },
-    "/perspectives/cluster_similarities/{aspect_id}": {
+    "/projects/{project_id}/perspectives/aspects/{aspect_id}/cluster-similarities": {
       "get": {
         "tags": ["perspectives"],
         "summary": "Returns data for visualizing the cluster similarities of the given aspect.",
         "operationId": "get_cluster_similarities",
         "security": [{ "OAuth2PasswordBearer": [] }],
         "parameters": [
+          {
+            "name": "project_id",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "integer", "title": "Project Id" }
+          },
           { "name": "aspect_id", "in": "path", "required": true, "schema": { "type": "integer", "title": "Aspect Id" } }
         ],
         "responses": {
@@ -7876,18 +7981,27 @@
         }
       }
     },
-    "/tagrecommendation/review_recommendations": {
+    "/projects/{project_id}/tag-recommendations/review": {
       "patch": {
         "tags": ["TagRecommendation"],
         "summary": "The endpoint receives IDs of wrongly and correctly tagged document recommendations and sets `is_accepted` to `true` or `false`, while setting the corresponding document tags if `true`.",
         "operationId": "update_recommendations",
+        "security": [{ "OAuth2PasswordBearer": [] }],
+        "parameters": [
+          {
+            "name": "project_id",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "integer", "title": "Project Id" }
+          }
+        ],
         "requestBody": {
+          "required": true,
           "content": {
             "application/json": {
-              "schema": { "items": { "type": "integer" }, "type": "array", "title": "Reviewd Recommendation Ids" }
+              "schema": { "type": "array", "items": { "type": "integer" }, "title": "Reviewd Recommendation Ids" }
             }
-          },
-          "required": true
+          }
         },
         "responses": {
           "200": {
@@ -7895,8 +8009,8 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "items": { "$ref": "#/components/schemas/TagRecommendationLinkRead" },
                   "type": "array",
+                  "items": { "$ref": "#/components/schemas/TagRecommendationLinkRead" },
                   "title": "Response Tagrecommendation-Update Recommendations"
                 }
               }
@@ -7906,8 +8020,7 @@
             "description": "Validation Error",
             "content": { "application/json": { "schema": { "$ref": "#/components/schemas/HTTPValidationError" } } }
           }
-        },
-        "security": [{ "OAuth2PasswordBearer": [] }]
+        }
       }
     },
     "/projects/{project_id}/jobs/tag-recommendation/{job_id}/recommendations": {
@@ -10413,15 +10526,10 @@
             "anyOf": [{ "type": "integer" }, { "type": "null" }],
             "title": "Tag Id",
             "description": "ID of the tag associated with this aspect."
-          },
-          "project_id": {
-            "type": "integer",
-            "title": "Project Id",
-            "description": "ID of the project this aspect belongs to"
           }
         },
         "type": "object",
-        "required": ["name", "doc_embedding_prompt", "is_hierarchical", "modality", "pipeline_settings", "project_id"],
+        "required": ["name", "doc_embedding_prompt", "is_hierarchical", "modality", "pipeline_settings"],
         "title": "AspectCreate"
       },
       "AspectCreatedEvent": {
@@ -11988,11 +12096,6 @@
       },
       "ClassifierEvaluationRead": {
         "properties": {
-          "project_id": {
-            "type": "integer",
-            "title": "Project Id",
-            "description": "Project the evaluation belongs to"
-          },
           "classifier_id": { "type": "integer", "title": "Classifier Id", "description": "ID of the Classifier" },
           "f1": { "type": "number", "title": "F1", "description": "F1 score" },
           "precision": { "type": "number", "title": "Precision", "description": "Precision score" },
@@ -12023,6 +12126,11 @@
             "description": "Class IDs (tag or code) labeling the rows/columns of the confusion matrix. The O (no-label) class is represented by the id 0. Empty for older evaluations."
           },
           "id": { "type": "integer", "title": "Id", "description": "ID of the Classifier Evaluation" },
+          "project_id": {
+            "type": "integer",
+            "title": "Project Id",
+            "description": "Project the evaluation belongs to"
+          },
           "created": {
             "type": "string",
             "format": "date-time",
@@ -12032,7 +12140,6 @@
         },
         "type": "object",
         "required": [
-          "project_id",
           "classifier_id",
           "f1",
           "precision",
@@ -12040,6 +12147,7 @@
           "accuracy",
           "eval_data_stats",
           "id",
+          "project_id",
           "created"
         ],
         "title": "ClassifierEvaluationRead"
@@ -12271,11 +12379,6 @@
       "ClassifierModel": { "type": "string", "enum": ["document", "sentence", "span"], "title": "ClassifierModel" },
       "ClassifierRead": {
         "properties": {
-          "project_id": {
-            "type": "integer",
-            "title": "Project Id",
-            "description": "ID of the project this classifier belongs to"
-          },
           "name": { "type": "string", "title": "Name", "description": "Name of the classifier" },
           "base_model": { "type": "string", "title": "Base Model", "description": "Name of the base model" },
           "type": { "$ref": "#/components/schemas/ClassifierModel", "description": "Type of the classifier" },
@@ -12304,6 +12407,11 @@
             "description": "Training data stats"
           },
           "id": { "type": "integer", "title": "Id", "description": "ID of the Classifier" },
+          "project_id": {
+            "type": "integer",
+            "title": "Project Id",
+            "description": "ID of the project this classifier belongs to"
+          },
           "created": {
             "type": "string",
             "format": "date-time",
@@ -12331,7 +12439,6 @@
         },
         "type": "object",
         "required": [
-          "project_id",
           "name",
           "base_model",
           "type",
@@ -12340,6 +12447,7 @@
           "train_loss",
           "train_data_stats",
           "id",
+          "project_id",
           "created",
           "updated",
           "class_ids",

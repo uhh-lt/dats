@@ -238,7 +238,6 @@ class ClassifierDatasetStatistics(BaseModel):
 
 
 class ClassifierCreate(BaseModel):
-    project_id: int = Field(description="ID of the project this classifier belongs to")
     name: str = Field(description="Name of the classifier")
     base_model: str = Field(description="Name of the base model")
     type: ClassifierModel = Field(description="Type of the classifier")
@@ -267,7 +266,6 @@ class ClassifierClassMetrics(BaseModel):
 
 
 class ClassifierEvaluationCreate(BaseModel):
-    project_id: int = Field(description="Project the evaluation belongs to")
     classifier_id: int = Field(description="ID of the Classifier")
     f1: float = Field(description="F1 score")
     precision: float = Field(description="Precision score")
@@ -300,6 +298,7 @@ class ClassifierEvaluationCreate(BaseModel):
 
 class ClassifierEvaluationRead(ClassifierEvaluationCreate):
     id: int = Field(description="ID of the Classifier Evaluation")
+    project_id: int = Field(description="Project the evaluation belongs to")
     created: datetime = Field(description="Creation timestamp of the classifier")
 
     model_config = ConfigDict(from_attributes=True)
@@ -307,6 +306,7 @@ class ClassifierEvaluationRead(ClassifierEvaluationCreate):
 
 class ClassifierRead(ClassifierCreate):
     id: int = Field(description="ID of the Classifier")
+    project_id: int = Field(description="ID of the project this classifier belongs to")
     created: datetime = Field(description="Creation timestamp of the classifier")
     updated: datetime = Field(description="Update timestamp of the classifier")
 

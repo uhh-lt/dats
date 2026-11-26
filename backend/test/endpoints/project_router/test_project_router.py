@@ -38,7 +38,13 @@ PATH_IDS: dict[str, Callable[[TenantRows], int]] = {
     "cota_id": lambda rows: rows["cota"].id,
     "experiment_id": lambda rows: rows["experiment"].id,
     "run_id": lambda rows: rows["experiment_run"].id,
+    "classifier_id": lambda rows: rows["classifier"].id,
+    "aspect_id": lambda rows: rows["aspect"].id,
+    "cluster_id": lambda rows: rows["cluster"].id,
 }
+
+# an empty document filter
+_NO_FILTER = {"id": "root", "logic_operator": "and", "items": []}
 
 # a valid body (with ids of the path's project) for the routes with a path id and a
 # body, by "<METHOD> <path>"
@@ -92,6 +98,24 @@ BODIES: dict[str, Callable[[TenantRows], Any]] = {
     "PATCH /projects/{project_id}/experiments/{experiment_id}": (
         lambda rows: {"name": "renamed"}
     ),
+    "PATCH /projects/{project_id}/classifiers/{classifier_id}": (
+        lambda rows: {"name": "renamed"}
+    ),
+    "PATCH /projects/{project_id}/perspectives/aspects/{aspect_id}": (
+        lambda rows: {"name": "renamed"}
+    ),
+    "PATCH /projects/{project_id}/perspectives/clusters/{cluster_id}": (
+        lambda rows: {"name": "renamed"}
+    ),
+    "POST /projects/{project_id}/perspectives/aspects/{aspect_id}/visualize": (
+        lambda rows: {"filter": _NO_FILTER, "sorts": []}
+    ),
+    "POST /projects/{project_id}/perspectives/aspects/{aspect_id}/accept-labels": (
+        lambda rows: {"sdoc_ids": [rows["sdoc"].id], "filter": _NO_FILTER, "sorts": []}
+    ),
+    "POST /projects/{project_id}/perspectives/aspects/{aspect_id}/revert-labels": (
+        lambda rows: {"sdoc_ids": [rows["sdoc"].id], "filter": _NO_FILTER, "sorts": []}
+    ),
     "PATCH /projects/{project_id}/source-document-metadata/{sdoc_metadata_id}": (
         lambda rows: {
             "str_value": "changed",
@@ -107,6 +131,18 @@ BODIES: dict[str, Callable[[TenantRows], Any]] = {
 QUERIES: dict[str, dict[str, str]] = {
     "POST /projects/{project_id}/experiments/runs/{run_id}/export-log": {
         "export_format": "json"
+    },
+    "GET /projects/{project_id}/perspectives/aspects/{aspect_id}/clusters": {
+        "sdoc_id": "0"
+    },
+    "POST /projects/{project_id}/perspectives/aspects/{aspect_id}/visualize": {
+        "search_query": ""
+    },
+    "POST /projects/{project_id}/perspectives/aspects/{aspect_id}/accept-labels": {
+        "search_query": ""
+    },
+    "POST /projects/{project_id}/perspectives/aspects/{aspect_id}/revert-labels": {
+        "search_query": ""
     },
 }
 

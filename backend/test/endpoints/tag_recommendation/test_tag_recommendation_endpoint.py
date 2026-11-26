@@ -39,8 +39,12 @@ def _unreviewed_recommendation_ids(
     return {rid for result in results for rid in result.recommendation_ids}
 
 
+def _review_url(project_id: int) -> str:
+    return f"/projects/{project_id}/tag-recommendations/review"
+
+
 # ===========================================================================
-# REVIEW RECOMMENDATIONS (/tagrecommendation/review_recommendations) TESTS
+# REVIEW RECOMMENDATIONS (/projects/{project_id}/tag-recommendations/review) TESTS
 # ===========================================================================
 
 
@@ -51,7 +55,7 @@ def test_review_recommendations_marks_own_recommendations_as_reviewed(
     p = tag_recommendation_project
     ids = [p["recommendation_a"].id, p["recommendation_b"].id]
 
-    response = client.patch("/tagrecommendation/review_recommendations", json=ids)
+    response = client.patch(_review_url(p["project"].id), json=ids)
 
     assert response.status_code == 200, response.text
     results = [TagRecommendationLinkRead.model_validate(r) for r in response.json()]
@@ -75,9 +79,7 @@ def test_review_recommendations_rejects_non_member_and_changes_nothing(
     p = tag_recommendation_project
     ids = [p["recommendation_a"].id, p["recommendation_b"].id]
 
-    response = outsider_client.patch(
-        "/tagrecommendation/review_recommendations", json=ids
-    )
+    response = outsider_client.patch(_review_url(p["project"].id), json=ids)
 
     assert response.status_code == 403, response.text
     assert _unreviewed_recommendation_ids(
@@ -90,17 +92,15 @@ def test_review_recommendations_rejects_mixed_own_and_foreign_ids(
     outsider_client: TestClient,
     tag_recommendation_project: TagRecommendationProject,
 ):
-    """A member cannot smuggle a recommendation of a foreign project into a
-    review of their own ones; the whole request is rejected and nothing changes."""
+    """A recommendation of a foreign project is not found in the project of the
+    path; the whole request is rejected and nothing changes."""
     p = tag_recommendation_project
     own_ids = [p["recommendation_a"].id]
     foreign_id = p["foreign_recommendation"].id
 
-    response = client.patch(
-        "/tagrecommendation/review_recommendations", json=[*own_ids, foreign_id]
-    )
+    response = client.patch(_review_url(p["project"].id), json=[*own_ids, foreign_id])
 
-    assert response.status_code == 403, response.text
+    assert response.status_code == 404, response.text
     assert _unreviewed_recommendation_ids(
         client, tag_recommendation_project["project"].id, OWN_ML_JOB_ID
     ) == {
@@ -117,11 +117,12 @@ def test_review_recommendations_rejects_mixed_own_and_foreign_ids(
 def test_review_recommendations_rejects_unknown_id(
     client: TestClient, tag_recommendation_project: TagRecommendationProject
 ):
-    """An id that does not exist is rejected like a foreign one, so the
-    endpoint does not reveal which ids exist."""
-    response = client.patch("/tagrecommendation/review_recommendations", json=[999_999])
+    """An id that does not exist is not found, like a foreign one."""
+    response = client.patch(
+        _review_url(tag_recommendation_project["project"].id), json=[999_999]
+    )
 
-    assert response.status_code == 403, response.text
+    assert response.status_code == 404, response.text
 
 
 def test_review_recommendations_rejects_a_disabled_feature_and_changes_nothing(
@@ -133,14 +134,16 @@ def test_review_recommendations_rejects_a_disabled_feature_and_changes_nothing(
     recommendation is disabled, and the recommendation stays unreviewed (read
     from the database, as the job listing is gated by the feature too)."""
     response = client.patch(
-        "/tagrecommendation/review_recommendations",
+        _review_url(featureless_recommendation.project_id),
         json=[featureless_recommendation.id],
     )
 
     assert_feature_disabled(response, "tag_recommendation")
     db_session.expire_all()
     assert not crud_tag_recommendation_link.read(
-        db=db_session, id=featureless_recommendation.id
+        db=db_session,
+        project_id=featureless_recommendation.project_id,
+        id=featureless_recommendation.id,
     ).is_reviewed
 
 

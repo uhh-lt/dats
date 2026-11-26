@@ -138,7 +138,8 @@ class PerspectivesService:
             ],
         }
         self.method_for_job_type: dict[
-            PerspectivesJobType, Callable[[Session, int, PerspectivesJobParams], None]
+            PerspectivesJobType,
+            Callable[[Session, int, int, PerspectivesJobParams], None],
         ] = {
             PerspectivesJobType.CREATE_ASPECT: self.create_aspect,
             PerspectivesJobType.ADD_MISSING_DOCS_TO_ASPECT: self.add_missing_docs_to_aspect,
@@ -163,7 +164,7 @@ class PerspectivesService:
 
         # Execute the correct function
         self.method_for_job_type[payload.perspectives_job_type](
-            db, payload.aspect_id, payload.parameters
+            db, payload.project_id, payload.aspect_id, payload.parameters
         )
 
     def _log_status_msg(self, status_msg: str):
@@ -173,8 +174,8 @@ class PerspectivesService:
     def _log_status_step(self, step: int):
         self.job.update(current_step=step)
 
-    def _modify_documents(self, db: Session, aspect_id: int):
-        aspect = crud_aspect.read(db=db, id=aspect_id)
+    def _modify_documents(self, db: Session, project_id: int, aspect_id: int):
+        aspect = crud_aspect.read(db=db, project_id=project_id, id=aspect_id)
         aspect_dto = AspectRead.model_validate(aspect)
 
         # 1. Find all source documents that do not have an aspect yet
@@ -335,10 +336,11 @@ class PerspectivesService:
     def __generate_map_thumbnail(
         self,
         db: Session,
+        project_id: int,
         aspect_id: int,
     ) -> None:
         # Read all relevant data
-        aspect = crud_aspect.read(db=db, id=aspect_id)
+        aspect = crud_aspect.read(db=db, project_id=project_id, id=aspect_id)
         doc_aspects = aspect.document_aspects
         doc_clusters = crud_document_cluster.read_by_aspect_id(
             db=db, aspect_id=aspect_id
@@ -387,6 +389,7 @@ class PerspectivesService:
         self,
         db: Session,
         client: WeaviateClient,
+        project_id: int,
         aspect_id: int,
         sdoc_ids: list[int] | None = None,
         train_docs: list[str] | None = None,
@@ -407,7 +410,7 @@ class PerspectivesService:
         """
 
         # 1. Read the document aspects
-        aspect = crud_aspect.read(db=db, id=aspect_id)
+        aspect = crud_aspect.read(db=db, project_id=project_id, id=aspect_id)
         aspect_dto = AspectRead.model_validate(aspect)
         if sdoc_ids is None or len(sdoc_ids) == 0:
             # Read all document aspects
@@ -522,6 +525,7 @@ class PerspectivesService:
         self,
         db: Session,
         client: WeaviateClient,
+        project_id: int,
         aspect_id: int,
         sdoc_ids: list[int] | None,
         num_clusters: int | None,
@@ -536,7 +540,7 @@ class PerspectivesService:
         :return: List of cluster IDs that were assigned to the documents.
         """
 
-        aspect = crud_aspect.read(db=db, id=aspect_id)
+        aspect = crud_aspect.read(db=db, project_id=project_id, id=aspect_id)
         aspect_dto = AspectRead.model_validate(aspect)
 
         # 1. Read the document aspects
@@ -607,7 +611,7 @@ class PerspectivesService:
 
             # add mapping for outlier cluster
             outlier_cluster = crud_cluster.read_or_create_outlier_cluster(
-                db=db, aspect_id=aspect_id, level=0
+                db=db, project_id=project_id, aspect_id=aspect_id, level=0
             )
             hdb_cluster_id2db_cluster_id[-1] = (
                 outlier_cluster.id
@@ -665,16 +669,16 @@ class PerspectivesService:
             # Treat outlier cluster separately. We only want 1 outlier cluster per aspect.
             if -1 in hdb_cluster_ids:
                 outlier_cluster = crud_cluster.read_or_create_outlier_cluster(
-                    db=db, aspect_id=aspect_id, level=0
+                    db=db, project_id=project_id, aspect_id=aspect_id, level=0
                 )
                 hdb_cluster_ids.remove(-1)
                 hdb_cluster_id2db_cluster_id[-1] = outlier_cluster.id
 
             db_clusters = crud_cluster.create_multi(
                 db=db,
+                project_id=project_id,
                 create_dtos=[
                     ClusterCreateIntern(
-                        project_id=aspect.project_id,
                         aspect_id=aspect_id,
                         level=0,
                         name=None,
@@ -710,6 +714,7 @@ class PerspectivesService:
         self._log_status_msg("Generating map thumbnail for the map...")
         self.__generate_map_thumbnail(
             db=db,
+            project_id=project_id,
             aspect_id=aspect.id,
         )
 
@@ -873,6 +878,7 @@ class PerspectivesService:
         self,
         db: Session,
         client: WeaviateClient,
+        project_id: int,
         aspect_id: int,
         cluster_ids: list[int] | None,
         skip_name_generation_ids: list[int] | None = None,
@@ -890,14 +896,14 @@ class PerspectivesService:
         :return: None
         """
 
-        aspect = crud_aspect.read(db=db, id=aspect_id)
+        aspect = crud_aspect.read(db=db, project_id=project_id, id=aspect_id)
         aspect_dto = AspectRead.model_validate(aspect)
         level = 0  # TODO: we only consider 1 level for now (level 0)
 
         # 0. Read all required data
         # - Read the clusters
         all_clusters = crud_cluster.read_by_aspect_and_level(
-            db=db, aspect_id=aspect_id, level=level
+            db=db, project_id=project_id, aspect_id=aspect_id, level=level
         )
         # - Read all document aspects
         doc_aspects = crud_document_aspect.read_by_aspect_id(db=db, aspect_id=aspect_id)
@@ -1054,7 +1060,10 @@ class PerspectivesService:
 
             update_dtos.append(update_dto)
         crud_cluster.update_multi(
-            db=db, ids=cluster_ids_to_update, update_dtos=update_dtos
+            db=db,
+            project_id=project_id,
+            ids=cluster_ids_to_update,
+            update_dtos=update_dtos,
         )
 
         # ... update the document clusters with the new distances
@@ -1073,6 +1082,7 @@ class PerspectivesService:
     def create_aspect(
         self,
         db: Session,
+        project_id: int,
         aspect_id: int,
         params: PerspectivesJobParams,
     ):
@@ -1086,6 +1096,7 @@ class PerspectivesService:
         self._log_status_step(0)
         self._modify_documents(
             db=db,
+            project_id=project_id,
             aspect_id=aspect_id,
         )
 
@@ -1094,6 +1105,7 @@ class PerspectivesService:
         self._embed_documents(
             db=db,
             client=client,
+            project_id=project_id,
             aspect_id=aspect_id,
         )
 
@@ -1102,6 +1114,7 @@ class PerspectivesService:
         self._cluster_documents(
             db=db,
             client=client,
+            project_id=project_id,
             aspect_id=aspect_id,
             sdoc_ids=None,
             num_clusters=None,
@@ -1112,6 +1125,7 @@ class PerspectivesService:
         self._extract_clusters(
             db=db,
             client=client,
+            project_id=project_id,
             aspect_id=aspect_id,
             cluster_ids=None,
         )
@@ -1121,6 +1135,7 @@ class PerspectivesService:
     def add_missing_docs_to_aspect(
         self,
         db: Session,
+        project_id: int,
         aspect_id: int,
         params: PerspectivesJobParams,
     ):
@@ -1132,7 +1147,11 @@ class PerspectivesService:
         pass
 
     def create_cluster_with_name(
-        self, db: Session, aspect_id: int, params: PerspectivesJobParams
+        self,
+        db: Session,
+        project_id: int,
+        aspect_id: int,
+        params: PerspectivesJobParams,
     ):
         assert isinstance(
             params,
@@ -1140,7 +1159,7 @@ class PerspectivesService:
         ), "CreateClusterWithNameParams expected"
 
         # Read the aspect
-        aspect = crud_aspect.read(db=db, id=aspect_id)
+        aspect = crud_aspect.read(db=db, project_id=project_id, id=aspect_id)
         aspect_dto = AspectRead.model_validate(aspect)
 
         # Read the current document <-> cluster assignments
@@ -1177,8 +1196,8 @@ class PerspectivesService:
         # - Create the new cluster in the database
         new_cluster = crud_cluster.create(
             db=db,
+            project_id=project_id,
             create_dto=ClusterCreateIntern(
-                project_id=aspect.project_id,
                 parent_cluster_id=params.create_dto.parent_cluster_id,
                 aspect_id=params.create_dto.aspect_id,
                 level=params.create_dto.level,
@@ -1243,6 +1262,7 @@ class PerspectivesService:
             self._extract_clusters(
                 client=self.weaviate.get_client(),
                 db=db,
+                project_id=project_id,
                 aspect_id=aspect.id,
                 cluster_ids=list(modified_clusters),
                 skip_name_generation_ids=[new_cluster.id],
@@ -1251,7 +1271,11 @@ class PerspectivesService:
         self._log_status_msg("Successfully created cluster with name&description!")
 
     def create_cluster_with_sdocs(
-        self, db: Session, aspect_id: int, params: PerspectivesJobParams
+        self,
+        db: Session,
+        project_id: int,
+        aspect_id: int,
+        params: PerspectivesJobParams,
     ):
         assert isinstance(
             params,
@@ -1273,11 +1297,10 @@ class PerspectivesService:
         # - Create the new cluster in the database
         self._log_status_step(0)
         self._log_status_msg("Creating new empty cluster...")
-        aspect = crud_aspect.read(db=db, id=aspect_id)
         new_cluster = crud_cluster.create(
             db=db,
+            project_id=project_id,
             create_dto=ClusterCreateIntern(
-                project_id=aspect.project_id,
                 name="New Cluster",
                 aspect_id=aspect_id,
                 level=0,
@@ -1315,6 +1338,7 @@ class PerspectivesService:
             self._extract_clusters(
                 db=db,
                 client=self.weaviate.get_client(),
+                project_id=project_id,
                 aspect_id=aspect_id,
                 cluster_ids=list(modified_clusters),
             )
@@ -1322,7 +1346,11 @@ class PerspectivesService:
         self._log_status_msg("Successfully created cluster with source documents!")
 
     def remove_cluster(
-        self, db: Session, aspect_id: int, params: PerspectivesJobParams
+        self,
+        db: Session,
+        project_id: int,
+        aspect_id: int,
+        params: PerspectivesJobParams,
     ):
         assert isinstance(
             params,
@@ -1332,7 +1360,7 @@ class PerspectivesService:
         client = self.weaviate.get_client()
         # 0. Read all relevant data
         # - Read the cluster to remove
-        cluster = crud_cluster.read(db=db, id=params.cluster_id)
+        cluster = crud_cluster.read(db=db, project_id=project_id, id=params.cluster_id)
 
         # - Read the aspect
         aspect = cluster.aspect
@@ -1420,7 +1448,7 @@ class PerspectivesService:
 
         # 2. Cluster Removal: Remove the cluster from the database
         self._log_status_step(1)
-        crud_cluster.delete(db=db, id=params.cluster_id)
+        crud_cluster.delete(db=db, project_id=project_id, id=params.cluster_id)
         crud_cluster_embedding.delete(
             client=client,
             project_id=aspect.project_id,
@@ -1439,6 +1467,7 @@ class PerspectivesService:
             self._extract_clusters(
                 db=db,
                 client=client,
+                project_id=project_id,
                 aspect_id=aspect.id,
                 cluster_ids=list(modified_clusters),
             )
@@ -1446,7 +1475,11 @@ class PerspectivesService:
         self._log_status_msg("Successfully removed cluster!")
 
     def merge_clusters(
-        self, db: Session, aspect_id: int, params: PerspectivesJobParams
+        self,
+        db: Session,
+        project_id: int,
+        aspect_id: int,
+        params: PerspectivesJobParams,
     ):
         assert isinstance(
             params,
@@ -1454,8 +1487,12 @@ class PerspectivesService:
         ), "MergeClustersParams expected"
 
         # 0. Read the clusters to merge
-        cluster1 = crud_cluster.read(db=db, id=params.cluster_to_keep)
-        cluster2 = crud_cluster.read(db=db, id=params.cluster_to_merge)
+        cluster1 = crud_cluster.read(
+            db=db, project_id=project_id, id=params.cluster_to_keep
+        )
+        cluster2 = crud_cluster.read(
+            db=db, project_id=project_id, id=params.cluster_to_merge
+        )
         aspect = cluster1.aspect
         assert cluster1.aspect_id == cluster2.aspect_id, (
             "Cannot merge clusters from different aspects."
@@ -1471,7 +1508,7 @@ class PerspectivesService:
 
         # 2. Delete the merged cluster from the database
         self._log_status_step(1)
-        crud_cluster.delete(db=db, id=params.cluster_to_merge)
+        crud_cluster.delete(db=db, project_id=project_id, id=params.cluster_to_merge)
         crud_cluster_embedding.delete(
             client=self.weaviate.get_client(),
             project_id=aspect.project_id,
@@ -1489,20 +1526,27 @@ class PerspectivesService:
         self._extract_clusters(
             db=db,
             client=self.weaviate.get_client(),
+            project_id=project_id,
             aspect_id=aspect.id,
             cluster_ids=[params.cluster_to_keep],
         )
 
         self._log_status_msg("Successfully merged clusters!")
 
-    def split_cluster(self, db: Session, aspect_id: int, params: PerspectivesJobParams):
+    def split_cluster(
+        self,
+        db: Session,
+        project_id: int,
+        aspect_id: int,
+        params: PerspectivesJobParams,
+    ):
         assert isinstance(
             params,
             SplitClusterParams,
         ), "SplitClusterParams expected"
 
         # 0. Read the cluster to split
-        cluster = crud_cluster.read(db=db, id=params.cluster_id)
+        cluster = crud_cluster.read(db=db, project_id=project_id, id=params.cluster_id)
         aspect = cluster.aspect
 
         # 0. Find all sdoc_ids associated with the cluster
@@ -1519,7 +1563,7 @@ class PerspectivesService:
 
         # 1. Remove the cluster from the database
         self._log_status_step(0)
-        crud_cluster.delete(db=db, id=params.cluster_id)
+        crud_cluster.delete(db=db, project_id=project_id, id=params.cluster_id)
         crud_cluster_embedding.delete(
             client=self.weaviate.get_client(),
             project_id=aspect.project_id,
@@ -1535,6 +1579,7 @@ class PerspectivesService:
         created_cluster_ids = self._cluster_documents(
             db=db,
             client=self.weaviate.get_client(),
+            project_id=project_id,
             aspect_id=aspect.id,
             sdoc_ids=sdoc_ids,  # TODO: could be optimized by providing the document aspects directly
             num_clusters=None,
@@ -1545,6 +1590,7 @@ class PerspectivesService:
         self._extract_clusters(
             db=db,
             client=self.weaviate.get_client(),
+            project_id=project_id,
             aspect_id=aspect.id,
             cluster_ids=created_cluster_ids,
         )
@@ -1552,7 +1598,11 @@ class PerspectivesService:
         self._log_status_msg("Successfully split cluster!")
 
     def change_cluster(
-        self, db: Session, aspect_id: int, params: PerspectivesJobParams
+        self,
+        db: Session,
+        project_id: int,
+        aspect_id: int,
+        params: PerspectivesJobParams,
     ):
         assert isinstance(
             params,
@@ -1562,12 +1612,14 @@ class PerspectivesService:
         # 0. Read the cluster to change to
         if params.cluster_id == -1:
             cluster = crud_cluster.read_or_create_outlier_cluster(
-                db=db, aspect_id=aspect_id, level=0
+                db=db, project_id=project_id, aspect_id=aspect_id, level=0
             )
             cluster_id = cluster.id
             logger.info(f"Changing to outlier cluster {cluster.name}.")
         else:
-            cluster = crud_cluster.read(db=db, id=params.cluster_id)
+            cluster = crud_cluster.read(
+                db=db, project_id=project_id, id=params.cluster_id
+            )
             cluster_id = cluster.id
             logger.info(f"Changing to normal cluster {cluster.name}.")
 
@@ -1609,6 +1661,7 @@ class PerspectivesService:
             self._extract_clusters(
                 db=db,
                 client=self.weaviate.get_client(),
+                project_id=project_id,
                 aspect_id=aspect_id,
                 cluster_ids=list(modified_clusters),
             )
@@ -1618,14 +1671,15 @@ class PerspectivesService:
     def __build_training_data(
         self,
         db: Session,
+        project_id: int,
         aspect_id: int,
     ) -> tuple[list[str], list[str], list[int]]:
         # Read the aspect
-        aspect = crud_aspect.read(db=db, id=aspect_id)
+        aspect = crud_aspect.read(db=db, project_id=project_id, id=aspect_id)
 
         # Read all clusters
         all_clusters = crud_cluster.read_by_aspect_and_level(
-            db=db, aspect_id=aspect.id, level=0
+            db=db, project_id=project_id, aspect_id=aspect.id, level=0
         )
         cluster2accepted_docs: dict[int, list[int]] = {t.id: [] for t in all_clusters}
 
@@ -1668,7 +1722,11 @@ class PerspectivesService:
         return train_docs, train_labels, train_doc_ids
 
     def refine_cluster_model(
-        self, db: Session, aspect_id: int, params: PerspectivesJobParams
+        self,
+        db: Session,
+        project_id: int,
+        aspect_id: int,
+        params: PerspectivesJobParams,
     ):
         assert isinstance(
             params,
@@ -1676,10 +1734,11 @@ class PerspectivesService:
         ), "RefineModelParams expected"
 
         # Update the model name, so that a new model is trained
-        aspect = crud_aspect.read(db=db, id=aspect_id)
+        aspect = crud_aspect.read(db=db, project_id=project_id, id=aspect_id)
         model_name = f"project_{aspect.project_id}_aspect_{aspect.id}_{datetime.now().strftime('%Y%m%d_%H%M%S')}"
         crud_aspect.update(
             db=db,
+            project_id=project_id,
             id=aspect_id,
             update_dto=AspectUpdateIntern(
                 embedding_model=model_name,
@@ -1691,6 +1750,7 @@ class PerspectivesService:
         self._log_status_msg("Building training data for the embedding model...")
         train_docs, train_labels, train_doc_ids = self.__build_training_data(
             db=db,
+            project_id=project_id,
             aspect_id=aspect_id,
         )
 
@@ -1702,6 +1762,7 @@ class PerspectivesService:
         self._embed_documents(
             db=db,
             client=self.weaviate.get_client(),
+            project_id=project_id,
             aspect_id=aspect_id,
             train_docs=train_docs,
             train_labels=train_labels,
@@ -1712,6 +1773,7 @@ class PerspectivesService:
         self._cluster_documents(
             db=db,
             client=self.weaviate.get_client(),
+            project_id=project_id,
             aspect_id=aspect_id,
             sdoc_ids=None,
             num_clusters=None,
@@ -1724,6 +1786,7 @@ class PerspectivesService:
         self._extract_clusters(
             db=db,
             client=self.weaviate.get_client(),
+            project_id=project_id,
             aspect_id=aspect_id,
             cluster_ids=None,
         )
@@ -1731,7 +1794,11 @@ class PerspectivesService:
         self._log_status_msg("Successfully refined map!")
 
     def reset_cluster_model(
-        self, db: Session, aspect_id: int, params: PerspectivesJobParams
+        self,
+        db: Session,
+        project_id: int,
+        aspect_id: int,
+        params: PerspectivesJobParams,
     ):
         assert isinstance(
             params,
@@ -1741,20 +1808,24 @@ class PerspectivesService:
         pass
 
     def recompute_cluster_title_and_description(
-        self, db: Session, aspect_id: int, params: PerspectivesJobParams
+        self,
+        db: Session,
+        project_id: int,
+        aspect_id: int,
+        params: PerspectivesJobParams,
     ):
         assert isinstance(
             params,
             RecomputeClusterTitleAndDescriptionParams,
         ), "RecomputeClusterTitleAndDescriptionParams expected"
 
-        aspect = crud_aspect.read(db=db, id=aspect_id)
+        aspect = crud_aspect.read(db=db, project_id=project_id, id=aspect_id)
         aspect_dto = AspectRead.model_validate(aspect)
 
         # 1. Read cluster
         self._log_status_step(0)
         self._log_status_msg(f"Reading top words of cluster {params.cluster_id}...")
-        cluster = crud_cluster.read(db=db, id=params.cluster_id)
+        cluster = crud_cluster.read(db=db, project_id=project_id, id=params.cluster_id)
         top_words = cluster.top_words
         if top_words is None:
             raise ValueError(
@@ -1780,6 +1851,7 @@ class PerspectivesService:
         # Store the new title and description in database
         crud_cluster.update(
             db=db,
+            project_id=project_id,
             id=cluster.id,
             update_dto=ClusterUpdateIntern(
                 name=cluster_name[cluster.id],

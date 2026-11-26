@@ -102,6 +102,7 @@ export function ClassifierTable({ projectId, classifiers, isFetching, isError, o
     }
     updateClassifier(
       {
+        projectId,
         classifierId: row.original.id,
         requestBody: {
           name: values.name,
@@ -159,6 +160,7 @@ export function ClassifierTable({ projectId, classifiers, isFetching, isError, o
     if (selectedRows.length === 0) return;
     selectedRows.forEach((classifierId) => {
       deleteClassifierMutation.mutate({
+        projectId,
         classifierId,
       });
     });

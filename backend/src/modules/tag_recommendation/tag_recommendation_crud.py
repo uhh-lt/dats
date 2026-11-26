@@ -7,11 +7,11 @@ from modules.tag_recommendation.tag_recommendation_dto import (
 from modules.tag_recommendation.tag_recommendation_orm import (
     TagRecommendationLinkORM,
 )
-from repos.db.crud_base import SQLCRUDBase
+from repos.db.project_crud_base import ProjectCRUDBase
 
 
 class CRUDTagRecommendationLink(
-    SQLCRUDBase[
+    ProjectCRUDBase[
         TagRecommendationLinkORM,
         TagRecommendationLinkCreate,
         TagRecommendationLinkUpdate,

@@ -6,6 +6,7 @@ from sqlalchemy import (
     ForeignKey,
     ForeignKeyConstraint,
     Integer,
+    PrimaryKeyConstraint,
     String,
     UniqueConstraint,
 )
@@ -19,7 +20,8 @@ if TYPE_CHECKING:
 
 
 class TagRecommendationLinkORM(ORMBase):
-    id: Mapped[int] = mapped_column(Integer, primary_key=True, index=True)
+    # the primary key is (project_id, id), see __table_args__
+    id: Mapped[int] = mapped_column(Integer, autoincrement=True, index=True)
     # the id of the tag recommendation job (named before it became a job of its own)
     ml_job_id: Mapped[str | None] = mapped_column(String, index=True)
     prediction_score: Mapped[float | None] = mapped_column(Float, index=True)
@@ -30,7 +32,6 @@ class TagRecommendationLinkORM(ORMBase):
         Integer,
         ForeignKey("project.id", ondelete="CASCADE"),
         nullable=False,
-        index=True,
     )
 
     source_document_id: Mapped[int] = mapped_column(Integer, nullable=False, index=True)
@@ -48,6 +49,7 @@ class TagRecommendationLinkORM(ORMBase):
     )
 
     __table_args__ = (
+        PrimaryKeyConstraint("project_id", "id", name="tagrecommendationlink_pkey"),
         UniqueConstraint(
             "project_id", "id", name="UC_tagrecommendationlink_project_id_id"
         ),
@@ -64,6 +66,3 @@ class TagRecommendationLinkORM(ORMBase):
             name="FK_tagrecommendationlink_predicted_tag_id",
         ),
     )
-
-    def get_project_id(self) -> int:
-        return self.project_id

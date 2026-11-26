@@ -28,196 +28,16 @@ import { OpenAPI } from "../core/OpenAPI";
 import { request as __request } from "../core/request";
 export class PerspectivesService {
   /**
-   * Creates a new Aspect
-   * @returns AspectRead Successful Response
-   * @throws ApiError
-   */
-  public static createAspect({ requestBody }: { requestBody: AspectCreate }): CancelablePromise<AspectRead> {
-    return __request(OpenAPI, {
-      method: "PUT",
-      url: "/perspectives/aspect",
-      body: requestBody,
-      mediaType: "application/json",
-      errors: {
-        422: `Validation Error`,
-      },
-    });
-  }
-  /**
-   * Returns all Aspects of the Project with the given ID if it exists
-   * @returns AspectRead Successful Response
-   * @throws ApiError
-   */
-  public static getAllAspects({ projectId }: { projectId: number }): CancelablePromise<Array<AspectRead>> {
-    return __request(OpenAPI, {
-      method: "GET",
-      url: "/perspectives/project/{project_id}/aspects",
-      path: {
-        project_id: projectId,
-      },
-      errors: {
-        422: `Validation Error`,
-      },
-    });
-  }
-  /**
-   * Returns the Aspect with the given ID.
-   * @returns AspectRead Successful Response
-   * @throws ApiError
-   */
-  public static getById({ aspectId }: { aspectId: number }): CancelablePromise<AspectRead> {
-    return __request(OpenAPI, {
-      method: "GET",
-      url: "/perspectives/aspect/{aspect_id}",
-      path: {
-        aspect_id: aspectId,
-      },
-      errors: {
-        422: `Validation Error`,
-      },
-    });
-  }
-  /**
-   * Updates the Aspect with the given ID.
-   * @returns AspectRead Successful Response
-   * @throws ApiError
-   */
-  public static updateAspectById({
-    aspectId,
-    requestBody,
-  }: {
-    aspectId: number;
-    requestBody: AspectUpdate;
-  }): CancelablePromise<AspectRead> {
-    return __request(OpenAPI, {
-      method: "PATCH",
-      url: "/perspectives/aspect/{aspect_id}",
-      path: {
-        aspect_id: aspectId,
-      },
-      body: requestBody,
-      mediaType: "application/json",
-      errors: {
-        422: `Validation Error`,
-      },
-    });
-  }
-  /**
-   * Removes the Aspect with the given ID.
-   * @returns AspectRead Successful Response
-   * @throws ApiError
-   */
-  public static removeAspectById({ aspectId }: { aspectId: number }): CancelablePromise<AspectRead> {
-    return __request(OpenAPI, {
-      method: "DELETE",
-      url: "/perspectives/aspect/{aspect_id}",
-      path: {
-        aspect_id: aspectId,
-      },
-      errors: {
-        422: `Validation Error`,
-      },
-    });
-  }
-  /**
-   * Returns the URL of the map thumbnail of the Aspect (relative to /content/), None until it is computed.
-   * @returns any Successful Response
-   * @throws ApiError
-   */
-  public static getMapThumbnailUrl({ aspectId }: { aspectId: number }): CancelablePromise<string | null> {
-    return __request(OpenAPI, {
-      method: "GET",
-      url: "/perspectives/aspect/{aspect_id}/map_thumbnail_url",
-      path: {
-        aspect_id: aspectId,
-      },
-      errors: {
-        422: `Validation Error`,
-      },
-    });
-  }
-  /**
-   * Returns the Document Aspect Content for the given IDs.
-   * @returns string Successful Response
-   * @throws ApiError
-   */
-  public static getDocaspectById({
-    aspectId,
-    sdocId,
-  }: {
-    aspectId: number;
-    sdocId: number;
-  }): CancelablePromise<string> {
-    return __request(OpenAPI, {
-      method: "GET",
-      url: "/perspectives/aspect/{aspect_id}/sdoc/{sdoc_id}",
-      path: {
-        aspect_id: aspectId,
-        sdoc_id: sdocId,
-      },
-      errors: {
-        422: `Validation Error`,
-      },
-    });
-  }
-  /**
-   * Returns the clusters for the given SourceDocument (sdoc_id) in the specified Aspect (aspect_id).
-   * @returns ClusterRead Successful Response
-   * @throws ApiError
-   */
-  public static getClustersForSdoc({
-    aspectId,
-    sdocId,
-  }: {
-    aspectId: number;
-    sdocId: number;
-  }): CancelablePromise<Array<ClusterRead>> {
-    return __request(OpenAPI, {
-      method: "GET",
-      url: "/perspectives/clusters/{aspect_id}/sdoc/{sdoc_id}",
-      path: {
-        aspect_id: aspectId,
-        sdoc_id: sdocId,
-      },
-      errors: {
-        422: `Validation Error`,
-      },
-    });
-  }
-  /**
-   * Updates the Cluster's name and description.
-   * @returns ClusterRead Successful Response
-   * @throws ApiError
-   */
-  public static updateClusterDetails({
-    clusterId,
-    requestBody,
-  }: {
-    clusterId: number;
-    requestBody: ClusterUpdate;
-  }): CancelablePromise<ClusterRead> {
-    return __request(OpenAPI, {
-      method: "PATCH",
-      url: "/perspectives/cluster/{cluster_id}/details",
-      path: {
-        cluster_id: clusterId,
-      },
-      body: requestBody,
-      mediaType: "application/json",
-      errors: {
-        422: `Validation Error`,
-      },
-    });
-  }
-  /**
-   * Starts the PerspectivesJob for the given Parameters. If a job is already running, this will raise an error.
+   * Starts the PerspectivesJob of the Aspect (aspect_id) for the given Parameters. If a job is already running, this will raise an error.
    * @returns PerspectivesJobRead Successful Response
    * @throws ApiError
    */
   public static startPerspectivesJob({
+    projectId,
     aspectId,
     requestBody,
   }: {
+    projectId: number;
     aspectId: number;
     requestBody:
       | AddMissingDocsToAspectParams
@@ -233,9 +53,238 @@ export class PerspectivesService {
   }): CancelablePromise<PerspectivesJobRead> {
     return __request(OpenAPI, {
       method: "POST",
-      url: "/perspectives/job/{aspect_id}",
+      url: "/projects/{project_id}/jobs/perspectives",
       path: {
+        project_id: projectId,
+      },
+      query: {
         aspect_id: aspectId,
+      },
+      body: requestBody,
+      mediaType: "application/json",
+      errors: {
+        422: `Validation Error`,
+      },
+    });
+  }
+  /**
+   * Creates a new Aspect
+   * @returns AspectRead Successful Response
+   * @throws ApiError
+   */
+  public static createAspect({
+    projectId,
+    requestBody,
+  }: {
+    projectId: number;
+    requestBody: AspectCreate;
+  }): CancelablePromise<AspectRead> {
+    return __request(OpenAPI, {
+      method: "PUT",
+      url: "/projects/{project_id}/perspectives/aspects",
+      path: {
+        project_id: projectId,
+      },
+      body: requestBody,
+      mediaType: "application/json",
+      errors: {
+        422: `Validation Error`,
+      },
+    });
+  }
+  /**
+   * Returns all Aspects of the Project
+   * @returns AspectRead Successful Response
+   * @throws ApiError
+   */
+  public static getAllAspects({ projectId }: { projectId: number }): CancelablePromise<Array<AspectRead>> {
+    return __request(OpenAPI, {
+      method: "GET",
+      url: "/projects/{project_id}/perspectives/aspects",
+      path: {
+        project_id: projectId,
+      },
+      errors: {
+        422: `Validation Error`,
+      },
+    });
+  }
+  /**
+   * Returns the Aspect with the given ID.
+   * @returns AspectRead Successful Response
+   * @throws ApiError
+   */
+  public static getById({
+    projectId,
+    aspectId,
+  }: {
+    projectId: number;
+    aspectId: number;
+  }): CancelablePromise<AspectRead> {
+    return __request(OpenAPI, {
+      method: "GET",
+      url: "/projects/{project_id}/perspectives/aspects/{aspect_id}",
+      path: {
+        project_id: projectId,
+        aspect_id: aspectId,
+      },
+      errors: {
+        422: `Validation Error`,
+      },
+    });
+  }
+  /**
+   * Updates the Aspect with the given ID.
+   * @returns AspectRead Successful Response
+   * @throws ApiError
+   */
+  public static updateAspectById({
+    projectId,
+    aspectId,
+    requestBody,
+  }: {
+    projectId: number;
+    aspectId: number;
+    requestBody: AspectUpdate;
+  }): CancelablePromise<AspectRead> {
+    return __request(OpenAPI, {
+      method: "PATCH",
+      url: "/projects/{project_id}/perspectives/aspects/{aspect_id}",
+      path: {
+        project_id: projectId,
+        aspect_id: aspectId,
+      },
+      body: requestBody,
+      mediaType: "application/json",
+      errors: {
+        422: `Validation Error`,
+      },
+    });
+  }
+  /**
+   * Removes the Aspect with the given ID.
+   * @returns AspectRead Successful Response
+   * @throws ApiError
+   */
+  public static removeAspectById({
+    projectId,
+    aspectId,
+  }: {
+    projectId: number;
+    aspectId: number;
+  }): CancelablePromise<AspectRead> {
+    return __request(OpenAPI, {
+      method: "DELETE",
+      url: "/projects/{project_id}/perspectives/aspects/{aspect_id}",
+      path: {
+        project_id: projectId,
+        aspect_id: aspectId,
+      },
+      errors: {
+        422: `Validation Error`,
+      },
+    });
+  }
+  /**
+   * Returns the URL of the map thumbnail of the Aspect (relative to /content/), None until it is computed.
+   * @returns any Successful Response
+   * @throws ApiError
+   */
+  public static getMapThumbnailUrl({
+    projectId,
+    aspectId,
+  }: {
+    projectId: number;
+    aspectId: number;
+  }): CancelablePromise<string | null> {
+    return __request(OpenAPI, {
+      method: "GET",
+      url: "/projects/{project_id}/perspectives/aspects/{aspect_id}/map-thumbnail-url",
+      path: {
+        project_id: projectId,
+        aspect_id: aspectId,
+      },
+      errors: {
+        422: `Validation Error`,
+      },
+    });
+  }
+  /**
+   * Returns the Document Aspect Content for the given IDs.
+   * @returns string Successful Response
+   * @throws ApiError
+   */
+  public static getDocaspectById({
+    projectId,
+    aspectId,
+    sdocId,
+  }: {
+    projectId: number;
+    aspectId: number;
+    sdocId: number;
+  }): CancelablePromise<string> {
+    return __request(OpenAPI, {
+      method: "GET",
+      url: "/projects/{project_id}/perspectives/aspects/{aspect_id}/source-documents/{sdoc_id}",
+      path: {
+        project_id: projectId,
+        aspect_id: aspectId,
+        sdoc_id: sdocId,
+      },
+      errors: {
+        422: `Validation Error`,
+      },
+    });
+  }
+  /**
+   * Returns the clusters for the given SourceDocument (sdoc_id) in the specified Aspect (aspect_id).
+   * @returns ClusterRead Successful Response
+   * @throws ApiError
+   */
+  public static getClustersForSdoc({
+    projectId,
+    aspectId,
+    sdocId,
+  }: {
+    projectId: number;
+    aspectId: number;
+    sdocId: number;
+  }): CancelablePromise<Array<ClusterRead>> {
+    return __request(OpenAPI, {
+      method: "GET",
+      url: "/projects/{project_id}/perspectives/aspects/{aspect_id}/clusters",
+      path: {
+        project_id: projectId,
+        aspect_id: aspectId,
+      },
+      query: {
+        sdoc_id: sdocId,
+      },
+      errors: {
+        422: `Validation Error`,
+      },
+    });
+  }
+  /**
+   * Updates the Cluster's name and description.
+   * @returns ClusterRead Successful Response
+   * @throws ApiError
+   */
+  public static updateClusterDetails({
+    projectId,
+    clusterId,
+    requestBody,
+  }: {
+    projectId: number;
+    clusterId: number;
+    requestBody: ClusterUpdate;
+  }): CancelablePromise<ClusterRead> {
+    return __request(OpenAPI, {
+      method: "PATCH",
+      url: "/projects/{project_id}/perspectives/clusters/{cluster_id}",
+      path: {
+        project_id: projectId,
+        cluster_id: clusterId,
       },
       body: requestBody,
       mediaType: "application/json",
@@ -250,18 +299,21 @@ export class PerspectivesService {
    * @throws ApiError
    */
   public static visualizeDocuments({
+    projectId,
     aspectId,
     searchQuery,
     requestBody,
   }: {
+    projectId: number;
     aspectId: number;
     searchQuery: string;
     requestBody: Body_perspectives_visualize_documents;
   }): CancelablePromise<PerspectivesVisualization> {
     return __request(OpenAPI, {
       method: "POST",
-      url: "/perspectives/visualize_documents/{aspect_id}",
+      url: "/projects/{project_id}/perspectives/aspects/{aspect_id}/visualize",
       path: {
+        project_id: projectId,
         aspect_id: aspectId,
       },
       query: {
@@ -280,18 +332,21 @@ export class PerspectivesService {
    * @throws ApiError
    */
   public static acceptLabel({
+    projectId,
     aspectId,
     searchQuery,
     requestBody,
   }: {
+    projectId: number;
     aspectId: number;
     searchQuery: string;
     requestBody: Body_perspectives_accept_label;
   }): CancelablePromise<PerspectivesVisualization> {
     return __request(OpenAPI, {
       method: "POST",
-      url: "/perspectives/label_accept/{aspect_id}",
+      url: "/projects/{project_id}/perspectives/aspects/{aspect_id}/accept-labels",
       path: {
+        project_id: projectId,
         aspect_id: aspectId,
       },
       query: {
@@ -310,18 +365,21 @@ export class PerspectivesService {
    * @throws ApiError
    */
   public static revertLabel({
+    projectId,
     aspectId,
     searchQuery,
     requestBody,
   }: {
+    projectId: number;
     aspectId: number;
     searchQuery: string;
     requestBody: Body_perspectives_revert_label;
   }): CancelablePromise<PerspectivesVisualization> {
     return __request(OpenAPI, {
       method: "POST",
-      url: "/perspectives/label_revert/{aspect_id}",
+      url: "/projects/{project_id}/perspectives/aspects/{aspect_id}/revert-labels",
       path: {
+        project_id: projectId,
         aspect_id: aspectId,
       },
       query: {
@@ -340,14 +398,17 @@ export class PerspectivesService {
    * @throws ApiError
    */
   public static getClusterSimilarities({
+    projectId,
     aspectId,
   }: {
+    projectId: number;
     aspectId: number;
   }): CancelablePromise<PerspectivesClusterSimilarities> {
     return __request(OpenAPI, {
       method: "GET",
-      url: "/perspectives/cluster_similarities/{aspect_id}",
+      url: "/projects/{project_id}/perspectives/aspects/{aspect_id}/cluster-similarities",
       path: {
+        project_id: projectId,
         aspect_id: aspectId,
       },
       errors: {

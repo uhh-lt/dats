@@ -98,22 +98,22 @@ A wrapper around `SentenceTransformers` and `SetFit`.
 - Handles **Model Fine-tuning**: If training data is provided, it trains a SetFit model on the fly.
 - Handles **Inference**: Generates embeddings for text or images.
 
-### `PerspectivesEndpoint` (`perspectives_endpoint.py`)
+### `PerspectivesEndpoint` (`perspectives_endpoint.py`) and `perspectives_job_endpoint.py`
 
-The API surface. Key interactions:
+The API surface, under `/projects/{project_id}`. Key interactions:
 
-- **Jobs**: POST `/job/{aspect_id}` starts the pipeline (async).
-- **CRUD**: Standard Create/Read/Update/Delete for Aspects.
-- **Visualization**: POST `/visualize_documents/{aspect_id}` returns data for the frontend Scatterplot (docs, coords, cluster colors).
-- **Labeling**: POST `/label_accept` / `/label_revert` for user feedback.
+- **Jobs**: POST `/jobs/perspectives?aspect_id=` starts the pipeline (async).
+- **CRUD**: Standard Create/Read/Update/Delete for Aspects at `/perspectives/aspects`.
+- **Visualization**: POST `/perspectives/aspects/{aspect_id}/visualize` returns data for the frontend Scatterplot (docs, coords, cluster colors).
+- **Labeling**: POST `/perspectives/aspects/{aspect_id}/accept-labels` / `/revert-labels` for user feedback.
 
 ## API & Frontend Interaction
 
-1.  **Creation**: Frontend calls `create_aspect` (PUT `/aspect`). This immediately triggers a background Job.
+1.  **Creation**: Frontend calls `create_aspect` (PUT `/projects/{project_id}/perspectives/aspects`). This immediately triggers a background Job.
 2.  **Monitoring**: Frontend polls `/projects/{project_id}/jobs/perspectives/{job_id}` to show a progress bar.
 3.  **Visualization**:
-    - Call `/visualize_documents/{aspect_id}` to get all points (x, y) and their cluster assignments.
+    - Call `/projects/{project_id}/perspectives/aspects/{aspect_id}/visualize` to get all points (x, y) and their cluster assignments.
     - Call `/cluster_similarities/{aspect_id}` to get a similarity matrix for the cluster map.
 4.  **Interaction**:
-    - When a user clicks a point, frontend fetches details via `/aspect/{aspect_id}/sdoc/{sdoc_id}`.
-    - When a user "accepts" a cluster suggestion, frontend calls `/label_accept`.
+    - When a user clicks a point, frontend fetches details via `/projects/{project_id}/perspectives/aspects/{aspect_id}/source-documents/{sdoc_id}`.
+    - When a user "accepts" a cluster suggestion, frontend calls `/projects/{project_id}/perspectives/aspects/{aspect_id}/accept-labels`.

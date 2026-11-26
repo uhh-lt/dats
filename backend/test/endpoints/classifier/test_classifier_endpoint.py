@@ -2,6 +2,7 @@ import pytest
 from fastapi.testclient import TestClient
 from pydantic import TypeAdapter, ValidationError
 
+from composite_keys_test_utils import TwoTenants
 from config import conf
 from modules.classifier.classifier_dto import (
     ClassifierDatasetStatistics,
@@ -26,9 +27,9 @@ CLASSIFIER_LIST_ADAPTER = TypeAdapter(list[ClassifierRead])
 # ---------------------------------------------------------------------------
 
 
-def test_get_classifier_info(client: TestClient):
+def test_get_classifier_info(client: TestClient, test_project):
     """Classifier info exposes every frontend setting from server configuration."""
-    response = client.get("/classifier/info")
+    response = client.get(f"/projects/{test_project.id}/classifiers/info")
     assert response.status_code == 200, response.text
     info = ClassifierInfo.model_validate(response.json())
     expected_transformer = [m.value for m in conf.classifier.transformer_models]
@@ -49,7 +50,7 @@ def test_get_classifier_info(client: TestClient):
 
 def test_list_classifiers_empty(client: TestClient, test_project):
     """Listing classifiers of a fresh project returns an empty list."""
-    response = client.get(f"/classifier/project/{test_project.id}")
+    response = client.get(f"/projects/{test_project.id}/classifiers")
     assert response.status_code == 200, response.text
     classifiers = CLASSIFIER_LIST_ADAPTER.validate_python(response.json())
     assert classifiers == []
@@ -57,7 +58,7 @@ def test_list_classifiers_empty(client: TestClient, test_project):
 
 def test_list_classifiers(client: TestClient, test_project, persisted_classifier):
     """Listing classifiers returns the persisted classifier with matching id and name."""
-    response = client.get(f"/classifier/project/{test_project.id}")
+    response = client.get(f"/projects/{test_project.id}/classifiers")
     assert response.status_code == 200, response.text
     classifiers = CLASSIFIER_LIST_ADAPTER.validate_python(response.json())
     assert len(classifiers) == 1
@@ -65,12 +66,12 @@ def test_list_classifiers(client: TestClient, test_project, persisted_classifier
     assert classifiers[0].name == "Test Classifier"
 
 
-def test_rename_classifier(client: TestClient, persisted_classifier):
-    """PATCH /classifier/{id} renames the classifier and returns the new name."""
+def test_rename_classifier(client: TestClient, test_project, persisted_classifier):
+    """PATCH …/classifiers/{id} renames the classifier and returns the new name."""
     clf_id = persisted_classifier["classifier_id"]
     request = ClassifierUpdate(name="Renamed")
     response = client.patch(
-        f"/classifier/{clf_id}",
+        f"/projects/{test_project.id}/classifiers/{clf_id}",
         json=request.model_dump(mode="json"),
     )
     assert response.status_code == 200, response.text
@@ -81,22 +82,61 @@ def test_rename_classifier(client: TestClient, persisted_classifier):
 def test_delete_classifier_removes_dir_and_db_row(
     client: TestClient, test_project, persisted_classifier
 ):
-    """DELETE /classifier/{id} removes both the on-disk model directory and the
+    """DELETE …/classifiers/{id} removes both the on-disk model directory and the
     classifier's database row (it no longer appears in the project listing)."""
     clf_id = persisted_classifier["classifier_id"]
     model_dir = persisted_classifier["model_dir"]
     assert model_dir.exists()
 
-    response = client.delete(f"/classifier/{clf_id}")
+    response = client.delete(f"/projects/{test_project.id}/classifiers/{clf_id}")
     assert response.status_code == 200, response.text
     deleted_classifier = ClassifierRead.model_validate(response.json())
     assert deleted_classifier.id == clf_id
     assert not model_dir.exists()
 
-    response = client.get(f"/classifier/project/{test_project.id}")
+    response = client.get(f"/projects/{test_project.id}/classifiers")
     assert response.status_code == 200, response.text
     classifiers = CLASSIFIER_LIST_ADAPTER.validate_python(response.json())
     assert classifiers == []
+
+
+def test_list_classifiers_holds_the_classifiers_of_the_path_project(
+    client: TestClient, tenants: TwoTenants
+):
+    """Each project lists only its own "Classifier <p>"."""
+    for rows in (tenants["own"], tenants["foreign"]):
+        response = client.get(f"/projects/{rows['project'].id}/classifiers")
+        assert response.status_code == 200, response.text
+        classifiers = CLASSIFIER_LIST_ADAPTER.validate_python(response.json())
+        assert [c.id for c in classifiers] == [rows["classifier"].id]
+
+
+@pytest.mark.parametrize(
+    "method",
+    [
+        # rename
+        pytest.param("PATCH", id="update"),
+        # delete
+        pytest.param("DELETE", id="delete"),
+    ],
+)
+def test_classifier_of_another_project_is_not_found(
+    client: TestClient, tenants: TwoTenants, method: str
+):
+    """A classifier of another project of the user answers 404 and stays
+    listed in its own project under its name."""
+    own, foreign = tenants["own"], tenants["foreign"]
+    clf = foreign["classifier"]
+
+    response = client.request(
+        method,
+        f"/projects/{own['project'].id}/classifiers/{clf.id}",
+        json={"name": "Renamed"} if method == "PATCH" else None,
+    )
+
+    assert response.status_code == 404, response.text
+    response = client.get(f"/projects/{foreign['project'].id}/classifiers")
+    assert [c["name"] for c in response.json()] == [clf.name]
 
 
 # ---------------------------------------------------------------------------
@@ -235,7 +275,7 @@ def _request_dataset_statistics(
         merge_children_into_parent=merge_children_into_parent,
     )
     response = client.post(
-        f"/classifier/project/{project_id}/dataset-statistics",
+        f"/projects/{project_id}/classifiers/dataset-statistics",
         json=request.model_dump(mode="json"),
     )
     assert response.status_code == 200, response.text

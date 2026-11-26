@@ -6,10 +6,6 @@ import type { ClassifierClassMetrics } from "./ClassifierClassMetrics";
 import type { ClassifierData } from "./ClassifierData";
 export type ClassifierEvaluationRead = {
   /**
-   * Project the evaluation belongs to
-   */
-  project_id: number;
-  /**
    * ID of the Classifier
    */
   classifier_id: number;
@@ -49,6 +45,10 @@ export type ClassifierEvaluationRead = {
    * ID of the Classifier Evaluation
    */
   id: number;
+  /**
+   * Project the evaluation belongs to
+   */
+  project_id: number;
   /**
    * Creation timestamp of the classifier
    */

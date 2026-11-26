@@ -26,9 +26,10 @@ interface ClusterSimilarityPlotProps {
 export const ClusterSimilarityPlot = memo(({ aspectId, height, colorName }: ClusterSimilarityPlotProps) => {
   // global client state
   const colorScheme = useAppSelector((state) => state.perspectives.colorScheme);
+  const projectId = useAppSelector((state) => state.project.projectId);
 
   // global server state
-  const vis = useQuery(perspectivesQueries.clusterSimilarities(aspectId));
+  const vis = useQuery(perspectivesQueries.clusterSimilarities(projectId, aspectId));
 
   const labelFontSize = "0.75rem";
   const cellFontSize = "0.75rem";
