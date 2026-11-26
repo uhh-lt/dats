@@ -10,7 +10,7 @@ import AddIcon from "@mui/icons-material/Add";
 import ContentCopyIcon from "@mui/icons-material/ContentCopy";
 import SaveIcon from "@mui/icons-material/Save";
 import { Alert, Button, Dialog, DialogActions, DialogContent, MenuItem, Stack, TextField } from "@mui/material";
-import { useCallback, useEffect, useState } from "react";
+import { Fragment, useCallback, useEffect, useState } from "react";
 import { SubmitErrorHandler, SubmitHandler, useForm } from "react-hook-form";
 import { ApiKeyHooks } from "../../../api/apiKeyHooks";
 import { closeOnEscape } from "@utils/dialogUtils";
@@ -102,8 +102,11 @@ export function ApiKeyCreateDialog() {
           isMaximized={isMaximized}
           onToggleMaximize={toggleMaximize}
         />
+        {/* keyed, so the two views share no DOM element: otherwise the click on Close
+            turns its button into the submit button before the browser's default
+            action of the click, which then submits the form again */}
         {createdKey ? (
-          <>
+          <Fragment key="created">
             <DialogContent>
               <Stack spacing={3}>
                 <Alert severity="warning">
@@ -137,9 +140,9 @@ export function ApiKeyCreateDialog() {
                 Copy API Key
               </Button>
             </DialogActions>
-          </>
+          </Fragment>
         ) : (
-          <>
+          <Fragment key="form">
             <DialogContent>
               <Stack spacing={3}>
                 <FormText
@@ -198,7 +201,7 @@ export function ApiKeyCreateDialog() {
                 Create API Key
               </Button>
             </DialogActions>
-          </>
+          </Fragment>
         )}
       </Dialog>
     </>
