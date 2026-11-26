@@ -1,6 +1,6 @@
 # Module Architecture
 
-The DATS backend is built from a small core, three systems and self-contained modules. This page gives the whole picture for a developer who adds or changes a capability. The terms are defined in [`GLOSSARY.md`](https://github.com/uhh-lt/dats/blob/main/GLOSSARY.md); the decisions behind the design are the ADRs in [`specs/adr/`](https://github.com/uhh-lt/dats/tree/main/specs/adr) (0007 to 0012 for this architecture). The details of each system live in its README, linked below.
+The DATS backend is built from a small core, three systems and self-contained modules. This page gives the whole picture for a developer who adds or changes a capability. The terms are defined in [`GLOSSARY.md`](https://github.com/uhh-lt/dats/blob/main/GLOSSARY.md); the decisions behind the design are the ADRs in [`specs/adr/`](https://github.com/uhh-lt/dats/tree/main/specs/adr) (0007 to 0013 for this architecture). The details of each system live in its README, linked below.
 
 ## The model
 
