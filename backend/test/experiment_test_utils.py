@@ -196,8 +196,8 @@ def create_run_user_project(
     prompt = PromptService().create_prompt(
         db=db,
         user_id=test_user.id,
+        project_id=project.id,
         create_dto=PromptCreate(
-            project_id=project.id,
             name="Claims",
             task_type=TaskType.ANNOTATION,
             language=PromptLanguage.EN,

@@ -106,7 +106,11 @@ class AgreementService(metaclass=SingletonMeta):
 
         # 2) compare the annotations unit by unit
         segments = self._compute_segments(
-            db=db, sdoc_ids=sdoc_ids, code_ids=code_ids, params=params
+            db=db,
+            project_id=project_id,
+            sdoc_ids=sdoc_ids,
+            code_ids=code_ids,
+            params=params,
         )
 
         # 3) resolve the character offsets of the segments; only the token and
@@ -149,7 +153,11 @@ class AgreementService(metaclass=SingletonMeta):
 
         # 2) count per document and code, without reading the documents
         segments = self._compute_segments(
-            db=db, sdoc_ids=sdoc_ids, code_ids=code_ids, params=params
+            db=db,
+            project_id=project_id,
+            sdoc_ids=sdoc_ids,
+            code_ids=code_ids,
+            params=params,
         )
         counts: dict[tuple[int, int], list[int]] = {
             (sdoc_id, code_id): [0, 0, 0]
@@ -274,6 +282,7 @@ class AgreementService(metaclass=SingletonMeta):
         self,
         *,
         db: Session,
+        project_id: int,
         sdoc_ids: list[int],
         code_ids: list[int],
         params: AgreementParams,
@@ -289,6 +298,7 @@ class AgreementService(metaclass=SingletonMeta):
             case AgreementAnnotationType.SPAN:
                 annotations = self._read_span_annotations(
                     db=db,
+                    project_id=project_id,
                     sdoc_ids=sdoc_ids,
                     code_ids=code_ids,
                     user_ids=user_ids,
@@ -297,6 +307,7 @@ class AgreementService(metaclass=SingletonMeta):
             case AgreementAnnotationType.SENTENCE:
                 annotations = self._read_sentence_annotations(
                     db=db,
+                    project_id=project_id,
                     sdoc_ids=sdoc_ids,
                     code_ids=code_ids,
                     user_ids=user_ids,
@@ -366,6 +377,7 @@ class AgreementService(metaclass=SingletonMeta):
         self,
         *,
         db: Session,
+        project_id: int,
         sdoc_ids: list[int],
         code_ids: list[int],
         user_ids: list[int],
@@ -389,7 +401,11 @@ class AgreementService(metaclass=SingletonMeta):
             )
             for user_id in user_ids
             for anno in crud_span_anno.read_by_user_sdocs_codes(
-                db=db, user_id=user_id, sdoc_ids=sdoc_ids, code_ids=code_ids
+                db=db,
+                project_id=project_id,
+                user_id=user_id,
+                sdoc_ids=sdoc_ids,
+                code_ids=code_ids,
             )
         ]
 
@@ -397,6 +413,7 @@ class AgreementService(metaclass=SingletonMeta):
         self,
         *,
         db: Session,
+        project_id: int,
         sdoc_ids: list[int],
         code_ids: list[int],
         user_ids: list[int],
@@ -422,7 +439,11 @@ class AgreementService(metaclass=SingletonMeta):
             )
             for user_id in user_ids
             for anno in crud_sentence_anno.read_by_user_sdocs_codes(
-                db=db, user_id=user_id, sdoc_ids=sdoc_ids, code_ids=code_ids
+                db=db,
+                project_id=project_id,
+                user_id=user_id,
+                sdoc_ids=sdoc_ids,
+                code_ids=code_ids,
             )
         ]
 

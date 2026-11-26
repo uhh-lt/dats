@@ -11,10 +11,6 @@ from core.code.code_crud import crud_code
 from core.doc.source_document_crud import crud_sdoc
 from core.memo.memo_enum import AttachedObjectType
 from core.project.project_crud import crud_project
-from core.prompt.prompt_crud import crud_prompt
-from core.prompt.prompt_version_crud import (
-    crud_prompt_version,
-)
 from core.tag.tag_crud import crud_tag
 from core.user.user_crud import crud_user
 from modules.classifier.classifier_crud import crud_classifier
@@ -28,8 +24,6 @@ class Crud(Enum):
     CODE = crud_code
     TAG = crud_tag
     PROJECT = crud_project
-    PROMPT = crud_prompt
-    PROMPT_VERSION = crud_prompt_version
     REFRESH_TOKEN = crud_refresh_token
     SENTENCE_ANNOTATION = crud_sentence_anno
     SOURCE_DOCUMENT = crud_sdoc

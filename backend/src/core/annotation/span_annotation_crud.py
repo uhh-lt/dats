@@ -262,7 +262,13 @@ class CRUDSpanAnnotation(
         return db_objs
 
     def read_by_user_sdocs_codes(
-        self, db: Session, *, user_id: int, sdoc_ids: list[int], code_ids: list[int]
+        self,
+        db: Session,
+        *,
+        project_id: int,
+        user_id: int,
+        sdoc_ids: list[int],
+        code_ids: list[int],
     ) -> list[SpanAnnotationORM]:
         if not sdoc_ids or not code_ids:
             return []
@@ -275,6 +281,7 @@ class CRUDSpanAnnotation(
                 .options(*self._load_options())
                 .join(self.model.annotation_document)
                 .filter(
+                    self.model.project_id == project_id,
                     AnnotationDocumentORM.user_id == user_id,
                     AnnotationDocumentORM.source_document_id.in_(batch_sdoc_ids),
                     self.model.code_id.in_(code_ids),

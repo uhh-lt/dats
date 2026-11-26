@@ -200,13 +200,16 @@ def _merge_prompt(
                     return None
                 _create_versions(
                     db=db,
-                    project_id=existing.project_id,
+                    project_id=project_id,
                     prompt_id=existing.id,
                     prompt=prompt,
                     start=len(current),
                 )
                 _set_archived(
-                    db=db, prompt_id=existing.id, is_archived=prompt.is_archived
+                    db=db,
+                    project_id=project_id,
+                    prompt_id=existing.id,
+                    is_archived=prompt.is_archived,
                 )
                 return existing.id
 
@@ -217,18 +220,23 @@ def _merge_prompt(
             # 1c) an untouched default: the imported versions replace it
             if _is_untouched_default(existing, default_contents=default_contents):
                 crud_prompt_version.delete_multi(
-                    db=db, ids=[version.id for version in existing.versions]
+                    db=db,
+                    project_id=project_id,
+                    ids=[version.id for version in existing.versions],
                 )
                 db.expire(existing, ["versions"])
                 _create_versions(
                     db=db,
-                    project_id=existing.project_id,
+                    project_id=project_id,
                     prompt_id=existing.id,
                     prompt=prompt,
                     start=0,
                 )
                 _set_archived(
-                    db=db, prompt_id=existing.id, is_archived=prompt.is_archived
+                    db=db,
+                    project_id=project_id,
+                    prompt_id=existing.id,
+                    is_archived=prompt.is_archived,
                 )
                 return existing.id
 
@@ -239,18 +247,23 @@ def _merge_prompt(
     # 2) a new prompt
     db_obj = crud_prompt.create(
         db=db,
+        project_id=project_id,
         create_dto=PromptCreateIntern(
             name=name,
             task_type=prompt.task_type,
             language=prompt.language,
-            project_id=project_id,
         ),
     )
     existing_by_name[name] = db_obj
     _create_versions(
         db=db, project_id=project_id, prompt_id=db_obj.id, prompt=prompt, start=0
     )
-    _set_archived(db=db, prompt_id=db_obj.id, is_archived=prompt.is_archived)
+    _set_archived(
+        db=db,
+        project_id=project_id,
+        prompt_id=db_obj.id,
+        is_archived=prompt.is_archived,
+    )
     if name != prompt.name:
         logger.warning(
             f"Prompt '{prompt.name}' differs from the one in project "
@@ -265,9 +278,9 @@ def _create_versions(
     """Create the versions of an imported prompt from position `start` on."""
     crud_prompt_version.create_multi(
         db=db,
+        project_id=project_id,
         create_dtos=[
             PromptVersionCreateIntern(
-                project_id=project_id,
                 prompt_id=prompt_id,
                 version=i + 1,
                 user_id=user_id,
@@ -281,9 +294,14 @@ def _create_versions(
     )
 
 
-def _set_archived(db: Session, *, prompt_id: int, is_archived: bool) -> None:
+def _set_archived(
+    db: Session, *, project_id: int, prompt_id: int, is_archived: bool
+) -> None:
     crud_prompt.update(
-        db=db, id=prompt_id, update_dto=PromptUpdate(is_archived=is_archived)
+        db=db,
+        project_id=project_id,
+        id=prompt_id,
+        update_dto=PromptUpdate(is_archived=is_archived),
     )
 
 

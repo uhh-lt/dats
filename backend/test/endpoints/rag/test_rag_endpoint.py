@@ -15,7 +15,7 @@ from repos.ray.ray_repo import RayRepo
 from systems.feature_system.feature_registry import feature_registry
 
 # ===========================================================================
-# RAG SESSION (/rag/rag_session) TESTS
+# RAG SESSION (/projects/{project_id}/rag/session) TESTS
 # ===========================================================================
 
 
@@ -24,9 +24,8 @@ def test_rag_session_is_rejected_when_rag_chat_is_disabled(
 ):
     """A project without RAG chat answers 403 before any LLM call."""
     response = client.post(
-        "/rag/rag_session",
+        f"/projects/{featureless_project['project'].id}/rag/session",
         params={
-            "project_id": featureless_project["project"].id,
             "top_k": 10,
             "threshold": 0.5,
             "model": "default",
@@ -41,9 +40,8 @@ def test_rag_session_rejects_a_list_query(client: TestClient, test_project):
     """`test_project` enables RAG chat; a list of texts is no query (one text), so the body validation rejects it: 422 for the `query`
     of the body, before any LLM call."""
     response = client.post(
-        "/rag/rag_session",
+        f"/projects/{test_project.id}/rag/session",
         params={
-            "project_id": test_project.id,
             "top_k": 10,
             "threshold": 0.5,
             "model": "default",
@@ -104,9 +102,8 @@ def test_rag_session_answers_from_the_nearest_sentences_without_semantic_search(
     ids = [] if sdoc_ids == "all" else [p["text"].id + 1000]
 
     response = client.post(
-        "/rag/rag_session",
+        f"/projects/{p['project'].id}/rag/session",
         params={
-            "project_id": p["project"].id,
             "top_k": 10,
             "threshold": 0.75,
             "model": "default",

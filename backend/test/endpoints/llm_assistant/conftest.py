@@ -489,9 +489,8 @@ def job_prompt_project(
     ) -> list[PromptExample]:
         return service.create_prompt_examples(
             db=db_session,
-            create_dto=PromptExamplesCreate(
-                project_id=project_id, kind=kind, annotation_ids=annotation_ids
-            ),
+            project_id=project_id,
+            create_dto=PromptExamplesCreate(kind=kind, annotation_ids=annotation_ids),
         )
 
     def prompt(
@@ -504,10 +503,10 @@ def job_prompt_project(
     ) -> PromptRead:
         return service.create_prompt(
             db=db_session,
+            project_id=project_id,
             user_id=test_user.id,
             create_dto=PromptCreate.model_validate(
                 {
-                    "project_id": project_id,
                     "name": name,
                     "task_type": task_type,
                     "language": PromptLanguage.EN,

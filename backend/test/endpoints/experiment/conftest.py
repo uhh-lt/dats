@@ -271,8 +271,8 @@ def experiment_project(
     span_prompt = pts.create_prompt(
         db=db,
         user_id=test_user.id,
+        project_id=project.id,
         create_dto=PromptCreate(
-            project_id=project.id,
             name="Claim and Evidence",
             task_type=TaskType.ANNOTATION,
             language=PromptLanguage.EN,
@@ -282,6 +282,7 @@ def experiment_project(
     )
     span_prompt = pts.create_prompt_version(
         db=db,
+        project_id=project.id,
         user_id=test_user.id,
         prompt_id=span_prompt.id,
         create_dto=PromptVersionCreate(
@@ -291,8 +292,8 @@ def experiment_project(
     archived_prompt = pts.create_prompt(
         db=db,
         user_id=test_user.id,
+        project_id=project.id,
         create_dto=PromptCreate(
-            project_id=project.id,
             name="Archived",
             task_type=TaskType.ANNOTATION,
             language=PromptLanguage.EN,
@@ -301,14 +302,19 @@ def experiment_project(
         ),
     )
     crud_prompt.update(
-        db=db, id=archived_prompt.id, update_dto=PromptUpdate(is_archived=True)
+        db=db,
+        project_id=project.id,
+        id=archived_prompt.id,
+        update_dto=PromptUpdate(is_archived=True),
     )
-    archived_prompt = pts.read_prompt(db=db, prompt_id=archived_prompt.id)
+    archived_prompt = pts.read_prompt(
+        db=db, project_id=project.id, prompt_id=archived_prompt.id
+    )
     sentence_prompt = pts.create_prompt(
         db=db,
         user_id=test_user.id,
+        project_id=project.id,
         create_dto=PromptCreate(
-            project_id=project.id,
             name="Sentences",
             task_type=TaskType.SENTENCE_ANNOTATION,
             language=PromptLanguage.EN,
@@ -463,3 +469,28 @@ def gold_deleted_project(
     crud_user.delete(db=db_session, id=project["group_standard"].id)
     db_session.commit()
     return project
+
+
+@pytest.fixture
+def foreign_prompt_version_id(
+    db_session: Session, test_user: UserORM, experiment_project: ExperimentProject
+) -> int:
+    """`experiment_project` plus the prompt "Foreign prompt" (span annotation,
+    English, the default inline prompt with the code `foreign_code` "Foreign") in
+    `other_project`, saved by the test user. Returns the id of its version 1, a
+    prompt version of another project than `experiment`."""
+    other_project = experiment_project["other_project"]
+    prompt = PromptService().create_prompt(
+        db=db_session,
+        project_id=other_project.id,
+        user_id=test_user.id,
+        create_dto=PromptCreate(
+            name="Foreign prompt",
+            task_type=TaskType.ANNOTATION,
+            language=PromptLanguage.EN,
+            text=DEFAULT_PROMPTS[OutputFormat.INLINE][PromptLanguage.EN],
+            codes=[_prompt_code(experiment_project["foreign_code"])],
+        ),
+    )
+    db_session.commit()
+    return prompt.versions[0].id

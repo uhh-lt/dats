@@ -86,55 +86,61 @@ class PromptService(metaclass=SingletonMeta):
     # CREATE
 
     def create_prompt(
-        self, *, db: Session, user_id: int | None, create_dto: PromptCreate
+        self,
+        *,
+        db: Session,
+        project_id: int,
+        user_id: int | None,
+        create_dto: PromptCreate,
     ) -> PromptRead:
         # 1) validate the content of the first version
         self.validate_prompt(
             db=db,
-            project_id=create_dto.project_id,
+            project_id=project_id,
             prompt=PromptSnapshot.model_validate(
-                create_dto.model_dump(exclude={"name", "project_id"})
+                create_dto.model_dump(exclude={"name"})
             ),
         )
 
         # 2) create the prompt
         db_obj = crud_prompt.create(
             db=db,
+            project_id=project_id,
             create_dto=PromptCreateIntern(
                 name=create_dto.name,
                 task_type=create_dto.task_type,
                 language=create_dto.language,
-                project_id=create_dto.project_id,
             ),
         )
 
         # 3) create its first version
         crud_prompt_version.create(
             db=db,
+            project_id=project_id,
             create_dto=PromptVersionCreateIntern(
-                project_id=db_obj.project_id,
                 prompt_id=db_obj.id,
                 version=1,
                 user_id=user_id,
                 **create_dto.model_dump(include=_CONTENT_FIELDS),
             ),
         )
-        return self.read_prompt(db=db, prompt_id=db_obj.id)
+        return self.read_prompt(db=db, project_id=project_id, prompt_id=db_obj.id)
 
     def create_prompt_version(
         self,
         *,
         db: Session,
+        project_id: int,
         user_id: int,
         prompt_id: int,
         create_dto: PromptVersionCreate,
     ) -> PromptRead:
         """Save new content of a prompt as its next version."""
         # 1) validate the content for the prompt's project and task
-        db_obj = crud_prompt.read(db=db, id=prompt_id)
+        db_obj = crud_prompt.read(db=db, project_id=project_id, id=prompt_id)
         self.validate_prompt(
             db=db,
-            project_id=db_obj.project_id,
+            project_id=project_id,
             prompt=PromptSnapshot(
                 task_type=db_obj.task_type,
                 language=db_obj.language,
@@ -143,18 +149,20 @@ class PromptService(metaclass=SingletonMeta):
         )
 
         # 2) append the next version
-        num_versions = crud_prompt_version.count_by_prompt(db=db, prompt_id=prompt_id)
+        num_versions = crud_prompt_version.count_by_prompt(
+            db=db, project_id=project_id, prompt_id=prompt_id
+        )
         crud_prompt_version.create(
             db=db,
+            project_id=project_id,
             create_dto=PromptVersionCreateIntern(
-                project_id=db_obj.project_id,
                 prompt_id=prompt_id,
                 version=num_versions + 1,
                 user_id=user_id,
                 **create_dto.model_dump(),
             ),
         )
-        return self.read_prompt(db=db, prompt_id=prompt_id)
+        return self.read_prompt(db=db, project_id=project_id, prompt_id=prompt_id)
 
     def create_default_prompts(
         self, *, db: Session, project_id: int
@@ -167,9 +175,9 @@ class PromptService(metaclass=SingletonMeta):
         return [
             self.create_prompt(
                 db=db,
+                project_id=project_id,
                 user_id=SYSTEM_USER_ID,
                 create_dto=PromptCreate(
-                    project_id=project_id,
                     name=default_prompt_name(output_format, language),
                     task_type=spec.task_type,
                     language=language,
@@ -183,7 +191,7 @@ class PromptService(metaclass=SingletonMeta):
         ]
 
     def create_prompt_examples(
-        self, *, db: Session, create_dto: PromptExamplesCreate
+        self, *, db: Session, project_id: int, create_dto: PromptExamplesCreate
     ) -> list[PromptExample]:
         """Turn annotations into few-shot examples, in the order of the annotation ids.
 
@@ -198,20 +206,22 @@ class PromptService(metaclass=SingletonMeta):
             case PromptExampleKind.SPAN:
                 return self._create_span_examples(
                     db=db,
-                    project_id=create_dto.project_id,
+                    project_id=project_id,
                     annotation_ids=create_dto.annotation_ids,
                 )
             case PromptExampleKind.SENTENCE:
                 return self._create_sentence_examples(
                     db=db,
-                    project_id=create_dto.project_id,
+                    project_id=project_id,
                     annotation_ids=create_dto.annotation_ids,
                 )
 
     # READ
 
-    def read_prompt(self, *, db: Session, prompt_id: int) -> PromptRead:
-        db_obj = crud_prompt.read(db=db, id=prompt_id)
+    def read_prompt(
+        self, *, db: Session, project_id: int, prompt_id: int
+    ) -> PromptRead:
+        db_obj = crud_prompt.read(db=db, project_id=project_id, id=prompt_id)
         return PromptRead.model_validate(db_obj)
 
     def read_prompts_by_project(
@@ -220,8 +230,10 @@ class PromptService(metaclass=SingletonMeta):
         db_objs = crud_prompt.read_by_project(db=db, project_id=project_id)
         return [PromptRead.model_validate(db_obj) for db_obj in db_objs]
 
-    def read_prompt_version(self, *, db: Session, version_id: int) -> PromptVersionRead:
-        db_obj = crud_prompt_version.read(db=db, id=version_id)
+    def read_prompt_version(
+        self, *, db: Session, project_id: int, version_id: int
+    ) -> PromptVersionRead:
+        db_obj = crud_prompt_version.read(db=db, project_id=project_id, id=version_id)
         return PromptVersionRead.model_validate(db_obj)
 
     def read_snapshot(
@@ -235,20 +247,13 @@ class PromptService(metaclass=SingletonMeta):
         """Return what a run needs to render a stored version.
 
         Raises:
-            NoSuchElementError: If the version does not exist.
-            PromptMismatchError: If the version belongs to another project
-                or (if given) task.
+            NoSuchElementError: If the version does not exist in the project.
+            PromptMismatchError: If the version belongs to another task (if given).
         """
-        db_obj = crud_prompt_version.read(db=db, id=version_id)
+        db_obj = crud_prompt_version.read(db=db, project_id=project_id, id=version_id)
         prompt = db_obj.prompt
-        if prompt.project_id != project_id or (
-            task_type is not None and prompt.task_type != task_type
-        ):
-            raise PromptMismatchError(
-                version_id=version_id,
-                project_id=project_id,
-                task_type=task_type or TaskType(prompt.task_type),
-            )
+        if task_type is not None and prompt.task_type != task_type:
+            raise PromptMismatchError(version_id=version_id, task_type=task_type)
         version = PromptVersionRead.model_validate(db_obj)
         return PromptSnapshot(
             task_type=prompt.task_type,
@@ -301,21 +306,19 @@ class PromptService(metaclass=SingletonMeta):
         )
 
     def preview_prompt(
-        self, *, db: Session, request: PromptPreviewRequest
+        self, *, db: Session, project_id: int, request: PromptPreviewRequest
     ) -> PromptPreview:
         """Render a stored version or an unsaved draft for one message of a document."""
         # 1) resolve and validate the prompt
         if request.draft is not None:
             prompt = request.draft
-            renderer = self.validate_prompt(
-                db=db, project_id=request.project_id, prompt=prompt
-            )
+            renderer = self.validate_prompt(db=db, project_id=project_id, prompt=prompt)
         else:
             assert request.prompt_version_id is not None
             prompt = self.read_snapshot(
                 db=db,
                 version_id=request.prompt_version_id,
-                project_id=request.project_id,
+                project_id=project_id,
             )
             renderer = self.build_renderer(prompt=prompt)
 
@@ -337,7 +340,7 @@ class PromptService(metaclass=SingletonMeta):
             )
         # raises NoSuchElementError for a document of another project
         sdoc_data = crud_sdoc_data.read(
-            db=db, project_id=request.project_id, id=request.sdoc_id
+            db=db, project_id=project_id, id=request.sdoc_id
         )
         segments = renderer.segments(sdoc_data)
         if request.message_index >= len(segments):
@@ -361,12 +364,15 @@ class PromptService(metaclass=SingletonMeta):
         self,
         *,
         db: Session,
+        project_id: int,
         prompt_id: int,
         update_dto: PromptUpdate,
     ) -> PromptRead:
         """Rename or (un)archive a prompt. This does not create a version."""
-        crud_prompt.update(db=db, id=prompt_id, update_dto=update_dto)
-        return self.read_prompt(db=db, prompt_id=prompt_id)
+        crud_prompt.update(
+            db=db, project_id=project_id, id=prompt_id, update_dto=update_dto
+        )
+        return self.read_prompt(db=db, project_id=project_id, prompt_id=prompt_id)
 
     # VALIDATION AND RENDERING
 

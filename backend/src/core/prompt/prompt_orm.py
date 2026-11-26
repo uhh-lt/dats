@@ -7,6 +7,7 @@ from sqlalchemy import (
     ForeignKey,
     ForeignKeyConstraint,
     Integer,
+    PrimaryKeyConstraint,
     String,
     UniqueConstraint,
     func,
@@ -22,7 +23,8 @@ if TYPE_CHECKING:
 
 
 class PromptORM(ORMBase):
-    id: Mapped[int] = mapped_column(Integer, primary_key=True, index=True)
+    # the primary key is (project_id, id), see __table_args__
+    id: Mapped[int] = mapped_column(Integer, autoincrement=True, index=True)
     name: Mapped[str] = mapped_column(String, nullable=False, index=True)
     task_type: Mapped[TaskType] = mapped_column(String, nullable=False, index=True)
     language: Mapped[PromptLanguage] = mapped_column(String, nullable=False, index=True)
@@ -44,7 +46,6 @@ class PromptORM(ORMBase):
         Integer,
         ForeignKey("project.id", ondelete="CASCADE"),
         nullable=False,
-        index=True,
     )
     project: Mapped["ProjectORM"] = relationship("ProjectORM", back_populates="prompts")
 
@@ -59,6 +60,7 @@ class PromptORM(ORMBase):
     )
 
     __table_args__ = (
+        PrimaryKeyConstraint("project_id", "id", name="prompt_pkey"),
         UniqueConstraint(
             "project_id",
             "name",
@@ -67,14 +69,12 @@ class PromptORM(ORMBase):
         UniqueConstraint("project_id", "id", name="UC_prompt_project_id_id"),
     )
 
-    def get_project_id(self) -> int:
-        return self.project_id
-
 
 class PromptVersionORM(ORMBase):
     """An immutable version of a prompt. Versions are never updated."""
 
-    id: Mapped[int] = mapped_column(Integer, primary_key=True, index=True)
+    # the primary key is (project_id, id), see __table_args__
+    id: Mapped[int] = mapped_column(Integer, autoincrement=True, index=True)
     # 1, 2, 3, ... per prompt, in the order of creation
     version: Mapped[int] = mapped_column(Integer, nullable=False, index=True)
     text: Mapped[str] = mapped_column(String, nullable=False, index=False)
@@ -106,7 +106,6 @@ class PromptVersionORM(ORMBase):
         Integer,
         ForeignKey("project.id", ondelete="CASCADE"),
         nullable=False,
-        index=True,
     )
 
     prompt_id: Mapped[int] = mapped_column(Integer, nullable=False, index=True)
@@ -122,6 +121,7 @@ class PromptVersionORM(ORMBase):
     )
 
     __table_args__ = (
+        PrimaryKeyConstraint("project_id", "id", name="promptversion_pkey"),
         UniqueConstraint(
             "prompt_id",
             "version",
@@ -135,6 +135,3 @@ class PromptVersionORM(ORMBase):
             name="FK_promptversion_prompt_id",
         ),
     )
-
-    def get_project_id(self) -> int:
-        return self.project_id

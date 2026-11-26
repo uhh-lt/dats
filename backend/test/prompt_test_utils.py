@@ -284,9 +284,8 @@ def create_prompt_project(
     ) -> list[PromptExample]:
         return service.create_prompt_examples(
             db=db_session,
-            create_dto=PromptExamplesCreate(
-                project_id=test_project.id, kind=kind, annotation_ids=annotation_ids
-            ),
+            project_id=test_project.id,
+            create_dto=PromptExamplesCreate(kind=kind, annotation_ids=annotation_ids),
         )
 
     [alice_example] = examples(PromptExampleKind.SPAN, [alice_annotation.id])
@@ -301,8 +300,8 @@ def create_prompt_project(
     span_prompt = service.create_prompt(
         db=db_session,
         user_id=test_user.id,
+        project_id=test_project.id,
         create_dto=PromptCreate(
-            project_id=test_project.id,
             name="Span tagging",
             task_type=TaskType.ANNOTATION,
             language=PromptLanguage.EN,
@@ -312,6 +311,7 @@ def create_prompt_project(
     )
     span_prompt = service.create_prompt_version(
         db=db_session,
+        project_id=test_project.id,
         user_id=test_user.id,
         prompt_id=span_prompt.id,
         create_dto=PromptVersionCreate(
@@ -361,8 +361,8 @@ def create_prompt_project(
     foreign_prompt = service.create_prompt(
         db=db_session,
         user_id=test_user.id,
+        project_id=foreign_project.id,
         create_dto=PromptCreate(
-            project_id=foreign_project.id,
             name="Foreign tagging",
             task_type=TaskType.ANNOTATION,
             language=PromptLanguage.EN,
@@ -463,14 +463,15 @@ def create_prompt_eximport_projects(
     # 1) the changes of the source project
     service.update_prompt(
         db=db_session,
+        project_id=source_id,
         prompt_id=source["span_prompt"].id,
         update_dto=PromptUpdate(is_archived=True),
     )
     tag_prompt = service.create_prompt(
         db=db_session,
         user_id=test_user.id,
+        project_id=source_id,
         create_dto=PromptCreate(
-            project_id=source_id,
             name="Tag selection",
             task_type=TaskType.TAGGING,
             language=PromptLanguage.EN,
@@ -487,8 +488,8 @@ def create_prompt_eximport_projects(
     metadata_prompt = service.create_prompt(
         db=db_session,
         user_id=test_user.id,
+        project_id=source_id,
         create_dto=PromptCreate(
-            project_id=source_id,
             name="Metadata selection",
             task_type=TaskType.METADATA_EXTRACTION,
             language=PromptLanguage.EN,
@@ -506,8 +507,8 @@ def create_prompt_eximport_projects(
     sentence_prompt = service.create_prompt(
         db=db_session,
         user_id=test_user.id,
+        project_id=source_id,
         create_dto=PromptCreate(
-            project_id=source_id,
             name="Sentence examples",
             task_type=TaskType.SENTENCE_ANNOTATION,
             language=PromptLanguage.EN,
@@ -559,8 +560,8 @@ def create_prompt_eximport_projects(
     target_span_prompt = service.create_prompt(
         db=db_session,
         user_id=test_user.id,
+        project_id=target.id,
         create_dto=PromptCreate(
-            project_id=target.id,
             name="Span tagging",
             task_type=TaskType.ANNOTATION,
             language=PromptLanguage.EN,

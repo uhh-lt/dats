@@ -41,6 +41,8 @@ PATH_IDS: dict[str, Callable[[TenantRows], int]] = {
     "classifier_id": lambda rows: rows["classifier"].id,
     "aspect_id": lambda rows: rows["aspect"].id,
     "cluster_id": lambda rows: rows["cluster"].id,
+    "prompt_id": lambda rows: rows["prompt"].id,
+    "version_id": lambda rows: rows["prompt_version"].id,
 }
 
 # an empty document filter
@@ -115,6 +117,12 @@ BODIES: dict[str, Callable[[TenantRows], Any]] = {
     ),
     "POST /projects/{project_id}/perspectives/aspects/{aspect_id}/revert-labels": (
         lambda rows: {"sdoc_ids": [rows["sdoc"].id], "filter": _NO_FILTER, "sorts": []}
+    ),
+    "PUT /projects/{project_id}/prompts/{prompt_id}/versions": (
+        lambda rows: {"text": rows["prompt_version"].text}
+    ),
+    "PATCH /projects/{project_id}/prompts/{prompt_id}": (
+        lambda rows: {"name": "renamed"}
     ),
     "PATCH /projects/{project_id}/source-document-metadata/{sdoc_metadata_id}": (
         lambda rows: {

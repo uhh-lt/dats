@@ -19,6 +19,7 @@ class LLMAssistantService(metaclass=SingletonMeta):
     def count_existing_assistant_annotations(
         self,
         db: Session,
+        project_id: int,
         task_type: TaskType,
         code_ids: list[int],
         sdoc_ids: list[int],
@@ -32,6 +33,7 @@ class LLMAssistantService(metaclass=SingletonMeta):
                 # 1. Find existing annotations
                 existing_annotations = crud_sentence_anno.read_by_user_sdocs_codes(
                     db=db,
+                    project_id=project_id,
                     user_id=virtual_user_id,
                     sdoc_ids=sdoc_ids,
                     code_ids=code_ids,
@@ -40,6 +42,7 @@ class LLMAssistantService(metaclass=SingletonMeta):
                 # 1. Find existing annotations
                 existing_annotations = crud_span_anno.read_by_user_sdocs_codes(
                     db=db,
+                    project_id=project_id,
                     user_id=virtual_user_id,
                     sdoc_ids=sdoc_ids,
                     code_ids=code_ids,

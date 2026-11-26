@@ -383,7 +383,8 @@ def test_create_run_rejects_ineligible_prompt_versions(
 def test_create_run_rejects_nonexistent_prompt_versions_and_foreign_experiments(
     client: TestClient, experiment_project: ExperimentProject
 ) -> None:
-    """An unknown prompt version is 404, an experiment of another project 403."""
+    """An unknown prompt version and an experiment of another project are not
+    found (HTTP 404)."""
     p = experiment_project
     unknown_version = ExperimentRunCreate(
         experiment_id=p["experiment"].id,
@@ -406,6 +407,31 @@ def test_create_run_rejects_nonexistent_prompt_versions_and_foreign_experiments(
         _url(p["project"].id, "/runs"), json=foreign.model_dump(mode="json")
     )
     assert response.status_code == 404, response.text
+
+
+def test_create_run_with_a_prompt_version_of_another_project_is_not_found(
+    client: TestClient,
+    experiment_project: ExperimentProject,
+    foreign_prompt_version_id: int,
+) -> None:
+    """A prompt version of another project is read within the experiment's
+    project, so it is not found (HTTP 404) and no run is created."""
+    p = experiment_project
+    project_id = p["project"].id
+    experiment_id = p["experiment"].id
+    runs_before = _get_experiment(client, project_id, experiment_id).runs
+    dto = ExperimentRunCreate(
+        experiment_id=experiment_id,
+        name="Foreign version",
+        prompt_version_id=foreign_prompt_version_id,
+        model=INVALID_MODEL,
+    )
+
+    response = client.put(_url(project_id, "/runs"), json=dto.model_dump(mode="json"))
+
+    assert response.status_code == 404, response.text
+    assert "PromptVersion" in response.text
+    assert _get_experiment(client, project_id, experiment_id).runs == runs_before
 
 
 def test_create_run_is_refused_without_a_gold_annotator(
