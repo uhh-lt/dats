@@ -14,9 +14,6 @@ from repos.db.sql_exceptions import NoSuchElementError
 class CRUDProject(SQLCRUDBase[ProjectORM, ProjectCreate, ProjectUpdate]):
     ### READ OPERATIONS ###
 
-    def read_by_title(self, db: Session, *, title: str) -> ProjectORM | None:
-        return db.query(self.model).filter(self.model.title == title).first()
-
     def read_locked(self, db: Session, *, id: int, shared: bool = False) -> ProjectORM:
         """
         Read the project's current row and lock it until the transaction ends.

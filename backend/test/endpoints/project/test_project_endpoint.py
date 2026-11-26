@@ -2,12 +2,12 @@ import pytest
 from fastapi.testclient import TestClient
 from rq.exceptions import NoSuchJobError
 
-from core.project.project_crud import crud_project
 from core.project.project_dto import (
     ProjectCreate,
     ProjectRead,
     ProjectUpdate,
 )
+from core.project.project_orm import ProjectORM
 from core.user.user_crud import crud_user
 from experiment_test_utils import RunUserProject
 from systems.feature_system.feature_registry import Feature, feature_registry
@@ -182,7 +182,7 @@ def test_create_project_with_an_unknown_feature_is_rejected(
 
     assert response.status_code == 404, response.text
     assert "no_such_feature" in response.text
-    assert crud_project.read_by_title(db=db_session, title="Unknown") is None
+    assert not db_session.query(ProjectORM).filter_by(title="Unknown").count()
 
 
 def test_create_project_enables_only_the_requested_features(

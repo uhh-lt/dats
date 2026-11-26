@@ -1,7 +1,7 @@
 from datetime import UTC, datetime
 from typing import Annotated, Generator
 
-from fastapi import Depends, HTTPException, Query, Request, WebSocket
+from fastapi import Depends, HTTPException, Request, WebSocket
 from fastapi.security import OAuth2PasswordBearer
 from jwt import InvalidTokenError
 from pydantic import ValidationError
@@ -19,32 +19,6 @@ from repos.vector.weaviate_repo import WeaviateRepo
 
 # instantiate here to so that it is reusable for consecutive calls
 reusable_oauth2_scheme = OAuth2PasswordBearer(tokenUrl=conf.auth.jwt.token_url)
-
-
-def skip_limit_params(
-    skip: int | None = Query(
-        title="Skip",
-        description="The number of elements to skip (offset)",
-        ge=0,
-        le=10e6,
-        default=None,
-    ),
-    limit: int | None = Query(
-        title="Limit",
-        description="The maximum number of returned elements",
-        ge=1,
-        le=1000,
-        default=None,
-    ),
-) -> dict[str, int]:
-    """Parses optional skip/limit query parameters into a dict for pagination."""
-    result = {}
-    if skip is not None:
-        result["skip"] = skip
-    if limit is not None:
-        result["limit"] = limit
-
-    return result
 
 
 def get_db_session() -> Generator[Session, None, None]:

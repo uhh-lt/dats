@@ -107,19 +107,6 @@ class ProjectCRUDBase(
         existing = self._read_existing_pks(db=db, pks=[(project_id, id) for id in ids])
         return {id: db_obj for (_, id), db_obj in existing.items()}
 
-    def read_multi(
-        self, db: Session, *, project_id: int, skip: int = 0, limit: int = 100
-    ) -> list[ORMModelType]:
-        return (
-            db.query(self.model)
-            .options(*self._load_options())
-            .filter(self._pk_columns[0] == project_id)
-            .order_by(*self._pk_columns)
-            .offset(skip)
-            .limit(limit)
-            .all()
-        )
-
     ### UPDATE OPERATIONS ###
 
     def update(

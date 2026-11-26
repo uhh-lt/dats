@@ -1,15 +1,12 @@
 import shutil
 from pathlib import Path
-from typing import TYPE_CHECKING
 
 from loguru import logger
 
+from repos.db.orm_base import ORMBase
 from repos.filesystem.filesystem_exceptions import FileAlreadyExistsError
 from repos.filesystem.filesystem_repo import FilesystemRepo
 from utils.import_utils import import_by_suffix
-
-if TYPE_CHECKING:
-    from repos.db.orm_base import ORMBase
 
 _file_cruds: list[type["FileCRUDBase"]] = []
 _file_cruds_imported = False
@@ -27,7 +24,7 @@ class FileCRUDBase:
     """
 
     folder: str
-    owner: "type[ORMBase] | None"
+    owner: type[ORMBase] | None
 
     def __init_subclass__(cls, **kwargs) -> None:
         super().__init_subclass__(**kwargs)
@@ -45,7 +42,7 @@ class FileCRUDBase:
 
     @staticmethod
     def delete_by_owner(
-        owner: "type[ORMBase]", *, project_id: int, ids: list[int]
+        owner: type[ORMBase], *, project_id: int, ids: list[int]
     ) -> None:
         """Deletes the folders of the given rows of `owner` in every file CRUD
         whose owner is `owner`."""

@@ -119,11 +119,6 @@ class SQLCRUDBase(Generic[ORMModelType, CreateDTOType, UpdateDTOType, IDType]):
         """
         return self._read_existing_pks(db=db, pks=ids)
 
-    def read_multi(
-        self, db: Session, *, skip: int = 0, limit: int = 100
-    ) -> list[ORMModelType]:
-        return db.query(self.model).offset(skip).limit(limit).all()
-
     ### UPDATE OPERATIONS ###
 
     def update(
