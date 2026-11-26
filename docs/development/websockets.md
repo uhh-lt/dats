@@ -49,7 +49,7 @@ Backend (`backend/src/common/dats_event.py`):
 3. Emit the event from an endpoint via the `WebsocketEmitter` dependency (`ws: WebsocketEmitter = Depends()`), choosing the audience: `emit_to_project`, `emit_dtos_to_projects` (batch of read DTOs, e.g. service results, grouped by their `project_id`), `emit_to_user`, `emit_to_users`, or `emit_to_all`. The emitter queues the send as a FastAPI `BackgroundTasks` task so it fires after the DB commit, and automatically excludes the acting user.
 
    ```python
-   ws.emit_to_project(DATSEvent.CODE_CREATED, result, project_id=code.project_id)
+   ws.emit_to_project(DATSEvent.CODE_CREATED, result, project_id=project_id)
    ```
 
 4. Regenerate the API client (`just update-api`). The event union is exposed via OpenAPI webhooks, so this produces the matching `frontend/src/models/<Name>Event.ts` and updates `frontend/src/models/datsEvents.ts`.

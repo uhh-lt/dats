@@ -1,6 +1,6 @@
 # Module Architecture
 
-The DATS backend is built from a small core, three systems and self-contained modules. This page gives the whole picture for a developer who adds or changes a capability. The terms are defined in [`GLOSSARY.md`](https://github.com/uhh-lt/dats/blob/main/GLOSSARY.md); the decisions behind the design are the ADRs in [`specs/adr/`](https://github.com/uhh-lt/dats/tree/main/specs/adr) (0007 to 0012 for this architecture). The details of each system live in its README, linked below.
+The DATS backend is built from a small core, three systems and self-contained modules. This page gives the whole picture for a developer who adds or changes a capability. The terms are defined in [`GLOSSARY.md`](https://github.com/uhh-lt/dats/blob/main/GLOSSARY.md); the decisions behind the design are the ADRs in [`specs/adr/`](https://github.com/uhh-lt/dats/tree/main/specs/adr) (0007 to 0012 for this architecture, 0013 for the rows of a project, which are identified by `(project_id, id)`). The details of each system live in its README, linked below.
 
 ## The model
 
@@ -15,7 +15,7 @@ The three systems in `backend/src/systems/` stack on each other:
 feature system  ──artefacts──▶  artefact system  ──jobs──▶  job system
 ```
 
-- The [job system](https://github.com/uhh-lt/dats/blob/main/backend/src/systems/job_system/README.md) runs jobs and pushes their progress to the clients. It knows no pipeline: it calls hooks when a job starts, finishes or fails, and the artefact system registers its step handling there.
+- The [job system](https://github.com/uhh-lt/dats/blob/main/backend/src/systems/job_system/README.md) runs jobs and pushes their progress to the clients. It knows no pipeline: it calls hooks when a job starts, finishes or fails, and the artefact system registers its step handling there. Its generated endpoints live under `/projects/{project_id}/jobs/<job-type>` (the job type in kebab-case); a start body carries no `project_id`, the job takes the project of the path.
 - The [artefact system](https://github.com/uhh-lt/dats/blob/main/backend/src/systems/artefact_system/README.md) holds the artefact and step declarations, the pipeline graph, the step statuses per document and the planning. It is asked in artefacts ("compute these artefacts for this project") and never knows features.
 - The [feature system](https://github.com/uhh-lt/dats/blob/main/backend/src/systems/feature_system/README.md) holds the feature declarations, the enabled features of each project, their status and the actions Enable, Complete and Disable. It translates features into artefacts and passes them to the artefact system.
 
@@ -43,7 +43,7 @@ The filesystem is split into lifecycle and file access, mirroring `repos/vector`
 - File CRUDs register themselves and are discovered through their `*_file_crud.py` filenames. When deleting rows, call `FileCRUDBase.delete_by_owner(<Owner>ORM, ...)` so its uploads, thumbnails, extracted audio, models and plots are removed together.
 - `crud_temporary_file` manages scratch space and upload or job handovers below `temporary_files/<uuid>/`. Use `folder()` for scratch that must be removed on success or failure. For a handover, pass the id returned by `create()` in the job payload and let the consuming job delete it.
 
-File URLs are relative to `/content/`; the frontend hooks add that prefix. Use `GET /projects/{project_id}/source-documents/{sdoc_id}/urls` for the uploaded file, WebP image and thumbnail (the latter two are `null` until computed), and `GET /perspectives/aspect/{aspect_id}/map_thumbnail_url` for a perspective map thumbnail. Source document URLs are not stored in `SourceDocumentData`; derive them through the file CRUDs and these endpoints.
+File URLs are relative to `/content/`; the frontend hooks add that prefix. Use `GET /projects/{project_id}/source-documents/{sdoc_id}/urls` for the uploaded file, WebP image and thumbnail (the latter two are `null` until computed), and `GET /projects/{project_id}/perspectives/aspects/{aspect_id}/map-thumbnail-url` for a perspective map thumbnail. Source document URLs are not stored in `SourceDocumentData`; derive them through the file CRUDs and these endpoints.
 
 The concrete file CRUDs and their layout are listed in [`backend/src/repos/README.md`](https://github.com/uhh-lt/dats/blob/main/backend/src/repos/README.md).
 
