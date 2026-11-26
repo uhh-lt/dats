@@ -43,7 +43,7 @@ The filesystem is split into lifecycle and file access, mirroring `repos/vector`
 - File CRUDs register themselves and are discovered through their `*_file_crud.py` filenames. When deleting an entity, call `FileCRUDBase.delete_by_entity(...)` so its uploads, thumbnails, extracted audio, models and plots are removed together.
 - `crud_temporary_file` manages scratch space and upload or job handovers below `temporary_files/<uuid>/`. Use `folder()` for scratch that must be removed on success or failure. For a handover, pass the id returned by `create()` in the job payload and let the consuming job delete it.
 
-File URLs are relative to `/content/`; the frontend hooks add that prefix. Use `GET /projects/{project_id}/source-documents/{sdoc_id}/urls` for the uploaded file, WebP image and thumbnail (the latter two are `null` until computed), and `GET /perspectives/aspect/{aspect_id}/map_thumbnail_url` for a perspective map thumbnail. Source document URLs are not stored in `SourceDocumentData`; derive them through the file CRUDs and these endpoints.
+File URLs are relative to `/content/`; the frontend hooks add that prefix. Use `GET /projects/{project_id}/source-documents/{sdoc_id}/urls` for the uploaded file, WebP image and thumbnail (the latter two are `null` until computed), and `GET /projects/{project_id}/perspectives/aspects/{aspect_id}/map-thumbnail-url` for a perspective map thumbnail. Source document URLs are not stored in `SourceDocumentData`; derive them through the file CRUDs and these endpoints.
 
 The concrete file CRUDs and their layout are listed in [`backend/src/repos/README.md`](https://github.com/uhh-lt/dats/blob/main/backend/src/repos/README.md).
 
