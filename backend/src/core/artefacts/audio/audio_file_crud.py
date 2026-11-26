@@ -1,4 +1,4 @@
-from common.crud_enum import Crud
+from core.doc.source_document_orm import SourceDocumentORM
 from repos.filesystem.file_crud_base import FileCRUDBase
 
 # the audio stream extracted from a video document
@@ -10,7 +10,7 @@ class CRUDAudioFile(FileCRUDBase):
     audio stream of an audio document is its uploaded file (`crud_sdoc_file`)."""
 
     folder = "audio"
-    entity = Crud.SOURCE_DOCUMENT
+    owner = SourceDocumentORM
 
 
 crud_audio_file = CRUDAudioFile()

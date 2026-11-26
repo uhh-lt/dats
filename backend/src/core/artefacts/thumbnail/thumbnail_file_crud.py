@@ -1,4 +1,4 @@
-from common.crud_enum import Crud
+from core.doc.source_document_orm import SourceDocumentORM
 from repos.filesystem.file_crud_base import FileCRUDBase
 
 THUMBNAIL_FILENAME = "thumbnail.webp"
@@ -9,7 +9,7 @@ class CRUDThumbnailFile(FileCRUDBase):
     `thumbnails/<sdoc_id>/thumbnail.webp`."""
 
     folder = "thumbnails"
-    entity = Crud.SOURCE_DOCUMENT
+    owner = SourceDocumentORM
 
 
 crud_thumbnail_file = CRUDThumbnailFile()

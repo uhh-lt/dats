@@ -8,8 +8,8 @@ from datetime import timedelta
 import pytest
 
 import bootstrap
-from common.crud_enum import Crud
 from core.doc.source_document_file_crud import crud_sdoc_file
+from core.doc.source_document_orm import SourceDocumentORM
 from core.project.export_file_crud import EXPORT_TTL, crud_export_file
 from core.project.project_orm import ProjectORM
 from repos.filesystem.file_crud_base import FileCRUDBase
@@ -44,12 +44,12 @@ def test_every_file_crud_stores_its_files_in_one_folder_per_entity(
         assert crud.ids(project_id=test_project.id) == ["7"]
 
 
-def test_delete_by_entity_deletes_the_folders_of_the_entity_in_every_file_crud(
+def test_delete_by_owner_deletes_the_folders_of_the_rows_in_every_file_crud(
     test_project: ProjectORM,
 ):
     """Deleting source documents removes their folders in every file CRUD of
-    source documents, and leaves other documents and other entities alone."""
-    by_entity = {
+    source documents, and leaves other documents and other owners alone."""
+    by_owner = {
         file_crud: file_crud().write(
             project_id=test_project.id, id=1, name="f", data=b"f"
         )
@@ -59,15 +59,13 @@ def test_delete_by_entity_deletes_the_folders_of_the_entity_in_every_file_crud(
         project_id=test_project.id, id=2, name="f", data=b"f"
     )
 
-    FileCRUDBase.delete_by_entity(
-        Crud.SOURCE_DOCUMENT, project_id=test_project.id, ids=[1]
-    )
+    FileCRUDBase.delete_by_owner(SourceDocumentORM, project_id=test_project.id, ids=[1])
 
     assert {
-        file_crud.folder: path.exists() for file_crud, path in by_entity.items()
+        file_crud.folder: path.exists() for file_crud, path in by_owner.items()
     } == {
-        file_crud.folder: file_crud.entity is not Crud.SOURCE_DOCUMENT
-        for file_crud in by_entity
+        file_crud.folder: file_crud.owner is not SourceDocumentORM
+        for file_crud in by_owner
     }
     assert other_document.exists()
 

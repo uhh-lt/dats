@@ -1,4 +1,4 @@
-from common.crud_enum import Crud
+from modules.classifier.classifier_orm import ClassifierORM
 from repos.filesystem.file_crud_base import FileCRUDBase
 
 # the checkpoint of the trained model
@@ -10,7 +10,7 @@ class CRUDClassifierFile(FileCRUDBase):
     `classifier_models/<classifier_id>/`."""
 
     folder = "classifier_models"
-    entity = Crud.CLASSIFIER
+    owner = ClassifierORM
 
 
 crud_classifier_file = CRUDClassifierFile()

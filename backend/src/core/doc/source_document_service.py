@@ -1,6 +1,5 @@
 from sqlalchemy.orm import Session
 
-from common.crud_enum import Crud
 from common.singleton_meta import SingletonMeta
 from core.artefacts.thumbnail.thumbnail_file_crud import (
     THUMBNAIL_FILENAME,
@@ -20,6 +19,7 @@ from core.doc.source_document_dto import (
     SourceDocumentUrls,
 )
 from core.doc.source_document_file_crud import crud_sdoc_file
+from core.doc.source_document_orm import SourceDocumentORM
 from repos.elastic.elastic_repo import ElasticSearchRepo
 from repos.filesystem.file_crud_base import FileCRUDBase
 from repos.vector.collection_base import BaseCollection
@@ -93,9 +93,7 @@ class SourceDocumentService(metaclass=SingletonMeta):
         # 4) delete the files (the folders of the documents in every file CRUD),
         #    Elasticsearch documents and Weaviate objects
         ids = [sdoc.id for sdoc in sdocs]
-        FileCRUDBase.delete_by_entity(
-            Crud.SOURCE_DOCUMENT, project_id=project_id, ids=ids
-        )
+        FileCRUDBase.delete_by_owner(SourceDocumentORM, project_id=project_id, ids=ids)
         crud_sdoc_elastic.delete_multi(
             client=self.es_repo.get_client(), project_id=project_id, ids=ids
         )

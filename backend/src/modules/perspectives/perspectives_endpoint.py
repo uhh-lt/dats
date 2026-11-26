@@ -3,7 +3,6 @@ from fastapi import Depends
 from sqlalchemy.orm import Session
 from weaviate import WeaviateClient
 
-from common.crud_enum import Crud
 from common.dats_event import DATSEvent
 from common.dependencies import DBSession, get_weaviate_client
 from common.project_router import project_router
@@ -17,6 +16,7 @@ from modules.perspectives.aspect_dto import (
     AspectUpdateIntern,
 )
 from modules.perspectives.aspect_embedding_crud import crud_aspect_embedding
+from modules.perspectives.aspect_orm import AspectORM
 from modules.perspectives.cluster_crud import crud_cluster
 from modules.perspectives.cluster_dto import (
     ClusterRead,
@@ -263,7 +263,7 @@ def remove_aspect_by_id(
     )
     db_obj = crud_aspect.delete(db=db, project_id=project_id, id=aspect_id)
     result = AspectRead.model_validate(db_obj)
-    FileCRUDBase.delete_by_entity(Crud.ASPECT, project_id=project_id, ids=[aspect_id])
+    FileCRUDBase.delete_by_owner(AspectORM, project_id=project_id, ids=[aspect_id])
     ws.emit_to_project(DATSEvent.ASPECT_DELETED, result, project_id=project_id)
     return result
 

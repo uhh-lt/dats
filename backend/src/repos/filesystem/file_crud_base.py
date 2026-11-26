@@ -9,7 +9,7 @@ from repos.filesystem.filesystem_repo import FilesystemRepo
 from utils.import_utils import import_by_suffix
 
 if TYPE_CHECKING:
-    from common.crud_enum import Crud
+    from repos.db.orm_base import ORMBase
 
 _file_cruds: list[type["FileCRUDBase"]] = []
 _file_cruds_imported = False
@@ -17,17 +17,17 @@ _file_cruds_imported = False
 
 class FileCRUDBase:
     """
-    The files of one kind, in one folder per entity:
+    The files of one kind, in one folder per owning row:
     `projects/<project_id>/<folder>/<id>/<name>`.
 
-    A subclass names its `folder` and the `entity` whose id names the subfolder
-    (None if the files belong to no database row, e.g. the exports), and
-    registers itself, so that deleting an entity deletes its files in every
-    file CRUD (`delete_by_entity`).
+    A subclass names its `folder` and the ORM class of the `owner` whose id names
+    the subfolder (None if the files belong to no database row, e.g. the
+    exports), and registers itself, so that deleting rows deletes their files in
+    every file CRUD of their ORM class (`delete_by_owner`).
     """
 
     folder: str
-    entity: "Crud | None"
+    owner: "type[ORMBase] | None"
 
     def __init_subclass__(cls, **kwargs) -> None:
         super().__init_subclass__(**kwargs)
@@ -44,11 +44,13 @@ class FileCRUDBase:
         return list(_file_cruds)
 
     @staticmethod
-    def delete_by_entity(entity: "Crud", *, project_id: int, ids: list[int]) -> None:
-        """Deletes the folders of the given entities in every file CRUD whose
-        entity is `entity`."""
+    def delete_by_owner(
+        owner: "type[ORMBase]", *, project_id: int, ids: list[int]
+    ) -> None:
+        """Deletes the folders of the given rows of `owner` in every file CRUD
+        whose owner is `owner`."""
         for file_crud in FileCRUDBase.all_file_cruds():
-            if file_crud.entity is not entity:
+            if file_crud.owner is not owner:
                 continue
             for id in ids:
                 file_crud().delete(project_id=project_id, id=id)
