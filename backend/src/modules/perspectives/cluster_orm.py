@@ -10,7 +10,6 @@ from sqlalchemy import (
     PrimaryKeyConstraint,
     String,
     Text,
-    UniqueConstraint,
 )
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
@@ -82,7 +81,6 @@ class ClusterORM(ORMBase):
 
     __table_args__ = (
         PrimaryKeyConstraint("project_id", "id", name="cluster_pkey"),
-        UniqueConstraint("project_id", "id", name="UC_cluster_project_id_id"),
         ForeignKeyConstraint(
             ["project_id", "aspect_id"],
             ["aspect.project_id", "aspect.id"],

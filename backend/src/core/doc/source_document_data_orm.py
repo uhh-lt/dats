@@ -6,7 +6,6 @@ from sqlalchemy import (
     Integer,
     PrimaryKeyConstraint,
     String,
-    UniqueConstraint,
 )
 from sqlalchemy.dialects.postgresql import ARRAY
 from sqlalchemy.orm import Mapped, mapped_column, relationship
@@ -57,9 +56,6 @@ class SourceDocumentDataORM(ORMBase):
 
     __table_args__ = (
         PrimaryKeyConstraint("project_id", "id", name="sourcedocumentdata_pkey"),
-        UniqueConstraint(
-            "project_id", "id", name="UC_sourcedocumentdata_project_id_id"
-        ),
         ForeignKeyConstraint(
             ["project_id", "id"],
             ["sourcedocument.project_id", "sourcedocument.id"],

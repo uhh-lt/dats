@@ -99,7 +99,6 @@ class BBoxAnnotationORM(ORMBase):
             "uuid",
             name="UC_bbox_annotation_uuid_unique_per_project",
         ),
-        UniqueConstraint("project_id", "id", name="UC_bboxannotation_project_id_id"),
         ForeignKeyConstraint(
             ["project_id", "code_id"],
             ["code.project_id", "code.id"],

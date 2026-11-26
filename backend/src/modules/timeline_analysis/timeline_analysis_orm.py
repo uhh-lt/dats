@@ -7,7 +7,6 @@ from sqlalchemy import (
     Integer,
     PrimaryKeyConstraint,
     String,
-    UniqueConstraint,
     func,
     text,
 )
@@ -60,5 +59,4 @@ class TimelineAnalysisORM(ORMBase):
 
     __table_args__ = (
         PrimaryKeyConstraint("project_id", "id", name="timelineanalysis_pkey"),
-        UniqueConstraint("project_id", "id", name="UC_timelineanalysis_project_id_id"),
     )

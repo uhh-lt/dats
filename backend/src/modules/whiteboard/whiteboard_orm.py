@@ -7,7 +7,6 @@ from sqlalchemy import (
     Integer,
     PrimaryKeyConstraint,
     String,
-    UniqueConstraint,
     func,
     text,
 )
@@ -51,7 +50,4 @@ class WhiteboardORM(ORMBase):
         "ProjectORM", back_populates="whiteboards"
     )
 
-    __table_args__ = (
-        PrimaryKeyConstraint("project_id", "id", name="whiteboard_pkey"),
-        UniqueConstraint("project_id", "id", name="UC_whiteboard_project_id_id"),
-    )
+    __table_args__ = (PrimaryKeyConstraint("project_id", "id", name="whiteboard_pkey"),)

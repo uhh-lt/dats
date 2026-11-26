@@ -98,7 +98,7 @@ def _project_owned_tables(inspector: sa.Inspector) -> list[str]:
 
 # --- A. the schema at head --------------------------------------------------
 # Asserted through the inspector: alembic autogenerate does not compare primary
-# keys, and #928 swaps them to (project_id, id) on top of this schema.
+# keys.
 
 
 def test_every_project_owned_table_has_a_not_null_project_id(db_session: Session):
@@ -120,22 +120,23 @@ def test_every_project_owned_table_has_a_not_null_project_id(db_session: Session
         assert project_keys[0].get("options", {}).get("ondelete") == CASCADE, table
 
 
-def test_every_project_owned_table_with_an_id_is_unique_per_project_and_id(
+def test_every_project_owned_table_with_an_id_has_the_key_project_id_and_id(
     db_session: Session,
 ):
-    """UNIQUE (project_id, id) on every project-owned table with an id column,
-    the target of the composite foreign keys."""
+    """The primary key (project_id, id) on every project-owned table with an id
+    column, the target of the composite foreign keys, and no redundant
+    UNIQUE (project_id, id) next to it."""
     inspector = sa.inspect(db_session.get_bind())
 
     for table in _project_owned_tables(inspector):
         if "id" not in {c["name"] for c in inspector.get_columns(table)}:
             continue
-        assert {
-            "name": f"UC_{table}_project_id_id",
-            "column_names": ["project_id", "id"],
-        } in [
-            {"name": uc["name"], "column_names": uc["column_names"]}
-            for uc in inspector.get_unique_constraints(table)
+        assert inspector.get_pk_constraint(table)["constrained_columns"] == [
+            "project_id",
+            "id",
+        ], table
+        assert ["project_id", "id"] not in [
+            uc["column_names"] for uc in inspector.get_unique_constraints(table)
         ], table
 
 

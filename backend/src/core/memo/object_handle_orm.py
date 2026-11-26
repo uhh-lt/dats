@@ -158,7 +158,6 @@ class ObjectHandleORM(ORMBase):
             "tag_id",
             name="UC_only_one_object_handle_per_instance",
         ),
-        UniqueConstraint("project_id", "id", name="UC_objecthandle_project_id_id"),
         ForeignKeyConstraint(
             ["project_id", "code_id"],
             ["code.project_id", "code.id"],

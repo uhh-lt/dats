@@ -81,7 +81,6 @@ class ClassifierORM(ORMBase):
     __table_args__ = (
         PrimaryKeyConstraint("project_id", "id", name="classifier_pkey"),
         UniqueConstraint("project_id", "name", name="UC_unique_name_in_project"),
-        UniqueConstraint("project_id", "id", name="UC_classifier_project_id_id"),
     )
 
     @property
@@ -131,9 +130,6 @@ class ClassifierEvaluationORM(ORMBase):
 
     __table_args__ = (
         PrimaryKeyConstraint("project_id", "id", name="classifierevaluation_pkey"),
-        UniqueConstraint(
-            "project_id", "id", name="UC_classifierevaluation_project_id_id"
-        ),
         ForeignKeyConstraint(
             ["project_id", "classifier_id"],
             ["classifier.project_id", "classifier.id"],

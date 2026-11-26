@@ -107,7 +107,6 @@ class CodeORM(ORMBase):
             "name",
             name="UC_code_name_unique_per_project",
         ),
-        UniqueConstraint("project_id", "id", name="UC_code_project_id_id"),
         ForeignKeyConstraint(
             ["project_id", "parent_id"],
             ["code.project_id", "code.id"],

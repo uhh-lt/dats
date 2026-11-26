@@ -66,7 +66,6 @@ class PromptORM(ORMBase):
             "name",
             name="UC_prompt_name_unique_per_project",
         ),
-        UniqueConstraint("project_id", "id", name="UC_prompt_project_id_id"),
     )
 
 
@@ -127,7 +126,6 @@ class PromptVersionORM(ORMBase):
             "version",
             name="UC_prompt_version_unique_per_prompt",
         ),
-        UniqueConstraint("project_id", "id", name="UC_promptversion_project_id_id"),
         ForeignKeyConstraint(
             ["project_id", "prompt_id"],
             ["prompt.project_id", "prompt.id"],

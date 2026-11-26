@@ -8,7 +8,6 @@ from sqlalchemy import (
     Integer,
     PrimaryKeyConstraint,
     String,
-    UniqueConstraint,
     func,
 )
 from sqlalchemy.orm import Mapped, mapped_column, relationship
@@ -70,7 +69,6 @@ class SpanGroupORM(ORMBase):
 
     __table_args__ = (
         PrimaryKeyConstraint("project_id", "id", name="spangroup_pkey"),
-        UniqueConstraint("project_id", "id", name="UC_spangroup_project_id_id"),
         ForeignKeyConstraint(
             ["project_id", "annotation_document_id"],
             ["annotationdocument.project_id", "annotationdocument.id"],

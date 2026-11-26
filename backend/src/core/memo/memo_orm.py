@@ -76,7 +76,6 @@ class MemoORM(ORMBase):
             "uuid",
             name="UC_memo_uuid_unique_per_project",
         ),
-        UniqueConstraint("project_id", "id", name="UC_memo_project_id_id"),
         ForeignKeyConstraint(
             ["project_id", "attached_to_id"],
             ["objecthandle.project_id", "objecthandle.id"],
