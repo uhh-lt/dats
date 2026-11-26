@@ -7,8 +7,9 @@ import re
 from typing import Any, Callable
 
 import pytest
-from fastapi.routing import APIRoute, iter_route_contexts
+from fastapi.routing import APIRoute, RouteContext, iter_route_contexts
 from fastapi.testclient import TestClient
+from starlette.routing import Mount, Route, WebSocketRoute
 
 from composite_keys_test_utils import TenantRows, TwoTenants
 from core.project.project_orm import ProjectORM
@@ -22,6 +23,48 @@ JOB_ID = "job_id"
 
 # the route whose user_id names a member of the project, not a virtual user
 MEMBER_PATH = f"{PROJECT_PREFIX}/members/{{user_id}}"
+
+# every route outside /projects/{project_id} (see `_route_key`); none of them
+# reads or writes the data of one project without checking the membership
+ROUTES_OUTSIDE_PROJECTS = {
+    # the API documentation
+    "GET /docs",
+    "HEAD /docs",
+    "GET /docs/oauth2-redirect",
+    "HEAD /docs/oauth2-redirect",
+    "GET /openapi.json",
+    "HEAD /openapi.json",
+    "GET /redoc",
+    "HEAD /redoc",
+    # authentication; /content checks the membership for the file of a project
+    "GET /authentication/content",
+    "POST /authentication/login",
+    "POST /authentication/logout",
+    "GET /authentication/oidc/callback",
+    "GET /authentication/oidc/login",
+    "POST /authentication/refresh_access",
+    "POST /authentication/register",
+    "POST /authentication/sync-session",
+    # the logged-in user
+    "GET /users/me",
+    "PATCH /users/me",
+    "DELETE /users/me",
+    "GET /users/me/api-keys",
+    "PUT /users/me/api-keys",
+    "DELETE /users/me/api-keys/{api_key_id}",
+    "GET /users/me/projects",
+    # a new project, the features a project can enable
+    "PUT /projects",
+    "GET /features",
+    # the server
+    "GET /",
+    "GET /heartbeat",
+    "GET /info",
+    "GET /info/llms",
+    # the websocket and the MCP server (which forwards to the API routes)
+    "WEBSOCKET /ws",
+    "MOUNT /",
+}
 
 # the row of a tenant that a path parameter names
 PATH_IDS: dict[str, Callable[[TenantRows], int]] = {
@@ -209,6 +252,19 @@ def _project_routes(client: TestClient) -> list[tuple[str, str, APIRoute]]:
     ]
 
 
+def _route_key(context: RouteContext) -> list[str]:
+    """ "<METHOD> <full path>" per method of the route, "WEBSOCKET <path>" for a
+    websocket and "MOUNT <path>" for a mounted app."""
+    # the route of an included router with the include prefixes in its path
+    route = getattr(context, "starlette_route", None) or context.route
+    if isinstance(route, Mount):
+        return [f"MOUNT {route.path or '/'}"]
+    if isinstance(route, WebSocketRoute):
+        return [f"WEBSOCKET {route.path}"]
+    assert isinstance(route, Route), f"unknown kind of route {route}"
+    return [f"{method} {route.path}" for method in sorted(route.methods or ())]
+
+
 def _path_params(path: str) -> list[str]:
     return [
         name
@@ -254,6 +310,19 @@ def _request_with_path_ids(
 # ===========================================================================
 # ALL PROJECT ROUTES: PATH IDS
 # ===========================================================================
+
+
+def test_only_the_known_routes_are_outside_projects(client: TestClient) -> None:
+    """Every route outside /projects/{project_id} is in ROUTES_OUTSIDE_PROJECTS, so
+    a new route that serves project data under another prefix fails here instead
+    of escaping the project tests."""
+    routes = {
+        key
+        for context in iter_route_contexts(client.app.routes)  # type: ignore[attr-defined]
+        for key in _route_key(context)
+        if not key.split(" ")[1].startswith(PROJECT_PREFIX)
+    }
+    assert routes == ROUTES_OUTSIDE_PROJECTS
 
 
 def test_every_project_route_is_covered(client: TestClient) -> None:
