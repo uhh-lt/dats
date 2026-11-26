@@ -6,10 +6,6 @@ import type { Filter_SpanColumns__Input } from "./Filter_SpanColumns__Input";
 import type { GroupConfig_SpanColumns_ } from "./GroupConfig_SpanColumns_";
 export type GroupQueryRequest_SpanColumns_ = {
   /**
-   * Project the search runs in
-   */
-  project_id: number;
-  /**
    * Full-text query applied before grouping
    */
   search_query?: string;

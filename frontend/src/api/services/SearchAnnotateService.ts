@@ -21,9 +21,11 @@ export class SearchAnnotateService {
   }): CancelablePromise<PaginatedSpanAnnotationHits> {
     return __request(OpenAPI, {
       method: "POST",
-      url: "/search_annotate/auto_annotate",
-      query: {
+      url: "/projects/{project_id}/search-annotate/auto-annotate",
+      path: {
         project_id: projectId,
+      },
+      query: {
         query: query,
       },
       errors: {

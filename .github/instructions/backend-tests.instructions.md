@@ -137,7 +137,7 @@ Organize each test file with comment blocks, from coarse to fine:
 
 ```python
 # ===========================================================================
-# SEARCH MEMO (/search/memo) TESTS
+# SEARCH MEMO (/search/memos) TESTS
 # ===========================================================================
 ```
 

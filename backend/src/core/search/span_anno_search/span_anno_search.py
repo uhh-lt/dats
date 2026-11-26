@@ -49,6 +49,7 @@ def _apply_span_text_search(query, search_query: str):
 def find_span_annotations(
     db: Session,
     *,
+    project_id: int,
     request: QueryRequest[SpanColumns],
     user_id: int,
 ) -> Page[SpanAnnotationRow]:
@@ -82,7 +83,7 @@ def find_span_annotations(
             SpanAnnotationORM.source_code_id,
         )
         .join(subquery, SpanAnnotationORM.id == subquery.c.id)
-        .filter(SourceDocumentORM.project_id == request.project_id)
+        .filter(SourceDocumentORM.project_id == project_id)
         .filter(CodeORM.enabled == True)  # noqa: E712
     )._join_query(
         AnnotationDocumentORM,
@@ -110,7 +111,7 @@ def find_span_annotations(
 
     memo_ids_by_annotation = crud_object_handle.read_memo_ids_by_objects(
         db=db,
-        project_id=request.project_id,
+        project_id=project_id,
         attached_object_type=AttachedObjectType.span_annotation,
         object_ids=[row[0] for row in result_rows],
     )
@@ -138,6 +139,7 @@ def find_span_annotations(
 def find_span_annotation_groups(
     db: Session,
     *,
+    project_id: int,
     request: GroupQueryRequest[SpanColumns],
     user_id: int,
 ) -> GroupPage:
@@ -161,7 +163,7 @@ def find_span_annotation_groups(
             SpanAnnotationORM.id,
         )
         .join(subquery, SpanAnnotationORM.id == subquery.c.id)
-        .filter(SourceDocumentORM.project_id == request.project_id)
+        .filter(SourceDocumentORM.project_id == project_id)
         .filter(CodeORM.enabled == True)  # noqa: E712
     )._join_query(
         AnnotationDocumentORM,

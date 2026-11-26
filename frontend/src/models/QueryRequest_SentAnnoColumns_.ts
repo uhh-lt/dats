@@ -7,10 +7,6 @@ import type { GroupConfig_SentAnnoColumns_ } from "./GroupConfig_SentAnnoColumns
 import type { Sort_SentAnnoColumns_ } from "./Sort_SentAnnoColumns_";
 export type QueryRequest_SentAnnoColumns_ = {
   /**
-   * Project the search runs in
-   */
-  project_id: number;
-  /**
    * Full-text query
    */
   search_query?: string;

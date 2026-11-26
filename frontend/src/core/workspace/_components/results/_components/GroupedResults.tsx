@@ -27,8 +27,8 @@ export function GroupedResults<TColumns extends string, TRow extends { id: numbe
 }: GroupedResultsProps<TColumns, TRow>): ReactNode {
   const groupBy = view.group_by;
   const query = config.useQueryGroups(
+    projectId,
     {
-      project_id: projectId,
       search_query: searchQuery,
       filter: view.filters,
       group_by: groupBy ?? { field: config.columns[Object.keys(config.columns)[0] as TColumns] },

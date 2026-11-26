@@ -60,7 +60,6 @@ import { Sort_BBoxColumns_ } from "@models/Sort_BBoxColumns_";
 
 /** Generic structural mirror of the generated `QueryRequest_<Columns>` types. */
 export interface WorkspaceQueryRequest<TColumns extends string> {
-  project_id: number;
   search_query?: string;
   filter: MyFilter<TColumns>;
   sorts?: WorkspaceSort<TColumns>[];
@@ -72,7 +71,6 @@ export interface WorkspaceQueryRequest<TColumns extends string> {
 
 /** Generic structural mirror of `GroupQueryRequest_<Columns>`. */
 export interface WorkspaceGroupQueryRequest<TColumns extends string> {
-  project_id: number;
   search_query?: string;
   filter: MyFilter<TColumns>;
   group_by: WorkspaceGroupConfig<TColumns>;

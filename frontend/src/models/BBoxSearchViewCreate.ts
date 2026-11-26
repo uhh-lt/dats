@@ -13,10 +13,6 @@ export type BBoxSearchViewCreate = {
    */
   entity_type?: string;
   /**
-   * Project the SearchView belongs to
-   */
-  project_id: number;
-  /**
    * Name of the SearchView
    */
   name: string;

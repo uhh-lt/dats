@@ -7,10 +7,6 @@ import type { GroupConfig_BBoxColumns_ } from "./GroupConfig_BBoxColumns_";
 import type { Sort_BBoxColumns_ } from "./Sort_BBoxColumns_";
 export type QueryRequest_BBoxColumns_ = {
   /**
-   * Project the search runs in
-   */
-  project_id: number;
-  /**
    * Full-text query
    */
   search_query?: string;

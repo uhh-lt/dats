@@ -107,8 +107,7 @@ const MemoFilterTable = <TToolbarProps extends FilterTableToolbarProps<MemoRead>
 
   // table data
   const { data, fetchNextPage, isError, isFetching, isLoading } = useInfiniteQuery(
-    memoQueries.search({
-      project_id: projectId,
+    memoQueries.search(projectId, {
       search_query: searchQuery || "",
       filter,
       sorts: toSorts<MemoColumns>(sortingModel),

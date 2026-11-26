@@ -6,10 +6,6 @@ import type { Filter_MemoColumns__Input } from "./Filter_MemoColumns__Input";
 import type { GroupConfig_MemoColumns_ } from "./GroupConfig_MemoColumns_";
 export type GroupQueryRequest_MemoColumns_ = {
   /**
-   * Project the search runs in
-   */
-  project_id: number;
-  /**
    * Full-text query applied before grouping
    */
   search_query?: string;

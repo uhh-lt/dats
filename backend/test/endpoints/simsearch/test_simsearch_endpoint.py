@@ -20,7 +20,7 @@ from .conftest import SimSearchProject
 EMPTY_FILTER = {"id": "root", "logic_operator": "and", "items": []}
 
 # ===========================================================================
-# GATING (/simsearch/sentences, /simsearch/images) TESTS
+# GATING (/projects/{project_id}/simsearch/sentences, .../images) TESTS
 # ===========================================================================
 
 
@@ -39,12 +39,8 @@ def test_similarity_search_is_rejected_when_semantic_search_is_disabled(
     """A project without semantic search answers 403 naming the feature, for
     sentences and images alike."""
     response = client.post(
-        path,
-        params={
-            "project_id": featureless_project["project"].id,
-            "top_k": 10,
-            "threshold": 0.5,
-        },
+        f"/projects/{featureless_project['project'].id}{path}",
+        params={"top_k": 10, "threshold": 0.5},
         json={"query": "alpha", "filter": EMPTY_FILTER},
     )
 
@@ -52,7 +48,7 @@ def test_similarity_search_is_rejected_when_semantic_search_is_disabled(
 
 
 # ===========================================================================
-# QUERY (/simsearch/sentences, /simsearch/images) TESTS
+# QUERY (/projects/{project_id}/simsearch/sentences, .../images) TESTS
 # ===========================================================================
 
 
@@ -70,8 +66,8 @@ def test_similarity_search_rejects_a_list_query(
     text or the id of an image), so the body validation rejects it: 422 for the
     `query` of the body, not for a missing URL parameter."""
     response = client.post(
-        path,
-        params={"project_id": test_project.id, "top_k": 10, "threshold": 0.5},
+        f"/projects/{test_project.id}{path}",
+        params={"top_k": 10, "threshold": 0.5},
         json={"query": ["alpha", "beta"], "filter": EMPTY_FILTER},
     )
 
@@ -107,8 +103,8 @@ def clip_calls(monkeypatch: pytest.MonkeyPatch) -> dict[str, list[object]]:
 
 def _search(client: TestClient, path: str, project_id: int, query: str | int):
     return client.post(
-        path,
-        params={"project_id": project_id, "top_k": 10, "threshold": 0.75},
+        f"/projects/{project_id}{path}",
+        params={"top_k": 10, "threshold": 0.75},
         json={"query": query, "filter": EMPTY_FILTER},
     )
 

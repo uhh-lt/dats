@@ -37,8 +37,8 @@ export function EntityResultList<TColumns extends string, TRow extends { id: num
   scrollable = true,
 }: EntityResultListProps<TColumns, TRow>): ReactNode {
   const query = config.useQueryRows(
+    projectId,
     {
-      project_id: projectId,
       search_query: searchQuery,
       filter: view.filters,
       sorts: view.sorts,

@@ -23,7 +23,7 @@ An entity that can be listed with filters, sorting and infinite scrolling (sdocs
 | `toolbar/`                       | `FilterTableToolbarProps` (`table`, `selectedData`, `anchor`), `Redux` / `URL` / `LocalFilterTableToolbarLeft` (the matching dialog), `FilterTableToolbarRight`                                                                                                                                                                                                            |
 | `table/`                         | `FilterTable` (MRT table with virtualization, infinite scroll, selection, manual sorting and the toolbars), `FilterTableContainerProps`, the variant props `ReduxFilterTableProps` / `URLFilterTableProps` / `LocalFilterTableProps`                                                                                                                                       |
 
-The query side is defined by the domain's factory (see `frontend-api.instructions.md`): `<domain>Queries.search(request)` (an `infiniteQueryOptions` leaf), `searchScope()` and `tableInfo(projectId)`, whose key is `tableInfoQueries.byDomain("<domain>", projectId)` and whose `queryFn` maps the backend infos with `toColumnInfos`.
+The query side is defined by the domain's factory (see `frontend-api.instructions.md`): `<domain>Queries.search(projectId, request)` (an `infiniteQueryOptions` leaf), `searchScope()` and `tableInfo(projectId)`, whose key is `tableInfoQueries.byDomain("<domain>", projectId)` and whose `queryFn` maps the backend infos with `toColumnInfos`.
 
 ## File Structure
 
@@ -93,7 +93,7 @@ const <Entity>FilterTable = <TToolbarProps extends FilterTableToolbarProps<Row>>
 
   // table data
   const { data, fetchNextPage, isError, isFetching, isLoading } = useInfiniteQuery(
-    <domain>Queries.search({ project_id: projectId, filter, sorts: toSorts<Columns>(sortingModel), page_size: fetchSize }),
+    <domain>Queries.search(projectId, { filter, sorts: toSorts<Columns>(sortingModel), page_size: fetchSize }),
   );
 
   // resetting search-parameter-dependant state
@@ -145,7 +145,7 @@ export const <Entity>LocalFilterTable = memo(
 - **Variant props**: type the variants with `ReduxFilterTableProps<Row, Columns>` / `URLFilterTableProps` / `LocalFilterTableProps`, never with hand-written `Omit<FilterTableContainerProps ...>`. Every variant defaults `renderTopLeftToolbar` to its generic toolbar (or the domain's own, e.g. `MemoReduxToolbarLeft`) and lets the caller override it.
 - **Table infos**: every filter popover (Redux, URL and Local) takes the domain's `tableInfo` leaf as `tableInfoOptions` (`sdocQueries.tableInfo(projectId)`, no `useMemo`) and loads the column infos itself. Code that needs the infos as a map (`addMetadataFilter`, `ConceptFilterEditor`) reads `columnInfoMap = TableInfoHooks.useColumnInfoMap(...)`.
 - **Columns**: built in one `useMemo` from `tableInfo`, `[]` while loading. Type the map callback (`(column): MRT_ColumnDef<Row> =>`) and the base `colDef`; never cast with `as MRT_ColumnDef`. The base `colDef` has `accessorFn: () => null`, because MRT only sorts columns with an accessor. Metadata columns (numeric `column`) render `SdocMetadataRenderer`; unknown columns render `<i>Cannot render column …</i>`. Extra columns that are not in `tableInfo` are typed constants prepended to the result (`textColumn`, `previewColumn`); columns to skip go in a `HIDDEN_COLUMNS: string[]` constant filtered before the map.
-- **Data**: `useInfiniteQuery(<domain>Queries.search({...}))` with `toSorts<Columns>(sortingModel)` and `fetchSize` as page size; pass the factory leaf directly (no spread, no `enabled`).
+- **Data**: `useInfiniteQuery(<domain>Queries.search(projectId, {...}))` with `toSorts<Columns>(sortingModel)` and `fetchSize` as page size; pass the factory leaf directly (no spread, no `enabled`).
 - **Reset**: `useResetStateOnSearch([...searchParams], resetState)` clears the selection, sets the fetch size back to 20 and calls `onSearchParameterChange`. The params are every input of the search: `[filter, sortingModel]`, plus `searchQuery` if the table has a global search.
 - **`FilterTable` props** in this order: `name`, `columns`, `getRowId`, `data`, `fetchNextPage`, `flatMapData`, `isLoading={isLoading || columns.length === 0}`, `isError`, `isFetching`, `onFetchSizeChange`, the three state pairs, the four toolbar props, then any extra MRT options (global search, detail panel, resizing).
 - **Global search** (sdoc, memo): `const [searchQuery, setSearchQuery] = useState<string | undefined>("")`, passed as `state={{ globalFilter: searchQuery }}`, `enableGlobalFilter`, `onGlobalFilterChange={setSearchQuery}`.

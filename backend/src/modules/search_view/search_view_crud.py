@@ -9,15 +9,15 @@ from modules.search_view.search_view_dto import (
 from modules.search_view.search_view_enum import SearchEntityType
 from modules.search_view.search_view_exceptions import InvalidSearchViewOrderError
 from modules.search_view.search_view_orm import SearchViewORM
-from repos.db.crud_base import SQLCRUDBase
+from repos.db.project_crud_base import ProjectCRUDBase
 
 
 class CRUDSearchView(
-    SQLCRUDBase[SearchViewORM, SearchViewCreateIntern, SearchViewUpdateUnion]
+    ProjectCRUDBase[SearchViewORM, SearchViewCreateIntern, SearchViewUpdateUnion]
 ):
     ### CREATE OPERATIONS ###
 
-    # Inherited from SQLCRUDBase
+    # Inherited from ProjectCRUDBase
 
     ### READ OPERATIONS ###
 
@@ -70,12 +70,13 @@ class CRUDSearchView(
         self,
         db: Session,
         *,
+        project_id: int,
         ids: list[int],
         update_dtos: list[SearchViewUpdateUnion],
     ) -> list[SearchViewORM]:
         self._check_update_input(ids=ids, update_dtos=update_dtos)
 
-        views = self.read_by_ids(db=db, ids=ids)
+        views = self.read_by_ids(db=db, project_id=project_id, ids=ids)
         for view, update_dto in zip(views, update_dtos):
             self._merge(view=view, update_dto=update_dto)
         db.flush()

@@ -26,13 +26,18 @@ export class SearchViewService {
    * @throws ApiError
    */
   public static create({
+    projectId,
     requestBody,
   }: {
+    projectId: number;
     requestBody: MemoSearchViewCreate | SpanSearchViewCreate | SentenceSearchViewCreate | BBoxSearchViewCreate;
   }): CancelablePromise<MemoSearchViewRead | SpanSearchViewRead | SentenceSearchViewRead | BBoxSearchViewRead> {
     return __request(OpenAPI, {
       method: "PUT",
-      url: "/searchView",
+      url: "/projects/{project_id}/search-views",
+      path: {
+        project_id: projectId,
+      },
       body: requestBody,
       mediaType: "application/json",
       errors: {
@@ -54,7 +59,7 @@ export class SearchViewService {
   }): CancelablePromise<Array<MemoSearchViewRead | SpanSearchViewRead | SentenceSearchViewRead | BBoxSearchViewRead>> {
     return __request(OpenAPI, {
       method: "GET",
-      url: "/searchView/project/{project_id}",
+      url: "/projects/{project_id}/search-views",
       path: {
         project_id: projectId,
       },
@@ -82,7 +87,7 @@ export class SearchViewService {
   }): CancelablePromise<Array<MemoSearchViewRead | SpanSearchViewRead | SentenceSearchViewRead | BBoxSearchViewRead>> {
     return __request(OpenAPI, {
       method: "PATCH",
-      url: "/searchView/project/{project_id}/order",
+      url: "/projects/{project_id}/search-views/order",
       path: {
         project_id: projectId,
       },
@@ -102,16 +107,19 @@ export class SearchViewService {
    * @throws ApiError
    */
   public static update({
+    projectId,
     viewId,
     requestBody,
   }: {
+    projectId: number;
     viewId: number;
     requestBody: MemoSearchViewUpdate | SpanSearchViewUpdate | SentenceSearchViewUpdate | BBoxSearchViewUpdate;
   }): CancelablePromise<MemoSearchViewRead | SpanSearchViewRead | SentenceSearchViewRead | BBoxSearchViewRead> {
     return __request(OpenAPI, {
       method: "PATCH",
-      url: "/searchView/{view_id}",
+      url: "/projects/{project_id}/search-views/{view_id}",
       path: {
+        project_id: projectId,
         view_id: viewId,
       },
       body: requestBody,
@@ -127,14 +135,17 @@ export class SearchViewService {
    * @throws ApiError
    */
   public static delete({
+    projectId,
     viewId,
   }: {
+    projectId: number;
     viewId: number;
   }): CancelablePromise<MemoSearchViewRead | SpanSearchViewRead | SentenceSearchViewRead | BBoxSearchViewRead> {
     return __request(OpenAPI, {
       method: "DELETE",
-      url: "/searchView/{view_id}",
+      url: "/projects/{project_id}/search-views/{view_id}",
       path: {
+        project_id: projectId,
         view_id: viewId,
       },
       errors: {

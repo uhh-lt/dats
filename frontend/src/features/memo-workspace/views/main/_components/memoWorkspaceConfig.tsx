@@ -65,10 +65,10 @@ export const createMemoWorkspaceConfig = (userId: number): EntityWorkspaceConfig
   emptyFilter: emptyMemoFilter,
 
   tableInfo: memoQueries.tableInfo,
-  useQueryRows: (request: WorkspaceQueryRequest<MemoColumns>, enabled?: boolean) =>
-    useInfiniteQuery({ ...memoQueries.search(request as QueryRequest_MemoColumns_), enabled }),
-  useQueryGroups: (request: WorkspaceGroupQueryRequest<MemoColumns>, enabled?: boolean) =>
-    useInfiniteQuery({ ...memoQueries.searchGrouped(request as GroupQueryRequest_MemoColumns_), enabled }),
+  useQueryRows: (projectId: number, request: WorkspaceQueryRequest<MemoColumns>, enabled?: boolean) =>
+    useInfiniteQuery({ ...memoQueries.search(projectId, request as QueryRequest_MemoColumns_), enabled }),
+  useQueryGroups: (projectId: number, request: WorkspaceGroupQueryRequest<MemoColumns>, enabled?: boolean) =>
+    useInfiniteQuery({ ...memoQueries.searchGrouped(projectId, request as GroupQueryRequest_MemoColumns_), enabled }),
   useSearchViews: MemoViewHooks,
 
   tableColumns: memoTableColumns,

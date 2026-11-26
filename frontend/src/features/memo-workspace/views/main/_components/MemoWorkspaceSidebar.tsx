@@ -91,8 +91,7 @@ export const MemoWorkspaceSidebar = memo(({ projectId, scope }: MemoWorkspaceSid
     );
   }, [createMemo, dispatch, scope, projectId]);
   const projectMemos = useInfiniteQuery({
-    ...memoQueries.search({
-      project_id: projectId,
+    ...memoQueries.search(projectId, {
       filter: projectFilter,
       sorts: [{ column: MemoColumns.M_TITLE, direction: SortDirection.ASC }],
       page_size: 200,
@@ -101,8 +100,7 @@ export const MemoWorkspaceSidebar = memo(({ projectId, scope }: MemoWorkspaceSid
   });
 
   const favoriteMemos = useInfiniteQuery({
-    ...memoQueries.search({
-      project_id: projectId,
+    ...memoQueries.search(projectId, {
       filter: favoriteFilter,
       sorts: [{ column: MemoColumns.M_TITLE, direction: SortDirection.ASC }],
       page_size: 200,

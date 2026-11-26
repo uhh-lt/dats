@@ -48,7 +48,7 @@ def _to_row(data) -> MemoRead:
 
 
 def find_memos(
-    db: Session, *, request: QueryRequest[MemoColumns], user_id: int
+    db: Session, *, project_id: int, request: QueryRequest[MemoColumns], user_id: int
 ) -> Page[MemoRead]:
     """Row query: filter/sort/search/drill-down/paginate memos -> Page[MemoRead].
 
@@ -65,7 +65,7 @@ def find_memos(
         user_id=user_id,
     )
     builder.init_subquery(
-        build_memo_subquery(db, project_id=request.project_id, user_id=user_id)
+        build_memo_subquery(db, project_id=project_id, user_id=user_id)
     )
     subquery = builder.build_subquery()
     builder.init_query(db.query(subquery.c.id))
@@ -92,7 +92,7 @@ def find_memos(
     # Re-run the projection restricted to the page's memo IDs to resolve the
     # human-readable labels, then reorder to match the paginated order.
     projection = build_memo_subquery(
-        db, project_id=request.project_id, user_id=user_id
+        db, project_id=project_id, user_id=user_id
     ).subquery()
     summary_rows = db.query(*projection.c).filter(projection.c.id.in_(memo_ids)).all()
     summaries_by_id = {
@@ -106,7 +106,11 @@ def find_memos(
 
 
 def find_memo_groups(
-    db: Session, *, request: GroupQueryRequest[MemoColumns], user_id: int
+    db: Session,
+    *,
+    project_id: int,
+    request: GroupQueryRequest[MemoColumns],
+    user_id: int,
 ) -> GroupPage:
     """Group query: aggregate memos by a column -> paginated GroupPage.
 
@@ -121,7 +125,7 @@ def find_memo_groups(
         user_id=user_id,
     )
     builder.init_subquery(
-        build_memo_subquery(db, project_id=request.project_id, user_id=user_id)
+        build_memo_subquery(db, project_id=project_id, user_id=user_id)
     )
     subquery = builder.build_subquery()
     builder.init_query(db.query(subquery.c.id))
