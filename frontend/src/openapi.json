@@ -2586,7 +2586,7 @@
         ],
         "requestBody": {
           "required": true,
-          "content": { "application/json": { "schema": { "$ref": "#/components/schemas/ClassifierJobInput" } } }
+          "content": { "application/json": { "schema": { "$ref": "#/components/schemas/ClassifierJobStart" } } }
         },
         "responses": {
           "200": {
@@ -2794,7 +2794,7 @@
         ],
         "requestBody": {
           "required": true,
-          "content": { "application/json": { "schema": { "$ref": "#/components/schemas/CrawlerJobInput" } } }
+          "content": { "application/json": { "schema": { "$ref": "#/components/schemas/CrawlerJobStart" } } }
         },
         "responses": {
           "200": {
@@ -2941,7 +2941,7 @@
         ],
         "requestBody": {
           "required": true,
-          "content": { "application/json": { "schema": { "$ref": "#/components/schemas/DuplicateFinderInput" } } }
+          "content": { "application/json": { "schema": { "$ref": "#/components/schemas/DuplicateFinderJobStart" } } }
         },
         "responses": {
           "200": {
@@ -2998,7 +2998,7 @@
         ],
         "requestBody": {
           "required": true,
-          "content": { "application/json": { "schema": { "$ref": "#/components/schemas/LLMAssistantJobInput" } } }
+          "content": { "application/json": { "schema": { "$ref": "#/components/schemas/LlmAssistantJobStart" } } }
         },
         "responses": {
           "200": {
@@ -3145,7 +3145,7 @@
         ],
         "requestBody": {
           "required": true,
-          "content": { "application/json": { "schema": { "$ref": "#/components/schemas/ExportJobInput" } } }
+          "content": { "application/json": { "schema": { "$ref": "#/components/schemas/ExportJobStart" } } }
         },
         "responses": {
           "200": {
@@ -3342,7 +3342,7 @@
         ],
         "requestBody": {
           "required": true,
-          "content": { "application/json": { "schema": { "$ref": "#/components/schemas/TagRecommendationJobInput" } } }
+          "content": { "application/json": { "schema": { "$ref": "#/components/schemas/TagRecommendationJobStart" } } }
         },
         "responses": {
           "200": {
@@ -12452,6 +12452,38 @@
         "required": ["job_id", "job_type", "project_id", "status", "current_step", "steps", "input", "created"],
         "title": "ClassifierJobRead"
       },
+      "ClassifierJobStart": {
+        "properties": {
+          "task_type": {
+            "$ref": "#/components/schemas/ClassifierTask",
+            "description": "The type of the Classifier Task"
+          },
+          "model_type": {
+            "$ref": "#/components/schemas/ClassifierModel",
+            "description": "The type of the Classifier Model"
+          },
+          "task_parameters": {
+            "oneOf": [
+              { "$ref": "#/components/schemas/ClassifierTrainingParams" },
+              { "$ref": "#/components/schemas/ClassifierEvaluationParams" },
+              { "$ref": "#/components/schemas/ClassifierInferenceParams" }
+            ],
+            "title": "Task Parameters",
+            "description": "Specific parameters for the ClassifierJob w.r.t it's type",
+            "discriminator": {
+              "propertyName": "task_type",
+              "mapping": {
+                "evaluation": "#/components/schemas/ClassifierEvaluationParams",
+                "inference": "#/components/schemas/ClassifierInferenceParams",
+                "training": "#/components/schemas/ClassifierTrainingParams"
+              }
+            }
+          }
+        },
+        "type": "object",
+        "required": ["task_type", "model_type", "task_parameters"],
+        "title": "ClassifierJobStart"
+      },
       "ClassifierLoss": {
         "properties": {
           "step": { "type": "integer", "title": "Step", "description": "Training step" },
@@ -13505,6 +13537,20 @@
         "required": ["job_id", "job_type", "project_id", "status", "current_step", "steps", "input", "created"],
         "title": "CrawlerJobRead"
       },
+      "CrawlerJobStart": {
+        "properties": {
+          "settings": { "$ref": "#/components/schemas/ProcessingSettings", "description": "Processing settings" },
+          "urls": {
+            "items": { "type": "string" },
+            "type": "array",
+            "title": "Urls",
+            "description": "List of URLs to crawl."
+          }
+        },
+        "type": "object",
+        "required": ["settings", "urls"],
+        "title": "CrawlerJobStart"
+      },
       "CreateAspectParams": {
         "properties": {
           "perspectives_job_type": {
@@ -13683,6 +13729,23 @@
         "type": "object",
         "required": ["job_id", "job_type", "project_id", "status", "current_step", "steps", "input", "created"],
         "title": "DuplicateFinderJobRead"
+      },
+      "DuplicateFinderJobStart": {
+        "properties": {
+          "max_different_words": {
+            "type": "integer",
+            "title": "Max Different Words",
+            "description": "Number of different words allowed between duplicates"
+          },
+          "tag_id": {
+            "anyOf": [{ "type": "integer" }, { "type": "null" }],
+            "title": "Tag Id",
+            "description": "Tag id to filter source documents. If not provided, all source documents are considered."
+          }
+        },
+        "type": "object",
+        "required": ["max_different_words", "tag_id"],
+        "title": "DuplicateFinderJobStart"
       },
       "DuplicateFinderOutput": {
         "properties": {
@@ -14169,6 +14232,49 @@
         "type": "object",
         "required": ["job_id", "job_type", "project_id", "status", "current_step", "steps", "input", "created"],
         "title": "ExportJobRead"
+      },
+      "ExportJobStart": {
+        "properties": {
+          "export_job_type": {
+            "$ref": "#/components/schemas/ExportJobType",
+            "description": "The type of the export job (what to export)"
+          },
+          "specific_export_job_parameters": {
+            "anyOf": [
+              {
+                "oneOf": [
+                  { "$ref": "#/components/schemas/ExportSelectedSdocsParams" },
+                  { "$ref": "#/components/schemas/ExportSelectedSpanAnnotationsParams" },
+                  { "$ref": "#/components/schemas/ExportSelectedSentenceAnnotationsParams" },
+                  { "$ref": "#/components/schemas/ExportSelectedBboxAnnotationsParams" },
+                  { "$ref": "#/components/schemas/ExportSelectedMemosParams" },
+                  { "$ref": "#/components/schemas/ExportSelectedWhiteboardsParams" },
+                  { "$ref": "#/components/schemas/ExportSelectedTimelineAnalysesParams" },
+                  { "$ref": "#/components/schemas/ExportSelectedCotaParams" }
+                ],
+                "discriminator": {
+                  "propertyName": "export_job_type",
+                  "mapping": {
+                    "SELECTED_BBOX_ANNOTATIONS": "#/components/schemas/ExportSelectedBboxAnnotationsParams",
+                    "SELECTED_COTA": "#/components/schemas/ExportSelectedCotaParams",
+                    "SELECTED_MEMOS": "#/components/schemas/ExportSelectedMemosParams",
+                    "SELECTED_SDOCS": "#/components/schemas/ExportSelectedSdocsParams",
+                    "SELECTED_SENTENCE_ANNOTATIONS": "#/components/schemas/ExportSelectedSentenceAnnotationsParams",
+                    "SELECTED_SPAN_ANNOTATIONS": "#/components/schemas/ExportSelectedSpanAnnotationsParams",
+                    "SELECTED_TIMELINE_ANALYSES": "#/components/schemas/ExportSelectedTimelineAnalysesParams",
+                    "SELECTED_WHITEBOARDS": "#/components/schemas/ExportSelectedWhiteboardsParams"
+                  }
+                }
+              },
+              { "type": "null" }
+            ],
+            "title": "Specific Export Job Parameters",
+            "description": "Specific parameters for the export job w.r.t it's type"
+          }
+        },
+        "type": "object",
+        "required": ["export_job_type", "specific_export_job_parameters"],
+        "title": "ExportJobStart"
       },
       "ExportJobType": {
         "type": "string",
@@ -15684,6 +15790,41 @@
         "type": "object",
         "required": ["job_id", "job_type", "project_id", "status", "current_step", "steps", "input", "created"],
         "title": "LlmAssistantJobRead"
+      },
+      "LlmAssistantJobStart": {
+        "properties": {
+          "task_type": { "$ref": "#/components/schemas/TaskType", "description": "The task of the prompt" },
+          "sdoc_ids": {
+            "items": { "type": "integer" },
+            "type": "array",
+            "title": "Sdoc Ids",
+            "description": "IDs of the source documents to process"
+          },
+          "model": { "type": "string", "title": "Model", "description": "Large Language Model to use for the job" },
+          "prompt_version_id": {
+            "anyOf": [{ "type": "integer" }, { "type": "null" }],
+            "title": "Prompt Version Id",
+            "description": "ID of the prompt version to run. Exactly one of prompt_version_id and draft is set."
+          },
+          "draft": {
+            "anyOf": [{ "$ref": "#/components/schemas/PromptSnapshot" }, { "type": "null" }],
+            "description": "An unsaved prompt to run, e.g. the prompt of the wizard. Exactly one of prompt_version_id and draft is set."
+          },
+          "virtual_user_id": {
+            "anyOf": [{ "type": "integer" }, { "type": "null" }],
+            "title": "Virtual User Id",
+            "description": "Virtual user of the project the annotations are written into. Required for span and sentence annotation, unused otherwise."
+          },
+          "delete_existing_annotations": {
+            "type": "boolean",
+            "title": "Delete Existing Annotations",
+            "description": "Delete the existing annotations of the virtual user for the documents and codes of the prompt before creating new ones",
+            "default": false
+          }
+        },
+        "type": "object",
+        "required": ["task_type", "sdoc_ids", "model"],
+        "title": "LlmAssistantJobStart"
       },
       "LogicalOperator": {
         "type": "string",
@@ -20365,6 +20506,30 @@
         "type": "object",
         "required": ["job_id", "job_type", "project_id", "status", "current_step", "steps", "input", "created"],
         "title": "TagRecommendationJobRead"
+      },
+      "TagRecommendationJobStart": {
+        "properties": {
+          "multi_class": {
+            "type": "boolean",
+            "title": "Multi Class",
+            "description": "Tags are mutually exclusive if `False`",
+            "default": false
+          },
+          "tag_ids": {
+            "items": { "type": "integer" },
+            "type": "array",
+            "title": "Tag Ids",
+            "description": "Tags to consider. If empty, all tags applied to any document are considered.",
+            "default": []
+          },
+          "method": {
+            "$ref": "#/components/schemas/TagRecommendationMethod",
+            "description": "Method to use for suggestions",
+            "default": "KNN"
+          }
+        },
+        "type": "object",
+        "title": "TagRecommendationJobStart"
       },
       "TagRecommendationLinkRead": {
         "properties": {

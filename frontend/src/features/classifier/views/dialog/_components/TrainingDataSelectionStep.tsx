@@ -47,7 +47,6 @@ export function TrainingDataSelectionStep() {
         requestBody: {
           model_type: model,
           task_type: task,
-          project_id: projectId,
           task_parameters: trainingParams,
         },
       },

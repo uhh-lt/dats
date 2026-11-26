@@ -59,7 +59,6 @@ export function DuplicateFinderView() {
       {
         projectId,
         requestBody: {
-          project_id: projectId,
           max_different_words: maxDifferentWords,
           tag_id: tagId,
         },
@@ -85,7 +84,6 @@ export function DuplicateFinderView() {
             {
               projectId,
               requestBody: {
-                project_id: projectId,
                 max_different_words: maxDifferentWords,
                 tag_id: tagId,
               },

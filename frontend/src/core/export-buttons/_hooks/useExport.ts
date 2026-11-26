@@ -26,7 +26,6 @@ export const useExport = ({ export_job_type, specific_export_job_parameters }: O
       projectId,
       requestBody: {
         export_job_type: export_job_type,
-        project_id: projectId,
         specific_export_job_parameters: specific_export_job_parameters,
       },
     });

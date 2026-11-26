@@ -2,21 +2,21 @@
 /* istanbul ignore file */
 /* tslint:disable */
 /* eslint-disable */
-import type { ClassifierJobInput } from "@models/ClassifierJobInput";
 import type { ClassifierJobRead } from "@models/ClassifierJobRead";
+import type { ClassifierJobStart } from "@models/ClassifierJobStart";
 import type { COTARefinementJobRead } from "@models/COTARefinementJobRead";
-import type { CrawlerJobInput } from "@models/CrawlerJobInput";
 import type { CrawlerJobRead } from "@models/CrawlerJobRead";
-import type { DuplicateFinderInput } from "@models/DuplicateFinderInput";
+import type { CrawlerJobStart } from "@models/CrawlerJobStart";
 import type { DuplicateFinderJobRead } from "@models/DuplicateFinderJobRead";
-import type { ExportJobInput } from "@models/ExportJobInput";
+import type { DuplicateFinderJobStart } from "@models/DuplicateFinderJobStart";
 import type { ExportJobRead } from "@models/ExportJobRead";
+import type { ExportJobStart } from "@models/ExportJobStart";
 import type { ImportJobRead } from "@models/ImportJobRead";
-import type { LLMAssistantJobInput } from "@models/LLMAssistantJobInput";
 import type { LlmAssistantJobRead } from "@models/LlmAssistantJobRead";
+import type { LlmAssistantJobStart } from "@models/LlmAssistantJobStart";
 import type { PerspectivesJobRead } from "@models/PerspectivesJobRead";
-import type { TagRecommendationJobInput } from "@models/TagRecommendationJobInput";
 import type { TagRecommendationJobRead } from "@models/TagRecommendationJobRead";
+import type { TagRecommendationJobStart } from "@models/TagRecommendationJobStart";
 import type { CancelablePromise } from "../core/CancelablePromise";
 import { OpenAPI } from "../core/OpenAPI";
 import { request as __request } from "../core/request";
@@ -48,7 +48,7 @@ export class JobService {
     requestBody,
   }: {
     projectId: number;
-    requestBody: ClassifierJobInput;
+    requestBody: ClassifierJobStart;
   }): CancelablePromise<ClassifierJobRead> {
     return __request(OpenAPI, {
       method: "POST",
@@ -211,7 +211,7 @@ export class JobService {
     requestBody,
   }: {
     projectId: number;
-    requestBody: CrawlerJobInput;
+    requestBody: CrawlerJobStart;
   }): CancelablePromise<CrawlerJobRead> {
     return __request(OpenAPI, {
       method: "POST",
@@ -329,7 +329,7 @@ export class JobService {
     requestBody,
   }: {
     projectId: number;
-    requestBody: DuplicateFinderInput;
+    requestBody: DuplicateFinderJobStart;
   }): CancelablePromise<DuplicateFinderJobRead> {
     return __request(OpenAPI, {
       method: "POST",
@@ -378,7 +378,7 @@ export class JobService {
     requestBody,
   }: {
     projectId: number;
-    requestBody: LLMAssistantJobInput;
+    requestBody: LlmAssistantJobStart;
   }): CancelablePromise<LlmAssistantJobRead> {
     return __request(OpenAPI, {
       method: "POST",
@@ -496,7 +496,7 @@ export class JobService {
     requestBody,
   }: {
     projectId: number;
-    requestBody: ExportJobInput;
+    requestBody: ExportJobStart;
   }): CancelablePromise<ExportJobRead> {
     return __request(OpenAPI, {
       method: "POST",
@@ -614,7 +614,7 @@ export class JobService {
     requestBody,
   }: {
     projectId: number;
-    requestBody: TagRecommendationJobInput;
+    requestBody: TagRecommendationJobStart;
   }): CancelablePromise<TagRecommendationJobRead> {
     return __request(OpenAPI, {
       method: "POST",

@@ -117,7 +117,6 @@ export function ReviewStep() {
         {
           projectId,
           requestBody: {
-            project_id: projectId,
             task_type: method,
             sdoc_ids: sdocIds,
             model: modelId,
