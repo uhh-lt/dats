@@ -90,7 +90,7 @@ def _start_job(client: TestClient, payload: ClassifierJobInput) -> ClassifierJob
     """Serialize a typed classifier request, start its job, and return the response."""
     response = client.post(
         _job_url(payload.project_id),
-        json=payload.model_dump(mode="json"),
+        json=payload.model_dump(mode="json", exclude={"project_id"}),
     )
     assert response.status_code == 200, response.text
     return ClassifierJobRead.model_validate(response.json())
@@ -1024,7 +1024,7 @@ def test_inference_job_requires_a_virtual_user(
     start returns HTTP 400; no job is enqueued."""
     payload = _inference_payload(
         test_project.id, model_type, 1, [], classifier_virtual_user.id
-    ).model_dump(mode="json")
+    ).model_dump(mode="json", exclude={"project_id"})
     payload["task_parameters"]["virtual_user_id"] = None
     response = client.post(_job_url(test_project.id), json=payload)
     assert response.status_code == 422, response.text

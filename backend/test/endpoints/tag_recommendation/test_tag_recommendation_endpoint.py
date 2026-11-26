@@ -161,7 +161,9 @@ def test_a_started_tag_recommendation_job_is_listed(
     payload = TagRecommendationJobInput(project_id=test_project.id)
 
     url = f"/projects/{test_project.id}/jobs/tag-recommendation"
-    started = client.post(url, json=payload.model_dump(mode="json"))
+    started = client.post(
+        url, json=payload.model_dump(mode="json", exclude={"project_id"})
+    )
     listed = client.get(url)
 
     assert started.status_code == 200, started.text
@@ -194,7 +196,9 @@ def _run_job(
 ) -> dict[int, list[int]]:
     """Start and run the job; its recommendations: tag ids by document id."""
     url = f"/projects/{payload.project_id}/jobs/tag-recommendation"
-    started = client.post(url, json=payload.model_dump(mode="json"))
+    started = client.post(
+        url, json=payload.model_dump(mode="json", exclude={"project_id"})
+    )
     assert started.status_code == 200, started.text
     held_jobs.run("tag_recommendation")
     job_id = started.json()["job_id"]

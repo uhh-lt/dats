@@ -151,7 +151,9 @@ def _start_sentence_job(
         virtual_user_id=base["run_a"].id,
         delete_existing_annotations=True,
     )
-    response = client.post(_job_url(project), json=payload.model_dump(mode="json"))
+    response = client.post(
+        _job_url(project), json=payload.model_dump(mode="json", exclude={"project_id"})
+    )
     assert response.status_code == 200, response.text
     return LLMAssistantJobRead.model_validate(response.json()).job_id
 

@@ -212,8 +212,10 @@ with the job type's own `JobRead` model:
 | `POST /<job-type>/{job_id}/abort`  | ✓     |           |        |
 | `POST /<job-type>/{job_id}/retry`  | ✓     |           |        |
 
-- The start overwrites the `project_id` of the job input with the project of
-  the path, then runs `validate_input`, which checks the job's feature.
+- The start body is the generated `<JobName>JobStart` model: the job input
+  without `project_id`, and an unknown field answers 422. The start builds the
+  job input in the project of the path, then runs `validate_input`, which
+  checks the job's feature.
 - A job id is read with `JobService.read_project_job`: a job of another
   project or of another type answers 404, like an unknown one.
 - `READ` is for a job that a route of its module starts, because the start

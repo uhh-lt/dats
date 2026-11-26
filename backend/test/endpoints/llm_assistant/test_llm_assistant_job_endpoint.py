@@ -95,7 +95,8 @@ def _start_job(
 ) -> LLMAssistantJobRead:
     """Start a typed assistant job and validate its initial endpoint response."""
     response = client.post(
-        _job_url(payload.project_id), json=payload.model_dump(mode="json")
+        _job_url(payload.project_id),
+        json=payload.model_dump(mode="json", exclude={"project_id"}),
     )
     assert response.status_code == 200, response.text
     job = LLMAssistantJobRead.model_validate(response.json())
@@ -726,7 +727,8 @@ def test_job_start_rejects_malformed_payloads(
             if isinstance(value, str) and value in drafts
             else value
         )
-    response = client.post(_job_url(payload["project_id"]), json=payload)
+    project_id = payload.pop("project_id")
+    response = client.post(_job_url(project_id), json=payload)
     assert response.status_code == 422, response.text
     assert expected_fragment in response.text
 
@@ -741,7 +743,8 @@ def test_job_start_and_project_list_reject_foreign_project(
         update={"project_id": foreign_project.id}
     )
     start_response = client.post(
-        _job_url(foreign_project.id), json=payload.model_dump(mode="json")
+        _job_url(foreign_project.id),
+        json=payload.model_dump(mode="json", exclude={"project_id"}),
     )
     assert start_response.status_code == 403, start_response.text
 
@@ -773,7 +776,8 @@ def test_job_start_rejects_documents_outside_the_project(
     )
 
     response = client.post(
-        _job_url(base["project"].id), json=payload.model_dump(mode="json")
+        _job_url(base["project"].id),
+        json=payload.model_dump(mode="json", exclude={"project_id"}),
     )
 
     assert response.status_code == 404, response.text
@@ -812,7 +816,8 @@ def test_job_start_requires_a_virtual_user_for_annotation_tasks(
             is_fewshot=False,
         ).model_dump(mode="json")
 
-    response = client.post(_job_url(payload["project_id"]), json=payload)
+    project_id = payload.pop("project_id")
+    response = client.post(_job_url(project_id), json=payload)
 
     assert response.status_code == 422, response.text
     assert "need the virtual user to annotate as" in response.text
@@ -850,7 +855,8 @@ def test_job_start_rejects_users_that_are_no_virtual_user_of_the_project(
     ).model_copy(update={"virtual_user_id": virtual_user_id})
 
     response = client.post(
-        _job_url(base["project"].id), json=payload.model_dump(mode="json")
+        _job_url(base["project"].id),
+        json=payload.model_dump(mode="json", exclude={"project_id"}),
     )
 
     assert response.status_code in (400, 404), response.text
