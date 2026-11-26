@@ -7,18 +7,18 @@ Status on 2026-11-26: 16 PRs open and stacked (#941 to #956), nothing merged. Ev
 
 ## 0. What the owner needs to review, check or decide
 
-Read this section first. Everything below it is the record. Status: the review fixes are in #956 (one PR on top of #955); the second review runs on that tip.
+Read this section first. Everything below it is the record. Status: the review fixes are in #956 (one PR on top of #955); the second review (`review-2.md`) ran on that tip, and its agreed points are fixed in one PR on top of #956 (the second review fixes).
 
-### To decide
+### Decided by the owner
 
-| #   | Question                                                                                                                                                            | Where         |
-| --- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------- |
-| D1  | Run the migration on a copy of the production data before the merge? The issue asks for it; it has not been done. The owner runs production commands.               | 6             |
-| D2  | Routes without a caller in the frontend (search-and-annotate, the two unused job lists): keep or delete?                                                            | 3.1, 3.2      |
-| D3  | Any member may update or delete the project and manage members. Unchanged from before, approved as it is; listed because it is a permission question.               | 2.5           |
-| D4  | File issues for the bugs seen in passing (nested button warning, UMAP on very small maps, fixture debt, e2e tests need Ray) and for "span texts are never deleted"? | 1.3 to 1.6, 9 |
-| D5  | Old clients that still send `project_id` in a job start body are not rejected (pydantic ignores the extra field). Accept, or forbid extra fields?                   | 2.6, 10.4     |
-| D6  | How to merge: the whole stack at once as rebase merges. #944 and #945 are red on their own (fixed by #946), so they cannot be merged one by one.                    | 6             |
+| #   | Question                                                                                                 | Answer                                                                             |
+| --- | -------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------- |
+| D1  | Run the migration on a copy of the production data before the merge?                                     | The owner runs the migration test before the deployment; it is in the roadmap.     |
+| D2  | Routes without a caller in the frontend (search-and-annotate, the two unused job lists): keep or delete? | Keep the routes.                                                                   |
+| D3  | Any member may update or delete the project and manage members.                                          | By design: every member is admin within a project.                                 |
+| D4  | File issues for the bugs seen in passing?                                                                | No issues; only "span texts are never deleted" is a bug, and it is on the roadmap. |
+| D5  | Old clients that still send `project_id` in a job start body: accept, or forbid extra fields?            | Unknown fields are forbidden (422). Done in the second review fixes.               |
+| D6  | How to merge?                                                                                            | One merge of the whole stack in the end; the PRs stay open for review.             |
 
 ### To review (new or changed by the review fixes, #956)
 
@@ -32,13 +32,42 @@ Read this section first. Everything below it is the record. Status: the review f
 
 ### To check (not verified yet)
 
-| #   | What                                                                                                                                                                                                                                                                                                            |
-| --- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| C1  | CI of #956 on its final tip. The first frontend check failed while starting the CI containers (the worker was unhealthy), before any frontend step ran; it was restarted. Backend checks were still running when this was written.                                                                              |
-| C2  | Hand-written joins that still compare one id column, with the project filter elsewhere in the query: the `subquery.c.id` joins of the four searches, the timeline and the word frequency, and `SpanTextORM.id == span_text_id` in the code frequency. The second review checks them against rule 4 of ADR 0013. |
-| C3  | The agentic workflows (overview, documentation, review) failed on every PR during a model outage and were restarted on #941 to #955 on 2026-11-26. Their comments are not read yet.                                                                                                                             |
-| C4  | The UI paths nobody clicked (list in section 6).                                                                                                                                                                                                                                                                |
-| C5  | A test helper finds a document's project by its id alone (it fails loudly if the id exists twice); older tests still send `project_id` in job start bodies.                                                                                                                                                     |
+| #   | What                                                                                                                                                                                                                                          |
+| --- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| C1  | CI of #956 on its final tip. **Answered by the second review:** the failed first frontend check was the runner (the worker container exited 3.5 s after its start, before any migration or step of #956 could run; the rerun was healthy).    |
+| C2  | Hand-written joins that still compare one id column. **Answered by the second review:** all are safe (table in `review-2.md` 4, C2); the six annotation search queries now also filter `<Anno>ORM.project_id` directly (second review fixes). |
+| C3  | The agentic workflows (overview, documentation, review) failed on every PR during a model outage and were restarted on #941 to #955 on 2026-11-26. Their comments are not read yet.                                                           |
+| C4  | The UI paths nobody clicked (list in section 6).                                                                                                                                                                                              |
+| C5  | A test helper finds a document's project by its id alone (it fails loudly if the id exists twice). The tests that sent `project_id` in job start bodies no longer do (second review fixes).                                                   |
+
+### Second review (`review-2.md`): status after the second review fixes
+
+| Point                                                      | Status                                                                                                                                               |
+| ---------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------- |
+| N1 the twin tests cannot fail                              | Fixed: baseline of project A before the twin, POST read routes and custom reads added, mutation-checked.                                             |
+| N2 the frontend cache identifies rows by id alone          | Fixed: every project-owned query key is `[entity, "project", projectId, ...]`, cache-sync writes per project.                                        |
+| N3 instructions that teach id-only code                    | Fixed: service, CRUD, DTO, endpoint and frontend-api instructions, job, artefact and search READMEs.                                                 |
+| N4 dead code                                               | Fixed: deleted with its test lines.                                                                                                                  |
+| M-a migration drops constraints by name, never run on prod | Open: the owner runs it before the deployment (D1).                                                                                                  |
+| 1 annotation searches without a direct project filter      | Fixed.                                                                                                                                               |
+| 2 backfill doubles the tables on disk                      | Open: check the disk headroom in the dry run (D1).                                                                                                   |
+| 3 the downgrade fails once two projects share an id        | Open: deploy note, the way back is a restore.                                                                                                        |
+| 4 a metadata id of another project in a search filter: 500 | Fixed: 404.                                                                                                                                          |
+| 5 RAG chat session found by its uuid alone                 | Fixed: a session of another project or user answers 404.                                                                                             |
+| 6 perspectives `cluster_id` not checked against the aspect | Open (same project only).                                                                                                                            |
+| 7 outer and inner `export_job_type` may disagree           | Open.                                                                                                                                                |
+| 8 user-id filters, `only_if_finished`, crawler URLs        | Open (pre-existing).                                                                                                                                 |
+| 9 the positive control accepts 500 and 422                 | Fixed: 2xx required, exceptions listed in the test.                                                                                                  |
+| 10 unknown fields in job start bodies                      | Fixed (D5): 422.                                                                                                                                     |
+| 11 persisted slices carry row ids across projects          | Fixed.                                                                                                                                               |
+| 12 47 reads of `state.project.projectId`                   | Open: follow-up below.                                                                                                                               |
+| 13 Enter in the created API key may submit again           | Open.                                                                                                                                                |
+| 14 pass-through retry validator, needless `TYPE_CHECKING`  | Fixed.                                                                                                                                               |
+| New: a metadata filter or sort in a search answered 500    | Fixed: the metadata join grouped by `metadata.id`, which no longer determines the value since the key is `(project_id, id)`; found by the test of 4. |
+
+### Open follow-ups
+
+- The frontend reads the project id from Redux (`state.project.projectId`) in 47 places instead of from the route; issue to be filed.
 
 ## 1. Bugs seen in passing (not caused by the stack)
 
@@ -139,7 +168,7 @@ Decision of the owner (2026-11-26): ids are unique per project and will not stay
 
 ## 9. Open from before the stack
 
-- Span texts are never deleted (no issue filed yet).
+- Span texts are never deleted: on the roadmap (D4).
 
 ## 10. Found by the review fixes (#956)
 
@@ -149,5 +178,5 @@ Decision of the owner (2026-11-26): ids are unique per project and will not stay
 | 10.2 | Query counts before and after the project-keyed joins: bulk metadata update with 9 values 13 to 5 queries, export of 29 spans 36 to 8. Many-to-one loads cost 0 extra queries, checked for 32 relationships. | Fixed, covered by tests.      |
 | 10.3 | A twin project with the same ids in every table: no relationship, no CRUD read and none of the GET routes crosses projects (57 routes answer 200; the project and its members are not copied).               | Covered by tests.             |
 | 10.4 | COTA answered 500 for an unknown sentence and did not check its date metadata; the similarity search searched all documents when its filter matched none.                                                    | Fixed (R4).                   |
-| 10.5 | Old clients that send `project_id` in a job start body are not rejected.                                                                                                                                     | Open (D5).                    |
+| 10.5 | Old clients that send `project_id` in a job start body are not rejected.                                                                                                                                     | Fixed (D5): 422.              |
 | 10.6 | A helper sub-agent of the fixing session stopped without committing; its work was taken over.                                                                                                                | Process note, no code effect. |
