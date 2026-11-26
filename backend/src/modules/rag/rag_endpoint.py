@@ -1,9 +1,10 @@
 from typing import Annotated
 
-from fastapi import Body
+from fastapi import Body, Depends
 
 from common.dependencies import DBSession
 from common.project_router import project_router
+from core.auth.authz_user import AuthzUser
 from modules.rag.rag_dto import ChatSessionResponse
 from modules.rag.rag_feature import RAG_CHAT
 from modules.rag.rag_service import RAGService
@@ -29,9 +30,11 @@ def rag_session(
     model: str,
     sdoc_ids: list[int] | None,
     session_id: str | None = None,
+    authz_user: AuthzUser = Depends(),
 ) -> ChatSessionResponse:
     return RAGService().retrieval_augmented_generation_with_session(
         project_id=project_id,
+        user_id=authz_user.user.id,
         query=query,
         top_k=top_k,
         threshold=threshold,
@@ -53,7 +56,12 @@ def chat_session(
     model: str,
     prompt: str,
     session_id: str | None = None,
+    authz_user: AuthzUser = Depends(),
 ) -> ChatSessionResponse:
     return RAGService().chat_with_session(
-        model=model, prompt=prompt, session_id=session_id
+        project_id=project_id,
+        user_id=authz_user.user.id,
+        model=model,
+        prompt=prompt,
+        session_id=session_id,
     )

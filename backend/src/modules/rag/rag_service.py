@@ -25,6 +25,7 @@ class RAGService(metaclass=SingletonMeta):
     def retrieval_augmented_generation_with_session(
         self,
         project_id: int,
+        user_id: int,
         query: str,
         top_k: int,
         threshold: float,
@@ -76,17 +77,27 @@ class RAGService(metaclass=SingletonMeta):
             model=model,
             system_prompt="You are an assistant helping answer questions based on internal documentation.",
             user_prompt=RAG_PROMPT,
+            project_id=project_id,
+            user_id=user_id,
             session_id=session_id,
         )
         return ChatSessionResponse(session_id=session_id, response=response.strip())
 
     def chat_with_session(
-        self, *, model: str, prompt: str, session_id: str | None = None
+        self,
+        *,
+        project_id: int,
+        user_id: int,
+        model: str,
+        prompt: str,
+        session_id: str | None = None,
     ) -> ChatSessionResponse:
         response, session_id = self.llm.llm_chat_with_session(
             model=model,
             system_prompt="You are having a chat session with a user. Respond to their queries.",
             user_prompt=prompt,
+            project_id=project_id,
+            user_id=user_id,
             session_id=session_id,
         )
         return ChatSessionResponse(session_id=session_id, response=response.strip())
