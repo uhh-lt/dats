@@ -43,6 +43,7 @@ from modules.perspectives.aspect_orm import AspectORM
 from modules.perspectives.cluster_orm import ClusterORM
 from modules.perspectives.document_aspect_orm import DocumentAspectORM
 from modules.perspectives.document_cluster_orm import DocumentClusterORM
+from modules.search_view.search_view_orm import SearchViewORM
 from modules.tag_recommendation.tag_recommendation_orm import TagRecommendationLinkORM
 from modules.timeline_analysis.timeline_analysis_enum import TimelineAnalysisType
 from modules.timeline_analysis.timeline_analysis_orm import TimelineAnalysisORM
@@ -108,6 +109,7 @@ class TenantRows(TypedDict):
     - the analyses without project-owned parent: whiteboard "Whiteboard <p>",
       timeline analysis "Timeline <p>" (documents) and concept over time
       analysis "COTA <p>", each empty
+    - the memo search view "View <p>" of `user` (table layout, empty filter)
 
     `<p>` is the project id.
     """
@@ -151,6 +153,7 @@ class TenantRows(TypedDict):
     whiteboard: WhiteboardORM
     timeline_analysis: TimelineAnalysisORM
     cota: ConceptOverTimeAnalysisORM
+    search_view: SearchViewORM
 
 
 T = TypeVar("T")
@@ -549,6 +552,18 @@ def create_tenant_rows(
             ),
         ),
         "cota": _add(db, ConceptOverTimeAnalysisORM(name=f"COTA {p}", project_id=p)),
+        "search_view": _add(
+            db,
+            SearchViewORM(
+                name=f"View {p}",
+                entity_type="memo",
+                layout="table",
+                filters={"id": "root", "logic_operator": "and", "items": []},
+                position=0,
+                project_id=p,
+                user_id=user.id,
+            ),
+        ),
     }
 
 

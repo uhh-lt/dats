@@ -43,6 +43,7 @@ PATH_IDS: dict[str, Callable[[TenantRows], int]] = {
     "cluster_id": lambda rows: rows["cluster"].id,
     "prompt_id": lambda rows: rows["prompt"].id,
     "version_id": lambda rows: rows["prompt_version"].id,
+    "view_id": lambda rows: rows["search_view"].id,
 }
 
 # an empty document filter
@@ -122,6 +123,9 @@ BODIES: dict[str, Callable[[TenantRows], Any]] = {
         lambda rows: {"text": rows["prompt_version"].text}
     ),
     "PATCH /projects/{project_id}/prompts/{prompt_id}": (
+        lambda rows: {"name": "renamed"}
+    ),
+    "PATCH /projects/{project_id}/search-views/{view_id}": (
         lambda rows: {"name": "renamed"}
     ),
     "PATCH /projects/{project_id}/source-document-metadata/{sdoc_metadata_id}": (
@@ -448,3 +452,36 @@ def test_memo_on_an_object_of_another_project_is_a_conflict(
         },
     )
     assert response.status_code == 409, response.text
+
+
+def test_search_filter_by_a_code_of_another_project_matches_nothing(
+    client: TestClient, tenants: TwoTenants
+) -> None:
+    """Searching the span annotations of the path's project for the code of the
+    other project finds nothing, while the own code finds the own annotation."""
+    own, foreign = tenants["own"], tenants["foreign"]
+    url = f"/projects/{own['project'].id}/search/span-annotations"
+
+    def search(code_id: int) -> list[int]:
+        response = client.post(
+            url,
+            json={
+                "filter": {
+                    "id": "root",
+                    "logic_operator": "and",
+                    "items": [
+                        {
+                            "id": "code",
+                            "column": "SP_CODE_ID_LIST_RECURSIVE",
+                            "operator": "IDLR_CONTAINS",
+                            "value": code_id,
+                        }
+                    ],
+                },
+            },
+        )
+        assert response.status_code == 200, response.text
+        return [row["id"] for row in response.json()["items"]]
+
+    assert search(own["code"].id) == [own["span"].id]
+    assert search(foreign["code"].id) == []

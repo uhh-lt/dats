@@ -90,14 +90,19 @@ def search_view_project(db_session, test_project, test_user) -> SearchViewProjec
     def create_view(create_dto) -> SearchViewORM:
         return crud_search_view.read(
             db=db_session,
+            project_id=test_project.id,
             id=SearchViewService()
-            .create(db=db_session, user_id=test_user.id, create_dto=create_dto)
+            .create(
+                db=db_session,
+                project_id=test_project.id,
+                user_id=test_user.id,
+                create_dto=create_dto,
+            )
             .id,
         )
 
     memo_view_a = create_view(
         MemoSearchViewCreate(
-            project_id=test_project.id,
             name="Memo View A",
             layout=SearchViewLayout.TABLE,
             filters=string_filter_tree(MemoColumns.TITLE, "a"),
@@ -107,7 +112,6 @@ def search_view_project(db_session, test_project, test_user) -> SearchViewProjec
     )
     memo_view_b = create_view(
         MemoSearchViewCreate(
-            project_id=test_project.id,
             name="Memo View B",
             layout=SearchViewLayout.TABLE,
             filters=string_filter_tree(MemoColumns.TITLE, "b"),
@@ -116,7 +120,6 @@ def search_view_project(db_session, test_project, test_user) -> SearchViewProjec
     )
     memo_view_c = create_view(
         MemoSearchViewCreate(
-            project_id=test_project.id,
             name="Memo View C",
             layout=SearchViewLayout.TABLE,
             filters=string_filter_tree(MemoColumns.TITLE, "c"),
@@ -125,7 +128,6 @@ def search_view_project(db_session, test_project, test_user) -> SearchViewProjec
     )
     span_view = create_view(
         SpanSearchViewCreate(
-            project_id=test_project.id,
             name="Span View",
             layout=SearchViewLayout.TABLE,
             filters=string_filter_tree(SpanColumns.SPAN_TEXT, "span"),
@@ -134,7 +136,6 @@ def search_view_project(db_session, test_project, test_user) -> SearchViewProjec
     )
     sentence_view = create_view(
         SentenceSearchViewCreate(
-            project_id=test_project.id,
             name="Sentence View",
             layout=SearchViewLayout.TABLE,
             filters=string_filter_tree(
@@ -145,7 +146,6 @@ def search_view_project(db_session, test_project, test_user) -> SearchViewProjec
     )
     bbox_view = create_view(
         BBoxSearchViewCreate(
-            project_id=test_project.id,
             name="BBox View",
             layout=SearchViewLayout.TABLE,
             filters=string_filter_tree(BBoxColumns.SOURCE_DOCUMENT_NAME, "bbox"),

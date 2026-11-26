@@ -100,7 +100,6 @@ class GroupQueryRequest(BaseModel, Generic[T]):
     - `group_by`: the column (and optional date granularity) to group by.
     """
 
-    project_id: int = Field(description="Project the search runs in")
     search_query: str = Field(
         default="", description="Full-text query applied before grouping"
     )

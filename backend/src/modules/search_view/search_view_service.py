@@ -15,13 +15,19 @@ class SearchViewService(metaclass=SingletonMeta):
         return super(SearchViewService, cls).__new__(cls)
 
     def create(
-        self, db: Session, *, user_id: int, create_dto: SearchViewCreateUnion
+        self,
+        db: Session,
+        *,
+        project_id: int,
+        user_id: int,
+        create_dto: SearchViewCreateUnion,
     ) -> SearchViewReadUnion:
         """
         Create a personal search view of a user, placed after the user's other views
         of the same entity type.
 
         Args:
+            project_id: The project the view belongs to.
             user_id: The user the view belongs to.
             create_dto: The view to create.
 
@@ -31,7 +37,7 @@ class SearchViewService(metaclass=SingletonMeta):
         # 1) append the view after the user's other views of the entity type
         last_position = crud_search_view.read_last_position(
             db=db,
-            project_id=create_dto.project_id,
+            project_id=project_id,
             user_id=user_id,
             entity_type=create_dto.entity_type,
         )
@@ -39,6 +45,7 @@ class SearchViewService(metaclass=SingletonMeta):
         # 2) store the serialized view
         db_obj = crud_search_view.create(
             db=db,
+            project_id=project_id,
             create_dto=SearchViewCreateIntern(
                 name=create_dto.name.strip(),
                 entity_type=create_dto.entity_type.value,
@@ -55,7 +62,6 @@ class SearchViewService(metaclass=SingletonMeta):
                     if create_dto.selected_properties is not None
                     else None
                 ),
-                project_id=create_dto.project_id,
                 user_id=user_id,
                 position=last_position + 1 if last_position is not None else 0,
             ),

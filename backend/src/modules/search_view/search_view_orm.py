@@ -7,6 +7,7 @@ from sqlalchemy import (
     ForeignKey,
     Index,
     Integer,
+    PrimaryKeyConstraint,
     String,
     UniqueConstraint,
     func,
@@ -30,7 +31,8 @@ class SearchViewORM(ORMBase):
     itself is entity-agnostic; validation happens in the DTO layer.
     """
 
-    id: Mapped[int] = mapped_column(Integer, primary_key=True, index=True)
+    # the primary key is (project_id, id), see __table_args__
+    id: Mapped[int] = mapped_column(Integer, autoincrement=True, index=True)
     name: Mapped[str] = mapped_column(String, nullable=False)
     entity_type: Mapped[str] = mapped_column(String, nullable=False)
     layout: Mapped[str] = mapped_column(String, nullable=False)
@@ -54,7 +56,6 @@ class SearchViewORM(ORMBase):
         Integer,
         ForeignKey("project.id", ondelete="CASCADE"),
         nullable=False,
-        index=True,
     )
     project: Mapped["ProjectORM"] = relationship(
         "ProjectORM", back_populates="search_views"
@@ -69,6 +70,7 @@ class SearchViewORM(ORMBase):
     user: Mapped["UserORM"] = relationship("UserORM", back_populates="search_views")
 
     __table_args__ = (
+        PrimaryKeyConstraint("project_id", "id", name="searchview_pkey"),
         # Case-insensitive name uniqueness per user + project + entity type, so the
         # same view name can be reused across different entity types.
         Index(
@@ -88,6 +90,3 @@ class SearchViewORM(ORMBase):
         ),
         UniqueConstraint("project_id", "id", name="UC_searchview_project_id_id"),
     )
-
-    def get_project_id(self) -> int:
-        return self.project_id

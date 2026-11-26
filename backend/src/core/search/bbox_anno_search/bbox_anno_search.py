@@ -46,6 +46,7 @@ def find_bbox_annotations_info(
 def find_bbox_annotations(
     db: Session,
     *,
+    project_id: int,
     request: QueryRequest[BBoxColumns],
     user_id: int,
 ) -> Page[BBoxAnnotationRow]:
@@ -78,7 +79,7 @@ def find_bbox_annotations(
             BBoxAnnotationORM.source_code_id,
         )
         .join(subquery, BBoxAnnotationORM.id == subquery.c.id)
-        .filter(SourceDocumentORM.project_id == request.project_id)
+        .filter(SourceDocumentORM.project_id == project_id)
     )._join_query(
         AnnotationDocumentORM,
         AnnotationDocumentORM.id == BBoxAnnotationORM.annotation_document_id,
@@ -98,7 +99,7 @@ def find_bbox_annotations(
 
     memo_ids_by_annotation = crud_object_handle.read_memo_ids_by_objects(
         db=db,
-        project_id=request.project_id,
+        project_id=project_id,
         attached_object_type=AttachedObjectType.bbox_annotation,
         object_ids=[row[0] for row in result_rows],
     )
@@ -136,6 +137,7 @@ def find_bbox_annotations(
 def find_bbox_annotation_groups(
     db: Session,
     *,
+    project_id: int,
     request: GroupQueryRequest[BBoxColumns],
     user_id: int,
 ) -> GroupPage:
@@ -159,7 +161,7 @@ def find_bbox_annotation_groups(
             BBoxAnnotationORM.id,
         )
         .join(subquery, BBoxAnnotationORM.id == subquery.c.id)
-        .filter(SourceDocumentORM.project_id == request.project_id)
+        .filter(SourceDocumentORM.project_id == project_id)
     )._join_query(
         AnnotationDocumentORM,
         AnnotationDocumentORM.id == BBoxAnnotationORM.annotation_document_id,

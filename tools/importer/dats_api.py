@@ -162,7 +162,8 @@ class DATSAPI:
         # get all sdoc ids
         r = requests.post(
             self.BASE_PATH
-            + f"search/sdoc?search_query=%20&project_id={proj_id}&expert_mode=false&highlight=false",
+            + f"projects/{proj_id}/search/source-documents"
+            + "?search_query=%20&expert_mode=false&highlight=false",
             data=json.dumps(
                 {
                     "filter": {
@@ -218,7 +219,8 @@ class DATSAPI:
         # get all sdoc ids
         r = requests.post(
             self.BASE_PATH
-            + f"search/sdoc?search_query=%20&project_id={proj_id}&expert_mode=false&highlight=false",
+            + f"projects/{proj_id}/search/source-documents"
+            + "?search_query=%20&expert_mode=false&highlight=false",
             data=json.dumps(
                 {
                     "filter": {"id": "asdf", "items": [], "logic_operator": "or"},
@@ -238,7 +240,8 @@ class DATSAPI:
         # get all sdoc ids
         r = requests.post(
             self.BASE_PATH
-            + f"search/sdoc?search_query=%20&project_id={proj_id}&expert_mode=false&highlight=false",
+            + f"projects/{proj_id}/search/source-documents"
+            + "?search_query=%20&expert_mode=false&highlight=false",
             data=json.dumps(
                 {
                     "filter": {

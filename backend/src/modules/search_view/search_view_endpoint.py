@@ -1,7 +1,8 @@
-from fastapi import APIRouter, Depends
+from fastapi import Depends
 
 from common.dats_event import DATSEvent
-from common.dependencies import DBSession, get_current_user
+from common.dependencies import DBSession
+from common.project_router import project_router
 from core.auth.authz_user import AuthzUser
 from modules.search_view.search_view_crud import crud_search_view
 from modules.search_view.search_view_dto import (
@@ -13,14 +14,9 @@ from modules.search_view.search_view_dto import (
 )
 from modules.search_view.search_view_enum import SearchEntityType
 from modules.search_view.search_view_service import SearchViewService
-from repos.db.sql_exceptions import NoSuchElementError
 from systems.websocket_system.websocket_dependency import WebsocketEmitter
 
-router = APIRouter(
-    prefix="/searchView",
-    dependencies=[Depends(get_current_user)],
-    tags=["searchView"],
-)
+router = project_router("/search-views", tags=["searchView"])
 
 
 # --- create operations
@@ -34,13 +30,13 @@ router = APIRouter(
 def create(
     *,
     db: DBSession,
+    project_id: int,
     view: SearchViewCreateUnion,
     authz_user: AuthzUser = Depends(),
     ws: WebsocketEmitter = Depends(),
 ) -> SearchViewReadUnion:
-    authz_user.assert_in_project(view.project_id)
     result = SearchViewService().create(
-        db=db, user_id=authz_user.user.id, create_dto=view
+        db=db, project_id=project_id, user_id=authz_user.user.id, create_dto=view
     )
     ws.emit_to_user(DATSEvent.SEARCH_VIEW_CREATED, result, user_id=result.user_id)
     return result
@@ -50,7 +46,7 @@ def create(
 
 
 @router.get(
-    "/project/{project_id}",
+    "",
     response_model=list[SearchViewReadUnion],
     summary="Returns the current user's search views of an entity type in a project",
 )
@@ -61,7 +57,6 @@ def get_by_project(
     entity_type: SearchEntityType,
     authz_user: AuthzUser = Depends(),
 ) -> list[SearchViewReadUnion]:
-    authz_user.assert_in_project(project_id)
     db_views = crud_search_view.read_by_user_project_and_entity(
         db=db,
         project_id=project_id,
@@ -75,7 +70,7 @@ def get_by_project(
 
 
 @router.patch(
-    "/project/{project_id}/order",
+    "/order",
     response_model=list[SearchViewReadUnion],
     summary="Reorders the current user's search views of an entity type in a project",
 )
@@ -88,7 +83,6 @@ def reorder(
     authz_user: AuthzUser = Depends(),
     ws: WebsocketEmitter = Depends(),
 ) -> list[SearchViewReadUnion]:
-    authz_user.assert_in_project(project_id)
     db_views = crud_search_view.reorder(
         db=db,
         project_id=project_id,
@@ -111,18 +105,17 @@ def reorder(
 def update(
     *,
     db: DBSession,
+    project_id: int,
     view_id: int,
     view_update: SearchViewUpdateUnion,
     authz_user: AuthzUser = Depends(),
     ws: WebsocketEmitter = Depends(),
 ) -> SearchViewReadUnion:
-    try:
-        view = crud_search_view.read(db=db, id=view_id)
-    except NoSuchElementError:
-        authz_user.deny_access("Search view does not exist")
-    authz_user.assert_in_project(view.project_id)
+    view = crud_search_view.read(db=db, project_id=project_id, id=view_id)
     authz_user.assert_is_same_user(view.user_id)
-    db_view = crud_search_view.update(db=db, id=view_id, update_dto=view_update)
+    db_view = crud_search_view.update(
+        db=db, project_id=project_id, id=view_id, update_dto=view_update
+    )
     result = search_view_read_from_orm(db_view)
     ws.emit_to_user(DATSEvent.SEARCH_VIEW_UPDATED, result, user_id=result.user_id)
     return result
@@ -139,17 +132,14 @@ def update(
 def delete(
     *,
     db: DBSession,
+    project_id: int,
     view_id: int,
     authz_user: AuthzUser = Depends(),
     ws: WebsocketEmitter = Depends(),
 ) -> SearchViewReadUnion:
-    try:
-        view = crud_search_view.read(db=db, id=view_id)
-    except NoSuchElementError:
-        authz_user.deny_access("Search view does not exist")
-    authz_user.assert_in_project(view.project_id)
+    view = crud_search_view.read(db=db, project_id=project_id, id=view_id)
     authz_user.assert_is_same_user(view.user_id)
     result = search_view_read_from_orm(view)
-    crud_search_view.delete(db=db, id=view_id)
+    crud_search_view.delete(db=db, project_id=project_id, id=view_id)
     ws.emit_to_user(DATSEvent.SEARCH_VIEW_DELETED, result, user_id=result.user_id)
     return result

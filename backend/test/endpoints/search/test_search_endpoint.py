@@ -1,5 +1,5 @@
 """Endpoint tests for the memo search (/search/memo*) and the annotation search
-(/search/*_annotation*) routes of search_endpoint.py.
+(/search/*-annotations*) routes of search_endpoint.py.
 
 The annotation tests cover span, sentence, and bbox annotations, parametrized
 across the three entities. All tests run against the deterministic
@@ -82,17 +82,17 @@ MEMOS_BY_TYPE = {
 # Entity matrix: per-entity constants used to parametrize across span/sentence/bbox.
 # ---------------------------------------------------------------------------
 
-SPAN_URL = "/search/span_annotation"
-SENT_URL = "/search/sentence_annotation"
-BBOX_URL = "/search/bbox_annotation"
+SPAN_URL = "/search/span-annotations"
+SENT_URL = "/search/sentence-annotations"
+BBOX_URL = "/search/bbox-annotations"
 
-SPAN_INFO_URL = "/search/span_annotation_info"
-SENT_INFO_URL = "/search/sentence_annotation_info"
-BBOX_INFO_URL = "/search/bbox_annotation_info"
+SPAN_INFO_URL = "/search/span-annotations/info"
+SENT_INFO_URL = "/search/sentence-annotations/info"
+BBOX_INFO_URL = "/search/bbox-annotations/info"
 
-SPAN_GROUPS_URL = "/search/span_annotation/groups"
-SENT_GROUPS_URL = "/search/sentence_annotation/groups"
-BBOX_GROUPS_URL = "/search/bbox_annotation/groups"
+SPAN_GROUPS_URL = "/search/span-annotations/groups"
+SENT_GROUPS_URL = "/search/sentence-annotations/groups"
+BBOX_GROUPS_URL = "/search/bbox-annotations/groups"
 
 # entity -> (row model, columns enum, fixture annotation list key)
 ENTITY = {
@@ -124,6 +124,11 @@ GROUPABLE = {
 }
 
 
+def _url(path: str, project_id: int) -> str:
+    """The route `path` of the search in the project."""
+    return f"/projects/{project_id}{path}"
+
+
 def _entity_ids(search_project, entity: str) -> set[int]:
     """Return the set of annotation ids for the given entity from the fixture."""
     _, _, key = ENTITY[entity]
@@ -140,7 +145,7 @@ def _on_sdoc_one_indices(entity: str) -> set[int]:
 
 
 # ===========================================================================
-# SEARCH MEMO INFO (/search/memo_info) TESTS
+# SEARCH MEMO INFO (/search/memos/info) TESTS
 # ===========================================================================
 
 
@@ -148,9 +153,7 @@ def test_memo_info_marks_all_columns_except_content_groupable(
     client: TestClient, search_project
 ):
     """Memo info exposes every MemoColumns member; all but CONTENT are groupable."""
-    response = client.post(
-        "/search/memo_info", params={"project_id": search_project["project"].id}
-    )
+    response = client.get(_url("/search/memos/info", search_project["project"].id))
     assert response.status_code == 200, response.text
     infos = [ColumnInfo[MemoColumns].model_validate(x) for x in response.json()]
     groupable = {info.column for info in infos if info.groupable}
@@ -159,23 +162,24 @@ def test_memo_info_marks_all_columns_except_content_groupable(
 
 
 # ===========================================================================
-# SEARCH MEMO (/search/memo) TESTS
+# SEARCH MEMO (/search/memos) TESTS
 # ===========================================================================
 
 
 def _post_memo_query(
     client: TestClient, project_id: int, filter_tree: Filter
 ) -> set[str]:
-    """POST /search/memo and return the set of matching memo titles."""
+    """POST /search/memos and return the set of matching memo titles."""
     request = QueryRequest[MemoColumns](
-        project_id=project_id,
         search_query="",
         filter=filter_tree,
         sorts=[],
         page_number=0,
         page_size=20,
     )
-    response = client.post("/search/memo", json=request.model_dump(mode="json"))
+    response = client.post(
+        _url("/search/memos", project_id), json=request.model_dump(mode="json")
+    )
     assert response.status_code == 200, response.text
     return {m.title for m in Page[MemoRead].model_validate(response.json()).items}
 
@@ -952,14 +956,16 @@ def test_memo_search_rejects_wrong_typed_filter_values_with_400(
 ):
     """Wrong-typed/malformed filter values are rejected with HTTP 400."""
     request = QueryRequest[MemoColumns](
-        project_id=search_project["project"].id,
         search_query="",
         filter=make_filter_tree([make_filter_expr("e1", column, operator, value)]),
         sorts=[],
         page_number=0,
         page_size=20,
     )
-    response = client.post("/search/memo", json=request.model_dump(mode="json"))
+    response = client.post(
+        _url("/search/memos", search_project["project"].id),
+        json=request.model_dump(mode="json"),
+    )
     assert response.status_code == 400, response.text
     assert re.search(match, response.text), response.text
 
@@ -1023,7 +1029,6 @@ def test_memo_search_rejects_operator_column_family_mismatch_with_400(
 ):
     """An operator whose family mismatches the column's family is rejected (400)."""
     payload = {
-        "project_id": search_project["project"].id,
         "search_query": "",
         "filter": {
             "id": "root",
@@ -1043,7 +1048,9 @@ def test_memo_search_rejects_operator_column_family_mismatch_with_400(
         "page_number": 0,
         "page_size": 20,
     }
-    response = client.post("/search/memo", json=payload)
+    response = client.post(
+        _url("/search/memos", search_project["project"].id), json=payload
+    )
     assert response.status_code == 400, response.text
     assert "not compatible with column" in response.text
 
@@ -1056,14 +1063,16 @@ def test_memo_search_full_text_query_matches_title_and_content(
 ):
     """Memo full-text search matches against title/content."""
     request = QueryRequest[MemoColumns](
-        project_id=search_project["project"].id,
         search_query="document",
         filter=empty_filter(),
         sorts=[],
         page_number=0,
         page_size=20,
     )
-    response = client.post("/search/memo", json=request.model_dump(mode="json"))
+    response = client.post(
+        _url("/search/memos", search_project["project"].id),
+        json=request.model_dump(mode="json"),
+    )
     assert response.status_code == 200, response.text
     page = Page[MemoRead].model_validate(response.json())
     # "Document Memo" title and "A memo on the first document" content both match.
@@ -1075,7 +1084,6 @@ def test_memo_search_paginates_rows_without_overlap(client: TestClient, search_p
 
     def _page(page_number: int) -> Page[MemoRead]:
         request = QueryRequest[MemoColumns](
-            project_id=search_project["project"].id,
             search_query="",
             filter=empty_filter(),
             sorts=[],
@@ -1083,7 +1091,10 @@ def test_memo_search_paginates_rows_without_overlap(client: TestClient, search_p
             page_size=2,
         )
         return Page[MemoRead].model_validate(
-            client.post("/search/memo", json=request.model_dump(mode="json")).json()
+            client.post(
+                _url("/search/memos", search_project["project"].id),
+                json=request.model_dump(mode="json"),
+            ).json()
         )
 
     page0 = _page(0)
@@ -1109,7 +1120,6 @@ def _post_memo_drill_down_query(
 ) -> Page[MemoRead]:
     """POST a row query with optional drill-down and return the validated Page."""
     request = QueryRequest[MemoColumns](
-        project_id=project_id,
         search_query="",
         filter=empty_filter(),
         sorts=[],
@@ -1118,7 +1128,9 @@ def _post_memo_drill_down_query(
         page_number=0,
         page_size=20,
     )
-    response = client.post("/search/memo", json=request.model_dump(mode="json"))
+    response = client.post(
+        _url("/search/memos", project_id), json=request.model_dump(mode="json")
+    )
     assert response.status_code == 200, response.text
     return Page[MemoRead].model_validate(response.json())
 
@@ -1237,7 +1249,6 @@ def test_memo_drill_down_group_by_without_group_key_rejected_with_422(
 ):
     """group_by alone (no group_key) is rejected with HTTP 422."""
     payload = {
-        "project_id": search_project["project"].id,
         "search_query": "",
         "filter": empty_filter().model_dump(mode="json"),
         "sorts": [],
@@ -1246,7 +1257,9 @@ def test_memo_drill_down_group_by_without_group_key_rejected_with_422(
         "page_number": 0,
         "page_size": 20,
     }
-    response = client.post("/search/memo", json=payload)
+    response = client.post(
+        _url("/search/memos", search_project["project"].id), json=payload
+    )
     assert response.status_code == 422, response.text
     assert "Both 'group_by' and 'group_key' must be provided together" in response.text
 
@@ -1256,7 +1269,6 @@ def test_memo_drill_down_group_key_without_group_by_rejected_with_422(
 ):
     """group_key alone (no group_by) is rejected with HTTP 422."""
     payload = {
-        "project_id": search_project["project"].id,
         "search_query": "",
         "filter": empty_filter().model_dump(mode="json"),
         "sorts": [],
@@ -1265,7 +1277,9 @@ def test_memo_drill_down_group_key_without_group_by_rejected_with_422(
         "page_number": 0,
         "page_size": 20,
     }
-    response = client.post("/search/memo", json=payload)
+    response = client.post(
+        _url("/search/memos", search_project["project"].id), json=payload
+    )
     assert response.status_code == 422, response.text
     assert "Both 'group_by' and 'group_key' must be provided together" in response.text
 
@@ -1275,7 +1289,6 @@ def test_memo_drill_down_into_non_groupable_column_rejected_with_400(
 ):
     """Drilling into a non-groupable column (CONTENT) is rejected with HTTP 400."""
     request = QueryRequest[MemoColumns](
-        project_id=search_project["project"].id,
         search_query="",
         filter=empty_filter(),
         sorts=[],
@@ -1284,13 +1297,16 @@ def test_memo_drill_down_into_non_groupable_column_rejected_with_400(
         page_number=0,
         page_size=20,
     )
-    response = client.post("/search/memo", json=request.model_dump(mode="json"))
+    response = client.post(
+        _url("/search/memos", search_project["project"].id),
+        json=request.model_dump(mode="json"),
+    )
     assert response.status_code == 400, response.text
     assert "does not support grouping" in response.text
 
 
 # ===========================================================================
-# SEARCH MEMO GROUPS (/search/memo/groups) TESTS
+# SEARCH MEMO GROUPS (/search/memos/groups) TESTS
 # ===========================================================================
 # Every memo column except CONTENT is groupable (see MemoColumns.is_groupable).
 # Grouping partitions by KEY (never label); each column defines its own key/label
@@ -1315,14 +1331,15 @@ def _post_memo_group_query(
 ) -> GroupPage:
     """POST a group query and return the validated GroupPage."""
     request = GroupQueryRequest[MemoColumns](
-        project_id=project_id,
         search_query=search_query,
         filter=filter_tree if filter_tree is not None else empty_filter(),
         group_by=group_by,
         page_number=page_number,
         page_size=page_size,
     )
-    response = client.post("/search/memo/groups", json=request.model_dump(mode="json"))
+    response = client.post(
+        _url("/search/memos/groups", project_id), json=request.model_dump(mode="json")
+    )
     assert response.status_code == 200, response.text
     return GroupPage.model_validate(response.json())
 
@@ -1589,14 +1606,16 @@ def test_memo_group_by_non_groupable_column_rejected_with_400(
 ):
     """Grouping by CONTENT (not groupable) is rejected with HTTP 400."""
     request = GroupQueryRequest[MemoColumns](
-        project_id=search_project["project"].id,
         search_query="",
         filter=empty_filter(),
         group_by=GroupConfig(field=MemoColumns.CONTENT),
         page_number=0,
         page_size=20,
     )
-    response = client.post("/search/memo/groups", json=request.model_dump(mode="json"))
+    response = client.post(
+        _url("/search/memos/groups", search_project["project"].id),
+        json=request.model_dump(mode="json"),
+    )
     assert response.status_code == 400, response.text
     assert "does not support grouping" in response.text
 
@@ -1622,7 +1641,7 @@ def test_memo_group_query_with_filter_matching_nothing_returns_no_groups(
 
 
 # ===========================================================================
-# INFO ENDPOINTS (/search/*_annotation_info)
+# INFO ENDPOINTS (/search/*-annotations/info)
 # ===========================================================================
 
 
@@ -1639,9 +1658,7 @@ def test_annotation_info_marks_exactly_the_documented_columns_groupable(
 ):
     """Annotation info marks exactly the documented columns as groupable."""
     _, columns_enum, _ = ENTITY[entity]
-    response = client.post(
-        info_url, params={"project_id": search_project["project"].id}
-    )
+    response = client.get(_url(info_url, search_project["project"].id))
     assert response.status_code == 200, response.text
     infos = [ColumnInfo[columns_enum].model_validate(x) for x in response.json()]
     groupable = {info.column for info in infos if info.groupable}
@@ -1649,7 +1666,7 @@ def test_annotation_info_marks_exactly_the_documented_columns_groupable(
 
 
 # ===========================================================================
-# ROW QUERIES (/search/*_annotation)
+# ROW QUERIES (/search/*-annotations)
 # ===========================================================================
 
 
@@ -1663,7 +1680,6 @@ def _search(
     """Search the annotations of a kind filtered by SOURCE_USER_ID."""
     row_model, columns, _ = ENTITY[kind]
     request = QueryRequest[columns](
-        project_id=project_id,
         filter=Filter[columns](
             id="root",
             logic_operator=LogicalOperator.and_,
@@ -1681,7 +1697,8 @@ def _search(
         page_size=50,
     )
     response = client.post(
-        f"/search/{kind}_annotation", json=request.model_dump(mode="json")
+        _url(f"/search/{kind}-annotations", project_id),
+        json=request.model_dump(mode="json"),
     )
     assert response.status_code == 200, response.text
     return Page[row_model].model_validate(response.json())
@@ -1714,7 +1731,6 @@ def _post_annotation_query(
 ):
     """POST an annotation row query and return the validated Page."""
     request = QueryRequest(
-        project_id=project_id,
         search_query=search_query,
         filter=filter_tree,
         sorts=sorts if sorts is not None else [],
@@ -1723,7 +1739,7 @@ def _post_annotation_query(
         page_number=page_number,
         page_size=page_size,
     )
-    response = client.post(url, json=request.model_dump(mode="json"))
+    response = client.post(_url(url, project_id), json=request.model_dump(mode="json"))
     assert response.status_code == 200, response.text
     return Page[row_model].model_validate(response.json())
 
@@ -2416,14 +2432,15 @@ def test_annotation_search_rejects_wrong_typed_filter_values_with_400(
     _, columns_enum, _ = ENTITY[entity]
     column = getattr(columns_enum, column_name)
     request = QueryRequest(
-        project_id=search_project["project"].id,
         search_query="",
         filter=make_filter_tree([make_filter_expr("e1", column, operator, value)]),
         sorts=[],
         page_number=0,
         page_size=20,
     )
-    response = client.post(url, json=request.model_dump(mode="json"))
+    response = client.post(
+        _url(url, search_project["project"].id), json=request.model_dump(mode="json")
+    )
     assert response.status_code == 400, response.text
     assert re.search(match, response.text), response.text
 
@@ -2442,7 +2459,6 @@ def test_annotation_search_rejects_wrong_typed_user_id_value_with_400(
     """IDOperator rejects a list value with HTTP 400 (USER_ID column)."""
     _, columns_enum, _ = ENTITY[entity]
     request = QueryRequest(
-        project_id=search_project["project"].id,
         search_query="",
         filter=make_filter_tree(
             [
@@ -2455,7 +2471,9 @@ def test_annotation_search_rejects_wrong_typed_user_id_value_with_400(
         page_number=0,
         page_size=20,
     )
-    response = client.post(url, json=request.model_dump(mode="json"))
+    response = client.post(
+        _url(url, search_project["project"].id), json=request.model_dump(mode="json")
+    )
     assert response.status_code == 400, response.text
     assert re.search(
         r"Invalid value type for IDOperator \(requires int or str\)", response.text
@@ -2507,7 +2525,6 @@ def test_annotation_search_rejects_operator_column_family_mismatch_with_400(
     _, columns_enum, _ = ENTITY[entity]
     column = getattr(columns_enum, column_name)
     payload = {
-        "project_id": search_project["project"].id,
         "search_query": "",
         "filter": {
             "id": "root",
@@ -2525,7 +2542,7 @@ def test_annotation_search_rejects_operator_column_family_mismatch_with_400(
         "page_number": 0,
         "page_size": 20,
     }
-    response = client.post(url, json=payload)
+    response = client.post(_url(url, search_project["project"].id), json=payload)
     assert response.status_code == 400, response.text
     assert "not compatible with column" in response.text
 
@@ -2752,7 +2769,6 @@ def test_annotation_drill_down_requires_group_by_and_group_key_together(
     """Setting only one of group_by/group_key is rejected with HTTP 422."""
     _, columns_enum, _ = ENTITY[entity]
     payload = {
-        "project_id": search_project["project"].id,
         "search_query": "",
         "filter": empty_filter().model_dump(mode="json"),
         "sorts": [],
@@ -2765,7 +2781,7 @@ def test_annotation_drill_down_requires_group_by_and_group_key_together(
         "page_number": 0,
         "page_size": 20,
     }
-    response = client.post(url, json=payload)
+    response = client.post(_url(url, search_project["project"].id), json=payload)
     assert response.status_code == 422, response.text
     assert "Both 'group_by' and 'group_key' must be provided together" in response.text
 
@@ -2788,7 +2804,6 @@ def test_annotation_drill_down_into_non_groupable_column_rejected_with_400(
     _, columns_enum, _ = ENTITY[entity]
     column = getattr(columns_enum, non_groupable_column)
     request = QueryRequest(
-        project_id=search_project["project"].id,
         search_query="",
         filter=empty_filter(),
         sorts=[],
@@ -2797,7 +2812,9 @@ def test_annotation_drill_down_into_non_groupable_column_rejected_with_400(
         page_number=0,
         page_size=20,
     )
-    response = client.post(url, json=request.model_dump(mode="json"))
+    response = client.post(
+        _url(url, search_project["project"].id), json=request.model_dump(mode="json")
+    )
     assert response.status_code == 400, response.text
     assert "does not support grouping" in response.text
 
@@ -2909,7 +2926,6 @@ def test_search_sort_by_source_user_puts_annotations_without_provenance_last(
     project = provenance_project_with_copies
     row_model, columns, _ = ENTITY[kind]
     request = QueryRequest[columns](
-        project_id=project["project"].id,
         filter=Filter[columns](
             id="root", logic_operator=LogicalOperator.and_, items=[]
         ),
@@ -2919,7 +2935,8 @@ def test_search_sort_by_source_user_puts_annotations_without_provenance_last(
     )
 
     response = client.post(
-        f"/search/{kind}_annotation", json=request.model_dump(mode="json")
+        _url(f"/search/{kind}-annotations", project["project"].id),
+        json=request.model_dump(mode="json"),
     )
 
     assert response.status_code == 200, response.text
@@ -2934,7 +2951,7 @@ def test_search_sort_by_source_user_puts_annotations_without_provenance_last(
 
 
 # ===========================================================================
-# GROUP QUERIES (/search/*_annotation/groups)
+# GROUP QUERIES (/search/*-annotations/groups)
 # ===========================================================================
 # Grouping partitions by KEY (never label); each column defines its own key/label
 # and optionally a drill-down target (see get_group_expressions).
@@ -2958,14 +2975,13 @@ def _post_annotation_group_query(
 ) -> GroupPage:
     """POST an annotation group query and return the validated GroupPage."""
     request = GroupQueryRequest[columns_enum](
-        project_id=project_id,
         search_query="",
         filter=filter_tree if filter_tree is not None else empty_filter(),
         group_by=group_by,
         page_number=page_number,
         page_size=page_size,
     )
-    response = client.post(url, json=request.model_dump(mode="json"))
+    response = client.post(_url(url, project_id), json=request.model_dump(mode="json"))
     assert response.status_code == 200, response.text
     return GroupPage.model_validate(response.json())
 
@@ -3145,14 +3161,16 @@ def test_annotation_group_by_non_groupable_column_rejected_with_400(
     _, columns_enum, _ = ENTITY[entity]
     column = getattr(columns_enum, non_groupable_column)
     request = GroupQueryRequest(
-        project_id=search_project["project"].id,
         search_query="",
         filter=empty_filter(),
         group_by=GroupConfig(field=column),
         page_number=0,
         page_size=20,
     )
-    response = client.post(groups_url, json=request.model_dump(mode="json"))
+    response = client.post(
+        _url(groups_url, search_project["project"].id),
+        json=request.model_dump(mode="json"),
+    )
     assert response.status_code == 400, response.text
     assert "does not support grouping" in response.text
 
@@ -3204,7 +3222,6 @@ def test_search_group_by_source_user_counts_copies_per_source_user(
     project = provenance_project_with_copies
     _, columns, _ = ENTITY[kind]
     request = GroupQueryRequest[columns](
-        project_id=project["project"].id,
         filter=Filter[columns](
             id="root", logic_operator=LogicalOperator.and_, items=[]
         ),
@@ -3214,7 +3231,8 @@ def test_search_group_by_source_user_counts_copies_per_source_user(
     )
 
     response = client.post(
-        f"/search/{kind}_annotation/groups", json=request.model_dump(mode="json")
+        _url(f"/search/{kind}-annotations/groups", project["project"].id),
+        json=request.model_dump(mode="json"),
     )
 
     assert response.status_code == 200, response.text
@@ -3234,9 +3252,8 @@ def test_search_group_by_source_user_counts_copies_per_source_user(
 
 def _search_sdocs(client: TestClient, project_id: int, search_query: str):
     return client.post(
-        "/search/sdoc",
+        _url("/search/source-documents", project_id),
         params={
-            "project_id": project_id,
             "search_query": search_query,
             "expert_mode": False,
             "highlight": False,

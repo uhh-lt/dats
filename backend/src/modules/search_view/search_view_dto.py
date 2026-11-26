@@ -34,7 +34,6 @@ class SearchViewBase(BaseModel, Generic[T]):
         description="Searchable entity the SearchView is for"
     )
 
-    project_id: int = Field(description="Project the SearchView belongs to")
     name: str = Field(
         description="Name of the SearchView", min_length=1, max_length=255
     )
@@ -160,7 +159,6 @@ class SearchViewCreateIntern(BaseModel):
     selected_properties: list[str] | None = Field(
         description="Selected property columns, or None for the default"
     )
-    project_id: int = Field(description="Project the SearchView belongs to")
     user_id: int = Field(description="User the SearchView belongs to")
     position: int = Field(
         description="Position among the user's views of the entity type"
@@ -172,6 +170,7 @@ class SearchViewCreateIntern(BaseModel):
 
 class MemoSearchViewRead(MemoSearchViewBase):
     id: int = Field(description="ID of the SearchView")
+    project_id: int = Field(description="Project the SearchView belongs to")
     user_id: int = Field(description="User the SearchView belongs to")
     position: int = Field(description="Position of the SearchView in the user's list")
     created: datetime = Field(description="Created timestamp of the SearchView")
@@ -181,6 +180,7 @@ class MemoSearchViewRead(MemoSearchViewBase):
 
 class SpanSearchViewRead(SpanSearchViewBase):
     id: int = Field(description="ID of the SearchView")
+    project_id: int = Field(description="Project the SearchView belongs to")
     user_id: int = Field(description="User the SearchView belongs to")
     position: int = Field(description="Position of the SearchView in the user's list")
     created: datetime = Field(description="Created timestamp of the SearchView")
@@ -190,6 +190,7 @@ class SpanSearchViewRead(SpanSearchViewBase):
 
 class SentenceSearchViewRead(SentenceSearchViewBase):
     id: int = Field(description="ID of the SearchView")
+    project_id: int = Field(description="Project the SearchView belongs to")
     user_id: int = Field(description="User the SearchView belongs to")
     position: int = Field(description="Position of the SearchView in the user's list")
     created: datetime = Field(description="Created timestamp of the SearchView")
@@ -199,6 +200,7 @@ class SentenceSearchViewRead(SentenceSearchViewBase):
 
 class BBoxSearchViewRead(BBoxSearchViewBase):
     id: int = Field(description="ID of the SearchView")
+    project_id: int = Field(description="Project the SearchView belongs to")
     user_id: int = Field(description="User the SearchView belongs to")
     position: int = Field(description="Position of the SearchView in the user's list")
     created: datetime = Field(description="Created timestamp of the SearchView")

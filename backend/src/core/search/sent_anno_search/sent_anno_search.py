@@ -44,6 +44,7 @@ def find_sentence_annotations_info(
 def find_sentence_annotations(
     db: Session,
     *,
+    project_id: int,
     request: QueryRequest[SentAnnoColumns],
     user_id: int,
 ) -> Page[SentenceAnnotationRow]:
@@ -78,7 +79,7 @@ def find_sentence_annotations(
             SentenceAnnotationORM.source_code_id,
         )
         .join(subquery, SentenceAnnotationORM.id == subquery.c.id)
-        .filter(SourceDocumentORM.project_id == request.project_id)
+        .filter(SourceDocumentORM.project_id == project_id)
         .filter(CodeORM.enabled == True)  # noqa: E712
     )._join_query(
         AnnotationDocumentORM,
@@ -99,7 +100,7 @@ def find_sentence_annotations(
 
     memo_ids_by_annotation = crud_object_handle.read_memo_ids_by_objects(
         db=db,
-        project_id=request.project_id,
+        project_id=project_id,
         attached_object_type=AttachedObjectType.sentence_annotation,
         object_ids=[row[0] for row in result_rows],
     )
@@ -129,6 +130,7 @@ def find_sentence_annotations(
 def find_sentence_annotation_groups(
     db: Session,
     *,
+    project_id: int,
     request: GroupQueryRequest[SentAnnoColumns],
     user_id: int,
 ) -> GroupPage:
@@ -152,7 +154,7 @@ def find_sentence_annotation_groups(
             SentenceAnnotationORM.id,
         )
         .join(subquery, SentenceAnnotationORM.id == subquery.c.id)
-        .filter(SourceDocumentORM.project_id == request.project_id)
+        .filter(SourceDocumentORM.project_id == project_id)
         .filter(CodeORM.enabled == True)  # noqa: E712
     )._join_query(
         AnnotationDocumentORM,

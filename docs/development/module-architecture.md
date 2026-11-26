@@ -88,13 +88,11 @@ The keyword statistics (`backend/src/modules/keyword_statistics/`) are a small, 
    )
    ```
 
-4. **The endpoint gate** (`keyword_statistics_endpoint.py`): the route that reads keywords declares the feature, so a project without it gets an error instead of empty data. A gate checks that the feature is enabled, never that its data is computed.
+4. **The endpoint gate** (`keyword_statistics_endpoint.py`): the router that reads keywords declares the feature, so a project without it gets an error instead of empty data. A gate checks that the feature is enabled, never that its data is computed.
 
    ```python
-   @router.post(
-       "/keyword",
-       dependencies=[Depends(require_feature(KEYWORD_STATISTICS))],
-       ...
+   router = project_router(
+       "/keyword-statistics", tags=["keyword_statistics"], feature=KEYWORD_STATISTICS
    )
    ```
 

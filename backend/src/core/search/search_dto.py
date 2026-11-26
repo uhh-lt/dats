@@ -40,7 +40,6 @@ class QueryRequest(BaseModel, Generic[T]):
       by `group_by`). Both must be provided together, or both must be omitted.
     """
 
-    project_id: int = Field(description="Project the search runs in")
     search_query: str = Field(default="", description="Full-text query")
     filter: Filter[T] = Field(description="Column filter tree")
     sorts: list[Sort[T]] = Field(
