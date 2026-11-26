@@ -93,3 +93,4 @@ nav:
       - admin/index.md
       - GPU Setup: admin/gpu-setup.md
       - Project Doctor: admin/project-doctor.md
+      - Metadata Converter: admin/metadata-converter.md
