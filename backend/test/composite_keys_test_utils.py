@@ -41,6 +41,7 @@ from modules.classifier.classifier_orm import (
 )
 from modules.concept_over_time_analysis.cota_orm import ConceptOverTimeAnalysisORM
 from modules.experiment.experiment_orm import ExperimentORM, ExperimentRunORM
+from modules.perspectives.aspect_dto import PipelineSettings
 from modules.perspectives.aspect_orm import AspectORM
 from modules.perspectives.cluster_orm import ClusterORM
 from modules.perspectives.document_aspect_orm import DocumentAspectORM
@@ -105,9 +106,11 @@ class TenantRows(TypedDict):
       `user`)
     - classifier "Classifier <p>" linked to "Code <p>" and "Tag <p>", with one
       evaluation
-    - aspect "Aspect <p>" of "Tag <p>" with cluster "Cluster <p>" and its child
-      "Child cluster <p>"; the document has a document aspect and is in the
-      cluster
+    - aspect "Aspect <p>" of "Tag <p>" (default pipeline settings, rewriting
+      model "default") with cluster "Cluster <p>" and its child "Child cluster
+      <p>" (both computed: description "Description", coordinates (0, 0)); the
+      document has a document aspect (content "", coordinates (0, 0)) and is in
+      the cluster
     - a tag recommendation of "Tag <p>" for the document
     - the analyses without project-owned parent: whiteboard "Whiteboard <p>",
       timeline analysis "Timeline <p>" (documents) and concept over time
@@ -469,6 +472,9 @@ def create_tenant_rows(
             name=f"Aspect {p}",
             doc_embedding_prompt="",
             is_hierarchical=False,
+            pipeline_settings=PipelineSettings(rewriting_model="default").model_dump(
+                mode="json"
+            ),
             project_id=p,
             tag_id=tag.id,
         ),
@@ -477,6 +483,9 @@ def create_tenant_rows(
         db,
         ClusterORM(
             name=f"Cluster {p}",
+            description="Description",
+            x=0.0,
+            y=0.0,
             is_outlier=False,
             level=0,
             project_id=p,
@@ -487,6 +496,9 @@ def create_tenant_rows(
         db,
         ClusterORM(
             name=f"Child cluster {p}",
+            description="Description",
+            x=0.0,
+            y=0.0,
             is_outlier=False,
             level=1,
             project_id=p,
@@ -497,7 +509,7 @@ def create_tenant_rows(
     document_aspect = _add(
         db,
         DocumentAspectORM(
-            project_id=p, sdoc_id=sdoc.id, aspect_id=aspect.id, content=""
+            project_id=p, sdoc_id=sdoc.id, aspect_id=aspect.id, content="", x=0.0, y=0.0
         ),
     )
     document_cluster = _add(

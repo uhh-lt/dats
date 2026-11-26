@@ -13,12 +13,15 @@ from fastapi.testclient import TestClient
 from composite_keys_test_utils import TenantRows, TwoTenants
 from core.project.project_orm import ProjectORM
 
-from .conftest import TenantJobs
+from .conftest import PathTenant
 
 PROJECT_PREFIX = "/projects/{project_id}"
 
 # the path parameter of a job, a job of the type the route names after /jobs/
 JOB_ID = "job_id"
+
+# the route whose user_id names a member of the project, not a virtual user
+MEMBER_PATH = f"{PROJECT_PREFIX}/members/{{user_id}}"
 
 # the row of a tenant that a path parameter names
 PATH_IDS: dict[str, Callable[[TenantRows], int]] = {
@@ -191,35 +194,61 @@ ANNOTATION_GROUPS: dict[str, tuple[str, str, dict[str, Any]]] = {
 BULK_CREATE_GROUPS = {"span-annotations", "sentence-annotations"}
 
 
-def _project_routes(client: TestClient) -> list[tuple[str, APIRoute]]:
-    """The routes of the app the client runs. `include_router` keeps the routers
-    as they are, so the routes are found through their route contexts."""
+def _project_routes(client: TestClient) -> list[tuple[str, str, APIRoute]]:
+    """Method, full path and route of every route under /projects/{project_id} of
+    the app the client runs. `include_router` keeps the routers as they are, so
+    the routes are found through their route contexts, whose path includes the
+    include prefixes."""
     return [
-        (method, context.original_route)
+        (method, path, context.original_route)
         for context in iter_route_contexts(client.app.routes)  # type: ignore[attr-defined]
         if isinstance(context.original_route, APIRoute)
-        and context.original_route.path.startswith(PROJECT_PREFIX)
+        and (path := context.path) is not None
+        and path.startswith(PROJECT_PREFIX)
         for method in sorted(context.original_route.methods or ())
     ]
 
 
-def _path_params(route: APIRoute) -> list[str]:
+def _path_params(path: str) -> list[str]:
     return [
         name
-        for name in re.findall(r"{(\w+)}", route.path)
+        for name in re.findall(r"{(\w+)}", path)
         if name != "project_id" and name not in NON_ID_PARAMS
     ]
 
 
-def _path_id(
-    name: str, route: APIRoute, rows: TenantRows, jobs: dict[str, str]
-) -> int | str:
-    """The id of the tenant's row (or job) that the path parameter names."""
+def _path_id(name: str, path: str, tenant: PathTenant) -> int | str:
+    """The id of the tenant's row, job or member that the path parameter names."""
     if name == JOB_ID:
-        match = re.search(r"/jobs/([\w-]+)/", route.path)
-        assert match, f"{route.path}: {JOB_ID} outside /jobs/<job type>"
-        return jobs[match.group(1).replace("-", "_")]
-    return PATH_IDS[name](rows)
+        match = re.search(r"/jobs/([\w-]+)/", path)
+        assert match, f"{path}: {JOB_ID} outside /jobs/<job type>"
+        return tenant["jobs"][match.group(1).replace("-", "_")]
+    if path == MEMBER_PATH:
+        return tenant["member"].id
+    return PATH_IDS[name](tenant["rows"])
+
+
+def _request_with_path_ids(
+    client: TestClient,
+    method: str,
+    path: str,
+    tenant_by_param: dict[str, PathTenant],
+    own: PathTenant,
+) -> tuple[str, Any]:
+    """Send the request of the route in the project of `own`, with the path ids
+    of the given tenant per parameter and the body and query of `own`."""
+    values = {
+        name: _path_id(name, path, tenant) for name, tenant in tenant_by_param.items()
+    }
+    url = path.format(project_id=own["rows"]["project"].id, **values)
+    body = BODIES.get(f"{method} {path}")
+    response = client.request(
+        method,
+        url,
+        params=QUERIES.get(f"{method} {path}"),
+        json=body(own["rows"]) if body is not None else None,
+    )
+    return url, response
 
 
 # ===========================================================================
@@ -233,60 +262,67 @@ def test_every_project_route_is_covered(client: TestClient) -> None:
     a new route is covered by the tests below."""
     routes = _project_routes(client)
     assert routes, "no route under /projects/{project_id}"
-    for method, route in routes:
-        for name in _path_params(route):
+    for method, path, route in routes:
+        for name in _path_params(path):
             assert name in PATH_IDS or name == JOB_ID, (
-                f"{method} {route.path}: add {name} to PATH_IDS"
+                f"{method} {path}: add {name} to PATH_IDS"
             )
-        if _path_params(route) and route.body_field is not None:
-            assert f"{method} {route.path}" in BODIES, (
-                f"{method} {route.path}: add a body to BODIES"
+        if _path_params(path) and route.body_field is not None:
+            assert f"{method} {path}" in BODIES, (
+                f"{method} {path}: add a body to BODIES"
             )
         required_queries = [
             param.name
             for param in route.dependant.query_params
             if param.field_info.is_required()
         ]
-        if _path_params(route) and required_queries:
-            assert set(required_queries) <= set(
-                QUERIES.get(f"{method} {route.path}", {})
-            ), f"{method} {route.path}: add {required_queries} to QUERIES"
+        if _path_params(path) and required_queries:
+            assert set(required_queries) <= set(QUERIES.get(f"{method} {path}", {})), (
+                f"{method} {path}: add {required_queries} to QUERIES"
+            )
 
 
 def test_path_id_of_another_project_is_not_found(
-    client: TestClient, tenants: TwoTenants, tenant_jobs: TenantJobs
+    client: TestClient,
+    path_tenants: dict[str, PathTenant],
+    new_own_path_tenant: Callable[[], PathTenant],
 ) -> None:
     """Every project route answers 404 when one of its path ids belongs to the other
-    project and the others to the path's project; the user is a member of both."""
-    own, foreign = tenants["own"], tenants["foreign"]
+    project and the others to the path's project, and a status other than 404 and
+    403 when all belong to the path's project (so the 404 comes from the foreign
+    id); the user is a member of both. The request with own ids comes last, and a
+    DELETE route gets its own new project, so no request deletes what a later one
+    names."""
+    foreign = path_tenants["foreign"]
     failures: list[str] = []
     routes = _project_routes(client)
     assert routes, "no route under /projects/{project_id}"
-    for method, route in routes:
-        names = _path_params(route)
-        body = BODIES.get(f"{method} {route.path}")
+    for method, path, _ in routes:
+        names = _path_params(path)
+        if not names:
+            continue
+        own = new_own_path_tenant() if method == "DELETE" else path_tenants["own"]
         for foreign_name in names:
-            values = {
-                name: _path_id(
-                    name,
-                    route,
-                    foreign if name == foreign_name else own,
-                    tenant_jobs["foreign" if name == foreign_name else "own"],
-                )
-                for name in names
-            }
-            url = route.path.format(project_id=own["project"].id, **values)
-            response = client.request(
+            url, response = _request_with_path_ids(
+                client,
                 method,
-                url,
-                params=QUERIES.get(f"{method} {route.path}"),
-                json=body(own) if body is not None else None,
+                path,
+                {name: foreign if name == foreign_name else own for name in names},
+                own,
             )
             if response.status_code != 404:
                 failures.append(
                     f"{method} {url} ({foreign_name} foreign): "
                     f"{response.status_code} {response.text[:200]}"
                 )
+        url, response = _request_with_path_ids(
+            client, method, path, {name: own for name in names}, own
+        )
+        if response.status_code in (403, 404):
+            failures.append(
+                f"{method} {url} (all own): {response.status_code} "
+                f"{response.text[:200]}"
+            )
     assert not failures, "\n".join(failures)
 
 
@@ -296,9 +332,9 @@ def test_every_project_route_rejects_a_non_member(
     """Every project route answers 403 to a user who is not a member of the
     project of the path, before it reads its path ids or its body."""
     failures: list[str] = []
-    for method, route in _project_routes(non_member_client):
+    for method, path, _ in _project_routes(non_member_client):
         url = re.sub(
-            r"{(\w+)}", "0", route.path.replace("{project_id}", str(test_project.id))
+            r"{(\w+)}", "0", path.replace("{project_id}", str(test_project.id))
         )
         response = non_member_client.request(method, url)
         if response.status_code != 403:

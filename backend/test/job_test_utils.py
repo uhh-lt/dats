@@ -205,13 +205,14 @@ def unreachable_redis(after_starts: int = 0) -> Generator[None, None, None]:
 
 def store_job(job_type: str, payload: JobInputBase, job_id: str | None = None) -> str:
     """Store a job of this type with this input (and this id, a new one if None)
-    in the test Redis, as if it had been started, without enqueueing it, so no
-    worker runs it. Returns its id."""
+    in the test Redis, as if it had been started (status QUEUED), without
+    enqueueing it, so no worker runs it. Returns its id."""
     job = rq.job.Job.create(
         rq_job_handler,
         id=job_id,
         kwargs={"jobtype": job_type, "handler": None, "payload": payload},
         meta={"type": job_type, "project_id": payload.project_id},
+        status=rq.job.JobStatus.QUEUED,
         connection=JobService().redis_conn,
     )
     job.save()

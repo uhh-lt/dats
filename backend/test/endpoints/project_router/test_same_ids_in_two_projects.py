@@ -52,12 +52,12 @@ def test_every_read_route_answers_the_same_in_projects_with_the_same_ids(
     rows = twins["rows"]
     differences: list[str] = []
     ok = 0
-    for method, route in _project_routes(client):
-        names = _path_params(route)
-        key = f"{method} {route.path}"
+    for method, path, _ in _project_routes(client):
+        names = _path_params(path)
+        key = f"{method} {path}"
         if (
             method != "GET"
-            or route.path in NOT_COPIED_ROUTES
+            or path in NOT_COPIED_ROUTES
             or any(name not in PATH_IDS for name in names)
         ):
             continue
@@ -67,7 +67,7 @@ def test_every_read_route_answers_the_same_in_projects_with_the_same_ids(
             try:
                 response = client.request(
                     method,
-                    route.path.format(project_id=project.id, **values),
+                    path.format(project_id=project.id, **values),
                     params=QUERIES.get(key),
                 )
             except Exception as error:

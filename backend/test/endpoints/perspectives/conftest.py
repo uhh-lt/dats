@@ -80,13 +80,4 @@ def tenants(db_session, test_user, test_project) -> TwoTenants:
     Non-obvious derived behavior: the test user is a member of both projects, so
     an id of the other project is the only reason a request finds nothing.
     """
-    tenants = create_two_tenants(db_session, user=test_user, project=test_project)
-    for rows in (tenants["own"], tenants["foreign"]):
-        rows["aspect"].pipeline_settings = PipelineSettings(
-            rewriting_model="default"
-        ).model_dump(mode="json")
-        rows["cluster"].description = "Description"
-        rows["cluster"].x = 0.0
-        rows["cluster"].y = 0.0
-    db_session.commit()
-    return tenants
+    return create_two_tenants(db_session, user=test_user, project=test_project)
