@@ -88,14 +88,16 @@ The keyword statistics (`backend/src/modules/keyword_statistics/`) are a small, 
    )
    ```
 
-4. **The endpoint gate** (`keyword_statistics_endpoint.py`): the route that reads keywords declares the feature, so a project without it gets an error instead of empty data. A gate checks that the feature is enabled, never that its data is computed.
+4. **The project router** (`keyword_statistics_endpoint.py`): `project_router` places the routes under `/projects/{project_id}/keyword-statistics` and checks that the user is a project member. Passing `feature=KEYWORD_STATISTICS` gates every route, so a project without the feature gets an error instead of empty data. A gate checks that the feature is enabled, never that its data is computed.
 
    ```python
-   @router.post(
-       "/keyword",
-       dependencies=[Depends(require_feature(KEYWORD_STATISTICS))],
-       ...
+   router = project_router(
+       "/keyword-statistics",
+       tags=["keyword_statistics"],
+       feature=KEYWORD_STATISTICS,
    )
+
+   @router.post("/keywords", ...)
    ```
 
 Then regenerate the API client (`just update-api`); the frontend reads the features from `GET /feature` and needs a change only for a page or a gate. The rules a module developer must follow are in [`.github/instructions/backend-module.instructions.md`](https://github.com/uhh-lt/dats/blob/main/.github/instructions/backend-module.instructions.md).
