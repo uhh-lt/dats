@@ -4,11 +4,10 @@ from fastapi import Depends, Request
 from loguru import logger
 from sqlalchemy.orm import Session
 
-from common.crud_enum import Crud
 from common.dependencies import DBSession, get_current_user
 from core.auth.auth_exceptions import ForbiddenError
+from core.user.user_crud import crud_user
 from core.user.user_orm import UserORM
-from repos.db.orm_base import ORMBase
 from repos.db.sql_exceptions import NoSuchElementError
 
 
@@ -37,56 +36,6 @@ class AuthzUser:
         (vs. a JWT from a human user). Recorded by `get_current_user`."""
         return getattr(self.request.state, "auth_method", "jwt") == "api_key"
 
-    def assert_in_same_project_as(self, crud: Crud, object_id: int | str):
-        orm_object = self.read_crud(crud, object_id)
-
-        project_id = orm_object.get_project_id()
-        if project_id is None:
-            self.deny_access("Object has no parent project")
-
-        self.assert_in_project(project_id)
-
-    def assert_in_same_project_as_many(
-        self, crud: Crud, object_ids: list[int] | list[str]
-    ):
-        if len(object_ids) == 0:
-            return
-
-        # Some read functions take an int, others take a str
-        # (e.g. PreprocessingJobs).
-        # There's no good way to bind the value of `Crud` to the
-        # type of `object_id`, so we switch off the type checker
-        # for this line :(
-        try:
-            objs = crud.value.read_by_ids(db=self.db, ids=object_ids)  # type: ignore
-        except NoSuchElementError:
-            # Do not leak which ids exist: a missing object is indistinguishable
-            # from an unauthorized one. Mirrors read_crud (single-entity path).
-            self.deny_access("One or several objects do not exist")
-        loaded_object_ids = {obj.id for obj in objs}
-        if loaded_object_ids != set(object_ids):
-            self.deny_access(
-                f"One or several objects were not found: {set(object_ids) - loaded_object_ids}"
-            )
-
-        required_project_ids = {obj.get_project_id() for obj in objs}
-        if None in required_project_ids:
-            self.deny_access("One or several objects have no parent project")
-
-        # Since we pre-load user projects, this should require no db query
-        user_project_ids = {proj.id for proj in self.user.projects}
-
-        self.assert_true(required_project_ids.issubset(user_project_ids))
-
-    def assert_object_has_same_user_id(self, crud: Crud, object_id: int | str):
-        orm_object = self.read_crud(crud, object_id)
-
-        user_id = orm_object.get_user_id()
-        if user_id is None:
-            self.deny_access("Object has no user id set")
-
-        self.assert_is_same_user(user_id)
-
     def assert_is_same_user(self, other_user_id: int):
         self.assert_true(self.user.id == other_user_id)
 
@@ -99,10 +48,13 @@ class AuthzUser:
         if user_id is None or user_id == self.user.id:
             return self.user.id
 
+        try:
+            user = crud_user.read(db=self.db, id=user_id)
+        except NoSuchElementError:
+            self.deny_access(f"User {user_id} does not exist")
         # only virtual users have a project
-        user_project_id = self.read_crud(Crud.USER, user_id).get_project_id()
         self.assert_true(
-            user_project_id == project_id,
+            user.project_id == project_id,
             f"User {user_id} must be a virtual user of project {project_id}",
         )
         return user_id
@@ -137,14 +89,3 @@ class AuthzUser:
         logger.opt(depth=1).debug(
             f"check {result_description}: user {self.user.id}, {self.request.method} {self.request.url.path}{note}"
         )
-
-    def read_crud(self, crud: Crud, id: int | str) -> ORMBase:
-        try:
-            # Some read functions take an int, others take a str
-            # (e.g. PreprocessingJobs).
-            # There's no good way to bind the value of `Crud` to the
-            # type of `object_id`, so we switch off the type checker
-            # for this line :(
-            return crud.value.read(db=self.db, id=id)  # type: ignore
-        except NoSuchElementError:
-            self.deny_access("Object does not exist")

@@ -74,9 +74,6 @@ class SourceDocumentMetadataORM(ORMBase):
             "project_metadata_id",
             name="UC_unique_metadata_sdoc_id_project_metadata_id",
         ),
-        UniqueConstraint(
-            "project_id", "id", name="UC_sourcedocumentmetadata_project_id_id"
-        ),
         ForeignKeyConstraint(
             ["project_id", "project_metadata_id"],
             ["projectmetadata.project_id", "projectmetadata.id"],

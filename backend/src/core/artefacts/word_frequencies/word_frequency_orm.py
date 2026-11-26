@@ -38,6 +38,3 @@ class WordFrequencyORM(ORMBase):
             name="FK_wordfrequency_sdoc_id",
         ),
     )
-
-    def get_project_id(self) -> int:
-        return self.project_id

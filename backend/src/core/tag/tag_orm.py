@@ -97,7 +97,6 @@ class TagORM(ORMBase):
             "name",
             name="UC_tag_name_unique_per_project",
         ),
-        UniqueConstraint("project_id", "id", name="UC_tag_project_id_id"),
         ForeignKeyConstraint(
             ["project_id", "parent_id"],
             ["tag.project_id", "tag.id"],

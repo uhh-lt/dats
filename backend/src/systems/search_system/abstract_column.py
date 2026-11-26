@@ -4,10 +4,10 @@ from typing import TYPE_CHECKING, Any
 from sqlalchemy.orm import Session
 from sqlalchemy.sql.base import ReadOnlyColumnCollection
 
+from core.memo.memo_enum import AttachedObjectType
 from systems.search_system.filtering_operators import FilterOperator, FilterValueType
 
 if TYPE_CHECKING:
-    from common.crud_enum import Crud
     from systems.search_system.grouping import DateGranularity, GroupExpressions
     from systems.search_system.search_builder import SearchBuilder
 
@@ -115,13 +115,13 @@ class AbstractColumns(Enum, metaclass=EnumMeta):
         db: Session,
         project_id: int,
         ids: list[int],
-        types: list["Crud"] | None = None,
+        types: list[AttachedObjectType] | None = None,
     ) -> list[str]:
         """Map database ids within a project to display names (for filter
         round-trips).
 
         `types` is only set for polymorphic columns (e.g. memo ATTACHED_OBJECT): it
-        carries the Crud entity token aligned with each id, so the column can resolve
+        carries the attached object type aligned with each id, so the column can resolve
         against the correct table instead of probing all of them. Mono-typed columns
         ignore it.
         """
@@ -132,7 +132,7 @@ class AbstractColumns(Enum, metaclass=EnumMeta):
         db: Session,
         project_id: int,
         names: list[str],
-        types: list["Crud"] | None = None,
+        types: list[AttachedObjectType] | None = None,
     ) -> list[int]:
         """Map display names back to database ids within a project.
 

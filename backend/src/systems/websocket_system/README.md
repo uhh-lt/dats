@@ -83,16 +83,16 @@ mutation result:
 
 ```python
 @router.put("", response_model=CodeRead)
-def create_new_code(
+def create_code(
     *,
     db: DBSession,
+    project_id: int,
     code: CodeCreate,
-    authz_user: AuthzUser = Depends(),
     ws: WebsocketEmitter = Depends(),
 ) -> CodeRead:
     ...
     result = CodeRead.model_validate(db_code)
-    ws.emit_to_project(DATSEvent.CODE_CREATED, result, project_id=code.project_id)
+    ws.emit_to_project(DATSEvent.CODE_CREATED, result, project_id=project_id)
     return result
 ```
 

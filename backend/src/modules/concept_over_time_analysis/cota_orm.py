@@ -7,7 +7,6 @@ from sqlalchemy import (
     Integer,
     PrimaryKeyConstraint,
     String,
-    UniqueConstraint,
     func,
     text,
 )
@@ -74,7 +73,4 @@ class ConceptOverTimeAnalysisORM(ORMBase):
 
     __table_args__ = (
         PrimaryKeyConstraint("project_id", "id", name="conceptovertimeanalysis_pkey"),
-        UniqueConstraint(
-            "project_id", "id", name="UC_conceptovertimeanalysis_project_id_id"
-        ),
     )

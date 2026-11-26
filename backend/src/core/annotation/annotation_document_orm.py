@@ -107,9 +107,6 @@ class AnnotationDocumentORM(ORMBase):
             "user_id",
             name="UC_annotationdocument_source_document_id_user_id",
         ),
-        UniqueConstraint(
-            "project_id", "id", name="UC_annotationdocument_project_id_id"
-        ),
         ForeignKeyConstraint(
             ["project_id", "source_document_id"],
             ["sourcedocument.project_id", "sourcedocument.id"],

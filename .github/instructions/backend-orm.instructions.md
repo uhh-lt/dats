@@ -6,7 +6,7 @@ paths:
 
 # Backend ORM Pattern
 
-`*_orm.py` modules define the SQLAlchemy 2.0 models that make up the PostgreSQL schema. Every file matching `*_orm.py` is auto-imported by `import_by_suffix("_orm.py")` in [sql_repo.py](backend/src/repos/db/sql_repo.py), so a new model needs no manual registration. Alembic autogenerates migrations from these classes, and `AuthzUser` and the websocket system call `get_project_id()` on them. Keep them uniform so that migrations, cascades and authorization behave the same way for every entity. [check_orm.py](backend/lint/check_orm.py) enforces the mechanical rules below (`just lint backend`, pre-commit hook `lint-backend-orm`; `--help` lists them).
+`*_orm.py` modules define the SQLAlchemy 2.0 models that make up the PostgreSQL schema. Every file matching `*_orm.py` is auto-imported by `import_by_suffix("_orm.py")` in [sql_repo.py](backend/src/repos/db/sql_repo.py), so a new model needs no manual registration. Alembic autogenerates migrations from these classes. Keep them uniform so that migrations and cascades behave the same way for every entity. [check_orm.py](backend/lint/check_orm.py) enforces the mechanical rules below (`just lint backend`, pre-commit hook `lint-backend-orm`; `--help` lists them).
 
 ## File Structure
 
@@ -15,7 +15,15 @@ paths:
 from datetime import datetime
 from typing import TYPE_CHECKING
 
-from sqlalchemy import DateTime, ForeignKey, Integer, String, UniqueConstraint, func
+from sqlalchemy import (
+    DateTime,
+    ForeignKey,
+    Integer,
+    PrimaryKeyConstraint,
+    String,
+    UniqueConstraint,
+    func,
+)
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from repos.db.orm_base import ORMBase
@@ -27,8 +35,8 @@ if TYPE_CHECKING:
 
 # 3. Main entity class: <Entity>ORM -> table name "<entity>" (lowercased, "ORM" removed)
 class WhiteboardORM(ORMBase):
-    # 3a. Primary key
-    id: Mapped[int] = mapped_column(Integer, primary_key=True, index=True)
+    # 3a. Primary key: (project_id, id), see __table_args__
+    id: Mapped[int] = mapped_column(Integer, autoincrement=True, index=True)
     # 3b. Plain columns, created / updated timestamps
     title: Mapped[str] = mapped_column(String, nullable=False, index=False)
     created: Mapped[datetime] = mapped_column(
@@ -47,23 +55,18 @@ class WhiteboardORM(ORMBase):
         Integer,
         ForeignKey("project.id", ondelete="CASCADE"),
         nullable=False,
-        index=True,
     )
     project: Mapped["ProjectORM"] = relationship(
         "ProjectORM", back_populates="whiteboards"
     )
 
-    # 3d. Table-level constraints (only if needed)
+    # 3d. Table-level constraints
     __table_args__ = (
+        PrimaryKeyConstraint("project_id", "id", name="whiteboard_pkey"),
         UniqueConstraint("project_id", "title", name="UC_<...>_unique_per_project"),
-        UniqueConstraint("project_id", "id", name="UC_whiteboard_project_id_id"),
     )
 
     # 3e. Derived @property values (memo_ids, sdoc_id, user_id, ...)
-
-    # 3f. Authorization hook, always the last member
-    def get_project_id(self) -> int:
-        return self.project_id
 
 
 # 4. Association tables for many-to-many relationships: <A><B>LinkTable
@@ -104,10 +107,10 @@ class SourceDocumentTagLinkTable(ORMBase):
 
 - **Typed mapping**: every column is `name: Mapped[<py type>] = mapped_column(<SA type>, ...)` with the SQLAlchemy type passed explicitly. Never use legacy `Column(...)` or leave out `Mapped[...]`.
 - **Nullability**: the annotation decides. `Mapped[T]` is `NOT NULL` (`nullable=False` is common and allowed), `Mapped[T | None]` is nullable. Never pass `nullable=True`. The annotation must match the database, so callers handle `None` for optional columns.
-- **Primary key**: `id: Mapped[int] = mapped_column(Integer, primary_key=True, index=True)`. Variations that are allowed:
+- **Primary key**: a project-owned table with an `id` declares `PrimaryKeyConstraint("project_id", "id", name="<table>_pkey")` in `__table_args__`, `id` as `mapped_column(Integer, autoincrement=True, index=True)` and `project_id` without its own index; Alembic does not detect key changes, so a migration adds `drop_constraint`/`create_primary_key` by hand. Variations that are allowed:
+  - Global tables (`ProjectORM`, `UserORM`, `ApiKeyORM`, `RefreshTokenORM`, `SpanTextORM`) use `id: Mapped[int] = mapped_column(Integer, primary_key=True, index=True)`.
   - Dependent 1:1 tables use the parent FK as their `id` (`SourceDocumentDataORM`).
   - Association tables use a composite primary key made of their FKs, with no `id` column.
-  - Tables keyed by their project (#928, `span_annotation_orm.py`) declare `PrimaryKeyConstraint("project_id", "id", name="<table>_pkey")` in `__table_args__`, `id` as `mapped_column(Integer, autoincrement=True, index=True)` and `project_id` without its own index; Alembic does not detect the key change, so the migration adds `drop_constraint`/`create_primary_key` by hand.
 - **Timestamps**: always `DateTime(timezone=True)`. `created` uses `server_default=func.now()` and `index=True`. `updated` also sets `onupdate=func.current_timestamp()`.
 - **Defaults**: use `server_default` (a string, or `text(...)` for JSONB), so the default also lands in the migration. Python-side `default=` appears only for booleans in the perspectives module.
 - **Enums**: store an enum as `String` or `Integer`, annotated with the enum type (`folder_type: Mapped[FolderType] = mapped_column(String, ...)`). The column holds the member value (`"sdoc_folder"`). Never use a native `Enum(...)` column type.
@@ -115,7 +118,7 @@ class SourceDocumentTagLinkTable(ORMBase):
 
 ### Foreign Keys & Relationships
 
-- **Tenant**: every project-owned table (all but `ProjectORM`, `UserORM`, `ApiKeyORM`, `RefreshTokenORM`, `SpanTextORM`, `ProjectUserLinkTable`) has `project_id: Mapped[int]` with `ForeignKey("project.id", ondelete="CASCADE")`, and a table with an `id` has `UniqueConstraint("project_id", "id", name="UC_<table>_project_id_id")`.
+- **Tenant**: every project-owned table (all but `ProjectORM`, `UserORM`, `ApiKeyORM`, `RefreshTokenORM`, `SpanTextORM`, `ProjectUserLinkTable`) has `project_id: Mapped[int]` with `ForeignKey("project.id", ondelete="CASCADE")`.
 - **Composite FKs**: an FK onto a project-owned table is a `ForeignKeyConstraint(["project_id", "<column>"], ["<table>.project_id", "<table>.id"], ondelete="CASCADE", name="FK_<table>_<column>")` in `__table_args__`, and its column is a plain `mapped_column(Integer, index=True)`; an optional column uses `ondelete="SET NULL (<column>)"`, so the shared `project_id` is never nulled.
 - **FK cascade**: an FK onto a global table (project, user, span text) is a column `ForeignKey("<table>.id", ondelete="CASCADE")` with `index=True`, except the first primary key column, which the primary key index covers (`SourceDocumentStepStatusORM.sdoc_id`). The only exceptions are `ondelete="SET NULL"` on an optional user column (`ExperimentORM.gold_user_id`) and `ondelete="NO ACTION", deferrable=True, initially="IMMEDIATE", name="experimentrun_virtual_user_id_fkey"` on `ExperimentRunORM.virtual_user_id`, whose check `crud_project.delete_multi` defers to the commit by that name.
 - **Relationships never write `project_id`**: a relationship over a composite FK passes `foreign_keys=` with the id column only, on both sides, so it never copies the `project_id` of another project; only the relationships onto `ProjectORM` write it.
@@ -141,8 +144,7 @@ class SourceDocumentTagLinkTable(ORMBase):
 
 ### Behavior
 
-- **`get_project_id()`**: every project-owned model overrides it with `return self.project_id`, except the tables keyed by their project whose CRUD callers all pass `project_id` (`span_group_orm.py`, `annotation_document_orm.py`, `code_orm.py`, `tag_orm.py`, `source_document_orm.py`, `source_document_data_orm.py`, `folder_orm.py`, `project_metadata_orm.py`, `source_document_metadata_orm.py`, `memo_orm.py`'s `MemoORM`, `object_handle_orm.py`, `whiteboard_orm.py`, `timeline_analysis_orm.py`, `cota_orm.py`, `experiment_orm.py`, `classifier_orm.py`, `aspect_orm.py`, `cluster_orm.py`, `tag_recommendation_orm.py`, `prompt_orm.py`, `search_view_orm.py`). Only user-scoped auth tables (`ApiKeyORM`, `RefreshTokenORM`), `SpanTextORM` and pure link tables skip it; `UserORM` returns its `project_id`, which is set for virtual users only.
-- **`get_user_id()`**: never override it. `ORMBase` reads the `user_id` attribute, so a model that is owned through its parent exposes `user_id` as a `@property` (see `SpanAnnotationORM.user_id`).
+- **`user_id`**: a model that is owned through its parent exposes `user_id` as a `@property` (see `SpanAnnotationORM.user_id`).
 - **`memo_ids`**: models that own an `object_handle` expose the same `memo_ids` property (copy it from `code_orm.py`).
 - **Derived values**: `@property` (or `hybrid_property` when the value must be usable in SQL queries) is used for convenience accessors that DTOs read through `from_attributes`. Keep them free of queries and side effects.
 - **`__repr__`**: optional, used only in the perspectives module.

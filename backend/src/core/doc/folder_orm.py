@@ -76,7 +76,6 @@ class FolderORM(ORMBase):
     __table_args__ = (
         PrimaryKeyConstraint("project_id", "id", name="folder_pkey"),
         UniqueConstraint("parent_id", "name", name="UC_unique_folder_name_in_parent"),
-        UniqueConstraint("project_id", "id", name="UC_folder_project_id_id"),
         ForeignKeyConstraint(
             ["project_id", "parent_id"],
             ["folder.project_id", "folder.id"],

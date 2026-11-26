@@ -9,7 +9,6 @@ from sqlalchemy import (
     Integer,
     PrimaryKeyConstraint,
     String,
-    UniqueConstraint,
     func,
 )
 from sqlalchemy.orm import Mapped, mapped_column, relationship
@@ -88,5 +87,4 @@ class SearchViewORM(ORMBase):
             entity_type,
             position,
         ),
-        UniqueConstraint("project_id", "id", name="UC_searchview_project_id_id"),
     )

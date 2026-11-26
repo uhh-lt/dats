@@ -8,7 +8,6 @@ from sqlalchemy import (
     Integer,
     PrimaryKeyConstraint,
     String,
-    UniqueConstraint,
 )
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
@@ -50,9 +49,6 @@ class TagRecommendationLinkORM(ORMBase):
 
     __table_args__ = (
         PrimaryKeyConstraint("project_id", "id", name="tagrecommendationlink_pkey"),
-        UniqueConstraint(
-            "project_id", "id", name="UC_tagrecommendationlink_project_id_id"
-        ),
         ForeignKeyConstraint(
             ["project_id", "source_document_id"],
             ["sourcedocument.project_id", "sourcedocument.id"],

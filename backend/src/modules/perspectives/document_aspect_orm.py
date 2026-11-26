@@ -63,6 +63,3 @@ class DocumentAspectORM(ORMBase):
         return (
             f"<DocumentAspectORM(sdoc_id={self.sdoc_id}, aspect_id={self.aspect_id})>"
         )
-
-    def get_project_id(self) -> int:
-        return self.project_id

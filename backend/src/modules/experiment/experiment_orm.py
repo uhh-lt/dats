@@ -83,7 +83,6 @@ class ExperimentORM(ORMBase):
             name="UC_experiment_name_unique_per_project",
         ),
         PrimaryKeyConstraint("project_id", "id", name="experiment_pkey"),
-        UniqueConstraint("project_id", "id", name="UC_experiment_project_id_id"),
     )
 
 
@@ -176,7 +175,6 @@ class ExperimentRunORM(ORMBase):
             name="UC_experiment_run_name_unique_per_experiment",
         ),
         PrimaryKeyConstraint("project_id", "id", name="experimentrun_pkey"),
-        UniqueConstraint("project_id", "id", name="UC_experimentrun_project_id_id"),
         ForeignKeyConstraint(
             ["project_id", "experiment_id"],
             ["experiment.project_id", "experiment.id"],

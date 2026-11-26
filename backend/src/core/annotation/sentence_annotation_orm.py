@@ -97,9 +97,6 @@ class SentenceAnnotationORM(ORMBase):
             "uuid",
             name="UC_sentence_annotation_uuid_unique_per_project",
         ),
-        UniqueConstraint(
-            "project_id", "id", name="UC_sentenceannotation_project_id_id"
-        ),
         ForeignKeyConstraint(
             ["project_id", "code_id"],
             ["code.project_id", "code.id"],
@@ -139,6 +136,3 @@ class SentenceAnnotationORM(ORMBase):
         if self.object_handle is None:
             return []
         return [memo.id for memo in self.object_handle.attached_memos]
-
-    def get_project_id(self) -> int:
-        return self.project_id

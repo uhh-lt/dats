@@ -14,20 +14,19 @@ Endpoint modules define the REST API surface of the backend. Each file owns exac
 # 1. Imports: fastapi, sqlalchemy, common.*, core.auth.authz_user,
 #    own-folder DTOs (never DTOs from other modules), own-folder service/crud,
 #    plus DATSEvent / WebsocketEmitter if the file has mutations.
-from fastapi import APIRouter, Depends
+from fastapi import Depends
 
 from common.dats_event import DATSEvent
-from common.dependencies import DBSession, get_current_user
+from common.dependencies import DBSession
+from common.project_router import project_router
 from core.auth.authz_user import AuthzUser
 from modules.example.example_dto import ExampleCreate, ExampleRead, ExampleUpdate
+from modules.example.example_feature import FEATURE
 from systems.websocket_system.websocket_dependency import WebsocketEmitter
 
-# 2. Router: one per file, prefix = resource name, auth enforced router-wide.
-router = APIRouter(
-    prefix="/example",
-    dependencies=[Depends(get_current_user)],
-    tags=["example"],
-)
+# 2. Router: one per file, under /projects/{project_id}/<resources>; it checks the
+#    membership (and the feature) for every route.
+router = project_router("/examples", tags=["example"], feature=FEATURE)
 
 # 3. Optional: service singletons used by the routes below.
 # es: ExampleService = ExampleService()
@@ -67,7 +66,7 @@ router = APIRouter(
 
 ### Project Routes
 
-Resources of a project move under `/projects/{project_id}/...` module group by module group (#928); `span_annotation_endpoint.py` is the example.
+Every resource of a project lives under `/projects/{project_id}/...` (#928); `span_annotation_endpoint.py` is the example.
 
 - **Router**: `router = project_router("/<resources>", tags=[...], feature=FEATURE)` (`common/project_router.py`) checks the membership and, for a feature module, the feature for every route; omit `feature` in core.
 - **Routes outside projects too**: a file that also has routes outside projects (`/users/me`, `/projects`, `/features`) declares them on `router = APIRouter(...)` with the tags and without a prefix (an included router gets both) and its project routes on `project = project_router(..., tags=[])`, included right after with `router.include_router(project)` (`user_endpoint.py`).
@@ -75,7 +74,7 @@ Resources of a project move under `/projects/{project_id}/...` module group by m
 - **Paths**: plural kebab-case collections (`/span-annotations`), one resource at `/{<entity>_id}`, links at `/{<entity>_id}/<others>/{<other>_id}` (PUT adds, DELETE removes), bulk routes at `/bulk` declared before `/{<entity>_id}`, computations at `POST /<verb>`.
 - **Bulk links**: bulk links at `/bulk/<others>` (`/tags/bulk/source-documents`): PUT adds, DELETE removes, PATCH does both.
 - **Filters**: optional query parameters on the collection (`GET /span-annotations?user_id=1&sdoc_id=2`), never one route per filter combination.
-- **Path ids**: read every id of the path within the project (`crud_x.read(db=db, project_id=project_id, id=...)`), so an id of another project answers 404; no `assert_in_same_project_as` or `get_project_id()`.
+- **Path ids**: read every id of the path within the project (`crud_x.read(db=db, project_id=project_id, id=...)`), so an id of another project answers 404.
 - **Body ids**: a reference in the body of a write (`code_id`, `sdoc_id`) is left to the composite foreign key, so an id of another project answers 409; services do not pre-check body references.
 - **Query ids**: a filter id of another project matches nothing.
 - **Emit to the path's project**: `ws.emit_to_project(event, result, project_id=project_id)`, also for batch events.
@@ -98,8 +97,7 @@ Resources of a project move under `/projects/{project_id}/...` module group by m
 ### Endpoint Anatomy
 
 - **Decorator**: Always set `response_model` and `summary`; the path uses `{resource_id}` path params for single-entity routes.
-- **Signature**: Keyword-only parameters (`*` first); `db: DBSession` (commits before the response and the websocket events) and `authz_user: AuthzUser = Depends()`; mutations add `ws`.
-- **Authz first**: outside a project router, the first statement of the body is `authz_user.assert_in_project(project_id)` or `authz_user.assert_in_same_project_as(Crud.X, id)`.
+- **Signature**: Keyword-only parameters (`*` first); `db: DBSession` (commits before the response and the websocket events); `authz_user: AuthzUser = Depends()` only where the route needs the current user (`authz_user.user`, `assert_can_annotate_as`); mutations add `ws`.
 - **Thin body**: Delegate to `crud_*` / service functions; no business logic in the route. Return type annotation matches `response_model`.
 
 ### Feature Gating

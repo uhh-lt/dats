@@ -105,7 +105,3 @@ class UserORM(ORMBase):
     @property
     def is_virtual(self) -> bool:
         return self.project_id is not None
-
-    # users belong to no project, virtual users to exactly one
-    def get_project_id(self) -> int | None:
-        return self.project_id

@@ -175,7 +175,6 @@ class SourceDocumentORM(ORMBase):
         UniqueConstraint(
             "project_id", "filename", name="UC_unique_filename_in_project"
         ),
-        UniqueConstraint("project_id", "id", name="UC_sourcedocument_project_id_id"),
         ForeignKeyConstraint(
             ["project_id", "folder_id"],
             ["folder.project_id", "folder.id"],

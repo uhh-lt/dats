@@ -8,7 +8,6 @@ from sqlalchemy import (
     PrimaryKeyConstraint,
     String,
     Text,
-    UniqueConstraint,
     text,
 )
 from sqlalchemy.dialects.postgresql import JSONB
@@ -80,7 +79,6 @@ class AspectORM(ORMBase):
 
     __table_args__ = (
         PrimaryKeyConstraint("project_id", "id", name="aspect_pkey"),
-        UniqueConstraint("project_id", "id", name="UC_aspect_project_id_id"),
         ForeignKeyConstraint(
             ["project_id", "tag_id"],
             ["tag.project_id", "tag.id"],
