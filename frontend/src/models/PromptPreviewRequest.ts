@@ -8,10 +8,6 @@ import type { PromptSnapshot } from "./PromptSnapshot";
  */
 export type PromptPreviewRequest = {
   /**
-   * Project of the prompt and the document
-   */
-  project_id: number;
-  /**
    * ID of the stored prompt version to render. Exactly one of prompt_version_id and draft is set.
    */
   prompt_version_id?: number | null;

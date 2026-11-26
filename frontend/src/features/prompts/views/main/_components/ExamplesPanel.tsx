@@ -64,7 +64,7 @@ export function ExamplesPanel({ projectId, kind, examples, codes, onChange }: Ex
   const handleAddExamples = useCallback(
     (annotationIds: number[]) => {
       createPromptExamplesMutation(
-        { requestBody: { project_id: projectId, kind, annotation_ids: annotationIds } },
+        { projectId, requestBody: { kind, annotation_ids: annotationIds } },
         {
           onSuccess: (created) => {
             // an annotation that is already part of an example adds nothing

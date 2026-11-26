@@ -13,9 +13,9 @@ export type PromptMap = Record<number, PromptRead>;
  *
  *   promptQueries.all()                                 ["prompt"]
  *   promptQueries.byProject(projectId)                  ["prompt", "project", projectId]
- *   promptQueries.taskInfo(taskType)                    ["prompt", "taskInfo", taskType]
- *   promptQueries.defaultPrompt(outputFormat, lang)     ["prompt", "default", outputFormat, lang]
- *   promptQueries.preview(request)                      ["prompt", "preview", request]
+ *   promptQueries.taskInfo(projectId, taskType)                 ["prompt", "taskInfo", taskType, projectId]
+ *   promptQueries.defaultPrompt(projectId, outputFormat, lang)  ["prompt", "default", outputFormat, lang, projectId]
+ *   promptQueries.preview(projectId, request)                   ["prompt", "preview", request, projectId]
  */
 export const promptQueries = {
   all: () => ["prompt"] as const,
@@ -37,28 +37,35 @@ export const promptQueries = {
 
   // the blocks that the prompts of a task can use (static per backend version)
   taskInfoScope: () => [...promptQueries.all(), "taskInfo"] as const,
-  taskInfo: (taskType: TaskType | undefined) =>
+  taskInfo: (projectId: number | undefined, taskType: TaskType | undefined) =>
     queryOptions({
-      queryKey: [...promptQueries.taskInfoScope(), taskType] as const,
-      queryFn: !taskType ? skipToken : () => PromptService.getTaskInfo({ taskType }),
+      queryKey: [...promptQueries.taskInfoScope(), taskType, projectId] as const,
+      queryFn: !projectId || !taskType ? skipToken : () => PromptService.getTaskInfo({ projectId, taskType }),
       staleTime: Infinity,
     }),
 
   // the default prompt of an output format in a language, the start of a new prompt
   defaultPromptScope: () => [...promptQueries.all(), "default"] as const,
-  defaultPrompt: (outputFormat: OutputFormat | undefined, language: PromptLanguage | undefined) =>
+  defaultPrompt: (
+    projectId: number | undefined,
+    outputFormat: OutputFormat | undefined,
+    language: PromptLanguage | undefined,
+  ) =>
     queryOptions({
-      queryKey: [...promptQueries.defaultPromptScope(), outputFormat, language] as const,
-      queryFn: !outputFormat || !language ? skipToken : () => PromptService.getDefault({ outputFormat, language }),
+      queryKey: [...promptQueries.defaultPromptScope(), outputFormat, language, projectId] as const,
+      queryFn:
+        !projectId || !outputFormat || !language
+          ? skipToken
+          : () => PromptService.getDefault({ projectId, outputFormat, language }),
       staleTime: Infinity,
     }),
 
   // the rendered prompt of one message (document, sentence or chunk) of a document
   previewScope: () => [...promptQueries.all(), "preview"] as const,
-  preview: (request: PromptPreviewRequest | undefined) =>
+  preview: (projectId: number | undefined, request: PromptPreviewRequest | undefined) =>
     queryOptions({
-      queryKey: [...promptQueries.previewScope(), request] as const,
-      queryFn: !request ? skipToken : () => PromptService.preview({ requestBody: request }),
+      queryKey: [...promptQueries.previewScope(), request, projectId] as const,
+      queryFn: !projectId || !request ? skipToken : () => PromptService.preview({ projectId, requestBody: request }),
       retry: false,
       placeholderData: keepPreviousData,
     }),

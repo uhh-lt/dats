@@ -30,6 +30,17 @@ export class GeneralService {
     });
   }
   /**
+   * Get all available LLM models from the LLM Provider
+   * @returns string Successful Response
+   * @throws ApiError
+   */
+  public static getAvailableModels(): CancelablePromise<Array<string>> {
+    return __request(OpenAPI, {
+      method: "GET",
+      url: "/info/llms",
+    });
+  }
+  /**
    * Redirection to /docs
    * @returns any Successful Response
    * @throws ApiError

@@ -51,6 +51,7 @@ const isValidSettings = (settings: Required<PromptSettings>) =>
 /** Configures the model and, in guided mode, the language, input and output format of the default prompt. */
 export const SettingsStep = memo(() => {
   const availableLLMs = useQuery(generalQueries.availableModels());
+  const projectId = useAppSelector((state) => state.llmAssistant.projectId);
   const mode = useAppSelector((state) => state.llmAssistant.mode);
   const method = useAppSelector((state) => state.llmAssistant.method);
   const savedModelId = useAppSelector((state) => state.llmAssistant.modelId);
@@ -59,7 +60,7 @@ export const SettingsStep = memo(() => {
   const savedDocumentUnit = useAppSelector((state) => state.llmAssistant.documentUnit);
   const savedSettings = useAppSelector((state) => state.llmAssistant.settings);
   const dispatch = useAppDispatch();
-  const taskInfo = useQuery({ ...promptQueries.taskInfo(method), enabled: mode === "guided" });
+  const taskInfo = useQuery({ ...promptQueries.taskInfo(projectId, method), enabled: mode === "guided" });
 
   // local state
   const [modelId, setModelId] = useState(savedModelId);

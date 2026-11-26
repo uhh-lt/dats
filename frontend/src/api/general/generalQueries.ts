@@ -1,5 +1,4 @@
 import { GeneralService } from "@api/services/GeneralService";
-import { RagService } from "@api/services/RagService";
 import { queryOptions } from "@tanstack/react-query";
 
 /**
@@ -16,7 +15,7 @@ export const generalQueries = {
   availableModels: () =>
     queryOptions({
       queryKey: [...generalQueries.all(), "availableModels"] as const,
-      queryFn: () => RagService.getAvailableModels(),
+      queryFn: () => GeneralService.getAvailableModels(),
     }),
 
   // the configuration of the instance (is OIDC enabled, Sentry/Glitchtip DSN, ...)

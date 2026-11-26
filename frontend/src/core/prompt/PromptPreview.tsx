@@ -55,14 +55,13 @@ export function PromptPreview({ projectId, sdocIds, source, toolbarStart, varian
 
   const request = useMemo(
     () => ({
-      project_id: projectId,
       ...("draft" in source ? { draft: source.draft } : { prompt_version_id: source.versionId }),
       sdoc_id: sdocId ?? null,
       message_index: messageIndex,
     }),
-    [projectId, source, sdocId, messageIndex],
+    [source, sdocId, messageIndex],
   );
-  const preview = useQuery(promptQueries.preview(request));
+  const preview = useQuery(promptQueries.preview(projectId, request));
   const listedSdocIds = useMemo(() => sdocIds.slice(0, MAX_LISTED_DOCUMENTS), [sdocIds]);
   const numMessages = preview.data?.num_messages ?? 0;
 

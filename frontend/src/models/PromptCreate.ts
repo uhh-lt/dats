@@ -47,8 +47,4 @@ export type PromptCreate = {
    * The language of the prompt, it decides the text of the blocks
    */
   language: PromptLanguage;
-  /**
-   * Project the prompt belongs to
-   */
-  project_id: number;
 };

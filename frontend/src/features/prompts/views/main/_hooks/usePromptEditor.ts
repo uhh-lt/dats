@@ -381,7 +381,7 @@ export function usePromptEditor(
   const onSave = useCallback(() => {
     if (!prompt || !draft) return;
     createVersionMutation(
-      { promptId: prompt.id, requestBody: draft },
+      { projectId: prompt.project_id, promptId: prompt.id, requestBody: draft },
       {
         onSuccess: (saved) =>
           setSelectedVersion({ promptId: saved.id, versionId: saved.versions[saved.versions.length - 1].id }),
@@ -401,13 +401,14 @@ export function usePromptEditor(
   const onRename = useCallback(
     (name: string) => {
       if (!prompt || name === prompt.name || name.trim() === "") return;
-      updatePromptMutation({ promptId: prompt.id, requestBody: { name } });
+      updatePromptMutation({ projectId: prompt.project_id, promptId: prompt.id, requestBody: { name } });
     },
     [prompt, updatePromptMutation],
   );
   const onToggleArchived = useCallback(() => {
     if (!prompt) return;
     updatePromptMutation({
+      projectId: prompt.project_id,
       promptId: prompt.id,
       requestBody: { is_archived: !prompt.is_archived },
     });

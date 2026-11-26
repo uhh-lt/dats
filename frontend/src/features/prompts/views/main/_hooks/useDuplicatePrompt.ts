@@ -26,8 +26,8 @@ export function useDuplicatePrompt(projectId: number, onDuplicated: (prompt: Pro
       const existingNames = new Set((prompts.data ?? []).map((candidate) => candidate.name));
       createPromptMutation(
         {
+          projectId,
           requestBody: {
-            project_id: projectId,
             name: copyName(prompt.name, existingNames),
             task_type: prompt.task_type,
             language: prompt.language,

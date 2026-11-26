@@ -121,7 +121,7 @@ interface PromptBlocksSidebarProps {
 /** The right of the Prompts page: every block of the task, expanded with its settings while the prompt uses it. */
 export function PromptBlocksSidebar({ editor, projectId }: PromptBlocksSidebarProps) {
   const { prompt, draft, onInsert, onEditSelection } = editor;
-  const taskInfo = useQuery(promptQueries.taskInfo(prompt.task_type));
+  const taskInfo = useQuery(promptQueries.taskInfo(projectId, prompt.task_type));
   if (taskInfo.isLoading) return <CircularProgress sx={{ m: 2 }} />;
   if (!taskInfo.data) return <Alert severity="error">Could not load the blocks of this task.</Alert>;
 
@@ -155,6 +155,7 @@ export function PromptBlocksSidebar({ editor, projectId }: PromptBlocksSidebarPr
       >
         {documentUnit ? (
           <DocumentBlockPanel
+            projectId={projectId}
             taskType={prompt.task_type}
             text={text}
             unit={documentUnit}

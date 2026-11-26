@@ -72,7 +72,7 @@ export function PromptCreateDialog({ projectId, onCreated }: PromptCreateDialogP
   const taskType = useWatch({ control, name: "taskType" });
   const language = useWatch({ control, name: "language" });
   const defaultPrompt = useQuery({
-    ...promptQueries.defaultPrompt(DEFAULT_OUTPUT_FORMATS[taskType ?? TaskType.ANNOTATION], language),
+    ...promptQueries.defaultPrompt(projectId, DEFAULT_OUTPUT_FORMATS[taskType ?? TaskType.ANNOTATION], language),
     enabled: isOpen,
   });
 
@@ -84,8 +84,8 @@ export function PromptCreateDialog({ projectId, onCreated }: PromptCreateDialogP
       if (!content) return;
       createPromptMutation(
         {
+          projectId,
           requestBody: {
-            project_id: projectId,
             name: data.name,
             task_type: data.taskType,
             language: data.language,
