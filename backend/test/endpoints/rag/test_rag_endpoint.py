@@ -119,6 +119,32 @@ def test_rag_session_answers_from_the_nearest_sentences_without_semantic_search(
     assert context.splitlines() == expected_context
 
 
+def test_rag_session_retrieves_nothing_of_a_document_of_another_project(
+    client: TestClient,
+    sentence_embedding_project: SentenceEmbeddingProject,
+    foreign_sentence_embedding_project: SentenceEmbeddingProject,
+    stubbed_models: dict[str, list[str]],
+):
+    """The document filter holds "text.txt" of "Foreign Project", another project
+    of the user with the same embeddings: it matches no sentence of the path's
+    project, so the context is empty."""
+    p = sentence_embedding_project
+
+    response = client.post(
+        f"/projects/{p['project'].id}/rag/session",
+        params={"top_k": 10, "threshold": 0.75, "model": "default"},
+        json={
+            "query": "a greeting",
+            "sdoc_ids": [foreign_sentence_embedding_project["text"].id],
+        },
+    )
+
+    assert response.status_code == 200, response.text
+    (prompt,) = stubbed_models["prompt"]
+    context = prompt.split("Context:\n")[1].split("\n\nQuestion:")[0]
+    assert context.splitlines() == []
+
+
 # ===========================================================================
 # FEATURE DECLARATION (rag_feature.py)
 # ===========================================================================

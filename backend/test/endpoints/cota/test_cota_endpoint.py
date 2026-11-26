@@ -1,6 +1,7 @@
 import pytest
 from fastapi.testclient import TestClient
 
+from composite_keys_test_utils import TwoTenants
 from feature_test_utils import assert_feature_disabled, feature_named
 from modules.concept_over_time_analysis.cota_dto import (
     COTACreate,
@@ -120,6 +121,80 @@ def test_update_cota_name(client: TestClient, project_with_cota) -> None:
 
     assert response.status_code == 200, response.text
     assert COTARead.model_validate(response.json()).name == "Renamed COTA"
+
+
+@pytest.mark.parametrize(
+    "tenant,status_code",
+    [
+        # the metadata of the path's project is stored
+        pytest.param("own", 200, id="own-metadata"),
+        # the metadata of another project is not found (a JSON field has no
+        # foreign key)
+        pytest.param("foreign", 404, id="foreign-metadata"),
+    ],
+)
+def test_update_cota_with_date_metadata_of_another_project_is_not_found(
+    client: TestClient, tenants: TwoTenants, tenant: str, status_code: int
+) -> None:
+    """The date metadata of the timeline settings must be one of the path's
+    project; the metadata of another project of the user is not stored."""
+    own, foreign = tenants["own"], tenants["foreign"]
+    metadata = (own if tenant == "own" else foreign)["project_metadata"]
+    url = _url(own["project"].id, f"/{own['cota'].id}")
+
+    response = client.patch(
+        url, json={"timeline_settings": {"date_metadata_id": metadata.id}}
+    )
+
+    assert response.status_code == status_code, response.text
+    response = client.get(url)
+    stored = COTARead.model_validate(response.json()).timeline_settings
+    assert (stored.date_metadata_id == metadata.id) == (tenant == "own")
+
+
+# ===========================================================================
+# ANNOTATE AND REMOVE SENTENCES (/projects/{project_id}/concept-over-time-analyses/{cota_id}/annotate, .../remove) TESTS
+# ===========================================================================
+
+
+@pytest.mark.parametrize(
+    "path,params",
+    [
+        # annotate the sentence with a concept
+        pytest.param("/annotate", {"concept_id": "c1"}, id="annotate"),
+        # remove the sentence from the search space
+        pytest.param("/remove", None, id="remove"),
+    ],
+)
+def test_sentence_of_another_project_is_not_found(
+    client: TestClient, tenants: TwoTenants, path: str, params: dict | None
+) -> None:
+    """Sentence 0 of the document of another project of the user is not in the
+    search space of the own COTA: 404, the search space is unchanged; the own
+    sentence 0 is annotated or removed."""
+    own, foreign = tenants["own"], tenants["foreign"]
+    url = _url(own["project"].id, f"/{own['cota'].id}")
+
+    def change(sdoc_id: int):
+        return client.patch(
+            f"{url}{path}",
+            params=params,
+            json=[{"sdoc_id": sdoc_id, "sentence_id": 0}],
+        )
+
+    response = change(foreign["sdoc"].id)
+    assert response.status_code == 404, response.text
+    search_space = COTARead.model_validate(client.get(url).json()).search_space
+    assert [(s.sdoc_id, s.concept_annotation) for s in search_space] == [
+        (own["sdoc"].id, None)
+    ]
+
+    response = change(own["sdoc"].id)
+    assert response.status_code == 200, response.text
+    search_space = COTARead.model_validate(response.json()).search_space
+    assert [(s.sdoc_id, s.concept_annotation) for s in search_space] == (
+        [(own["sdoc"].id, "c1")] if path == "/annotate" else []
+    )
 
 
 # ===========================================================================

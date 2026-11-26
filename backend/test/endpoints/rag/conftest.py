@@ -31,3 +31,14 @@ def sentence_embedding_project(
     return create_sentence_embedding_project(
         db_session, test_user, title="RAG Only", features=["rag_chat"]
     )
+
+
+@pytest.fixture(scope="function")
+def foreign_sentence_embedding_project(
+    db_session, test_user: UserORM
+) -> SentenceEmbeddingProject:
+    """The project of `SentenceEmbeddingProject`, "Foreign Project", without
+    features: another project of the user with the same embedded document."""
+    return create_sentence_embedding_project(
+        db_session, test_user, title="Foreign Project", features=[]
+    )

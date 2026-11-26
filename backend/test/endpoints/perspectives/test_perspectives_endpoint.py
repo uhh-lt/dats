@@ -1,8 +1,10 @@
 import pytest
 from fastapi.testclient import TestClient
 
+from common.doc_type_enum import DocType
 from composite_keys_test_utils import TwoTenants
-from modules.perspectives.aspect_dto import AspectRead
+from job_test_utils import HeldJobs
+from modules.perspectives.aspect_dto import AspectCreate, AspectRead, PipelineSettings
 from modules.perspectives.cluster_dto import ClusterRead
 from modules.perspectives.perspectives_file_crud import (
     crud_perspectives_model_file,
@@ -15,6 +17,50 @@ from .conftest import AspectsWithFiles
 def _url(project_id: int, path: str = "") -> str:
     """The URL of the perspectives routes of the project."""
     return f"/projects/{project_id}/perspectives{path}"
+
+
+# ===========================================================================
+# CREATE ASPECT (/projects/{project_id}/perspectives/aspects) TESTS
+# ===========================================================================
+
+
+@pytest.mark.parametrize(
+    "tenant,status_code",
+    [
+        # the tag of the path's project: the aspect is created
+        pytest.param("own", 200, id="own-tag"),
+        # the tag of another project: rejected by the composite foreign key
+        pytest.param("foreign", 409, id="foreign-tag"),
+    ],
+)
+def test_create_aspect_with_a_tag_of_another_project_is_a_conflict(
+    client: TestClient,
+    tenants: TwoTenants,
+    held_jobs: HeldJobs,
+    tenant: str,
+    status_code: int,
+):
+    """An aspect of the tag of another project of the user is rejected (409)
+    and not created; with the own tag it is created (its job is held)."""
+    own, foreign = tenants["own"], tenants["foreign"]
+    tag = (own if tenant == "own" else foreign)["tag"]
+
+    response = client.put(
+        _url(own["project"].id, "/aspects"),
+        json=AspectCreate(
+            name="New aspect",
+            doc_embedding_prompt="Topic",
+            is_hierarchical=False,
+            modality=DocType.text,
+            pipeline_settings=PipelineSettings(rewriting_model="default"),
+            tag_id=tag.id,
+        ).model_dump(mode="json"),
+    )
+
+    assert response.status_code == status_code, response.text
+    response = client.get(_url(own["project"].id, "/aspects"))
+    names = [AspectRead.model_validate(a).name for a in response.json()]
+    assert ("New aspect" in names) == (status_code == 200)
 
 
 # ===========================================================================

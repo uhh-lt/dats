@@ -9,6 +9,7 @@ bare `test_project` fixture because they assert on a fresh, empty project.
 import pytest
 from fastapi.testclient import TestClient
 
+from composite_keys_test_utils import TwoTenants
 from core.search.bbox_anno_search.bbox_anno_search_columns import BBoxColumns
 from core.search.memo_search.memo_search_columns import MemoColumns
 from core.search.sent_anno_search.sent_anno_search_columns import SentAnnoColumns
@@ -688,6 +689,29 @@ def test_reorder_search_views_rejects_incomplete_id_set(
         json={"view_ids": ids},
     )
     assert response.status_code == 400, response.text
+
+
+def test_reorder_search_views_rejects_a_view_of_another_project(
+    client: TestClient, tenants: TwoTenants
+):
+    """The memo view of another project of the user is no view of the path's
+    project: an order of it is rejected with HTTP 400, the own view is
+    accepted."""
+    own, foreign = tenants["own"], tenants["foreign"]
+
+    def reorder(view_id: int):
+        return client.patch(
+            f"{_views_url(own['project'].id)}/order",
+            params={"entity_type": SearchEntityType.MEMO.value},
+            json={"view_ids": [view_id]},
+        )
+
+    response = reorder(foreign["search_view"].id)
+    assert response.status_code == 400, response.text
+
+    response = reorder(own["search_view"].id)
+    assert response.status_code == 200, response.text
+    assert [view["id"] for view in response.json()] == [own["search_view"].id]
 
 
 def test_reorder_search_views_rejects_duplicate_ids(

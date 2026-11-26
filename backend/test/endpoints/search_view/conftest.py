@@ -4,6 +4,7 @@ import pytest
 from fastapi.testclient import TestClient
 
 import dats_test_utils
+from composite_keys_test_utils import TwoTenants, create_two_tenants
 from core.project.project_orm import ProjectORM
 from core.user.user_orm import UserORM
 from modules.search_view.search_view_crud import crud_search_view
@@ -239,3 +240,17 @@ def non_member_client(app_client, non_member) -> Generator[TestClient, Any, None
     c = dats_test_utils.create_user_client(app_client, non_member)
     yield c
     c.close()
+
+
+@pytest.fixture(scope="function")
+def tenants(db_session, test_user, test_project) -> TwoTenants:
+    """
+    This fixture sets up two projects with one row of every project-owned table
+    each (see `composite_keys_test_utils.TenantRows` for the full inventory):
+    `own` in the test project, `foreign` in "Foreign Project". Each holds the
+    memo search view "View <p>" of the test user (its only view).
+
+    Non-obvious derived behavior: the test user is a member of both projects, so
+    an id of the other project is the only reason a request fails.
+    """
+    return create_two_tenants(db_session, user=test_user, project=test_project)

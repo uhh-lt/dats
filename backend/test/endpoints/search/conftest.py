@@ -7,6 +7,7 @@ from sqlalchemy import update
 from sqlalchemy.orm import Session
 
 import dats_test_utils
+from composite_keys_test_utils import TwoTenants, create_two_tenants
 from core.annotation.bbox_annotation_crud import crud_bbox_anno
 from core.annotation.bbox_annotation_dto import BBoxAnnotationCreate
 from core.annotation.bbox_annotation_orm import BBoxAnnotationORM
@@ -41,7 +42,11 @@ from core.tag.tag_orm import TagORM
 from core.user.user_crud import crud_user
 from core.user.user_dto import UserCreate
 from core.user.user_orm import UserORM
-from feature_test_utils import FeaturelessProject, create_featureless_project
+from feature_test_utils import (
+    FeaturelessProject,
+    create_featureless_project,
+    create_project_with_features,
+)
 from provenance_test_utils import (
     ProvenanceProjectWithCopies,
     create_provenance_copies,
@@ -703,3 +708,23 @@ def featureless_project(seed_db_session, test_user) -> FeaturelessProject:
     # seed session blocks the TRUNCATE of the next test suite's cleanup
     seed_db_session.commit()
     return featureless
+
+
+@pytest.fixture(scope="session")
+def tenants(seed_db_session, test_user) -> TwoTenants:
+    """
+    This fixture sets up two projects of `test_user` (no features) with one row
+    of every project-owned table each (see `composite_keys_test_utils.TenantRows`
+    for the full inventory), built once next to `search_project`: `own` in
+    "Tenant Project", `foreign` in "Foreign Project". In each, the document
+    "doc_<p>.txt" (not in the search index) has "Tag <p>" and holds a span, a
+    sentence and a bounding box annotation of "Code <p>" by `test_user`;
+    "bare_<p>.txt" has none of these.
+
+    Non-obvious derived behavior: projects of their own, so they change no result
+    of the `search_project` tests.
+    """
+    project = create_project_with_features(
+        seed_db_session, test_user, title="Tenant Project", features=[]
+    )
+    return create_two_tenants(seed_db_session, user=test_user, project=project)

@@ -3,6 +3,7 @@ from fastapi.testclient import TestClient
 
 from common.doc_type_enum import DocType
 from common.meta_type_enum import MetaType
+from composite_keys_test_utils import TwoTenants
 from core.metadata.project_metadata_dto import (
     ProjectMetadataCreate,
     ProjectMetadataRead,
@@ -343,3 +344,32 @@ def test_update_project_metadata_bulk_rejects_unknown_keys(
     )
 
     assert response.status_code == 404, response.text
+
+
+def test_update_project_metadata_bulk_with_a_key_of_another_project_is_not_found(
+    client: TestClient, tenants: TwoTenants
+):
+    """A bulk update that names the project metadata of another project of the
+    user answers 404 and leaves it unchanged; the own key is updated."""
+    own, foreign = tenants["own"], tenants["foreign"]
+    url = f"/projects/{own['project'].id}/project-metadata"
+
+    response = client.patch(
+        f"{url}/bulk",
+        json=[
+            {"project_metadata_id": foreign["project_metadata"].id, "key": "renamed"}
+        ],
+    )
+    assert response.status_code == 404, response.text
+    response = client.get(
+        f"/projects/{foreign['project'].id}/project-metadata/"
+        f"{foreign['project_metadata'].id}"
+    )
+    assert response.json()["key"] == foreign["project_metadata"].key
+
+    response = client.patch(
+        f"{url}/bulk",
+        json=[{"project_metadata_id": own["project_metadata"].id, "key": "renamed"}],
+    )
+    assert response.status_code == 200, response.text
+    assert [meta["key"] for meta in response.json()] == ["renamed"]

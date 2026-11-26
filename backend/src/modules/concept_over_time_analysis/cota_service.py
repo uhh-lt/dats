@@ -18,6 +18,9 @@ from modules.concept_over_time_analysis.cota_dto import (
     COTAUpdate,
     COTAUpdateIntern,
 )
+from modules.concept_over_time_analysis.cota_exceptions import (
+    COTASentenceNotFoundError,
+)
 from systems.job_system.job_service import JobService
 
 
@@ -82,6 +85,13 @@ class COTAService(metaclass=SingletonMeta):
             )
 
         if cota_update.timeline_settings is not None:
+            # a JSON column has no foreign key: the date metadata must be one of
+            # the project (raises NoSuchElementError)
+            date_metadata_id = cota_update.timeline_settings.date_metadata_id
+            if date_metadata_id is not None:
+                crud_project_meta.read(
+                    db=db, project_id=project_id, id=date_metadata_id
+                )
             update_data["timeline_settings"] = jsonable_encoder(
                 cota_update.timeline_settings
             )
@@ -139,6 +149,10 @@ class COTAService(metaclass=SingletonMeta):
         # find the cota sentences and annotate them
         for cota_sentence_id in cota_sentence_ids:
             idx = f"{cota_sentence_id.sdoc_id}_{cota_sentence_id.sentence_id}"
+            if idx not in cota_sentence_id2_cota_sentence:
+                raise COTASentenceNotFoundError(
+                    cota_id, cota_sentence_id.sdoc_id, cota_sentence_id.sentence_id
+                )
             cota_sentence_id2_cota_sentence[idx].concept_annotation = concept_id
 
         search_space = jsonable_encoder(list(cota_sentence_id2_cota_sentence.values()))
@@ -177,6 +191,10 @@ class COTAService(metaclass=SingletonMeta):
         # find the cota sentences and delete them
         for cota_sentence_id in cota_sentence_ids:
             idx = f"{cota_sentence_id.sdoc_id}_{cota_sentence_id.sentence_id}"
+            if idx not in cota_sentence_id2_cota_sentence:
+                raise COTASentenceNotFoundError(
+                    cota_id, cota_sentence_id.sdoc_id, cota_sentence_id.sentence_id
+                )
             del cota_sentence_id2_cota_sentence[idx]
 
         search_space = jsonable_encoder(list(cota_sentence_id2_cota_sentence.values()))

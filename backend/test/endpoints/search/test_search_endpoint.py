@@ -13,14 +13,17 @@ aggregates, the "This"/"is" span-text trap).
 """
 
 import re
+from typing import Literal
 
 import pytest
 from fastapi.testclient import TestClient
 
+from composite_keys_test_utils import TwoTenants
 from core.memo.memo_dto import MemoRead
 from core.memo.memo_enum import AttachedObjectType
 from core.search.bbox_anno_search.bbox_anno_search_columns import BBoxColumns
 from core.search.memo_search.memo_search_columns import MemoColumns
+from core.search.sdoc_search.sdoc_search_columns import SdocColumns
 from core.search.search_dto import (
     BBoxAnnotationRow,
     Page,
@@ -3294,3 +3297,94 @@ def test_search_sdocs_without_a_text_query_works_in_a_project_without_features(
     assert response.status_code == 200, response.text
     hits = PaginatedSDocHits.model_validate(response.json())
     assert list(hits.sdocs) == [featureless_project["sdoc"].id]
+
+
+# ===========================================================================
+# CROSS-PROJECT FILTER IDS (/search/source-documents, /search/*-annotations)
+# ===========================================================================
+
+
+def _id_filter(column: str, value: int) -> dict:
+    return {
+        "id": "root",
+        "logic_operator": "and",
+        "items": [
+            {"id": "f", "column": column, "operator": "IDLR_CONTAINS", "value": value}
+        ],
+    }
+
+
+@pytest.mark.parametrize("tenant", ["own", "foreign"])
+def test_search_sdocs_by_a_tag_of_another_project_matches_nothing(
+    client: TestClient, tenants: TwoTenants, tenant: str
+):
+    """Filtering the documents of "Tenant Project" by its "Tag <p>" finds
+    "doc_<p>.txt"; the tag of "Foreign Project" finds nothing."""
+    own, foreign = tenants["own"], tenants["foreign"]
+    tag = (own if tenant == "own" else foreign)["tag"]
+
+    response = client.post(
+        _url("/search/source-documents", own["project"].id),
+        params={"search_query": "", "expert_mode": False, "highlight": False},
+        json={
+            "filter": _id_filter(SdocColumns.TAG_ID_LIST_RECURSIVE.value, tag.id),
+            "sorts": [],
+        },
+    )
+
+    assert response.status_code == 200, response.text
+    hits = PaginatedSDocHits.model_validate(response.json())
+    assert list(hits.sdocs) == ([own["sdoc"].id] if tenant == "own" else [])
+
+
+@pytest.mark.parametrize(
+    "path,column,filter_row,result_row",
+    [
+        # span annotations by the tag of their document
+        pytest.param(
+            "/search/span-annotations",
+            SpanColumns.TAG_ID_LIST_RECURSIVE.value,
+            "tag",
+            "span",
+            id="span-by-tag",
+        ),
+        # sentence annotations by their code
+        pytest.param(
+            "/search/sentence-annotations",
+            SentAnnoColumns.CODE_ID_LIST_RECURSIVE.value,
+            "code",
+            "sentence",
+            id="sentence-by-code",
+        ),
+        # bounding box annotations by their code
+        pytest.param(
+            "/search/bbox-annotations",
+            BBoxColumns.CODE_ID_LIST_RECURSIVE.value,
+            "code",
+            "bbox",
+            id="bbox-by-code",
+        ),
+    ],
+)
+@pytest.mark.parametrize("tenant", ["own", "foreign"])
+def test_search_annotations_by_an_id_of_another_project_matches_nothing(
+    client: TestClient,
+    tenants: TwoTenants,
+    path: str,
+    column: str,
+    filter_row: Literal["tag", "code"],
+    result_row: Literal["span", "sentence", "bbox"],
+    tenant: str,
+):
+    """Filtering the annotations of "Tenant Project" by its own tag or code finds
+    its annotation; the tag or code of "Foreign Project" finds nothing."""
+    own, foreign = tenants["own"], tenants["foreign"]
+    value = (own if tenant == "own" else foreign)[filter_row].id
+
+    response = client.post(
+        _url(path, own["project"].id), json={"filter": _id_filter(column, value)}
+    )
+
+    assert response.status_code == 200, response.text
+    ids = [row["id"] for row in response.json()["items"]]
+    assert ids == ([own[result_row].id] if tenant == "own" else [])
