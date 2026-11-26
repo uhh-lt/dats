@@ -5,6 +5,7 @@ from pydantic import BaseModel, Field, model_validator
 from sqlalchemy import and_, or_
 from sqlalchemy.orm import Session
 
+from core.memo.memo_enum import AttachedObjectType
 from systems.search_system.abstract_column import AbstractColumns
 from systems.search_system.filtering_operators import (
     AttachedObjectOperator,
@@ -146,17 +147,16 @@ class FilterExpression(BaseModel, Generic[T]):
             self.operator == AttachedObjectOperator.EQUALS
             or self.operator == AttachedObjectOperator.NOT_EQUALS
         ):
-            from common.crud_enum import attached_object_type_to_crud
-            from core.memo.memo_enum import AttachedObjectType
-
             assert isinstance(self.value, list) and len(self.value) == 2, (
                 f"Expected [type, id], got {self.value}"
             )
             type_value, id_value = self.value
             assert isinstance(type_value, str) and isinstance(id_value, str)
-            crud = attached_object_type_to_crud[AttachedObjectType(type_value)]
             resolved = self.column.resolve_ids(
-                db=db, project_id=project_id, ids=[int(id_value)], types=[crud]
+                db=db,
+                project_id=project_id,
+                ids=[int(id_value)],
+                types=[AttachedObjectType(type_value)],
             )
             if len(resolved) == 0:
                 raise FilterValueNotFoundError(self.value, self.column)
@@ -214,21 +214,16 @@ class FilterExpression(BaseModel, Generic[T]):
             self.operator == AttachedObjectOperator.EQUALS
             or self.operator == AttachedObjectOperator.NOT_EQUALS
         ):
-            # Local imports: see resolve_ids above (circular import guard).
-            from common.crud_enum import attached_object_type_to_crud
-            from core.memo.memo_enum import AttachedObjectType
-
             assert isinstance(self.value, list) and len(self.value) == 2, (
                 f"Expected [type, name], got {self.value}"
             )
             type_value, name_value = self.value
             assert isinstance(type_value, str) and isinstance(name_value, str)
-            crud = attached_object_type_to_crud[AttachedObjectType(type_value)]
             resolved = self.column.resolve_names(
                 db=db,
                 project_id=project_id,
                 names=[name_value],
-                types=[crud],
+                types=[AttachedObjectType(type_value)],
             )
             if len(resolved) == 0:
                 raise FilterValueNotFoundError(self.value, self.column)

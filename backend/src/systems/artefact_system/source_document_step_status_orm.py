@@ -54,6 +54,3 @@ class SourceDocumentStepStatusORM(ORMBase):
             postgresql_where=text(f"status <> {SDocStatus.finished.value}"),
         ),
     )
-
-    def get_project_id(self) -> int:
-        return self.project_id

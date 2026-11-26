@@ -58,6 +58,3 @@ class DocumentClusterORM(ORMBase):
 
     def __repr__(self) -> str:
         return f"<DocumentClusterORM(sdoc_id={self.sdoc_id}, cluster_id={self.cluster_id}, is_accepted={self.is_accepted})>"
-
-    def get_project_id(self) -> int:
-        return self.project_id

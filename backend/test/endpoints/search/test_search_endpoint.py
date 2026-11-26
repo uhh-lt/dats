@@ -613,8 +613,8 @@ def test_memo_search_attached_object_column_supports_attached_object_operators(
 #
 # The ATTACHED_OBJECT column is polymorphic: its value is a [type, id] pair, so the
 # generic resolve_ids/resolve_names hooks cannot know which table the id lives in.
-# filtering.py therefore converts the AttachedObjectType token into a `Crud` member
-# and passes it down as `types`, letting the memo column resolve the exact row.
+# filtering.py therefore passes the AttachedObjectType token down as `types`,
+# letting the memo column resolve the exact row.
 # These tests pin that contract: a [type, id] filter must survive a full
 # resolve_ids -> resolve_names round-trip unchanged, for every attachable type.
 

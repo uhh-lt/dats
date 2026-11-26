@@ -73,9 +73,8 @@ class WebsocketEmitter:
             event_type: The event type.
             payload: The mutation result (the entity's read DTO). Its type must
                 match the event class registered for `event_type`.
-            project_id: The project whose members are the audience. Passed
-                explicitly (from the body/path for creates, or
-                `db_obj.get_project_id()` for `/{id}` routes).
+            project_id: The project whose members are the audience, the
+                project of the path.
         """
         event = self._build_event(event_type, payload)
         exclude_user_id = self._actor_exclusion()

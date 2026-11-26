@@ -68,9 +68,6 @@ class CodeORM(ORMBase):
         UniqueConstraint("project_id", "name", name="UC_code_name_unique_per_project"),
         CheckConstraint("length(name) > 0", name="CC_code_name_not_empty"),
     )
-
-    def get_project_id(self) -> int:
-        return self.project_id
 """
 
 
@@ -126,8 +123,8 @@ def test_check_orm_accepts_valid_orm() -> None:
         # legacy Column(...) outside mapped_column
         pytest.param(
             "no-column",
-            "    def get_project_id(self) -> int:",
-            "    legacy = Column(Integer)\n\n    def get_project_id(self) -> int:",
+            "    __table_args__ = (",
+            "    legacy = Column(Integer)\n\n    __table_args__ = (",
             id="no-column",
         ),
         # optional column declared with nullable=True on a non-optional annotation

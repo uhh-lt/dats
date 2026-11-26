@@ -56,19 +56,6 @@ class CRUDUser(SQLCRUDBase[UserORM, UserCreate, UserUpdate]):
 
     ### READ OPERATIONS ###
 
-    def read_multi(
-        self,
-        db: Session,
-        *,
-        skip: int = 0,
-        limit: int = 100,
-        include_virtual: bool = True,
-    ) -> list[UserORM]:
-        query = db.query(self.model)
-        if not include_virtual:
-            query = query.filter(self.model.project_id.is_(None))
-        return query.order_by(self.model.id).offset(skip).limit(limit).all()
-
     def read_by_project(self, db: Session, *, project_id: int) -> list[UserORM]:
         """
         Read the users of a project: its members, then its virtual users.

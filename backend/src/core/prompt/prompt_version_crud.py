@@ -38,30 +38,6 @@ class CRUDPromptVersion(
             db.expire(db_obj.prompt, ["versions"])
         return db_objs
 
-    ### READ OPERATIONS ###
-
-    def read_by_prompt(
-        self, db: Session, *, project_id: int, prompt_id: int
-    ) -> list[PromptVersionORM]:
-        """
-        Read all versions of a prompt.
-
-        Args:
-            project_id: The project of the prompt.
-            prompt_id: The ID of the prompt.
-
-        Returns:
-            The versions of the prompt, oldest first.
-        """
-        return (
-            db.query(self.model)
-            .filter(
-                self.model.project_id == project_id, self.model.prompt_id == prompt_id
-            )
-            .order_by(self.model.version)
-            .all()
-        )
-
     ### OTHER OPERATIONS ###
 
     def count_by_prompt(self, db: Session, *, project_id: int, prompt_id: int) -> int:

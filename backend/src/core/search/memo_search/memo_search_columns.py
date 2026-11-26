@@ -1,7 +1,6 @@
 from sqlalchemy import String, and_, case, cast, func
 from sqlalchemy.orm import aliased
 
-from common.crud_enum import Crud
 from core.annotation.span_group_crud import crud_span_group
 from core.annotation.span_group_orm import SpanGroupORM
 from core.code.code_crud import crud_code
@@ -343,7 +342,11 @@ class MemoColumns(str, AbstractColumns):
                 raise NotImplementedError(f"Cannot determine groupability for {self}!")  # type: ignore
 
     def resolve_ids(
-        self, db, project_id: int, ids: list[int], types: list[Crud] | None = None
+        self,
+        db,
+        project_id: int,
+        ids: list[int],
+        types: list[AttachedObjectType] | None = None,
     ) -> list[str]:
         match self:
             case MemoColumns.ATTACHED_OBJECT_ID:
@@ -351,8 +354,8 @@ class MemoColumns(str, AbstractColumns):
                     "ATTACHED_OBJECT resolution requires the entity type per id"
                 )
                 return [
-                    self._resolve_attached_object_name(db, project_id, crud, i)
-                    for crud, i in zip(types, ids)
+                    self._resolve_attached_object_name(db, project_id, object_type, i)
+                    for object_type, i in zip(types, ids)
                 ]
             case MemoColumns.USER_ID:
                 users = crud_user.read_by_ids(db, ids=ids)
@@ -362,31 +365,37 @@ class MemoColumns(str, AbstractColumns):
 
     @staticmethod
     def _resolve_attached_object_name(
-        db, project_id: int, crud: Crud, object_id: int
+        db, project_id: int, object_type: AttachedObjectType, object_id: int
     ) -> str:
-        match crud:
-            case Crud.SPAN_GROUP:
+        match object_type:
+            case AttachedObjectType.span_group:
                 return crud_span_group.read(
                     db=db, project_id=project_id, id=object_id
                 ).name
-            case Crud.CODE:
+            case AttachedObjectType.code:
                 return crud_code.read(db=db, project_id=project_id, id=object_id).name
-            case Crud.TAG:
+            case AttachedObjectType.tag:
                 return crud_tag.read(db=db, project_id=project_id, id=object_id).name
-            case Crud.SOURCE_DOCUMENT:
+            case AttachedObjectType.source_document:
                 return crud_sdoc.read(db=db, project_id=project_id, id=object_id).name
-            case Crud.PROJECT:
+            case AttachedObjectType.project:
                 # a memo is attached to its own project only
                 if object_id != project_id:
                     raise NoSuchElementError(ProjectORM, id=object_id)
                 return crud_project.read(db=db, id=project_id).title
-            case Crud.SPAN_ANNOTATION | Crud.SENTENCE_ANNOTATION | Crud.BBOX_ANNOTATION:
+            case (
+                AttachedObjectType.span_annotation
+                | AttachedObjectType.sentence_annotation
+                | AttachedObjectType.bbox_annotation
+            ):
                 return str(object_id)
-            case _:
-                raise NotImplementedError(f"Cannot resolve name for {crud}!")
 
     def resolve_names(
-        self, db, project_id: int, names: list[str], types: list[Crud] | None = None
+        self,
+        db,
+        project_id: int,
+        names: list[str],
+        types: list[AttachedObjectType] | None = None,
     ) -> list[int]:
         match self:
             case MemoColumns.ATTACHED_OBJECT_ID:
@@ -394,8 +403,8 @@ class MemoColumns(str, AbstractColumns):
                     "ATTACHED_OBJECT resolution requires the entity type per name"
                 )
                 return [
-                    self._resolve_attached_object_id(db, project_id, crud, name)
-                    for crud, name in zip(types, names)
+                    self._resolve_attached_object_id(db, project_id, object_type, name)
+                    for object_type, name in zip(types, names)
                 ]
             case MemoColumns.USER_ID:
                 users = crud_user.read_by_emails(db, emails=names)
@@ -404,31 +413,37 @@ class MemoColumns(str, AbstractColumns):
                 raise NotImplementedError(f"Cannot resolve name for {self}!")
 
     @staticmethod
-    def _resolve_attached_object_id(db, project_id: int, crud: Crud, name: str) -> int:
-        match crud:
-            case Crud.SPAN_ANNOTATION | Crud.SENTENCE_ANNOTATION | Crud.BBOX_ANNOTATION:
+    def _resolve_attached_object_id(
+        db, project_id: int, object_type: AttachedObjectType, name: str
+    ) -> int:
+        match object_type:
+            case (
+                AttachedObjectType.span_annotation
+                | AttachedObjectType.sentence_annotation
+                | AttachedObjectType.bbox_annotation
+            ):
                 # Annotations have no name; they round-trip by their stringified id.
                 return int(name)
-            case Crud.SOURCE_DOCUMENT:
+            case AttachedObjectType.source_document:
                 found = crud_sdoc.read_by_name(db, name=name, project_id=project_id)
-            case Crud.CODE:
+            case AttachedObjectType.code:
                 found = crud_code.read_by_name_and_project(
                     db, code_name=name, project_id=project_id
                 )
-            case Crud.TAG:
+            case AttachedObjectType.tag:
                 found = crud_tag.read_by_name_and_project(
                     db, name=name, project_id=project_id
                 )
-            case Crud.PROJECT:
+            case AttachedObjectType.project:
                 # a memo is attached to its own project only
                 project = crud_project.read(db=db, id=project_id)
                 found = project if project.title == name else None
-            case Crud.SPAN_GROUP:
+            case AttachedObjectType.span_group:
                 found = crud_span_group.read_by_name(
                     db, project_id=project_id, name=name
                 )
-            case _:
-                raise NotImplementedError(f"Cannot resolve id for {crud}!")
         if found is None:
-            raise ValueError(f"No {crud.name} named '{name}' in project {project_id}!")
+            raise ValueError(
+                f"No {object_type.value} named '{name}' in project {project_id}!"
+            )
         return found.id
