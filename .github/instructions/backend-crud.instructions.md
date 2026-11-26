@@ -13,51 +13,56 @@ SQL CRUD modules are the PostgreSQL data-access layer for one ORM entity. Each f
 ## File Structure
 
 ```python
-# 1. Imports: sqlalchemy, own-entity ORM + DTOs, SQLCRUDBase (+ UpdateNotAllowed),
+# 1. Imports: sqlalchemy, own-entity ORM + DTOs, ProjectCRUDBase or SQLCRUDBase (+ UpdateNotAllowed),
 #    NoSuchElementError (repos.db.sql_exceptions), own <module>_exceptions, other crud_* singletons.
 from sqlalchemy.orm import Session
 
 from config import conf
 from core.code.code_dto import CodeCreate, CodeUpdate
 from core.code.code_orm import CodeORM
-from repos.db.crud_base import SQLCRUDBase
+from repos.db.project_crud_base import ProjectCRUDBase
 
 # 2. Module constants (only if the file batches queries itself)
 BATCH_SIZE = conf.postgres.batch_size
 
 # 3. The CRUD class, generic over [ORM, CreateDTO, UpdateDTO]
-class CRUDCode(SQLCRUDBase[CodeORM, CodeCreate, CodeUpdate]):
+class CRUDCode(ProjectCRUDBase[CodeORM, CodeCreate, CodeUpdate]):
     ### CREATE OPERATIONS ###
     def create_system_codes(self, db: Session, *, project_id: int, codes: list[SystemCode]) -> list[CodeORM]: ...
 
     ### READ OPERATIONS ###
-    def read_by_name(self, db: Session, *, code_name: str) -> list[CodeORM]:
+    def read_by_name(self, db: Session, *, project_id: int, code_name: str) -> list[CodeORM]:
         """
-        Read all codes with the given name.
+        Read the codes of the project with the given name.
 
         Args:
+            project_id: The project of the codes.
             code_name: The name of the codes.
 
         Returns:
             The matching codes.
         """
-        return db.query(self.model).filter(self.model.name == code_name).all()
+        return (
+            db.query(self.model)
+            .filter(self.model.project_id == project_id, self.model.name == code_name)
+            .all()
+        )
 
     ### UPDATE OPERATIONS ###
-    def update_with_children(self, db: Session, *, code_id: int, update_dto: CodeUpdate) -> CodeORM: ...
+    def update_with_children(self, db: Session, *, project_id: int, code_id: int, update_dto: CodeUpdate) -> CodeORM: ...
 
     ### DELETE OPERATIONS ###
-    def delete_by_sdoc(self, db: Session, *, sdoc_id: int) -> list[int]: ...
+    def delete_by_sdoc(self, db: Session, *, project_id: int, sdoc_id: int) -> list[int]: ...
 
     ### OTHER OPERATIONS ###
-    def exists_by_name(self, db: Session, *, code_name: str) -> bool: ...
+    def exists_by_name(self, db: Session, *, project_id: int, code_name: str) -> bool: ...
 
 
 # 4. The singleton: crud_<name> = CRUD<Entity>(<Entity>ORM)
 crud_code = CRUDCode(CodeORM)
 ```
 
-A CRUD with no custom methods is just `class CRUDAspect(SQLCRUDBase[...]):` + `pass` + the singleton.
+A CRUD with no custom methods is just `class CRUDAspect(ProjectCRUDBase[...]):` + `pass` + the singleton. Tables outside projects (`user`, `project`, `spantext`) extend `SQLCRUDBase`, whose base methods take plain ids.
 
 ## Rules
 
@@ -65,20 +70,20 @@ A CRUD with no custom methods is just `class CRUDAspect(SQLCRUDBase[...]):` + `p
 
 - **Class name**: `CRUD<Entity>` (e.g. `CRUDSpanAnnotation`). Exactly one class whose name starts with `CRUD` per file.
 - **Singleton**: `crud_<name> = CRUD<Entity>(<Entity>ORM)` at the bottom of the file. `<name>` is the snake_case entity name; the only allowed abbreviations are `sdoc`, `adoc`, `span_anno`, `sentence_anno`, `bbox_anno`, `sdoc_meta`, `sdoc_data`, `project_meta`. Callers import the singleton, never the class.
-- **Generic parameters**: `SQLCRUDBase[<Entity>ORM, <Create DTO>, <Update DTO>]`, plus the key type for a composite primary key (see Variations). Use the `...CreateIntern` / `...UpdateIntern` DTO when the ORM needs fields the API DTO lacks; the service builds it (e.g. `SpanAnnotationService` looks up the annotation document, `SearchViewService` serializes the view). If the entity is never updated, use `UpdateNotAllowed` from `crud_base`.
+- **Generic parameters**: `ProjectCRUDBase[<Entity>ORM, <Create DTO>, <Update DTO>]` (`SQLCRUDBase` outside projects), plus the key type for a composite primary key (see Variations). Use the `...CreateIntern` / `...UpdateIntern` DTO when the ORM needs fields the API DTO lacks; the service builds it (e.g. `SpanAnnotationService` looks up the annotation document, `SearchViewService` serializes the view). If the entity is never updated, use `UpdateNotAllowed` from `crud_base`.
 - **Exactly the generic DTOs**: the generic parameters are the CRUD's contract. Overrides of `create` / `create_multi` / `update` / `update_multi` take exactly `create_dto: <Create>` / `create_dtos: list[<Create>]` / `id` + `update_dto: <Update>` / `ids` + `update_dtos: list[<Update>]`, never API DTOs or extra parameters (`user_id`, `codes`). Related rows are linked by their own methods (`crud_classifier.link_codes`).
 - **Sections**: group methods under `### CREATE OPERATIONS ###`, `### READ OPERATIONS ###`, `### UPDATE OPERATIONS ###`, `### DELETE OPERATIONS ###`, `### OTHER OPERATIONS ###`, in that order. Omit empty sections, or keep the header with a `# Inherited from <Base>` comment.
 - **Verbs**: public method names start with `create`, `read`, `update` or `delete` (their own sections), or with one of the OTHER verbs: `exists`, `search`, `count`, `link`, `unlink`, `set`, `add`, `remove`, `duplicate`, `merge`, `reorder`, `associate`, `dissociate`, `revoke`, `favorite`, `unfavorite`. `add`/`remove` are for association rows only (`add_to_span_group`, `remove_from_span_group`). `get_` and `find_` are forbidden. The list is closed, so reuse an existing verb. Add a new one only when none fits: to `OTHER_VERBS` in `backend/lint/check_crud.py` (with a comment) and to this list. Use `_multi` for list variants and `_by_<field>[_and_<field>]` for lookups (`read_by_hashed_key`, `delete_by_adoc`, `exists_favorite`). Upserts are updates (`crud_memo.update_recent`).
 - **CRUDs vs. handlers**: CRUDs use `read_*`, while endpoint handlers use `get_*` (see `backend-endpoint.instructions.md`).
 - **Private helpers** (`_name`) are exempt from the verb, order and section rules, but still need a return annotation.
-- **Base methods**: `create`, `create_multi`, `read`, `read_by_ids`, `read_multi`, `exists`, `update`, `update_multi`, `delete`, `delete_multi`. Override them instead of adding near-duplicates. (This is SQL-specific: Embedding and Elastic CRUDs must not override their bases.)
+- **Base methods**: `create`, `create_multi`, `read`, `read_by_ids`, `exists`, `update`, `update_multi`, `delete`, `delete_multi`. Override them instead of adding near-duplicates. (This is SQL-specific: Embedding and Elastic CRUDs must not override their bases.)
 - **Single delegates to multi**: the base `create`, `update` and `delete` call `create_multi`, `update_multi` and `delete_multi` with one item. Put extra handling (e.g. adoc timestamps, password hashing) into an override of the `_multi` method that calls `super()`; the single-item path then gets it for free. Never override the single-item method: a caller of the `_multi` method would skip the handling. An exception needs `# check_crud: allow override-multi (<reason>)` directly above it.
 - **No `_bulk` methods**: batch operations are the `_multi` methods. Turning API DTOs into CRUD DTOs (annotation documents, ids inside bulk DTOs, per-user state) is orchestration and belongs in a service (`SpanAnnotationService.create_multi`, `MemoService.update_multi`).
 - **Lint**: `backend/lint/check_crud.py` enforces these conventions (including `no-bulk`, `generic-dto` and `override-multi`). It runs in `just lint backend` and in the `Lint: Backend CRUD conventions` pre-commit hook (so also in CI).
 
 ### Signatures
 
-- `db: Session` is the first parameter after `self`; every parameter after it is keyword-only (`*`), including the base `read(db, *, id)`.
+- `db: Session` is the first parameter after `self`; every parameter after it is keyword-only (`*`), including the base `read(db, *, project_id, id)`.
 - Project ids are always named `project_id`, never `proj_id`.
 - Every method has a return annotation; docstrings use the `Args:` / `Returns:` style.
 - Overrides of the base write methods keep the base parameters exactly (see _Exactly the generic DTOs_); other methods name their parameters freely.
