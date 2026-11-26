@@ -91,6 +91,26 @@ class CRUDUser(SQLCRUDBase[UserORM, UserCreate, UserUpdate]):
             .all()
         )
 
+    def read_virtual_user(self, db: Session, *, project_id: int, id: int) -> UserORM:
+        """
+        Read a virtual user of the project.
+
+        Args:
+            project_id: The project of the virtual user.
+            id: The id of the virtual user.
+
+        Returns:
+            The virtual user; raises NoSuchElementError for any other user.
+        """
+        user = (
+            db.query(self.model)
+            .filter(self.model.id == id, self.model.project_id == project_id)
+            .first()
+        )
+        if user is None:
+            raise NoSuchElementError(self.model, project_id=project_id, id=id)
+        return user
+
     def read_by_email(self, db: Session, *, email: str) -> UserORM:
         # Flo: email is unique so there can be only one, which is why we use first() here
         user = (

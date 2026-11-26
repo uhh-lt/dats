@@ -4,7 +4,6 @@
 /* eslint-disable */
 import type { ProjectAddUser } from "@models/ProjectAddUser";
 import type { ProjectUserLinks } from "@models/ProjectUserLinks";
-import type { PublicUserRead } from "@models/PublicUserRead";
 import type { UserRead } from "@models/UserRead";
 import type { UserUpdate } from "@models/UserUpdate";
 import type { VirtualUserCreate } from "@models/VirtualUserCreate";
@@ -26,40 +25,12 @@ export class UserService {
   }): CancelablePromise<UserRead> {
     return __request(OpenAPI, {
       method: "PUT",
-      url: "/user/{project_id}/virtual_user",
+      url: "/projects/{project_id}/virtual-users",
       path: {
         project_id: projectId,
       },
       body: requestBody,
       mediaType: "application/json",
-      errors: {
-        422: `Validation Error`,
-      },
-    });
-  }
-  /**
-   * Returns the current (logged in) user
-   * @returns UserRead Successful Response
-   * @throws ApiError
-   */
-  public static getMe(): CancelablePromise<UserRead> {
-    return __request(OpenAPI, {
-      method: "GET",
-      url: "/user/me",
-    });
-  }
-  /**
-   * Returns the User with the given ID if it exists
-   * @returns PublicUserRead Successful Response
-   * @throws ApiError
-   */
-  public static getById({ userId }: { userId: number }): CancelablePromise<PublicUserRead> {
-    return __request(OpenAPI, {
-      method: "GET",
-      url: "/user/by_id/{user_id}",
-      path: {
-        user_id: userId,
-      },
       errors: {
         422: `Validation Error`,
       },
@@ -73,7 +44,7 @@ export class UserService {
   public static getByProject({ projectId }: { projectId: number }): CancelablePromise<Array<UserRead>> {
     return __request(OpenAPI, {
       method: "GET",
-      url: "/user/{project_id}/user",
+      url: "/projects/{project_id}/members",
       path: {
         project_id: projectId,
       },
@@ -83,7 +54,7 @@ export class UserService {
     });
   }
   /**
-   * Associates an existing User to the Project with the given ID if it exists
+   * Adds the existing User with the given email to the Project as a member
    * @returns ProjectUserLinks Successful Response
    * @throws ApiError
    */
@@ -95,8 +66,8 @@ export class UserService {
     requestBody: ProjectAddUser;
   }): CancelablePromise<ProjectUserLinks> {
     return __request(OpenAPI, {
-      method: "PATCH",
-      url: "/user/{project_id}/user",
+      method: "PUT",
+      url: "/projects/{project_id}/members",
       path: {
         project_id: projectId,
       },
@@ -108,78 +79,24 @@ export class UserService {
     });
   }
   /**
-   * Returns all Users that exist in the system, without virtual users
-   * @returns PublicUserRead Successful Response
-   * @throws ApiError
-   */
-  public static getAll({
-    skip,
-    limit,
-  }: {
-    /**
-     * The number of elements to skip (offset)
-     */
-    skip?: number | null;
-    /**
-     * The maximum number of returned elements
-     */
-    limit?: number | null;
-  }): CancelablePromise<Array<PublicUserRead>> {
-    return __request(OpenAPI, {
-      method: "GET",
-      url: "/user/all",
-      query: {
-        skip: skip,
-        limit: limit,
-      },
-      errors: {
-        422: `Validation Error`,
-      },
-    });
-  }
-  /**
-   * Removes the logged-in User
-   * @returns UserRead Successful Response
-   * @throws ApiError
-   */
-  public static deleteMe(): CancelablePromise<UserRead> {
-    return __request(OpenAPI, {
-      method: "DELETE",
-      url: "/user/",
-    });
-  }
-  /**
-   * Updates the logged-in User
-   * @returns UserRead Successful Response
-   * @throws ApiError
-   */
-  public static updateMe({ requestBody }: { requestBody: UserUpdate }): CancelablePromise<UserRead> {
-    return __request(OpenAPI, {
-      method: "PATCH",
-      url: "/user/",
-      body: requestBody,
-      mediaType: "application/json",
-      errors: {
-        422: `Validation Error`,
-      },
-    });
-  }
-  /**
-   * Updates the User with the given ID: a virtual user of one of your projects (other users have no project)
+   * Updates the virtual user with the given ID of the Project
    * @returns UserRead Successful Response
    * @throws ApiError
    */
   public static updateById({
+    projectId,
     userId,
     requestBody,
   }: {
+    projectId: number;
     userId: number;
     requestBody: UserUpdate;
   }): CancelablePromise<UserRead> {
     return __request(OpenAPI, {
       method: "PATCH",
-      url: "/user/{user_id}",
+      url: "/projects/{project_id}/virtual-users/{user_id}",
       path: {
+        project_id: projectId,
         user_id: userId,
       },
       body: requestBody,
@@ -190,15 +107,16 @@ export class UserService {
     });
   }
   /**
-   * Removes the User with the given ID together with all its annotations and memos: a virtual user of one of your projects (other users have no project). The virtual user of an experiment run cannot be deleted here (HTTP 409); delete its run in the Experiment Studio.
+   * Removes the virtual user with the given ID of the Project together with all its annotations and memos. The virtual user of an experiment run cannot be deleted here (HTTP 409); delete its run in the Experiment Studio.
    * @returns UserRead Successful Response
    * @throws ApiError
    */
-  public static deleteById({ userId }: { userId: number }): CancelablePromise<UserRead> {
+  public static deleteById({ projectId, userId }: { projectId: number; userId: number }): CancelablePromise<UserRead> {
     return __request(OpenAPI, {
       method: "DELETE",
-      url: "/user/{user_id}",
+      url: "/projects/{project_id}/virtual-users/{user_id}",
       path: {
+        project_id: projectId,
         user_id: userId,
       },
       errors: {
@@ -207,7 +125,7 @@ export class UserService {
     });
   }
   /**
-   * Dissociates the Users with the Project with the given ID if it exists
+   * Removes the member with the given ID from the Project
    * @returns ProjectUserLinks Successful Response
    * @throws ApiError
    */
@@ -220,11 +138,49 @@ export class UserService {
   }): CancelablePromise<ProjectUserLinks> {
     return __request(OpenAPI, {
       method: "DELETE",
-      url: "/user/{project_id}/user/{user_id}",
+      url: "/projects/{project_id}/members/{user_id}",
       path: {
         project_id: projectId,
         user_id: userId,
       },
+      errors: {
+        422: `Validation Error`,
+      },
+    });
+  }
+  /**
+   * Returns the current (logged in) user
+   * @returns UserRead Successful Response
+   * @throws ApiError
+   */
+  public static getMe(): CancelablePromise<UserRead> {
+    return __request(OpenAPI, {
+      method: "GET",
+      url: "/users/me",
+    });
+  }
+  /**
+   * Removes the logged-in User
+   * @returns UserRead Successful Response
+   * @throws ApiError
+   */
+  public static deleteMe(): CancelablePromise<UserRead> {
+    return __request(OpenAPI, {
+      method: "DELETE",
+      url: "/users/me",
+    });
+  }
+  /**
+   * Updates the logged-in User
+   * @returns UserRead Successful Response
+   * @throws ApiError
+   */
+  public static updateMe({ requestBody }: { requestBody: UserUpdate }): CancelablePromise<UserRead> {
+    return __request(OpenAPI, {
+      method: "PATCH",
+      url: "/users/me",
+      body: requestBody,
+      mediaType: "application/json",
       errors: {
         422: `Validation Error`,
       },

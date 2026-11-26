@@ -93,13 +93,13 @@ def _texts(groups: list[SpanGroupWithAnnotationsRead]) -> list[list[str]]:
 
 
 # ===========================================================================
-# ENABLE (/feature/project/{project_id}/coreference_resolution/enable) TESTS
+# ENABLE (/projects/{project_id}/features/coreference_resolution/enable) TESTS
 # ===========================================================================
 
 
 def _enable(client: TestClient, project_id: int) -> None:
     response = client.post(
-        f"/feature/project/{project_id}/{FEATURE}/enable",
+        f"/projects/{project_id}/features/{FEATURE}/enable",
         json=FeatureActivation(settings=SETTINGS).model_dump(mode="json"),
     )
     assert response.status_code == 200, response.text
@@ -181,7 +181,9 @@ def test_enable_creates_the_mention_code_and_disable_keeps_it(
     created = mention()
     assert created is not None and created.is_system
 
-    response = client.post(f"/feature/project/{codeless_project.id}/{FEATURE}/disable")
+    response = client.post(
+        f"/projects/{codeless_project.id}/features/{FEATURE}/disable"
+    )
     assert response.status_code == 200, response.text
     kept = mention()
     assert kept is not None and kept.id == created.id
@@ -306,7 +308,7 @@ def test_create_project_enables_coreference_resolution_only_on_request(
 ):
     """A project created without a feature list does not enable coreference
     resolution; one created with it does."""
-    response = client.put("/project", json=create.model_dump(mode="json"))
+    response = client.put("/projects", json=create.model_dump(mode="json"))
 
     assert response.status_code == 200, response.text
     project = ProjectRead.model_validate(response.json())

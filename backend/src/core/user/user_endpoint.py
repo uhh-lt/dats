@@ -1,8 +1,8 @@
 from fastapi import APIRouter, Depends
 
-from common.crud_enum import Crud
 from common.dats_event import DATSEvent
-from common.dependencies import DBSession, get_current_user, skip_limit_params
+from common.dependencies import DBSession, get_current_user
+from common.project_router import project_router
 from core.auth.auth_exceptions import InvalidError
 from core.auth.authz_user import AuthzUser
 from core.project.project_crud import crud_project
@@ -11,7 +11,6 @@ from core.project.project_service import ProjectService
 from core.user.user_crud import crud_user
 from core.user.user_dto import (
     ProjectAddUser,
-    PublicUserRead,
     UserRead,
     UserUpdate,
     VirtualUserCreate,
@@ -19,16 +18,18 @@ from core.user.user_dto import (
 from core.user.user_orm import UserORM
 from systems.websocket_system.websocket_dependency import WebsocketEmitter
 
-router = APIRouter(
-    prefix="/user", dependencies=[Depends(get_current_user)], tags=["user", "mcp"]
-)
+# the logged-in user, outside every project
+router = APIRouter(dependencies=[Depends(get_current_user)], tags=["user", "mcp"])
+# the users of a project: its members and its virtual users
+project = project_router("", tags=[])
+router.include_router(project)
 
 
 # --- create operations
 
 
-@router.put(
-    "/{project_id}/virtual_user",
+@project.put(
+    "/virtual-users",
     response_model=UserRead,
     summary="Creates a virtual user (a user that cannot log in) in the Project",
 )
@@ -37,11 +38,8 @@ def create_virtual_user(
     project_id: int,
     virtual_user: VirtualUserCreate,
     db: DBSession,
-    authz_user: AuthzUser = Depends(),
     ws: WebsocketEmitter = Depends(),
 ) -> UserRead:
-    authz_user.assert_in_project(project_id)
-
     db_user = crud_user.create_virtual_user(
         db=db, project_id=project_id, name=virtual_user.name
     )
@@ -54,7 +52,7 @@ def create_virtual_user(
 
 
 @router.get(
-    "/me",
+    "/users/me",
     response_model=UserRead,
     summary="Returns the current (logged in) user",
 )
@@ -62,57 +60,26 @@ def get_me(*, user: UserORM = Depends(get_current_user)) -> UserRead:
     return UserRead.model_validate(user)
 
 
-@router.get(
-    "/by_id/{user_id}",
-    response_model=PublicUserRead,
-    summary="Returns the User with the given ID if it exists",
-)
-def get_by_id(*, db: DBSession, user_id: int) -> PublicUserRead:
-    db_user = crud_user.read(db=db, id=user_id)
-    return PublicUserRead.model_validate(db_user)
-
-
-@router.get(
-    "/{project_id}/user",
+@project.get(
+    "/members",
     response_model=list[UserRead],
     summary=(
         "Returns all Users of the Project with the given ID: its members, then its "
         "virtual users"
     ),
 )
-def get_by_project(
-    *,
-    project_id: int,
-    db: DBSession,
-    authz_user: AuthzUser = Depends(),
-) -> list[UserRead]:
-    authz_user.assert_in_project(project_id)
-
+def get_by_project(*, project_id: int, db: DBSession) -> list[UserRead]:
     return [
         UserRead.model_validate(user)
         for user in crud_user.read_by_project(db=db, project_id=project_id)
     ]
 
 
-@router.get(
-    "/all",
-    response_model=list[PublicUserRead],
-    summary="Returns all Users that exist in the system, without virtual users",
-)
-def get_all(
-    *,
-    db: DBSession,
-    skip_limit: dict[str, int] = Depends(skip_limit_params),
-) -> list[PublicUserRead]:
-    db_objs = crud_user.read_multi(db=db, include_virtual=False, **skip_limit)
-    return [PublicUserRead.model_validate(proj) for proj in db_objs]
-
-
 # --- update operations
 
 
 @router.patch(
-    "/",
+    "/users/me",
     response_model=UserRead,
     summary="Updates the logged-in User",
 )
@@ -131,23 +98,20 @@ def update_me(
     return result
 
 
-@router.patch(
-    "/{user_id}",
+@project.patch(
+    "/virtual-users/{user_id}",
     response_model=UserRead,
-    summary=(
-        "Updates the User with the given ID: a virtual user of one of your projects "
-        "(other users have no project)"
-    ),
+    summary="Updates the virtual user with the given ID of the Project",
 )
 def update_by_id(
     *,
+    project_id: int,
     user_id: int,
     user: UserUpdate,
     db: DBSession,
-    authz_user: AuthzUser = Depends(),
     ws: WebsocketEmitter = Depends(),
 ) -> UserRead:
-    authz_user.assert_in_same_project_as(Crud.USER, user_id)
+    crud_user.read_virtual_user(db=db, project_id=project_id, id=user_id)
     # the email and password of a virtual user are generated, never chosen
     if user.email is not None or user.password is not None:
         raise InvalidError("The email and password of a virtual user cannot be changed")
@@ -155,26 +119,22 @@ def update_by_id(
     result = UserRead.model_validate(
         crud_user.update(db=db, id=user_id, update_dto=user)
     )
-    assert result.project_id is not None
-    ws.emit_to_project(DATSEvent.USER_UPDATED, result, project_id=result.project_id)
+    ws.emit_to_project(DATSEvent.USER_UPDATED, result, project_id=project_id)
     return result
 
 
-@router.patch(
-    "/{project_id}/user",
+@project.put(
+    "/members",
     response_model=ProjectUserLinks,
-    summary="Associates an existing User to the Project with the given ID if it exists",
+    summary="Adds the existing User with the given email to the Project as a member",
 )
 def associate_user_to_project(
     *,
     project_id: int,
     user: ProjectAddUser,
     db: DBSession,
-    authz_user: AuthzUser = Depends(),
     ws: WebsocketEmitter = Depends(),
 ) -> ProjectUserLinks:
-    authz_user.assert_in_project(project_id)
-
     user_db_obj = crud_user.read_by_email(db=db, email=user.email)
     # virtual users belong to their project without being members
     if user_db_obj.is_virtual:
@@ -197,7 +157,7 @@ def associate_user_to_project(
 
 
 @router.delete(
-    "/",
+    "/users/me",
     response_model=UserRead,
     summary="Removes the logged-in User",
 )
@@ -220,47 +180,42 @@ def delete_me(
     return result
 
 
-@router.delete(
-    "/{user_id}",
+@project.delete(
+    "/virtual-users/{user_id}",
     response_model=UserRead,
     summary=(
-        "Removes the User with the given ID together with all its annotations and "
-        "memos: a virtual user of one of your projects (other users have no project). "
-        "The virtual user of an experiment run cannot be deleted here (HTTP 409); "
-        "delete its run in the Experiment Studio."
+        "Removes the virtual user with the given ID of the Project together with all "
+        "its annotations and memos. The virtual user of an experiment run cannot be "
+        "deleted here (HTTP 409); delete its run in the Experiment Studio."
     ),
 )
 def delete_by_id(
     *,
+    project_id: int,
     user_id: int,
     db: DBSession,
-    authz_user: AuthzUser = Depends(),
     ws: WebsocketEmitter = Depends(),
 ) -> UserRead:
-    authz_user.assert_in_same_project_as(Crud.USER, user_id)
-
-    result = UserRead.model_validate(crud_user.read(db=db, id=user_id))
+    result = UserRead.model_validate(
+        crud_user.read_virtual_user(db=db, project_id=project_id, id=user_id)
+    )
     crud_user.delete(db=db, id=user_id)
-    assert result.project_id is not None
-    ws.emit_to_project(DATSEvent.USER_DELETED, result, project_id=result.project_id)
+    ws.emit_to_project(DATSEvent.USER_DELETED, result, project_id=project_id)
     return result
 
 
-@router.delete(
-    "/{project_id}/user/{user_id}",
+@project.delete(
+    "/members/{user_id}",
     response_model=ProjectUserLinks,
-    summary="Dissociates the Users with the Project with the given ID if it exists",
+    summary="Removes the member with the given ID from the Project",
 )
 def dissociate_user_from_project(
     *,
     project_id: int,
     user_id: int,
     db: DBSession,
-    authz_user: AuthzUser = Depends(),
     ws: WebsocketEmitter = Depends(),
 ) -> ProjectUserLinks:
-    authz_user.assert_in_project(project_id)
-
     # the members before the removal: the removed user gets the event too
     member_ids = [u.id for u in crud_user.read_by_project(db=db, project_id=project_id)]
     crud_project.dissociate_user(db=db, project_id=project_id, user_id=user_id)

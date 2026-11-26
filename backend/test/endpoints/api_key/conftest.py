@@ -37,10 +37,10 @@ def api_key_project(db_session, test_user) -> ApiKeyProjectState:
     "dats_other_raw"); the raw keys are never usable through the API.
 
     Non-obvious derived behavior:
-    - `GET /api-keys/list` returns only the keys of the requesting user, so the
+    - `GET /users/me/api-keys` returns only the keys of the requesting user, so the
       test user sees exactly "Expiring Key" and "Never Key"; "Other User Key"
       is invisible to them.
-    - `DELETE /api-keys/delete/{key_id}` does not distinguish authorization from
+    - `DELETE /users/me/api-keys/{api_key_id}` does not distinguish authorization from
       existence: deleting "Other User Key" as the test user yields 404, exactly
       like deleting a nonexistent id.
     """

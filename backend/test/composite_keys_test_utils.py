@@ -28,6 +28,7 @@ from core.project.project_orm import ProjectORM
 from core.prompt.prompt_enum import PromptLanguage, TaskType
 from core.prompt.prompt_orm import PromptORM, PromptVersionORM
 from core.tag.tag_orm import SourceDocumentTagLinkTable, TagORM
+from core.user.user_crud import crud_user
 from core.user.user_orm import UserORM
 from feature_test_utils import create_project_with_features
 from modules.classifier.classifier_enum import ClassifierModel
@@ -110,6 +111,7 @@ class TenantRows(TypedDict):
       timeline analysis "Timeline <p>" (documents) and concept over time
       analysis "COTA <p>", each empty
     - the memo search view "View <p>" of `user` (table layout, empty filter)
+    - the virtual user "Virtual <p>" of the project (no member)
 
     `<p>` is the project id.
     """
@@ -154,6 +156,7 @@ class TenantRows(TypedDict):
     timeline_analysis: TimelineAnalysisORM
     cota: ConceptOverTimeAnalysisORM
     search_view: SearchViewORM
+    virtual_user: UserORM
 
 
 T = TypeVar("T")
@@ -563,6 +566,9 @@ def create_tenant_rows(
                 project_id=p,
                 user_id=user.id,
             ),
+        ),
+        "virtual_user": crud_user.create_virtual_user(
+            db, project_id=p, name=f"Virtual {p}"
         ),
     }
 

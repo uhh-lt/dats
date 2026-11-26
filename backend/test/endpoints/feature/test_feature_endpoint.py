@@ -33,13 +33,13 @@ from systems.job_system.job_system_enum import JobStatus
 from .conftest import DuplicateFinderProject
 
 # ===========================================================================
-# GET ALL FEATURES (/feature) TESTS
+# GET ALL FEATURES (/features) TESTS
 # ===========================================================================
 
 
 def _all_features(client: TestClient) -> dict[str, FeatureRead]:
     """The response of `GET /feature`, in its order, by feature name."""
-    response = client.get("/feature")
+    response = client.get("/features")
     assert response.status_code == 200, response.text
     reads = [FeatureRead.model_validate(f) for f in response.json()]
     return {r.feature: r for r in reads}
@@ -100,12 +100,12 @@ def test_get_all_features_lists_the_artefacts_a_feature_computes(
 
 
 # ===========================================================================
-# GET PROJECT FEATURES (/feature/project/{project_id}) TESTS
+# GET PROJECT FEATURES (/projects/{project_id}/features) TESTS
 # ===========================================================================
 
 
 def _features(client: TestClient, project_id: int) -> dict[str, ProjectFeatureRead]:
-    response = client.get(f"/feature/project/{project_id}")
+    response = client.get(f"/projects/{project_id}/features")
     assert response.status_code == 200, response.text
     reads = [ProjectFeatureRead.model_validate(r) for r in response.json()]
     return {r.feature: r for r in reads}
@@ -160,7 +160,7 @@ def test_project_features_report_coverage(
 
 def test_project_features_requires_membership(client: TestClient):
     """A non-member gets 403."""
-    response = client.get("/feature/project/123456")
+    response = client.get("/projects/123456/features")
 
     assert response.status_code == 403, response.text
 
@@ -246,7 +246,7 @@ SETTINGS = ProcessingSettings(
 
 def _act(client: TestClient, project_id: int, feature: str, action: FeatureAction):
     """Send the action (`/enable`, `/complete` or `/disable`) for the feature."""
-    url = f"/feature/project/{project_id}/{feature}/{action.value}"
+    url = f"/projects/{project_id}/features/{feature}/{action.value}"
     if action == FeatureAction.DISABLE:
         return client.post(url)
     return client.post(
@@ -362,7 +362,7 @@ def test_feature_action_on_an_unknown_feature_is_rejected(
 
 
 # ===========================================================================
-# ENABLE FEATURE (/feature/project/{project_id}/{feature}/enable) TESTS
+# ENABLE FEATURE (/projects/{project_id}/features/{feature}/enable) TESTS
 # ===========================================================================
 
 
@@ -768,7 +768,7 @@ def test_enable_feature_in_a_project_without_documents_starts_nothing(
 
 
 # ===========================================================================
-# COMPLETE FEATURE (/feature/project/{project_id}/{feature}/complete) TESTS
+# COMPLETE FEATURE (/projects/{project_id}/features/{feature}/complete) TESTS
 # ===========================================================================
 
 
@@ -906,7 +906,7 @@ def test_complete_feature_recovers_the_steps_an_advancing_with_redis_down_failed
 
 
 # ===========================================================================
-# DISABLE FEATURE (/feature/project/{project_id}/{feature}/disable) TESTS
+# DISABLE FEATURE (/projects/{project_id}/features/{feature}/disable) TESTS
 # ===========================================================================
 
 

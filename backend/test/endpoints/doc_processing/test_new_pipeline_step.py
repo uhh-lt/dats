@@ -141,7 +141,7 @@ def test_a_step_requiring_two_artefacts_of_one_step_is_planned_and_started(
     sdoc_id = p["text_running"].id
 
     response = client.post(
-        f"/feature/project/{p['project'].id}/keyword_statistics/enable",
+        f"/projects/{p['project'].id}/features/keyword_statistics/enable",
         json=FeatureActivation(settings=SETTINGS).model_dump(mode="json"),
     )
 

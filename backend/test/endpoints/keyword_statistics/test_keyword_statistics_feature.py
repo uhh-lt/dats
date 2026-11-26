@@ -45,7 +45,7 @@ def test_create_project_creates_the_keywords_key_only_with_the_feature(
     "keywords" for every doctype; a project created without it gets none."""
     responses = {
         name: client.put(
-            "/project",
+            "/projects",
             json=ProjectCreate(
                 title=name, description="", enabled_features=features
             ).model_dump(mode="json"),
@@ -77,7 +77,7 @@ def test_enable_creates_the_keywords_key_and_its_set_up_is_safe_to_run_twice(
     assert _keyword_keys(db_session, project_id) == {}
 
     response = client.post(
-        f"/feature/project/{project_id}/{FEATURE}/enable",
+        f"/projects/{project_id}/features/{FEATURE}/enable",
         json=FeatureActivation(settings=SETTINGS).model_dump(mode="json"),
     )
 

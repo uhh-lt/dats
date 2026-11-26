@@ -79,8 +79,10 @@ class CRUDProject(SQLCRUDBase[ProjectORM, ProjectCreate, ProjectUpdate]):
         # 1) read project
         proj_db_obj = self.read(db=db, id=project_id)
 
-        # 2) remove user from project
-        user_db_obj = crud_user.read(db=db, id=user_id)
+        # 2) remove the member from the project
+        user_db_obj = next((u for u in proj_db_obj.users if u.id == user_id), None)
+        if user_db_obj is None:
+            raise NoSuchElementError(UserORM, project_id=project_id, id=user_id)
         proj_db_obj.users.remove(user_db_obj)
         db.add(proj_db_obj)
         db.flush()

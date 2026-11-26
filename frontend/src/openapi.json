@@ -190,7 +190,7 @@
         }
       }
     },
-    "/api-keys": {
+    "/users/me/api-keys": {
       "put": {
         "tags": ["api-key"],
         "summary": "Generate a new API key with optional expiration.",
@@ -237,14 +237,19 @@
         }
       }
     },
-    "/api-keys/{key_id}": {
+    "/users/me/api-keys/{api_key_id}": {
       "delete": {
         "tags": ["api-key"],
         "summary": "Revoke/Delete an API key.",
         "operationId": "delete_api_key",
         "security": [{ "OAuth2PasswordBearer": [] }],
         "parameters": [
-          { "name": "key_id", "in": "path", "required": true, "schema": { "type": "integer", "title": "Key Id" } }
+          {
+            "name": "api_key_id",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "integer", "title": "Api Key Id" }
+          }
         ],
         "responses": {
           "200": {
@@ -2041,29 +2046,7 @@
         }
       }
     },
-    "/feature": {
-      "get": {
-        "tags": ["feature"],
-        "summary": "Returns all Features a Project can enable",
-        "operationId": "get_all",
-        "responses": {
-          "200": {
-            "description": "Successful Response",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "items": { "$ref": "#/components/schemas/FeatureRead" },
-                  "type": "array",
-                  "title": "Response Feature-Get All"
-                }
-              }
-            }
-          }
-        },
-        "security": [{ "OAuth2PasswordBearer": [] }]
-      }
-    },
-    "/feature/project/{project_id}": {
+    "/projects/{project_id}/features": {
       "get": {
         "tags": ["feature"],
         "summary": "Returns the state of every Feature in the Project: enabled, status, ready and document counts",
@@ -2097,7 +2080,7 @@
         }
       }
     },
-    "/feature/project/{project_id}/{feature}/enable": {
+    "/projects/{project_id}/features/{feature}/enable": {
       "post": {
         "tags": ["feature"],
         "summary": "Enables the disabled Feature in the Project and computes its data for all documents. Returns the enabled Features",
@@ -2132,7 +2115,7 @@
         }
       }
     },
-    "/feature/project/{project_id}/{feature}/complete": {
+    "/projects/{project_id}/features/{feature}/complete": {
       "post": {
         "tags": ["feature"],
         "summary": "Completes the partly available Feature: computes its data for the documents that lack it. Returns the enabled Features",
@@ -2171,7 +2154,7 @@
         }
       }
     },
-    "/feature/project/{project_id}/{feature}/disable": {
+    "/projects/{project_id}/features/{feature}/disable": {
       "post": {
         "tags": ["feature"],
         "summary": "Disables the partly or fully available Feature in the Project; its data is kept. Returns the enabled Features",
@@ -2204,6 +2187,28 @@
             "content": { "application/json": { "schema": { "$ref": "#/components/schemas/HTTPValidationError" } } }
           }
         }
+      }
+    },
+    "/features": {
+      "get": {
+        "tags": ["feature"],
+        "summary": "Returns all Features a Project can enable",
+        "operationId": "get_all",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": { "$ref": "#/components/schemas/FeatureRead" },
+                  "type": "array",
+                  "title": "Response Feature-Get All"
+                }
+              }
+            }
+          }
+        },
+        "security": [{ "OAuth2PasswordBearer": [] }]
       }
     },
     "/projects/{project_id}/folders": {
@@ -4389,29 +4394,7 @@
         }
       }
     },
-    "/project": {
-      "put": {
-        "tags": ["project"],
-        "summary": "Creates a new Project",
-        "operationId": "create_project",
-        "requestBody": {
-          "content": { "application/json": { "schema": { "$ref": "#/components/schemas/ProjectCreate" } } },
-          "required": true
-        },
-        "responses": {
-          "200": {
-            "description": "Successful Response",
-            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/ProjectRead" } } }
-          },
-          "422": {
-            "description": "Validation Error",
-            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/HTTPValidationError" } } }
-          }
-        },
-        "security": [{ "OAuth2PasswordBearer": [] }]
-      }
-    },
-    "/project/{project_id}": {
+    "/projects/{project_id}": {
       "get": {
         "tags": ["project"],
         "summary": "Returns the Project with the given ID if it exists",
@@ -4489,7 +4472,29 @@
         }
       }
     },
-    "/project/user/projects": {
+    "/projects": {
+      "put": {
+        "tags": ["project"],
+        "summary": "Creates a new Project",
+        "operationId": "create_project",
+        "requestBody": {
+          "content": { "application/json": { "schema": { "$ref": "#/components/schemas/ProjectCreate" } } },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/ProjectRead" } } }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/HTTPValidationError" } } }
+          }
+        },
+        "security": [{ "OAuth2PasswordBearer": [] }]
+      }
+    },
+    "/users/me/projects": {
       "get": {
         "tags": ["project"],
         "summary": "Returns all Projects of the logged-in User",
@@ -8426,7 +8431,7 @@
         }
       }
     },
-    "/user/{project_id}/virtual_user": {
+    "/projects/{project_id}/virtual-users": {
       "put": {
         "tags": ["user"],
         "summary": "Creates a virtual user (a user that cannot log in) in the Project",
@@ -8456,42 +8461,7 @@
         }
       }
     },
-    "/user/me": {
-      "get": {
-        "tags": ["user"],
-        "summary": "Returns the current (logged in) user",
-        "operationId": "get_me",
-        "responses": {
-          "200": {
-            "description": "Successful Response",
-            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/UserRead" } } }
-          }
-        },
-        "security": [{ "OAuth2PasswordBearer": [] }]
-      }
-    },
-    "/user/by_id/{user_id}": {
-      "get": {
-        "tags": ["user"],
-        "summary": "Returns the User with the given ID if it exists",
-        "operationId": "get_by_id",
-        "security": [{ "OAuth2PasswordBearer": [] }],
-        "parameters": [
-          { "name": "user_id", "in": "path", "required": true, "schema": { "type": "integer", "title": "User Id" } }
-        ],
-        "responses": {
-          "200": {
-            "description": "Successful Response",
-            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/PublicUserRead" } } }
-          },
-          "422": {
-            "description": "Validation Error",
-            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/HTTPValidationError" } } }
-          }
-        }
-      }
-    },
-    "/user/{project_id}/user": {
+    "/projects/{project_id}/members": {
       "get": {
         "tags": ["user"],
         "summary": "Returns all Users of the Project with the given ID: its members, then its virtual users",
@@ -8524,9 +8494,9 @@
           }
         }
       },
-      "patch": {
+      "put": {
         "tags": ["user"],
-        "summary": "Associates an existing User to the Project with the given ID if it exists",
+        "summary": "Adds the existing User with the given email to the Project as a member",
         "operationId": "associate_user_to_project",
         "security": [{ "OAuth2PasswordBearer": [] }],
         "parameters": [
@@ -8553,48 +8523,54 @@
         }
       }
     },
-    "/user/all": {
-      "get": {
+    "/projects/{project_id}/virtual-users/{user_id}": {
+      "patch": {
         "tags": ["user"],
-        "summary": "Returns all Users that exist in the system, without virtual users",
-        "operationId": "get_all",
+        "summary": "Updates the virtual user with the given ID of the Project",
+        "operationId": "update_by_id",
         "security": [{ "OAuth2PasswordBearer": [] }],
         "parameters": [
           {
-            "name": "skip",
-            "in": "query",
-            "required": false,
-            "schema": {
-              "anyOf": [{ "type": "integer", "maximum": 10000000, "minimum": 0 }, { "type": "null" }],
-              "title": "Skip",
-              "description": "The number of elements to skip (offset)"
-            },
-            "description": "The number of elements to skip (offset)"
+            "name": "project_id",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "integer", "title": "Project Id" }
           },
-          {
-            "name": "limit",
-            "in": "query",
-            "required": false,
-            "schema": {
-              "anyOf": [{ "type": "integer", "maximum": 1000, "minimum": 1 }, { "type": "null" }],
-              "title": "Limit",
-              "description": "The maximum number of returned elements"
-            },
-            "description": "The maximum number of returned elements"
+          { "name": "user_id", "in": "path", "required": true, "schema": { "type": "integer", "title": "User Id" } }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": { "application/json": { "schema": { "$ref": "#/components/schemas/UserUpdate" } } }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/UserRead" } } }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/HTTPValidationError" } } }
           }
+        }
+      },
+      "delete": {
+        "tags": ["user"],
+        "summary": "Removes the virtual user with the given ID of the Project together with all its annotations and memos. The virtual user of an experiment run cannot be deleted here (HTTP 409); delete its run in the Experiment Studio.",
+        "operationId": "delete_by_id",
+        "security": [{ "OAuth2PasswordBearer": [] }],
+        "parameters": [
+          {
+            "name": "project_id",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "integer", "title": "Project Id" }
+          },
+          { "name": "user_id", "in": "path", "required": true, "schema": { "type": "integer", "title": "User Id" } }
         ],
         "responses": {
           "200": {
             "description": "Successful Response",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "array",
-                  "items": { "$ref": "#/components/schemas/PublicUserRead" },
-                  "title": "Response User-Get All"
-                }
-              }
-            }
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/UserRead" } } }
           },
           "422": {
             "description": "Validation Error",
@@ -8603,7 +8579,46 @@
         }
       }
     },
-    "/user/": {
+    "/projects/{project_id}/members/{user_id}": {
+      "delete": {
+        "tags": ["user"],
+        "summary": "Removes the member with the given ID from the Project",
+        "operationId": "dissociate_user_from_project",
+        "security": [{ "OAuth2PasswordBearer": [] }],
+        "parameters": [
+          {
+            "name": "project_id",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "integer", "title": "Project Id" }
+          },
+          { "name": "user_id", "in": "path", "required": true, "schema": { "type": "integer", "title": "User Id" } }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/ProjectUserLinks" } } }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/HTTPValidationError" } } }
+          }
+        }
+      }
+    },
+    "/users/me": {
+      "get": {
+        "tags": ["user"],
+        "summary": "Returns the current (logged in) user",
+        "operationId": "get_me",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/UserRead" } } }
+          }
+        },
+        "security": [{ "OAuth2PasswordBearer": [] }]
+      },
       "delete": {
         "tags": ["user"],
         "summary": "Removes the logged-in User",
@@ -8635,77 +8650,6 @@
           }
         },
         "security": [{ "OAuth2PasswordBearer": [] }]
-      }
-    },
-    "/user/{user_id}": {
-      "patch": {
-        "tags": ["user"],
-        "summary": "Updates the User with the given ID: a virtual user of one of your projects (other users have no project)",
-        "operationId": "update_by_id",
-        "security": [{ "OAuth2PasswordBearer": [] }],
-        "parameters": [
-          { "name": "user_id", "in": "path", "required": true, "schema": { "type": "integer", "title": "User Id" } }
-        ],
-        "requestBody": {
-          "required": true,
-          "content": { "application/json": { "schema": { "$ref": "#/components/schemas/UserUpdate" } } }
-        },
-        "responses": {
-          "200": {
-            "description": "Successful Response",
-            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/UserRead" } } }
-          },
-          "422": {
-            "description": "Validation Error",
-            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/HTTPValidationError" } } }
-          }
-        }
-      },
-      "delete": {
-        "tags": ["user"],
-        "summary": "Removes the User with the given ID together with all its annotations and memos: a virtual user of one of your projects (other users have no project). The virtual user of an experiment run cannot be deleted here (HTTP 409); delete its run in the Experiment Studio.",
-        "operationId": "delete_by_id",
-        "security": [{ "OAuth2PasswordBearer": [] }],
-        "parameters": [
-          { "name": "user_id", "in": "path", "required": true, "schema": { "type": "integer", "title": "User Id" } }
-        ],
-        "responses": {
-          "200": {
-            "description": "Successful Response",
-            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/UserRead" } } }
-          },
-          "422": {
-            "description": "Validation Error",
-            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/HTTPValidationError" } } }
-          }
-        }
-      }
-    },
-    "/user/{project_id}/user/{user_id}": {
-      "delete": {
-        "tags": ["user"],
-        "summary": "Dissociates the Users with the Project with the given ID if it exists",
-        "operationId": "dissociate_user_from_project",
-        "security": [{ "OAuth2PasswordBearer": [] }],
-        "parameters": [
-          {
-            "name": "project_id",
-            "in": "path",
-            "required": true,
-            "schema": { "type": "integer", "title": "Project Id" }
-          },
-          { "name": "user_id", "in": "path", "required": true, "schema": { "type": "integer", "title": "User Id" } }
-        ],
-        "responses": {
-          "200": {
-            "description": "Successful Response",
-            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/ProjectUserLinks" } } }
-          },
-          "422": {
-            "description": "Validation Error",
-            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/HTTPValidationError" } } }
-          }
-        }
       }
     },
     "/projects/{project_id}/whiteboards": {
@@ -17686,22 +17630,6 @@
         "type": "object",
         "required": ["text", "id", "prompt_id", "version", "user_id", "created"],
         "title": "PromptVersionRead"
-      },
-      "PublicUserRead": {
-        "properties": {
-          "id": { "type": "integer", "title": "Id", "description": "ID of the User" },
-          "is_virtual": {
-            "type": "boolean",
-            "title": "Is Virtual",
-            "description": "Whether the User is a virtual user (one project, no login)"
-          },
-          "first_name": { "type": "string", "title": "First Name", "description": "First name of the User" },
-          "last_name": { "type": "string", "title": "Last Name", "description": "Last name of the User" }
-        },
-        "type": "object",
-        "required": ["id", "is_virtual", "first_name", "last_name"],
-        "title": "PublicUserRead",
-        "description": "A user object with information that everybody may see."
       },
       "QueryRequest_BBoxColumns_": {
         "properties": {

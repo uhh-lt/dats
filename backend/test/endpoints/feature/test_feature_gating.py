@@ -17,12 +17,14 @@ FEATURE_DISABLED = "is not enabled"
 
 
 def _project_routes(client: TestClient) -> list[tuple[str, APIRoute]]:
-    """The routes of the app under /projects/{project_id}, by method."""
+    """The routes of the app below /projects/{project_id}, by method; the routes
+    of the project itself belong to no feature module (and its DELETE would
+    delete the project of the test)."""
     return [
         (method, context.original_route)
         for context in iter_route_contexts(client.app.routes)  # type: ignore[attr-defined]
         if isinstance(context.original_route, APIRoute)
-        and context.original_route.path.startswith(PROJECT_PREFIX)
+        and context.original_route.path.startswith(f"{PROJECT_PREFIX}/")
         for method in sorted(context.original_route.methods or ())
     ]
 

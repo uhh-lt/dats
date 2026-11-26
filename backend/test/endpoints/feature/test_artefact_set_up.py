@@ -60,7 +60,7 @@ def test_enable_creates_the_codes_and_disable_keeps_them(
     project = _project(db_session, test_user, "Set Up Enable", [])
     assert _codes(db_session, project.id) == {}
 
-    base = f"/feature/project/{project.id}/{coded_feature.name}"
+    base = f"/projects/{project.id}/features/{coded_feature.name}"
     enabled = client.post(
         f"{base}/enable",
         json=FeatureActivation(settings=SETTINGS).model_dump(mode="json"),
@@ -136,7 +136,7 @@ def test_enable_runs_the_set_up_hook_after_the_codes_and_disable_does_not(
     system codes exist;
     Disable runs nothing, and Enable again runs the hook again."""
     project = _project(db_session, test_user, "Hook Enable", [])
-    base = f"/feature/project/{project.id}/{hooked_feature['feature'].name}"
+    base = f"/projects/{project.id}/features/{hooked_feature['feature'].name}"
     activation = FeatureActivation(settings=SETTINGS).model_dump(mode="json")
 
     assert client.post(f"{base}/enable", json=activation).status_code == 200
@@ -204,7 +204,7 @@ def test_complete_does_not_run_the_set_up_hook(
     assert hooked_feature["calls"] == [(project_id, HOOK_FINDS_ALL)]
 
     response = client.post(
-        f"/feature/project/{project_id}/{hooked_feature['feature'].name}/complete",
+        f"/projects/{project_id}/features/{hooked_feature['feature'].name}/complete",
         json=FeatureActivation(settings=SETTINGS).model_dump(mode="json"),
     )
 

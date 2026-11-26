@@ -6,7 +6,7 @@ from core.auth.api_key_dto import ApiKeyCreatedResponse, ApiKeyRead
 from core.auth.auth_enum import ExpiryDuration
 
 # ===========================================================================
-# CREATE API KEY (PUT /api-keys) TESTS
+# CREATE API KEY (PUT /users/me/api-keys) TESTS
 # ===========================================================================
 
 
@@ -15,7 +15,7 @@ def _create_api_key(
 ) -> ApiKeyCreatedResponse:
     """PUT /api-keys and return the validated response."""
     params: dict[str, str] = {"name": name, "expires_in": expires_in.value}
-    response = client.put("/api-keys", params=params)
+    response = client.put("/users/me/api-keys", params=params)
     assert response.status_code == 200, response.text
     return ApiKeyCreatedResponse.model_validate(response.json())
 
@@ -64,7 +64,7 @@ def test_create_api_key_appears_in_list_without_full_key(client: TestClient):
         client, name="Listed Key", expires_in=ExpiryDuration.NEVER
     )
 
-    response = client.get("/api-keys")
+    response = client.get("/users/me/api-keys")
     assert response.status_code == 200, response.text
     keys = [ApiKeyRead.model_validate(x) for x in response.json()]
 
@@ -76,7 +76,7 @@ def test_create_api_key_appears_in_list_without_full_key(client: TestClient):
 def test_create_api_key_without_name_is_rejected(client: TestClient):
     """The required query parameter `name` is missing -> 422."""
     response = client.put(
-        "/api-keys", params={"expires_in": ExpiryDuration.NEVER.value}
+        "/users/me/api-keys", params={"expires_in": ExpiryDuration.NEVER.value}
     )
 
     assert response.status_code == 422, response.text
@@ -84,7 +84,7 @@ def test_create_api_key_without_name_is_rejected(client: TestClient):
 
 def test_create_api_key_without_expires_in_is_rejected(client: TestClient):
     """The required query parameter `expires_in` is missing -> 422."""
-    response = client.put("/api-keys", params={"name": "No Expiry Key"})
+    response = client.put("/users/me/api-keys", params={"name": "No Expiry Key"})
 
     assert response.status_code == 422, response.text
 
@@ -92,14 +92,14 @@ def test_create_api_key_without_expires_in_is_rejected(client: TestClient):
 def test_create_api_key_with_invalid_expires_in_is_rejected(client: TestClient):
     """An expires_in value outside the ExpiryDuration enum -> 422."""
     response = client.put(
-        "/api-keys", params={"name": "Bad Key", "expires_in": "forever"}
+        "/users/me/api-keys", params={"name": "Bad Key", "expires_in": "forever"}
     )
 
     assert response.status_code == 422, response.text
 
 
 # ===========================================================================
-# LIST API KEYS (GET /api-keys) TESTS
+# LIST API KEYS (GET /users/me/api-keys) TESTS
 # ===========================================================================
 
 
@@ -108,7 +108,7 @@ def test_list_api_keys_returns_exactly_the_current_users_keys(
 ):
     """The test user sees exactly their two fixture keys; the other user's key
     is not included."""
-    response = client.get("/api-keys")
+    response = client.get("/users/me/api-keys")
 
     assert response.status_code == 200, response.text
     keys = [ApiKeyRead.model_validate(x) for x in response.json()]
@@ -129,14 +129,14 @@ def test_list_api_keys_returns_exactly_the_current_users_keys(
 
 def test_list_api_keys_empty_when_user_has_no_keys(client: TestClient):
     """Without any created keys (clean database), the list is empty."""
-    response = client.get("/api-keys")
+    response = client.get("/users/me/api-keys")
 
     assert response.status_code == 200, response.text
     assert response.json() == []
 
 
 # ===========================================================================
-# DELETE API KEY (DELETE /api-keys/{key_id}) TESTS
+# DELETE API KEY (DELETE /users/me/api-keys/{api_key_id}) TESTS
 # ===========================================================================
 
 
@@ -145,14 +145,14 @@ def test_delete_api_key_removes_it_from_list(client: TestClient, api_key_project
     expiring = api_key_project["user_key_expiring"]
     never = api_key_project["user_key_never"]
 
-    response = client.delete(f"/api-keys/{expiring.id}")
+    response = client.delete(f"/users/me/api-keys/{expiring.id}")
 
     assert response.status_code == 200, response.text
     deleted = ApiKeyRead.model_validate(response.json())
     assert deleted.id == expiring.id
     assert deleted.name == "Expiring Key"
 
-    response = client.get("/api-keys")
+    response = client.get("/users/me/api-keys")
     assert response.status_code == 200, response.text
     keys = [ApiKeyRead.model_validate(x) for x in response.json()]
     assert [k.id for k in keys] == [never.id]
@@ -162,7 +162,7 @@ def test_delete_api_key_with_nonexistent_id_returns_404(
     client: TestClient, api_key_project
 ):
     """An unknown key id -> 404 'API Key not found.'."""
-    response = client.delete("/api-keys/99999")
+    response = client.delete("/users/me/api-keys/99999")
 
     assert response.status_code == 404, response.text
     assert "API Key not found." in response.text
@@ -176,12 +176,12 @@ def test_delete_api_key_of_another_user_returns_404(
     keys remain untouched."""
     other_key = api_key_project["other_user_key"]
 
-    response = client.delete(f"/api-keys/{other_key.id}")
+    response = client.delete(f"/users/me/api-keys/{other_key.id}")
 
     assert response.status_code == 404, response.text
     assert "API Key not found." in response.text
 
-    response = client.get("/api-keys")
+    response = client.get("/users/me/api-keys")
     assert response.status_code == 200, response.text
     keys = [ApiKeyRead.model_validate(x) for x in response.json()]
     assert {k.id for k in keys} == {

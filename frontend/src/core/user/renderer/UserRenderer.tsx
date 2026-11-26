@@ -1,5 +1,4 @@
 import { ExpandableRenderer, ExpandableRendererProps } from "@components/ExpandableRenderer";
-import { PublicUserRead } from "@models/PublicUserRead";
 import { UserRead } from "@models/UserRead";
 import { Stack, Typography } from "@mui/material";
 import { memo } from "react";
@@ -12,7 +11,7 @@ export interface UserRendererSharedProps extends ExpandableRendererProps {
 }
 
 interface UserRendererProps extends UserRendererSharedProps {
-  user: number | UserRead | PublicUserRead;
+  user: number | UserRead;
 }
 
 export const UserRenderer = memo(({ user, ...props }: UserRendererProps) => {
@@ -38,7 +37,7 @@ const UserRendererWithoutData = memo(({ userId, ...props }: { userId: number } &
 });
 
 const UserRendererWithData = memo(
-  ({ user, renderAvatar = true, ...expandProps }: { user: PublicUserRead } & UserRendererSharedProps) => {
+  ({ user, renderAvatar = true, ...expandProps }: { user: UserRead } & UserRendererSharedProps) => {
     const fullName = `${user.first_name} ${user.last_name}`.trim();
 
     return (
@@ -54,7 +53,7 @@ const UserRendererWithData = memo(
   },
 );
 
-function UserContext({ user }: { user: PublicUserRead }) {
+function UserContext({ user }: { user: UserRead }) {
   const kind = user.is_virtual ? "Virtual user" : "User";
   return <Typography sx={{ whiteSpace: "pre-wrap", overflowWrap: "anywhere" }}>{`${kind} ID: ${user.id}`}</Typography>;
 }

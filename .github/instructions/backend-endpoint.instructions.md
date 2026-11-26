@@ -70,6 +70,7 @@ router = APIRouter(
 Resources of a project move under `/projects/{project_id}/...` module group by module group (#928); `span_annotation_endpoint.py` is the example.
 
 - **Router**: `router = project_router("/<resources>", tags=[...], feature=FEATURE)` (`common/project_router.py`) checks the membership and, for a feature module, the feature for every route; omit `feature` in core.
+- **Routes outside projects too**: a file that also has routes outside projects (`/users/me`, `/projects`, `/features`) declares them on `router = APIRouter(...)` with the tags and without a prefix (an included router gets both) and its project routes on `project = project_router(..., tags=[])`, included right after with `router.include_router(project)` (`user_endpoint.py`).
 - **Project from the path only**: every route takes `project_id: int`; request and create DTOs carry no `project_id`.
 - **Paths**: plural kebab-case collections (`/span-annotations`), one resource at `/{<entity>_id}`, links at `/{<entity>_id}/<others>/{<other>_id}` (PUT adds, DELETE removes), bulk routes at `/bulk` declared before `/{<entity>_id}`, computations at `POST /<verb>`.
 - **Bulk links**: bulk links at `/bulk/<others>` (`/tags/bulk/source-documents`): PUT adds, DELETE removes, PATCH does both.

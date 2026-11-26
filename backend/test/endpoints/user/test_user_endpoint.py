@@ -7,20 +7,20 @@ from core.annotation.span_annotation_dto import SpanAnnotationRead
 from core.project.project_crud import crud_project
 from core.project.project_dto import ProjectUserLinks
 from core.user.user_crud import crud_user
-from core.user.user_dto import (
-    PublicUserRead,
-    UserCreate,
-    UserRead,
-)
+from core.user.user_dto import UserCreate, UserRead
 from dats_test_utils import create_user_client
 from experiment_test_utils import RunUserProject
 from modules.experiment.experiment_dto import ExperimentRead
 from provenance_test_utils import ANNOTATION_KINDS, AnnotationKind, get_annotation
 from virtual_user_test_utils import VirtualUserProject
 
+# ===========================================================================
+# GET ME (GET /users/me) TESTS
+# ===========================================================================
+
 
 def test_get_me(client: TestClient, test_user: UserRead):
-    resp = client.get("/user/me")
+    resp = client.get("/users/me")
 
     assert resp.status_code == 200, resp.text
     me = UserRead.model_validate(resp.json())
@@ -30,29 +30,15 @@ def test_get_me(client: TestClient, test_user: UserRead):
     assert me.last_name == test_user.last_name
 
 
-def test_get_user_by_id(client: TestClient, project_with_user):
-    new_user = project_with_user["user"]
-
-    resp = client.get(f"/user/by_id/{new_user.id}")
-
-    assert resp.status_code == 200, resp.text
-    user = PublicUserRead.model_validate(resp.json())
-    assert user.id == new_user.id
-    assert user.first_name == new_user.first_name
-    assert user.last_name == new_user.last_name
-
-
-def test_get_user_by_id_not_exists(client: TestClient):
-    non_existing_user_id = 3000
-    resp = client.get(f"/user/by_id/{non_existing_user_id}")
-
-    assert resp.status_code == 404, resp.text
+# ===========================================================================
+# GET MEMBERS (GET /projects/{project_id}/members) TESTS
+# ===========================================================================
 
 
 def test_get_users_by_project(client: TestClient, project_with_user):
     project = project_with_user["project"]
 
-    resp = client.get(f"/user/{project.id}/user")
+    resp = client.get(f"/projects/{project.id}/members")
 
     assert resp.status_code == 200, resp.text
     assert len(resp.json()) == 3  # system, test, new
@@ -60,21 +46,14 @@ def test_get_users_by_project(client: TestClient, project_with_user):
 
 def test_get_users_by_project_not_exists(client: TestClient):
     non_existing_project_id = 2000
-    resp = client.get(f"/user/{non_existing_project_id}/user")
+    resp = client.get(f"/projects/{non_existing_project_id}/members")
 
     assert resp.status_code == 403, resp.text
 
 
-def test_get_all_users(client: TestClient, project_with_user, test_user: UserRead):
-    new_user = project_with_user["user"]
-
-    resp = client.get("/user/all")
-
-    assert resp.status_code == 200, resp.text
-    user_ids = [PublicUserRead.model_validate(x).id for x in resp.json()]
-    assert len(user_ids) == 4  # system, demo, test, new
-    assert test_user.id in user_ids
-    assert new_user.id in user_ids
+# ===========================================================================
+# UPDATE ME (PATCH /users/me) TESTS
+# ===========================================================================
 
 
 testdata = [
@@ -92,7 +71,7 @@ def test_update_me(
     test_user: UserRead,
     payload: dict,
 ):
-    resp = client.patch("/user/", json=payload)
+    resp = client.patch("/users/me", json=payload)
 
     assert resp.status_code == 200, resp.text
     user = UserRead.model_validate(resp.json())
@@ -102,11 +81,16 @@ def test_update_me(
     assert user.id == test_user.id
 
 
+# ===========================================================================
+# DELETE ME (DELETE /users/me) TESTS
+# ===========================================================================
+
+
 def test_delete_me(
     client: TestClient,
     test_user: UserRead,
 ):
-    resp = client.delete("/user/")
+    resp = client.delete("/users/me")
 
     assert resp.status_code == 200, resp.text
     deleted_user = UserRead.model_validate(resp.json())
@@ -117,12 +101,17 @@ def test_delete_me_if_not_exists(
     client: TestClient,
 ):
     # delete me! Should work the first time
-    resp = client.delete("/user/")
+    resp = client.delete("/users/me")
     assert resp.status_code == 200, resp.text
 
     # delete me again! Should fail now
-    resp = client.delete("/user/")
+    resp = client.delete("/users/me")
     assert resp.status_code == 404, resp.text
+
+
+# ===========================================================================
+# ADD MEMBER (PUT /projects/{project_id}/members) TESTS
+# ===========================================================================
 
 
 def test_associate_user_to_project(client: TestClient, db_session, test_project):
@@ -140,8 +129,8 @@ def test_associate_user_to_project(client: TestClient, db_session, test_project)
     db_session.refresh(new_user)
 
     # 2. Test: associate the new user to the project
-    resp = client.patch(
-        f"/user/{test_project.id}/user",
+    resp = client.put(
+        f"/projects/{test_project.id}/members",
         json={"email": new_user.email},
     )
 
@@ -160,6 +149,11 @@ def test_associate_user_to_project(client: TestClient, db_session, test_project)
     assert len(data.users) == len(project_user_ids)
 
 
+# ===========================================================================
+# REMOVE MEMBER (DELETE /projects/{project_id}/members/{user_id}) TESTS
+# ===========================================================================
+
+
 def test_dissociate_user_from_project(
     client: TestClient, db_session, project_with_user
 ):
@@ -168,7 +162,7 @@ def test_dissociate_user_from_project(
     new_user = project_with_user["user"]
 
     # 2. Test: dissociate the new_user from the project
-    resp = client.delete(f"/user/{project.id}/user/{new_user.id}")
+    resp = client.delete(f"/projects/{project.id}/members/{new_user.id}")
 
     # 3. Validate: check response and DB state
     assert resp.status_code == 200, resp.text
@@ -185,8 +179,34 @@ def test_dissociate_user_from_project(
     assert len(data.users) == len(project_user_ids)
 
 
+@pytest.mark.parametrize(
+    "user_key",
+    [
+        # a virtual user of the project belongs to it without being a member
+        pytest.param("run1", id="own-virtual-user"),
+        # a human who is no member of the project
+        pytest.param("other_user", id="human-non-member"),
+        # a virtual user of another project
+        pytest.param("other_run", id="foreign-virtual-user"),
+    ],
+)
+def test_dissociate_a_non_member_is_not_found(
+    client: TestClient, virtual_user_project: VirtualUserProject, user_key: str
+):
+    """Only a member of the project can be removed from it; any other user answers
+    404 and the users of the project stay."""
+    project = virtual_user_project["project"]
+    user = virtual_user_project[user_key]  # type: ignore[literal-required]
+    users_before = client.get(f"/projects/{project.id}/members").json()
+
+    response = client.delete(f"/projects/{project.id}/members/{user.id}")
+
+    assert response.status_code == 404, response.text
+    assert client.get(f"/projects/{project.id}/members").json() == users_before
+
+
 # ===========================================================================
-# CREATE VIRTUAL USER (PUT /user/{project_id}/virtual_user) TESTS: VIRTUAL USERS
+# CREATE VIRTUAL USER (PUT /projects/{project_id}/virtual-users) TESTS
 # ===========================================================================
 
 
@@ -198,7 +218,7 @@ def test_create_virtual_user_returns_a_virtual_user_of_the_project(
     project = virtual_user_project["project"]
 
     response = client.put(
-        f"/user/{project.id}/virtual_user", json={"name": "ExperimentA-Run3"}
+        f"/projects/{project.id}/virtual-users", json={"name": "ExperimentA-Run3"}
     )
 
     assert response.status_code == 200, response.text
@@ -207,7 +227,7 @@ def test_create_virtual_user_returns_a_virtual_user_of_the_project(
     assert created.project_id == project.id
     assert created.email.endswith("@virtual.dats")
     assert (created.first_name, created.last_name) == ("ExperimentA-Run3", "")
-    users = client.get(f"/user/{project.id}/user").json()
+    users = client.get(f"/projects/{project.id}/members").json()
     assert [user["first_name"] for user in users if user["is_virtual"]] == [
         "ExperimentA-Run1",
         "ExperimentA-Run2",
@@ -222,7 +242,9 @@ def test_create_virtual_user_allows_a_name_of_another_project(
     project = virtual_user_project["project"]
     other_name = virtual_user_project["other_run"].first_name
 
-    response = client.put(f"/user/{project.id}/virtual_user", json={"name": other_name})
+    response = client.put(
+        f"/projects/{project.id}/virtual-users", json={"name": other_name}
+    )
 
     assert response.status_code == 200, response.text
     assert UserRead.model_validate(response.json()).project_id == project.id
@@ -246,7 +268,7 @@ def test_create_virtual_user_rejects_invalid_names(
     """Duplicate and empty names are rejected."""
     project = virtual_user_project["project"]
 
-    response = client.put(f"/user/{project.id}/virtual_user", json={"name": name})
+    response = client.put(f"/projects/{project.id}/virtual-users", json={"name": name})
 
     assert response.status_code == expected_status, response.text
 
@@ -258,14 +280,14 @@ def test_create_virtual_user_in_foreign_project_is_forbidden(
     other_project = virtual_user_project["other_project"]
 
     response = client.put(
-        f"/user/{other_project.id}/virtual_user", json={"name": "Intruder"}
+        f"/projects/{other_project.id}/virtual-users", json={"name": "Intruder"}
     )
 
     assert response.status_code == 403, response.text
 
 
 # ===========================================================================
-# GET USERS (/user/{project_id}/user, /user/all) TESTS: VIRTUAL USERS
+# GET MEMBERS (GET /projects/{project_id}/members) TESTS: VIRTUAL USERS
 # ===========================================================================
 
 
@@ -276,7 +298,7 @@ def test_get_users_by_project_lists_members_then_virtual_users(
     virtual users of other projects are not listed."""
     project = virtual_user_project["project"]
 
-    response = client.get(f"/user/{project.id}/user")
+    response = client.get(f"/projects/{project.id}/members")
 
     assert response.status_code == 200, response.text
     users = [UserRead.model_validate(data) for data in response.json()]
@@ -289,20 +311,8 @@ def test_get_users_by_project_lists_members_then_virtual_users(
     }
 
 
-def test_get_all_users_lists_no_virtual_users(
-    client: TestClient, virtual_user_project: VirtualUserProject
-):
-    """The system-wide user list holds no virtual users."""
-    response = client.get("/user/all")
-
-    assert response.status_code == 200, response.text
-    users = [PublicUserRead.model_validate(data) for data in response.json()]
-    assert not any(user.is_virtual for user in users)
-    assert virtual_user_project["other_user"].id in {user.id for user in users}
-
-
 # ===========================================================================
-# UPDATE USER (PATCH /user/{user_id}) TESTS: VIRTUAL USERS
+# UPDATE VIRTUAL USER (PATCH /projects/{project_id}/virtual-users/{user_id}) TESTS
 # ===========================================================================
 
 
@@ -310,9 +320,13 @@ def test_update_virtual_user_renames_it(
     client: TestClient, virtual_user_project: VirtualUserProject
 ):
     """Renaming a virtual user changes its name (the first name)."""
+    project = virtual_user_project["project"]
     run2 = virtual_user_project["run2"]
 
-    response = client.patch(f"/user/{run2.id}", json={"first_name": "Gold standard"})
+    response = client.patch(
+        f"/projects/{project.id}/virtual-users/{run2.id}",
+        json={"first_name": "Gold standard"},
+    )
 
     assert response.status_code == 200, response.text
     renamed = UserRead.model_validate(response.json())
@@ -340,9 +354,12 @@ def test_update_virtual_user_rejects_invalid_updates(
     expected_status: int,
 ):
     """Invalid renames are rejected."""
+    project = virtual_user_project["project"]
     run2 = virtual_user_project["run2"]
 
-    response = client.patch(f"/user/{run2.id}", json=payload)
+    response = client.patch(
+        f"/projects/{project.id}/virtual-users/{run2.id}", json=payload
+    )
 
     assert response.status_code == expected_status, response.text
 
@@ -350,10 +367,10 @@ def test_update_virtual_user_rejects_invalid_updates(
 @pytest.mark.parametrize(
     "user_key",
     [
-        # other users have no project, so they are in no project of the user
+        # humans are no virtual users of any project
         pytest.param("user", id="human-self"),
         pytest.param("other_user", id="human-other"),
-        # virtual users of projects the user is no member of
+        # a virtual user of another project
         pytest.param("other_run", id="foreign-virtual-user"),
     ],
 )
@@ -362,16 +379,20 @@ def test_update_virtual_user_rejects_other_users_and_foreign_virtual_users(
     virtual_user_project: VirtualUserProject,
     user_key: str,
 ):
-    """Only virtual users of the user's projects can be updated by id."""
+    """Only a virtual user of the project of the path can be updated: any other
+    user answers 404."""
+    project = virtual_user_project["project"]
     user = virtual_user_project[user_key]  # type: ignore[literal-required]
 
-    response = client.patch(f"/user/{user.id}", json={"first_name": "X"})
+    response = client.patch(
+        f"/projects/{project.id}/virtual-users/{user.id}", json={"first_name": "X"}
+    )
 
-    assert response.status_code == 403, response.text
+    assert response.status_code == 404, response.text
 
 
 # ===========================================================================
-# ASSOCIATE USER (PATCH /user/{project_id}/user) TESTS: VIRTUAL USERS
+# ADD MEMBER (PUT /projects/{project_id}/members) TESTS: VIRTUAL USERS
 # ===========================================================================
 
 
@@ -383,14 +404,14 @@ def test_associate_virtual_user_to_project_is_rejected(
     project = virtual_user_project["project"]
     run1 = virtual_user_project["run1"]
 
-    response = client.patch(f"/user/{project.id}/user", json={"email": run1.email})
+    response = client.put(f"/projects/{project.id}/members", json={"email": run1.email})
 
     assert response.status_code == 400, response.text
     assert run1.id not in {member.id for member in project.users}
 
 
 # ===========================================================================
-# DELETE USER (DELETE /user/{user_id}) TESTS: VIRTUAL USERS
+# DELETE VIRTUAL USER (DELETE /projects/{project_id}/virtual-users/{user_id}) TESTS
 # ===========================================================================
 
 
@@ -406,7 +427,7 @@ def test_delete_virtual_user_deletes_its_annotations(
         virtual_user_project["run1_delta"].id,
     ]
 
-    response = client.delete(f"/user/{run1.id}")
+    response = client.delete(f"/projects/{project.id}/virtual-users/{run1.id}")
 
     assert response.status_code == 200, response.text
     assert UserRead.model_validate(response.json()).id == run1.id
@@ -421,7 +442,7 @@ def test_delete_virtual_user_deletes_its_annotations(
             f"/projects/{project.id}/source-documents/{sdoc.id}/annotators"
         ).json()
     )
-    user_ids = [u["id"] for u in client.get(f"/user/{project.id}/user").json()]
+    user_ids = [u["id"] for u in client.get(f"/projects/{project.id}/members").json()]
     assert run1.id not in user_ids
 
 
@@ -434,13 +455,12 @@ def test_delete_virtual_user_keeps_provenance_of_copies(
     run1 = virtual_user_project["run1"]
     copy_id = virtual_user_project["user_alpha_copy"].id
     code_id = virtual_user_project["code"].id
+    project_id = virtual_user_project["project"].id
 
-    response = client.delete(f"/user/{run1.id}")
+    response = client.delete(f"/projects/{project_id}/virtual-users/{run1.id}")
 
     assert response.status_code == 200, response.text
-    span_response = client.get(
-        f"/projects/{virtual_user_project['project'].id}/span-annotations/{copy_id}"
-    )
+    span_response = client.get(f"/projects/{project_id}/span-annotations/{copy_id}")
     assert span_response.status_code == 200, span_response.text
     span = SpanAnnotationRead.model_validate(span_response.json())
     assert span.source_annotation_id is None
@@ -451,29 +471,32 @@ def test_delete_virtual_user_keeps_provenance_of_copies(
 @pytest.mark.parametrize(
     "user_key",
     [
-        # other users have no project, so they are in no project of the user
+        # humans are no virtual users of any project
         pytest.param("user", id="human-self"),
         pytest.param("other_user", id="human-other"),
-        # virtual users of projects the user is no member of
+        # a virtual user of another project
         pytest.param("other_run", id="foreign-virtual-user"),
     ],
 )
 def test_delete_virtual_user_rejects_other_users_and_foreign_virtual_users(
     client: TestClient,
+    db_session,
     virtual_user_project: VirtualUserProject,
     user_key: str,
 ):
-    """Only virtual users of the user's projects can be deleted."""
+    """Only a virtual user of the project of the path can be deleted: any other
+    user answers 404 and stays."""
+    project = virtual_user_project["project"]
     user = virtual_user_project[user_key]  # type: ignore[literal-required]
 
-    response = client.delete(f"/user/{user.id}")
+    response = client.delete(f"/projects/{project.id}/virtual-users/{user.id}")
 
-    assert response.status_code == 403, response.text
-    assert client.get(f"/user/by_id/{user.id}").status_code == 200
+    assert response.status_code == 404, response.text
+    assert crud_user.exists(db=db_session, id=user.id)
 
 
 # ===========================================================================
-# DELETE USER (/user) TESTS: PROVENANCE
+# DELETE ME (DELETE /users/me) TESTS: PROVENANCE
 # ===========================================================================
 # The provenance columns are ON DELETE SET NULL: deleting the source annotation, its
 # user or its code clears only that column of the copy and keeps the rest.
@@ -492,7 +515,7 @@ def test_delete_source_user_keeps_source_code_of_copy(
     copy_id = project[f"{kind}_copies"]["copy_id"]
     assistant_client = create_user_client(app_client, project["assistant"])
 
-    response = assistant_client.delete("/user/")
+    response = assistant_client.delete("/users/me")
 
     assert response.status_code == 200, response.text
     copy = get_annotation(client, kind, project["project"].id, copy_id)
@@ -502,7 +525,7 @@ def test_delete_source_user_keeps_source_code_of_copy(
 
 
 # ===========================================================================
-# DELETE USER (DELETE /user/{user_id}, DELETE /user) TESTS: EXPERIMENTS
+# DELETE VIRTUAL USER AND DELETE ME TESTS: EXPERIMENTS
 # ===========================================================================
 # A run user is deleted with its run only (ON DELETE NO ACTION); deleting the gold
 # annotator keeps its experiments without one (ON DELETE SET NULL).
@@ -514,6 +537,13 @@ def _get_experiment(
     response = client.get(f"/projects/{project_id}/experiments/{experiment_id}")
     assert response.status_code == 200, response.text
     return ExperimentRead.model_validate(response.json())
+
+
+def _project_user_ids(client: TestClient, project_id: int) -> set[int]:
+    """The ids of the members and the virtual users of the project."""
+    response = client.get(f"/projects/{project_id}/members")
+    assert response.status_code == 200, response.text
+    return {user["id"] for user in response.json()}
 
 
 @pytest.mark.parametrize(
@@ -555,12 +585,14 @@ def test_delete_virtual_user_of_an_experiment_run_is_a_conflict(
         client, run_user_project["project"].id, experiment_id
     ).runs
 
-    response = client.delete(f"/user/{user_id}")
+    response = client.delete(
+        f"/projects/{run_user_project['project'].id}/virtual-users/{user_id}"
+    )
 
     assert response.status_code == 409, response.text
     assert "still in use" in response.text
     assert "experimentrun" not in response.text
-    assert client.get(f"/user/by_id/{user_id}").status_code == 200
+    assert user_id in _project_user_ids(client, run_user_project["project"].id)
     runs_after = _get_experiment(
         client, run_user_project["project"].id, experiment_id
     ).runs
@@ -574,11 +606,11 @@ def test_delete_virtual_user_of_an_experiment_run_keeps_its_annotations(
     """The refused deletion of a run user deletes none of its annotations."""
     user_id = run_user_project["virtual_gold_run_user"].id
     span_id = run_user_project["virtual_gold_anna"].id
+    project_id = run_user_project["project"].id
 
-    response = client.delete(f"/user/{user_id}")
+    response = client.delete(f"/projects/{project_id}/virtual-users/{user_id}")
 
     assert response.status_code == 409, response.text
-    project_id = run_user_project["project"].id
     assert (
         client.get(f"/projects/{project_id}/span-annotations/{span_id}").status_code
         == 200
@@ -601,7 +633,9 @@ def test_delete_virtual_gold_annotator_keeps_experiment_runs_and_scores(
     before = _get_experiment(client, run_user_project["project"].id, experiment_id)
     assert before.gold_user_id == group_standard_id
 
-    response = client.delete(f"/user/{group_standard_id}")
+    response = client.delete(
+        f"/projects/{p['project'].id}/virtual-users/{group_standard_id}"
+    )
 
     assert response.status_code == 200, response.text
     after = _get_experiment(client, run_user_project["project"].id, experiment_id)
@@ -609,8 +643,7 @@ def test_delete_virtual_gold_annotator_keeps_experiment_runs_and_scores(
     assert after.runs == before.runs
     baseline = next(run for run in after.runs if run.id == p["virtual_gold_run"].id)
     assert len(baseline.scores) > 0
-    for user_id in run_user_ids:
-        assert client.get(f"/user/by_id/{user_id}").status_code == 200
+    assert set(run_user_ids) <= _project_user_ids(client, p["project"].id)
     # the experiment of the human gold annotator is unaffected
     human_gold = _get_experiment(
         client, run_user_project["project"].id, p["human_gold_experiment"].id
@@ -631,11 +664,11 @@ def test_delete_me_as_gold_annotator_keeps_experiment_runs_and_scores(
     assert before.gold_user_id == p["gold_annotator"].id
     gold_client = create_user_client(app_client, p["gold_annotator"])
 
-    response = gold_client.delete("/user/")
+    response = gold_client.delete("/users/me")
 
     assert response.status_code == 200, response.text
     after = _get_experiment(client, run_user_project["project"].id, experiment_id)
     assert after.gold_user_id is None
     assert after.runs == before.runs
     assert len(after.runs[0].scores) > 0
-    assert client.get(f"/user/by_id/{run_user_id}").status_code == 200
+    assert run_user_id in _project_user_ids(client, p["project"].id)

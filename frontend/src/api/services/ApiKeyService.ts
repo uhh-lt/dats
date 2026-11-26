@@ -23,7 +23,7 @@ export class ApiKeyService {
   }): CancelablePromise<ApiKeyCreatedResponse> {
     return __request(OpenAPI, {
       method: "PUT",
-      url: "/api-keys",
+      url: "/users/me/api-keys",
       query: {
         name: name,
         expires_in: expiresIn,
@@ -41,7 +41,7 @@ export class ApiKeyService {
   public static listApiKeys(): CancelablePromise<Array<ApiKeyRead>> {
     return __request(OpenAPI, {
       method: "GET",
-      url: "/api-keys",
+      url: "/users/me/api-keys",
     });
   }
   /**
@@ -49,12 +49,12 @@ export class ApiKeyService {
    * @returns ApiKeyRead Successful Response
    * @throws ApiError
    */
-  public static deleteApiKey({ keyId }: { keyId: number }): CancelablePromise<ApiKeyRead> {
+  public static deleteApiKey({ apiKeyId }: { apiKeyId: number }): CancelablePromise<ApiKeyRead> {
     return __request(OpenAPI, {
       method: "DELETE",
-      url: "/api-keys/{key_id}",
+      url: "/users/me/api-keys/{api_key_id}",
       path: {
-        key_id: keyId,
+        api_key_id: apiKeyId,
       },
       errors: {
         422: `Validation Error`,

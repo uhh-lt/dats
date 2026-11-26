@@ -42,11 +42,11 @@ Keys are stored hashed in the database. The full key is shown to the user only o
 
 ### API Key Endpoints
 
-| Endpoint                    | Method | Description                                                |
-| --------------------------- | ------ | ---------------------------------------------------------- |
-| `/api-keys/create`          | POST   | Generate a new API key with a name and optional expiration |
-| `/api-keys/list`            | GET    | List all active API keys for the current user              |
-| `/api-keys/delete/{key_id}` | DELETE | Revoke an API key                                          |
+| Endpoint                          | Method | Description                                                |
+| --------------------------------- | ------ | ---------------------------------------------------------- |
+| `/users/me/api-keys`              | PUT    | Generate a new API key with a name and optional expiration |
+| `/users/me/api-keys`              | GET    | List all active API keys for the current user              |
+| `/users/me/api-keys/{api_key_id}` | DELETE | Revoke an API key                                          |
 
 ### Expiry Durations
 
