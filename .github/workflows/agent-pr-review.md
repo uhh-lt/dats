@@ -15,9 +15,9 @@ on:
 permissions:
   contents: read
   pull-requests: read
-max-turns: 500
-max-turn-cache-misses: 500
-timeout-minutes: 40
+max-turns: 1000
+max-turn-cache-misses: 1000
+timeout-minutes: 90
 engine:
   id: copilot
   env:
