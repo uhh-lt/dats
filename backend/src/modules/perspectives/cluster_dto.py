@@ -66,6 +66,7 @@ class ClusterUpdateIntern(ClusterUpdate):
 # Properties for reading
 class ClusterRead(BaseModel):
     id: int = Field(description="ID of the cluster")
+    project_id: int = Field(description="ID of the project this cluster belongs to")
     aspect_id: int = Field(description="ID of the aspect this cluster belongs to")
     parent_cluster_id: int | None = Field(
         description="ID of the parent cluster, if any"

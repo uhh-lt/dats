@@ -7885,7 +7885,7 @@
         "responses": {
           "200": {
             "description": "Successful Response",
-            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/SdocTagLinks" } } }
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/SdocTagLinksResult" } } }
           },
           "422": {
             "description": "Validation Error",
@@ -7915,7 +7915,7 @@
         "responses": {
           "200": {
             "description": "Successful Response",
-            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/SdocTagLinks" } } }
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/SdocTagLinksResult" } } }
           },
           "422": {
             "description": "Validation Error",
@@ -7943,7 +7943,7 @@
         "responses": {
           "200": {
             "description": "Successful Response",
-            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/SdocTagLinks" } } }
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/SdocTagLinksResult" } } }
           },
           "422": {
             "description": "Validation Error",
@@ -8131,7 +8131,7 @@
         "responses": {
           "200": {
             "description": "Successful Response",
-            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/SdocTagLinks" } } }
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/SdocTagLinksResult" } } }
           },
           "422": {
             "description": "Validation Error",
@@ -10098,6 +10098,7 @@
             "description": "Type of the PerspectivesJob"
           }
         },
+        "additionalProperties": false,
         "type": "object",
         "required": ["perspectives_job_type"],
         "title": "AddMissingDocsToAspectParams"
@@ -11703,6 +11704,7 @@
             "default": 64
           }
         },
+        "additionalProperties": false,
         "type": "object",
         "title": "COTARefinementHyperparameters"
       },
@@ -11939,6 +11941,7 @@
             "description": "ID of the cluster to change to. (-1 will be treated as 'removing' the documents / marking them as outliers)"
           }
         },
+        "additionalProperties": false,
         "type": "object",
         "required": ["perspectives_job_type", "sdoc_ids", "cluster_id"],
         "title": "ChangeClusterParams"
@@ -12480,6 +12483,7 @@
             }
           }
         },
+        "additionalProperties": false,
         "type": "object",
         "required": ["task_type", "model_type", "task_parameters"],
         "title": "ClassifierJobStart"
@@ -12981,6 +12985,11 @@
       "ClusterRead": {
         "properties": {
           "id": { "type": "integer", "title": "Id", "description": "ID of the cluster" },
+          "project_id": {
+            "type": "integer",
+            "title": "Project Id",
+            "description": "ID of the project this cluster belongs to"
+          },
           "aspect_id": {
             "type": "integer",
             "title": "Aspect Id",
@@ -13020,6 +13029,7 @@
         "type": "object",
         "required": [
           "id",
+          "project_id",
           "aspect_id",
           "parent_cluster_id",
           "is_outlier",
@@ -13547,6 +13557,7 @@
             "description": "List of URLs to crawl."
           }
         },
+        "additionalProperties": false,
         "type": "object",
         "required": ["settings", "urls"],
         "title": "CrawlerJobStart"
@@ -13560,6 +13571,7 @@
             "description": "Type of the PerspectivesJob"
           }
         },
+        "additionalProperties": false,
         "type": "object",
         "required": ["perspectives_job_type"],
         "title": "CreateAspectParams"
@@ -13577,6 +13589,7 @@
             "description": "DTO for creating a new cluster."
           }
         },
+        "additionalProperties": false,
         "type": "object",
         "required": ["perspectives_job_type", "create_dto"],
         "title": "CreateClusterWithNameParams"
@@ -13596,6 +13609,7 @@
             "description": "List of source document IDs to include in the cluster."
           }
         },
+        "additionalProperties": false,
         "type": "object",
         "required": ["perspectives_job_type", "sdoc_ids"],
         "title": "CreateClusterWithSdocsParams"
@@ -13743,6 +13757,7 @@
             "description": "Tag id to filter source documents. If not provided, all source documents are considered."
           }
         },
+        "additionalProperties": false,
         "type": "object",
         "required": ["max_different_words", "tag_id"],
         "title": "DuplicateFinderJobStart"
@@ -14272,6 +14287,7 @@
             "description": "Specific parameters for the export job w.r.t it's type"
           }
         },
+        "additionalProperties": false,
         "type": "object",
         "required": ["export_job_type", "specific_export_job_parameters"],
         "title": "ExportJobStart"
@@ -15822,6 +15838,7 @@
             "default": false
           }
         },
+        "additionalProperties": false,
         "type": "object",
         "required": ["task_type", "sdoc_ids", "model"],
         "title": "LlmAssistantJobStart"
@@ -16214,6 +16231,7 @@
             "description": "ID of the cluster to delete after merging."
           }
         },
+        "additionalProperties": false,
         "type": "object",
         "required": ["perspectives_job_type", "cluster_to_keep", "cluster_to_merge"],
         "title": "MergeClustersParams"
@@ -17969,6 +17987,7 @@
             "description": "ID of the cluster to recompute title and description for."
           }
         },
+        "additionalProperties": false,
         "type": "object",
         "required": ["perspectives_job_type", "cluster_id"],
         "title": "RecomputeClusterTitleAndDescriptionParams"
@@ -17982,6 +18001,7 @@
             "description": "Type of the PerspectivesJob"
           }
         },
+        "additionalProperties": false,
         "type": "object",
         "required": ["perspectives_job_type"],
         "title": "RefineModelParams"
@@ -17996,6 +18016,7 @@
           },
           "cluster_id": { "type": "integer", "title": "Cluster Id", "description": "ID of the cluster to remove." }
         },
+        "additionalProperties": false,
         "type": "object",
         "required": ["perspectives_job_type", "cluster_id"],
         "title": "RemoveClusterParams"
@@ -18018,6 +18039,7 @@
             "description": "Type of the PerspectivesJob"
           }
         },
+        "additionalProperties": false,
         "type": "object",
         "required": ["perspectives_job_type"],
         "title": "ResetModelParams"
@@ -18253,10 +18275,28 @@
         "required": ["links"],
         "title": "SdocTagLinks"
       },
+      "SdocTagLinksResult": {
+        "properties": {
+          "links": {
+            "additionalProperties": { "items": { "type": "integer" }, "type": "array" },
+            "type": "object",
+            "title": "Links",
+            "description": "Map of sdoc_id to its complete list of tag IDs"
+          },
+          "project_id": {
+            "type": "integer",
+            "title": "Project Id",
+            "description": "ID of the Project of the SourceDocuments"
+          }
+        },
+        "type": "object",
+        "required": ["links", "project_id"],
+        "title": "SdocTagLinksResult"
+      },
       "SdocTagsLinkedEvent": {
         "properties": {
           "type": { "type": "string", "const": "SDOC_TAGS_LINKED", "title": "Type", "default": "SDOC_TAGS_LINKED" },
-          "payload": { "$ref": "#/components/schemas/SdocTagLinks" }
+          "payload": { "$ref": "#/components/schemas/SdocTagLinksResult" }
         },
         "type": "object",
         "required": ["payload"],
@@ -20062,6 +20102,7 @@
         "properties": {
           "name": { "type": "string", "title": "Name", "description": "Name of the SpanGroup" },
           "id": { "type": "integer", "title": "Id", "description": "ID of the SpanGroup" },
+          "project_id": { "type": "integer", "title": "Project Id", "description": "Project the SpanGroup belongs to" },
           "user_id": { "type": "integer", "title": "User Id", "description": "User that created the SpanGroup" },
           "sdoc_id": { "type": "integer", "title": "Sdoc Id", "description": "SourceDocument the SpanGroup refers to" },
           "created": {
@@ -20078,7 +20119,7 @@
           }
         },
         "type": "object",
-        "required": ["name", "id", "user_id", "sdoc_id", "created", "updated"],
+        "required": ["name", "id", "project_id", "user_id", "sdoc_id", "created", "updated"],
         "title": "SpanGroupRead"
       },
       "SpanGroupUpdate": {
@@ -20105,6 +20146,7 @@
         "properties": {
           "name": { "type": "string", "title": "Name", "description": "Name of the SpanGroup" },
           "id": { "type": "integer", "title": "Id", "description": "ID of the SpanGroup" },
+          "project_id": { "type": "integer", "title": "Project Id", "description": "Project the SpanGroup belongs to" },
           "user_id": { "type": "integer", "title": "User Id", "description": "User that created the SpanGroup" },
           "sdoc_id": { "type": "integer", "title": "Sdoc Id", "description": "SourceDocument the SpanGroup refers to" },
           "created": {
@@ -20127,7 +20169,7 @@
           }
         },
         "type": "object",
-        "required": ["name", "id", "user_id", "sdoc_id", "created", "updated", "span_annotations"],
+        "required": ["name", "id", "project_id", "user_id", "sdoc_id", "created", "updated", "span_annotations"],
         "title": "SpanGroupWithAnnotationsRead"
       },
       "SpanPromptExample": {
@@ -20322,6 +20364,7 @@
             "description": "Number of clusters to split the cluster into. Must be greater than 1. If not set, the cluster will be split automatically."
           }
         },
+        "additionalProperties": false,
         "type": "object",
         "required": ["perspectives_job_type", "cluster_id", "split_into"],
         "title": "SplitClusterParams"
@@ -20528,6 +20571,7 @@
             "default": "KNN"
           }
         },
+        "additionalProperties": false,
         "type": "object",
         "title": "TagRecommendationJobStart"
       },
@@ -20558,10 +20602,15 @@
             "title": "Is Reviewed",
             "description": "Reviewed status of the recommendation",
             "default": false
+          },
+          "project_id": {
+            "type": "integer",
+            "title": "Project Id",
+            "description": "ID of the project of the recommendation"
           }
         },
         "type": "object",
-        "required": ["ml_job_id", "source_document_id", "predicted_tag_id", "prediction_score"],
+        "required": ["ml_job_id", "source_document_id", "predicted_tag_id", "prediction_score", "project_id"],
         "title": "TagRecommendationLinkRead"
       },
       "TagRecommendationMethod": {

@@ -7,6 +7,7 @@ from common.project_router import project_router
 from core.tag.tag_crud import crud_tag
 from core.tag.tag_dto import (
     SdocTagLinks,
+    SdocTagLinksResult,
     SourceDocumentTagMultiLink,
     TagCreate,
     TagRead,
@@ -20,16 +21,17 @@ router = project_router("/tags", tags=["tag", "mcp"])
 
 def _read_sdoc_tag_links(
     db: Session, *, project_id: int, sdoc_ids: list[int]
-) -> SdocTagLinks:
+) -> SdocTagLinksResult:
     """The tag ids of every given document, an empty list for a document without
     tags (or of another project)."""
     tags = crud_tag.read_tags_for_documents(
         db=db, project_id=project_id, sdoc_ids=sdoc_ids
     )
-    return SdocTagLinks(
+    return SdocTagLinksResult(
+        project_id=project_id,
         links={
             sdoc_id: [tag.id for tag in tags.get(sdoc_id, [])] for sdoc_id in sdoc_ids
-        }
+        },
     )
 
 
@@ -56,7 +58,7 @@ def create_tag(
 
 @router.put(
     "/bulk/source-documents",
-    response_model=SdocTagLinks,
+    response_model=SdocTagLinksResult,
     summary=(
         "Links the Tags with the SourceDocuments and returns the resulting tags per "
         "document"
@@ -68,7 +70,7 @@ def link_tags_bulk(
     project_id: int,
     multi_link: SourceDocumentTagMultiLink,
     ws: WebsocketEmitter = Depends(),
-) -> SdocTagLinks:
+) -> SdocTagLinksResult:
     crud_tag.link_multiple_tags(
         db=db,
         project_id=project_id,
@@ -165,7 +167,7 @@ def update_tags_bulk(
 
 @router.patch(
     "/bulk/source-documents",
-    response_model=SdocTagLinks,
+    response_model=SdocTagLinksResult,
     summary=(
         "Links and unlinks Tags of the SourceDocuments and returns the resulting tags "
         "per document"
@@ -179,7 +181,7 @@ def update_sdoc_tags_bulk(
     link_tag_ids: list[int] = Body(description="The Tags to link"),
     unlink_tag_ids: list[int] = Body(description="The Tags to unlink"),
     ws: WebsocketEmitter = Depends(),
-) -> SdocTagLinks:
+) -> SdocTagLinksResult:
     crud_tag.link_multiple_tags(
         db=db, project_id=project_id, sdoc_ids=sdoc_ids, tag_ids=link_tag_ids
     )
@@ -194,7 +196,7 @@ def update_sdoc_tags_bulk(
 
 @router.patch(
     "/bulk/source-documents/set",
-    response_model=SdocTagLinks,
+    response_model=SdocTagLinksResult,
     summary=(
         "Sets the Tags of each SourceDocument to the given Tags and returns the "
         "resulting tags per document"
@@ -206,7 +208,7 @@ def set_sdoc_tags_bulk(
     project_id: int,
     links: SdocTagLinks,
     ws: WebsocketEmitter = Depends(),
-) -> SdocTagLinks:
+) -> SdocTagLinksResult:
     crud_tag.set_tags_batch(db=db, project_id=project_id, links=links.links)
     result = _read_sdoc_tag_links(db, project_id=project_id, sdoc_ids=list(links.links))
     if result.links:
@@ -238,7 +240,7 @@ def update_by_id(
 
 @router.delete(
     "/bulk/source-documents",
-    response_model=SdocTagLinks,
+    response_model=SdocTagLinksResult,
     summary=(
         "Unlinks the Tags from the SourceDocuments and returns the resulting tags per "
         "document"
@@ -250,7 +252,7 @@ def unlink_tags_bulk(
     project_id: int,
     multi_link: SourceDocumentTagMultiLink,
     ws: WebsocketEmitter = Depends(),
-) -> SdocTagLinks:
+) -> SdocTagLinksResult:
     crud_tag.unlink_multiple_tags(
         db=db,
         project_id=project_id,

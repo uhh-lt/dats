@@ -8,6 +8,10 @@ export type ClusterRead = {
    */
   id: number;
   /**
+   * ID of the project this cluster belongs to
+   */
+  project_id: number;
+  /**
    * ID of the aspect this cluster belongs to
    */
   aspect_id: number;
