@@ -48,7 +48,7 @@ class SpanAnnotationORM(ORMBase):
         back_populates="span_annotation",
         cascade="all, delete-orphan",
         passive_deletes=True,
-        foreign_keys="ObjectHandleORM.span_annotation_id",
+        primaryjoin="and_(SpanAnnotationORM.project_id == ObjectHandleORM.project_id, SpanAnnotationORM.id == foreign(ObjectHandleORM.span_annotation_id))",
     )
 
     # many to one
@@ -67,7 +67,7 @@ class SpanAnnotationORM(ORMBase):
     code: Mapped["CodeORM"] = relationship(
         "CodeORM",
         back_populates="span_annotations",
-        foreign_keys="spanannotation.c.code_id",
+        primaryjoin="and_(CodeORM.project_id == SpanAnnotationORM.project_id, CodeORM.id == foreign(SpanAnnotationORM.code_id))",
     )
 
     annotation_document_id: Mapped[int] = mapped_column(
@@ -76,7 +76,7 @@ class SpanAnnotationORM(ORMBase):
     annotation_document: Mapped["AnnotationDocumentORM"] = relationship(
         "AnnotationDocumentORM",
         back_populates="span_annotations",
-        foreign_keys=[annotation_document_id],
+        primaryjoin="and_(AnnotationDocumentORM.project_id == SpanAnnotationORM.project_id, AnnotationDocumentORM.id == foreign(SpanAnnotationORM.annotation_document_id))",
     )
 
     # provenance: set when the annotation was copied from another annotation

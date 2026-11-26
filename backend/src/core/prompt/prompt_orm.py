@@ -56,7 +56,7 @@ class PromptORM(ORMBase):
         cascade="all, delete-orphan",
         passive_deletes=True,
         order_by="PromptVersionORM.version",
-        foreign_keys="PromptVersionORM.prompt_id",
+        primaryjoin="and_(PromptORM.project_id == PromptVersionORM.project_id, PromptORM.id == foreign(PromptVersionORM.prompt_id))",
     )
 
     __table_args__ = (
@@ -109,7 +109,9 @@ class PromptVersionORM(ORMBase):
 
     prompt_id: Mapped[int] = mapped_column(Integer, nullable=False, index=True)
     prompt: Mapped["PromptORM"] = relationship(
-        "PromptORM", back_populates="versions", foreign_keys=[prompt_id]
+        "PromptORM",
+        back_populates="versions",
+        primaryjoin="and_(PromptORM.project_id == PromptVersionORM.project_id, PromptORM.id == foreign(PromptVersionORM.prompt_id))",
     )
 
     # the user who saved the version (kept as NULL when the user is deleted)
@@ -122,6 +124,7 @@ class PromptVersionORM(ORMBase):
     __table_args__ = (
         PrimaryKeyConstraint("project_id", "id", name="promptversion_pkey"),
         UniqueConstraint(
+            "project_id",
             "prompt_id",
             "version",
             name="UC_prompt_version_unique_per_prompt",

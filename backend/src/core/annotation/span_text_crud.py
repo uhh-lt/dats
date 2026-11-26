@@ -52,9 +52,6 @@ class CRUDSpanText(SQLCRUDBase[SpanTextORM, SpanTextCreate, UpdateNotAllowed]):
 
     ### READ OPERATIONS ###
 
-    def read_by_text(self, db: Session, *, text: str) -> SpanTextORM | None:
-        return db.query(self.model).filter(self.model.text == text).first()
-
     def read_all_by_text_unordered(
         self, db: Session, *, texts: list[str]
     ) -> list[SpanTextORM]:

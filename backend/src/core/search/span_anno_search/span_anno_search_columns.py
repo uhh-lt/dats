@@ -158,13 +158,10 @@ class SpanColumns(str, AbstractColumns):
                     )
                 )
                 query_builder._join_subquery(
-                    AnnotationDocumentORM,
-                    AnnotationDocumentORM.id
-                    == SpanAnnotationORM.annotation_document_id,
+                    SpanAnnotationORM.annotation_document,
                 )
                 query_builder._join_subquery(
-                    SourceDocumentORM,
-                    SourceDocumentORM.id == AnnotationDocumentORM.source_document_id,
+                    AnnotationDocumentORM.source_document,
                 )
                 query_builder._join_subquery(SourceDocumentORM.tags, isouter=True)
             case SpanColumns.FOLDER_ID_LIST_RECURSIVE:
@@ -176,17 +173,13 @@ class SpanColumns(str, AbstractColumns):
                     )
                 )
                 query_builder._join_subquery(
-                    AnnotationDocumentORM,
-                    AnnotationDocumentORM.id
-                    == SpanAnnotationORM.annotation_document_id,
+                    SpanAnnotationORM.annotation_document,
                 )
                 query_builder._join_subquery(
-                    SourceDocumentORM,
-                    SourceDocumentORM.id == AnnotationDocumentORM.source_document_id,
+                    AnnotationDocumentORM.source_document,
                 )
                 query_builder._join_subquery(
-                    FolderORM,
-                    FolderORM.id == SourceDocumentORM.folder_id,
+                    SourceDocumentORM.folder,
                     isouter=True,
                 )
 
@@ -194,12 +187,9 @@ class SpanColumns(str, AbstractColumns):
         match self:
             case SpanColumns.SOURCE_DOCUMENT_NAME:
                 query_builder._join_query(
-                    AnnotationDocumentORM,
-                    AnnotationDocumentORM.id
-                    == SpanAnnotationORM.annotation_document_id,
+                    SpanAnnotationORM.annotation_document,
                 )._join_query(
-                    SourceDocumentORM,
-                    SourceDocumentORM.id == AnnotationDocumentORM.source_document_id,
+                    AnnotationDocumentORM.source_document,
                 )
             case SpanColumns.SPAN_TEXT:
                 query_builder._join_query(
@@ -212,9 +202,7 @@ class SpanColumns(str, AbstractColumns):
                 )._join_query(ObjectHandleORM.attached_memos, isouter=True)
             case SpanColumns.USER_ID:
                 query_builder._join_query(
-                    AnnotationDocumentORM,
-                    AnnotationDocumentORM.id
-                    == SpanAnnotationORM.annotation_document_id,
+                    SpanAnnotationORM.annotation_document,
                 )._join_query(
                     UserORM,
                     UserORM.id == AnnotationDocumentORM.user_id,

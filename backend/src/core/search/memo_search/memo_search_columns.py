@@ -148,7 +148,11 @@ def build_memo_subquery(db, project_id: int, user_id: int):
         .outerjoin(project, project.id == handle.attached_project_id)
         .outerjoin(
             favorite,
-            and_(favorite.memo_id == MemoORM.id, favorite.user_id == user_id),
+            and_(
+                favorite.project_id == MemoORM.project_id,
+                favorite.memo_id == MemoORM.id,
+                favorite.user_id == user_id,
+            ),
         )
         .filter(MemoORM.project_id == project_id)
     )

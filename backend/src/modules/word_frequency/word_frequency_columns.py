@@ -180,20 +180,15 @@ class WordFrequencyColumns(str, AbstractColumns):
                     )
                 )
                 query_builder._join_subquery(
-                    AnnotationDocumentORM,
-                    AnnotationDocumentORM.source_document_id == SourceDocumentORM.id,
+                    SourceDocumentORM.annotation_documents,
                     isouter=True,
                 )
                 query_builder._join_subquery(
-                    SpanAnnotationORM,
-                    SpanAnnotationORM.annotation_document_id
-                    == AnnotationDocumentORM.id,
+                    AnnotationDocumentORM.span_annotations,
                     isouter=True,
                 )
                 query_builder._join_subquery(
-                    SentenceAnnotationORM,
-                    SentenceAnnotationORM.annotation_document_id
-                    == AnnotationDocumentORM.id,
+                    AnnotationDocumentORM.sentence_annotations,
                     isouter=True,
                 )
             case WordFrequencyColumns.FOLDER_ID_LIST_RECURSIVE:
@@ -205,8 +200,7 @@ class WordFrequencyColumns(str, AbstractColumns):
                     )
                 )
                 query_builder._join_subquery(
-                    FolderORM,
-                    FolderORM.id == SourceDocumentORM.folder_id,
+                    SourceDocumentORM.folder,
                     isouter=True,
                 )
 
@@ -218,8 +212,7 @@ class WordFrequencyColumns(str, AbstractColumns):
                     )
                 )
                 query_builder._join_subquery(
-                    AnnotationDocumentORM,
-                    AnnotationDocumentORM.source_document_id == SourceDocumentORM.id,
+                    SourceDocumentORM.annotation_documents,
                     isouter=True,
                 )
             case WordFrequencyColumns.SPAN_ANNOTATIONS:
@@ -239,14 +232,11 @@ class WordFrequencyColumns(str, AbstractColumns):
                     ).label(WordFrequencyColumns.SPAN_ANNOTATIONS.value)
                 )
                 query_builder._join_subquery(
-                    AnnotationDocumentORM,
-                    AnnotationDocumentORM.source_document_id == SourceDocumentORM.id,
+                    SourceDocumentORM.annotation_documents,
                     isouter=True,
                 )
                 query_builder._join_subquery(
-                    SpanAnnotationORM,
-                    SpanAnnotationORM.annotation_document_id
-                    == AnnotationDocumentORM.id,
+                    AnnotationDocumentORM.span_annotations,
                     isouter=True,
                 )
                 query_builder._join_subquery(

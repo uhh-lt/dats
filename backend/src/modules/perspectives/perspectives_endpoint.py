@@ -161,7 +161,7 @@ def get_docaspect_by_id(
     sdoc_id: int,
 ) -> str:
     crud_aspect.exists(db=db, project_id=project_id, id=aspect_id, raise_error=True)
-    db_obj = crud_document_aspect.read(id=(sdoc_id, aspect_id), db=db)
+    db_obj = crud_document_aspect.read(db=db, id=(project_id, sdoc_id, aspect_id))
     return db_obj.content
 
 
@@ -301,7 +301,7 @@ def _build_document_visualization(
     # Color by
     clusters = aspect.clusters
     document_clusters = crud_document_cluster.read_by_aspect_id(
-        db=db, aspect_id=aspect_id
+        db=db, project_id=project_id, aspect_id=aspect_id
     )
     sdoc_id2dc = {dc.sdoc_id: dc for dc in document_clusters}
     cluster_id2cluster = {c.id: c for c in clusters}
@@ -424,6 +424,7 @@ def accept_label(
     crud_aspect.exists(db=db, project_id=project_id, id=aspect_id, raise_error=True)
     crud_document_cluster.set_labels(
         db=db,
+        project_id=project_id,
         aspect_id=aspect_id,
         sdoc_ids=sdoc_ids,
         is_accepted=True,
@@ -458,6 +459,7 @@ def revert_label(
     crud_aspect.exists(db=db, project_id=project_id, id=aspect_id, raise_error=True)
     crud_document_cluster.set_labels(
         db=db,
+        project_id=project_id,
         aspect_id=aspect_id,
         sdoc_ids=sdoc_ids,
         is_accepted=False,

@@ -48,7 +48,7 @@ class CodeORM(ORMBase):
         back_populates="code",
         cascade="all, delete-orphan",
         passive_deletes=True,
-        foreign_keys="ObjectHandleORM.code_id",
+        primaryjoin="and_(CodeORM.project_id == ObjectHandleORM.project_id, CodeORM.id == foreign(ObjectHandleORM.code_id))",
     )
 
     # many to one
@@ -65,7 +65,7 @@ class CodeORM(ORMBase):
         back_populates="code",
         cascade="all, delete-orphan",
         passive_deletes=True,
-        foreign_keys="spanannotation.c.code_id",
+        primaryjoin="and_(CodeORM.project_id == SpanAnnotationORM.project_id, CodeORM.id == foreign(SpanAnnotationORM.code_id))",
     )
 
     bbox_annotations: Mapped[list["BBoxAnnotationORM"]] = relationship(
@@ -73,7 +73,7 @@ class CodeORM(ORMBase):
         back_populates="code",
         cascade="all, delete-orphan",
         passive_deletes=True,
-        foreign_keys="bboxannotation.c.code_id",
+        primaryjoin="and_(CodeORM.project_id == BBoxAnnotationORM.project_id, CodeORM.id == foreign(BBoxAnnotationORM.code_id))",
     )
 
     sentence_annotations: Mapped[list["SentenceAnnotationORM"]] = relationship(
@@ -81,23 +81,22 @@ class CodeORM(ORMBase):
         back_populates="code",
         cascade="all, delete-orphan",
         passive_deletes=True,
-        foreign_keys="sentenceannotation.c.code_id",
+        primaryjoin="and_(CodeORM.project_id == SentenceAnnotationORM.project_id, CodeORM.id == foreign(SentenceAnnotationORM.code_id))",
     )
 
     # hierarchy reference
     parent_id: Mapped[int | None] = mapped_column(Integer, index=True)
     parent: Mapped["CodeORM | None"] = relationship(
         "CodeORM",
-        remote_side=[id],
         back_populates="children",
-        foreign_keys=[parent_id],
+        primaryjoin="and_(remote(CodeORM.project_id) == CodeORM.project_id, remote(CodeORM.id) == foreign(CodeORM.parent_id))",
     )
     children: Mapped[list["CodeORM"]] = relationship(
         "CodeORM",
         back_populates="parent",
         cascade="all, delete-orphan",
         passive_deletes=True,
-        foreign_keys=[parent_id],
+        primaryjoin="and_(remote(CodeORM.project_id) == CodeORM.project_id, remote(foreign(CodeORM.parent_id)) == CodeORM.id)",
     )
 
     __table_args__ = (

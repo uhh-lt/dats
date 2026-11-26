@@ -55,8 +55,9 @@ def find_span_annotations(
 ) -> Page[SpanAnnotationRow]:
     builder = SearchBuilder(
         db,
-        request.filter,
-        request.sorts,
+        project_id=project_id,
+        filter=request.filter,
+        sorts=request.sorts,
         group_by=request.group_by,
         group_key=request.group_key,
         user_id=user_id,
@@ -65,7 +66,9 @@ def find_span_annotations(
     subquery = builder.init_subquery(
         db.query(
             SpanAnnotationORM.id,
-        ).group_by(
+        )
+        .filter(SpanAnnotationORM.project_id == project_id)
+        .group_by(
             SpanAnnotationORM.id,
         )
     ).build_subquery()
@@ -86,14 +89,11 @@ def find_span_annotations(
         .filter(SourceDocumentORM.project_id == project_id)
         .filter(CodeORM.enabled == True)  # noqa: E712
     )._join_query(
-        AnnotationDocumentORM,
-        AnnotationDocumentORM.id == SpanAnnotationORM.annotation_document_id,
+        SpanAnnotationORM.annotation_document,
     )._join_query(
-        SourceDocumentORM,
-        SourceDocumentORM.id == AnnotationDocumentORM.source_document_id,
+        AnnotationDocumentORM.source_document,
     )._join_query(
-        CodeORM,
-        CodeORM.id == SpanAnnotationORM.code_id,
+        SpanAnnotationORM.code,
     )._join_query(
         SpanTextORM,
         SpanTextORM.id == SpanAnnotationORM.span_text_id,
@@ -149,12 +149,19 @@ def find_span_annotation_groups(
     (group_key, group_label, total_results, target_id, target_type) directly.
     """
     builder = SearchBuilder(
-        db, request.filter, sorts=[], group_by=request.group_by, user_id=user_id
+        db,
+        project_id=project_id,
+        filter=request.filter,
+        sorts=[],
+        group_by=request.group_by,
+        user_id=user_id,
     )
     subquery = builder.init_subquery(
         db.query(
             SpanAnnotationORM.id,
-        ).group_by(
+        )
+        .filter(SpanAnnotationORM.project_id == project_id)
+        .group_by(
             SpanAnnotationORM.id,
         )
     ).build_subquery()
@@ -166,14 +173,11 @@ def find_span_annotation_groups(
         .filter(SourceDocumentORM.project_id == project_id)
         .filter(CodeORM.enabled == True)  # noqa: E712
     )._join_query(
-        AnnotationDocumentORM,
-        AnnotationDocumentORM.id == SpanAnnotationORM.annotation_document_id,
+        SpanAnnotationORM.annotation_document,
     )._join_query(
-        SourceDocumentORM,
-        SourceDocumentORM.id == AnnotationDocumentORM.source_document_id,
+        AnnotationDocumentORM.source_document,
     )._join_query(
-        CodeORM,
-        CodeORM.id == SpanAnnotationORM.code_id,
+        SpanAnnotationORM.code,
     )
     query = builder.build_query()
 

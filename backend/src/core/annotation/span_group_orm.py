@@ -40,7 +40,7 @@ class SpanGroupORM(ORMBase):
         back_populates="span_group",
         cascade="all, delete-orphan",
         passive_deletes=True,
-        foreign_keys="ObjectHandleORM.span_group_id",
+        primaryjoin="and_(SpanGroupORM.project_id == ObjectHandleORM.project_id, SpanGroupORM.id == foreign(ObjectHandleORM.span_group_id))",
     )
 
     # many to one
@@ -56,7 +56,7 @@ class SpanGroupORM(ORMBase):
     annotation_document: Mapped["AnnotationDocumentORM"] = relationship(
         "AnnotationDocumentORM",
         back_populates="span_groups",
-        foreign_keys=[annotation_document_id],
+        primaryjoin="and_(AnnotationDocumentORM.project_id == SpanGroupORM.project_id, AnnotationDocumentORM.id == foreign(SpanGroupORM.annotation_document_id))",
     )
 
     # many to many (read only: links are written by id columns)
@@ -87,18 +87,21 @@ class SpanGroupORM(ORMBase):
 
 
 class SpanAnnotationSpanGroupLinkTable(ORMBase):
-    span_annotation_id: Mapped[int] = mapped_column(
-        Integer, primary_key=True, index=True
-    )
-    span_group_id: Mapped[int] = mapped_column(Integer, primary_key=True, index=True)
+    span_annotation_id: Mapped[int] = mapped_column(Integer, index=True)
+    span_group_id: Mapped[int] = mapped_column(Integer, index=True)
     project_id: Mapped[int] = mapped_column(
         Integer,
         ForeignKey("project.id", ondelete="CASCADE"),
         nullable=False,
-        index=True,
     )
 
     __table_args__ = (
+        PrimaryKeyConstraint(
+            "project_id",
+            "span_annotation_id",
+            "span_group_id",
+            name="spanannotationspangrouplinktable_pkey",
+        ),
         ForeignKeyConstraint(
             ["project_id", "span_annotation_id"],
             ["spanannotation.project_id", "spanannotation.id"],

@@ -16,7 +16,6 @@ from core.artefacts.sentence_embeddings.sentence_embedding_dto import (
     SentenceObjectIdentifier,
 )
 from core.doc.source_document_data_crud import crud_sdoc_data
-from core.doc.source_document_orm import SourceDocumentORM
 from modules.annoscaling.annoscaling_dto import (
     AnnoscalingResult,
     AnnoscalingSentenceHit,
@@ -249,16 +248,9 @@ class AnnoScalingService(metaclass=SingletonMeta):
                 SpanAnnotationORM.end,
                 AnnotationDocumentORM.source_document_id,
             )
-            .join(
-                AnnotationDocumentORM,
-                SpanAnnotationORM.annotation_document_id == AnnotationDocumentORM.id,
-            )
-            .join(
-                SourceDocumentORM,
-                SourceDocumentORM.id == AnnotationDocumentORM.source_document_id,
-            )
+            .join(SpanAnnotationORM.annotation_document)
             .filter(
-                SourceDocumentORM.project_id == project_id,
+                SpanAnnotationORM.project_id == project_id,
                 AnnotationDocumentORM.user_id.in_(user_ids),
                 SpanAnnotationORM.code_id == code_id,
             )

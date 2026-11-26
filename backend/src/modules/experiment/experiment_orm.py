@@ -73,7 +73,7 @@ class ExperimentORM(ORMBase):
         cascade="all, delete-orphan",
         passive_deletes=True,
         order_by="ExperimentRunORM.id",
-        foreign_keys="ExperimentRunORM.experiment_id",
+        primaryjoin="and_(ExperimentORM.project_id == ExperimentRunORM.project_id, ExperimentORM.id == foreign(ExperimentRunORM.experiment_id))",
     )
 
     __table_args__ = (
@@ -139,7 +139,9 @@ class ExperimentRunORM(ORMBase):
 
     experiment_id: Mapped[int] = mapped_column(Integer, nullable=False, index=True)
     experiment: Mapped["ExperimentORM"] = relationship(
-        "ExperimentORM", back_populates="runs", foreign_keys=[experiment_id]
+        "ExperimentORM",
+        back_populates="runs",
+        primaryjoin="and_(ExperimentORM.project_id == ExperimentRunORM.project_id, ExperimentORM.id == foreign(ExperimentRunORM.experiment_id))",
     )
 
     prompt_version_id: Mapped[int] = mapped_column(Integer, nullable=False, index=True)
@@ -170,6 +172,7 @@ class ExperimentRunORM(ORMBase):
 
     __table_args__ = (
         UniqueConstraint(
+            "project_id",
             "experiment_id",
             "name",
             name="UC_experiment_run_name_unique_per_experiment",

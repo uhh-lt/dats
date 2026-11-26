@@ -16,7 +16,6 @@ from core.annotation.span_group_orm import SpanAnnotationSpanGroupLinkTable
 from core.annotation.span_text_crud import crud_span_text
 from core.annotation.span_text_dto import SpanTextCreate
 from core.code.code_orm import CodeORM
-from core.doc.source_document_orm import SourceDocumentORM
 from core.memo.object_handle_orm import ObjectHandleORM
 from repos.db.crud_base import BATCH_SIZE
 from repos.db.project_crud_base import ProjectCRUDBase
@@ -85,23 +84,12 @@ class CRUDSpanAnnotation(
         *,
         project_id: int,
     ) -> list[SpanAnnotationORM]:
-        query = (
+        return (
             db.query(self.model)
             .options(*self._load_options())
-            .join(
-                AnnotationDocumentORM,
-                AnnotationDocumentORM.id == self.model.annotation_document_id,
-            )
-            .join(
-                SourceDocumentORM,
-                SourceDocumentORM.id == AnnotationDocumentORM.source_document_id,
-            )
-            .where(
-                SourceDocumentORM.project_id == project_id,
-            )
+            .where(self.model.project_id == project_id)
+            .all()
         )
-
-        return query.all()
 
     def read_by_project_and_uuid(
         self,
@@ -155,6 +143,7 @@ class CRUDSpanAnnotation(
         self,
         db: Session,
         *,
+        project_id: int,
         user_id: int,
         sdoc_id: int,
         exclude_disabled_codes: bool = True,
@@ -164,6 +153,7 @@ class CRUDSpanAnnotation(
             .options(*self._load_options())
             .join(self.model.annotation_document)
             .where(
+                self.model.project_id == project_id,
                 AnnotationDocumentORM.user_id == user_id,
                 AnnotationDocumentORM.source_document_id == sdoc_id,
             )
@@ -171,34 +161,6 @@ class CRUDSpanAnnotation(
         if exclude_disabled_codes:
             query = query.join(self.model.code).where(CodeORM.enabled == True)  # noqa: E712
         return query.all()
-
-    def read_by_users_and_sdoc(
-        self,
-        db: Session,
-        *,
-        user_ids: list[int],
-        sdoc_id: int,
-        exclude_disabled_codes: bool = True,
-    ) -> list[SpanAnnotationORM]:
-        if not user_ids:
-            return []
-
-        db_objs: list[SpanAnnotationORM] = []
-        for i in range(0, len(user_ids), BATCH_SIZE):
-            batch_user_ids = user_ids[i : i + BATCH_SIZE]
-            query = (
-                db.query(self.model)
-                .options(*self._load_options())
-                .join(self.model.annotation_document)
-                .where(
-                    AnnotationDocumentORM.user_id.in_(batch_user_ids),
-                    AnnotationDocumentORM.source_document_id == sdoc_id,
-                )
-            )
-            if exclude_disabled_codes:
-                query = query.join(self.model.code).where(CodeORM.enabled == True)  # noqa: E712
-            db_objs.extend(query.all())
-        return db_objs
 
     def read_by_user(
         self,
@@ -240,26 +202,6 @@ class CRUDSpanAnnotation(
         if exclude_disabled_codes:
             query = query.join(self.model.code).where(CodeORM.enabled == True)  # noqa: E712
         return query.all()
-
-    def read_by_codes(
-        self,
-        db: Session,
-        *,
-        code_ids: list[int],
-    ) -> list[SpanAnnotationORM]:
-        if not code_ids:
-            return []
-
-        db_objs: list[SpanAnnotationORM] = []
-        for i in range(0, len(code_ids), BATCH_SIZE):
-            batch_code_ids = code_ids[i : i + BATCH_SIZE]
-            query = (
-                db.query(self.model)
-                .options(*self._load_options())
-                .filter(self.model.code_id.in_(batch_code_ids))
-            )
-            db_objs.extend(query.all())
-        return db_objs
 
     def read_by_user_sdocs_codes(
         self,

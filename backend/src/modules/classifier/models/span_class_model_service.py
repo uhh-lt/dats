@@ -449,6 +449,7 @@ class SpanClassificationModelService(TextClassificationModelService):
                 )
                 .join(SpanAnnotationORM.annotation_document)
                 .where(
+                    SpanAnnotationORM.project_id == project_id,
                     AnnotationDocumentORM.user_id.in_(user_ids),
                     AnnotationDocumentORM.source_document_id.in_(batch_sdoc_ids),
                     SpanAnnotationORM.code_id.in_(list(codeid2parentid.keys())),

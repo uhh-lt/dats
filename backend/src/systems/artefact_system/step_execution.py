@@ -77,7 +77,9 @@ def _start_planned(steps: list[str], input: SdocProcessingJobInput) -> None:
     if not steps:
         return
     with sqlr.transaction() as db:
-        status = crud_sdoc_step_status.read_by_sdoc(db=db, sdoc_id=input.sdoc_id)
+        status = crud_sdoc_step_status.read_by_sdoc(
+            db=db, project_id=input.project_id, sdoc_id=input.sdoc_id
+        )
     planned = [step for step in steps if step in status]
     if planned:
         start_steps(
@@ -105,7 +107,11 @@ def _set_status(
         return
     with sqlr.transaction() as db:
         crud_sdoc_step_status.update_status(
-            db=db, sdoc_ids=[input.sdoc_id], steps=[job_type], status=status
+            db=db,
+            project_id=input.project_id,
+            sdoc_ids=[input.sdoc_id],
+            steps=[job_type],
+            status=status,
         )
 
 
@@ -133,6 +139,7 @@ def handle_job_error(job_type: str, input: JobInputBase) -> None:
     with sqlr.transaction() as db:
         crud_sdoc_step_status.update_pending_to_erroneous(
             db=db,
+            project_id=input.project_id,
             sdoc_id=input.sdoc_id,
             steps=artefact_registry.graph().descendants([job_type]),
         )

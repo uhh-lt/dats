@@ -320,7 +320,7 @@ class TimelineAnalysisService(metaclass=SingletonMeta):
         project_metadata_id: int,
         filter: Filter[SdocColumns],
     ) -> list[TimelineAnalysisRow]:
-        builder = SearchBuilder(db, filter, sorts=[])
+        builder = SearchBuilder(db, project_id=project_id, filter=filter, sorts=[])
 
         date_metadata = aliased(SourceDocumentMetadataORM)
         subquery = (
@@ -336,7 +336,8 @@ class TimelineAnalysisService(metaclass=SingletonMeta):
             )
             ._join_subquery(
                 date_metadata,
-                (SourceDocumentORM.id == date_metadata.source_document_id)
+                (date_metadata.project_id == SourceDocumentORM.project_id)
+                & (date_metadata.source_document_id == SourceDocumentORM.id)
                 & (date_metadata.project_metadata_id == project_metadata_id)
                 & (date_metadata.date_value.isnot(None)),
             )
@@ -350,6 +351,7 @@ class TimelineAnalysisService(metaclass=SingletonMeta):
                 *group_by.apply(subquery.c["date"]),  # type: ignore
             )
             .join(subquery, SourceDocumentORM.id == subquery.c.id)
+            .filter(SourceDocumentORM.project_id == project_id)
             .group_by(*group_by.apply(column=subquery.c["date"]))  # type: ignore
         ).build_query()
 
@@ -382,7 +384,9 @@ class TimelineAnalysisService(metaclass=SingletonMeta):
             case TAAnnotationAggregationType.UNIT:
                 # UNIT = Count sentences
 
-                builder = SearchBuilder(db, filter, sorts=[])
+                builder = SearchBuilder(
+                    db, project_id=project_id, filter=filter, sorts=[]
+                )
                 date_metadata = aliased(SourceDocumentMetadataORM)
                 subquery = (
                     builder.init_subquery(
@@ -396,18 +400,15 @@ class TimelineAnalysisService(metaclass=SingletonMeta):
                         )
                     )
                     ._join_subquery(
-                        AnnotationDocumentORM,
-                        AnnotationDocumentORM.id
-                        == SentenceAnnotationORM.annotation_document_id,
+                        SentenceAnnotationORM.annotation_document,
                     )
                     ._join_subquery(
-                        SourceDocumentORM,
-                        SourceDocumentORM.id
-                        == AnnotationDocumentORM.source_document_id,
+                        AnnotationDocumentORM.source_document,
                     )
                     ._join_subquery(
                         date_metadata,
-                        (SourceDocumentORM.id == date_metadata.source_document_id)
+                        (date_metadata.project_id == SourceDocumentORM.project_id)
+                        & (date_metadata.source_document_id == SourceDocumentORM.id)
                         & (date_metadata.project_metadata_id == project_metadata_id)
                         & (date_metadata.date_value.isnot(None)),
                     )
@@ -423,6 +424,7 @@ class TimelineAnalysisService(metaclass=SingletonMeta):
                         *group_by.apply(subquery.c["date"]),  # type: ignore
                     )
                     .join(subquery, SentenceAnnotationORM.id == subquery.c.id)
+                    .filter(SentenceAnnotationORM.project_id == project_id)
                     .group_by(*group_by.apply(column=subquery.c["date"]))  # type: ignore
                 ).build_query()
 
@@ -495,7 +497,9 @@ class TimelineAnalysisService(metaclass=SingletonMeta):
             case TAAnnotationAggregationType.UNIT:
                 # UNIT = Count sentences
 
-                builder = SearchBuilder(db, filter, sorts=[])
+                builder = SearchBuilder(
+                    db, project_id=project_id, filter=filter, sorts=[]
+                )
                 date_metadata = aliased(SourceDocumentMetadataORM)
                 subquery = (
                     builder.init_subquery(
@@ -509,18 +513,15 @@ class TimelineAnalysisService(metaclass=SingletonMeta):
                         )
                     )
                     ._join_subquery(
-                        AnnotationDocumentORM,
-                        AnnotationDocumentORM.id
-                        == SpanAnnotationORM.annotation_document_id,
+                        SpanAnnotationORM.annotation_document,
                     )
                     ._join_subquery(
-                        SourceDocumentORM,
-                        SourceDocumentORM.id
-                        == AnnotationDocumentORM.source_document_id,
+                        AnnotationDocumentORM.source_document,
                     )
                     ._join_subquery(
                         date_metadata,
-                        (SourceDocumentORM.id == date_metadata.source_document_id)
+                        (date_metadata.project_id == SourceDocumentORM.project_id)
+                        & (date_metadata.source_document_id == SourceDocumentORM.id)
                         & (date_metadata.project_metadata_id == project_metadata_id)
                         & (date_metadata.date_value.isnot(None)),
                     )
@@ -536,6 +537,7 @@ class TimelineAnalysisService(metaclass=SingletonMeta):
                         *group_by.apply(subquery.c["date"]),  # type: ignore
                     )
                     .join(subquery, SpanAnnotationORM.id == subquery.c.id)
+                    .filter(SpanAnnotationORM.project_id == project_id)
                     .group_by(*group_by.apply(column=subquery.c["date"]))  # type: ignore
                 ).build_query()
 
@@ -648,7 +650,7 @@ class TimelineAnalysisService(metaclass=SingletonMeta):
     ) -> list[TimelineAnalysisRow]:
         # ANNOTATION = Count annotations
 
-        builder = SearchBuilder(db, filter, sorts=[])
+        builder = SearchBuilder(db, project_id=project_id, filter=filter, sorts=[])
         date_metadata = aliased(SourceDocumentMetadataORM)
         subquery = (
             builder.init_subquery(
@@ -662,16 +664,15 @@ class TimelineAnalysisService(metaclass=SingletonMeta):
                 )
             )
             ._join_subquery(
-                AnnotationDocumentORM,
-                AnnotationDocumentORM.id == annotation_orm.annotation_document_id,
+                annotation_orm.annotation_document,
             )
             ._join_subquery(
-                SourceDocumentORM,
-                SourceDocumentORM.id == AnnotationDocumentORM.source_document_id,
+                AnnotationDocumentORM.source_document,
             )
             ._join_subquery(
                 date_metadata,
-                (SourceDocumentORM.id == date_metadata.source_document_id)
+                (date_metadata.project_id == SourceDocumentORM.project_id)
+                & (date_metadata.source_document_id == SourceDocumentORM.id)
                 & (date_metadata.project_metadata_id == project_metadata_id)
                 & (date_metadata.date_value.isnot(None)),
             )
@@ -685,6 +686,7 @@ class TimelineAnalysisService(metaclass=SingletonMeta):
                 *group_by.apply(subquery.c["date"]),  # type: ignore
             )
             .join(subquery, annotation_orm.id == subquery.c.id)
+            .filter(annotation_orm.project_id == project_id)
             .group_by(*group_by.apply(column=subquery.c["date"]))  # type: ignore
         ).build_query()
 
@@ -715,7 +717,7 @@ class TimelineAnalysisService(metaclass=SingletonMeta):
     ) -> list[TimelineAnalysisRow]:
         # DOCUMENT = Count documents
 
-        builder = SearchBuilder(db, filter, sorts=[])
+        builder = SearchBuilder(db, project_id=project_id, filter=filter, sorts=[])
         date_metadata = aliased(SourceDocumentMetadataORM)
         subquery = (
             builder.init_subquery(
@@ -734,16 +736,15 @@ class TimelineAnalysisService(metaclass=SingletonMeta):
                 )
             )
             ._join_subquery(
-                AnnotationDocumentORM,
-                AnnotationDocumentORM.id == annotation_orm.annotation_document_id,
+                annotation_orm.annotation_document,
             )
             ._join_subquery(
-                SourceDocumentORM,
-                SourceDocumentORM.id == AnnotationDocumentORM.source_document_id,
+                AnnotationDocumentORM.source_document,
             )
             ._join_subquery(
                 date_metadata,
-                (SourceDocumentORM.id == date_metadata.source_document_id)
+                (date_metadata.project_id == SourceDocumentORM.project_id)
+                & (date_metadata.source_document_id == SourceDocumentORM.id)
                 & (date_metadata.project_metadata_id == project_metadata_id)
                 & (date_metadata.date_value.isnot(None)),
             )
@@ -759,10 +760,11 @@ class TimelineAnalysisService(metaclass=SingletonMeta):
                 sdoc_ids_agg,
                 sent_anno_ids,
                 *group_by.apply(subquery.c["date"]),  # type: ignore
-            ).group_by(*group_by.apply(column=subquery.c["date"]))  # type: ignore
+            )
+            .filter(annotation_orm.project_id == project_id)
+            .group_by(*group_by.apply(column=subquery.c["date"]))  # type: ignore
         )._join_query(
-            AnnotationDocumentORM,
-            AnnotationDocumentORM.id == annotation_orm.annotation_document_id,
+            annotation_orm.annotation_document,
         )._join_query(
             subquery,
             and_(

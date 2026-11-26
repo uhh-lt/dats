@@ -54,28 +54,29 @@ class FolderORM(ORMBase):
         back_populates="folder",
         cascade="all, delete-orphan",
         passive_deletes=True,
-        foreign_keys="SourceDocumentORM.folder_id",
+        primaryjoin="and_(FolderORM.project_id == SourceDocumentORM.project_id, FolderORM.id == foreign(SourceDocumentORM.folder_id))",
     )
 
     # hierarchy reference
     parent_id: Mapped[int | None] = mapped_column(Integer, index=True)
     parent: Mapped["FolderORM | None"] = relationship(
         "FolderORM",
-        remote_side=[id],
         back_populates="children",
-        foreign_keys=[parent_id],
+        primaryjoin="and_(remote(FolderORM.project_id) == FolderORM.project_id, remote(FolderORM.id) == foreign(FolderORM.parent_id))",
     )
     children: Mapped[list["FolderORM"]] = relationship(
         "FolderORM",
         back_populates="parent",
         cascade="all, delete-orphan",
         passive_deletes=True,
-        foreign_keys=[parent_id],
+        primaryjoin="and_(remote(FolderORM.project_id) == FolderORM.project_id, remote(foreign(FolderORM.parent_id)) == FolderORM.id)",
     )
 
     __table_args__ = (
         PrimaryKeyConstraint("project_id", "id", name="folder_pkey"),
-        UniqueConstraint("parent_id", "name", name="UC_unique_folder_name_in_parent"),
+        UniqueConstraint(
+            "project_id", "parent_id", "name", name="UC_unique_folder_name_in_parent"
+        ),
         ForeignKeyConstraint(
             ["project_id", "parent_id"],
             ["folder.project_id", "folder.id"],

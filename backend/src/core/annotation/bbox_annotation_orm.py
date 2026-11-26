@@ -46,7 +46,7 @@ class BBoxAnnotationORM(ORMBase):
         back_populates="bbox_annotation",
         cascade="all, delete-orphan",
         passive_deletes=True,
-        foreign_keys="ObjectHandleORM.bbox_annotation_id",
+        primaryjoin="and_(BBoxAnnotationORM.project_id == ObjectHandleORM.project_id, BBoxAnnotationORM.id == foreign(ObjectHandleORM.bbox_annotation_id))",
     )
 
     # many to one
@@ -65,7 +65,7 @@ class BBoxAnnotationORM(ORMBase):
     code: Mapped["CodeORM"] = relationship(
         "CodeORM",
         back_populates="bbox_annotations",
-        foreign_keys="bboxannotation.c.code_id",
+        primaryjoin="and_(CodeORM.project_id == BBoxAnnotationORM.project_id, CodeORM.id == foreign(BBoxAnnotationORM.code_id))",
     )
 
     annotation_document_id: Mapped[int] = mapped_column(
@@ -74,7 +74,7 @@ class BBoxAnnotationORM(ORMBase):
     annotation_document: Mapped["AnnotationDocumentORM"] = relationship(
         "AnnotationDocumentORM",
         back_populates="bbox_annotations",
-        foreign_keys=[annotation_document_id],
+        primaryjoin="and_(AnnotationDocumentORM.project_id == BBoxAnnotationORM.project_id, AnnotationDocumentORM.id == foreign(BBoxAnnotationORM.annotation_document_id))",
     )
 
     # provenance: set when the annotation was copied from another annotation

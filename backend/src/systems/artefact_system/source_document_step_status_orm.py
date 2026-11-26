@@ -5,6 +5,7 @@ from sqlalchemy import (
     ForeignKeyConstraint,
     Index,
     Integer,
+    PrimaryKeyConstraint,
     String,
     text,
 )
@@ -24,21 +25,25 @@ class SourceDocumentStepStatusORM(ORMBase):
     (artefact_statements.py) touch it."""
 
     # many to one; the primary key (sdoc_id, step) indexes it
-    sdoc_id: Mapped[int] = mapped_column(Integer, primary_key=True)
+    sdoc_id: Mapped[int] = mapped_column(Integer)
     source_document: Mapped["SourceDocumentORM"] = relationship(
-        "SourceDocumentORM", back_populates="step_statuses", foreign_keys=[sdoc_id]
+        "SourceDocumentORM",
+        back_populates="step_statuses",
+        primaryjoin="and_(SourceDocumentORM.project_id == SourceDocumentStepStatusORM.project_id, SourceDocumentORM.id == foreign(SourceDocumentStepStatusORM.sdoc_id))",
     )
 
-    step: Mapped[str] = mapped_column(String, primary_key=True)
+    step: Mapped[str] = mapped_column(String)
     status: Mapped[SDocStatus] = mapped_column(Integer, nullable=False)
     project_id: Mapped[int] = mapped_column(
         Integer,
         ForeignKey("project.id", ondelete="CASCADE"),
         nullable=False,
-        index=True,
     )
 
     __table_args__ = (
+        PrimaryKeyConstraint(
+            "project_id", "sdoc_id", "step", name="sourcedocumentstepstatus_pkey"
+        ),
         ForeignKeyConstraint(
             ["project_id", "sdoc_id"],
             ["sourcedocument.project_id", "sourcedocument.id"],

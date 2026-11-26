@@ -5,7 +5,6 @@ from common.doc_type_enum import DocType
 from core.doc.source_document_data_orm import SourceDocumentDataORM
 from core.doc.source_document_orm import SourceDocumentORM
 from core.tag.tag_orm import TagORM
-from modules.perspectives.cluster_orm import ClusterORM
 from modules.perspectives.document_aspect_dto import (
     DocumentAspectCreate,
     DocumentAspectUpdate,
@@ -21,14 +20,28 @@ class CRUDDocumentAspect(
         DocumentAspectORM,
         DocumentAspectCreate,
         DocumentAspectUpdate,
-        tuple[int, int],  # (sdoc_id, aspect_id)
+        tuple[int, int, int],  # (project_id, sdoc_id, aspect_id)
     ]
 ):
     ### READ OPERATIONS ###
 
     def read_by_aspect_and_sdoc_ids(
-        self, db: Session, *, sdoc_ids: list[int], aspect_id: int
+        self, db: Session, *, project_id: int, sdoc_ids: list[int], aspect_id: int
     ) -> list[DocumentAspectORM]:
+        """
+        Read the document aspects of an aspect for the given documents, in batches.
+
+        Args:
+            project_id: The project of the aspect and the documents.
+            sdoc_ids: The documents.
+            aspect_id: The aspect.
+
+        Returns:
+            The document aspects, in the order of `sdoc_ids`.
+
+        Raises:
+            NoSuchElementError: If a document has no document aspect of the aspect.
+        """
         if not sdoc_ids:
             return []
 
@@ -40,6 +53,7 @@ class CRUDDocumentAspect(
 
             # 2. Build the SELECT statement
             stmt = select(self.model).filter(
+                self.model.project_id == project_id,
                 self.model.aspect_id == aspect_id,
                 self.model.sdoc_id.in_(batch_sdoc_ids),
             )
@@ -55,17 +69,35 @@ class CRUDDocumentAspect(
             if key in id_map:
                 result.append(id_map[key])
             else:
-                raise NoSuchElementError(self.model, sdoc_id=key, aspect_id=aspect_id)
+                raise NoSuchElementError(
+                    self.model, project_id=project_id, sdoc_id=key, aspect_id=aspect_id
+                )
 
         return result
 
     def read_by_aspect_and_cluster_id(
-        self, db: Session, *, aspect_id: int, cluster_id: int
+        self, db: Session, *, project_id: int, aspect_id: int, cluster_id: int
     ) -> list[DocumentAspectORM]:
+        """
+        Read the document aspects of an aspect whose documents are in a cluster.
+
+        Args:
+            project_id: The project of the aspect.
+            aspect_id: The aspect.
+            cluster_id: The cluster.
+
+        Returns:
+            The document aspects of the documents in the cluster.
+        """
         return (
             db.query(self.model)
-            .join(DocumentClusterORM, DocumentClusterORM.sdoc_id == self.model.sdoc_id)
+            .join(
+                DocumentClusterORM,
+                (DocumentClusterORM.project_id == self.model.project_id)
+                & (DocumentClusterORM.sdoc_id == self.model.sdoc_id),
+            )
             .filter(
+                self.model.project_id == project_id,
                 self.model.aspect_id == aspect_id,
                 DocumentClusterORM.cluster_id == cluster_id,
             )
@@ -73,26 +105,23 @@ class CRUDDocumentAspect(
         )
 
     def read_by_aspect_id(
-        self, db: Session, *, aspect_id: int
+        self, db: Session, *, project_id: int, aspect_id: int
     ) -> list[DocumentAspectORM]:
-        return (
-            db.query(self.model)
-            .filter(
-                self.model.aspect_id == aspect_id,
-            )
-            .all()
-        )
+        """
+        Read the document aspects of an aspect.
 
-    def read_all_with_clusters_of_level(
-        self, db: Session, *, aspect_id: int, level: int
-    ) -> list[DocumentAspectORM]:
+        Args:
+            project_id: The project of the aspect.
+            aspect_id: The aspect.
+
+        Returns:
+            The document aspects of the aspect.
+        """
         return (
             db.query(self.model)
-            .join(DocumentClusterORM, DocumentClusterORM.sdoc_id == self.model.sdoc_id)
-            .join(ClusterORM, ClusterORM.id == DocumentClusterORM.cluster_id)
             .filter(
-                ClusterORM.aspect_id == aspect_id,
-                ClusterORM.level == level,
+                self.model.project_id == project_id,
+                self.model.aspect_id == aspect_id,
             )
             .all()
         )
@@ -119,10 +148,11 @@ class CRUDDocumentAspect(
         """
         query = (
             db.query(SourceDocumentDataORM)
-            .join(SourceDocumentORM, SourceDocumentORM.id == SourceDocumentDataORM.id)
+            .join(SourceDocumentDataORM.source_document)
             .outerjoin(
                 DocumentAspectORM,
-                (DocumentAspectORM.sdoc_id == SourceDocumentDataORM.id)
+                (DocumentAspectORM.project_id == SourceDocumentDataORM.project_id)
+                & (DocumentAspectORM.sdoc_id == SourceDocumentDataORM.id)
                 & (DocumentAspectORM.aspect_id == aspect_id),
             )
             .filter(

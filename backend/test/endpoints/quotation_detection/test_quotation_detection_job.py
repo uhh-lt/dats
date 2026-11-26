@@ -97,7 +97,10 @@ def _span_count(db: Session, sdoc: SourceDocumentORM) -> int:
     db.expire_all()
     return len(
         crud_span_anno.read_by_user_and_sdoc(
-            db=db, user_id=SYSTEM_USER_ID, sdoc_id=sdoc.id
+            db=db,
+            project_id=sdoc.project_id,
+            user_id=SYSTEM_USER_ID,
+            sdoc_id=sdoc.id,
         )
     )
 

@@ -15,29 +15,55 @@ class CRUDDocumentCluster(
         DocumentClusterORM,
         DocumentClusterCreate,
         DocumentClusterUpdate,
-        tuple[int, int],  # (sdoc_id, cluster_id)
+        tuple[int, int, int],  # (project_id, sdoc_id, cluster_id)
     ]
 ):
     ### READ OPERATIONS ###
 
     def read_by_aspect_id(
-        self, db: Session, *, aspect_id: int
+        self, db: Session, *, project_id: int, aspect_id: int
     ) -> list[DocumentClusterORM]:
+        """
+        Read the document cluster assignments of all clusters of an aspect.
+
+        Args:
+            project_id: The project of the aspect.
+            aspect_id: The aspect.
+
+        Returns:
+            The document cluster assignments of the aspect.
+        """
         return (
             db.query(self.model)
-            .join(ClusterORM, ClusterORM.id == self.model.cluster_id)
-            .filter(ClusterORM.aspect_id == aspect_id)
+            .join(self.model.cluster)
+            .filter(
+                self.model.project_id == project_id,
+                ClusterORM.aspect_id == aspect_id,
+            )
             .all()
         )
 
     def read_by_aspect_and_cluster_id(
-        self, db: Session, *, aspect_id: int, cluster_id: int
+        self, db: Session, *, project_id: int, aspect_id: int, cluster_id: int
     ) -> list[DocumentClusterORM]:
+        """
+        Read the document cluster assignments of a cluster of an aspect.
+
+        Args:
+            project_id: The project of the aspect.
+            aspect_id: The aspect.
+            cluster_id: The cluster.
+
+        Returns:
+            The document cluster assignments of the cluster.
+        """
         return (
             db.query(self.model)
-            .join(ClusterORM, ClusterORM.id == self.model.cluster_id)
+            .join(self.model.cluster)
             .filter(
-                ClusterORM.aspect_id == aspect_id, self.model.cluster_id == cluster_id
+                self.model.project_id == project_id,
+                ClusterORM.aspect_id == aspect_id,
+                self.model.cluster_id == cluster_id,
             )
             .all()
         )
@@ -51,6 +77,7 @@ class CRUDDocumentCluster(
         self,
         db: Session,
         *,
+        project_id: int,
         cluster_to_keep: int,
         cluster_to_merge: int,
     ) -> None:
@@ -59,6 +86,7 @@ class CRUDDocumentCluster(
         that belong to the cluster being merged into the cluster that is kept.
         Args:
             db: The database session
+            project_id: The project of the clusters
             cluster_to_keep: The ID of the cluster that will be kept
             cluster_to_merge: The ID of the cluster that will be merged into the kept cluster
         Raises:
@@ -72,7 +100,10 @@ class CRUDDocumentCluster(
         # Update all DocumentClusterORM entries that reference the cluster to merge
         stmt = (
             update(self.model)
-            .where(self.model.cluster_id == cluster_to_merge)
+            .where(
+                self.model.project_id == project_id,
+                self.model.cluster_id == cluster_to_merge,
+            )
             .values(cluster_id=cluster_to_keep)
             .execution_options(
                 synchronize_session=False
@@ -86,6 +117,7 @@ class CRUDDocumentCluster(
         self,
         db: Session,
         *,
+        project_id: int,
         aspect_id: int,
         sdoc_ids: list[int],
         is_accepted: bool,
@@ -94,6 +126,7 @@ class CRUDDocumentCluster(
         Accepts the labels for the provided SourceDocuments (by ID) of the aspect.
         Args:
             db: The database session
+            project_id: The project of the aspect
             aspect_id: The ID of the aspect to which the cluster belongs
             sdoc_ids: List of SourceDocument IDs to accept labels for
             is_accepted: Whether to set the labels as accepted
@@ -113,10 +146,12 @@ class CRUDDocumentCluster(
             stmt = (
                 update(self.model)
                 .where(
+                    self.model.project_id == project_id,
                     self.model.sdoc_id.in_(batch_sdoc_ids),
                 )
                 .where(
-                    self.model.cluster_id == ClusterORM.id,
+                    ClusterORM.project_id == self.model.project_id,
+                    ClusterORM.id == self.model.cluster_id,
                     ClusterORM.aspect_id == aspect_id,
                 )
                 .values(is_accepted=is_accepted)
@@ -140,6 +175,7 @@ class CRUDDocumentCluster(
         self,
         db: Session,
         *,
+        project_id: int,
         aspect_id: int,
         cluster_id: int,
         sdoc_ids: list[int],
@@ -149,6 +185,7 @@ class CRUDDocumentCluster(
         Sets the Cluster <-> SourceDocument assignments to the provided Cluster.
         Args:
             db: The database session
+            project_id: The project of the aspect
             aspect_id: The ID of the aspect to which the cluster belongs
             cluster_id: The ID of the cluster to which the SourceDocuments should be assigned
             sdoc_ids: List of SourceDocument IDs to set cluster for
@@ -169,10 +206,12 @@ class CRUDDocumentCluster(
             stmt = (
                 update(self.model)
                 .where(
+                    self.model.project_id == project_id,
                     self.model.sdoc_id.in_(batch_sdoc_ids),
                 )
                 .where(
-                    self.model.cluster_id == ClusterORM.id,
+                    ClusterORM.project_id == self.model.project_id,
+                    ClusterORM.id == self.model.cluster_id,
                     ClusterORM.aspect_id == aspect_id,
                 )
                 .values(cluster_id=cluster_id, is_accepted=is_accepted)

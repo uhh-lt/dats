@@ -147,6 +147,7 @@ class CRUDAnnotationDocument(
                 )
                 .on_conflict_do_nothing(
                     index_elements=[
+                        self.model.project_id,
                         self.model.source_document_id,
                         self.model.user_id,
                     ]

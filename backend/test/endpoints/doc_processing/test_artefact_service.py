@@ -326,7 +326,11 @@ def test_plan_document_plans_the_steps_of_the_artefact_demand(
         db=db_session, project_id=p["other_project"].id
     )
     roots = ArtefactService().plan_document(
-        db=db_session, sdoc_id=p["new"].id, doctype=DocType.text, demand=demand
+        db=db_session,
+        project_id=p["other_project"].id,
+        sdoc_id=p["new"].id,
+        doctype=DocType.text,
+        demand=demand,
     )
     db_session.commit()
 

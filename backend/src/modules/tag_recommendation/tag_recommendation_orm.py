@@ -37,14 +37,14 @@ class TagRecommendationLinkORM(ORMBase):
     source_document: Mapped["SourceDocumentORM"] = relationship(
         "SourceDocumentORM",
         back_populates="tag_recommendation_link",
-        foreign_keys=[source_document_id],
+        primaryjoin="and_(SourceDocumentORM.project_id == TagRecommendationLinkORM.project_id, SourceDocumentORM.id == foreign(TagRecommendationLinkORM.source_document_id))",
     )
 
     predicted_tag_id: Mapped[int] = mapped_column(Integer, nullable=False, index=True)
     predicted_tag: Mapped["TagORM"] = relationship(
         "TagORM",
         back_populates="tag_recommendation_links",
-        foreign_keys=[predicted_tag_id],
+        primaryjoin="and_(TagORM.project_id == TagRecommendationLinkORM.project_id, TagORM.id == foreign(TagRecommendationLinkORM.predicted_tag_id))",
     )
 
     __table_args__ = (

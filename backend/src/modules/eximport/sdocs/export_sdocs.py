@@ -32,6 +32,7 @@ def export_selected_sdocs(
     sdocs = crud_sdoc.read_by_ids(db=db, project_id=project_id, ids=sdoc_ids)
     return __export_sdocs(
         db=db,
+        project_id=project_id,
         out_dir=out_dir,
         fn=f"project_{project_id}_selected_docs",
         sdocs=sdocs,
@@ -46,6 +47,7 @@ def export_all_sdocs(
     sdocs = crud_sdoc.read_by_project(db=db, project_id=project_id, only_finished=False)
     return __export_sdocs(
         db=db,
+        project_id=project_id,
         out_dir=out_dir,
         fn=f"project_{project_id}_all_docs",
         sdocs=sdocs,
@@ -54,6 +56,7 @@ def export_all_sdocs(
 
 def __export_sdocs(
     db: Session,
+    project_id: int,
     out_dir: Path,
     fn: str,
     sdocs: list[SourceDocumentORM],
@@ -86,7 +89,7 @@ def __export_sdocs(
     # Create a collection of export data
     graph = artefact_registry.graph()
     stored_status = crud_sdoc_step_status.read_by_sdocs(
-        db=db, sdoc_ids=[sdoc.id for sdoc in sdocs]
+        db=db, project_id=project_id, sdoc_ids=[sdoc.id for sdoc in sdocs]
     )
     export_collection = []
     for sdoc in sdocs:

@@ -28,6 +28,7 @@ class KeywordStatisticsService(metaclass=SingletonMeta):
         filtered_keywords_metadata = (
             db.query(SourceDocumentMetadataORM)
             .filter(
+                SourceDocumentMetadataORM.project_id == project_id,
                 SourceDocumentMetadataORM.project_metadata_id.in_(project_metadata_ids),
                 SourceDocumentMetadataORM.source_document_id.in_(sdoc_ids),
             )
@@ -41,7 +42,8 @@ class KeywordStatisticsService(metaclass=SingletonMeta):
         all_keywords_metadata = (
             db.query(SourceDocumentMetadataORM)
             .filter(
-                SourceDocumentMetadataORM.project_metadata_id.in_(project_metadata_ids)
+                SourceDocumentMetadataORM.project_id == project_id,
+                SourceDocumentMetadataORM.project_metadata_id.in_(project_metadata_ids),
             )
             .all()
         )

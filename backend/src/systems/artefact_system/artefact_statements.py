@@ -78,6 +78,7 @@ def read_sdoc_ids_to_plan(
         planned = (
             select(func.count())
             .where(
+                SourceDocumentStepStatusORM.project_id == sdoc.project_id,
                 SourceDocumentStepStatusORM.sdoc_id == sdoc.id,
                 SourceDocumentStepStatusORM.step.in_(missing_steps),
             )
@@ -87,6 +88,7 @@ def read_sdoc_ids_to_plan(
     if redo_steps:
         conditions.append(
             exists().where(
+                SourceDocumentStepStatusORM.project_id == sdoc.project_id,
                 SourceDocumentStepStatusORM.sdoc_id == sdoc.id,
                 SourceDocumentStepStatusORM.step.in_(redo_steps),
                 SourceDocumentStepStatusORM.status == SDocStatus.erroneous,
@@ -167,6 +169,7 @@ def create_missing(
                 # the range again on the existing rows: the anti join reads
                 # the batch's rows from the primary key, not the whole table
                 ~exists().where(
+                    existing.project_id == sdoc.project_id,
                     existing.sdoc_id == sdoc.id,
                     existing.sdoc_id > sdoc_ids[0],
                     existing.sdoc_id <= sdoc_ids[1],
@@ -176,6 +179,7 @@ def create_missing(
         )
         .on_conflict_do_nothing(
             index_elements=[
+                SourceDocumentStepStatusORM.project_id,
                 SourceDocumentStepStatusORM.sdoc_id,
                 SourceDocumentStepStatusORM.step,
             ]
@@ -195,6 +199,7 @@ def create_missing(
 def update_to_processing(
     db: Session,
     *,
+    project_id: int,
     sdoc_ids: list[int],
     steps: list[str],
 ) -> StepRows:
@@ -204,6 +209,7 @@ def update_to_processing(
     (`read_sdoc_ids_to_plan`).
 
     Args:
+        project_id: The project of the documents.
         sdoc_ids: The documents.
         steps: The steps to plan again.
 
@@ -217,6 +223,7 @@ def update_to_processing(
     changed = db.execute(
         update(SourceDocumentStepStatusORM)
         .where(
+            SourceDocumentStepStatusORM.project_id == project_id,
             SourceDocumentStepStatusORM.sdoc_id == ids.c.sdoc_id,
             SourceDocumentStepStatusORM.step.in_(steps),
             SourceDocumentStepStatusORM.status == SDocStatus.erroneous,
@@ -236,7 +243,7 @@ def update_to_processing(
 
 
 def update_blocked_to_erroneous(
-    db: Session, *, rows: StepRows, inputs: dict[str, list[str]]
+    db: Session, *, project_id: int, rows: StepRows, inputs: dict[str, list[str]]
 ) -> None:
     """
     Set the given rows that are processing to erroneous if one of their input
@@ -246,6 +253,7 @@ def update_blocked_to_erroneous(
     the documents (`read_sdoc_ids_to_plan`).
 
     Args:
+        project_id: The project of the documents.
         rows: The documents per step to check, in pipeline order.
         inputs: The input steps of each step in `rows`.
     """
@@ -256,6 +264,7 @@ def update_blocked_to_erroneous(
         db.execute(
             update(SourceDocumentStepStatusORM)
             .where(
+                SourceDocumentStepStatusORM.project_id == project_id,
                 SourceDocumentStepStatusORM.sdoc_id == ids.c.sdoc_id,
                 _in_range(sdoc_ids),
                 SourceDocumentStepStatusORM.step == step,
@@ -272,13 +281,14 @@ def update_blocked_to_erroneous(
 
 
 def read_startable(
-    db: Session, *, rows: StepRows, inputs: dict[str, list[str]]
+    db: Session, *, project_id: int, rows: StepRows, inputs: dict[str, list[str]]
 ) -> dict[int, list[str]]:
     """
     Read which of the given rows can start now: they are processing and all
     their input steps are finished.
 
     Args:
+        project_id: The project of the documents.
         rows: The documents per step to check.
         inputs: The input steps of each step in `rows`.
 
@@ -294,6 +304,7 @@ def read_startable(
             select(SourceDocumentStepStatusORM.sdoc_id)
             .join(ids, ids.c.sdoc_id == SourceDocumentStepStatusORM.sdoc_id)
             .where(
+                SourceDocumentStepStatusORM.project_id == project_id,
                 _in_range(sdoc_ids),
                 SourceDocumentStepStatusORM.step == step,
                 SourceDocumentStepStatusORM.status == SDocStatus.processing,
@@ -324,6 +335,7 @@ def _count_inputs(
     return (
         select(func.count())
         .where(
+            row.project_id == SourceDocumentStepStatusORM.project_id,
             row.sdoc_id == SourceDocumentStepStatusORM.sdoc_id,
             row.step.in_(input_steps),
             row.status.in_(statuses),

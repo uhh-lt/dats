@@ -6,6 +6,7 @@ from sqlalchemy import (
     ForeignKey,
     ForeignKeyConstraint,
     Integer,
+    PrimaryKeyConstraint,
 )
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
@@ -17,13 +18,12 @@ if TYPE_CHECKING:
 
 
 class DocumentClusterORM(ORMBase):
-    sdoc_id: Mapped[int] = mapped_column(Integer, primary_key=True, index=True)
-    cluster_id: Mapped[int] = mapped_column(Integer, primary_key=True, index=True)
+    sdoc_id: Mapped[int] = mapped_column(Integer, index=True)
+    cluster_id: Mapped[int] = mapped_column(Integer, index=True)
     project_id: Mapped[int] = mapped_column(
         Integer,
         ForeignKey("project.id", ondelete="CASCADE"),
         nullable=False,
-        index=True,
     )
 
     similarity: Mapped[float | None] = mapped_column(Float)
@@ -33,15 +33,18 @@ class DocumentClusterORM(ORMBase):
     source_document: Mapped["SourceDocumentORM"] = relationship(
         "SourceDocumentORM",
         back_populates="document_clusters",
-        foreign_keys=[sdoc_id],
+        primaryjoin="and_(SourceDocumentORM.project_id == DocumentClusterORM.project_id, SourceDocumentORM.id == foreign(DocumentClusterORM.sdoc_id))",
     )
     cluster: Mapped["ClusterORM"] = relationship(
         "ClusterORM",
         back_populates="document_clusters",
-        foreign_keys=[cluster_id],
+        primaryjoin="and_(ClusterORM.project_id == DocumentClusterORM.project_id, ClusterORM.id == foreign(DocumentClusterORM.cluster_id))",
     )
 
     __table_args__ = (
+        PrimaryKeyConstraint(
+            "project_id", "sdoc_id", "cluster_id", name="documentcluster_pkey"
+        ),
         ForeignKeyConstraint(
             ["project_id", "sdoc_id"],
             ["sourcedocument.project_id", "sourcedocument.id"],

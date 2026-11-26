@@ -51,7 +51,10 @@ class AspectORM(ORMBase):
     project: Mapped["ProjectORM"] = relationship("ProjectORM", back_populates="aspects")
 
     tag_id: Mapped[int | None] = mapped_column(Integer, index=True)
-    tag: Mapped["TagORM | None"] = relationship("TagORM", foreign_keys=[tag_id])
+    tag: Mapped["TagORM | None"] = relationship(
+        "TagORM",
+        primaryjoin="and_(TagORM.project_id == AspectORM.project_id, TagORM.id == foreign(AspectORM.tag_id))",
+    )
 
     # one to many
     clusters: Mapped[list["ClusterORM"]] = relationship(
@@ -59,7 +62,7 @@ class AspectORM(ORMBase):
         back_populates="aspect",
         cascade="all, delete-orphan",
         passive_deletes=True,
-        foreign_keys="ClusterORM.aspect_id",
+        primaryjoin="and_(AspectORM.project_id == ClusterORM.project_id, AspectORM.id == foreign(ClusterORM.aspect_id))",
     )
 
     # many to many
@@ -68,7 +71,7 @@ class AspectORM(ORMBase):
         back_populates="aspect",
         cascade="all, delete-orphan",
         passive_deletes=True,
-        foreign_keys="DocumentAspectORM.aspect_id",
+        primaryjoin="and_(AspectORM.project_id == DocumentAspectORM.project_id, AspectORM.id == foreign(DocumentAspectORM.aspect_id))",
     )
     source_documents: Mapped[list["SourceDocumentORM"]] = relationship(
         "SourceDocumentORM",

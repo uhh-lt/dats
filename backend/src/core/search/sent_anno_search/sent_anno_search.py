@@ -50,8 +50,9 @@ def find_sentence_annotations(
 ) -> Page[SentenceAnnotationRow]:
     builder = SearchBuilder(
         db,
-        request.filter,
-        request.sorts,
+        project_id=project_id,
+        filter=request.filter,
+        sorts=request.sorts,
         group_by=request.group_by,
         group_key=request.group_key,
         user_id=user_id,
@@ -60,7 +61,9 @@ def find_sentence_annotations(
     subquery = builder.init_subquery(
         db.query(
             SentenceAnnotationORM.id,
-        ).group_by(
+        )
+        .filter(SentenceAnnotationORM.project_id == project_id)
+        .group_by(
             SentenceAnnotationORM.id,
         )
     ).build_subquery()
@@ -82,14 +85,11 @@ def find_sentence_annotations(
         .filter(SourceDocumentORM.project_id == project_id)
         .filter(CodeORM.enabled == True)  # noqa: E712
     )._join_query(
-        AnnotationDocumentORM,
-        AnnotationDocumentORM.id == SentenceAnnotationORM.annotation_document_id,
+        SentenceAnnotationORM.annotation_document,
     )._join_query(
-        SourceDocumentORM,
-        SourceDocumentORM.id == AnnotationDocumentORM.source_document_id,
+        AnnotationDocumentORM.source_document,
     )._join_query(
-        CodeORM,
-        CodeORM.id == SentenceAnnotationORM.code_id,
+        SentenceAnnotationORM.code,
     )
     builder.build_query()
 
@@ -140,12 +140,19 @@ def find_sentence_annotation_groups(
     (group_key, group_label, total_results, target_id, target_type) directly.
     """
     builder = SearchBuilder(
-        db, request.filter, sorts=[], group_by=request.group_by, user_id=user_id
+        db,
+        project_id=project_id,
+        filter=request.filter,
+        sorts=[],
+        group_by=request.group_by,
+        user_id=user_id,
     )
     subquery = builder.init_subquery(
         db.query(
             SentenceAnnotationORM.id,
-        ).group_by(
+        )
+        .filter(SentenceAnnotationORM.project_id == project_id)
+        .group_by(
             SentenceAnnotationORM.id,
         )
     ).build_subquery()
@@ -157,14 +164,11 @@ def find_sentence_annotation_groups(
         .filter(SourceDocumentORM.project_id == project_id)
         .filter(CodeORM.enabled == True)  # noqa: E712
     )._join_query(
-        AnnotationDocumentORM,
-        AnnotationDocumentORM.id == SentenceAnnotationORM.annotation_document_id,
+        SentenceAnnotationORM.annotation_document,
     )._join_query(
-        SourceDocumentORM,
-        SourceDocumentORM.id == AnnotationDocumentORM.source_document_id,
+        AnnotationDocumentORM.source_document,
     )._join_query(
-        CodeORM,
-        CodeORM.id == SentenceAnnotationORM.code_id,
+        SentenceAnnotationORM.code,
     )
     builder.build_query()
 

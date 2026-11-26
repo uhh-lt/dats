@@ -645,6 +645,7 @@ class SentClassificationModelService(TextClassificationModelService):
                 )
                 .join(SentenceAnnotationORM.annotation_document)
                 .where(
+                    SentenceAnnotationORM.project_id == project_id,
                     AnnotationDocumentORM.user_id.in_(user_ids),
                     AnnotationDocumentORM.source_document_id.in_(batch_sdoc_ids),
                     SentenceAnnotationORM.code_id.in_(list(codeid2parentid.keys())),

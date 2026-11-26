@@ -55,6 +55,8 @@ class SearchBuilder:
     def __init__(
         self,
         db: Session,
+        *,
+        project_id: int,
         filter: Filter[T],
         sorts: list[Sort[T]],
         group_by: GroupConfig[T] | None = None,
@@ -65,6 +67,8 @@ class SearchBuilder:
 
         Args:
             db: Active database session.
+            project_id: The project searched in; ids of filter values and metadata
+                columns are ids within this project.
             filter: The filter tree to apply.
             sorts: The sorts to apply (ignored when `group_by` is set).
             group_by: Optional grouping request. When set without `group_key`,
@@ -76,6 +80,7 @@ class SearchBuilder:
                 (e.g. per-user favorite flags).
         """
         self.db = db
+        self.project_id = project_id
         self.filter = filter
         self.sorts = sorts
         self.group_by = group_by
@@ -173,7 +178,10 @@ class SearchBuilder:
         # select the correct value column based on the metadata type
         project_metadata = ProjectMetadataRead.model_validate(
             self.db.query(ProjectMetadataORM)
-            .filter(ProjectMetadataORM.id == project_metadata_id)
+            .filter(
+                ProjectMetadataORM.project_id == self.project_id,
+                ProjectMetadataORM.id == project_metadata_id,
+            )
             .first()
         )
         metadata = aliased(SourceDocumentMetadataORM)
@@ -195,7 +203,8 @@ class SearchBuilder:
             )
             .outerjoin(
                 metadata,
-                (SourceDocumentORM.id == metadata.source_document_id)
+                (metadata.project_id == SourceDocumentORM.project_id)
+                & (metadata.source_document_id == SourceDocumentORM.id)
                 & (metadata.project_metadata_id == project_metadata_id),
             )
             .group_by(metadata.id)
@@ -293,6 +302,7 @@ class SearchBuilder:
             query=self.query,
             filter=self.filter,
             subquery_dict=subquery_dict,
+            project_id=self.project_id,
         )
 
         # drill-down (row queries only): restrict to the single group `group_key`.

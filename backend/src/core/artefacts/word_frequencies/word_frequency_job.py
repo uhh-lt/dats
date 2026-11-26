@@ -48,7 +48,9 @@ def handle_word_frequency_job(payload: WordFrequencyJobInput, job: Job) -> None:
         SpacyInput(text=payload.text, language=payload.language)
     )
     with sqlr.transaction() as db:
-        crud_word_frequency.delete_by_sdoc_id(db=db, sdoc_id=payload.sdoc_id)
+        crud_word_frequency.delete_by_sdoc_id(
+            db=db, project_id=payload.project_id, sdoc_id=payload.sdoc_id
+        )
         crud_word_frequency.create_multi(
             db=db,
             create_dtos=extract_word_frequencies(

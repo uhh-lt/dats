@@ -9,6 +9,7 @@ from sqlalchemy.orm import Session
 from common.doc_type_enum import DocType
 from common.sdoc_status_enum import SDocStatus
 from core.doc.source_document_crud import crud_sdoc
+from core.doc.source_document_orm import SourceDocumentORM
 from job_test_utils import HeldJobs
 from systems.artefact_system import step_execution
 from systems.artefact_system.artefact_dto import SdocProcessingJobInput
@@ -55,18 +56,35 @@ def core_steps(doctype: DocType) -> list[str]:
     return planned_steps(doctype, [])
 
 
+def _project_of(db: Session, sdoc_id: int) -> int:
+    """The project of the document. The tests create documents with ids that
+    are unique in the test database, so `one()` finds exactly one."""
+    return (
+        db.query(SourceDocumentORM.project_id)
+        .filter(SourceDocumentORM.id == sdoc_id)
+        .one()[0]
+    )
+
+
 def set_step_status(db: Session, sdoc_id: int, status: dict[str, int]) -> None:
     """Set the status of the given steps of the document (planning them)."""
+    project_id = _project_of(db, sdoc_id)
     for step, value in status.items():
         crud_sdoc_step_status.update_status(
-            db=db, sdoc_ids=[sdoc_id], steps=[str(step)], status=SDocStatus(value)
+            db=db,
+            project_id=project_id,
+            sdoc_ids=[sdoc_id],
+            steps=[str(step)],
+            status=SDocStatus(value),
         )
 
 
 def read_step_status(db: Session, sdoc_id: int, step: str) -> int | None:
     """The status of the step of the document, None if it is not planned."""
     db.expire_all()
-    status = crud_sdoc_step_status.read_by_sdoc(db=db, sdoc_id=sdoc_id).get(step)
+    status = crud_sdoc_step_status.read_by_sdoc(
+        db=db, project_id=_project_of(db, sdoc_id), sdoc_id=sdoc_id
+    ).get(step)
     db.commit()
     return None if status is None else status.value
 
@@ -74,7 +92,9 @@ def read_step_status(db: Session, sdoc_id: int, step: str) -> int | None:
 def read_all_step_status(db: Session, sdoc_id: int) -> dict[str, int]:
     """The status of every planned step of the document."""
     db.expire_all()
-    status = crud_sdoc_step_status.read_by_sdoc(db=db, sdoc_id=sdoc_id)
+    status = crud_sdoc_step_status.read_by_sdoc(
+        db=db, project_id=_project_of(db, sdoc_id), sdoc_id=sdoc_id
+    )
     db.commit()
     return {step: value.value for step, value in status.items()}
 
@@ -84,7 +104,7 @@ def count_processing_sdocs(db: Session, project_id: int) -> int:
     db.expire_all()
     sdocs = crud_sdoc.read_by_project(db=db, project_id=project_id, only_finished=False)
     status = crud_sdoc_step_status.read_by_sdocs(
-        db=db, sdoc_ids=[sdoc.id for sdoc in sdocs]
+        db=db, project_id=project_id, sdoc_ids=[sdoc.id for sdoc in sdocs]
     )
     db.commit()
     return sum(SDocStatus.processing in s.values() for s in status.values())

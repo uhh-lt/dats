@@ -182,6 +182,7 @@ class ArtefactService(metaclass=SingletonMeta):
         self,
         *,
         db: Session,
+        project_id: int,
         sdoc_id: int,
         doctype: DocType,
         demand: frozenset[Artefact],
@@ -202,7 +203,11 @@ class ArtefactService(metaclass=SingletonMeta):
         }
         steps = [s for s in graph.steps(doctype) if s in needed]
         crud_sdoc_step_status.update_status(
-            db=db, sdoc_ids=[sdoc_id], steps=steps, status=SDocStatus.processing
+            db=db,
+            project_id=project_id,
+            sdoc_ids=[sdoc_id],
+            steps=steps,
+            status=SDocStatus.processing,
         )
         return [s for s in graph.roots(doctype) if s in needed]
 
@@ -434,7 +439,7 @@ class ArtefactService(metaclass=SingletonMeta):
                 steps=to_plan,
             )
             redone = statements.update_to_processing(
-                db=db, sdoc_ids=locked, steps=to_redo
+                db=db, project_id=project_id, sdoc_ids=locked, steps=to_redo
             )
             rows = {
                 step: step_ids
@@ -444,7 +449,11 @@ class ArtefactService(metaclass=SingletonMeta):
 
             # 3) fail the steps that cannot run, then read those that can start
             inputs = {step: graph.inputs(doctype, step) for step in to_plan}
-            statements.update_blocked_to_erroneous(db=db, rows=rows, inputs=inputs)
-            sdoc_steps |= statements.read_startable(db=db, rows=rows, inputs=inputs)
+            statements.update_blocked_to_erroneous(
+                db=db, project_id=project_id, rows=rows, inputs=inputs
+            )
+            sdoc_steps |= statements.read_startable(
+                db=db, project_id=project_id, rows=rows, inputs=inputs
+            )
 
         return sdoc_steps

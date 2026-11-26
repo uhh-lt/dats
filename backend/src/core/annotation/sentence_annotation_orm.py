@@ -44,7 +44,7 @@ class SentenceAnnotationORM(ORMBase):
         back_populates="sentence_annotation",
         cascade="all, delete-orphan",
         passive_deletes=True,
-        foreign_keys="ObjectHandleORM.sentence_annotation_id",
+        primaryjoin="and_(SentenceAnnotationORM.project_id == ObjectHandleORM.project_id, SentenceAnnotationORM.id == foreign(ObjectHandleORM.sentence_annotation_id))",
     )
 
     # many to one
@@ -63,7 +63,7 @@ class SentenceAnnotationORM(ORMBase):
     code: Mapped["CodeORM"] = relationship(
         "CodeORM",
         back_populates="sentence_annotations",
-        foreign_keys="sentenceannotation.c.code_id",
+        primaryjoin="and_(CodeORM.project_id == SentenceAnnotationORM.project_id, CodeORM.id == foreign(SentenceAnnotationORM.code_id))",
     )
 
     annotation_document_id: Mapped[int] = mapped_column(
@@ -72,7 +72,7 @@ class SentenceAnnotationORM(ORMBase):
     annotation_document: Mapped["AnnotationDocumentORM"] = relationship(
         "AnnotationDocumentORM",
         back_populates="sentence_annotations",
-        foreign_keys=[annotation_document_id],
+        primaryjoin="and_(AnnotationDocumentORM.project_id == SentenceAnnotationORM.project_id, AnnotationDocumentORM.id == foreign(SentenceAnnotationORM.annotation_document_id))",
     )
 
     # provenance: set when the annotation was copied from another annotation
