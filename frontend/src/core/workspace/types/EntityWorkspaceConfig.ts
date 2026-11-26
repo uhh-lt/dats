@@ -53,10 +53,12 @@ export interface EntityWorkspaceConfig<TColumns extends string, TRow extends { i
   /** The tableInfo leaf of the entity's query factory (e.g. `memoQueries.tableInfo`): the column infos for filtering. */
   tableInfo: (projectId: number) => TableInfoOptions;
   useQueryRows: (
+    projectId: number,
     request: WorkspaceQueryRequest<TColumns>,
     enabled?: boolean,
   ) => UseInfiniteQueryResult<InfiniteData<WorkspacePage<TRow>>, Error>;
   useQueryGroups: (
+    projectId: number,
     request: WorkspaceGroupQueryRequest<TColumns>,
     enabled?: boolean,
   ) => UseInfiniteQueryResult<InfiniteData<GroupPage>, Error>;

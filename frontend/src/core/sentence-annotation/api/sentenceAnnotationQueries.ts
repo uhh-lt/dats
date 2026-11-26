@@ -12,7 +12,7 @@ import { infiniteQueryOptions, queryOptions, skipToken } from "@tanstack/react-q
  *   sentenceAnnotationQueries.byId(projectId, sentenceAnnoId)    ["sentenceAnnotation", "detail", sentenceAnnoId, projectId]
  *   sentenceAnnotationQueries.bySdoc(projectId, sdocId, userId)  ["sentenceAnnotation", "sdoc", sdocId, userId, projectId]
  *   sentenceAnnotationQueries.tableInfo(projectId)               ["tableInfo", "sentence", projectId]
- *   sentenceAnnotationQueries.search(request)                    ["sentenceAnnotation", "search", request]
+ *   sentenceAnnotationQueries.search(projectId, request)           ["sentenceAnnotation", "search", request, projectId]
  *
  * The routes need the project, but the ids already determine it: the project comes last in the keys, so the prefixes
  * by id cover it.
@@ -56,11 +56,11 @@ export const sentenceAnnotationQueries = {
     }),
 
   searchScope: () => [...sentenceAnnotationQueries.all(), "search"] as const,
-  search: (request: QueryRequest_SentAnnoColumns_) =>
+  search: (projectId: number, request: QueryRequest_SentAnnoColumns_) =>
     infiniteQueryOptions({
-      queryKey: [...sentenceAnnotationQueries.searchScope(), request] as const,
+      queryKey: [...sentenceAnnotationQueries.searchScope(), request, projectId] as const,
       queryFn: ({ pageParam }) =>
-        SearchService.searchSentenceAnnotations({ requestBody: { ...request, page_number: pageParam } }),
+        SearchService.searchSentenceAnnotations({ projectId, requestBody: { ...request, page_number: pageParam } }),
       initialPageParam: 0,
       getNextPageParam: (_lastPage, pages) => pages.length,
       refetchOnWindowFocus: false,

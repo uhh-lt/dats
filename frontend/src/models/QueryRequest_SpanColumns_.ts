@@ -7,10 +7,6 @@ import type { GroupConfig_SpanColumns_ } from "./GroupConfig_SpanColumns_";
 import type { Sort_SpanColumns_ } from "./Sort_SpanColumns_";
 export type QueryRequest_SpanColumns_ = {
   /**
-   * Project the search runs in
-   */
-  project_id: number;
-  /**
    * Full-text query
    */
   search_query?: string;

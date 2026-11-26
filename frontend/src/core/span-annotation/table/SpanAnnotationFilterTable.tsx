@@ -142,8 +142,7 @@ const SpanAnnotationFilterTable = <TToolbarProps extends FilterTableToolbarProps
 
   // table data
   const { data, fetchNextPage, isError, isFetching, isLoading } = useInfiniteQuery(
-    spanAnnotationQueries.search({
-      project_id: projectId,
+    spanAnnotationQueries.search(projectId, {
       filter,
       sorts: toSorts<SpanColumns>(sortingModel),
       page_size: fetchSize,

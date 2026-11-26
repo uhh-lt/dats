@@ -28,9 +28,11 @@ export class SimsearchService {
   }): CancelablePromise<Array<SimSearchSentenceHit>> {
     return __request(OpenAPI, {
       method: "POST",
-      url: "/simsearch/sentences",
-      query: {
+      url: "/projects/{project_id}/simsearch/sentences",
+      path: {
         project_id: projectId,
+      },
+      query: {
         top_k: topK,
         threshold: threshold,
       },
@@ -59,9 +61,11 @@ export class SimsearchService {
   }): CancelablePromise<Array<SimSearchImageHit>> {
     return __request(OpenAPI, {
       method: "POST",
-      url: "/simsearch/images",
-      query: {
+      url: "/projects/{project_id}/simsearch/images",
+      path: {
         project_id: projectId,
+      },
+      query: {
         top_k: topK,
         threshold: threshold,
       },

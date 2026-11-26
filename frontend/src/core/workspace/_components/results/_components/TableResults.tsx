@@ -76,8 +76,8 @@ function GroupedTableResults<TColumns extends string, TRow extends { id: number 
 }: TableResultsProps<TColumns, TRow>): ReactNode {
   const groupBy = view.group_by;
   const query = config.useQueryGroups(
+    projectId,
     {
-      project_id: projectId,
       search_query: searchQuery,
       filter: view.filters,
       group_by: groupBy ?? { field: config.columns[Object.keys(config.columns)[0] as TColumns] },
@@ -120,8 +120,8 @@ function UngroupedTableResults<TColumns extends string, TRow extends { id: numbe
   onColumnSizingChange,
 }: TableResultsProps<TColumns, TRow>): ReactNode {
   const query = config.useQueryRows(
+    projectId,
     {
-      project_id: projectId,
       search_query: searchQuery,
       filter: view.filters,
       sorts: view.sorts,

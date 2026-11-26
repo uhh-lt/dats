@@ -13,10 +13,6 @@ export type SentenceSearchViewRead = {
    */
   entity_type?: string;
   /**
-   * Project the SearchView belongs to
-   */
-  project_id: number;
-  /**
    * Name of the SearchView
    */
   name: string;
@@ -44,6 +40,10 @@ export type SentenceSearchViewRead = {
    * ID of the SearchView
    */
   id: number;
+  /**
+   * Project the SearchView belongs to
+   */
+  project_id: number;
   /**
    * User the SearchView belongs to
    */

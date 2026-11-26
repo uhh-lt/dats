@@ -12,7 +12,7 @@ import { infiniteQueryOptions, queryOptions, skipToken } from "@tanstack/react-q
  *   spanAnnotationQueries.byUserCode(projectId, codeId, userId)  ["spanAnnotation", "userCode", codeId, userId, projectId]
  *   spanAnnotationQueries.bySdoc(projectId, sdocId, userId)      ["spanAnnotation", "sdoc", sdocId, userId, projectId]
  *   spanAnnotationQueries.tableInfo(projectId)                   ["tableInfo", "span", projectId]
- *   spanAnnotationQueries.search(request)                        ["spanAnnotation", "search", request]
+ *   spanAnnotationQueries.search(projectId, request)               ["spanAnnotation", "search", request, projectId]
  *
  * The routes need the project, but the ids already determine it: the project comes last in the keys, so the prefixes
  * by id (bySdocOfSdocScope, byUserCodeOfCodeScope) cover it.
@@ -77,11 +77,11 @@ export const spanAnnotationQueries = {
     }),
 
   searchScope: () => [...spanAnnotationQueries.all(), "search"] as const,
-  search: (request: QueryRequest_SpanColumns_) =>
+  search: (projectId: number, request: QueryRequest_SpanColumns_) =>
     infiniteQueryOptions({
-      queryKey: [...spanAnnotationQueries.searchScope(), request] as const,
+      queryKey: [...spanAnnotationQueries.searchScope(), request, projectId] as const,
       queryFn: ({ pageParam }) =>
-        SearchService.searchSpanAnnotations({ requestBody: { ...request, page_number: pageParam } }),
+        SearchService.searchSpanAnnotations({ projectId, requestBody: { ...request, page_number: pageParam } }),
       initialPageParam: 0,
       getNextPageParam: (_lastPage, pages) => pages.length,
       refetchOnWindowFocus: false,

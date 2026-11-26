@@ -37,9 +37,9 @@ export class SearchService {
     projectId: number;
   }): CancelablePromise<Array<ColumnInfo_SdocColumns_>> {
     return __request(OpenAPI, {
-      method: "POST",
-      url: "/search/sdoc_info",
-      query: {
+      method: "GET",
+      url: "/projects/{project_id}/search/source-documents/info",
+      path: {
         project_id: projectId,
       },
       errors: {
@@ -77,9 +77,11 @@ export class SearchService {
   }): CancelablePromise<PaginatedSDocHits> {
     return __request(OpenAPI, {
       method: "POST",
-      url: "/search/sdoc",
-      query: {
+      url: "/projects/{project_id}/search/source-documents",
+      path: {
         project_id: projectId,
+      },
+      query: {
         search_query: searchQuery,
         expert_mode: expertMode,
         highlight: highlight,
@@ -107,9 +109,9 @@ export class SearchService {
     projectId: number;
   }): CancelablePromise<Array<ColumnInfo_MemoColumns_>> {
     return __request(OpenAPI, {
-      method: "POST",
-      url: "/search/memo_info",
-      query: {
+      method: "GET",
+      url: "/projects/{project_id}/search/memos/info",
+      path: {
         project_id: projectId,
       },
       errors: {
@@ -123,13 +125,18 @@ export class SearchService {
    * @throws ApiError
    */
   public static searchMemos({
+    projectId,
     requestBody,
   }: {
+    projectId: number;
     requestBody: QueryRequest_MemoColumns_;
   }): CancelablePromise<Page_MemoRead_> {
     return __request(OpenAPI, {
       method: "POST",
-      url: "/search/memo",
+      url: "/projects/{project_id}/search/memos",
+      path: {
+        project_id: projectId,
+      },
       body: requestBody,
       mediaType: "application/json",
       errors: {
@@ -143,13 +150,18 @@ export class SearchService {
    * @throws ApiError
    */
   public static searchMemoGroups({
+    projectId,
     requestBody,
   }: {
+    projectId: number;
     requestBody: GroupQueryRequest_MemoColumns_;
   }): CancelablePromise<GroupPage> {
     return __request(OpenAPI, {
       method: "POST",
-      url: "/search/memo/groups",
+      url: "/projects/{project_id}/search/memos/groups",
+      path: {
+        project_id: projectId,
+      },
       body: requestBody,
       mediaType: "application/json",
       errors: {
@@ -168,9 +180,9 @@ export class SearchService {
     projectId: number;
   }): CancelablePromise<Array<ColumnInfo_SpanColumns_>> {
     return __request(OpenAPI, {
-      method: "POST",
-      url: "/search/span_annotation_info",
-      query: {
+      method: "GET",
+      url: "/projects/{project_id}/search/span-annotations/info",
+      path: {
         project_id: projectId,
       },
       errors: {
@@ -184,13 +196,18 @@ export class SearchService {
    * @throws ApiError
    */
   public static searchSpanAnnotations({
+    projectId,
     requestBody,
   }: {
+    projectId: number;
     requestBody: QueryRequest_SpanColumns_;
   }): CancelablePromise<Page_SpanAnnotationRow_> {
     return __request(OpenAPI, {
       method: "POST",
-      url: "/search/span_annotation",
+      url: "/projects/{project_id}/search/span-annotations",
+      path: {
+        project_id: projectId,
+      },
       body: requestBody,
       mediaType: "application/json",
       errors: {
@@ -204,13 +221,18 @@ export class SearchService {
    * @throws ApiError
    */
   public static searchSpanAnnotationGroups({
+    projectId,
     requestBody,
   }: {
+    projectId: number;
     requestBody: GroupQueryRequest_SpanColumns_;
   }): CancelablePromise<GroupPage> {
     return __request(OpenAPI, {
       method: "POST",
-      url: "/search/span_annotation/groups",
+      url: "/projects/{project_id}/search/span-annotations/groups",
+      path: {
+        project_id: projectId,
+      },
       body: requestBody,
       mediaType: "application/json",
       errors: {
@@ -229,9 +251,9 @@ export class SearchService {
     projectId: number;
   }): CancelablePromise<Array<ColumnInfo_SentAnnoColumns_>> {
     return __request(OpenAPI, {
-      method: "POST",
-      url: "/search/sentence_annotation_info",
-      query: {
+      method: "GET",
+      url: "/projects/{project_id}/search/sentence-annotations/info",
+      path: {
         project_id: projectId,
       },
       errors: {
@@ -245,13 +267,18 @@ export class SearchService {
    * @throws ApiError
    */
   public static searchSentenceAnnotations({
+    projectId,
     requestBody,
   }: {
+    projectId: number;
     requestBody: QueryRequest_SentAnnoColumns_;
   }): CancelablePromise<Page_SentenceAnnotationRow_> {
     return __request(OpenAPI, {
       method: "POST",
-      url: "/search/sentence_annotation",
+      url: "/projects/{project_id}/search/sentence-annotations",
+      path: {
+        project_id: projectId,
+      },
       body: requestBody,
       mediaType: "application/json",
       errors: {
@@ -265,13 +292,18 @@ export class SearchService {
    * @throws ApiError
    */
   public static searchSentenceAnnotationGroups({
+    projectId,
     requestBody,
   }: {
+    projectId: number;
     requestBody: GroupQueryRequest_SentAnnoColumns_;
   }): CancelablePromise<GroupPage> {
     return __request(OpenAPI, {
       method: "POST",
-      url: "/search/sentence_annotation/groups",
+      url: "/projects/{project_id}/search/sentence-annotations/groups",
+      path: {
+        project_id: projectId,
+      },
       body: requestBody,
       mediaType: "application/json",
       errors: {
@@ -290,9 +322,9 @@ export class SearchService {
     projectId: number;
   }): CancelablePromise<Array<ColumnInfo_BBoxColumns_>> {
     return __request(OpenAPI, {
-      method: "POST",
-      url: "/search/bbox_annotation_info",
-      query: {
+      method: "GET",
+      url: "/projects/{project_id}/search/bbox-annotations/info",
+      path: {
         project_id: projectId,
       },
       errors: {
@@ -306,13 +338,18 @@ export class SearchService {
    * @throws ApiError
    */
   public static searchBboxAnnotations({
+    projectId,
     requestBody,
   }: {
+    projectId: number;
     requestBody: QueryRequest_BBoxColumns_;
   }): CancelablePromise<Page_BBoxAnnotationRow_> {
     return __request(OpenAPI, {
       method: "POST",
-      url: "/search/bbox_annotation",
+      url: "/projects/{project_id}/search/bbox-annotations",
+      path: {
+        project_id: projectId,
+      },
       body: requestBody,
       mediaType: "application/json",
       errors: {
@@ -326,13 +363,18 @@ export class SearchService {
    * @throws ApiError
    */
   public static searchBboxAnnotationGroups({
+    projectId,
     requestBody,
   }: {
+    projectId: number;
     requestBody: GroupQueryRequest_BBoxColumns_;
   }): CancelablePromise<GroupPage> {
     return __request(OpenAPI, {
       method: "POST",
-      url: "/search/bbox_annotation/groups",
+      url: "/projects/{project_id}/search/bbox-annotations/groups",
+      path: {
+        project_id: projectId,
+      },
       body: requestBody,
       mediaType: "application/json",
       errors: {

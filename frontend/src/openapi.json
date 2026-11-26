@@ -5124,7 +5124,7 @@
         }
       }
     },
-    "/search_annotate/auto_annotate": {
+    "/projects/{project_id}/search-annotate/auto-annotate": {
       "post": {
         "tags": ["search_annotate"],
         "summary": "Returns the character & token-level positions needed for creating SpanAnnotations.",
@@ -5133,7 +5133,7 @@
         "parameters": [
           {
             "name": "project_id",
-            "in": "query",
+            "in": "path",
             "required": true,
             "schema": { "type": "integer", "title": "Project Id" }
           },
@@ -5153,8 +5153,8 @@
         }
       }
     },
-    "/search/sdoc_info": {
-      "post": {
+    "/projects/{project_id}/search/source-documents/info": {
+      "get": {
         "tags": ["search"],
         "summary": "Returns Search Info.",
         "operationId": "search_sdoc_info",
@@ -5162,7 +5162,7 @@
         "parameters": [
           {
             "name": "project_id",
-            "in": "query",
+            "in": "path",
             "required": true,
             "schema": { "type": "integer", "title": "Project Id" }
           }
@@ -5187,7 +5187,7 @@
         }
       }
     },
-    "/search/sdoc": {
+    "/projects/{project_id}/search/source-documents": {
       "post": {
         "tags": ["search"],
         "summary": "Returns all SourceDocument Ids and their scores and (optional) hightlights that match the query parameters.",
@@ -5196,7 +5196,7 @@
         "parameters": [
           {
             "name": "project_id",
-            "in": "query",
+            "in": "path",
             "required": true,
             "schema": { "type": "integer", "title": "Project Id" }
           },
@@ -5265,8 +5265,8 @@
         }
       }
     },
-    "/search/memo_info": {
-      "post": {
+    "/projects/{project_id}/search/memos/info": {
+      "get": {
         "tags": ["search"],
         "summary": "Returns Memo Table Info.",
         "operationId": "search_memo_info",
@@ -5274,7 +5274,7 @@
         "parameters": [
           {
             "name": "project_id",
-            "in": "query",
+            "in": "path",
             "required": true,
             "schema": { "type": "integer", "title": "Project Id" }
           }
@@ -5299,14 +5299,23 @@
         }
       }
     },
-    "/search/memo": {
+    "/projects/{project_id}/search/memos": {
       "post": {
         "tags": ["search"],
         "summary": "Queries Memo summaries for a workspace view",
         "operationId": "search_memos",
+        "security": [{ "OAuth2PasswordBearer": [] }],
+        "parameters": [
+          {
+            "name": "project_id",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "integer", "title": "Project Id" }
+          }
+        ],
         "requestBody": {
-          "content": { "application/json": { "schema": { "$ref": "#/components/schemas/QueryRequest_MemoColumns_" } } },
-          "required": true
+          "required": true,
+          "content": { "application/json": { "schema": { "$ref": "#/components/schemas/QueryRequest_MemoColumns_" } } }
         },
         "responses": {
           "200": {
@@ -5317,20 +5326,28 @@
             "description": "Validation Error",
             "content": { "application/json": { "schema": { "$ref": "#/components/schemas/HTTPValidationError" } } }
           }
-        },
-        "security": [{ "OAuth2PasswordBearer": [] }]
+        }
       }
     },
-    "/search/memo/groups": {
+    "/projects/{project_id}/search/memos/groups": {
       "post": {
         "tags": ["search"],
         "summary": "Queries paginated Memo groups for a workspace view",
         "operationId": "search_memo_groups",
+        "security": [{ "OAuth2PasswordBearer": [] }],
+        "parameters": [
+          {
+            "name": "project_id",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "integer", "title": "Project Id" }
+          }
+        ],
         "requestBody": {
+          "required": true,
           "content": {
             "application/json": { "schema": { "$ref": "#/components/schemas/GroupQueryRequest_MemoColumns_" } }
-          },
-          "required": true
+          }
         },
         "responses": {
           "200": {
@@ -5341,12 +5358,11 @@
             "description": "Validation Error",
             "content": { "application/json": { "schema": { "$ref": "#/components/schemas/HTTPValidationError" } } }
           }
-        },
-        "security": [{ "OAuth2PasswordBearer": [] }]
+        }
       }
     },
-    "/search/span_annotation_info": {
-      "post": {
+    "/projects/{project_id}/search/span-annotations/info": {
+      "get": {
         "tags": ["search"],
         "summary": "Returns SpanAnnotationSearch Info.",
         "operationId": "search_span_annotation_info",
@@ -5354,7 +5370,7 @@
         "parameters": [
           {
             "name": "project_id",
-            "in": "query",
+            "in": "path",
             "required": true,
             "schema": { "type": "integer", "title": "Project Id" }
           }
@@ -5379,14 +5395,23 @@
         }
       }
     },
-    "/search/span_annotation": {
+    "/projects/{project_id}/search/span-annotations": {
       "post": {
         "tags": ["search"],
         "summary": "Returns SpanAnnotationSearch.",
         "operationId": "search_span_annotations",
+        "security": [{ "OAuth2PasswordBearer": [] }],
+        "parameters": [
+          {
+            "name": "project_id",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "integer", "title": "Project Id" }
+          }
+        ],
         "requestBody": {
-          "content": { "application/json": { "schema": { "$ref": "#/components/schemas/QueryRequest_SpanColumns_" } } },
-          "required": true
+          "required": true,
+          "content": { "application/json": { "schema": { "$ref": "#/components/schemas/QueryRequest_SpanColumns_" } } }
         },
         "responses": {
           "200": {
@@ -5397,20 +5422,28 @@
             "description": "Validation Error",
             "content": { "application/json": { "schema": { "$ref": "#/components/schemas/HTTPValidationError" } } }
           }
-        },
-        "security": [{ "OAuth2PasswordBearer": [] }]
+        }
       }
     },
-    "/search/span_annotation/groups": {
+    "/projects/{project_id}/search/span-annotations/groups": {
       "post": {
         "tags": ["search"],
         "summary": "Returns paginated SpanAnnotation groups.",
         "operationId": "search_span_annotation_groups",
+        "security": [{ "OAuth2PasswordBearer": [] }],
+        "parameters": [
+          {
+            "name": "project_id",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "integer", "title": "Project Id" }
+          }
+        ],
         "requestBody": {
+          "required": true,
           "content": {
             "application/json": { "schema": { "$ref": "#/components/schemas/GroupQueryRequest_SpanColumns_" } }
-          },
-          "required": true
+          }
         },
         "responses": {
           "200": {
@@ -5421,12 +5454,11 @@
             "description": "Validation Error",
             "content": { "application/json": { "schema": { "$ref": "#/components/schemas/HTTPValidationError" } } }
           }
-        },
-        "security": [{ "OAuth2PasswordBearer": [] }]
+        }
       }
     },
-    "/search/sentence_annotation_info": {
-      "post": {
+    "/projects/{project_id}/search/sentence-annotations/info": {
+      "get": {
         "tags": ["search"],
         "summary": "Returns SentenceAnnotationSearch Info.",
         "operationId": "search_sentence_annotation_info",
@@ -5434,7 +5466,7 @@
         "parameters": [
           {
             "name": "project_id",
-            "in": "query",
+            "in": "path",
             "required": true,
             "schema": { "type": "integer", "title": "Project Id" }
           }
@@ -5459,16 +5491,25 @@
         }
       }
     },
-    "/search/sentence_annotation": {
+    "/projects/{project_id}/search/sentence-annotations": {
       "post": {
         "tags": ["search"],
         "summary": "Returns Sentence Annotations.",
         "operationId": "search_sentence_annotations",
+        "security": [{ "OAuth2PasswordBearer": [] }],
+        "parameters": [
+          {
+            "name": "project_id",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "integer", "title": "Project Id" }
+          }
+        ],
         "requestBody": {
+          "required": true,
           "content": {
             "application/json": { "schema": { "$ref": "#/components/schemas/QueryRequest_SentAnnoColumns_" } }
-          },
-          "required": true
+          }
         },
         "responses": {
           "200": {
@@ -5481,20 +5522,28 @@
             "description": "Validation Error",
             "content": { "application/json": { "schema": { "$ref": "#/components/schemas/HTTPValidationError" } } }
           }
-        },
-        "security": [{ "OAuth2PasswordBearer": [] }]
+        }
       }
     },
-    "/search/sentence_annotation/groups": {
+    "/projects/{project_id}/search/sentence-annotations/groups": {
       "post": {
         "tags": ["search"],
         "summary": "Returns paginated Sentence Annotation groups.",
         "operationId": "search_sentence_annotation_groups",
+        "security": [{ "OAuth2PasswordBearer": [] }],
+        "parameters": [
+          {
+            "name": "project_id",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "integer", "title": "Project Id" }
+          }
+        ],
         "requestBody": {
+          "required": true,
           "content": {
             "application/json": { "schema": { "$ref": "#/components/schemas/GroupQueryRequest_SentAnnoColumns_" } }
-          },
-          "required": true
+          }
         },
         "responses": {
           "200": {
@@ -5505,12 +5554,11 @@
             "description": "Validation Error",
             "content": { "application/json": { "schema": { "$ref": "#/components/schemas/HTTPValidationError" } } }
           }
-        },
-        "security": [{ "OAuth2PasswordBearer": [] }]
+        }
       }
     },
-    "/search/bbox_annotation_info": {
-      "post": {
+    "/projects/{project_id}/search/bbox-annotations/info": {
+      "get": {
         "tags": ["search"],
         "summary": "Returns BBoxAnnotationSearch Info.",
         "operationId": "search_bbox_annotation_info",
@@ -5518,7 +5566,7 @@
         "parameters": [
           {
             "name": "project_id",
-            "in": "query",
+            "in": "path",
             "required": true,
             "schema": { "type": "integer", "title": "Project Id" }
           }
@@ -5543,14 +5591,23 @@
         }
       }
     },
-    "/search/bbox_annotation": {
+    "/projects/{project_id}/search/bbox-annotations": {
       "post": {
         "tags": ["search"],
         "summary": "Returns BBox Annotations.",
         "operationId": "search_bbox_annotations",
+        "security": [{ "OAuth2PasswordBearer": [] }],
+        "parameters": [
+          {
+            "name": "project_id",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "integer", "title": "Project Id" }
+          }
+        ],
         "requestBody": {
-          "content": { "application/json": { "schema": { "$ref": "#/components/schemas/QueryRequest_BBoxColumns_" } } },
-          "required": true
+          "required": true,
+          "content": { "application/json": { "schema": { "$ref": "#/components/schemas/QueryRequest_BBoxColumns_" } } }
         },
         "responses": {
           "200": {
@@ -5561,20 +5618,28 @@
             "description": "Validation Error",
             "content": { "application/json": { "schema": { "$ref": "#/components/schemas/HTTPValidationError" } } }
           }
-        },
-        "security": [{ "OAuth2PasswordBearer": [] }]
+        }
       }
     },
-    "/search/bbox_annotation/groups": {
+    "/projects/{project_id}/search/bbox-annotations/groups": {
       "post": {
         "tags": ["search"],
         "summary": "Returns paginated BBox Annotation groups.",
         "operationId": "search_bbox_annotation_groups",
+        "security": [{ "OAuth2PasswordBearer": [] }],
+        "parameters": [
+          {
+            "name": "project_id",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "integer", "title": "Project Id" }
+          }
+        ],
         "requestBody": {
+          "required": true,
           "content": {
             "application/json": { "schema": { "$ref": "#/components/schemas/GroupQueryRequest_BBoxColumns_" } }
-          },
-          "required": true
+          }
         },
         "responses": {
           "200": {
@@ -5585,16 +5650,25 @@
             "description": "Validation Error",
             "content": { "application/json": { "schema": { "$ref": "#/components/schemas/HTTPValidationError" } } }
           }
-        },
-        "security": [{ "OAuth2PasswordBearer": [] }]
+        }
       }
     },
-    "/searchView": {
+    "/projects/{project_id}/search-views": {
       "put": {
         "tags": ["searchView"],
         "summary": "Creates a personal search view",
         "operationId": "create",
+        "security": [{ "OAuth2PasswordBearer": [] }],
+        "parameters": [
+          {
+            "name": "project_id",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "integer", "title": "Project Id" }
+          }
+        ],
         "requestBody": {
+          "required": true,
           "content": {
             "application/json": {
               "schema": {
@@ -5607,8 +5681,7 @@
                 "title": "View"
               }
             }
-          },
-          "required": true
+          }
         },
         "responses": {
           "200": {
@@ -5631,11 +5704,8 @@
             "description": "Validation Error",
             "content": { "application/json": { "schema": { "$ref": "#/components/schemas/HTTPValidationError" } } }
           }
-        },
-        "security": [{ "OAuth2PasswordBearer": [] }]
-      }
-    },
-    "/searchView/project/{project_id}": {
+        }
+      },
       "get": {
         "tags": ["searchView"],
         "summary": "Returns the current user's search views of an entity type in a project",
@@ -5682,7 +5752,7 @@
         }
       }
     },
-    "/searchView/project/{project_id}/order": {
+    "/projects/{project_id}/search-views/order": {
       "patch": {
         "tags": ["searchView"],
         "summary": "Reorders the current user's search views of an entity type in a project",
@@ -5733,13 +5803,19 @@
         }
       }
     },
-    "/searchView/{view_id}": {
+    "/projects/{project_id}/search-views/{view_id}": {
       "patch": {
         "tags": ["searchView"],
         "summary": "Updates a personal search view",
         "operationId": "update",
         "security": [{ "OAuth2PasswordBearer": [] }],
         "parameters": [
+          {
+            "name": "project_id",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "integer", "title": "Project Id" }
+          },
           { "name": "view_id", "in": "path", "required": true, "schema": { "type": "integer", "title": "View Id" } }
         ],
         "requestBody": {
@@ -5787,6 +5863,12 @@
         "operationId": "delete",
         "security": [{ "OAuth2PasswordBearer": [] }],
         "parameters": [
+          {
+            "name": "project_id",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "integer", "title": "Project Id" }
+          },
           { "name": "view_id", "in": "path", "required": true, "schema": { "type": "integer", "title": "View Id" } }
         ],
         "responses": {
@@ -6207,7 +6289,7 @@
         }
       }
     },
-    "/simsearch/sentences": {
+    "/projects/{project_id}/simsearch/sentences": {
       "post": {
         "tags": ["simsearch"],
         "summary": "Returns similar sentences according to a textual or visual query.",
@@ -6216,7 +6298,7 @@
         "parameters": [
           {
             "name": "project_id",
-            "in": "query",
+            "in": "path",
             "required": true,
             "schema": { "type": "integer", "title": "Project Id" }
           },
@@ -6249,7 +6331,7 @@
         }
       }
     },
-    "/simsearch/images": {
+    "/projects/{project_id}/simsearch/images": {
       "post": {
         "tags": ["simsearch"],
         "summary": "Returns similar images according to a textual or visual query.",
@@ -6258,7 +6340,7 @@
         "parameters": [
           {
             "name": "project_id",
-            "in": "query",
+            "in": "path",
             "required": true,
             "schema": { "type": "integer", "title": "Project Id" }
           },
@@ -11028,11 +11110,6 @@
             "description": "Searchable entity the SearchView is for",
             "default": "bbox_annotation"
           },
-          "project_id": {
-            "type": "integer",
-            "title": "Project Id",
-            "description": "Project the SearchView belongs to"
-          },
           "name": {
             "type": "string",
             "maxLength": 255,
@@ -11062,7 +11139,7 @@
           }
         },
         "type": "object",
-        "required": ["project_id", "name", "layout", "filters"],
+        "required": ["name", "layout", "filters"],
         "title": "BBoxSearchViewCreate"
       },
       "BBoxSearchViewRead": {
@@ -11073,11 +11150,6 @@
             "title": "Entity Type",
             "description": "Searchable entity the SearchView is for",
             "default": "bbox_annotation"
-          },
-          "project_id": {
-            "type": "integer",
-            "title": "Project Id",
-            "description": "Project the SearchView belongs to"
           },
           "name": {
             "type": "string",
@@ -11107,6 +11179,11 @@
             "description": "Entity properties to render (None = the frontend's default selection)"
           },
           "id": { "type": "integer", "title": "Id", "description": "ID of the SearchView" },
+          "project_id": {
+            "type": "integer",
+            "title": "Project Id",
+            "description": "Project the SearchView belongs to"
+          },
           "user_id": { "type": "integer", "title": "User Id", "description": "User the SearchView belongs to" },
           "position": {
             "type": "integer",
@@ -11127,7 +11204,7 @@
           }
         },
         "type": "object",
-        "required": ["project_id", "name", "layout", "filters", "id", "user_id", "position", "created", "updated"],
+        "required": ["name", "layout", "filters", "id", "project_id", "user_id", "position", "created", "updated"],
         "title": "BBoxSearchViewRead"
       },
       "BBoxSearchViewUpdate": {
@@ -15144,7 +15221,6 @@
       },
       "GroupQueryRequest_BBoxColumns_": {
         "properties": {
-          "project_id": { "type": "integer", "title": "Project Id", "description": "Project the search runs in" },
           "search_query": {
             "type": "string",
             "title": "Search Query",
@@ -15176,12 +15252,11 @@
           }
         },
         "type": "object",
-        "required": ["project_id", "filter", "group_by"],
+        "required": ["filter", "group_by"],
         "title": "GroupQueryRequest[BBoxColumns]"
       },
       "GroupQueryRequest_MemoColumns_": {
         "properties": {
-          "project_id": { "type": "integer", "title": "Project Id", "description": "Project the search runs in" },
           "search_query": {
             "type": "string",
             "title": "Search Query",
@@ -15213,12 +15288,11 @@
           }
         },
         "type": "object",
-        "required": ["project_id", "filter", "group_by"],
+        "required": ["filter", "group_by"],
         "title": "GroupQueryRequest[MemoColumns]"
       },
       "GroupQueryRequest_SentAnnoColumns_": {
         "properties": {
-          "project_id": { "type": "integer", "title": "Project Id", "description": "Project the search runs in" },
           "search_query": {
             "type": "string",
             "title": "Search Query",
@@ -15250,12 +15324,11 @@
           }
         },
         "type": "object",
-        "required": ["project_id", "filter", "group_by"],
+        "required": ["filter", "group_by"],
         "title": "GroupQueryRequest[SentAnnoColumns]"
       },
       "GroupQueryRequest_SpanColumns_": {
         "properties": {
-          "project_id": { "type": "integer", "title": "Project Id", "description": "Project the search runs in" },
           "search_query": {
             "type": "string",
             "title": "Search Query",
@@ -15287,7 +15360,7 @@
           }
         },
         "type": "object",
-        "required": ["project_id", "filter", "group_by"],
+        "required": ["filter", "group_by"],
         "title": "GroupQueryRequest[SpanColumns]"
       },
       "GroupSummary": {
@@ -15819,11 +15892,6 @@
             "description": "Searchable entity the SearchView is for",
             "default": "memo"
           },
-          "project_id": {
-            "type": "integer",
-            "title": "Project Id",
-            "description": "Project the SearchView belongs to"
-          },
           "name": {
             "type": "string",
             "maxLength": 255,
@@ -15853,7 +15921,7 @@
           }
         },
         "type": "object",
-        "required": ["project_id", "name", "layout", "filters"],
+        "required": ["name", "layout", "filters"],
         "title": "MemoSearchViewCreate"
       },
       "MemoSearchViewRead": {
@@ -15864,11 +15932,6 @@
             "title": "Entity Type",
             "description": "Searchable entity the SearchView is for",
             "default": "memo"
-          },
-          "project_id": {
-            "type": "integer",
-            "title": "Project Id",
-            "description": "Project the SearchView belongs to"
           },
           "name": {
             "type": "string",
@@ -15898,6 +15961,11 @@
             "description": "Entity properties to render (None = the frontend's default selection)"
           },
           "id": { "type": "integer", "title": "Id", "description": "ID of the SearchView" },
+          "project_id": {
+            "type": "integer",
+            "title": "Project Id",
+            "description": "Project the SearchView belongs to"
+          },
           "user_id": { "type": "integer", "title": "User Id", "description": "User the SearchView belongs to" },
           "position": {
             "type": "integer",
@@ -15918,7 +15986,7 @@
           }
         },
         "type": "object",
-        "required": ["project_id", "name", "layout", "filters", "id", "user_id", "position", "created", "updated"],
+        "required": ["name", "layout", "filters", "id", "project_id", "user_id", "position", "created", "updated"],
         "title": "MemoSearchViewRead"
       },
       "MemoSearchViewUpdate": {
@@ -17637,7 +17705,6 @@
       },
       "QueryRequest_BBoxColumns_": {
         "properties": {
-          "project_id": { "type": "integer", "title": "Project Id", "description": "Project the search runs in" },
           "search_query": {
             "type": "string",
             "title": "Search Query",
@@ -17678,12 +17745,11 @@
           }
         },
         "type": "object",
-        "required": ["project_id", "filter"],
+        "required": ["filter"],
         "title": "QueryRequest[BBoxColumns]"
       },
       "QueryRequest_MemoColumns_": {
         "properties": {
-          "project_id": { "type": "integer", "title": "Project Id", "description": "Project the search runs in" },
           "search_query": {
             "type": "string",
             "title": "Search Query",
@@ -17724,12 +17790,11 @@
           }
         },
         "type": "object",
-        "required": ["project_id", "filter"],
+        "required": ["filter"],
         "title": "QueryRequest[MemoColumns]"
       },
       "QueryRequest_SentAnnoColumns_": {
         "properties": {
-          "project_id": { "type": "integer", "title": "Project Id", "description": "Project the search runs in" },
           "search_query": {
             "type": "string",
             "title": "Search Query",
@@ -17773,12 +17838,11 @@
           }
         },
         "type": "object",
-        "required": ["project_id", "filter"],
+        "required": ["filter"],
         "title": "QueryRequest[SentAnnoColumns]"
       },
       "QueryRequest_SpanColumns_": {
         "properties": {
-          "project_id": { "type": "integer", "title": "Project Id", "description": "Project the search runs in" },
           "search_query": {
             "type": "string",
             "title": "Search Query",
@@ -17819,7 +17883,7 @@
           }
         },
         "type": "object",
-        "required": ["project_id", "filter"],
+        "required": ["filter"],
         "title": "QueryRequest[SpanColumns]"
       },
       "RecomputeClusterTitleAndDescriptionParams": {
@@ -18752,11 +18816,6 @@
             "description": "Searchable entity the SearchView is for",
             "default": "sentence_annotation"
           },
-          "project_id": {
-            "type": "integer",
-            "title": "Project Id",
-            "description": "Project the SearchView belongs to"
-          },
           "name": {
             "type": "string",
             "maxLength": 255,
@@ -18789,7 +18848,7 @@
           }
         },
         "type": "object",
-        "required": ["project_id", "name", "layout", "filters"],
+        "required": ["name", "layout", "filters"],
         "title": "SentenceSearchViewCreate"
       },
       "SentenceSearchViewRead": {
@@ -18800,11 +18859,6 @@
             "title": "Entity Type",
             "description": "Searchable entity the SearchView is for",
             "default": "sentence_annotation"
-          },
-          "project_id": {
-            "type": "integer",
-            "title": "Project Id",
-            "description": "Project the SearchView belongs to"
           },
           "name": {
             "type": "string",
@@ -18837,6 +18891,11 @@
             "description": "Entity properties to render (None = the frontend's default selection)"
           },
           "id": { "type": "integer", "title": "Id", "description": "ID of the SearchView" },
+          "project_id": {
+            "type": "integer",
+            "title": "Project Id",
+            "description": "Project the SearchView belongs to"
+          },
           "user_id": { "type": "integer", "title": "User Id", "description": "User the SearchView belongs to" },
           "position": {
             "type": "integer",
@@ -18857,7 +18916,7 @@
           }
         },
         "type": "object",
-        "required": ["project_id", "name", "layout", "filters", "id", "user_id", "position", "created", "updated"],
+        "required": ["name", "layout", "filters", "id", "project_id", "user_id", "position", "created", "updated"],
         "title": "SentenceSearchViewRead"
       },
       "SentenceSearchViewUpdate": {
@@ -20043,11 +20102,6 @@
             "description": "Searchable entity the SearchView is for",
             "default": "span_annotation"
           },
-          "project_id": {
-            "type": "integer",
-            "title": "Project Id",
-            "description": "Project the SearchView belongs to"
-          },
           "name": {
             "type": "string",
             "maxLength": 255,
@@ -20077,7 +20131,7 @@
           }
         },
         "type": "object",
-        "required": ["project_id", "name", "layout", "filters"],
+        "required": ["name", "layout", "filters"],
         "title": "SpanSearchViewCreate"
       },
       "SpanSearchViewRead": {
@@ -20088,11 +20142,6 @@
             "title": "Entity Type",
             "description": "Searchable entity the SearchView is for",
             "default": "span_annotation"
-          },
-          "project_id": {
-            "type": "integer",
-            "title": "Project Id",
-            "description": "Project the SearchView belongs to"
           },
           "name": {
             "type": "string",
@@ -20122,6 +20171,11 @@
             "description": "Entity properties to render (None = the frontend's default selection)"
           },
           "id": { "type": "integer", "title": "Id", "description": "ID of the SearchView" },
+          "project_id": {
+            "type": "integer",
+            "title": "Project Id",
+            "description": "Project the SearchView belongs to"
+          },
           "user_id": { "type": "integer", "title": "User Id", "description": "User the SearchView belongs to" },
           "position": {
             "type": "integer",
@@ -20142,7 +20196,7 @@
           }
         },
         "type": "object",
-        "required": ["project_id", "name", "layout", "filters", "id", "user_id", "position", "created", "updated"],
+        "required": ["name", "layout", "filters", "id", "project_id", "user_id", "position", "created", "updated"],
         "title": "SpanSearchViewRead"
       },
       "SpanSearchViewUpdate": {

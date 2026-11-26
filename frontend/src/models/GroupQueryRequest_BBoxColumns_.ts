@@ -6,10 +6,6 @@ import type { Filter_BBoxColumns__Input } from "./Filter_BBoxColumns__Input";
 import type { GroupConfig_BBoxColumns_ } from "./GroupConfig_BBoxColumns_";
 export type GroupQueryRequest_BBoxColumns_ = {
   /**
-   * Project the search runs in
-   */
-  project_id: number;
-  /**
    * Full-text query applied before grouping
    */
   search_query?: string;

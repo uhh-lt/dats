@@ -85,7 +85,8 @@ export function useWorkspaceViews<TColumns extends string, TRow extends { id: nu
       while (usedNames.has(uniqueName.toLocaleLowerCase())) uniqueName = `${name} ${suffix++}`;
       createView.mutate(
         {
-          requestBody: { project_id: projectId, name: uniqueName, layout, filters, group_by: groupBy, sorts },
+          projectId,
+          requestBody: { name: uniqueName, layout, filters, group_by: groupBy, sorts },
         } as Parameters<typeof createView.mutate>[0],
         { onSuccess: (view) => handleSelectView(view.id) },
       );
@@ -99,11 +100,12 @@ export function useWorkspaceViews<TColumns extends string, TRow extends { id: nu
     (requestBody: WorkspaceViewUpdate<TColumns>) => {
       if (!activeView) return;
       updateView.mutate({
+        projectId,
         viewId: activeView.id,
         requestBody,
       } as Parameters<typeof updateView.mutate>[0]);
     },
-    [activeView, updateView],
+    [activeView, projectId, updateView],
   );
 
   const handleDeleteView = useCallback(() => {
@@ -113,19 +115,20 @@ export function useWorkspaceViews<TColumns extends string, TRow extends { id: nu
       type: "DELETE",
       text: `Do you really want to delete the view "${view.name}"? This action cannot be undone!`,
       onAccept: () => {
-        deleteView.mutate({ viewId: view.id }, { onSuccess: () => setActiveViewId(undefined) });
+        deleteView.mutate({ projectId, viewId: view.id }, { onSuccess: () => setActiveViewId(undefined) });
       },
     });
-  }, [activeView, deleteView, openConfirmationDialog]);
+  }, [activeView, deleteView, openConfirmationDialog, projectId]);
 
   const handleRenameView = useCallback(
     (name: string, onSuccess?: () => void) => {
       if (!activeView || name === activeView.name) return;
-      updateView.mutate({ viewId: activeView.id, requestBody: { name } } as Parameters<typeof updateView.mutate>[0], {
-        onSuccess,
-      });
+      updateView.mutate(
+        { projectId, viewId: activeView.id, requestBody: { name } } as Parameters<typeof updateView.mutate>[0],
+        { onSuccess },
+      );
     },
-    [activeView, updateView],
+    [activeView, projectId, updateView],
   );
 
   return {

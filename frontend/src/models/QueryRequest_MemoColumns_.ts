@@ -7,10 +7,6 @@ import type { GroupConfig_MemoColumns_ } from "./GroupConfig_MemoColumns_";
 import type { Sort_MemoColumns_ } from "./Sort_MemoColumns_";
 export type QueryRequest_MemoColumns_ = {
   /**
-   * Project the search runs in
-   */
-  project_id: number;
-  /**
    * Full-text query
    */
   search_query?: string;

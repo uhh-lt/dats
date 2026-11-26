@@ -6,10 +6,6 @@ import type { Filter_SentAnnoColumns__Input } from "./Filter_SentAnnoColumns__In
 import type { GroupConfig_SentAnnoColumns_ } from "./GroupConfig_SentAnnoColumns_";
 export type GroupQueryRequest_SentAnnoColumns_ = {
   /**
-   * Project the search runs in
-   */
-  project_id: number;
-  /**
    * Full-text query applied before grouping
    */
   search_query?: string;

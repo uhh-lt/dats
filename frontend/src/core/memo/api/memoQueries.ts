@@ -16,8 +16,8 @@ const nextPageByCount = <TPage extends { items: unknown[]; total_results: number
  *   memoQueries.byId(projectId, memoId)            ["memo", "detail", memoId, projectId]
  *   memoQueries.byAttachedObject(projectId, type, id)  ["memo", "attached", type, id, projectId]
  *   memoQueries.recent(projectId)                  ["memo", "recent", projectId]
- *   memoQueries.search(request)                    ["memo", "search", request]
- *   memoQueries.searchGrouped(request)             ["memo", "searchGrouped", request]
+ *   memoQueries.search(projectId, request)           ["memo", "search", request, projectId]
+ *   memoQueries.searchGrouped(projectId, request)    ["memo", "searchGrouped", request, projectId]
  *   memoQueries.tableInfo(projectId)               ["tableInfo", "memoFilter", projectId]
  */
 export const memoQueries = {
@@ -63,19 +63,20 @@ export const memoQueries = {
 
   // search results (flat) and search results grouped by a column
   searchScope: () => [...memoQueries.all(), "search"] as const,
-  search: (request: QueryRequest_MemoColumns_) =>
+  search: (projectId: number, request: QueryRequest_MemoColumns_) =>
     infiniteQueryOptions({
-      queryKey: [...memoQueries.searchScope(), request] as const,
-      queryFn: ({ pageParam }) => SearchService.searchMemos({ requestBody: { ...request, page_number: pageParam } }),
+      queryKey: [...memoQueries.searchScope(), request, projectId] as const,
+      queryFn: ({ pageParam }) =>
+        SearchService.searchMemos({ projectId, requestBody: { ...request, page_number: pageParam } }),
       initialPageParam: 0,
       getNextPageParam: nextPageByCount,
     }),
   searchGroupedScope: () => [...memoQueries.all(), "searchGrouped"] as const,
-  searchGrouped: (request: GroupQueryRequest_MemoColumns_) =>
+  searchGrouped: (projectId: number, request: GroupQueryRequest_MemoColumns_) =>
     infiniteQueryOptions({
-      queryKey: [...memoQueries.searchGroupedScope(), request] as const,
+      queryKey: [...memoQueries.searchGroupedScope(), request, projectId] as const,
       queryFn: ({ pageParam }) =>
-        SearchService.searchMemoGroups({ requestBody: { ...request, page_number: pageParam } }),
+        SearchService.searchMemoGroups({ projectId, requestBody: { ...request, page_number: pageParam } }),
       initialPageParam: 0,
       getNextPageParam: nextPageByCount,
     }),

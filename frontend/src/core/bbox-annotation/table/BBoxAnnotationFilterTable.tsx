@@ -158,8 +158,7 @@ const BBoxAnnotationFilterTable = <TToolbarProps extends FilterTableToolbarProps
 
   // table data
   const { data, fetchNextPage, isError, isFetching, isLoading } = useInfiniteQuery(
-    bboxAnnotationQueries.search({
-      project_id: projectId,
+    bboxAnnotationQueries.search(projectId, {
       filter,
       sorts: toSorts<BBoxColumns>(sortingModel),
       page_size: fetchSize,

@@ -147,8 +147,7 @@ const SentenceAnnotationFilterTable = <TToolbarProps extends FilterTableToolbarP
 
   // table data
   const { data, fetchNextPage, isError, isFetching, isLoading } = useInfiniteQuery(
-    sentenceAnnotationQueries.search({
-      project_id: projectId,
+    sentenceAnnotationQueries.search(projectId, {
       filter,
       sorts: toSorts<SentAnnoColumns>(sortingModel),
       page_size: fetchSize,
