@@ -71,18 +71,21 @@ class WhiteboardORM(ORMBase):
 
 # 4. Association tables for many-to-many relationships: <A><B>LinkTable
 class SourceDocumentTagLinkTable(ORMBase):
-    source_document_id: Mapped[int] = mapped_column(
-        Integer, primary_key=True, index=True
-    )
+    source_document_id: Mapped[int] = mapped_column(Integer, index=True)
     # tag_id: same shape
     project_id: Mapped[int] = mapped_column(
         Integer,
         ForeignKey("project.id", ondelete="CASCADE"),
         nullable=False,
-        index=True,
     )
 
     __table_args__ = (
+        PrimaryKeyConstraint(
+            "project_id",
+            "source_document_id",
+            "tag_id",
+            name="sourcedocumenttaglinktable_pkey",
+        ),
         ForeignKeyConstraint(
             ["project_id", "source_document_id"],
             ["sourcedocument.project_id", "sourcedocument.id"],
@@ -110,7 +113,7 @@ class SourceDocumentTagLinkTable(ORMBase):
 - **Primary key**: a project-owned table with an `id` declares `PrimaryKeyConstraint("project_id", "id", name="<table>_pkey")` in `__table_args__`, `id` as `mapped_column(Integer, autoincrement=True, index=True)` and `project_id` without its own index; Alembic does not detect key changes, so a migration adds `drop_constraint`/`create_primary_key` by hand. Variations that are allowed:
   - Global tables (`ProjectORM`, `UserORM`, `ApiKeyORM`, `RefreshTokenORM`, `SpanTextORM`) use `id: Mapped[int] = mapped_column(Integer, primary_key=True, index=True)`.
   - Dependent 1:1 tables use the parent FK as their `id` (`SourceDocumentDataORM`).
-  - Association tables use a composite primary key made of their FKs, with no `id` column.
+  - Association tables and tables keyed by their references use `PrimaryKeyConstraint("project_id", <reference columns>, name="<table>_pkey")`, with no `id` column and no own index on `project_id`.
 - **Timestamps**: always `DateTime(timezone=True)`. `created` uses `server_default=func.now()` and `index=True`. `updated` also sets `onupdate=func.current_timestamp()`.
 - **Defaults**: use `server_default` (a string, or `text(...)` for JSONB), so the default also lands in the migration. Python-side `default=` appears only for booleans in the perspectives module.
 - **Enums**: store an enum as `String` or `Integer`, annotated with the enum type (`folder_type: Mapped[FolderType] = mapped_column(String, ...)`). The column holds the member value (`"sdoc_folder"`). Never use a native `Enum(...)` column type.
@@ -120,16 +123,17 @@ class SourceDocumentTagLinkTable(ORMBase):
 
 - **Tenant**: every project-owned table (all but `ProjectORM`, `UserORM`, `ApiKeyORM`, `RefreshTokenORM`, `SpanTextORM`, `ProjectUserLinkTable`) has `project_id: Mapped[int]` with `ForeignKey("project.id", ondelete="CASCADE")`.
 - **Composite FKs**: an FK onto a project-owned table is a `ForeignKeyConstraint(["project_id", "<column>"], ["<table>.project_id", "<table>.id"], ondelete="CASCADE", name="FK_<table>_<column>")` in `__table_args__`, and its column is a plain `mapped_column(Integer, index=True)`; an optional column uses `ondelete="SET NULL (<column>)"`, so the shared `project_id` is never nulled.
-- **FK cascade**: an FK onto a global table (project, user, span text) is a column `ForeignKey("<table>.id", ondelete="CASCADE")` with `index=True`, except the first primary key column, which the primary key index covers (`SourceDocumentStepStatusORM.sdoc_id`). The only exceptions are `ondelete="SET NULL"` on an optional user column (`ExperimentORM.gold_user_id`) and `ondelete="NO ACTION", deferrable=True, initially="IMMEDIATE", name="experimentrun_virtual_user_id_fkey"` on `ExperimentRunORM.virtual_user_id`, whose check `crud_project.delete_multi` defers to the commit by that name.
-- **Relationships never write `project_id`**: a relationship over a composite FK passes `foreign_keys=` with the id column only, on both sides, so it never copies the `project_id` of another project; only the relationships onto `ProjectORM` write it.
+- **FK cascade**: an FK onto a global table (project, user, span text) is a column `ForeignKey("<table>.id", ondelete="CASCADE")` with `index=True`, except a primary key column. The only exceptions are `ondelete="SET NULL"` on an optional user column (`ExperimentORM.gold_user_id`) and `ondelete="NO ACTION", deferrable=True, initially="IMMEDIATE", name="experimentrun_virtual_user_id_fkey"` on `ExperimentRunORM.virtual_user_id`, whose check `crud_project.delete_multi` defers to the commit by that name.
+- **Rows are identified by `(project_id, id)`**: ids are unique per project only, never globally, so no key, join or read relies on an id alone (ADR 0013).
+- **Relationships join on both columns, write the id only**: a relationship over a composite FK declares `primaryjoin="and_(CodeORM.project_id == SpanAnnotationORM.project_id, CodeORM.id == foreign(SpanAnnotationORM.code_id))"` on both sides, so it loads by `(project_id, id)` (a many-to-one from the identity map) and an assignment never moves a row into another project; only the relationships onto `ProjectORM` write `project_id`.
 - **Create with id columns**: create rows with their id columns and `project_id` (`attached_to_id=handle.id`), never by assigning relationship objects.
 - **Relationship form**: `relationship("<TargetORM>", back_populates="<attr>", ...)`. Pass the target as a string, and give the annotation as a string as well (`Mapped["CodeORM"]`, `Mapped[list["CodeORM"]]`).
 - **`back_populates` both ways**: when the other side declares the inverse relationship, both sides name each other with `back_populates`. Never use `backref`.
 - **Parent side of one-to-many / one-to-one**: `cascade="all, delete-orphan", passive_deletes=True`. Together with `ondelete="CASCADE"`, the database does the deleting. Exceptions: `ClusterORM.child_clusters` (children survive via `SET NULL`) and the shared lookup `SpanTextORM.span_annotations` (only `passive_deletes=True`).
 - **One to one**: add `uselist=False` on the parent side (e.g. `object_handle`, `data`).
 - **Many to many**: `secondary=...` plus `back_populates` and `viewonly=True`; the CRUD writes the link rows by their id columns and `project_id` (`crud_tag.link_multiple_tags`).
-- **Hierarchies** (code, tag, folder, cluster): `parent_id: Mapped[int | None]` has a composite self-FK. `parent: Mapped["<Self>ORM | None"] = relationship("<Self>ORM", remote_side=[id], back_populates="children", foreign_keys=[parent_id])`. `children` has `back_populates="parent"`, `foreign_keys=[parent_id]` and the parent-side cascade.
-- **Ambiguous FKs**: `foreign_keys=` also picks the FK when two connect the same tables (`SpanAnnotationORM.code` and `source_code_id`).
+- **Hierarchies** (code, tag, folder, cluster): `parent_id: Mapped[int | None]` has a composite self-FK; `parent` joins with `primaryjoin="and_(remote(<Self>ORM.project_id) == <Self>ORM.project_id, remote(<Self>ORM.id) == foreign(<Self>ORM.parent_id))"`, `children` with `primaryjoin="and_(remote(<Self>ORM.project_id) == <Self>ORM.project_id, remote(foreign(<Self>ORM.parent_id)) == <Self>ORM.id)"` and the parent-side cascade (`code_orm.py`).
+- **Ambiguous FKs**: the `foreign()` column of the `primaryjoin` also picks the FK when two connect the same tables (`SpanAnnotationORM.code` and `source_code_id`).
 - **Inverse side**: adding a relationship to an existing model also means adding the inverse relationship and the `TYPE_CHECKING` import in the target ORM file (e.g. a new project-scoped entity adds a list to `ProjectORM`).
 
 ### Imports
@@ -140,7 +144,7 @@ class SourceDocumentTagLinkTable(ORMBase):
 ### Table Arguments
 
 - **`__table_args__`**: a tuple placed after all columns and relationships. It holds `UniqueConstraint(..., name="UC_...")`, `CheckConstraint(..., name="CC_...")`, `ForeignKeyConstraint(..., name="FK_...")` and composite `Index(...)` entries.
-- **Project-scoped uniqueness**: entities with a user-facing name or uuid are unique per project (`UniqueConstraint("project_id", "name", ...)`).
+- **Project-scoped uniqueness**: entities with a user-facing name or uuid are unique per project (`UniqueConstraint("project_id", "name", ...)`), and every unique constraint over an id column names `project_id` too.
 
 ### Behavior
 
