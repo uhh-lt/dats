@@ -124,12 +124,14 @@ class _References:
         user_ids.extend(run.user_id for run in runs if run.user_id is not None)
 
         versions = crud_prompt_version.read_existing_by_ids(
-            db=db, ids=[run.prompt_version_id for run in runs]
+            db=db, project_id=project_id, ids=[run.prompt_version_id for run in runs]
         )
         prompt_name = {
             id: prompt.name
             for id, prompt in crud_prompt.read_existing_by_ids(
-                db=db, ids=[version.prompt_id for version in versions.values()]
+                db=db,
+                project_id=project_id,
+                ids=[version.prompt_id for version in versions.values()],
             ).items()
         }
 

@@ -29,7 +29,7 @@ export function OutputFormatBlockPanel({
   onChangeText,
   onChangeSettings,
 }: OutputFormatBlockPanelProps) {
-  const taskInfo = useQuery(promptQueries.taskInfo(draft.task_type));
+  const taskInfo = useQuery(promptQueries.taskInfo(projectId, draft.task_type));
   const formats = useMemo(() => taskInfo.data?.output_formats ?? [], [taskInfo.data]);
   const formatInfo = formats.find((info) => info.output_format === outputFormat);
   const handleChangeFormat = useCallback(
@@ -49,7 +49,7 @@ export function OutputFormatBlockPanel({
   // the fixed answer instructions, as the block renders them once the user stops typing
   const debouncedDraft = useDebounce(draft, 500);
   const rendered = useQuery(
-    promptQueries.preview({ project_id: projectId, draft: debouncedDraft, sdoc_id: null, message_index: 0 }),
+    promptQueries.preview(projectId, { draft: debouncedDraft, sdoc_id: null, message_index: 0 }),
   );
   const [showInstructions, setShowInstructions] = useState(false);
   const handleToggleInstructions = useCallback(() => setShowInstructions((current) => !current), []);

@@ -1,8 +1,8 @@
-from fastapi import APIRouter, Depends
+from fastapi import Depends
 
-from common.crud_enum import Crud
 from common.dats_event import DATSEvent
-from common.dependencies import DBSession, get_current_user
+from common.dependencies import DBSession
+from common.project_router import project_router
 from core.auth.authz_user import AuthzUser
 from core.prompt.prompt_dto import (
     PromptContent,
@@ -25,11 +25,7 @@ from core.prompt.prompt_enum import (
 from core.prompt.prompt_service import PromptService
 from systems.websocket_system.websocket_dependency import WebsocketEmitter
 
-router = APIRouter(
-    prefix="/prompt",
-    dependencies=[Depends(get_current_user)],
-    tags=["prompt"],
-)
+router = project_router("/prompts", tags=["prompt"])
 
 pts: PromptService = PromptService()
 
@@ -45,39 +41,40 @@ pts: PromptService = PromptService()
 def create(
     *,
     db: DBSession,
+    project_id: int,
     prompt: PromptCreate,
     authz_user: AuthzUser = Depends(),
     ws: WebsocketEmitter = Depends(),
 ) -> PromptRead:
-    authz_user.assert_in_project(prompt.project_id)
-
-    result = pts.create_prompt(db=db, user_id=authz_user.user.id, create_dto=prompt)
-    ws.emit_to_project(DATSEvent.PROMPT_CREATED, result, project_id=result.project_id)
+    result = pts.create_prompt(
+        db=db, project_id=project_id, user_id=authz_user.user.id, create_dto=prompt
+    )
+    ws.emit_to_project(DATSEvent.PROMPT_CREATED, result, project_id=project_id)
     return result
 
 
 @router.put(
-    "/{prompt_id}/version",
+    "/{prompt_id}/versions",
     response_model=PromptRead,
     summary="Saves a prompt with its selections as the next immutable version of the prompt",
 )
 def create_version(
     *,
     db: DBSession,
+    project_id: int,
     prompt_id: int,
     version: PromptVersionCreate,
     authz_user: AuthzUser = Depends(),
     ws: WebsocketEmitter = Depends(),
 ) -> PromptRead:
-    authz_user.assert_in_same_project_as(Crud.PROMPT, prompt_id)
-
     result = pts.create_prompt_version(
         db=db,
+        project_id=project_id,
         user_id=authz_user.user.id,
         prompt_id=prompt_id,
         create_dto=version,
     )
-    ws.emit_to_project(DATSEvent.PROMPT_UPDATED, result, project_id=result.project_id)
+    ws.emit_to_project(DATSEvent.PROMPT_UPDATED, result, project_id=project_id)
     return result
 
 
@@ -89,12 +86,10 @@ def create_version(
 def create_examples(
     *,
     db: DBSession,
+    project_id: int,
     examples: PromptExamplesCreate,
-    authz_user: AuthzUser = Depends(),
 ) -> list[PromptExample]:
-    authz_user.assert_in_project(examples.project_id)
-
-    return pts.create_prompt_examples(db=db, create_dto=examples)
+    return pts.create_prompt_examples(db=db, project_id=project_id, create_dto=examples)
 
 
 @router.post(
@@ -105,24 +100,23 @@ def create_examples(
 def preview(
     *,
     db: DBSession,
+    project_id: int,
     request: PromptPreviewRequest,
-    authz_user: AuthzUser = Depends(),
 ) -> PromptPreview:
-    authz_user.assert_in_project(request.project_id)
-
-    return pts.preview_prompt(db=db, request=request)
+    return pts.preview_prompt(db=db, project_id=project_id, request=request)
 
 
 # --- read operations
 
 
 @router.get(
-    "/task_info",
+    "/task-info",
     response_model=PromptTaskInfo,
     summary="Returns the blocks that the prompts of a task can use",
 )
 def get_task_info(
     *,
+    project_id: int,
     task_type: TaskType,
 ) -> PromptTaskInfo:
     return pts.read_task_info(task_type=task_type)
@@ -135,6 +129,7 @@ def get_task_info(
 )
 def get_default(
     *,
+    project_id: int,
     output_format: OutputFormat,
     language: PromptLanguage,
 ) -> PromptContent:
@@ -142,7 +137,7 @@ def get_default(
 
 
 @router.get(
-    "/project/{project_id}",
+    "",
     response_model=list[PromptRead],
     summary="Returns the prompts of the project with all their versions",
 )
@@ -150,27 +145,22 @@ def get_by_project(
     *,
     db: DBSession,
     project_id: int,
-    authz_user: AuthzUser = Depends(),
 ) -> list[PromptRead]:
-    authz_user.assert_in_project(project_id)
-
     return pts.read_prompts_by_project(db=db, project_id=project_id)
 
 
 @router.get(
-    "/version/{version_id}",
+    "/versions/{version_id}",
     response_model=PromptVersionRead,
     summary="Returns the prompt version with the given ID",
 )
 def get_version_by_id(
     *,
     db: DBSession,
+    project_id: int,
     version_id: int,
-    authz_user: AuthzUser = Depends(),
 ) -> PromptVersionRead:
-    authz_user.assert_in_same_project_as(Crud.PROMPT_VERSION, version_id)
-
-    return pts.read_prompt_version(db=db, version_id=version_id)
+    return pts.read_prompt_version(db=db, project_id=project_id, version_id=version_id)
 
 
 @router.get(
@@ -181,12 +171,10 @@ def get_version_by_id(
 def get_by_id(
     *,
     db: DBSession,
+    project_id: int,
     prompt_id: int,
-    authz_user: AuthzUser = Depends(),
 ) -> PromptRead:
-    authz_user.assert_in_same_project_as(Crud.PROMPT, prompt_id)
-
-    return pts.read_prompt(db=db, prompt_id=prompt_id)
+    return pts.read_prompt(db=db, project_id=project_id, prompt_id=prompt_id)
 
 
 # --- update operations
@@ -200,13 +188,13 @@ def get_by_id(
 def update_by_id(
     *,
     db: DBSession,
+    project_id: int,
     prompt_id: int,
     prompt: PromptUpdate,
-    authz_user: AuthzUser = Depends(),
     ws: WebsocketEmitter = Depends(),
 ) -> PromptRead:
-    authz_user.assert_in_same_project_as(Crud.PROMPT, prompt_id)
-
-    result = pts.update_prompt(db=db, prompt_id=prompt_id, update_dto=prompt)
-    ws.emit_to_project(DATSEvent.PROMPT_UPDATED, result, project_id=result.project_id)
+    result = pts.update_prompt(
+        db=db, project_id=project_id, prompt_id=prompt_id, update_dto=prompt
+    )
+    ws.emit_to_project(DATSEvent.PROMPT_UPDATED, result, project_id=project_id)
     return result

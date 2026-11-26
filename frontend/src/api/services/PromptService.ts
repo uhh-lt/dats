@@ -26,12 +26,38 @@ export class PromptService {
    * @returns PromptRead Successful Response
    * @throws ApiError
    */
-  public static create({ requestBody }: { requestBody: PromptCreate }): CancelablePromise<PromptRead> {
+  public static create({
+    projectId,
+    requestBody,
+  }: {
+    projectId: number;
+    requestBody: PromptCreate;
+  }): CancelablePromise<PromptRead> {
     return __request(OpenAPI, {
       method: "PUT",
-      url: "/prompt",
+      url: "/projects/{project_id}/prompts",
+      path: {
+        project_id: projectId,
+      },
       body: requestBody,
       mediaType: "application/json",
+      errors: {
+        422: `Validation Error`,
+      },
+    });
+  }
+  /**
+   * Returns the prompts of the project with all their versions
+   * @returns PromptRead Successful Response
+   * @throws ApiError
+   */
+  public static getByProject({ projectId }: { projectId: number }): CancelablePromise<Array<PromptRead>> {
+    return __request(OpenAPI, {
+      method: "GET",
+      url: "/projects/{project_id}/prompts",
+      path: {
+        project_id: projectId,
+      },
       errors: {
         422: `Validation Error`,
       },
@@ -43,16 +69,19 @@ export class PromptService {
    * @throws ApiError
    */
   public static createVersion({
+    projectId,
     promptId,
     requestBody,
   }: {
+    projectId: number;
     promptId: number;
     requestBody: PromptVersionCreate;
   }): CancelablePromise<PromptRead> {
     return __request(OpenAPI, {
       method: "PUT",
-      url: "/prompt/{prompt_id}/version",
+      url: "/projects/{project_id}/prompts/{prompt_id}/versions",
       path: {
+        project_id: projectId,
         prompt_id: promptId,
       },
       body: requestBody,
@@ -68,13 +97,18 @@ export class PromptService {
    * @throws ApiError
    */
   public static createExamples({
+    projectId,
     requestBody,
   }: {
+    projectId: number;
     requestBody: PromptExamplesCreate;
   }): CancelablePromise<Array<SpanPromptExample | SentencePromptExample>> {
     return __request(OpenAPI, {
       method: "POST",
-      url: "/prompt/examples",
+      url: "/projects/{project_id}/prompts/examples",
+      path: {
+        project_id: projectId,
+      },
       body: requestBody,
       mediaType: "application/json",
       errors: {
@@ -87,10 +121,19 @@ export class PromptService {
    * @returns PromptPreview Successful Response
    * @throws ApiError
    */
-  public static preview({ requestBody }: { requestBody: PromptPreviewRequest }): CancelablePromise<PromptPreview> {
+  public static preview({
+    projectId,
+    requestBody,
+  }: {
+    projectId: number;
+    requestBody: PromptPreviewRequest;
+  }): CancelablePromise<PromptPreview> {
     return __request(OpenAPI, {
       method: "POST",
-      url: "/prompt/preview",
+      url: "/projects/{project_id}/prompts/preview",
+      path: {
+        project_id: projectId,
+      },
       body: requestBody,
       mediaType: "application/json",
       errors: {
@@ -103,10 +146,19 @@ export class PromptService {
    * @returns PromptTaskInfo Successful Response
    * @throws ApiError
    */
-  public static getTaskInfo({ taskType }: { taskType: TaskType }): CancelablePromise<PromptTaskInfo> {
+  public static getTaskInfo({
+    projectId,
+    taskType,
+  }: {
+    projectId: number;
+    taskType: TaskType;
+  }): CancelablePromise<PromptTaskInfo> {
     return __request(OpenAPI, {
       method: "GET",
-      url: "/prompt/task_info",
+      url: "/projects/{project_id}/prompts/task-info",
+      path: {
+        project_id: projectId,
+      },
       query: {
         task_type: taskType,
       },
@@ -121,35 +173,23 @@ export class PromptService {
    * @throws ApiError
    */
   public static getDefault({
+    projectId,
     outputFormat,
     language,
   }: {
+    projectId: number;
     outputFormat: OutputFormat;
     language: PromptLanguage;
   }): CancelablePromise<PromptContent> {
     return __request(OpenAPI, {
       method: "GET",
-      url: "/prompt/default",
+      url: "/projects/{project_id}/prompts/default",
+      path: {
+        project_id: projectId,
+      },
       query: {
         output_format: outputFormat,
         language: language,
-      },
-      errors: {
-        422: `Validation Error`,
-      },
-    });
-  }
-  /**
-   * Returns the prompts of the project with all their versions
-   * @returns PromptRead Successful Response
-   * @throws ApiError
-   */
-  public static getByProject({ projectId }: { projectId: number }): CancelablePromise<Array<PromptRead>> {
-    return __request(OpenAPI, {
-      method: "GET",
-      url: "/prompt/project/{project_id}",
-      path: {
-        project_id: projectId,
       },
       errors: {
         422: `Validation Error`,
@@ -161,11 +201,18 @@ export class PromptService {
    * @returns PromptVersionRead Successful Response
    * @throws ApiError
    */
-  public static getVersionById({ versionId }: { versionId: number }): CancelablePromise<PromptVersionRead> {
+  public static getVersionById({
+    projectId,
+    versionId,
+  }: {
+    projectId: number;
+    versionId: number;
+  }): CancelablePromise<PromptVersionRead> {
     return __request(OpenAPI, {
       method: "GET",
-      url: "/prompt/version/{version_id}",
+      url: "/projects/{project_id}/prompts/versions/{version_id}",
       path: {
+        project_id: projectId,
         version_id: versionId,
       },
       errors: {
@@ -178,11 +225,18 @@ export class PromptService {
    * @returns PromptRead Successful Response
    * @throws ApiError
    */
-  public static getById({ promptId }: { promptId: number }): CancelablePromise<PromptRead> {
+  public static getById({
+    projectId,
+    promptId,
+  }: {
+    projectId: number;
+    promptId: number;
+  }): CancelablePromise<PromptRead> {
     return __request(OpenAPI, {
       method: "GET",
-      url: "/prompt/{prompt_id}",
+      url: "/projects/{project_id}/prompts/{prompt_id}",
       path: {
+        project_id: projectId,
         prompt_id: promptId,
       },
       errors: {
@@ -196,16 +250,19 @@ export class PromptService {
    * @throws ApiError
    */
   public static updateById({
+    projectId,
     promptId,
     requestBody,
   }: {
+    projectId: number;
     promptId: number;
     requestBody: PromptUpdate;
   }): CancelablePromise<PromptRead> {
     return __request(OpenAPI, {
       method: "PATCH",
-      url: "/prompt/{prompt_id}",
+      url: "/projects/{project_id}/prompts/{prompt_id}",
       path: {
+        project_id: projectId,
         prompt_id: promptId,
       },
       body: requestBody,

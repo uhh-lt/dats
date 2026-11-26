@@ -6,11 +6,14 @@ from core.prompt.prompt_enum import TaskType
 
 from .conftest import LLMAssistantProject
 
-COUNT_ANNOTATIONS_URL = "/llm_assistant/count_existing_assistant_annotations"
+
+def _count_url(project_id: int) -> str:
+    return f"/projects/{project_id}/llm-assistant/count-existing-annotations"
 
 
 # ===========================================================================
-# COUNT EXISTING ANNOTATIONS (/llm_assistant/count_existing_assistant_annotations) TESTS
+# COUNT EXISTING ANNOTATIONS
+# (/projects/{project_id}/llm-assistant/count-existing-annotations) TESTS
 # ===========================================================================
 
 
@@ -42,9 +45,8 @@ def test_count_existing_assistant_annotations_separates_task_and_virtual_user(
     code = llm_assistant_project[code_key]
     annotator = llm_assistant_project[annotator_key]
     response = client.post(
-        COUNT_ANNOTATIONS_URL,
+        _count_url(llm_assistant_project["project"].id),
         params={
-            "project_id": llm_assistant_project["project"].id,
             "task_type": task_type.value,
             "virtual_user_id": annotator.id,
         },
@@ -75,9 +77,8 @@ def test_count_existing_assistant_annotations_returns_empty_for_other_tasks(
 ) -> None:
     """Non-annotation task types return an empty count mapping."""
     response = client.post(
-        COUNT_ANNOTATIONS_URL,
+        _count_url(llm_assistant_project["project"].id),
         params={
-            "project_id": llm_assistant_project["project"].id,
             "task_type": task_type.value,
             "virtual_user_id": llm_assistant_project["run_a"].id,
         },
@@ -96,9 +97,8 @@ def test_count_existing_assistant_annotations_includes_explicit_zero_counts(
 ) -> None:
     """Every requested code is returned even when it has no matching annotations."""
     response = client.post(
-        COUNT_ANNOTATIONS_URL,
+        _count_url(llm_assistant_project["project"].id),
         params={
-            "project_id": llm_assistant_project["project"].id,
             "task_type": TaskType.ANNOTATION.value,
             "virtual_user_id": llm_assistant_project["run_a"].id,
         },
@@ -149,9 +149,8 @@ def test_count_existing_assistant_annotations_rejects_malformed_id_lists(
     body: dict[str, object] = {"sdoc_ids": [], "code_ids": []}
     body.update(body_update)
     response = client.post(
-        COUNT_ANNOTATIONS_URL,
+        _count_url(llm_assistant_project["project"].id),
         params={
-            "project_id": llm_assistant_project["project"].id,
             "task_type": TaskType.ANNOTATION.value,
             "virtual_user_id": 1,
         },
@@ -161,16 +160,15 @@ def test_count_existing_assistant_annotations_rejects_malformed_id_lists(
     assert expected_fragment in response.text
 
 
-def test_count_existing_assistant_annotations_rejects_foreign_objects(
+def test_count_existing_assistant_annotations_rejects_a_non_member(
     client: TestClient,
     llm_assistant_project: LLMAssistantProject,
 ) -> None:
     """Annotation counts must not reveal data of a project the user is no member
-    of (403)."""
+    of (HTTP 403)."""
     response = client.post(
-        COUNT_ANNOTATIONS_URL,
+        _count_url(llm_assistant_project["foreign_project"].id),
         params={
-            "project_id": llm_assistant_project["foreign_project"].id,
             "task_type": TaskType.ANNOTATION.value,
             "virtual_user_id": llm_assistant_project["foreign_run"].id,
         },
@@ -182,21 +180,40 @@ def test_count_existing_assistant_annotations_rejects_foreign_objects(
     assert response.status_code == 403, response.text
 
 
-def test_count_existing_assistant_annotations_rejects_foreign_virtual_user(
+@pytest.mark.parametrize(
+    "annotator_key,sdoc_key,code_key",
+    [
+        # The virtual user, document and code of the other project: its span
+        # annotation "Eve" is not counted in the path's project.
+        pytest.param("foreign_run", "foreign_sdoc", "foreign_code", id="all-foreign"),
+        # The virtual user of the other project on the project's own target.
+        pytest.param("foreign_run", "target_sdoc", "person_code", id="foreign-user"),
+        # The project's own virtual user on a document of the other project.
+        pytest.param("run_a", "foreign_sdoc", "person_code", id="foreign-document"),
+    ],
+)
+def test_count_existing_assistant_annotations_of_another_project_counts_zero(
     client: TestClient,
     llm_assistant_project: LLMAssistantProject,
+    annotator_key: str,
+    sdoc_key: str,
+    code_key: str,
 ) -> None:
-    """The counted virtual user must belong to one of the user's projects."""
+    """Ids of another project match nothing in the path's project: the requested
+    code is counted with 0."""
+    code = llm_assistant_project[code_key]
     response = client.post(
-        COUNT_ANNOTATIONS_URL,
+        _count_url(llm_assistant_project["project"].id),
         params={
-            "project_id": llm_assistant_project["project"].id,
             "task_type": TaskType.ANNOTATION.value,
-            "virtual_user_id": llm_assistant_project["foreign_run"].id,
+            "virtual_user_id": llm_assistant_project[annotator_key].id,
         },
         json={
-            "sdoc_ids": [llm_assistant_project["target_sdoc"].id],
-            "code_ids": [llm_assistant_project["person_code"].id],
+            "sdoc_ids": [llm_assistant_project[sdoc_key].id],
+            "code_ids": [code.id],
         },
     )
-    assert response.status_code == 403, response.text
+    assert response.status_code == 200, response.text
+    counts = TypeAdapter(dict[int, int]).validate_python(response.json())
+
+    assert counts == {code.id: 0}

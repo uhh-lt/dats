@@ -1,22 +1,18 @@
-from fastapi import APIRouter, Depends
-
-from common.crud_enum import Crud
-from common.dependencies import DBSession, get_current_user
-from core.auth.authz_user import AuthzUser
+from common.dependencies import DBSession
+from common.project_router import project_router
 from core.prompt.prompt_enum import TaskType
 from modules.llm_assistant.llm_assistant_service import LLMAssistantService
 
-router = APIRouter(
-    prefix="/llm_assistant",
-    dependencies=[Depends(get_current_user)],
-    tags=["llm_assistant"],
-)
+router = project_router("/llm-assistant", tags=["llm_assistant"])
 
 llmas: LLMAssistantService = LLMAssistantService()
 
 
+# --- other operations
+
+
 @router.post(
-    "/count_existing_assistant_annotations",
+    "/count-existing-annotations",
     response_model=dict[int, int],
     summary=(
         "Count the existing annotations of a virtual user per code, for the "
@@ -31,13 +27,10 @@ def count_existing_assistant_annotations(
     code_ids: list[int],
     task_type: TaskType,
     virtual_user_id: int,
-    authz_user: AuthzUser = Depends(),
 ) -> dict[int, int]:
-    authz_user.assert_in_project(project_id)
-    authz_user.assert_in_same_project_as(Crud.USER, virtual_user_id)
-
     return llmas.count_existing_assistant_annotations(
         db=db,
+        project_id=project_id,
         virtual_user_id=virtual_user_id,
         task_type=task_type,
         sdoc_ids=sdoc_ids,

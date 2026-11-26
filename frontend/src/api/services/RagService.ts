@@ -30,9 +30,11 @@ export class RagService {
   }): CancelablePromise<ChatSessionResponse> {
     return __request(OpenAPI, {
       method: "POST",
-      url: "/rag/rag_session",
-      query: {
+      url: "/projects/{project_id}/rag/session",
+      path: {
         project_id: projectId,
+      },
+      query: {
         top_k: topK,
         threshold: threshold,
         model: model,
@@ -51,17 +53,22 @@ export class RagService {
    * @throws ApiError
    */
   public static chatSession({
+    projectId,
     model,
     prompt,
     sessionId,
   }: {
+    projectId: number;
     model: string;
     prompt: string;
     sessionId?: string | null;
   }): CancelablePromise<ChatSessionResponse> {
     return __request(OpenAPI, {
       method: "GET",
-      url: "/rag/chat_session",
+      url: "/projects/{project_id}/rag/chat-session",
+      path: {
+        project_id: projectId,
+      },
       query: {
         model: model,
         prompt: prompt,
@@ -70,17 +77,6 @@ export class RagService {
       errors: {
         422: `Validation Error`,
       },
-    });
-  }
-  /**
-   * Get all available LLM models from the LLM Provider
-   * @returns string Successful Response
-   * @throws ApiError
-   */
-  public static getAvailableModels(): CancelablePromise<Array<string>> {
-    return __request(OpenAPI, {
-      method: "GET",
-      url: "/rag/models",
     });
   }
 }

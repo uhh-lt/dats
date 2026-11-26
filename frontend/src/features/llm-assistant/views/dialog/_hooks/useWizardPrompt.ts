@@ -47,7 +47,7 @@ export function useWizardPrompt(): WizardPrompt {
   // guided mode: the default prompt and the selected project data
   const format = outputFormat ?? (method ? DEFAULT_OUTPUT_FORMATS[method] : undefined);
   const defaultPrompt = useQuery({
-    ...promptQueries.defaultPrompt(format, language),
+    ...promptQueries.defaultPrompt(projectId, format, language),
     enabled: mode === "guided",
   });
   const codes = CodeHooks.useGetEnabledCodes();

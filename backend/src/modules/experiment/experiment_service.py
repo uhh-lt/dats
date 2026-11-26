@@ -11,7 +11,6 @@ from core.annotation.annotation_document_crud import crud_adoc
 from core.code.code_crud import crud_code
 from core.doc.source_document_crud import crud_sdoc
 from core.project.export_file_crud import crud_export_file
-from core.prompt.prompt_crud import crud_prompt
 from core.prompt.prompt_dto import PromptVersionRead
 from core.prompt.prompt_enum import TaskType
 from core.prompt.prompt_service import PromptService
@@ -175,7 +174,9 @@ class ExperimentService(metaclass=SingletonMeta):
     ) -> ExperimentRunLog:
         run = crud_experiment_run.read(db=db, project_id=project_id, id=run_id)
         experiment = run.experiment
-        version = crud_prompt_version.read(db=db, id=run.prompt_version_id)
+        version = crud_prompt_version.read(
+            db=db, project_id=project_id, id=run.prompt_version_id
+        )
         user_ids = [
             user_id
             for user_id in (experiment.gold_user_id, run.virtual_user_id, run.user_id)
@@ -452,15 +453,18 @@ class ExperimentService(metaclass=SingletonMeta):
     ) -> None:
         """Check that a prompt version is a version of the experiment's task whose
         codes are exactly the experiment's codes, and that its prompt is not archived."""
-        # raises PromptMismatchError for other projects and tasks
+        # raises NoSuchElementError for another project, PromptMismatchError for
+        # another task
         snapshot = self.pts.read_snapshot(
             db=db,
             version_id=prompt_version_id,
             project_id=experiment.project_id,
             task_type=TaskType(experiment.task_type),
         )
-        version = crud_prompt_version.read(db=db, id=prompt_version_id)
-        if crud_prompt.read(db=db, id=version.prompt_id).is_archived:
+        version = crud_prompt_version.read(
+            db=db, project_id=experiment.project_id, id=prompt_version_id
+        )
+        if version.prompt.is_archived:
             raise ExperimentPromptVersionNotEligibleError(
                 prompt_version_id=prompt_version_id, cause="its prompt is archived"
             )

@@ -2533,6 +2533,28 @@
         }
       }
     },
+    "/info/llms": {
+      "get": {
+        "tags": ["general"],
+        "summary": "Get all available LLM models from the LLM Provider",
+        "operationId": "get_available_models",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": { "type": "string" },
+                  "type": "array",
+                  "title": "Response General-Get Available Models"
+                }
+              }
+            }
+          }
+        },
+        "security": [{ "OAuth2PasswordBearer": [] }]
+      }
+    },
     "/": {
       "get": {
         "tags": ["general"],
@@ -3502,7 +3524,7 @@
         }
       }
     },
-    "/llm_assistant/count_existing_assistant_annotations": {
+    "/projects/{project_id}/llm-assistant/count-existing-annotations": {
       "post": {
         "tags": ["llm_assistant"],
         "summary": "Count the existing annotations of a virtual user per code, for the documents and codes of an LLM Assistant run",
@@ -3511,7 +3533,7 @@
         "parameters": [
           {
             "name": "project_id",
-            "in": "query",
+            "in": "path",
             "required": true,
             "schema": { "type": "integer", "title": "Project Id" }
           },
@@ -4693,40 +4715,23 @@
         }
       }
     },
-    "/prompt": {
+    "/projects/{project_id}/prompts": {
       "put": {
         "tags": ["prompt"],
         "summary": "Creates a prompt with its first version",
         "operationId": "create",
-        "requestBody": {
-          "content": { "application/json": { "schema": { "$ref": "#/components/schemas/PromptCreate" } } },
-          "required": true
-        },
-        "responses": {
-          "200": {
-            "description": "Successful Response",
-            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/PromptRead" } } }
-          },
-          "422": {
-            "description": "Validation Error",
-            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/HTTPValidationError" } } }
-          }
-        },
-        "security": [{ "OAuth2PasswordBearer": [] }]
-      }
-    },
-    "/prompt/{prompt_id}/version": {
-      "put": {
-        "tags": ["prompt"],
-        "summary": "Saves a prompt with its selections as the next immutable version of the prompt",
-        "operationId": "create_version",
         "security": [{ "OAuth2PasswordBearer": [] }],
         "parameters": [
-          { "name": "prompt_id", "in": "path", "required": true, "schema": { "type": "integer", "title": "Prompt Id" } }
+          {
+            "name": "project_id",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "integer", "title": "Project Id" }
+          }
         ],
         "requestBody": {
           "required": true,
-          "content": { "application/json": { "schema": { "$ref": "#/components/schemas/PromptVersionCreate" } } }
+          "content": { "application/json": { "schema": { "$ref": "#/components/schemas/PromptCreate" } } }
         },
         "responses": {
           "200": {
@@ -4738,131 +4743,7 @@
             "content": { "application/json": { "schema": { "$ref": "#/components/schemas/HTTPValidationError" } } }
           }
         }
-      }
-    },
-    "/prompt/examples": {
-      "post": {
-        "tags": ["prompt"],
-        "summary": "Turns span or sentence annotations into few-shot examples for a prompt",
-        "operationId": "create_examples",
-        "requestBody": {
-          "content": { "application/json": { "schema": { "$ref": "#/components/schemas/PromptExamplesCreate" } } },
-          "required": true
-        },
-        "responses": {
-          "200": {
-            "description": "Successful Response",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "items": {
-                    "oneOf": [
-                      { "$ref": "#/components/schemas/SpanPromptExample" },
-                      { "$ref": "#/components/schemas/SentencePromptExample" }
-                    ],
-                    "discriminator": {
-                      "propertyName": "kind",
-                      "mapping": {
-                        "SPAN": "#/components/schemas/SpanPromptExample",
-                        "SENTENCE": "#/components/schemas/SentencePromptExample"
-                      }
-                    }
-                  },
-                  "type": "array",
-                  "title": "Response Prompt-Create Examples"
-                }
-              }
-            }
-          },
-          "422": {
-            "description": "Validation Error",
-            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/HTTPValidationError" } } }
-          }
-        },
-        "security": [{ "OAuth2PasswordBearer": [] }]
-      }
-    },
-    "/prompt/preview": {
-      "post": {
-        "tags": ["prompt"],
-        "summary": "Returns the rendered prompt of a stored version or an unsaved draft for one message of a document",
-        "operationId": "preview",
-        "requestBody": {
-          "content": { "application/json": { "schema": { "$ref": "#/components/schemas/PromptPreviewRequest" } } },
-          "required": true
-        },
-        "responses": {
-          "200": {
-            "description": "Successful Response",
-            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/PromptPreview" } } }
-          },
-          "422": {
-            "description": "Validation Error",
-            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/HTTPValidationError" } } }
-          }
-        },
-        "security": [{ "OAuth2PasswordBearer": [] }]
-      }
-    },
-    "/prompt/task_info": {
-      "get": {
-        "tags": ["prompt"],
-        "summary": "Returns the blocks that the prompts of a task can use",
-        "operationId": "get_task_info",
-        "security": [{ "OAuth2PasswordBearer": [] }],
-        "parameters": [
-          {
-            "name": "task_type",
-            "in": "query",
-            "required": true,
-            "schema": { "$ref": "#/components/schemas/TaskType" }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "Successful Response",
-            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/PromptTaskInfo" } } }
-          },
-          "422": {
-            "description": "Validation Error",
-            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/HTTPValidationError" } } }
-          }
-        }
-      }
-    },
-    "/prompt/default": {
-      "get": {
-        "tags": ["prompt"],
-        "summary": "Returns the default prompt of an output format in a language",
-        "operationId": "get_default",
-        "security": [{ "OAuth2PasswordBearer": [] }],
-        "parameters": [
-          {
-            "name": "output_format",
-            "in": "query",
-            "required": true,
-            "schema": { "$ref": "#/components/schemas/OutputFormat" }
-          },
-          {
-            "name": "language",
-            "in": "query",
-            "required": true,
-            "schema": { "$ref": "#/components/schemas/PromptLanguage" }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "Successful Response",
-            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/PromptContent" } } }
-          },
-          "422": {
-            "description": "Validation Error",
-            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/HTTPValidationError" } } }
-          }
-        }
-      }
-    },
-    "/prompt/project/{project_id}": {
+      },
       "get": {
         "tags": ["prompt"],
         "summary": "Returns the prompts of the project with all their versions",
@@ -4896,13 +4777,200 @@
         }
       }
     },
-    "/prompt/version/{version_id}": {
+    "/projects/{project_id}/prompts/{prompt_id}/versions": {
+      "put": {
+        "tags": ["prompt"],
+        "summary": "Saves a prompt with its selections as the next immutable version of the prompt",
+        "operationId": "create_version",
+        "security": [{ "OAuth2PasswordBearer": [] }],
+        "parameters": [
+          {
+            "name": "project_id",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "integer", "title": "Project Id" }
+          },
+          { "name": "prompt_id", "in": "path", "required": true, "schema": { "type": "integer", "title": "Prompt Id" } }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": { "application/json": { "schema": { "$ref": "#/components/schemas/PromptVersionCreate" } } }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/PromptRead" } } }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/HTTPValidationError" } } }
+          }
+        }
+      }
+    },
+    "/projects/{project_id}/prompts/examples": {
+      "post": {
+        "tags": ["prompt"],
+        "summary": "Turns span or sentence annotations into few-shot examples for a prompt",
+        "operationId": "create_examples",
+        "security": [{ "OAuth2PasswordBearer": [] }],
+        "parameters": [
+          {
+            "name": "project_id",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "integer", "title": "Project Id" }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": { "application/json": { "schema": { "$ref": "#/components/schemas/PromptExamplesCreate" } } }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "oneOf": [
+                      { "$ref": "#/components/schemas/SpanPromptExample" },
+                      { "$ref": "#/components/schemas/SentencePromptExample" }
+                    ],
+                    "discriminator": {
+                      "propertyName": "kind",
+                      "mapping": {
+                        "SPAN": "#/components/schemas/SpanPromptExample",
+                        "SENTENCE": "#/components/schemas/SentencePromptExample"
+                      }
+                    }
+                  },
+                  "title": "Response Prompt-Create Examples"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/HTTPValidationError" } } }
+          }
+        }
+      }
+    },
+    "/projects/{project_id}/prompts/preview": {
+      "post": {
+        "tags": ["prompt"],
+        "summary": "Returns the rendered prompt of a stored version or an unsaved draft for one message of a document",
+        "operationId": "preview",
+        "security": [{ "OAuth2PasswordBearer": [] }],
+        "parameters": [
+          {
+            "name": "project_id",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "integer", "title": "Project Id" }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": { "application/json": { "schema": { "$ref": "#/components/schemas/PromptPreviewRequest" } } }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/PromptPreview" } } }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/HTTPValidationError" } } }
+          }
+        }
+      }
+    },
+    "/projects/{project_id}/prompts/task-info": {
+      "get": {
+        "tags": ["prompt"],
+        "summary": "Returns the blocks that the prompts of a task can use",
+        "operationId": "get_task_info",
+        "security": [{ "OAuth2PasswordBearer": [] }],
+        "parameters": [
+          {
+            "name": "project_id",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "integer", "title": "Project Id" }
+          },
+          {
+            "name": "task_type",
+            "in": "query",
+            "required": true,
+            "schema": { "$ref": "#/components/schemas/TaskType" }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/PromptTaskInfo" } } }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/HTTPValidationError" } } }
+          }
+        }
+      }
+    },
+    "/projects/{project_id}/prompts/default": {
+      "get": {
+        "tags": ["prompt"],
+        "summary": "Returns the default prompt of an output format in a language",
+        "operationId": "get_default",
+        "security": [{ "OAuth2PasswordBearer": [] }],
+        "parameters": [
+          {
+            "name": "project_id",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "integer", "title": "Project Id" }
+          },
+          {
+            "name": "output_format",
+            "in": "query",
+            "required": true,
+            "schema": { "$ref": "#/components/schemas/OutputFormat" }
+          },
+          {
+            "name": "language",
+            "in": "query",
+            "required": true,
+            "schema": { "$ref": "#/components/schemas/PromptLanguage" }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/PromptContent" } } }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/HTTPValidationError" } } }
+          }
+        }
+      }
+    },
+    "/projects/{project_id}/prompts/versions/{version_id}": {
       "get": {
         "tags": ["prompt"],
         "summary": "Returns the prompt version with the given ID",
         "operationId": "get_version_by_id",
         "security": [{ "OAuth2PasswordBearer": [] }],
         "parameters": [
+          {
+            "name": "project_id",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "integer", "title": "Project Id" }
+          },
           {
             "name": "version_id",
             "in": "path",
@@ -4922,13 +4990,19 @@
         }
       }
     },
-    "/prompt/{prompt_id}": {
+    "/projects/{project_id}/prompts/{prompt_id}": {
       "get": {
         "tags": ["prompt"],
         "summary": "Returns the prompt with the given ID and all its versions",
         "operationId": "get_by_id",
         "security": [{ "OAuth2PasswordBearer": [] }],
         "parameters": [
+          {
+            "name": "project_id",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "integer", "title": "Project Id" }
+          },
           { "name": "prompt_id", "in": "path", "required": true, "schema": { "type": "integer", "title": "Prompt Id" } }
         ],
         "responses": {
@@ -4948,6 +5022,12 @@
         "operationId": "update_by_id",
         "security": [{ "OAuth2PasswordBearer": [] }],
         "parameters": [
+          {
+            "name": "project_id",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "integer", "title": "Project Id" }
+          },
           { "name": "prompt_id", "in": "path", "required": true, "schema": { "type": "integer", "title": "Prompt Id" } }
         ],
         "requestBody": {
@@ -4966,7 +5046,7 @@
         }
       }
     },
-    "/rag/rag_session": {
+    "/projects/{project_id}/rag/session": {
       "post": {
         "tags": ["rag"],
         "summary": "Answer a query using Retrieval-Augmented Generation (RAG)",
@@ -4975,7 +5055,7 @@
         "parameters": [
           {
             "name": "project_id",
-            "in": "query",
+            "in": "path",
             "required": true,
             "schema": { "type": "integer", "title": "Project Id" }
           },
@@ -5010,13 +5090,19 @@
         }
       }
     },
-    "/rag/chat_session": {
+    "/projects/{project_id}/rag/chat-session": {
       "get": {
         "tags": ["rag"],
         "summary": "Initiate or continue a chat session with the LLM using a prompt",
         "operationId": "chat_session",
         "security": [{ "OAuth2PasswordBearer": [] }],
         "parameters": [
+          {
+            "name": "project_id",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "integer", "title": "Project Id" }
+          },
           { "name": "model", "in": "query", "required": true, "schema": { "type": "string", "title": "Model" } },
           { "name": "prompt", "in": "query", "required": true, "schema": { "type": "string", "title": "Prompt" } },
           {
@@ -5036,28 +5122,6 @@
             "content": { "application/json": { "schema": { "$ref": "#/components/schemas/HTTPValidationError" } } }
           }
         }
-      }
-    },
-    "/rag/models": {
-      "get": {
-        "tags": ["rag"],
-        "summary": "Get all available LLM models from the LLM Provider",
-        "operationId": "get_available_models",
-        "responses": {
-          "200": {
-            "description": "Successful Response",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "items": { "type": "string" },
-                  "type": "array",
-                  "title": "Response Rag-Get Available Models"
-                }
-              }
-            }
-          }
-        },
-        "security": [{ "OAuth2PasswordBearer": [] }]
       }
     },
     "/search_annotate/auto_annotate": {
@@ -17060,11 +17124,10 @@
           "language": {
             "$ref": "#/components/schemas/PromptLanguage",
             "description": "The language of the prompt, it decides the text of the blocks"
-          },
-          "project_id": { "type": "integer", "title": "Project Id", "description": "Project the prompt belongs to" }
+          }
         },
         "type": "object",
-        "required": ["text", "name", "task_type", "language", "project_id"],
+        "required": ["text", "name", "task_type", "language"],
         "title": "PromptCreate"
       },
       "PromptCreatedEvent": {
@@ -17100,11 +17163,6 @@
       },
       "PromptExamplesCreate": {
         "properties": {
-          "project_id": {
-            "type": "integer",
-            "title": "Project Id",
-            "description": "Project the annotations belong to"
-          },
           "kind": { "$ref": "#/components/schemas/PromptExampleKind", "description": "The kind of the annotations" },
           "annotation_ids": {
             "items": { "type": "integer" },
@@ -17115,7 +17173,7 @@
           }
         },
         "type": "object",
-        "required": ["project_id", "kind", "annotation_ids"],
+        "required": ["kind", "annotation_ids"],
         "title": "PromptExamplesCreate",
         "description": "Selects annotations to turn into few-shot examples."
       },
@@ -17196,11 +17254,6 @@
       },
       "PromptPreviewRequest": {
         "properties": {
-          "project_id": {
-            "type": "integer",
-            "title": "Project Id",
-            "description": "Project of the prompt and the document"
-          },
           "prompt_version_id": {
             "anyOf": [{ "type": "integer" }, { "type": "null" }],
             "title": "Prompt Version Id",
@@ -17224,7 +17277,6 @@
           }
         },
         "type": "object",
-        "required": ["project_id"],
         "title": "PromptPreviewRequest",
         "description": "Renders a stored version or an unsaved draft for one message of a document."
       },

@@ -6,10 +6,10 @@ from core.prompt.prompt_dto import (
     PromptUpdate,
 )
 from core.prompt.prompt_orm import PromptORM
-from repos.db.crud_base import SQLCRUDBase
+from repos.db.project_crud_base import ProjectCRUDBase
 
 
-class CRUDPrompt(SQLCRUDBase[PromptORM, PromptCreateIntern, PromptUpdate]):
+class CRUDPrompt(ProjectCRUDBase[PromptORM, PromptCreateIntern, PromptUpdate]):
     ### READ OPERATIONS ###
 
     def read_by_project(self, db: Session, *, project_id: int) -> list[PromptORM]:

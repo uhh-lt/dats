@@ -149,7 +149,6 @@ PromptExample = Annotated[
 class PromptExamplesCreate(BaseModel):
     """Selects annotations to turn into few-shot examples."""
 
-    project_id: int = Field(description="Project the annotations belong to")
     kind: PromptExampleKind = Field(description="The kind of the annotations")
     annotation_ids: list[int] = Field(
         description="IDs of the span or sentence annotations", min_length=1
@@ -187,7 +186,6 @@ class PromptVersionCreate(PromptContent):
 
 
 class PromptVersionCreateIntern(PromptContent):
-    project_id: int = Field(description="Project the version belongs to")
     prompt_id: int = Field(description="ID of the prompt the version belongs to")
     version: int = Field(description="Number of the version within its prompt")
     user_id: int | None = Field(description="ID of the user who saved the version")
@@ -219,11 +217,11 @@ class PromptBaseDTO(BaseModel):
 
 # Properties for creation
 class PromptCreate(PromptBaseDTO, PromptContent):
-    project_id: int = Field(description="Project the prompt belongs to")
+    pass
 
 
 class PromptCreateIntern(PromptBaseDTO):
-    project_id: int = Field(description="Project the prompt belongs to")
+    pass
 
 
 # Properties for updating
@@ -267,7 +265,6 @@ class PromptSnapshot(PromptContent):
 class PromptPreviewRequest(BaseModel):
     """Renders a stored version or an unsaved draft for one message of a document."""
 
-    project_id: int = Field(description="Project of the prompt and the document")
     prompt_version_id: int | None = Field(
         description=(
             "ID of the stored prompt version to render. "

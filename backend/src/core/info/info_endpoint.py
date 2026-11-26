@@ -1,8 +1,10 @@
-from fastapi import APIRouter
+from fastapi import APIRouter, Depends
 from fastapi.responses import RedirectResponse
 
+from common.dependencies import get_current_user
 from config import conf
 from core.info.info_dto import InstanceInfo
+from repos.llm_repo import LLMRepo
 
 router = APIRouter(tags=["general"])
 
@@ -21,6 +23,16 @@ def info():
         is_stable=conf.api.is_stable,
         glitchtip_dsn=conf.glitchtip.dsn_frontend,
     )
+
+
+@router.get(
+    "/info/llms",
+    dependencies=[Depends(get_current_user)],
+    response_model=list[str],
+    summary="Get all available LLM models from the LLM Provider",
+)
+def get_available_models() -> list[str]:
+    return LLMRepo().get_available_llms()
 
 
 # Allow to view docs without being logged in (?)

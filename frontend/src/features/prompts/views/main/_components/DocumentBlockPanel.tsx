@@ -8,6 +8,7 @@ import { ChangeEvent, useCallback, useMemo } from "react";
 import { SettingField } from "./SettingField";
 
 interface DocumentBlockPanelProps {
+  projectId: number;
   taskType: TaskType;
   text: string;
   unit: DocumentUnit;
@@ -18,6 +19,7 @@ interface DocumentBlockPanelProps {
 
 /** Configures the document block: how a document is split into LLM calls. */
 export function DocumentBlockPanel({
+  projectId,
   taskType,
   text,
   unit,
@@ -25,7 +27,7 @@ export function DocumentBlockPanel({
   onChangeText,
   onChangeSettings,
 }: DocumentBlockPanelProps) {
-  const taskInfo = useQuery(promptQueries.taskInfo(taskType));
+  const taskInfo = useQuery(promptQueries.taskInfo(projectId, taskType));
   const units = useMemo(() => taskInfo.data?.document_units ?? [], [taskInfo.data]);
   const handleChangeUnit = useCallback(
     (event: ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {

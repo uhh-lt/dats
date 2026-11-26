@@ -100,11 +100,12 @@ function PromptActionMenu({ prompt, onDuplicate }: ActionMenuProps) {
     (event: MouseEvent) => {
       handleClose(event);
       updatePromptMutation({
+        projectId: prompt.project_id,
         promptId: prompt.id,
         requestBody: { is_archived: !prompt.is_archived },
       });
     },
-    [handleClose, updatePromptMutation, prompt.id, prompt.is_archived],
+    [handleClose, updatePromptMutation, prompt.project_id, prompt.id, prompt.is_archived],
   );
 
   return (

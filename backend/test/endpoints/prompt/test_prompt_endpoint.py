@@ -3,6 +3,8 @@ from fastapi.testclient import TestClient
 from pydantic import TypeAdapter
 
 from common.meta_type_enum import MetaType
+from composite_keys_test_utils import TwoTenants
+from core.project.project_orm import ProjectORM
 from core.prompt.prompt_blocks import OUTPUT_FORMAT_INSTRUCTIONS
 from core.prompt.prompt_defaults import DEFAULT_PROMPTS
 from core.prompt.prompt_dto import (
@@ -47,7 +49,6 @@ from prompt_test_utils import (
     prompt_code,
 )
 
-PROMPT_URL = "/prompt"
 PromptList = TypeAdapter(list[PromptRead])
 PromptExampleList = TypeAdapter(list[PromptExample])
 
@@ -84,7 +85,6 @@ METADATA_PROMPT = (
 SENTENCE_PROMPT = "Codes:\n<codes>\n\n<output-format:sentences>\n\n<document:whole>"
 CONTEXT_PROMPT = "Codes:\n<codes>\n\n<output-format:context>\n\n<document:chunks>"
 
-PREVIEW_URL = "/prompt/preview"
 # four tokens per chunk with an overlap of two: the example document (11 tokens)
 # becomes five chunks
 SMALL_CHUNKS = PromptSettings(chunk_size_tokens=4, chunk_overlap_tokens=2)
@@ -100,8 +100,12 @@ NUMBERED_SENTENCES = [
 ]
 
 
-def _put_prompt(client: TestClient, create_dto: PromptCreate):
-    return client.put(PROMPT_URL, json=create_dto.model_dump(mode="json"))
+def _prompts_url(project_id: int, path: str = "") -> str:
+    return f"/projects/{project_id}/prompts{path}"
+
+
+def _put_prompt(client: TestClient, project_id: int, create_dto: PromptCreate):
+    return client.put(_prompts_url(project_id), json=create_dto.model_dump(mode="json"))
 
 
 # ===========================================================================
@@ -117,7 +121,7 @@ def test_new_projects_get_one_default_prompt_per_output_format_and_language(
 
     The defaults select nothing (a new project has no codes, tags or fields).
     """
-    response = client.get(f"{PROMPT_URL}/project/{prompt_project['project'].id}")
+    response = client.get(_prompts_url(prompt_project["project"].id))
     assert response.status_code == 200, response.text
     defaults = [
         prompt
@@ -143,7 +147,7 @@ def test_new_projects_get_one_default_prompt_per_output_format_and_language(
 
 
 # ===========================================================================
-# TASK INFO (GET /prompt/task_info) TESTS
+# TASK INFO (GET /projects/{project_id}/prompts/task-info) TESTS
 # ===========================================================================
 
 
@@ -194,6 +198,7 @@ def test_new_projects_get_one_default_prompt_per_output_format_and_language(
 )
 def test_get_task_info_describes_the_blocks_of_a_task(
     client: TestClient,
+    test_project: ProjectORM,
     task_type: TaskType,
     expected_units: list[DocumentUnit],
     expected_formats: list[OutputFormat],
@@ -203,7 +208,8 @@ def test_get_task_info_describes_the_blocks_of_a_task(
 ) -> None:
     """Units, formats, blocks and example kind follow the task; all are described."""
     response = client.get(
-        f"{PROMPT_URL}/task_info", params={"task_type": task_type.value}
+        _prompts_url(test_project.id, "/task-info"),
+        params={"task_type": task_type.value},
     )
     assert response.status_code == 200, response.text
     info = PromptTaskInfo.model_validate(response.json())
@@ -236,14 +242,18 @@ def test_get_task_info_describes_the_blocks_of_a_task(
     assert all(block.description for block in info.blocks)
 
 
-def test_get_task_info_rejects_an_unknown_task(client: TestClient) -> None:
+def test_get_task_info_rejects_an_unknown_task(
+    client: TestClient, test_project: ProjectORM
+) -> None:
     """An unknown task type is rejected by request validation (HTTP 422)."""
-    response = client.get(f"{PROMPT_URL}/task_info", params={"task_type": "UNKNOWN"})
+    response = client.get(
+        _prompts_url(test_project.id, "/task-info"), params={"task_type": "UNKNOWN"}
+    )
     assert response.status_code == 422, response.text
 
 
 # ===========================================================================
-# DEFAULT PROMPT (GET /prompt/default) TESTS
+# DEFAULT PROMPT (GET /projects/{project_id}/prompts/default) TESTS
 # ===========================================================================
 
 
@@ -258,12 +268,13 @@ def test_get_task_info_rejects_an_unknown_task(client: TestClient) -> None:
 )
 def test_get_default_returns_the_default_prompt_without_selections(
     client: TestClient,
+    test_project: ProjectORM,
     output_format: OutputFormat,
     language: PromptLanguage,
 ) -> None:
     """The default prompt contains the format's blocks and selects nothing."""
     response = client.get(
-        f"{PROMPT_URL}/default",
+        _prompts_url(test_project.id, "/default"),
         params={"output_format": output_format.value, "language": language.value},
     )
     assert response.status_code == 200, response.text
@@ -287,15 +298,15 @@ def test_get_default_returns_the_default_prompt_without_selections(
     ],
 )
 def test_get_default_rejects_invalid_parameters(
-    client: TestClient, params: dict[str, str]
+    client: TestClient, test_project: ProjectORM, params: dict[str, str]
 ) -> None:
     """Unknown or missing parameters return HTTP 422."""
-    response = client.get(f"{PROMPT_URL}/default", params=params)
+    response = client.get(_prompts_url(test_project.id, "/default"), params=params)
     assert response.status_code == 422, response.text
 
 
 # ===========================================================================
-# CREATE PROMPT (PUT /prompt) TESTS
+# CREATE PROMPT (PUT /projects/{project_id}/prompts) TESTS
 # ===========================================================================
 
 
@@ -310,7 +321,6 @@ def test_create_prompt_stores_the_content_as_version_one(
     """A new prompt has exactly one version (number 1) with the whole content."""
     project = prompt_project
     create_dto = PromptCreate(
-        project_id=project["project"].id,
         name="New prompt",
         task_type=TaskType.ANNOTATION,
         language=PromptLanguage.DE,
@@ -321,7 +331,7 @@ def test_create_prompt_stores_the_content_as_version_one(
         codes=[prompt_code(project["claim_code"])],
         examples=[project["alice_example"]],
     )
-    response = _put_prompt(client, create_dto)
+    response = _put_prompt(client, project["project"].id, create_dto)
     assert response.status_code == 200, response.text
     prompt = PromptRead.model_validate(response.json())
 
@@ -377,7 +387,6 @@ def test_create_prompt_accepts_every_task(
     project = prompt_project
     field = project["author_field"]
     create_dto = PromptCreate(
-        project_id=project["project"].id,
         name="New prompt",
         task_type=task_type,
         language=PromptLanguage.EN,
@@ -401,7 +410,7 @@ def test_create_prompt_accepts_every_task(
             else []
         ),
     )
-    response = _put_prompt(client, create_dto)
+    response = _put_prompt(client, project["project"].id, create_dto)
     assert response.status_code == 200, response.text
     prompt = PromptRead.model_validate(response.json())
     assert prompt.task_type == task_type
@@ -601,7 +610,6 @@ def test_create_prompt_rejects_invalid_blocks_and_selections(
     project = prompt_project
     create_dto = PromptCreate.model_validate(
         {
-            "project_id": project["project"].id,
             "name": "New prompt",
             "task_type": task_type,
             "language": PromptLanguage.EN,
@@ -609,7 +617,7 @@ def test_create_prompt_rejects_invalid_blocks_and_selections(
             **_selection(project, selection),
         }
     )
-    response = _put_prompt(client, create_dto)
+    response = _put_prompt(client, project["project"].id, create_dto)
     assert response.status_code == 400, response.text
     assert expected_fragment in response.text
 
@@ -621,8 +629,8 @@ def test_create_prompt_rejects_a_duplicate_name(
     """Prompt names are unique per project (HTTP 409)."""
     response = _put_prompt(
         client,
+        prompt_project["project"].id,
         PromptCreate(
-            project_id=prompt_project["project"].id,
             name="Span tagging",
             task_type=TaskType.ANNOTATION,
             language=PromptLanguage.EN,
@@ -636,11 +644,11 @@ def test_create_prompt_rejects_foreign_project(
     client: TestClient,
     prompt_project: PromptProject,
 ) -> None:
-    """Creating requires membership in the prompt's project."""
+    """Creating requires membership in the path's project (HTTP 403)."""
     response = _put_prompt(
         client,
+        prompt_project["foreign_project"].id,
         PromptCreate(
-            project_id=prompt_project["foreign_project"].id,
             name="New prompt",
             task_type=TaskType.ANNOTATION,
             language=PromptLanguage.EN,
@@ -668,14 +676,13 @@ def test_create_prompt_requires_language_task_and_text(
 ) -> None:
     """Missing required fields return HTTP 422."""
     body = PromptCreate(
-        project_id=prompt_project["project"].id,
         name="New prompt",
         task_type=TaskType.ANNOTATION,
         language=PromptLanguage.EN,
         text=SPAN_V1_PROMPT,
     ).model_dump(mode="json")
     del body[field]
-    response = client.put(PROMPT_URL, json=body)
+    response = client.put(_prompts_url(prompt_project["project"].id), json=body)
     assert response.status_code == 422, response.text
     assert field in response.text
 
@@ -686,20 +693,19 @@ def test_create_prompt_rejects_a_chunk_overlap_not_below_the_size(
 ) -> None:
     """The chunk overlap must be smaller than the chunk size (HTTP 422)."""
     body = PromptCreate(
-        project_id=prompt_project["project"].id,
         name="New prompt",
         task_type=TaskType.ANNOTATION,
         language=PromptLanguage.EN,
         text=CONTEXT_PROMPT,
     ).model_dump(mode="json")
     body["settings"] = {"chunk_size_tokens": 10, "chunk_overlap_tokens": 10}
-    response = client.put(PROMPT_URL, json=body)
+    response = client.put(_prompts_url(prompt_project["project"].id), json=body)
     assert response.status_code == 422, response.text
     assert "The chunk overlap must be smaller than the chunk size" in response.text
 
 
 # ===========================================================================
-# CREATE VERSION (PUT /prompt/{id}/version) TESTS
+# CREATE VERSION (PUT /projects/{project_id}/prompts/{prompt_id}/versions) TESTS
 # ===========================================================================
 
 
@@ -710,12 +716,13 @@ def test_create_version_appends_the_next_version_and_keeps_older_ones(
 ) -> None:
     """Saving creates version 3; versions 1 and 2 stay unchanged."""
     project = prompt_project
+    project_id = project["project"].id
     prompt = project["span_prompt"]
     new_version = PromptVersionCreate(
         text=CONTEXT_PROMPT, codes=[prompt_code(project["claim_code"])]
     )
     response = client.put(
-        f"{PROMPT_URL}/{prompt.id}/version",
+        f"{_prompts_url(project_id)}/{prompt.id}/versions",
         json=new_version.model_dump(mode="json"),
     )
     assert response.status_code == 200, response.text
@@ -739,13 +746,14 @@ def test_create_version_stores_local_definitions_without_changing_the_project(
     """A code edited in the prompt is saved with the version only; the project's
     code Claim keeps its name and description."""
     project = prompt_project
+    project_id = project["project"].id
     prompt = project["span_prompt"]
     claim = project["claim_code"]
     local_claim = PromptCode(
         code_id=claim.id, name="Assertion", description="Something claimed as true."
     )
     response = client.put(
-        f"{PROMPT_URL}/{prompt.id}/version",
+        f"{_prompts_url(project_id)}/{prompt.id}/versions",
         json=PromptVersionCreate(text=SPAN_V1_PROMPT, codes=[local_claim]).model_dump(
             mode="json"
         ),
@@ -767,42 +775,52 @@ def test_create_version_validates_the_prompt_for_the_prompt_task(
     prompt_project: PromptProject,
 ) -> None:
     """A new version follows the rules of the prompt's task (HTTP 400)."""
+    project_id = prompt_project["project"].id
     prompt = prompt_project["span_prompt"]
     response = client.put(
-        f"{PROMPT_URL}/{prompt.id}/version",
+        f"{_prompts_url(project_id)}/{prompt.id}/versions",
         json=PromptVersionCreate(text=TAGGING_PROMPT).model_dump(mode="json"),
     )
     assert response.status_code == 400, response.text
     assert "<output-format:tags> is not supported for this task" in response.text
 
 
-@pytest.mark.parametrize(
-    "prompt_key",
-    [
-        # The prompt of another project.
-        pytest.param("foreign", id="foreign"),
-        # A prompt that does not exist.
-        pytest.param("unknown", id="unknown"),
-    ],
-)
-def test_create_version_rejects_foreign_or_unknown_prompts(
+def test_create_version_of_a_prompt_of_another_project_is_not_found(
     client: TestClient,
-    prompt_project: PromptProject,
-    prompt_key: str,
+    tenants: TwoTenants,
 ) -> None:
-    """Saving a version requires access to the prompt (HTTP 403 for both)."""
-    prompt_id = (
-        prompt_project["foreign_prompt"].id if prompt_key == "foreign" else 999999
-    )
+    """A prompt of another project of the user is not found in the path's project
+    (HTTP 404); the prompt keeps its single version."""
+    own, foreign = tenants["own"], tenants["foreign"]
+    prompt_id = foreign["prompt"].id
     response = client.put(
-        f"{PROMPT_URL}/{prompt_id}/version",
+        f"{_prompts_url(own['project'].id)}/{prompt_id}/versions",
         json=PromptVersionCreate(text=SPAN_V1_PROMPT).model_dump(mode="json"),
     )
-    assert response.status_code == 403, response.text
+    assert response.status_code == 404, response.text
+
+    response = client.get(f"{_prompts_url(foreign['project'].id)}/{prompt_id}")
+    assert response.status_code == 200, response.text
+    assert [
+        version.version
+        for version in PromptRead.model_validate(response.json()).versions
+    ] == [1]
+
+
+def test_create_version_of_an_unknown_prompt_is_not_found(
+    client: TestClient,
+    prompt_project: PromptProject,
+) -> None:
+    """A prompt id that does not exist answers HTTP 404."""
+    response = client.put(
+        f"{_prompts_url(prompt_project['project'].id)}/999999/versions",
+        json=PromptVersionCreate(text=SPAN_V1_PROMPT).model_dump(mode="json"),
+    )
+    assert response.status_code == 404, response.text
 
 
 # ===========================================================================
-# READ (GET /prompt/...) TESTS
+# READ (GET /projects/{project_id}/prompts[/{prompt_id}|/versions/{version_id}]) TESTS
 # ===========================================================================
 
 
@@ -811,7 +829,7 @@ def test_get_by_project_lists_the_project_prompts_by_name(
     prompt_project: PromptProject,
 ) -> None:
     """Names sort byte-wise, so ``Span tagging`` precedes the defaults."""
-    response = client.get(f"{PROMPT_URL}/project/{prompt_project['project'].id}")
+    response = client.get(_prompts_url(prompt_project["project"].id))
     assert response.status_code == 200, response.text
     prompts = PromptList.validate_python(response.json())
     assert [prompt.name for prompt in prompts] == [
@@ -824,11 +842,27 @@ def test_get_by_project_rejects_foreign_project(
     client: TestClient,
     prompt_project: PromptProject,
 ) -> None:
-    """Listing requires membership in the project."""
-    response = client.get(
-        f"{PROMPT_URL}/project/{prompt_project['foreign_project'].id}"
-    )
+    """Listing requires membership in the path's project (HTTP 403)."""
+    response = client.get(_prompts_url(prompt_project["foreign_project"].id))
     assert response.status_code == 403, response.text
+
+
+def test_get_by_project_lists_only_the_prompts_of_the_path_project(
+    client: TestClient,
+    tenants: TwoTenants,
+) -> None:
+    """Each project of the user lists its own "Prompt <p>" and "Bare prompt <p>",
+    never those of the other project."""
+    own, foreign = tenants["own"], tenants["foreign"]
+    for tenant, other in [(own, foreign), (foreign, own)]:
+        response = client.get(_prompts_url(tenant["project"].id))
+        assert response.status_code == 200, response.text
+        prompts = PromptList.validate_python(response.json())
+
+        assert {prompt.project_id for prompt in prompts} == {tenant["project"].id}
+        names = {prompt.name for prompt in prompts}
+        assert {tenant["prompt"].name, tenant["bare_prompt"].name} <= names
+        assert not {other["prompt"].name, other["bare_prompt"].name} & names
 
 
 def test_get_returns_a_prompt_and_a_version(
@@ -837,13 +871,14 @@ def test_get_returns_a_prompt_and_a_version(
 ) -> None:
     """A prompt and each of its versions can be read by id, with all selections."""
     project = prompt_project
+    project_id = project["project"].id
     prompt = project["span_prompt"]
-    prompt_response = client.get(f"{PROMPT_URL}/{prompt.id}")
+    prompt_response = client.get(f"{_prompts_url(project_id)}/{prompt.id}")
     assert prompt_response.status_code == 200, prompt_response.text
     assert PromptRead.model_validate(prompt_response.json()) == prompt
 
     version = prompt.versions[1]
-    version_response = client.get(f"{PROMPT_URL}/version/{version.id}")
+    version_response = client.get(f"{_prompts_url(project_id)}/versions/{version.id}")
     assert version_response.status_code == 200, version_response.text
     read = PromptVersionRead.model_validate(version_response.json())
     assert read == version
@@ -856,12 +891,16 @@ def test_get_returns_a_prompt_and_a_version(
 
 def test_get_version_without_a_stored_reasoning_setting_reads_it_as_off(
     client: TestClient,
+    prompt_project: PromptProject,
     version_without_reasoning_setting: int,
 ) -> None:
     """A version saved before the ``request_reasoning`` setting existed has no such
     key in its stored settings; it is read with the setting off, so existing
     versions need no data migration."""
-    response = client.get(f"{PROMPT_URL}/version/{version_without_reasoning_setting}")
+    project_id = prompt_project["project"].id
+    response = client.get(
+        f"{_prompts_url(project_id)}/versions/{version_without_reasoning_setting}"
+    )
     assert response.status_code == 200, response.text
     read = PromptVersionRead.model_validate(response.json())
 
@@ -869,19 +908,55 @@ def test_get_version_without_a_stored_reasoning_setting_reads_it_as_off(
     assert read.settings == PromptSettings()
 
 
-def test_get_rejects_foreign_prompts_and_versions(
+@pytest.mark.parametrize(
+    "path_key,row_key",
+    [
+        # GET /prompts/{prompt_id} with a prompt of the other project.
+        pytest.param("", "prompt", id="prompt"),
+        # GET /prompts/versions/{version_id} with a version of the other project.
+        pytest.param("/versions", "prompt_version", id="version"),
+    ],
+)
+def test_get_prompt_or_version_of_another_project_is_not_found(
+    client: TestClient,
+    tenants: TwoTenants,
+    path_key: str,
+    row_key: str,
+) -> None:
+    """A prompt or version of another project of the user is not found in the
+    path's project (HTTP 404), but is found in its own project."""
+    own, foreign = tenants["own"], tenants["foreign"]
+    row_id = foreign[row_key].id  # type: ignore[literal-required]
+
+    response = client.get(f"{_prompts_url(own['project'].id)}{path_key}/{row_id}")
+    assert response.status_code == 404, response.text
+    response = client.get(f"{_prompts_url(foreign['project'].id)}{path_key}/{row_id}")
+    assert response.status_code == 200, response.text
+
+
+@pytest.mark.parametrize(
+    "path_key",
+    [
+        # GET /prompts/{prompt_id}
+        pytest.param("", id="prompt"),
+        # GET /prompts/versions/{version_id}
+        pytest.param("/versions", id="version"),
+    ],
+)
+def test_get_unknown_prompt_or_version_is_not_found(
     client: TestClient,
     prompt_project: PromptProject,
+    path_key: str,
 ) -> None:
-    """Prompts and versions of other projects cannot be read."""
-    prompt = prompt_project["foreign_prompt"]
-    assert client.get(f"{PROMPT_URL}/{prompt.id}").status_code == 403
-    version_id = prompt.versions[0].id
-    assert client.get(f"{PROMPT_URL}/version/{version_id}").status_code == 403
+    """Ids that do not exist answer HTTP 404."""
+    response = client.get(
+        f"{_prompts_url(prompt_project['project'].id)}{path_key}/999999"
+    )
+    assert response.status_code == 404, response.text
 
 
 # ===========================================================================
-# UPDATE (PATCH /prompt/{id}) TESTS
+# UPDATE (PATCH /projects/{project_id}/prompts/{prompt_id}) TESTS
 # ===========================================================================
 
 
@@ -907,9 +982,10 @@ def test_update_renames_or_archives_without_creating_a_version(
     expected_archived: bool,
 ) -> None:
     """Renaming and archiving change the prompt only, never its versions."""
+    project_id = prompt_project["project"].id
     prompt = prompt_project["span_prompt"]
     response = client.patch(
-        f"{PROMPT_URL}/{prompt.id}",
+        f"{_prompts_url(project_id)}/{prompt.id}",
         json=update.model_dump(mode="json", exclude_unset=True),
     )
     assert response.status_code == 200, response.text
@@ -938,23 +1014,32 @@ def test_update_rejects_invalid_bodies(
     body: dict[str, object],
 ) -> None:
     """Invalid updates return HTTP 422."""
+    project_id = prompt_project["project"].id
     prompt = prompt_project["span_prompt"]
-    response = client.patch(f"{PROMPT_URL}/{prompt.id}", json=body)
+    response = client.patch(f"{_prompts_url(project_id)}/{prompt.id}", json=body)
     assert response.status_code == 422, response.text
 
 
-def test_update_rejects_foreign_prompt(
+def test_update_prompt_of_another_project_is_not_found(
     client: TestClient,
-    prompt_project: PromptProject,
+    tenants: TwoTenants,
 ) -> None:
-    """Updating requires access to the prompt's project."""
-    prompt = prompt_project["foreign_prompt"]
-    response = client.patch(f"{PROMPT_URL}/{prompt.id}", json={"name": "Taken over"})
-    assert response.status_code == 403, response.text
+    """A prompt of another project of the user is not found in the path's project
+    (HTTP 404) and keeps its name."""
+    own, foreign = tenants["own"], tenants["foreign"]
+    prompt = foreign["prompt"]
+    response = client.patch(
+        f"{_prompts_url(own['project'].id)}/{prompt.id}", json={"name": "Taken over"}
+    )
+    assert response.status_code == 404, response.text
+
+    response = client.get(f"{_prompts_url(foreign['project'].id)}/{prompt.id}")
+    assert response.status_code == 200, response.text
+    assert PromptRead.model_validate(response.json()).name == prompt.name
 
 
 # ===========================================================================
-# CREATE EXAMPLES (POST /prompt/examples) TESTS
+# CREATE EXAMPLES (POST /projects/{project_id}/prompts/examples) TESTS
 # ===========================================================================
 
 
@@ -966,9 +1051,8 @@ def _post_examples(
     project_key: str = "project",
 ):
     return client.post(
-        f"{PROMPT_URL}/examples",
+        _prompts_url(project[project_key].id, "/examples"),  # type: ignore[literal-required]
         json=PromptExamplesCreate(
-            project_id=project[project_key].id,  # type: ignore[literal-required]
             kind=kind,
             annotation_ids=annotation_ids,
         ).model_dump(mode="json"),
@@ -1123,7 +1207,7 @@ def test_create_examples_rejects_foreign_project(
     client: TestClient,
     prompt_project: PromptProject,
 ) -> None:
-    """Creating examples requires membership in the project."""
+    """Creating examples requires membership in the path's project (HTTP 403)."""
     project = prompt_project
     response = _post_examples(
         client,
@@ -1141,9 +1225,8 @@ def test_create_examples_rejects_an_empty_selection(
 ) -> None:
     """At least one annotation is required (HTTP 422)."""
     response = client.post(
-        f"{PROMPT_URL}/examples",
+        _prompts_url(prompt_project["project"].id, "/examples"),
         json={
-            "project_id": prompt_project["project"].id,
             "kind": PromptExampleKind.SPAN.value,
             "annotation_ids": [],
         },
@@ -1153,7 +1236,7 @@ def test_create_examples_rejects_an_empty_selection(
 
 
 # ===========================================================================
-# PREVIEW (POST /prompt/preview) TESTS
+# PREVIEW (POST /projects/{project_id}/prompts/preview) TESTS
 # ===========================================================================
 
 
@@ -1181,7 +1264,6 @@ def _draft(
 
 
 def _request(
-    project: PromptProject,
     *,
     draft: PromptSnapshot | None = None,
     version_id: int | None = None,
@@ -1189,7 +1271,6 @@ def _request(
     message_index: int = 0,
 ) -> PromptPreviewRequest:
     return PromptPreviewRequest(
-        project_id=project["project"].id,
         draft=draft,
         prompt_version_id=version_id,
         sdoc_id=sdoc_id,
@@ -1197,12 +1278,19 @@ def _request(
     )
 
 
-def _post_preview(client: TestClient, request: PromptPreviewRequest):
-    return client.post(PREVIEW_URL, json=request.model_dump(mode="json"))
+def _post_preview(
+    client: TestClient, project: PromptProject, request: PromptPreviewRequest
+):
+    return client.post(
+        _prompts_url(project["project"].id, "/preview"),
+        json=request.model_dump(mode="json"),
+    )
 
 
-def _preview(client: TestClient, request: PromptPreviewRequest) -> PromptPreview:
-    response = _post_preview(client, request)
+def _preview(
+    client: TestClient, project: PromptProject, request: PromptPreviewRequest
+) -> PromptPreview:
+    response = _post_preview(client, project, request)
     assert response.status_code == 200, response.text
     return PromptPreview.model_validate(response.json())
 
@@ -1257,7 +1345,7 @@ def test_preview_of_a_draft_without_document_keeps_the_document_block(
         "Codes:\n<codes>\n\n<output-format:sentences>\n\n<document:whole>",
         codes=[prompt_code(project["claim_code"])],
     )
-    preview = _preview(client, _request(project, draft=draft))
+    preview = _preview(client, project, _request(draft=draft))
 
     instructions = _instructions(OutputFormat.SENTENCES)
     assert preview.sdoc_id is None
@@ -1286,7 +1374,7 @@ def test_preview_collapses_the_blank_lines_of_empty_blocks(
         "<output-format:inline>",
         codes=[prompt_code(project["claim_code"])],
     )
-    preview = _preview(client, _request(project, draft=draft))
+    preview = _preview(client, project, _request(draft=draft))
     assert preview.text.startswith("Codes: CLAIM\n\nText:\n<document:whole>\n")
     assert "\n\n\n" not in preview.text
     assert _blocks(preview)["<examples>"] == ""
@@ -1304,7 +1392,7 @@ def test_preview_lists_unknown_placeholders(
         "<code> <codes>\n<output-format:inline>\n<sentence> <code>\n<document:whole>",
         codes=[prompt_code(project["claim_code"])],
     )
-    preview = _preview(client, _request(project, draft=draft))
+    preview = _preview(client, project, _request(draft=draft))
     assert preview.unknown_placeholders == ["<code>", "<sentence>"]
     assert preview.text.startswith(f"<code> CLAIM: {CLAIM_DESCRIPTION}\n")
     assert "\n<sentence> <code>\n<document:whole>" in preview.text
@@ -1394,7 +1482,7 @@ def test_preview_instructions_ask_for_reasoning_only_when_requested(
             settings=PromptSettings(request_reasoning=request_reasoning),
             language=language,
         )
-        return _blocks(_preview(client, _request(project, draft=draft)))[placeholder]
+        return _blocks(_preview(client, project, _request(draft=draft)))[placeholder]
 
     with_reasoning = instructions(True)
     without_reasoning = instructions(False)
@@ -1473,8 +1561,8 @@ def test_preview_splits_the_document_by_its_unit(
     )
     preview = _preview(
         client,
+        project,
         _request(
-            project,
             draft=draft,
             sdoc_id=project["sdoc"].id,
             message_index=message_index,
@@ -1538,8 +1626,8 @@ def test_preview_numbers_the_sentences_globally(
     )
     preview = _preview(
         client,
+        project,
         _request(
-            project,
             draft=draft,
             sdoc_id=project["sdoc"].id,
             message_index=message_index,
@@ -1558,8 +1646,8 @@ def test_preview_renders_a_stored_version(
     version = project["span_prompt"].versions[1]
     preview = _preview(
         client,
+        project,
         _request(
-            project,
             version_id=version.id,
             sdoc_id=project["sdoc"].id,
             message_index=2,
@@ -1591,7 +1679,7 @@ def test_preview_inline_examples_tag_all_selected_spans(
         codes=[prompt_code(project["person_code"]), prompt_code(project["claim_code"])],
         examples=[project["alice_example"], project["bob_example"]],
     )
-    preview = _preview(client, _request(project, draft=draft))
+    preview = _preview(client, project, _request(draft=draft))
 
     assert preview.is_fewshot
     assert _blocks(preview)["<examples>"] == (
@@ -1615,7 +1703,7 @@ def test_preview_inline_examples_skip_spans_of_unselected_codes(
         codes=[prompt_code(project["claim_code"])],
         examples=[project["alice_example"], project["bob_example"]],
     )
-    preview = _preview(client, _request(project, draft=draft))
+    preview = _preview(client, project, _request(draft=draft))
 
     assert preview.is_fewshot
     assert _blocks(preview)["<examples>"] == (
@@ -1637,7 +1725,7 @@ def test_preview_without_examples_of_selected_codes_is_zero_shot(
         codes=[prompt_code(project["claim_code"])],
         examples=[project["bob_example"]],
     )
-    preview = _preview(client, _request(project, draft=draft))
+    preview = _preview(client, project, _request(draft=draft))
 
     assert not preview.is_fewshot
     assert _blocks(preview)["<examples>"] == ""
@@ -1688,7 +1776,7 @@ def test_preview_context_examples_show_quotes_with_context(
         settings=PromptSettings(context_before_chars=5, context_after_chars=5),
         language=language,
     )
-    preview = _preview(client, _request(project, draft=draft))
+    preview = _preview(client, project, _request(draft=draft))
 
     assert preview.is_fewshot
     assert _blocks(preview)["<examples>"] == expected_examples
@@ -1709,7 +1797,7 @@ def test_preview_sentence_examples_are_grouped_by_code(
         codes=[prompt_code(project["claim_code"])],
         examples=[project["sentence_example"]],
     )
-    preview = _preview(client, _request(project, draft=draft))
+    preview = _preview(client, project, _request(draft=draft))
 
     assert preview.is_fewshot
     assert _blocks(preview)["<examples>"] == (
@@ -1787,7 +1875,7 @@ def test_preview_examples_note_that_they_omit_the_requested_reasoning(
             settings=PromptSettings(request_reasoning=request_reasoning),
             language=language,
         )
-        return _blocks(_preview(client, _request(project, draft=draft)))["<examples>"]
+        return _blocks(_preview(client, project, _request(draft=draft)))["<examples>"]
 
     with_reasoning = examples(True)
     without_reasoning = examples(False)
@@ -1813,7 +1901,8 @@ def test_preview_rejects_a_message_index_out_of_range(
     )
     response = _post_preview(
         client,
-        _request(project, draft=draft, sdoc_id=project["sdoc"].id, message_index=3),
+        project,
+        _request(draft=draft, sdoc_id=project["sdoc"].id, message_index=3),
     )
     assert response.status_code == 400, response.text
     assert "Message 3 does not exist" in response.text
@@ -1833,21 +1922,40 @@ def test_preview_rejects_a_document_of_another_project(
         codes=[prompt_code(project["claim_code"])],
     )
     response = _post_preview(
-        client, _request(project, draft=draft, sdoc_id=project["foreign_sdoc"].id)
+        client, project, _request(draft=draft, sdoc_id=project["foreign_sdoc"].id)
     )
     assert response.status_code == 404, response.text
 
 
-def test_preview_rejects_a_version_of_another_project(
+def test_preview_of_a_version_of_another_project_is_not_found(
     client: TestClient,
     prompt_project: PromptProject,
 ) -> None:
-    """A version of the unauthorized project cannot be rendered (HTTP 400)."""
+    """A version of another project is not found in the path's project (HTTP
+    404)."""
     project = prompt_project
     version_id = project["foreign_prompt"].versions[0].id
-    response = _post_preview(client, _request(project, version_id=version_id))
-    assert response.status_code == 400, response.text
-    assert f"Prompt version {version_id} cannot be used" in response.text
+    response = _post_preview(client, project, _request(version_id=version_id))
+    assert response.status_code == 404, response.text
+
+
+def test_preview_of_a_version_of_another_project_of_the_user_is_not_found(
+    client: TestClient,
+    tenants: TwoTenants,
+) -> None:
+    """Membership in both projects does not matter: a version of the other project
+    is not found in the path's project (HTTP 404)."""
+    own, foreign = tenants["own"], tenants["foreign"]
+    response = client.post(
+        _prompts_url(own["project"].id, "/preview"),
+        json=PromptPreviewRequest(
+            prompt_version_id=foreign["prompt_version"].id,
+            draft=None,
+            sdoc_id=None,
+            message_index=0,
+        ).model_dump(mode="json"),
+    )
+    assert response.status_code == 404, response.text
 
 
 def test_preview_rejects_an_invalid_draft(
@@ -1857,7 +1965,7 @@ def test_preview_rejects_an_invalid_draft(
     """Drafts are validated like saved prompts (HTTP 400)."""
     project = prompt_project
     draft = _draft(TaskType.ANNOTATION, "<codes>\n<output-format:inline>")
-    response = _post_preview(client, _request(project, draft=draft))
+    response = _post_preview(client, project, _request(draft=draft))
     assert response.status_code == 400, response.text
     assert "must contain exactly one document block" in response.text
 
@@ -1866,12 +1974,14 @@ def test_preview_rejects_foreign_project(
     client: TestClient,
     prompt_project: PromptProject,
 ) -> None:
-    """Previewing requires membership in the request's project."""
+    """Previewing requires membership in the path's project (HTTP 403)."""
     project = prompt_project
-    request = _request(
-        project, version_id=project["foreign_prompt"].versions[0].id
-    ).model_copy(update={"project_id": project["foreign_project"].id})
-    response = _post_preview(client, request)
+    response = client.post(
+        _prompts_url(project["foreign_project"].id, "/preview"),
+        json=_request(version_id=project["foreign_prompt"].versions[0].id).model_dump(
+            mode="json"
+        ),
+    )
     assert response.status_code == 403, response.text
 
 
@@ -1898,13 +2008,12 @@ def test_preview_requires_exactly_one_prompt_source(
         codes=[prompt_code(project["claim_code"])],
     )
     body = {
-        "project_id": project["project"].id,
         "prompt_version_id": (
             project["span_prompt"].versions[0].id if has_version else None
         ),
         "draft": draft.model_dump(mode="json") if has_draft else None,
     }
-    response = client.post(PREVIEW_URL, json=body)
+    response = client.post(_prompts_url(project["project"].id, "/preview"), json=body)
     assert response.status_code == 422, response.text
     assert "Exactly one of prompt_version_id and draft" in response.text
 
@@ -1916,10 +2025,9 @@ def test_preview_rejects_a_negative_message_index(
     """Message indices start at 0 (HTTP 422)."""
     project = prompt_project
     body = {
-        "project_id": project["project"].id,
         "prompt_version_id": project["span_prompt"].versions[0].id,
         "message_index": -1,
     }
-    response = client.post(PREVIEW_URL, json=body)
+    response = client.post(_prompts_url(project["project"].id, "/preview"), json=body)
     assert response.status_code == 422, response.text
     assert "message_index" in response.text

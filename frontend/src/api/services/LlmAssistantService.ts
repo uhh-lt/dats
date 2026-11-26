@@ -26,9 +26,11 @@ export class LlmAssistantService {
   }): CancelablePromise<Record<string, number>> {
     return __request(OpenAPI, {
       method: "POST",
-      url: "/llm_assistant/count_existing_assistant_annotations",
-      query: {
+      url: "/projects/{project_id}/llm-assistant/count-existing-annotations",
+      path: {
         project_id: projectId,
+      },
+      query: {
         task_type: taskType,
         virtual_user_id: virtualUserId,
       },

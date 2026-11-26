@@ -569,12 +569,22 @@ def test_sentence_annotation_job_runs_a_stored_version(
 
 
 @pytest.mark.parametrize(
-    "prompt_key,task_type",
+    "prompt_key,task_type,expected_fragment",
     [
-        # A version of the unauthorized project cannot be used in the main project.
-        pytest.param("foreign_prompt", TaskType.ANNOTATION, id="other-project"),
+        # A version of the unauthorized project does not exist in the main project.
+        pytest.param(
+            "foreign_prompt",
+            TaskType.ANNOTATION,
+            "There exists no PromptVersion",
+            id="other-project",
+        ),
         # A tagging version cannot run a sentence annotation job.
-        pytest.param("tagging_prompt", TaskType.SENTENCE_ANNOTATION, id="other-task"),
+        pytest.param(
+            "tagging_prompt",
+            TaskType.SENTENCE_ANNOTATION,
+            "Prompt version {version_id} cannot be used",
+            id="other-task",
+        ),
     ],
 )
 def test_job_fails_with_a_version_of_another_project_or_task(
@@ -582,8 +592,10 @@ def test_job_fails_with_a_version_of_another_project_or_task(
     job_prompt_project: JobPromptProject,
     prompt_key: str,
     task_type: TaskType,
+    expected_fragment: str,
 ) -> None:
-    """The job checks that the version belongs to its project and task."""
+    """The job reads the version within its project (a version of another project
+    is not found) and checks that it belongs to its task."""
     prompt = job_prompt_project[prompt_key]  # type: ignore[literal-required]
     version_id = prompt.versions[0].id
     started = _start_job(
@@ -594,7 +606,7 @@ def test_job_fails_with_a_version_of_another_project_or_task(
     )
     failed = _wait_for_status(client, started, JobStatus.FAILED)
     assert failed.output is None
-    assert f"Prompt version {version_id} cannot be used" in (
+    assert expected_fragment.format(version_id=version_id) in (
         failed.status_message or ""
     )
 

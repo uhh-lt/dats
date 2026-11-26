@@ -8,10 +8,6 @@ import type { PromptExampleKind } from "./PromptExampleKind";
  */
 export type PromptExamplesCreate = {
   /**
-   * Project the annotations belong to
-   */
-  project_id: number;
-  /**
    * The kind of the annotations
    */
   kind: PromptExampleKind;

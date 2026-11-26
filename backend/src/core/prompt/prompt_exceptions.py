@@ -22,12 +22,11 @@ class InvalidPromptExampleError(Exception):
 
 @exception_handler(status.HTTP_400_BAD_REQUEST)
 class PromptMismatchError(Exception):
-    """Raised when a prompt version is used for another project or task."""
+    """Raised when a prompt version is used for another task."""
 
-    def __init__(self, version_id: int, project_id: int, task_type: TaskType) -> None:
+    def __init__(self, version_id: int, task_type: TaskType) -> None:
         super().__init__(
-            f"Prompt version {version_id} cannot be used in project "
-            f"{project_id} for task {task_type.value}."
+            f"Prompt version {version_id} cannot be used for task {task_type.value}."
         )
 
 

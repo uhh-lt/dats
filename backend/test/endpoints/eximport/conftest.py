@@ -476,8 +476,8 @@ def experiment_eximport_projects(
     prompt = pts.create_prompt(
         db=db,
         user_id=test_user.id,
+        project_id=project.id,
         create_dto=PromptCreate(
-            project_id=project.id,
             name="Claim and Evidence",
             task_type=TaskType.ANNOTATION,
             language=PromptLanguage.EN,
@@ -487,6 +487,7 @@ def experiment_eximport_projects(
     )
     prompt = pts.create_prompt_version(
         db=db,
+        project_id=project.id,
         user_id=test_user.id,
         prompt_id=prompt.id,
         create_dto=PromptVersionCreate(text="Changed: " + inline_text, codes=codes),
@@ -553,8 +554,8 @@ def experiment_eximport_projects(
     target_prompt = pts.create_prompt(
         db=db,
         user_id=test_user.id,
+        project_id=target_project.id,
         create_dto=PromptCreate(
-            project_id=target_project.id,
             name="Claim and Evidence",
             task_type=TaskType.ANNOTATION,
             language=PromptLanguage.EN,

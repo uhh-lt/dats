@@ -54,7 +54,7 @@ export function ReviewStep() {
 
   // the name of the prompt: the selected version, or the default prompt of the guided path and its copy in the project
   const promptVersion = PromptHooks.useGetPromptVersion({ projectId, versionId });
-  const taskInfo = useQuery({ ...promptQueries.taskInfo(method), enabled: mode === "guided" });
+  const taskInfo = useQuery({ ...promptQueries.taskInfo(projectId, method), enabled: mode === "guided" });
   const format = outputFormat ?? (method ? DEFAULT_OUTPUT_FORMATS[method] : undefined);
   const formatInfo = taskInfo.data?.output_formats.find((info) => info.output_format === format);
   const defaultPromptName = formatInfo?.default_prompt_names[language];
@@ -63,9 +63,9 @@ export function ReviewStep() {
   const { source, codeIds, isError } = useWizardPrompt();
   const rendered = useQuery(
     promptQueries.preview(
+      projectId,
       source
         ? {
-            project_id: projectId,
             ...("draft" in source ? { draft: source.draft } : { prompt_version_id: source.versionId }),
             sdoc_id: null,
             message_index: 0,
