@@ -31,6 +31,25 @@ router = project_router(
 
 The `_custom_route_mapper` in `mcp_server.py` includes only routes tagged with `"mcp"` and excludes everything else.
 
+## Memo API Routes
+
+Memo routes are project-scoped and tagged with `"mcp"`, so the same operations are available to MCP clients and REST API clients.
+
+| Method | Route | Purpose |
+| ------ | ----- | ------- |
+| `PUT` | `/projects/{project_id}/memos` | Create a memo. The request body includes `attached_object_type` and `attached_object_id`. |
+| `GET` | `/projects/{project_id}/memos` | List project memos, optionally filtered by `attached_object_type`, `attached_object_id`, and `user_id`. |
+| `GET` | `/projects/{project_id}/memos/recent` | List the current user's most recently opened memos. |
+| `GET` | `/projects/{project_id}/memos/{memo_id}` | Read a memo. |
+| `PATCH` | `/projects/{project_id}/memos/bulk` | Update memos in bulk. |
+| `PATCH` | `/projects/{project_id}/memos/{memo_id}` | Update a memo, including its favorite state for the current user. |
+| `POST` | `/projects/{project_id}/memos/{memo_id}/recent` | Record that the current user opened a memo. |
+| `DELETE` | `/projects/{project_id}/memos/bulk` | Delete memos in bulk. |
+| `DELETE` | `/projects/{project_id}/memos/{memo_id}` | Delete a memo. |
+| `POST` | `/projects/{project_id}/memos/suggest` | Generate a memo suggestion using the `attached_object_type`, `attached_object_id`, and `model` query parameters. |
+
+A memo ID outside the path's project is treated as not found (404), including in bulk updates and deletes. When filtering the collection, `attached_object_id` requires `attached_object_type`; an object filter that does not match the project returns an empty list. Memo search routes remain under `/search/memo*`; search and grouped-search requests take `project_id` in the request body.
+
 ## API Key Authentication
 
 API keys provide an alternative to JWT tokens for programmatic access. The `get_current_user` dependency in `backend/src/common/dependencies.py` accepts both:
