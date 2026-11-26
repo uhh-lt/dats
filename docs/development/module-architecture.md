@@ -15,7 +15,7 @@ The three systems in `backend/src/systems/` stack on each other:
 feature system  ──artefacts──▶  artefact system  ──jobs──▶  job system
 ```
 
-- The [job system](https://github.com/uhh-lt/dats/blob/main/backend/src/systems/job_system/README.md) runs jobs and pushes their progress to the clients. It knows no pipeline: it calls hooks when a job starts, finishes or fails, and the artefact system registers its step handling there.
+- The [job system](https://github.com/uhh-lt/dats/blob/main/backend/src/systems/job_system/README.md) runs jobs and pushes their progress to the clients. It knows no pipeline: it calls hooks when a job starts, finishes or fails, and the artefact system registers its step handling there. Its generated REST endpoints live under `/projects/{project_id}/jobs/<job-type>`, with the job type in kebab-case. Generated start routes use the project from the path, overwriting the payload's `project_id`; reading or controlling a job of another project or type returns 404. The README lists the `ALL`, `MINIMAL` and `READ` generation modes and their routes.
 - The [artefact system](https://github.com/uhh-lt/dats/blob/main/backend/src/systems/artefact_system/README.md) holds the artefact and step declarations, the pipeline graph, the step statuses per document and the planning. It is asked in artefacts ("compute these artefacts for this project") and never knows features.
 - The [feature system](https://github.com/uhh-lt/dats/blob/main/backend/src/systems/feature_system/README.md) holds the feature declarations, the enabled features of each project, their status and the actions Enable, Complete and Disable. It translates features into artefacts and passes them to the artefact system.
 
