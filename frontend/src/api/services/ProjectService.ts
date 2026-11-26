@@ -10,22 +10,6 @@ import { OpenAPI } from "../core/OpenAPI";
 import { request as __request } from "../core/request";
 export class ProjectService {
   /**
-   * Creates a new Project
-   * @returns ProjectRead Successful Response
-   * @throws ApiError
-   */
-  public static createProject({ requestBody }: { requestBody: ProjectCreate }): CancelablePromise<ProjectRead> {
-    return __request(OpenAPI, {
-      method: "PUT",
-      url: "/project",
-      body: requestBody,
-      mediaType: "application/json",
-      errors: {
-        422: `Validation Error`,
-      },
-    });
-  }
-  /**
    * Returns the Project with the given ID if it exists
    * @returns ProjectRead Successful Response
    * @throws ApiError
@@ -33,7 +17,7 @@ export class ProjectService {
   public static getProject({ projectId }: { projectId: number }): CancelablePromise<ProjectRead> {
     return __request(OpenAPI, {
       method: "GET",
-      url: "/project/{project_id}",
+      url: "/projects/{project_id}",
       path: {
         project_id: projectId,
       },
@@ -56,7 +40,7 @@ export class ProjectService {
   }): CancelablePromise<ProjectRead> {
     return __request(OpenAPI, {
       method: "PATCH",
-      url: "/project/{project_id}",
+      url: "/projects/{project_id}",
       path: {
         project_id: projectId,
       },
@@ -75,10 +59,26 @@ export class ProjectService {
   public static deleteProject({ projectId }: { projectId: number }): CancelablePromise<ProjectRead> {
     return __request(OpenAPI, {
       method: "DELETE",
-      url: "/project/{project_id}",
+      url: "/projects/{project_id}",
       path: {
         project_id: projectId,
       },
+      errors: {
+        422: `Validation Error`,
+      },
+    });
+  }
+  /**
+   * Creates a new Project
+   * @returns ProjectRead Successful Response
+   * @throws ApiError
+   */
+  public static createProject({ requestBody }: { requestBody: ProjectCreate }): CancelablePromise<ProjectRead> {
+    return __request(OpenAPI, {
+      method: "PUT",
+      url: "/projects",
+      body: requestBody,
+      mediaType: "application/json",
       errors: {
         422: `Validation Error`,
       },
@@ -92,7 +92,7 @@ export class ProjectService {
   public static getUserProjects(): CancelablePromise<Array<ProjectRead>> {
     return __request(OpenAPI, {
       method: "GET",
-      url: "/project/user/projects",
+      url: "/users/me/projects",
     });
   }
 }

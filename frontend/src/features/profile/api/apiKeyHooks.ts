@@ -21,7 +21,7 @@ const useCreateApiKey = () =>
 const useDeleteApiKey = () =>
   useMutation({
     mutationKey: [...apiKeyQueries.all(), "deleteApiKey"],
-    mutationFn: ({ keyId }: { keyId: number }) => ApiKeyService.deleteApiKey({ keyId }),
+    mutationFn: ApiKeyService.deleteApiKey,
     meta: {
       datsEvent: "API_KEY_DELETED",
       successMessage: (deletedKey: ApiKeyRead) => `Deleted API key ${deletedKey.name}`,

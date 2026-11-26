@@ -80,7 +80,7 @@ Choose the home of a piece of state by its kind; [frontend-slice.instructions.md
 
 ## Toggleable Features and Navigation
 
-A feature is declared in the backend (`register_feature` with name, title, description, area and `default_enabled`); the frontend reads the features from `GET /feature` (`featureQueries.list()`). The Features tab and the project creation dialog need no frontend change for a new feature.
+A feature is declared in the backend (`register_feature` with name, title, description, area and `default_enabled`); the frontend reads the features from `GET /features` (`featureQueries.list()`). The Features tab and the project creation dialog need no frontend change for a new feature.
 
 Give a feature a page or a gate:
 

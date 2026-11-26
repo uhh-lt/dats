@@ -1,12 +1,11 @@
 import { getIconComponent, Icon } from "@components/icons";
-import { PublicUserRead } from "@models/PublicUserRead";
 import { UserRead } from "@models/UserRead";
 import { Avatar, AvatarProps, Tooltip, TooltipProps } from "@mui/material";
 import { memo } from "react";
 import { UserHooks } from "./api/userHooks";
 
 interface UserAvatarProps extends AvatarProps {
-  user: number | UserRead | PublicUserRead;
+  user: number | UserRead;
   tooltipPlacement?: TooltipProps["placement"];
 }
 
@@ -31,7 +30,7 @@ const UserAvatarWithoutData = memo(
 );
 
 const UserAvatarWithData = memo(
-  ({ user, tooltipPlacement, ...props }: Omit<UserAvatarProps, "user"> & { user: PublicUserRead }) => {
+  ({ user, tooltipPlacement, ...props }: Omit<UserAvatarProps, "user"> & { user: UserRead }) => {
     const fullName = `${user.first_name} ${user.last_name}`.trim();
 
     return (
@@ -44,5 +43,5 @@ const UserAvatarWithData = memo(
   },
 );
 
-const getInitials = (user: PublicUserRead) =>
+const getInitials = (user: UserRead) =>
   `${user.first_name.trim().charAt(0)}${user.last_name.trim().charAt(0)}`.toLocaleUpperCase();

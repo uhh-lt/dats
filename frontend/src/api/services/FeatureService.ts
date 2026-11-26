@@ -10,17 +10,6 @@ import { OpenAPI } from "../core/OpenAPI";
 import { request as __request } from "../core/request";
 export class FeatureService {
   /**
-   * Returns all Features a Project can enable
-   * @returns FeatureRead Successful Response
-   * @throws ApiError
-   */
-  public static getAll(): CancelablePromise<Array<FeatureRead>> {
-    return __request(OpenAPI, {
-      method: "GET",
-      url: "/feature",
-    });
-  }
-  /**
    * Returns the state of every Feature in the Project: enabled, status, ready and document counts
    * @returns ProjectFeatureRead Successful Response
    * @throws ApiError
@@ -28,7 +17,7 @@ export class FeatureService {
   public static getProjectFeatures({ projectId }: { projectId: number }): CancelablePromise<Array<ProjectFeatureRead>> {
     return __request(OpenAPI, {
       method: "GET",
-      url: "/feature/project/{project_id}",
+      url: "/projects/{project_id}/features",
       path: {
         project_id: projectId,
       },
@@ -53,7 +42,7 @@ export class FeatureService {
   }): CancelablePromise<Array<string>> {
     return __request(OpenAPI, {
       method: "POST",
-      url: "/feature/project/{project_id}/{feature}/enable",
+      url: "/projects/{project_id}/features/{feature}/enable",
       path: {
         project_id: projectId,
         feature: feature,
@@ -81,7 +70,7 @@ export class FeatureService {
   }): CancelablePromise<Array<string>> {
     return __request(OpenAPI, {
       method: "POST",
-      url: "/feature/project/{project_id}/{feature}/complete",
+      url: "/projects/{project_id}/features/{feature}/complete",
       path: {
         project_id: projectId,
         feature: feature,
@@ -107,7 +96,7 @@ export class FeatureService {
   }): CancelablePromise<Array<string>> {
     return __request(OpenAPI, {
       method: "POST",
-      url: "/feature/project/{project_id}/{feature}/disable",
+      url: "/projects/{project_id}/features/{feature}/disable",
       path: {
         project_id: projectId,
         feature: feature,
@@ -115,6 +104,17 @@ export class FeatureService {
       errors: {
         422: `Validation Error`,
       },
+    });
+  }
+  /**
+   * Returns all Features a Project can enable
+   * @returns FeatureRead Successful Response
+   * @throws ApiError
+   */
+  public static getAll(): CancelablePromise<Array<FeatureRead>> {
+    return __request(OpenAPI, {
+      method: "GET",
+      url: "/features",
     });
   }
 }

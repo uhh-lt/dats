@@ -40,7 +40,7 @@ interface AuthContextProps {
  * Responsibilities:
  * - Persist and restore auth credentials (access token, refresh token, expiry) from localStorage.
  * - Keep the generated API client (`OpenAPI.TOKEN`) in sync with the current access token.
- * - Resolve the current session by fetching `/user/me` when an access token exists.
+ * - Resolve the current session by fetching `/users/me` when an access token exists.
  * - Proactively refresh access tokens shortly before expiry.
  * - Perform local logout immediately and trigger best-effort server-side revoke.
  *
