@@ -6,6 +6,7 @@ import { queryOptions, skipToken } from "@tanstack/react-query";
  *
  *   userQueries.all()                      ["user"]
  *   userQueries.me(accessToken)            ["user", "me", accessToken]
+ *   userQueries.projectScope(projectId)    ["user", "project", projectId]
  *   userQueries.byProject(projectId)       ["user", "project", projectId]
  */
 export const userQueries = {
@@ -20,11 +21,13 @@ export const userQueries = {
       retry: false,
     }),
 
+  // prefix of all user queries of one project
+  projectScope: (projectId: number | undefined) => [...userQueries.all(), "project", projectId] as const,
+
   // all users of a project: its members, then its virtual users
-  byProjectScope: () => [...userQueries.all(), "project"] as const,
   byProject: (projectId: number | undefined) =>
     queryOptions({
-      queryKey: [...userQueries.byProjectScope(), projectId] as const,
+      queryKey: userQueries.projectScope(projectId),
       queryFn: projectId === undefined ? skipToken : () => UserService.getByProject({ projectId }),
       staleTime: 1000 * 60 * 5,
     }),

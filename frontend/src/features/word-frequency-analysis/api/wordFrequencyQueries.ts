@@ -8,12 +8,15 @@ type WordFrequencySearchRequest = Omit<Parameters<typeof WordFrequencyService.wo
 /**
  * Query factory for the word frequency analysis.
  *
- *   wordFrequencyQueries.all()                 ["wordFrequency"]
- *   wordFrequencyQueries.tableInfo(projectId)  ["tableInfo", "wordFrequency", projectId]
- *   wordFrequencyQueries.search(request)       ["wordFrequency", "search", request]
+ *   wordFrequencyQueries.all()                    ["wordFrequency"]
+ *   wordFrequencyQueries.projectScope(projectId)  ["wordFrequency", "project", projectId]
+ *   wordFrequencyQueries.tableInfo(projectId)     ["tableInfo", "project", projectId, "wordFrequency"]
+ *   wordFrequencyQueries.search(request)          ["wordFrequency", "project", projectId, "search", request]
  */
 export const wordFrequencyQueries = {
   all: () => ["wordFrequency"] as const,
+  // prefix of all word frequency queries of one project
+  projectScope: (projectId: number) => [...wordFrequencyQueries.all(), "project", projectId] as const,
 
   // the column infos of the word frequency filter
   tableInfo: (projectId: number) =>
@@ -23,10 +26,10 @@ export const wordFrequencyQueries = {
       staleTime: Infinity,
     }),
 
-  searchScope: () => [...wordFrequencyQueries.all(), "search"] as const,
+  searchScope: (projectId: number) => [...wordFrequencyQueries.projectScope(projectId), "search"] as const,
   search: (request: WordFrequencySearchRequest) =>
     infiniteQueryOptions({
-      queryKey: [...wordFrequencyQueries.searchScope(), request] as const,
+      queryKey: [...wordFrequencyQueries.searchScope(request.projectId), request] as const,
       queryFn: ({ pageParam }) => WordFrequencyService.wordFrequencyAnalysis({ ...request, page: pageParam }),
       initialPageParam: 0,
       getNextPageParam: (_lastGroup, groups) => groups.length,

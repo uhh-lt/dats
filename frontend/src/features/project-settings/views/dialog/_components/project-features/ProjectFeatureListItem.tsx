@@ -31,7 +31,7 @@ export const ProjectFeatureListItem = memo(({ projectId, feature, state, onActiv
   // disable
   const openConfirmationDialog = useOpenConfirmationDialog();
   const { mutate: disableFeatureMutation, isPending: isDisablePending } = FeatureHooks.useDisableFeature();
-  const refreshHealthTable = useRefreshHealthTable();
+  const refreshHealthTable = useRefreshHealthTable(projectId);
   const { title, description } = feature;
   const handleClickDisable = useCallback(() => {
     openConfirmationDialog({

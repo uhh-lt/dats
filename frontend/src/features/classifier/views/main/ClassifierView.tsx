@@ -18,7 +18,7 @@ export function ClassifierView() {
   const classifierJobsQuery = useSuspenseQuery(classifierJobsByProjectOptions);
 
   // the list and the jobs its items follow
-  const { refresh: refreshJobs, isFetching: isFetchingJobs } = useRefreshJobs(classifierQueries.job);
+  const { refresh: refreshJobs, isFetching: isFetchingJobs } = useRefreshJobs(classifierQueries.job, projectId);
 
   const classifiers = useMemo(() => Object.values(classifiersQuery.data), [classifiersQuery.data]);
 

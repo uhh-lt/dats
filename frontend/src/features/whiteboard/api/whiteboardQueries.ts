@@ -15,18 +15,20 @@ export type WhiteboardMap = Record<number, WhiteboardRead>;
 /**
  * Query factory for whiteboards.
  *
- *   whiteboardQueries.all()                  ["whiteboard"]
- *   whiteboardQueries.byProject(projectId)   ["whiteboard", "project", projectId]
- *   whiteboardQueries.data(projectId, id)    ["whiteboard", "data", id, projectId]
+ *   whiteboardQueries.all()                    ["whiteboard"]
+ *   whiteboardQueries.projectScope(projectId)  ["whiteboard", "project", projectId]
+ *   whiteboardQueries.byProject(projectId)     ["whiteboard", "project", projectId]
+ *   whiteboardQueries.data(projectId, id)      ["whiteboard", "project", projectId, "data", id]
  */
 export const whiteboardQueries = {
   all: () => ["whiteboard"] as const,
+  // prefix of all whiteboard queries of one project
+  projectScope: (projectId: number) => [...whiteboardQueries.all(), "project", projectId] as const,
 
   // all whiteboards of a project, as a map by whiteboard id
-  byProjectScope: () => [...whiteboardQueries.all(), "project"] as const,
   byProject: (projectId: number) =>
     queryOptions({
-      queryKey: [...whiteboardQueries.byProjectScope(), projectId] as const,
+      queryKey: whiteboardQueries.projectScope(projectId),
       queryFn: async () => {
         const data = await WhiteboardService.getByProject({ projectId });
         return data.reduce<WhiteboardMap>((acc, whiteboard) => {
@@ -39,10 +41,10 @@ export const whiteboardQueries = {
 
   // the content of one whiteboard. Its queryFn seeds the caches of the entities on the board, so that the nodes
   // do not have to fetch them one by one.
-  dataScope: () => [...whiteboardQueries.all(), "data"] as const,
+  dataScope: (projectId: number) => [...whiteboardQueries.projectScope(projectId), "data"] as const,
   data: (projectId: number, whiteboardId: number) =>
     queryOptions({
-      queryKey: [...whiteboardQueries.dataScope(), whiteboardId, projectId] as const,
+      queryKey: [...whiteboardQueries.dataScope(projectId), whiteboardId] as const,
       queryFn: async () => {
         const whiteboardData = await WhiteboardService.getDataById({ projectId, whiteboardId });
 

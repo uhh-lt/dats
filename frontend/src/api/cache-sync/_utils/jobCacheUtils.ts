@@ -101,6 +101,7 @@ export function handleJobUpdate(job: JobRead): void {
 }
 
 // The websocket (re)connected: the job updates pushed while no socket was open are lost, so refetch the jobs of all types.
+// The socket carries the events of all projects of the user, so all of them missed updates.
 export function invalidateAllJobs(): void {
   queryClient.invalidateQueries({ predicate: ({ queryKey }) => isJobQueryKey(queryKey) });
 }
@@ -143,7 +144,7 @@ function handleImportJobFinished(job: ImportJobRead) {
       queryClient.invalidateQueries({ queryKey: codeQueries.byProject(projectId).queryKey });
       break;
     case ImportJobType.FOLDERS:
-      queryClient.invalidateQueries({ queryKey: folderQueries.byProjectOfProjectScope(projectId) });
+      queryClient.invalidateQueries({ queryKey: folderQueries.byProjectScope(projectId) });
       break;
     case ImportJobType.PROJECT_METADATA:
       queryClient.invalidateQueries({ queryKey: projectMetadataQueries.byProject(projectId).queryKey });
@@ -161,10 +162,10 @@ function handleImportJobFinished(job: ImportJobRead) {
       queryClient.invalidateQueries({ queryKey: cotaQueries.byProject(projectId).queryKey });
       break;
     case ImportJobType.DOCUMENTS:
-      queryClient.invalidateQueries({ queryKey: sdocQueries.searchOfProjectScope(projectId) });
+      queryClient.invalidateQueries({ queryKey: sdocQueries.searchScope(projectId) });
       break;
     case ImportJobType.MEMOS:
-      queryClient.invalidateQueries({ queryKey: memoQueries.all() });
+      queryClient.invalidateQueries({ queryKey: memoQueries.projectScope(projectId) });
       break;
     case ImportJobType.PROMPTS:
       queryClient.invalidateQueries({ queryKey: promptQueries.byProject(projectId).queryKey });
@@ -177,8 +178,8 @@ function handleImportJobFinished(job: ImportJobRead) {
       queryClient.invalidateQueries({ queryKey: timelineAnalysisQueries.byProject(projectId).queryKey });
       queryClient.invalidateQueries({ queryKey: whiteboardQueries.byProject(projectId).queryKey });
       queryClient.invalidateQueries({ queryKey: cotaQueries.byProject(projectId).queryKey });
-      queryClient.invalidateQueries({ queryKey: sdocQueries.searchOfProjectScope(projectId) });
-      queryClient.invalidateQueries({ queryKey: memoQueries.all() });
+      queryClient.invalidateQueries({ queryKey: sdocQueries.searchScope(projectId) });
+      queryClient.invalidateQueries({ queryKey: memoQueries.projectScope(projectId) });
       queryClient.invalidateQueries({ queryKey: promptQueries.byProject(projectId).queryKey });
       break;
     case ImportJobType.BBOX_ANNOTATIONS:
@@ -195,7 +196,7 @@ function handleImportJobFinished(job: ImportJobRead) {
 // batch by batch: a failed or stopped job keeps the annotations of the batches it saved.
 const LLM_ASSISTANT_ENDED_WITH_ANNOTATIONS = new Set([JobStatus.FINISHED, JobStatus.FAILED, JobStatus.STOPPED]);
 function handleLlmAssistantJobEnded(job: LlmAssistantJobRead) {
-  invalidateAssistantAnnotations(job.input.task_type, new Set(job.input.sdoc_ids));
+  invalidateAssistantAnnotations(job.project_id, job.input.task_type, new Set(job.input.sdoc_ids));
 }
 
 // The job of an experiment run stores its state, the run's status, and the scores in the experiment (the job has no
@@ -213,27 +214,27 @@ function handleExperimentRunJobUpdate(job: ExperimentRunJobRead) {
   }
   if (job.status === JobStatus.FINISHED && job.output) {
     const sdocIds = new Set(job.output.specific_task_result.results.map((result) => result.sdoc_id));
-    invalidateAssistantAnnotations(job.output.task_type, sdocIds);
+    invalidateAssistantAnnotations(job.project_id, job.output.task_type, sdocIds);
     return;
   }
   // a failed or stopped run keeps the annotations of the batches it saved; the job input names the run only, so its
   // documents and task come from the experiments, else all annotations are refreshed
   if (job.status !== JobStatus.FAILED && job.status !== JobStatus.STOPPED) return;
   if (experiment && run) {
-    invalidateAssistantAnnotations(experiment.task_type, new Set(run.sdoc_ids));
+    invalidateAssistantAnnotations(job.project_id, experiment.task_type, new Set(run.sdoc_ids));
     return;
   }
-  queryClient.invalidateQueries({ queryKey: spanAnnotationQueries.bySdocScope() });
-  queryClient.invalidateQueries({ queryKey: sentenceAnnotationQueries.bySdocScope() });
+  queryClient.invalidateQueries({ queryKey: spanAnnotationQueries.bySdocScope(job.project_id) });
+  queryClient.invalidateQueries({ queryKey: sentenceAnnotationQueries.bySdocScope(job.project_id) });
 }
 
-function invalidateAssistantAnnotations(taskType: TaskType, sdocIds: Set<number>) {
+function invalidateAssistantAnnotations(projectId: number, taskType: TaskType, sdocIds: Set<number>) {
   switch (taskType) {
     case TaskType.ANNOTATION:
-      invalidateBySdocs(spanAnnotationQueries.bySdocScope(), sdocIds);
+      invalidateBySdocs(spanAnnotationQueries.bySdocScope(projectId), sdocIds);
       break;
     case TaskType.SENTENCE_ANNOTATION:
-      invalidateBySdocs(sentenceAnnotationQueries.bySdocScope(), sdocIds);
+      invalidateBySdocs(sentenceAnnotationQueries.bySdocScope(projectId), sdocIds);
       break;
     default:
       break;
@@ -262,7 +263,7 @@ function handleClassifierJobFinished(job: ClassifierJobRead) {
     job.output
   ) {
     (job.input.task_parameters as ClassifierInferenceParams).sdoc_ids.forEach((sdocId) => {
-      queryClient.invalidateQueries({ queryKey: tagQueries.idsBySdocOfSdocScope(sdocId) });
+      queryClient.invalidateQueries({ queryKey: tagQueries.idsBySdoc(job.project_id, sdocId).queryKey });
     });
   }
 }
@@ -279,9 +280,11 @@ function writeAspectMostRecentJob(job: PerspectivesJobRead) {
 
 // A finished perspectives job recomputed the aspect's visualization data.
 function handlePerspectivesJobFinished(job: PerspectivesJobRead) {
-  queryClient.invalidateQueries({ queryKey: perspectivesQueries.visualizationOfAspectScope(job.input.aspect_id) });
   queryClient.invalidateQueries({
-    queryKey: perspectivesQueries.clusterSimilaritiesOfAspectScope(job.input.aspect_id),
+    queryKey: perspectivesQueries.visualizationOfAspectScope(job.project_id, job.input.aspect_id),
+  });
+  queryClient.invalidateQueries({
+    queryKey: perspectivesQueries.clusterSimilarities(job.project_id, job.input.aspect_id).queryKey,
   });
 }
 

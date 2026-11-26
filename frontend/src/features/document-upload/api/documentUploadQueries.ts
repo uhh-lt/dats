@@ -5,7 +5,7 @@ import { JobService } from "@api/services/JobService";
  * Query factory for the document upload (crawler jobs of a project).
  *
  *   documentUploadQueries.all()            ["documentUpload"]
- *   documentUploadQueries.job.byId(projectId, jobId)  ["documentUpload", "job", "detail", jobId, projectId]
+ *   documentUploadQueries.job.byId(projectId, jobId)  ["documentUpload", "job", "project", projectId, "detail", jobId]
  *
  * Job updates arrive via websocket (JOB_UPDATED) and are written into the job caches by the cache-sync code.
  */

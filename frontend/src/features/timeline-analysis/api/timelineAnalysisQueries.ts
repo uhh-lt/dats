@@ -10,18 +10,20 @@ export type TimelineMap = Record<number, TimelineAnalysisRead>;
 /**
  * Query factory for timeline analyses.
  *
- *   timelineAnalysisQueries.all()                  ["timelineAnalysis"]
- *   timelineAnalysisQueries.byProject(projectId)   ["timelineAnalysis", "project", projectId]
+ *   timelineAnalysisQueries.all()                    ["timelineAnalysis"]
+ *   timelineAnalysisQueries.projectScope(projectId)  ["timelineAnalysis", "project", projectId]
+ *   timelineAnalysisQueries.byProject(projectId)     ["timelineAnalysis", "project", projectId]
  *   timelineAnalysisQueries.tableInfo(timeline)    the column infos of the filter (they depend on the type)
  */
 export const timelineAnalysisQueries = {
   all: () => ["timelineAnalysis"] as const,
+  // prefix of all timeline analysis queries of one project
+  projectScope: (projectId: number) => [...timelineAnalysisQueries.all(), "project", projectId] as const,
 
   // all timeline analyses of a project, as a map by id
-  byProjectScope: () => [...timelineAnalysisQueries.all(), "project"] as const,
   byProject: (projectId: number) =>
     queryOptions({
-      queryKey: [...timelineAnalysisQueries.byProjectScope(), projectId] as const,
+      queryKey: timelineAnalysisQueries.projectScope(projectId),
       queryFn: async () => {
         const data = await TimelineAnalysisService.getByProject({ projectId });
         return data.reduce<TimelineMap>((acc, timeline) => {

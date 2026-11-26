@@ -5,17 +5,21 @@ import { queryOptions, skipToken } from "@tanstack/react-query";
 /**
  * Query factory for the statistics of a set of sdocs (`sdocIds` is null/undefined until the sdocs are known).
  *
- *   statisticsQueries.all()                                  ["statistics"]
- *   statisticsQueries.codeStats(projId, codeId, sdocIds, global)  ["statistics", "code", codeId, sdocIds, global, projId]
- *   statisticsQueries.keywordStats(projId, sdocIds, global)  ["statistics", "keyword", projId, sdocIds, global]
- *   statisticsQueries.tagStats(sdocIds, global)              ["statistics", "tag", sdocIds, global]
+ *   statisticsQueries.all()                                       ["statistics"]
+ *   statisticsQueries.projectScope(projId)                        ["statistics", "project", projId]
+ *   statisticsQueries.codeStats(projId, codeId, sdocIds, global)  ["statistics", "project", projId, "code", codeId, sdocIds, global]
+ *   statisticsQueries.keywordStats(projId, sdocIds, global)       ["statistics", "project", projId, "keyword", sdocIds, global]
+ *   statisticsQueries.tagStats(projId, sdocIds, global)           ["statistics", "project", projId, "tag", sdocIds, global]
  */
 export const statisticsQueries = {
   all: () => ["statistics"] as const,
+  // prefix of all statistics of one project
+  projectScope: (projectId: number | undefined) => [...statisticsQueries.all(), "project", projectId] as const,
 
-  codeStatsScope: () => [...statisticsQueries.all(), "code"] as const,
+  codeStatsScope: (projectId: number | undefined) => [...statisticsQueries.projectScope(projectId), "code"] as const,
   // prefix of all code statistics of one code, for invalidation
-  codeStatsOfCodeScope: (codeId: number) => [...statisticsQueries.codeStatsScope(), codeId] as const,
+  codeStatsOfCodeScope: (projectId: number | undefined, codeId: number) =>
+    [...statisticsQueries.codeStatsScope(projectId), codeId] as const,
   codeStats: (
     projectId: number | undefined,
     codeId: number,
@@ -23,7 +27,7 @@ export const statisticsQueries = {
     sortByGlobal: boolean | undefined,
   ) =>
     queryOptions({
-      queryKey: [...statisticsQueries.codeStatsOfCodeScope(codeId), sdocIds, sortByGlobal, projectId] as const,
+      queryKey: [...statisticsQueries.codeStatsOfCodeScope(projectId, codeId), sdocIds, sortByGlobal] as const,
       queryFn:
         !projectId || !sdocIds
           ? skipToken
@@ -31,20 +35,20 @@ export const statisticsQueries = {
       staleTime: 1000 * 60 * 5,
     }),
 
-  keywordStatsScope: () => [...statisticsQueries.all(), "keyword"] as const,
+  keywordStatsScope: (projectId: number) => [...statisticsQueries.projectScope(projectId), "keyword"] as const,
   keywordStats: (projectId: number, sdocIds: number[] | null | undefined, sortByGlobal: boolean | undefined) =>
     queryOptions({
-      queryKey: [...statisticsQueries.keywordStatsScope(), projectId, sdocIds, sortByGlobal] as const,
+      queryKey: [...statisticsQueries.keywordStatsScope(projectId), sdocIds, sortByGlobal] as const,
       queryFn: !sdocIds
         ? skipToken
         : () => KeywordStatisticsService.filterKeywordStats({ projectId, requestBody: sdocIds, sortByGlobal }),
       staleTime: 1000 * 60 * 5,
     }),
 
-  tagStatsScope: () => [...statisticsQueries.all(), "tag"] as const,
+  tagStatsScope: (projectId: number) => [...statisticsQueries.projectScope(projectId), "tag"] as const,
   tagStats: (projectId: number, sdocIds: number[] | null | undefined, sortByGlobal: boolean | undefined) =>
     queryOptions({
-      queryKey: [...statisticsQueries.tagStatsScope(), projectId, sdocIds, sortByGlobal] as const,
+      queryKey: [...statisticsQueries.tagStatsScope(projectId), sdocIds, sortByGlobal] as const,
       queryFn: !sdocIds
         ? skipToken
         : () => StatisticsService.filterTagStats({ projectId, requestBody: sdocIds, sortByGlobal }),

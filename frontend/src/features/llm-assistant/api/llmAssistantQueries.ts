@@ -17,19 +17,22 @@ export interface ExistingAnnotationCountParams {
  * Query factory for the LLM assistant.
  *
  *   llmAssistantQueries.all()                         ["llmAssistant"]
- *   llmAssistantQueries.existingAnnotationCount(...)  ["llmAssistant", "existingAnnotationCount", ...]
- *   llmAssistantQueries.job.byId(projectId, jobId)    ["llmAssistant", "job", "detail", jobId, projectId]
+ *   llmAssistantQueries.projectScope(projectId)       ["llmAssistant", "project", projectId]
+ *   llmAssistantQueries.existingAnnotationCount(...)  ["llmAssistant", "project", projectId, "existingAnnotationCount", ...]
+ *   llmAssistantQueries.job.byId(projectId, jobId)    ["llmAssistant", "job", "project", projectId, "detail", jobId]
  *   llmAssistantQueries.job.byProject(projectId)      ["llmAssistant", "job", "project", projectId]
  */
 export const llmAssistantQueries = {
   all: () => ["llmAssistant"] as const,
+  // prefix of all LLM assistant queries of one project (the jobs have their own root, `job.all()`)
+  projectScope: (projectId: number) => [...llmAssistantQueries.all(), "project", projectId] as const,
 
-  existingAnnotationCountScope: () => [...llmAssistantQueries.all(), "existingAnnotationCount"] as const,
+  existingAnnotationCountScope: (projectId: number) =>
+    [...llmAssistantQueries.projectScope(projectId), "existingAnnotationCount"] as const,
   existingAnnotationCount: ({ projectId, taskType, virtualUserId, sdocIds, codeIds }: ExistingAnnotationCountParams) =>
     queryOptions({
       queryKey: [
-        ...llmAssistantQueries.existingAnnotationCountScope(),
-        projectId,
+        ...llmAssistantQueries.existingAnnotationCountScope(projectId),
         taskType,
         virtualUserId,
         sdocIds,

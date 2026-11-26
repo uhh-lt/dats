@@ -11,22 +11,25 @@ export type AspectMap = Record<number, AspectRead>;
  * Query factory for perspectives (aspects, their clusters and visualizations).
  * The perspectives background job is `perspectivesQueries.job`.
  *
- *   perspectivesQueries.all()                                         ["perspectives"]
- *   perspectivesQueries.aspectsByProject(projectId)                   ["perspectives", "aspects", projectId]
- *   perspectivesQueries.docAspect(projectId, aspectId, sdocId)                   ["perspectives", "docAspect", aspectId, sdocId, projectId]
- *   perspectivesQueries.visualization(projectId, aspectId, searchQuery, filter)  ["perspectives", "visualization", aspectId, ..., projectId]
- *   perspectivesQueries.clusterSimilarities(projectId, aspectId)                 ["perspectives", "clusterSimilarities", aspectId, projectId]
- *   perspectivesQueries.clustersBySdoc(projectId, aspectId, sdocId)              ["perspectives", "clustersBySdoc", aspectId, sdocId, projectId]
- *   perspectivesQueries.mapThumbnailUrl(projectId, aspectId)                     ["perspectives", "mapThumbnailUrl", aspectId, projectId]
+ *   perspectivesQueries.all()                                                    ["perspectives"]
+ *   perspectivesQueries.projectScope(projectId)                                  ["perspectives", "project", projectId]
+ *   perspectivesQueries.aspectsByProject(projectId)                              ["perspectives", "project", projectId, "aspects"]
+ *   perspectivesQueries.docAspect(projectId, aspectId, sdocId)                   ["perspectives", "project", projectId, "docAspect", aspectId, sdocId]
+ *   perspectivesQueries.visualization(projectId, aspectId, searchQuery, filter)  ["perspectives", "project", projectId, "visualization", aspectId, ...]
+ *   perspectivesQueries.clusterSimilarities(projectId, aspectId)                 ["perspectives", "project", projectId, "clusterSimilarities", aspectId]
+ *   perspectivesQueries.clustersBySdoc(projectId, aspectId, sdocId)              ["perspectives", "project", projectId, "clustersBySdoc", aspectId, sdocId]
+ *   perspectivesQueries.mapThumbnailUrl(projectId, aspectId)                     ["perspectives", "project", projectId, "mapThumbnailUrl", aspectId]
  */
 export const perspectivesQueries = {
   all: () => ["perspectives"] as const,
+  // prefix of all perspectives queries of one project (the jobs have their own root, `job.all()`)
+  projectScope: (projectId: number | null | undefined) => [...perspectivesQueries.all(), "project", projectId] as const,
 
   // all aspects of a project, as a map by aspect id
-  aspectsByProjectScope: () => [...perspectivesQueries.all(), "aspects"] as const,
+  aspectsByProjectScope: (projectId: number) => [...perspectivesQueries.projectScope(projectId), "aspects"] as const,
   aspectsByProject: (projectId: number) =>
     queryOptions({
-      queryKey: [...perspectivesQueries.aspectsByProjectScope(), projectId] as const,
+      queryKey: perspectivesQueries.aspectsByProjectScope(projectId),
       queryFn: async () => {
         const aspects = await PerspectivesService.getAllAspects({ projectId });
         return aspects.reduce<AspectMap>((acc, aspect) => {
@@ -38,14 +41,15 @@ export const perspectivesQueries = {
     }),
 
   // the content of a document for an aspect
-  docAspectScope: () => [...perspectivesQueries.all(), "docAspect"] as const,
+  docAspectScope: (projectId: number | null | undefined) =>
+    [...perspectivesQueries.projectScope(projectId), "docAspect"] as const,
   docAspect: (
     projectId: number | null | undefined,
     aspectId: number | null | undefined,
     sdocId: number | null | undefined,
   ) =>
     queryOptions({
-      queryKey: [...perspectivesQueries.docAspectScope(), aspectId, sdocId, projectId] as const,
+      queryKey: [...perspectivesQueries.docAspectScope(projectId), aspectId, sdocId] as const,
       queryFn:
         !projectId || !aspectId || !sdocId
           ? skipToken
@@ -54,9 +58,11 @@ export const perspectivesQueries = {
     }),
 
   // the document visualization (2D map) of an aspect
-  visualizationScope: () => [...perspectivesQueries.all(), "visualization"] as const,
+  visualizationScope: (projectId: number | undefined) =>
+    [...perspectivesQueries.projectScope(projectId), "visualization"] as const,
   // prefix of all visualizations of one aspect (any search query / filter), for invalidation
-  visualizationOfAspectScope: (aspectId: number) => [...perspectivesQueries.visualizationScope(), aspectId] as const,
+  visualizationOfAspectScope: (projectId: number | undefined, aspectId: number) =>
+    [...perspectivesQueries.visualizationScope(projectId), aspectId] as const,
   visualization: (
     projectId: number | undefined,
     aspectId: number,
@@ -64,7 +70,7 @@ export const perspectivesQueries = {
     filter: Body_perspectives_visualize_documents["filter"],
   ) =>
     queryOptions({
-      queryKey: [...perspectivesQueries.visualizationScope(), aspectId, searchQuery, filter, projectId] as const,
+      queryKey: [...perspectivesQueries.visualizationOfAspectScope(projectId, aspectId), searchQuery, filter] as const,
       queryFn:
         projectId === undefined
           ? skipToken
@@ -78,26 +84,28 @@ export const perspectivesQueries = {
       staleTime: 1000 * 60 * 5,
     }),
 
-  clusterSimilaritiesScope: () => [...perspectivesQueries.all(), "clusterSimilarities"] as const,
-  // prefix of the cluster similarities of one aspect, for invalidation
-  clusterSimilaritiesOfAspectScope: (aspectId: number) =>
-    [...perspectivesQueries.clusterSimilaritiesScope(), aspectId] as const,
+  clusterSimilaritiesScope: (projectId: number | undefined) =>
+    [...perspectivesQueries.projectScope(projectId), "clusterSimilarities"] as const,
   clusterSimilarities: (projectId: number | undefined, aspectId: number) =>
     queryOptions({
-      queryKey: [...perspectivesQueries.clusterSimilaritiesOfAspectScope(aspectId), projectId] as const,
+      queryKey: [...perspectivesQueries.clusterSimilaritiesScope(projectId), aspectId] as const,
       queryFn:
         projectId === undefined ? skipToken : () => PerspectivesService.getClusterSimilarities({ projectId, aspectId }),
       staleTime: 1000 * 60 * 5,
     }),
 
-  clustersBySdocScope: () => [...perspectivesQueries.all(), "clustersBySdoc"] as const,
+  clustersBySdocScope: (projectId: number | null | undefined) =>
+    [...perspectivesQueries.projectScope(projectId), "clustersBySdoc"] as const,
+  // prefix of the clusters of all sdocs in one aspect, for cache writes
+  clustersBySdocOfAspectScope: (projectId: number, aspectId: number) =>
+    [...perspectivesQueries.clustersBySdocScope(projectId), aspectId] as const,
   clustersBySdoc: (
     projectId: number | null | undefined,
     aspectId: number | null | undefined,
     sdocId: number | null | undefined,
   ) =>
     queryOptions({
-      queryKey: [...perspectivesQueries.clustersBySdocScope(), aspectId, sdocId, projectId] as const,
+      queryKey: [...perspectivesQueries.clustersBySdocScope(projectId), aspectId, sdocId] as const,
       queryFn:
         !projectId || !aspectId || !sdocId
           ? skipToken
@@ -107,10 +115,11 @@ export const perspectivesQueries = {
 
   // the relative url of the map thumbnail of an aspect, null until it is computed
   // (raw; the hook adds the /content/ prefix)
-  mapThumbnailUrlScope: () => [...perspectivesQueries.all(), "mapThumbnailUrl"] as const,
+  mapThumbnailUrlScope: (projectId: number) =>
+    [...perspectivesQueries.projectScope(projectId), "mapThumbnailUrl"] as const,
   mapThumbnailUrl: (projectId: number, aspectId: number) =>
     queryOptions({
-      queryKey: [...perspectivesQueries.mapThumbnailUrlScope(), aspectId, projectId] as const,
+      queryKey: [...perspectivesQueries.mapThumbnailUrlScope(projectId), aspectId] as const,
       queryFn: () => PerspectivesService.getMapThumbnailUrl({ projectId, aspectId }),
     }),
 

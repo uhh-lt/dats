@@ -5,7 +5,7 @@ import { createJobQueries } from "@core/job";
  * Query factory for the project import (import jobs of a project).
  *
  *   importQueries.all()            ["import"]
- *   importQueries.job.byId(projectId, jobId)  ["import", "job", "detail", jobId, projectId]
+ *   importQueries.job.byId(projectId, jobId)  ["import", "job", "project", projectId, "detail", jobId]
  *
  * Job updates arrive via websocket (JOB_UPDATED) and are written into the job caches by the cache-sync code.
  */

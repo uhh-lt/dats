@@ -883,7 +883,7 @@ const queryFactoryShapeRule = {
     messages: {
       prefixName: "A key prefix of a query factory is named '<leaf>Scope' or '<leaf>Of<Param>Scope', not '{{name}}'.",
       leafScope:
-        "The queryKey of the leaf '{{name}}' must start with ...{{factory}}.{{name}}Scope() (or {{name}}Of<Param>Scope(...)).",
+        "The queryKey of the leaf '{{name}}' must start with ...{{factory}}.{{name}}Scope() (or {{name}}Of<Param>Scope(...); byProject may start with projectScope(...)).",
       leafRoot: "The queryKey of the leaf '{{name}}' (no params) must start with ...{{factory}}.all().",
     },
     schema: [],
@@ -931,9 +931,11 @@ const queryFactoryShapeRule = {
             if (prefix !== "all") context.report({ node: key, messageId: "leafRoot", data: { name, factory } });
             continue;
           }
+          // the entities of a whole project (byProject) are keyed by the project prefix itself
           const ownScope =
             prefix === `${name}Scope` ||
-            (prefix !== null && prefix.startsWith(`${name}Of`) && prefix.endsWith("Scope"));
+            (prefix !== null && prefix.startsWith(`${name}Of`) && prefix.endsWith("Scope")) ||
+            (name === "byProject" && prefix === "projectScope");
           if (!ownScope) context.report({ node: key, messageId: "leafScope", data: { name, factory } });
         }
       },

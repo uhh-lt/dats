@@ -13,6 +13,7 @@ export enum FolderSelection {
 
 interface DocumentSearchState extends TableState {
   // project state:
+  projectId: number | undefined; // the project of the ids below (they are persisted, see ProjectActions.changeProject)
   selectedDocumentId: number | undefined; // the id of the selected document. Used to highlight the selected document in the table, and to show the document information (tags, metadata etc.).
   selectedSdocFolderId: number | undefined; // the id of the selected sdoc folder document. Used to highlight the selected folder in the table, and to show the folder information (tags, metadata etc.).
   expandedTagIds: string[]; // the ids of the tags that are expanded in the tag tree.
@@ -26,6 +27,7 @@ interface DocumentSearchState extends TableState {
 const initialState: DocumentSearchState = {
   ...initialTableState,
   // project state:
+  projectId: undefined,
   selectedDocumentId: undefined,
   selectedSdocFolderId: undefined,
   sortingModel: [{ id: SdocColumns.SD_SOURCE_DOCUMENT_NAME, desc: false }],
@@ -121,9 +123,13 @@ const documentSearchSlice = createSlice({
     },
   },
   extraReducers(builder) {
-    builder.addCase(ProjectActions.changeProject, (state) => {
+    builder.addCase(ProjectActions.changeProject, (state, action) => {
+      // the persisted ids may belong to another project (another tab saved them), so compare, not only on a switch
+      if (state.projectId === action.payload) return;
       console.log("Project changed! Resetting 'documentSearch' state.");
+      state.projectId = action.payload;
       state.selectedDocumentId = initialState.selectedDocumentId;
+      state.selectedSdocFolderId = initialState.selectedSdocFolderId;
       state.expandedTagIds = initialState.expandedTagIds;
       state.scrollPosition = initialState.scrollPosition;
       state.expandedFolderIds = initialState.expandedFolderIds;

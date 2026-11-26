@@ -1,6 +1,4 @@
 import { createSlice, PayloadAction } from "@reduxjs/toolkit";
-import { persistReducer } from "redux-persist";
-import { persistStorage } from "../persistStorage";
 
 export interface ProjectState {
   // app state:
@@ -24,12 +22,7 @@ const projectSlice = createSlice({
 });
 
 export const ProjectActions = projectSlice.actions;
+// not persisted: the URL sets the project after every load, so that every persisted slice checks the project of its ids
 export const projectReducer = {
-  [projectSlice.name]: persistReducer(
-    {
-      key: projectSlice.name,
-      storage: persistStorage,
-    },
-    projectSlice.reducer,
-  ),
+  [projectSlice.name]: projectSlice.reducer,
 };

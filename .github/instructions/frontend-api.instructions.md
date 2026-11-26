@@ -21,23 +21,32 @@ import { queryOptions, skipToken } from "@tanstack/react-query";
 /**
  * 2. Doc comment: what the factory loads and one line per leaf with its key.
  *
- *   tagQueries.all()                ["tag"]
- *   tagQueries.byProject(projectId) ["tag", "project", projectId]
+ *   tagQueries.all()                         ["tag"]
+ *   tagQueries.projectScope(projectId)       ["tag", "project", projectId]
+ *   tagQueries.byProject(projectId)          ["tag", "project", projectId]
+ *   tagQueries.idsBySdoc(projectId, sdocId)  ["tag", "project", projectId, "sdoc", sdocId]
  */
 export const tagQueries = {
   // 3. The domain root; the file is named after it (lint)
   all: () => ["tag"] as const,
+  // 4. The prefix of all keys of one project
+  projectScope: (projectId: number | null | undefined) => [...tagQueries.all(), "project", projectId] as const,
 
-  // 4. Per leaf: a short comment, its scope, then the leaf
-  byProjectScope: () => [...tagQueries.all(), "project"] as const,
+  // 5. Per leaf: a short comment, its scope, then the leaf
   byProject: (projectId: number | undefined) =>
     queryOptions({
-      queryKey: [...tagQueries.byProjectScope(), projectId] as const,
+      queryKey: tagQueries.projectScope(projectId),
       queryFn: projectId === undefined ? skipToken : () => TagService.getByProject({ projectId }),
       staleTime: 1000 * 60 * 5,
     }),
+  idsBySdocScope: (projectId: number | null | undefined) => [...tagQueries.projectScope(projectId), "sdoc"] as const,
+  idsBySdoc: (projectId: number | null | undefined, sdocId: number | null | undefined) =>
+    queryOptions({
+      queryKey: [...tagQueries.idsBySdocScope(projectId), sdocId] as const,
+      // ...
+    }),
 
-  // 5. Optional: tableInfo, search/searchScope, optimisticMutationScope, job (see Rules)
+  // 6. Optional: tableInfo, search/searchScope, optimisticMutationScope, job (see Rules)
 };
 ```
 
@@ -57,7 +66,7 @@ const useGetTag = (tagId: number | null | undefined) => {
 const useCreateTag = () =>
   useMutation({
     mutationKey: [...tagQueries.all(), "createTag"],
-    mutationFn: TagService.createDocTag,
+    mutationFn: TagService.createTag,
     meta: { datsEvent: "TAG_CREATED", successMessage: (tag: TagRead) => `Created tag ${tag.name}` },
   });
 
@@ -78,15 +87,17 @@ export const TagHooks = { useGetTag, useCreateTag };
 ### Query Factories
 
 - **Shape**: a plain object of `all()`, key prefixes (`...Scope`) and leaves (`queryOptions` / `infiniteQueryOptions`). No React, no hooks.
-- **Keys**: hierarchical, domain → scope segment → params: `["tag", "project", projectId]`. Every key is `as const`.
-- **Scopes** (lint): every leaf with params has a prefix `<leaf>Scope()` (`[...xQueries.all(), "<segment>"]`) and its key starts with it. A parameterized prefix for invalidation is named `<leaf>Of<Param>Scope(param)` (`spanAnnotationQueries.bySdocOfSdocScope(sdocId)`, `sdocQueries.searchOfProjectScope(projectId)`). A leaf without params uses `[...xQueries.all(), "<segment>"]`. Every other key function ends with `Scope`.
-- **Leaf names**: `byId(id)` for one entity (segment `"detail"`), `byProject(projectId)` for all entities of a project, `by<Param>` / `<data>By<Param>` for other lookups (`bySdoc`, `idsBySdoc`, `aspectsByProject`). Keep names consistent with these, not with the service method.
+- **Keys**: hierarchical, domain → `"project", projectId` → scope segment → params: `["tag", "project", projectId, "sdoc", sdocId]`. Every key is `as const`.
+- **Project first**: ids are unique per project only (ADR 0013), so every key of project data starts with `projectScope(projectId)` (`[...xQueries.all(), "project", projectId]`), before any row id.
+- **Outside projects**: only data of no project (logged-in user, project list, API keys, instance info, releases) has keys without a project.
+- **Scopes** (lint): every leaf with params has a prefix `<leaf>Scope(projectId)` (`[...xQueries.projectScope(projectId), "<segment>"]`) and its key starts with it; `byProject(projectId)` uses `projectScope(projectId)` itself. A parameterized prefix for invalidation is named `<leaf>Of<Param>Scope(projectId, param)` (`spanAnnotationQueries.bySdocOfSdocScope(projectId, sdocId)`). Every other key function ends with `Scope`.
+- **Leaf names**: `byId(projectId, id)` for one entity (segment `"detail"`), `byProject(projectId)` for all entities of a project, `by<Param>` / `<data>By<Param>` for other lookups (`bySdoc`, `idsBySdoc`, `aspectsByProject`). Keep names consistent with these, not with the service method.
 - **Leaf params**: identity params only (ids, filters, the backend request). Never `enabled`, `select` or `staleTime` params. A leaf may set `staleTime`, `retry`, `refetchOnWindowFocus` itself when they belong to the data.
 - **Missing ids**: a leaf whose id may be missing takes `number | null | undefined` and returns `skipToken` as `queryFn`. A leaf used by a route loader or `useSuspenseQuery` takes a strict id (`projectId: number`) with a normal `queryFn`; non-route call sites add `enabled` (in a hook).
 - **queryFn**: inline. A module-level helper only when several leaves share it (`nextPageByCount` in `memoQueries.ts`). Type the service call, never use generics like `queryOptions<T>`. Data reshaping that every consumer needs (array → `Record<id, T>` map for O(1) access) happens in the `queryFn`; say so in the leaf comment.
 - **Seeding**: a leaf whose response contains other entities may seed their caches in its `queryFn` via the typed keys (`sdocQueries.search`, `whiteboardQueries.data`), never a route or component.
-- **Search listings**: filtered, sorted, paginated listings are `search(request)` + `searchScope()` (variant `searchGrouped`), with `tableInfo(projectId)` for the column infos of the filter table (key from `tableInfoQueries.byDomain(...)`, `staleTime: Infinity`). The leaf takes the backend request without the page (`Omit<Parameters<typeof Service.method>[0], "page">` or the request DTO) and adds the page in the `queryFn`; callers convert UI sorting with `toSorts<Column>(sortingModel)`. No `table` leaf, no UI translation in the leaf.
-- **Jobs**: background jobs are the `job` property, `createJobQueries("<root>", fetchJob, fetchJobs?, actions?)` from `@core/job` (`job.byId(projectId, jobId)`, `job.byProject(projectId)`); a job type with generated abort and retry endpoints passes them as `actions`, which `JobListItem` offers through `JobHooks` (`core/job/jobHooks.ts`). Components follow a job with `useLiveJob(xQueries.job.byId(projectId, jobId))`; a job list refreshes with `useRefreshJobs(xQueries.job)`, which also refetches the jobs its items follow.
+- **Search listings**: filtered, sorted, paginated listings are `search(request)` + `searchScope(projectId)` (variant `searchGrouped`), with `tableInfo(projectId)` for the column infos of the filter table (key from `tableInfoQueries.byDomain(...)`, `staleTime: Infinity`). The leaf takes the backend request without the page (`Omit<Parameters<typeof Service.method>[0], "page">` or the request DTO) and adds the page in the `queryFn`; callers convert UI sorting with `toSorts<Column>(sortingModel)`. No `table` leaf, no UI translation in the leaf.
+- **Jobs**: background jobs are the `job` property, `createJobQueries("<root>", fetchJob, fetchJobs?, actions?)` from `@core/job` (keys `[<root>, "job", "project", projectId, ...]`: `job.byId(projectId, jobId)`, `job.byProject(projectId)`); a job type with generated abort and retry endpoints passes them as `actions`, which `JobListItem` offers through `JobHooks` (`core/job/jobHooks.ts`). Components follow a job with `useLiveJob(xQueries.job.byId(projectId, jobId))`; a job list refreshes with `useRefreshJobs(xQueries.job, projectId)`, which also refetches the jobs its items follow.
 - **Optimistic scope**: a domain with optimistic mutations has `optimisticMutationScope: () => [...xQueries.all(), "optimistic"]`.
 
 ### Hooks Objects: Query Hooks
@@ -102,14 +113,15 @@ export const TagHooks = { useGetTag, useCreateTag };
 
 - **Key** (lint): `mutationKey: [...xQueries.all(), "<hookName without use>"]` (`useCreateTag` → `"createTag"`). Optimistic mutations start with `...xQueries.optimisticMutationScope()`, job starts are `[...xQueries.job.all(), "start"]`. Every `useMutation` has a `mutationKey` (lint).
 - **Names**: `use<Verb><Entity>` (`useCreateCode`, `useDeleteBulkSpanAnnotation`, `useStartClassifierJob`).
-- **mutationFn**: pass the service method directly when its argument fits (`mutationFn: TagService.createDocTag`); otherwise a single arrow that maps the variables. No `async`/`await` wrapper.
+- **mutationFn**: pass the service method directly when its argument fits (`mutationFn: TagService.createTag`); otherwise a single arrow that maps the variables. No `async`/`await` wrapper.
 - **Cache updates**: tag the mutation with `meta.datsEvent`; the cache-sync code (`api/cache-sync`) writes the result into all caches. `meta.successMessage` / `meta.errorMessage` show the notification. A hook writes or invalidates a cache itself only for data without a DATS event (user-private data, results of this user's request) and says why in a comment (`MemoHooks.useRecordRecentMemo`, `PerspectivesHooks.useLabelDocs`).
 - **Optimistic updates**: `onMutate` cancels and snapshots the affected typed key, `onError` calls `rollbackOptimisticUpdate(queryClient, key, previous, xQueries.optimisticMutationScope())` from `@utils/optimisticUtils`.
 - **Callbacks**: logic that always belongs to the mutation goes in `useMutation`; caller-specific UI reactions go in the `mutate(variables, { onSuccess })` call. Callers use `mutate`; `mutateAsync` only when the result must be awaited in sequence (`useMemoPersistence` save queue). When the caller must decide what happens with the result, the hook takes `onSuccess`/`onError` as options (`AuthHooks.useLogin`).
 
 ### Cache Access
 
-- `setQueryData` / `getQueryData` / `invalidateQueries` use the typed key `xQueries.leaf(...).queryKey` or a scope prefix (`xQueries.searchScope()`), never a hand-written array (lint: no `queryKey` array literal outside `*Queries.ts`).
+- `setQueryData` / `getQueryData` / `invalidateQueries` use the typed key `xQueries.leaf(...).queryKey` or a scope prefix (`xQueries.searchScope(projectId)`), never a hand-written array (lint: no `queryKey` array literal outside `*Queries.ts`).
+- Every cache write, sweep and invalidation (also in `api/cache-sync`) starts from the project of the changed data and never reaches another project's entries.
 
 ## Examples
 

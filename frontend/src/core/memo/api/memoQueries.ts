@@ -12,35 +12,39 @@ const nextPageByCount = <TPage extends { items: unknown[]; total_results: number
 /**
  * Query factory for memos.
  *
- *   memoQueries.all()                              ["memo"]
- *   memoQueries.byId(projectId, memoId)            ["memo", "detail", memoId, projectId]
- *   memoQueries.byAttachedObject(projectId, type, id)  ["memo", "attached", type, id, projectId]
- *   memoQueries.recent(projectId)                  ["memo", "recent", projectId]
- *   memoQueries.search(projectId, request)           ["memo", "search", request, projectId]
- *   memoQueries.searchGrouped(projectId, request)    ["memo", "searchGrouped", request, projectId]
- *   memoQueries.tableInfo(projectId)               ["tableInfo", "memoFilter", projectId]
+ *   memoQueries.all()                                  ["memo"]
+ *   memoQueries.projectScope(projectId)                ["memo", "project", projectId]
+ *   memoQueries.byId(projectId, memoId)                ["memo", "project", projectId, "detail", memoId]
+ *   memoQueries.byAttachedObject(projectId, type, id)  ["memo", "project", projectId, "attached", type, id]
+ *   memoQueries.recent(projectId)                      ["memo", "project", projectId, "recent"]
+ *   memoQueries.search(projectId, request)             ["memo", "project", projectId, "search", request]
+ *   memoQueries.searchGrouped(projectId, request)      ["memo", "project", projectId, "searchGrouped", request]
+ *   memoQueries.tableInfo(projectId)                   ["tableInfo", "project", projectId, "memoFilter"]
  */
 export const memoQueries = {
   all: () => ["memo"] as const,
+  // prefix of all memo queries of one project
+  projectScope: (projectId: number | null | undefined) => [...memoQueries.all(), "project", projectId] as const,
 
   // a single memo
-  byIdScope: () => [...memoQueries.all(), "detail"] as const,
+  byIdScope: (projectId: number | null | undefined) => [...memoQueries.projectScope(projectId), "detail"] as const,
   byId: (projectId: number | null | undefined, memoId: number | null | undefined) =>
     queryOptions({
-      queryKey: [...memoQueries.byIdScope(), memoId, projectId] as const,
+      queryKey: [...memoQueries.byIdScope(projectId), memoId] as const,
       queryFn: !projectId || !memoId ? skipToken : () => MemoService.getById({ projectId, memoId }),
       staleTime: 1000 * 60 * 5,
     }),
 
-  // all memos attached to an object; the object determines the project, so the project comes last in the key
-  byAttachedObjectScope: () => [...memoQueries.all(), "attached"] as const,
+  // all memos attached to an object
+  byAttachedObjectScope: (projectId: number | null | undefined) =>
+    [...memoQueries.projectScope(projectId), "attached"] as const,
   byAttachedObject: (
     projectId: number | null | undefined,
     attachedObjType: AttachedObjectType,
     attachedObjId: number | null | undefined,
   ) =>
     queryOptions({
-      queryKey: [...memoQueries.byAttachedObjectScope(), attachedObjType, attachedObjId, projectId] as const,
+      queryKey: [...memoQueries.byAttachedObjectScope(projectId), attachedObjType, attachedObjId] as const,
       queryFn:
         !projectId || !attachedObjId
           ? skipToken
@@ -54,27 +58,27 @@ export const memoQueries = {
     }),
 
   // recently opened memos of a project
-  recentScope: () => [...memoQueries.all(), "recent"] as const,
+  recentScope: (projectId: number | null | undefined) => [...memoQueries.projectScope(projectId), "recent"] as const,
   recent: (projectId: number | null | undefined) =>
     queryOptions({
-      queryKey: [...memoQueries.recentScope(), projectId] as const,
+      queryKey: memoQueries.recentScope(projectId),
       queryFn: !projectId ? skipToken : () => MemoService.getRecentMemos({ projectId }),
     }),
 
   // search results (flat) and search results grouped by a column
-  searchScope: () => [...memoQueries.all(), "search"] as const,
+  searchScope: (projectId: number) => [...memoQueries.projectScope(projectId), "search"] as const,
   search: (projectId: number, request: QueryRequest_MemoColumns_) =>
     infiniteQueryOptions({
-      queryKey: [...memoQueries.searchScope(), request, projectId] as const,
+      queryKey: [...memoQueries.searchScope(projectId), request] as const,
       queryFn: ({ pageParam }) =>
         SearchService.searchMemos({ projectId, requestBody: { ...request, page_number: pageParam } }),
       initialPageParam: 0,
       getNextPageParam: nextPageByCount,
     }),
-  searchGroupedScope: () => [...memoQueries.all(), "searchGrouped"] as const,
+  searchGroupedScope: (projectId: number) => [...memoQueries.projectScope(projectId), "searchGrouped"] as const,
   searchGrouped: (projectId: number, request: GroupQueryRequest_MemoColumns_) =>
     infiniteQueryOptions({
-      queryKey: [...memoQueries.searchGroupedScope(), request, projectId] as const,
+      queryKey: [...memoQueries.searchGroupedScope(projectId), request] as const,
       queryFn: ({ pageParam }) =>
         SearchService.searchMemoGroups({ projectId, requestBody: { ...request, page_number: pageParam } }),
       initialPageParam: 0,

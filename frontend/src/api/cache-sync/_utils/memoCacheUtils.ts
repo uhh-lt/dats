@@ -16,10 +16,12 @@ import { removeSingle, setSingle } from "./cacheWriterUtils";
  * indicators on the attached object and the memo workspace views.
  */
 
-/** Invalidate the memo workspace queries (list + groups). */
-export function invalidateMemoWorkspace(): void {
-  queryClient.invalidateQueries({ queryKey: memoQueries.searchScope() });
-  queryClient.invalidateQueries({ queryKey: memoQueries.searchGroupedScope() });
+/** Invalidate the memo workspace queries (list + groups) of the given projects. */
+export function invalidateMemoWorkspace(projectIds: Iterable<number>): void {
+  for (const projectId of new Set(projectIds)) {
+    queryClient.invalidateQueries({ queryKey: memoQueries.searchScope(projectId) });
+    queryClient.invalidateQueries({ queryKey: memoQueries.searchGroupedScope(projectId) });
+  }
 }
 
 /**
@@ -37,31 +39,32 @@ export function invalidateMemoRecents(projectIds: Iterable<number>): void {
  * indicators across the UI react to memo creation/deletion.
  */
 export function invalidateAttachedObjectMemoIds(
+  projectId: number,
   attachedObjectType: AttachedObjectType,
   attachedObjectId: number,
 ): void {
   switch (attachedObjectType) {
     case "source_document":
-      queryClient.invalidateQueries({ queryKey: sdocQueries.byIdOfSdocScope(attachedObjectId) });
-      queryClient.invalidateQueries({ queryKey: sdocQueries.searchScope() });
+      queryClient.invalidateQueries({ queryKey: sdocQueries.byId(projectId, attachedObjectId).queryKey });
+      queryClient.invalidateQueries({ queryKey: sdocQueries.searchScope(projectId) });
       break;
     case "tag":
-      queryClient.invalidateQueries({ queryKey: tagQueries.byProjectScope() });
+      queryClient.invalidateQueries({ queryKey: tagQueries.byProject(projectId).queryKey });
       break;
     case "code":
-      queryClient.invalidateQueries({ queryKey: codeQueries.all() });
+      queryClient.invalidateQueries({ queryKey: codeQueries.byProject(projectId).queryKey });
       break;
     case "span_annotation":
-      queryClient.invalidateQueries({ queryKey: spanAnnotationQueries.bySdocScope() });
-      queryClient.invalidateQueries({ queryKey: sdocQueries.searchScope() });
+      queryClient.invalidateQueries({ queryKey: spanAnnotationQueries.bySdocScope(projectId) });
+      queryClient.invalidateQueries({ queryKey: sdocQueries.searchScope(projectId) });
       break;
     case "sentence_annotation":
-      queryClient.invalidateQueries({ queryKey: sentenceAnnotationQueries.bySdocScope() });
-      queryClient.invalidateQueries({ queryKey: sdocQueries.searchScope() });
+      queryClient.invalidateQueries({ queryKey: sentenceAnnotationQueries.bySdocScope(projectId) });
+      queryClient.invalidateQueries({ queryKey: sdocQueries.searchScope(projectId) });
       break;
     case "bbox_annotation":
-      queryClient.invalidateQueries({ queryKey: bboxAnnotationQueries.bySdocScope() });
-      queryClient.invalidateQueries({ queryKey: sdocQueries.searchScope() });
+      queryClient.invalidateQueries({ queryKey: bboxAnnotationQueries.bySdocScope(projectId) });
+      queryClient.invalidateQueries({ queryKey: sdocQueries.searchScope(projectId) });
       break;
     default:
       break;
@@ -86,7 +89,7 @@ export function invalidateCopiedAnnotationMemos(
       queryKey: memoQueries.byAttachedObject(annotation.project_id, attachedObjectType, annotation.id).queryKey,
     }),
   );
-  invalidateMemoWorkspace();
+  invalidateMemoWorkspace(copiesWithMemos.map((annotation) => annotation.project_id));
 }
 
 export function writeMemo(memo: MemoRead): void {
@@ -111,5 +114,5 @@ export function removeMemo(memo: MemoRead): void {
     memoQueries.byAttachedObject(memo.project_id, memo.attached_object_type, memo.attached_object_id).queryKey,
     (old) => (old ? old.filter((m) => m.id !== memo.id) : old),
   );
-  invalidateAttachedObjectMemoIds(memo.attached_object_type, memo.attached_object_id);
+  invalidateAttachedObjectMemoIds(memo.project_id, memo.attached_object_type, memo.attached_object_id);
 }

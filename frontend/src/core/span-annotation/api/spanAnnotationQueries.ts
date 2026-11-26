@@ -8,14 +8,12 @@ import { infiniteQueryOptions, queryOptions, skipToken } from "@tanstack/react-q
  * Query factory for span annotations.
  *
  *   spanAnnotationQueries.all()                                  ["spanAnnotation"]
- *   spanAnnotationQueries.byId(projectId, spanId)                ["spanAnnotation", "detail", spanId, projectId]
- *   spanAnnotationQueries.byUserCode(projectId, codeId, userId)  ["spanAnnotation", "userCode", codeId, userId, projectId]
- *   spanAnnotationQueries.bySdoc(projectId, sdocId, userId)      ["spanAnnotation", "sdoc", sdocId, userId, projectId]
- *   spanAnnotationQueries.tableInfo(projectId)                   ["tableInfo", "span", projectId]
- *   spanAnnotationQueries.search(projectId, request)               ["spanAnnotation", "search", request, projectId]
- *
- * The routes need the project, but the ids already determine it: the project comes last in the keys, so the prefixes
- * by id (bySdocOfSdocScope, byUserCodeOfCodeScope) cover it.
+ *   spanAnnotationQueries.projectScope(projectId)                ["spanAnnotation", "project", projectId]
+ *   spanAnnotationQueries.byId(projectId, spanId)                ["spanAnnotation", "project", projectId, "detail", spanId]
+ *   spanAnnotationQueries.byUserCode(projectId, codeId, userId)  ["spanAnnotation", "project", projectId, "userCode", codeId, userId]
+ *   spanAnnotationQueries.bySdoc(projectId, sdocId, userId)      ["spanAnnotation", "project", projectId, "sdoc", sdocId, userId]
+ *   spanAnnotationQueries.tableInfo(projectId)                   ["tableInfo", "project", projectId, "span"]
+ *   spanAnnotationQueries.search(projectId, request)             ["spanAnnotation", "project", projectId, "search", request]
  */
 export const spanAnnotationQueries = {
   all: () => ["spanAnnotation"] as const,
@@ -23,11 +21,16 @@ export const spanAnnotationQueries = {
   // the mutations that update a cache optimistically (see rollbackOptimisticUpdate); only these are counted there
   optimisticMutationScope: () => [...spanAnnotationQueries.all(), "optimistic"] as const,
 
+  // prefix of all span annotation queries of one project
+  projectScope: (projectId: number | null | undefined) =>
+    [...spanAnnotationQueries.all(), "project", projectId] as const,
+
   // a single span annotation
-  byIdScope: () => [...spanAnnotationQueries.all(), "detail"] as const,
+  byIdScope: (projectId: number | null | undefined) =>
+    [...spanAnnotationQueries.projectScope(projectId), "detail"] as const,
   byId: (projectId: number | null | undefined, spanId: number | null | undefined) =>
     queryOptions({
-      queryKey: [...spanAnnotationQueries.byIdScope(), spanId, projectId] as const,
+      queryKey: [...spanAnnotationQueries.byIdScope(projectId), spanId] as const,
       queryFn:
         !projectId || !spanId
           ? skipToken
@@ -36,16 +39,18 @@ export const spanAnnotationQueries = {
     }),
 
   // all span annotations of one user that use a code
-  byUserCodeScope: () => [...spanAnnotationQueries.all(), "userCode"] as const,
+  byUserCodeScope: (projectId: number | null | undefined) =>
+    [...spanAnnotationQueries.projectScope(projectId), "userCode"] as const,
   // prefix of all span annotation queries of one code (any user), for invalidation
-  byUserCodeOfCodeScope: (codeId: number) => [...spanAnnotationQueries.byUserCodeScope(), codeId] as const,
+  byUserCodeOfCodeScope: (projectId: number, codeId: number) =>
+    [...spanAnnotationQueries.byUserCodeScope(projectId), codeId] as const,
   byUserCode: (
     projectId: number | null | undefined,
     codeId: number | null | undefined,
     userId: number | null | undefined,
   ) =>
     queryOptions({
-      queryKey: [...spanAnnotationQueries.byUserCodeScope(), codeId, userId, projectId] as const,
+      queryKey: [...spanAnnotationQueries.byUserCodeScope(projectId), codeId, userId] as const,
       queryFn:
         !projectId || !codeId || !userId
           ? skipToken
@@ -53,16 +58,18 @@ export const spanAnnotationQueries = {
     }),
 
   // all span annotations of one user in one sdoc
-  bySdocScope: () => [...spanAnnotationQueries.all(), "sdoc"] as const,
+  bySdocScope: (projectId: number | null | undefined) =>
+    [...spanAnnotationQueries.projectScope(projectId), "sdoc"] as const,
   // prefix of all span annotation queries of one sdoc (any user), for invalidation
-  bySdocOfSdocScope: (sdocId: number) => [...spanAnnotationQueries.bySdocScope(), sdocId] as const,
+  bySdocOfSdocScope: (projectId: number, sdocId: number) =>
+    [...spanAnnotationQueries.bySdocScope(projectId), sdocId] as const,
   bySdoc: (
     projectId: number | null | undefined,
     sdocId: number | null | undefined,
     userId: number | null | undefined,
   ) =>
     queryOptions({
-      queryKey: [...spanAnnotationQueries.bySdocScope(), sdocId, userId, projectId] as const,
+      queryKey: [...spanAnnotationQueries.bySdocScope(projectId), sdocId, userId] as const,
       queryFn:
         !projectId || !sdocId || !userId
           ? skipToken
@@ -76,10 +83,10 @@ export const spanAnnotationQueries = {
       staleTime: Infinity,
     }),
 
-  searchScope: () => [...spanAnnotationQueries.all(), "search"] as const,
+  searchScope: (projectId: number) => [...spanAnnotationQueries.projectScope(projectId), "search"] as const,
   search: (projectId: number, request: QueryRequest_SpanColumns_) =>
     infiniteQueryOptions({
-      queryKey: [...spanAnnotationQueries.searchScope(), request, projectId] as const,
+      queryKey: [...spanAnnotationQueries.searchScope(projectId), request] as const,
       queryFn: ({ pageParam }) =>
         SearchService.searchSpanAnnotations({ projectId, requestBody: { ...request, page_number: pageParam } }),
       initialPageParam: 0,

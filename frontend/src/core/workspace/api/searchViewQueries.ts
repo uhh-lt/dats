@@ -17,17 +17,19 @@ export const asViewsOfEntity = <TView extends SearchViewBase>(views: AnySearchVi
  * Query factory for the saved search views of the entity workspaces (memo, span, sentence, bbox).
  *
  *   searchViewQueries.all()                                  ["searchView"]
- *   searchViewQueries.byProject<TView>(entityType, projId)   ["searchView", entityType, projId]
+ *   searchViewQueries.projectScope(projectId)                ["searchView", "project", projectId]
+ *   searchViewQueries.byProject<TView>(entityType, projId)   ["searchView", "project", projId, entityType]
  */
 export const searchViewQueries = {
   all: () => ["searchView"] as const,
 
-  // prefix of all views of one entity type (any project), for invalidation
-  byProjectOfEntityScope: (entityType: SearchEntityType) => [...searchViewQueries.all(), entityType] as const,
+  // prefix of all search view queries of one project
+  projectScope: (projectId: number) => [...searchViewQueries.all(), "project", projectId] as const,
+
   // TView: the view type of entityType (e.g. MemoSearchViewRead), so the cache entry is typed as TView[]
   byProject: <TView extends SearchViewBase = AnySearchViewRead>(entityType: SearchEntityType, projectId: number) =>
     queryOptions({
-      queryKey: [...searchViewQueries.byProjectOfEntityScope(entityType), projectId] as const,
+      queryKey: [...searchViewQueries.projectScope(projectId), entityType] as const,
       queryFn: async () => asViewsOfEntity<TView>(await SearchViewService.getByProject({ projectId, entityType })),
     }),
 };

@@ -5,7 +5,7 @@ import { JobService } from "@api/services/JobService";
  * Query factory for the duplicate finder (the duplicate finder job).
  *
  *   duplicateFinderQueries.all()            ["duplicateFinder"]
- *   duplicateFinderQueries.job.byId(projectId, jobId)  ["duplicateFinder", "job", "detail", jobId, projectId]
+ *   duplicateFinderQueries.job.byId(projectId, jobId)  ["duplicateFinder", "job", "project", projectId, "detail", jobId]
  *
  * Job updates arrive via websocket (JOB_UPDATED) and are written into the job caches by the cache-sync code.
  */

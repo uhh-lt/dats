@@ -17,7 +17,10 @@ export const DocumentUploadJobsView = memo(({ projectId }: DocumentImportJobsVie
   // global server state (react-query)
   const { data: crawlerJobs } = useQuery(documentUploadQueries.job.byProject(projectId));
   // the list and the jobs its items follow
-  const { refresh: refreshCrawlerJobs, isFetching: isCrawlerFetching } = useRefreshJobs(documentUploadQueries.job);
+  const { refresh: refreshCrawlerJobs, isFetching: isCrawlerFetching } = useRefreshJobs(
+    documentUploadQueries.job,
+    projectId,
+  );
   const {
     data: sdocStatus,
     refetch: refetchSdocStatus,

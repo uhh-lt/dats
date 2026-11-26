@@ -5,12 +5,14 @@ import { persistStorage } from "@store/persistStorage";
 
 interface ImageSearchState {
   // project state:
+  projectId: number | undefined; // the project of the ids below (they are persisted, see ProjectActions.changeProject)
   selectedDocumentIds: number[];
   selectedDocumentId: number | undefined;
 }
 
 const initialState: ImageSearchState = {
   // project state:
+  projectId: undefined,
   selectedDocumentIds: [],
   selectedDocumentId: undefined,
 };
@@ -63,8 +65,11 @@ const imageSearchSlice = createSlice({
     },
   },
   extraReducers: (builder) => {
-    builder.addCase(ProjectActions.changeProject, (state) => {
+    builder.addCase(ProjectActions.changeProject, (state, action) => {
+      // the persisted ids may belong to another project (another tab saved them), so compare, not only on a switch
+      if (state.projectId === action.payload) return;
       console.log("Project changed! Resetting 'imageSearch' state.");
+      state.projectId = action.payload;
       state.selectedDocumentIds = initialState.selectedDocumentIds;
       state.selectedDocumentId = initialState.selectedDocumentId;
     });

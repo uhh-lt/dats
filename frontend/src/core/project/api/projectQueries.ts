@@ -14,9 +14,10 @@ export type ProjectFeatureMap = Partial<Record<string, ProjectFeatureRead>>;
  *
  *   projectQueries.all()                                ["project"]
  *   projectQueries.userProjects()                       ["project", "user"]
- *   projectQueries.sdocStatusCount(projectId, status)   ["project", "sdocStatusCount", projectId, status]
- *   projectQueries.sdocStatusSimple(projectId, status)  ["project", "sdocStatusSimple", projectId, status]
- *   projectQueries.features(projectId)                  ["project", "features", projectId]
+ *   projectQueries.projectScope(projectId)              ["project", "project", projectId]
+ *   projectQueries.sdocStatusCount(projectId, status)   ["project", "project", projectId, "sdocStatusCount", status]
+ *   projectQueries.sdocStatusSimple(projectId, status)  ["project", "project", projectId, "sdocStatusSimple", status]
+ *   projectQueries.features(projectId)                  ["project", "project", projectId, "features"]
  */
 export const projectQueries = {
   all: () => ["project"] as const,
@@ -29,29 +30,33 @@ export const projectQueries = {
       staleTime: 1000 * 60 * 5,
     }),
 
+  // prefix of all queries of the data of one project
+  projectScope: (projectId: number) => [...projectQueries.all(), "project", projectId] as const,
+
   // number of documents of a project with the given processing status
-  sdocStatusCountScope: () => [...projectQueries.all(), "sdocStatusCount"] as const,
+  sdocStatusCountScope: (projectId: number) => [...projectQueries.projectScope(projectId), "sdocStatusCount"] as const,
   sdocStatusCount: (projectId: number, status: SDocStatus) =>
     queryOptions({
-      queryKey: [...projectQueries.sdocStatusCountScope(), projectId, status] as const,
+      queryKey: [...projectQueries.sdocStatusCountScope(projectId), status] as const,
       queryFn: () => SourceDocumentService.countSdocs({ projectId, status }),
     }),
 
   // simple processing status of all documents of a project with the given status
-  sdocStatusSimpleScope: () => [...projectQueries.all(), "sdocStatusSimple"] as const,
+  sdocStatusSimpleScope: (projectId: number) =>
+    [...projectQueries.projectScope(projectId), "sdocStatusSimple"] as const,
   sdocStatusSimple: (projectId: number, status: SDocStatus) =>
     queryOptions({
-      queryKey: [...projectQueries.sdocStatusSimpleScope(), projectId, status] as const,
+      queryKey: [...projectQueries.sdocStatusSimpleScope(projectId), status] as const,
       queryFn: () => DocprocessingService.getSimpleSdocStatusByProjectAndStatus({ projectId, status }),
     }),
 
   // state (enabled, ready, coverage) of every toggleable feature in a project, as a map feature -> state; an
   // aggregate over all documents, so it is loaded only where it is shown. Refreshed every few seconds while a feature
   // is computing, wherever it is used (the pipeline steps send no events).
-  featuresScope: () => [...projectQueries.all(), "features"] as const,
+  featuresScope: (projectId: number) => [...projectQueries.projectScope(projectId), "features"] as const,
   features: (projectId: number) =>
     queryOptions({
-      queryKey: [...projectQueries.featuresScope(), projectId] as const,
+      queryKey: projectQueries.featuresScope(projectId),
       queryFn: async () => {
         const states = await FeatureService.getProjectFeatures({ projectId });
         return states.reduce<ProjectFeatureMap>((acc, state) => {

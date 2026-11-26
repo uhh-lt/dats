@@ -7,7 +7,10 @@ import { useCallback } from "react";
  * Refreshes the document health table after a feature change planned or unplanned steps: the steps send no events, and
  * the table is cached for minutes.
  */
-export function useRefreshHealthTable() {
+export function useRefreshHealthTable(projectId: number) {
   const queryClient = useQueryClient();
-  return useCallback(() => queryClient.invalidateQueries({ queryKey: healthQueries.searchScope() }), [queryClient]);
+  return useCallback(
+    () => queryClient.invalidateQueries({ queryKey: healthQueries.searchScope(projectId) }),
+    [queryClient, projectId],
+  );
 }

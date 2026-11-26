@@ -7,17 +7,19 @@ export type CodeMap = Record<number, CodeRead>;
 /**
  * Query factory for codes.
  *
- *   codeQueries.all()                 ["code"]
- *   codeQueries.byProject(projectId)  ["code", "project", projectId]
+ *   codeQueries.all()                    ["code"]
+ *   codeQueries.projectScope(projectId)  ["code", "project", projectId]
+ *   codeQueries.byProject(projectId)     ["code", "project", projectId]
  */
 export const codeQueries = {
   all: () => ["code"] as const,
+  // prefix of all code queries of one project
+  projectScope: (projectId: number | null | undefined) => [...codeQueries.all(), "project", projectId] as const,
 
   // all codes of a project, as a map by code id
-  byProjectScope: () => [...codeQueries.all(), "project"] as const,
   byProject: (projectId: number | undefined) =>
     queryOptions({
-      queryKey: [...codeQueries.byProjectScope(), projectId] as const,
+      queryKey: codeQueries.projectScope(projectId),
       queryFn:
         projectId === undefined
           ? skipToken
