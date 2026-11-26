@@ -9,10 +9,9 @@ from sqlalchemy.orm import Session
 from common.languages_enum import Language
 from composite_keys_test_utils import (
     TenantRows,
-    TwinProjects,
     TwoTenants,
     create_tenant_rows,
-    create_twin_projects,
+    create_twin,
     create_two_tenants,
 )
 from core.project.project_crud import crud_project
@@ -248,18 +247,34 @@ def non_member_client(app_client, db_session) -> Generator[TestClient, Any, None
     client.close()
 
 
-@pytest.fixture(scope="function")
-def twins(db_session, test_user, test_project) -> TwinProjects:
-    """
-    This fixture sets up two projects that hold the same ids (see
-    `composite_keys_test_utils.TwinProjects`):
+class LoneProject(TypedDict):
+    """The rows of `create_tenant_rows` (see `composite_keys_test_utils.TenantRows`)
+    in the test project (`project`, `rows`), alone with their ids until
+    `create_twin()` creates "Twin Project" with the same features and a copy of
+    every row of the test project with the same id (`copy_project_rows`), and
+    returns it."""
 
-    - `project`: the test project with one row of every project-owned table
-      (`rows`, see `composite_keys_test_utils.TenantRows`).
-    - `twin`: "Twin Project" with the same features and a copy of every row of the
-      test project with the same id.
+    project: ProjectORM
+    rows: TenantRows
+    create_twin: Callable[[], ProjectORM]
+
+
+@pytest.fixture(scope="function")
+def lone_project(db_session, test_user, test_project: ProjectORM) -> LoneProject:
+    """
+    This fixture sets up the test project with one row of every project-owned
+    table (see `LoneProject`); no other project exists until `create_twin()`.
 
     Non-obvious derived behavior: only the SQL rows are copied, so a read of
     Elasticsearch, Weaviate or files finds nothing in either project.
     """
-    return create_twin_projects(db_session, user=test_user, project=test_project)
+    rows = create_tenant_rows(db_session, project=test_project, user=test_user)
+    db_session.commit()
+
+    return {
+        "project": test_project,
+        "rows": rows,
+        "create_twin": lambda: create_twin(
+            db_session, user=test_user, project=test_project
+        ),
+    }
