@@ -21,6 +21,7 @@ import { CheckboxState } from "@utils/CheckboxState";
 import { isEqual } from "lodash";
 import { Dispatch, SetStateAction, useCallback, useMemo, useState } from "react";
 import { PerspectivesHooks } from "../../../../api/perspectivesHooks";
+import { PerspectivesMapRouteAPI } from "../../_hooks/perspectivesMapRouteAPI";
 
 interface ClusterMenuProps {
   aspectId: number;
@@ -137,6 +138,7 @@ function ClusterMenuContent({
   };
 
   // actions
+  const { projectId } = PerspectivesMapRouteAPI.useParams();
   const { mutate: startPerspectivesJobMutation, isPending } = PerspectivesHooks.useStartPerspectivesJob();
   const handleSetCluster = useCallback(() => {
     // find entry where CheckboxState is Checked
@@ -147,6 +149,7 @@ function ClusterMenuContent({
     }
     startPerspectivesJobMutation(
       {
+        projectId,
         aspectId: aspectId,
         requestBody: {
           perspectives_job_type: PerspectivesJobType.CHANGE_CLUSTER,
@@ -160,10 +163,11 @@ function ClusterMenuContent({
         },
       },
     );
-  }, [aspectId, checked, handleClose, sdocIds, startPerspectivesJobMutation]);
+  }, [aspectId, checked, handleClose, projectId, sdocIds, startPerspectivesJobMutation]);
   const handleCreateCluster = useCallback(() => {
     startPerspectivesJobMutation(
       {
+        projectId,
         aspectId: aspectId,
         requestBody: {
           perspectives_job_type: PerspectivesJobType.CREATE_CLUSTER_WITH_SDOCS,
@@ -176,7 +180,7 @@ function ClusterMenuContent({
         },
       },
     );
-  }, [aspectId, startPerspectivesJobMutation, handleClose, sdocIds]);
+  }, [aspectId, startPerspectivesJobMutation, handleClose, projectId, sdocIds]);
 
   // Display buttons depending on state
   const actionMenu: React.ReactNode = useMemo(() => {

@@ -8,10 +8,6 @@ import type { ClassifierLoss } from "./ClassifierLoss";
 import type { ClassifierModel } from "./ClassifierModel";
 export type ClassifierRead = {
   /**
-   * ID of the project this classifier belongs to
-   */
-  project_id: number;
-  /**
    * Name of the classifier
    */
   name: string;
@@ -43,6 +39,10 @@ export type ClassifierRead = {
    * ID of the Classifier
    */
   id: number;
+  /**
+   * ID of the project this classifier belongs to
+   */
+  project_id: number;
   /**
    * Creation timestamp of the classifier
    */

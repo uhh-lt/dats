@@ -129,7 +129,8 @@ export const DocAspectTable = memo(({ aspectId, height, cluster }: DocAspectTabl
 });
 
 function ContentRenderer({ aspectId, sdocId }: { aspectId: number; sdocId: number }) {
-  const content = useQuery(perspectivesQueries.docAspect(aspectId, sdocId));
+  const projectId = useAppSelector((state) => state.project.projectId);
+  const content = useQuery(perspectivesQueries.docAspect(projectId, aspectId, sdocId));
   if (!content.data) return null;
   return content.data;
 }

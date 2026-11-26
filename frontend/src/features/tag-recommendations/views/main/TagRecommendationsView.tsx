@@ -196,6 +196,7 @@ function TagRecommendationsContent({
       },
     });
     reviewTagsMutation({
+      projectId,
       requestBody: rows.map((row) => row.recommendation_ids).flat(),
     });
   }, [applyTagsMutation, projectId, rows, reviewTagsMutation]);

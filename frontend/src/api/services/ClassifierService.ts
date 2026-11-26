@@ -16,21 +16,27 @@ export class ClassifierService {
    * @returns ClassifierInfo Successful Response
    * @throws ApiError
    */
-  public static getClassifierInfo(): CancelablePromise<ClassifierInfo> {
+  public static getClassifierInfo({ projectId }: { projectId: number }): CancelablePromise<ClassifierInfo> {
     return __request(OpenAPI, {
       method: "GET",
-      url: "/classifier/info",
+      url: "/projects/{project_id}/classifiers/info",
+      path: {
+        project_id: projectId,
+      },
+      errors: {
+        422: `Validation Error`,
+      },
     });
   }
   /**
-   * Returns all Classifiers of the Project with the given ID
+   * Returns all Classifiers of the Project
    * @returns ClassifierRead Successful Response
    * @throws ApiError
    */
   public static getByProject({ projectId }: { projectId: number }): CancelablePromise<Array<ClassifierRead>> {
     return __request(OpenAPI, {
       method: "GET",
-      url: "/classifier/project/{project_id}",
+      url: "/projects/{project_id}/classifiers",
       path: {
         project_id: projectId,
       },
@@ -45,16 +51,19 @@ export class ClassifierService {
    * @throws ApiError
    */
   public static updateById({
+    projectId,
     classifierId,
     requestBody,
   }: {
+    projectId: number;
     classifierId: number;
     requestBody: ClassifierUpdate;
   }): CancelablePromise<ClassifierRead> {
     return __request(OpenAPI, {
       method: "PATCH",
-      url: "/classifier/{classifier_id}",
+      url: "/projects/{project_id}/classifiers/{classifier_id}",
       path: {
+        project_id: projectId,
         classifier_id: classifierId,
       },
       body: requestBody,
@@ -69,11 +78,18 @@ export class ClassifierService {
    * @returns ClassifierRead Successful Response
    * @throws ApiError
    */
-  public static deleteById({ classifierId }: { classifierId: number }): CancelablePromise<ClassifierRead> {
+  public static deleteById({
+    projectId,
+    classifierId,
+  }: {
+    projectId: number;
+    classifierId: number;
+  }): CancelablePromise<ClassifierRead> {
     return __request(OpenAPI, {
       method: "DELETE",
-      url: "/classifier/{classifier_id}",
+      url: "/projects/{project_id}/classifiers/{classifier_id}",
       path: {
+        project_id: projectId,
         classifier_id: classifierId,
       },
       errors: {
@@ -95,7 +111,7 @@ export class ClassifierService {
   }): CancelablePromise<ClassifierDatasetStatistics> {
     return __request(OpenAPI, {
       method: "POST",
-      url: "/classifier/project/{project_id}/dataset-statistics",
+      url: "/projects/{project_id}/classifiers/dataset-statistics",
       path: {
         project_id: projectId,
       },

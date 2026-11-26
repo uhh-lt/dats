@@ -4,6 +4,7 @@ import ClearIcon from "@mui/icons-material/Clear";
 import { IconButton, Tooltip } from "@mui/material";
 import { useMemo } from "react";
 import { PerspectivesHooks } from "../../../../api/perspectivesHooks";
+import { PerspectivesMapRouteAPI } from "../../_hooks/perspectivesMapRouteAPI";
 
 interface ClusterReviewButtonsProps {
   aspectId: number;
@@ -37,13 +38,17 @@ export function ClusterReviewButtons({ aspectId, selectedSdocIds }: ClusterRevie
   }, [sdocId2Doc, selectedSdocIds]);
 
   // event handlers
-  const { mutate: labelDocsMutation, isPending: isLabelPending } = PerspectivesHooks.useLabelDocs(aspectId);
+  const { projectId } = PerspectivesMapRouteAPI.useParams();
+  const { mutate: labelDocsMutation, isPending: isLabelPending } = PerspectivesHooks.useLabelDocs(projectId, aspectId);
   const handleLabelDocs = () => {
     if (selectedSdocIds.length === 0) return;
     labelDocsMutation(selectedSdocIds);
   };
 
-  const { mutate: unlabelDocsMutation, isPending: isUnlabelPending } = PerspectivesHooks.useUnlabelDocs(aspectId);
+  const { mutate: unlabelDocsMutation, isPending: isUnlabelPending } = PerspectivesHooks.useUnlabelDocs(
+    projectId,
+    aspectId,
+  );
   const handleUnlabelDocs = () => {
     if (selectedSdocIds.length === 0) return;
     unlabelDocsMutation(selectedSdocIds);

@@ -33,7 +33,8 @@ const averagingOptions = [ClassifierAveraging.MICRO, ClassifierAveraging.MACRO];
 export function TrainingSettingsStep() {
   const model = useAppSelector((state) => state.classifier.context.model);
   const savedSettings = useAppSelector((state) => state.classifier.drafts.trainingSettings);
-  const classifierInfo = useQuery(classifierQueries.info());
+  const projectId = useAppSelector((state) => state.classifier.context.projectId);
+  const classifierInfo = useQuery(classifierQueries.info(projectId));
 
   if (classifierInfo.isError) {
     return <Alert severity="error">Could not load classifier settings: {classifierInfo.error.message}</Alert>;

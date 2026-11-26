@@ -42,7 +42,7 @@ export function EvalSettingsStep() {
 
   // read the classifier to pre-fill the averaging strategy from its training settings
   const classifiers = ClassifierHooks.useGetAllClassifiers(projectId);
-  const classifierInfo = useQuery(classifierQueries.info());
+  const classifierInfo = useQuery(classifierQueries.info(projectId));
   const classifier = classifiers.data?.find((c) => c.id === classifierId);
   const configuredAveraging = classifier?.train_params["averaging"];
   const defaultAveraging =

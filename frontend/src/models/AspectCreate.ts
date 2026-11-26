@@ -33,8 +33,4 @@ export type AspectCreate = {
    * ID of the tag associated with this aspect.
    */
   tag_id?: number | null;
-  /**
-   * ID of the project this aspect belongs to
-   */
-  project_id: number;
 };

@@ -52,6 +52,7 @@ export function ClusterCreationDialog({ aspectId }: ClusterCreationDialogProps) 
 
       startPerspectivesJobMutation(
         {
+          projectId,
           aspectId: aspectId,
           requestBody: {
             perspectives_job_type: PerspectivesJobType.CREATE_CLUSTER_WITH_NAME,

@@ -53,6 +53,7 @@ interface PerspectiveCardProps {
 export function PerspectiveCard({ aspect, title }: PerspectiveCardProps) {
   const perspectivesJob = useLiveJob(perspectivesQueries.job.byId(aspect.project_id, aspect.most_recent_job_id));
   const mapThumbnailUrl = PerspectivesHooks.useGetMapThumbnailURL(
+    aspect.project_id,
     aspect.id,
     perspectivesJob.data?.status === JobStatus.FINISHED,
   );
@@ -63,7 +64,7 @@ export function PerspectiveCard({ aspect, title }: PerspectiveCardProps) {
     openConfirmationDialog({
       text: `Are you sure you want to delete the map "${title}"? This action cannot be undone.`,
       onAccept: () => {
-        deleteMutation({ aspectId: aspect.id });
+        deleteMutation({ projectId: aspect.project_id, aspectId: aspect.id });
       },
     });
   };

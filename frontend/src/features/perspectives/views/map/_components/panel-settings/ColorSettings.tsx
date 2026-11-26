@@ -31,6 +31,7 @@ import { useState } from "react";
 import { PerspectivesHooks } from "../../../../api/perspectivesHooks";
 import { PerspectivesActions } from "../../../../store/perspectivesSlice";
 import { ClusterCreationDialog } from "./ClusterCreationDialog";
+import { PerspectivesMapRouteAPI } from "../../_hooks/perspectivesMapRouteAPI";
 
 const colorSchemes: Record<string, string[]> = {
   category: d3.schemeCategory10 as string[],
@@ -85,6 +86,7 @@ export function ColorSettings({ aspectId }: ColorSettingsProps) {
   };
 
   // legend
+  const { projectId } = PerspectivesMapRouteAPI.useParams();
   const { mutate: startPerspectivesJob, isPending } = PerspectivesHooks.useStartPerspectivesJob();
 
   // global server state
@@ -117,6 +119,7 @@ export function ColorSettings({ aspectId }: ColorSettingsProps) {
     if (checked.length !== 2) return;
     startPerspectivesJob(
       {
+        projectId,
         aspectId,
         requestBody: {
           perspectives_job_type: PerspectivesJobType.MERGE_CLUSTERS,
@@ -144,6 +147,7 @@ export function ColorSettings({ aspectId }: ColorSettingsProps) {
     const startJob = () => {
       startPerspectivesJob(
         {
+          projectId,
           aspectId,
           requestBody: {
             perspectives_job_type: PerspectivesJobType.REMOVE_CLUSTER,
@@ -182,6 +186,7 @@ export function ColorSettings({ aspectId }: ColorSettingsProps) {
     const startJob = () => {
       startPerspectivesJob(
         {
+          projectId,
           aspectId,
           requestBody: {
             perspectives_job_type: PerspectivesJobType.SPLIT_CLUSTER,

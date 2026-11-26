@@ -14,13 +14,18 @@ export class TagRecommendationService {
    * @throws ApiError
    */
   public static updateRecommendations({
+    projectId,
     requestBody,
   }: {
+    projectId: number;
     requestBody: Array<number>;
   }): CancelablePromise<Array<TagRecommendationLinkRead>> {
     return __request(OpenAPI, {
       method: "PATCH",
-      url: "/tagrecommendation/review_recommendations",
+      url: "/projects/{project_id}/tag-recommendations/review",
+      path: {
+        project_id: projectId,
+      },
       body: requestBody,
       mediaType: "application/json",
       errors: {
