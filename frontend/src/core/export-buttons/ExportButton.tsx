@@ -1,10 +1,10 @@
 import { getIconComponent, Icon } from "@components/icons";
-import { ExportJobInput } from "@models/ExportJobInput";
+import { ExportJobStart } from "@models/ExportJobStart";
 import { IconButton, Tooltip } from "@mui/material";
 import { memo } from "react";
 import { RUNNING_OR_WAITING, useExport } from "./_hooks/useExport";
 
-interface ExportInstantButtonProps extends Omit<ExportJobInput, "project_id"> {
+interface ExportInstantButtonProps extends ExportJobStart {
   title: string;
   isDisabled?: boolean;
 }

@@ -434,6 +434,55 @@ def test_dataset_statistics_document_reports_documents_without_selected_class_ta
     assert selected_sdoc_id not in data.unannotated_sdocs
 
 
+def test_dataset_statistics_with_a_class_of_another_project_is_not_found(
+    client: TestClient, tenants: TwoTenants
+):
+    """A class (tag) of another project of the user answers 404."""
+    own, foreign = tenants["own"], tenants["foreign"]
+    request = ClassifierDatasetStatisticsRequest(
+        model=ClassifierModel.DOCUMENT,
+        base_model_name=conf.classifier.transformer_models[0].value,
+        tag_ids=[own["tag"].id],
+        user_ids=[],
+        class_ids=[foreign["tag"].id],
+        merge_children_into_parent=False,
+    )
+
+    response = client.post(
+        f"/projects/{own['project'].id}/classifiers/dataset-statistics",
+        json=request.model_dump(mode="json"),
+    )
+
+    assert response.status_code == 404, response.text
+
+
+@pytest.mark.parametrize(
+    "tenant,total_units",
+    [
+        # "doc_<p>.txt" of the own project has "Tag <p>"
+        pytest.param("own", 1, id="own-tag"),
+        # the tag of another project selects no document of this project
+        pytest.param("foreign", 0, id="foreign-tag"),
+    ],
+)
+def test_dataset_statistics_selected_by_a_tag_of_another_project_are_empty(
+    client: TestClient, tenants: TwoTenants, tenant: str, total_units: int
+):
+    """The document tag that selects the dataset's documents matches within the
+    path's project only."""
+    own, foreign = tenants["own"], tenants["foreign"]
+    data = _request_dataset_statistics(
+        client,
+        own["project"].id,
+        ClassifierModel.DOCUMENT,
+        [own["tag"].id],
+        conf.classifier.transformer_models[0].value,
+        tag_ids=[(own if tenant == "own" else foreign)["tag"].id],
+    )
+
+    assert data.total_units == total_units
+
+
 def test_dataset_statistics_sentence(
     client: TestClient, sentence_statistics_dataset, test_user
 ):

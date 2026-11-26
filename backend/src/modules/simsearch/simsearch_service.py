@@ -56,6 +56,9 @@ class SimSearchService(metaclass=SingletonMeta):
         sdoc_ids, _ = filter_sdoc_ids(
             db=db, project_id=project_id, folder_id=None, filter=filter
         )
+        # the CRUD searches all documents for no ids
+        if not sdoc_ids:
+            return []
         results = crud_sentence_embedding.search_near_vector_in_sdoc_ids(
             client=self.weaviate.get_client(),
             vector=self._encode_query(
@@ -89,6 +92,9 @@ class SimSearchService(metaclass=SingletonMeta):
         sdoc_ids, _ = filter_sdoc_ids(
             db=db, project_id=project_id, folder_id=None, filter=filter
         )
+        # the CRUD searches all documents for no ids
+        if not sdoc_ids:
+            return []
         results = crud_image_embedding.search_near_vector_in_sdoc_ids(
             client=self.weaviate.get_client(),
             vector=self._encode_query(

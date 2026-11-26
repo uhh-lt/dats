@@ -547,6 +547,7 @@ class DocClassificationModelService(TextClassificationModelService):
 
             # 3. Build the SELECT statement
             stmt = select(SourceDocumentTagLinkTable).where(
+                SourceDocumentTagLinkTable.project_id == project_id,
                 SourceDocumentTagLinkTable.source_document_id.in_(batch_sdoc_ids),
                 SourceDocumentTagLinkTable.tag_id.in_(class_ids),
             )

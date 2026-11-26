@@ -52,7 +52,7 @@ class ClassifierORM(ORMBase):
         back_populates="classifier",
         cascade="all, delete-orphan",
         passive_deletes=True,
-        foreign_keys="ClassifierEvaluationORM.classifier_id",
+        primaryjoin="and_(ClassifierORM.project_id == ClassifierEvaluationORM.project_id, ClassifierORM.id == foreign(ClassifierEvaluationORM.classifier_id))",
     )
 
     # many to one
@@ -125,7 +125,7 @@ class ClassifierEvaluationORM(ORMBase):
     classifier: Mapped["ClassifierORM"] = relationship(
         "ClassifierORM",
         back_populates="evaluations",
-        foreign_keys=[classifier_id],
+        primaryjoin="and_(ClassifierORM.project_id == ClassifierEvaluationORM.project_id, ClassifierORM.id == foreign(ClassifierEvaluationORM.classifier_id))",
     )
 
     __table_args__ = (
@@ -140,16 +140,21 @@ class ClassifierEvaluationORM(ORMBase):
 
 
 class ClassifierCodeLinkTable(ORMBase):
-    classifier_id: Mapped[int] = mapped_column(Integer, primary_key=True, index=True)
-    code_id: Mapped[int] = mapped_column(Integer, primary_key=True, index=True)
+    classifier_id: Mapped[int] = mapped_column(Integer, index=True)
+    code_id: Mapped[int] = mapped_column(Integer, index=True)
     project_id: Mapped[int] = mapped_column(
         Integer,
         ForeignKey("project.id", ondelete="CASCADE"),
         nullable=False,
-        index=True,
     )
 
     __table_args__ = (
+        PrimaryKeyConstraint(
+            "project_id",
+            "classifier_id",
+            "code_id",
+            name="classifiercodelinktable_pkey",
+        ),
         ForeignKeyConstraint(
             ["project_id", "classifier_id"],
             ["classifier.project_id", "classifier.id"],
@@ -166,16 +171,18 @@ class ClassifierCodeLinkTable(ORMBase):
 
 
 class ClassifierTagLinkTable(ORMBase):
-    classifier_id: Mapped[int] = mapped_column(Integer, primary_key=True, index=True)
-    tag_id: Mapped[int] = mapped_column(Integer, primary_key=True, index=True)
+    classifier_id: Mapped[int] = mapped_column(Integer, index=True)
+    tag_id: Mapped[int] = mapped_column(Integer, index=True)
     project_id: Mapped[int] = mapped_column(
         Integer,
         ForeignKey("project.id", ondelete="CASCADE"),
         nullable=False,
-        index=True,
     )
 
     __table_args__ = (
+        PrimaryKeyConstraint(
+            "project_id", "classifier_id", "tag_id", name="classifiertaglinktable_pkey"
+        ),
         ForeignKeyConstraint(
             ["project_id", "classifier_id"],
             ["classifier.project_id", "classifier.id"],

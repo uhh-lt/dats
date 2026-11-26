@@ -29,7 +29,7 @@ from systems.search_system.search_system_exceptions import (
 
 
 def get_descendant_ids(
-    db: Session, column: AbstractColumns, parent_id: int
+    db: Session, column: AbstractColumns, project_id: int, parent_id: int
 ) -> list[int]:
     from core.code.code_orm import CodeORM
     from core.doc.folder_orm import FolderORM
@@ -47,15 +47,19 @@ def get_descendant_ids(
         return [parent_id]
 
     cte = (
-        db.query(orm_class.id)
-        .filter(orm_class.id == parent_id)
+        db.query(orm_class.project_id, orm_class.id)
+        .filter(orm_class.project_id == project_id, orm_class.id == parent_id)
         .cte(name="descendant_items", recursive=True)
     )
     cte_alias = cte.alias()
     cte = cte.union_all(
-        db.query(orm_class.id).join(cte_alias, orm_class.parent_id == cte_alias.c.id)  # type: ignore
+        db.query(orm_class.project_id, orm_class.id).join(  # type: ignore
+            cte_alias,
+            (orm_class.project_id == cte_alias.c.project_id)
+            & (orm_class.parent_id == cte_alias.c.id),
+        )
     )
-    return [row[0] for row in db.query(cte).all()]
+    return [row.id for row in db.query(cte).all()]
 
 
 T = TypeVar("T", bound=AbstractColumns)
@@ -348,7 +352,9 @@ class Filter(BaseModel, Generic[T]):
 Filter.model_rebuild()
 
 
-def resolve_recursive_filter(filter: Filter[T], db: Session) -> Filter[T]:
+def resolve_recursive_filter(
+    filter: Filter[T], db: Session, project_id: int
+) -> Filter[T]:
     resolved = filter.model_copy(deep=True)
     resolved_items = []
     for item in filter.items:
@@ -381,7 +387,9 @@ def resolve_recursive_filter(filter: Filter[T], db: Session) -> Filter[T]:
 
                 expanded_ids = []
                 for parent_id in parent_ids:
-                    descendant_ids = get_descendant_ids(db, expr.column, parent_id)
+                    descendant_ids = get_descendant_ids(
+                        db, expr.column, project_id, parent_id
+                    )
                     expanded_ids.extend(descendant_ids)
 
                 expr.value = list(set(expanded_ids))
@@ -389,7 +397,7 @@ def resolve_recursive_filter(filter: Filter[T], db: Session) -> Filter[T]:
             else:
                 resolved_items.append(item)
         else:
-            resolved_items.append(resolve_recursive_filter(item, db))
+            resolved_items.append(resolve_recursive_filter(item, db, project_id))
     resolved.items = resolved_items
     return resolved
 
@@ -398,8 +406,9 @@ def apply_filtering(
     query,
     filter: Filter,
     subquery_dict,
+    project_id: int,
 ):
-    resolved_filter = resolve_recursive_filter(filter, query.session)
+    resolved_filter = resolve_recursive_filter(filter, query.session, project_id)
     return query.filter(resolved_filter.get_sqlalchemy_expression(subquery_dict))
 
 

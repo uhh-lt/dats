@@ -2,6 +2,7 @@ import pytest
 from fastapi.testclient import TestClient
 
 from common.meta_type_enum import MetaType
+from composite_keys_test_utils import TwoTenants
 from core.metadata.source_document_metadata_dto import (
     DateMetadataCountResult,
     SourceDocumentMetadataRead,
@@ -336,3 +337,63 @@ def test_count_sdocs_with_date_metadata_counts_the_documents_with_a_date(
     assert DateMetadataCountResult.model_validate(
         response.json()
     ) == DateMetadataCountResult(sdocs_with_date=1, sdocs_total=2)
+
+
+def test_count_sdocs_with_date_metadata_of_another_project_matches_nothing(
+    client: TestClient, project_with_date_metadata, foreign_date_metadata
+):
+    """The date key of another project of the user matches no document of the
+    path's project, although its own document has a date."""
+    project_id = project_with_date_metadata["project"].id
+
+    response = client.get(
+        f"/projects/{project_id}/source-document-metadata/date-count",
+        params={"date_metadata_id": foreign_date_metadata.id},
+    )
+
+    assert response.status_code == 200, response.text
+    assert DateMetadataCountResult.model_validate(
+        response.json()
+    ) == DateMetadataCountResult(sdocs_with_date=0, sdocs_total=2)
+
+
+# ===========================================================================
+# UPDATE BULK (/projects/{project_id}/source-document-metadata/bulk)
+# CROSS-PROJECT TESTS
+# ===========================================================================
+
+
+def test_update_bulk_with_metadata_of_another_project_is_not_found(
+    client: TestClient, tenants: TwoTenants
+):
+    """A bulk update that names the document metadata of another project of the
+    user answers 404 and changes nothing; the own metadata is updated."""
+    own, foreign = tenants["own"], tenants["foreign"]
+    url = f"/projects/{own['project'].id}/source-document-metadata"
+
+    def update(sdoc_metadata_id: int):
+        return client.patch(
+            f"{url}/bulk",
+            json=[
+                SourceDocumentMetadataUpdateBulk(
+                    sdoc_metadata_id=sdoc_metadata_id,
+                    str_value="changed",
+                    int_value=None,
+                    boolean_value=None,
+                    date_value=None,
+                    list_value=None,
+                ).model_dump(mode="json")
+            ],
+        )
+
+    response = update(foreign["sdoc_metadata"].id)
+    assert response.status_code == 404, response.text
+    response = client.get(
+        f"/projects/{foreign['project'].id}/source-document-metadata/"
+        f"{foreign['sdoc_metadata'].id}"
+    )
+    assert response.json()["str_value"] == "value"
+
+    response = update(own["sdoc_metadata"].id)
+    assert response.status_code == 200, response.text
+    assert [meta["str_value"] for meta in response.json()] == ["changed"]

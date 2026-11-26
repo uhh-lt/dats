@@ -39,8 +39,8 @@ An artefact is declared with `artefact(...)` in a `<name>_artefact.py` file next
 The filesystem is split into lifecycle and file access, mirroring `repos/vector`:
 
 - `FilesystemRepo` (`backend/src/repos/filesystem/filesystem_repo.py`) owns the root and project folders. Files are read and written through `FileCRUDBase` subclasses, not by constructing paths from the repository root.
-- A file CRUD lives with the core concept, artefact or module that owns its files. It declares a `folder` and an `entity` (`Crud`), or `None` for files such as exports that belong to no database row. Its files are stored at `projects/<project_id>/<folder>/<entity_id>/<filename>`. The common interface provides `dir`, `path`, `exists`, `write`, `move_in`, `url`, `delete` and `ids`.
-- File CRUDs register themselves and are discovered through their `*_file_crud.py` filenames. When deleting an entity, call `FileCRUDBase.delete_by_entity(...)` so its uploads, thumbnails, extracted audio, models and plots are removed together.
+- A file CRUD lives with the core concept, artefact or module that owns its files. It declares a `folder` and the ORM class of its `owner` (`owner = SourceDocumentORM`), or `None` for files such as exports that belong to no database row, so a new module adds a file CRUD without touching any file outside its folder. Its files are stored at `projects/<project_id>/<folder>/<owner_id>/<filename>`. The common interface provides `dir`, `path`, `exists`, `write`, `move_in`, `url`, `delete` and `ids`.
+- File CRUDs register themselves and are discovered through their `*_file_crud.py` filenames. When deleting rows, call `FileCRUDBase.delete_by_owner(<Owner>ORM, ...)` so its uploads, thumbnails, extracted audio, models and plots are removed together.
 - `crud_temporary_file` manages scratch space and upload or job handovers below `temporary_files/<uuid>/`. Use `folder()` for scratch that must be removed on success or failure. For a handover, pass the id returned by `create()` in the job payload and let the consuming job delete it.
 
 File URLs are relative to `/content/`; the frontend hooks add that prefix. Use `GET /projects/{project_id}/source-documents/{sdoc_id}/urls` for the uploaded file, WebP image and thumbnail (the latter two are `null` until computed), and `GET /perspectives/aspect/{aspect_id}/map_thumbnail_url` for a perspective map thumbnail. Source document URLs are not stored in `SourceDocumentData`; derive them through the file CRUDs and these endpoints.
@@ -96,7 +96,7 @@ The keyword statistics (`backend/src/modules/keyword_statistics/`) are a small, 
    )
    ```
 
-Then regenerate the API client (`just update-api`); the frontend reads the features from `GET /features` and needs a change only for a page or a gate. The rules a module developer must follow are in [`.github/instructions/backend-module.instructions.md`](https://github.com/uhh-lt/dats/blob/main/.github/instructions/backend-module.instructions.md).
+Then regenerate the API client (`just update-api`); the frontend reads the features from `GET /info/features` and needs a change only for a page or a gate. The rules a module developer must follow are in [`.github/instructions/backend-module.instructions.md`](https://github.com/uhh-lt/dats/blob/main/.github/instructions/backend-module.instructions.md).
 
 ## Features
 

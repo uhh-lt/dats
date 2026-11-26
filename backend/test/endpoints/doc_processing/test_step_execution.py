@@ -130,7 +130,9 @@ def test_a_finished_job_fails_its_successors_if_the_queue_is_unreachable(
     (job,) = held_jobs.ran("html_extraction")
     assert job.get_status() == JobStatus.FINISHED
     assert held_jobs.jobs() == []
-    status = crud_sdoc_step_status.read_by_sdoc(db=db_session, sdoc_id=sdoc_id)
+    status = crud_sdoc_step_status.read_by_sdoc(
+        db=db_session, project_id=html_extraction.project_id, sdoc_id=sdoc_id
+    )
     assert status.pop("html_extraction") == SDocStatus.finished
     assert "text_extraction" in status
     assert set(status.values()) == {SDocStatus.erroneous}

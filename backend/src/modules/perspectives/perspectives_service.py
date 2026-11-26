@@ -343,7 +343,7 @@ class PerspectivesService:
         aspect = crud_aspect.read(db=db, project_id=project_id, id=aspect_id)
         doc_aspects = aspect.document_aspects
         doc_clusters = crud_document_cluster.read_by_aspect_id(
-            db=db, aspect_id=aspect_id
+            db=db, project_id=project_id, aspect_id=aspect_id
         )
         doc_id2_dt = {dt.sdoc_id: dt for dt in doc_clusters}
 
@@ -418,7 +418,7 @@ class PerspectivesService:
         else:
             # Read the document aspects for the given source document IDs
             doc_aspects = crud_document_aspect.read_by_aspect_and_sdoc_ids(
-                db=db, aspect_id=aspect_id, sdoc_ids=sdoc_ids
+                db=db, project_id=project_id, aspect_id=aspect_id, sdoc_ids=sdoc_ids
             )
 
         match aspect_dto.modality:
@@ -477,7 +477,7 @@ class PerspectivesService:
             # Store coordinates in the DB
             crud_document_aspect.update_multi(
                 db=db,
-                ids=[(da.sdoc_id, da.aspect_id) for da in doc_aspects],
+                ids=[(project_id, da.sdoc_id, da.aspect_id) for da in doc_aspects],
                 update_dtos=[
                     DocumentAspectUpdate(
                         x=float(coord[0]),
@@ -548,7 +548,7 @@ class PerspectivesService:
             doc_aspects = aspect.document_aspects
         else:
             doc_aspects = crud_document_aspect.read_by_aspect_and_sdoc_ids(
-                db=db, aspect_id=aspect_id, sdoc_ids=sdoc_ids
+                db=db, project_id=project_id, aspect_id=aspect_id, sdoc_ids=sdoc_ids
             )
 
         # ... and their embeddings
@@ -622,11 +622,11 @@ class PerspectivesService:
 
             # Construct update DTOS
             doc_clusters = crud_document_cluster.read_by_aspect_id(
-                db=db, aspect_id=aspect_id
+                db=db, project_id=project_id, aspect_id=aspect_id
             )
             sdoc_id2doccluster = {dt.sdoc_id: dt for dt in doc_clusters}
             update_dtos: list[DocumentClusterUpdate] = []
-            update_ids: list[tuple[int, int]] = []
+            update_ids: list[tuple[int, int, int]] = []
             for da, hdb_cluster in zip(doc_aspects, hdb_clusters):
                 if da.sdoc_id in train_doc_ids:
                     continue  # Skip documents that were used for training!
@@ -642,6 +642,7 @@ class PerspectivesService:
                 # Update the document cluster with the new cluster ID
                 update_ids.append(
                     (
+                        project_id,
                         dt.sdoc_id,
                         dt.cluster_id,
                     )
@@ -906,10 +907,12 @@ class PerspectivesService:
             db=db, project_id=project_id, aspect_id=aspect_id, level=level
         )
         # - Read all document aspects
-        doc_aspects = crud_document_aspect.read_by_aspect_id(db=db, aspect_id=aspect_id)
+        doc_aspects = crud_document_aspect.read_by_aspect_id(
+            db=db, project_id=project_id, aspect_id=aspect_id
+        )
         doc_aspects.sort(key=lambda da: da.sdoc_id)  # Sort by source document ID
         doc_clusters = crud_document_cluster.read_by_aspect_id(
-            db=db, aspect_id=aspect_id
+            db=db, project_id=project_id, aspect_id=aspect_id
         )
         doc_clusters.sort(key=lambda dt: dt.sdoc_id)  # Sort by source document ID
 
@@ -985,9 +988,8 @@ class PerspectivesService:
         cluster_centroids: dict[int, np.ndarray] = {}
         cluster_coordinates: dict[int, np.ndarray] = {}
         top_docs: dict[int, list[int]] = {}
-        distance_update_ids: list[
-            tuple[int, int]
-        ] = []  # List of (sdoc_id, cluster_id) tuples
+        # (project_id, sdoc_id, cluster_id) tuples
+        distance_update_ids: list[tuple[int, int, int]] = []
         distance_update_dtos: list[DocumentClusterUpdate] = []
         for cluster_id in cluster_ids_to_update:
             doc_coordinates = coordinates[assigned_clusters_arr == cluster_id]
@@ -1015,7 +1017,7 @@ class PerspectivesService:
 
             # ... update the distances of the document clusters
             for sdoc_id, similarity in zip(sdoc_ids, similarities):
-                distance_update_ids.append((sdoc_id.item(), cluster_id))
+                distance_update_ids.append((project_id, sdoc_id.item(), cluster_id))
                 distance_update_dtos.append(
                     DocumentClusterUpdate(similarity=similarity.item())
                 )
@@ -1164,7 +1166,7 @@ class PerspectivesService:
 
         # Read the current document <-> cluster assignments
         document_clusters = crud_document_cluster.read_by_aspect_id(
-            db=db, aspect_id=aspect.id
+            db=db, project_id=project_id, aspect_id=aspect.id
         )
         doc2cluster: dict[int, DocumentClusterORM] = {
             dt.sdoc_id: dt for dt in document_clusters
@@ -1212,7 +1214,7 @@ class PerspectivesService:
         # - Do not reassign documents that are accepted
         self._log_status_step(1)
         update_dtos: list[DocumentClusterUpdate] = []
-        update_ids: list[tuple[int, int]] = []
+        update_ids: list[tuple[int, int, int]] = []
         modified_clusters: set[int] = set()
         results = crud_aspect_embedding.search_near_vector_in_aspect(
             client=self.weaviate.get_client(),
@@ -1232,7 +1234,9 @@ class PerspectivesService:
 
             # assign the new cluster if the similarity is larger than the current cluster's distance
             if doc_cluster.similarity is None or result.score > doc_cluster.similarity:
-                update_ids.append((doc_cluster.sdoc_id, doc_cluster.cluster_id))
+                update_ids.append(
+                    (project_id, doc_cluster.sdoc_id, doc_cluster.cluster_id)
+                )
                 update_dtos.append(
                     DocumentClusterUpdate(
                         cluster_id=new_cluster.id,
@@ -1284,7 +1288,7 @@ class PerspectivesService:
 
         # Read the current document <-> cluster assignments
         document_clusters = crud_document_cluster.read_by_aspect_id(
-            db=db, aspect_id=aspect_id
+            db=db, project_id=project_id, aspect_id=aspect_id
         )
         doc2cluster: dict[int, DocumentClusterORM] = {
             dt.sdoc_id: dt for dt in document_clusters
@@ -1322,6 +1326,7 @@ class PerspectivesService:
         # assign the new cluster to the source documents
         crud_document_cluster.set_labels2(
             db=db,
+            project_id=project_id,
             aspect_id=aspect_id,
             cluster_id=new_cluster.id,
             sdoc_ids=params.sdoc_ids,
@@ -1367,7 +1372,10 @@ class PerspectivesService:
 
         # - Read the document aspect embeddings of all affected documents
         doc_aspects = crud_document_aspect.read_by_aspect_and_cluster_id(
-            db=db, aspect_id=cluster.aspect_id, cluster_id=cluster.id
+            db=db,
+            project_id=project_id,
+            aspect_id=cluster.aspect_id,
+            cluster_id=cluster.id,
         )
         embedding_ids = [
             AspectObjectIdentifier(aspect_id=da.aspect_id, sdoc_id=da.sdoc_id)
@@ -1398,7 +1406,10 @@ class PerspectivesService:
 
         # - Read the current document-cluster assignments (which will be updated)
         document_clusters = crud_document_cluster.read_by_aspect_and_cluster_id(
-            db=db, aspect_id=cluster.aspect_id, cluster_id=cluster.id
+            db=db,
+            project_id=project_id,
+            aspect_id=cluster.aspect_id,
+            cluster_id=cluster.id,
         )
 
         assert len(embedding_ids) == len(document_clusters), (
@@ -1427,7 +1438,7 @@ class PerspectivesService:
 
         # - Update the document-cluster assignments in the database
         update_dtos: list[DocumentClusterUpdate] = []
-        update_ids: list[tuple[int, int]] = []
+        update_ids: list[tuple[int, int, int]] = []
         for dt in document_clusters:
             update_dtos.append(
                 DocumentClusterUpdate(
@@ -1436,7 +1447,7 @@ class PerspectivesService:
                     is_accepted=False,  # Reset acceptance status
                 )
             )
-            update_ids.append((dt.sdoc_id, dt.cluster_id))
+            update_ids.append((project_id, dt.sdoc_id, dt.cluster_id))
 
         if len(update_dtos) > 0:
             crud_document_cluster.update_multi(
@@ -1502,6 +1513,7 @@ class PerspectivesService:
         self._log_status_step(0)
         crud_document_cluster.merge_clusters(
             db=db,
+            project_id=project_id,
             cluster_to_keep=params.cluster_to_keep,
             cluster_to_merge=params.cluster_to_merge,
         )
@@ -1553,7 +1565,10 @@ class PerspectivesService:
         sdoc_ids = [
             da.sdoc_id
             for da in crud_document_aspect.read_by_aspect_and_cluster_id(
-                db=db, aspect_id=cluster.aspect_id, cluster_id=cluster.id
+                db=db,
+                project_id=project_id,
+                aspect_id=cluster.aspect_id,
+                cluster_id=cluster.id,
             )
         ]
         assert len(sdoc_ids) > 0, "Cannot split a cluster without document aspects."
@@ -1625,7 +1640,7 @@ class PerspectivesService:
 
         # Read the current document <-> cluster assignments
         document_clusters = crud_document_cluster.read_by_aspect_id(
-            db=db, aspect_id=aspect_id
+            db=db, project_id=project_id, aspect_id=aspect_id
         )
         doc2cluster: dict[int, DocumentClusterORM] = {
             dt.sdoc_id: dt for dt in document_clusters
@@ -1645,6 +1660,7 @@ class PerspectivesService:
         # assign the cluster to the source documents
         crud_document_cluster.set_labels2(
             db=db,
+            project_id=project_id,
             aspect_id=aspect_id,
             cluster_id=cluster.id,
             sdoc_ids=params.sdoc_ids,
@@ -1691,7 +1707,7 @@ class PerspectivesService:
 
         # Read the current document <-> cluster assignments
         document_clusters = crud_document_cluster.read_by_aspect_id(
-            db=db, aspect_id=aspect.id
+            db=db, project_id=project_id, aspect_id=aspect.id
         )
         for dt in document_clusters:
             if dt.is_accepted:

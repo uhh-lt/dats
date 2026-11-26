@@ -1,6 +1,6 @@
 import { useLiveJob } from "@core/job";
 import { useOpenSnackbar } from "@core/notification";
-import { ExportJobInput } from "@models/ExportJobInput";
+import { ExportJobStart } from "@models/ExportJobStart";
 import { JobStatus } from "@models/JobStatus";
 import { useAppSelector } from "@store/storeHooks";
 import { downloadFile } from "@utils/downloadUtils";
@@ -10,7 +10,7 @@ import { exportQueries } from "../api/exportQueries";
 
 export const RUNNING_OR_WAITING = [JobStatus.QUEUED, JobStatus.DEFERRED, JobStatus.SCHEDULED, JobStatus.STARTED];
 
-export const useExport = ({ export_job_type, specific_export_job_parameters }: Omit<ExportJobInput, "project_id">) => {
+export const useExport = ({ export_job_type, specific_export_job_parameters }: ExportJobStart) => {
   const projectId = useAppSelector((state) => state.project.projectId);
 
   // mutations
@@ -26,7 +26,6 @@ export const useExport = ({ export_job_type, specific_export_job_parameters }: O
       projectId,
       requestBody: {
         export_job_type: export_job_type,
-        project_id: projectId,
         specific_export_job_parameters: specific_export_job_parameters,
       },
     });

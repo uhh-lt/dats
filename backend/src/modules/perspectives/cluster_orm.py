@@ -42,14 +42,13 @@ class ClusterORM(ORMBase):
     parent_cluster_id: Mapped[int | None] = mapped_column(Integer, index=True)
     parent_cluster: Mapped["ClusterORM | None"] = relationship(
         "ClusterORM",
-        remote_side=[id],
         back_populates="child_clusters",
-        foreign_keys=[parent_cluster_id],
+        primaryjoin="and_(remote(ClusterORM.project_id) == ClusterORM.project_id, remote(ClusterORM.id) == foreign(ClusterORM.parent_cluster_id))",
     )
     child_clusters: Mapped[list["ClusterORM"]] = relationship(
         "ClusterORM",
         back_populates="parent_cluster",
-        foreign_keys=[parent_cluster_id],
+        primaryjoin="and_(remote(ClusterORM.project_id) == ClusterORM.project_id, remote(foreign(ClusterORM.parent_cluster_id)) == ClusterORM.id)",
     )
 
     # many to one
@@ -61,7 +60,9 @@ class ClusterORM(ORMBase):
 
     aspect_id: Mapped[int] = mapped_column(Integer, nullable=False, index=True)
     aspect: Mapped["AspectORM"] = relationship(
-        "AspectORM", back_populates="clusters", foreign_keys=[aspect_id]
+        "AspectORM",
+        back_populates="clusters",
+        primaryjoin="and_(AspectORM.project_id == ClusterORM.project_id, AspectORM.id == foreign(ClusterORM.aspect_id))",
     )
 
     # many to many
@@ -70,7 +71,7 @@ class ClusterORM(ORMBase):
         back_populates="cluster",
         cascade="all, delete-orphan",
         passive_deletes=True,
-        foreign_keys="DocumentClusterORM.cluster_id",
+        primaryjoin="and_(ClusterORM.project_id == DocumentClusterORM.project_id, ClusterORM.id == foreign(DocumentClusterORM.cluster_id))",
     )
     source_documents: Mapped[list["SourceDocumentORM"]] = relationship(
         "SourceDocumentORM",

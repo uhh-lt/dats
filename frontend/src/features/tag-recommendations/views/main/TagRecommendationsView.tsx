@@ -62,7 +62,7 @@ export function TagRecommendationsView() {
   };
   const handleStart = () => {
     startJob.mutate(
-      { projectId, requestBody: { project_id: projectId, method, multi_class: multiClass } },
+      { projectId, requestBody: { method, multi_class: multiClass } },
       { onSuccess: (job) => setSelectedJobId(job.job_id) },
     );
   };

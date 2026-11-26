@@ -75,7 +75,7 @@ def get_simple_sdoc_status_by_project_and_status(
         db=db, project_id=project_id, status=status
     )
     step_status = crud_sdoc_step_status.read_by_sdocs(
-        db=db, sdoc_ids=[sdoc.id for sdoc in sdocs]
+        db=db, project_id=project_id, sdoc_ids=[sdoc.id for sdoc in sdocs]
     )
     return [
         SourceDocumentStatusSimple.from_sdoc_orm(sdoc, step_status[sdoc.id])

@@ -113,7 +113,7 @@ The API surface, under `/projects/{project_id}`. Key interactions:
 2.  **Monitoring**: Frontend polls `/projects/{project_id}/jobs/perspectives/{job_id}` to show a progress bar.
 3.  **Visualization**:
     - Call `/projects/{project_id}/perspectives/aspects/{aspect_id}/visualize` to get all points (x, y) and their cluster assignments.
-    - Call `/cluster_similarities/{aspect_id}` to get a similarity matrix for the cluster map.
+    - Call `/projects/{project_id}/perspectives/aspects/{aspect_id}/cluster-similarities` to get a similarity matrix for the cluster map.
 4.  **Interaction**:
     - When a user clicks a point, frontend fetches details via `/projects/{project_id}/perspectives/aspects/{aspect_id}/source-documents/{sdoc_id}`.
     - When a user "accepts" a cluster suggestion, frontend calls `/projects/{project_id}/perspectives/aspects/{aspect_id}/accept-labels`.

@@ -1,4 +1,4 @@
-from common.crud_enum import Crud
+from modules.perspectives.aspect_orm import AspectORM
 from repos.filesystem.file_crud_base import FileCRUDBase
 
 # the thumbnail of the map of an aspect
@@ -10,7 +10,7 @@ class CRUDPerspectivesModelFile(FileCRUDBase):
     `perspectives_models/<aspect_id>/`."""
 
     folder = "perspectives_models"
-    entity = Crud.ASPECT
+    owner = AspectORM
 
 
 class CRUDPerspectivesPlotFile(FileCRUDBase):
@@ -18,7 +18,7 @@ class CRUDPerspectivesPlotFile(FileCRUDBase):
     `perspectives_plots/<aspect_id>/`."""
 
     folder = "perspectives_plots"
-    entity = Crud.ASPECT
+    owner = AspectORM
 
 
 crud_perspectives_model_file = CRUDPerspectivesModelFile()

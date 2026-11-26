@@ -5,6 +5,7 @@ from sqlalchemy import (
     ForeignKey,
     ForeignKeyConstraint,
     Integer,
+    PrimaryKeyConstraint,
     Text,
 )
 from sqlalchemy.orm import Mapped, mapped_column, relationship
@@ -17,13 +18,12 @@ if TYPE_CHECKING:
 
 
 class DocumentAspectORM(ORMBase):
-    sdoc_id: Mapped[int] = mapped_column(Integer, primary_key=True, index=True)
-    aspect_id: Mapped[int] = mapped_column(Integer, primary_key=True, index=True)
+    sdoc_id: Mapped[int] = mapped_column(Integer, index=True)
+    aspect_id: Mapped[int] = mapped_column(Integer, index=True)
     project_id: Mapped[int] = mapped_column(
         Integer,
         ForeignKey("project.id", ondelete="CASCADE"),
         nullable=False,
-        index=True,
     )
 
     content: Mapped[str] = mapped_column(Text, nullable=False)
@@ -36,15 +36,18 @@ class DocumentAspectORM(ORMBase):
     source_document: Mapped["SourceDocumentORM"] = relationship(
         "SourceDocumentORM",
         back_populates="document_aspects",
-        foreign_keys=[sdoc_id],
+        primaryjoin="and_(SourceDocumentORM.project_id == DocumentAspectORM.project_id, SourceDocumentORM.id == foreign(DocumentAspectORM.sdoc_id))",
     )
     aspect: Mapped["AspectORM"] = relationship(
         "AspectORM",
         back_populates="document_aspects",
-        foreign_keys=[aspect_id],
+        primaryjoin="and_(AspectORM.project_id == DocumentAspectORM.project_id, AspectORM.id == foreign(DocumentAspectORM.aspect_id))",
     )
 
     __table_args__ = (
+        PrimaryKeyConstraint(
+            "project_id", "sdoc_id", "aspect_id", name="documentaspect_pkey"
+        ),
         ForeignKeyConstraint(
             ["project_id", "sdoc_id"],
             ["sourcedocument.project_id", "sourcedocument.id"],

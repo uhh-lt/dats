@@ -1,5 +1,7 @@
 import pytest
+from fastapi.routing import APIRoute, iter_route_contexts
 from fastapi.testclient import TestClient
+from pydantic import BaseModel
 
 from core.project.project_orm import ProjectORM
 from feature_test_utils import FeaturelessProject, assert_feature_disabled
@@ -55,22 +57,35 @@ def test_start_job_runs_in_the_project_of_the_path(
     test_project: ProjectORM,
     tag_recommendation_jobs: TagRecommendationJobs,
 ):
-    """The project of the path overwrites the project of the job input: a job
-    input naming another project starts the job in the path's project."""
-    payload = TagRecommendationJobInput(
-        project_id=tag_recommendation_jobs["other_project"].id
-    )
-
-    response = client.post(
-        f"/projects/{test_project.id}/{TAG_RECOMMENDATION}",
-        json=payload.model_dump(mode="json"),
-    )
+    """The start body has no project: the job runs in the project of the path."""
+    response = client.post(f"/projects/{test_project.id}/{TAG_RECOMMENDATION}", json={})
 
     assert response.status_code == 200, response.text
     job = JobService().get_job(response.json()["job_id"])
     assert job.get_project_id() == test_project.id
     assert job.job.kwargs["payload"].project_id == test_project.id
     assert response.json()["project_id"] == test_project.id
+
+
+def test_every_generated_job_start_body_has_no_project(client: TestClient):
+    """The body of every generated job start route is the `<JobName>JobStart` model
+    of its job input without `project_id`, which comes from the path."""
+    starts = {
+        context.path: context.original_route.body_field
+        for context in iter_route_contexts(client.app.routes)  # type: ignore[attr-defined]
+        if isinstance(context.original_route, APIRoute)
+        # the start routes register_job_endpoints generates
+        and context.original_route.endpoint.__qualname__
+        == "register_job_endpoints.<locals>.start_job"
+    }
+
+    assert starts
+    for path, body in starts.items():
+        assert body is not None, path
+        model = body.field_info.annotation
+        assert isinstance(model, type) and issubclass(model, BaseModel), path
+        assert model.__name__.endswith("JobStart"), path
+        assert "project_id" not in model.model_fields, path
 
 
 def test_start_job_of_a_non_member_is_forbidden(

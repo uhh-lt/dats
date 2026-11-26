@@ -1,10 +1,10 @@
 import { getIconComponent, Icon } from "@components/icons";
-import { ExportJobInput } from "@models/ExportJobInput";
+import { ExportJobStart } from "@models/ExportJobStart";
 import { CircularProgress, ListItemIcon, ListItemText, MenuItem, MenuItemProps } from "@mui/material";
 import { memo } from "react";
 import { RUNNING_OR_WAITING, useExport } from "./_hooks/useExport";
 
-interface ExportMenuItemProps extends Omit<ExportJobInput, "project_id">, Omit<MenuItemProps, "onClick" | "disabled"> {
+interface ExportMenuItemProps extends ExportJobStart, Omit<MenuItemProps, "onClick" | "disabled"> {
   title: string;
   isDisabled?: boolean;
 }

@@ -201,7 +201,7 @@ class DocProcessingService(metaclass=SingletonMeta):
 
         # transform to dto
         step_status = crud_sdoc_step_status.read_by_sdocs(
-            db=db, sdoc_ids=[sdoc.id for sdoc in result_rows]
+            db=db, project_id=project_id, sdoc_ids=[sdoc.id for sdoc in result_rows]
         )
         results = SdocHealthResult(
             total_results=total_results,
@@ -320,7 +320,9 @@ class DocProcessingService(metaclass=SingletonMeta):
         # imported while their core steps ran); the planning starts what can
         # start, the rest starts when its inputs finish.
         step = processing_step
-        statuses = crud_sdoc_step_status.read_by_sdocs(db=db, sdoc_ids=sdoc_ids)
+        statuses = crud_sdoc_step_status.read_by_sdocs(
+            db=db, project_id=project_id, sdoc_ids=sdoc_ids
+        )
         not_planned = sorted(i for i in sdoc_ids if step not in statuses.get(i, {}))
         if not_planned and step not in graph.core_steps(DocType(doctype)):
             raise StepNotPlannedError(step=processing_step, sdoc_ids=not_planned)

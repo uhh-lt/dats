@@ -3,7 +3,6 @@ from fastapi import APIRouter, Depends
 from common.dats_event import DATSEvent
 from common.dependencies import DBSession, get_current_user
 from common.project_router import project_router
-from core.auth.authz_user import AuthzUser
 from core.project.project_crud import crud_project
 from core.project.project_dto import (
     ProjectCreate,
@@ -11,11 +10,10 @@ from core.project.project_dto import (
     ProjectUpdate,
 )
 from core.project.project_service import ProjectService
-from core.user.user_crud import crud_user
 from core.user.user_orm import UserORM
 from systems.websocket_system.websocket_dependency import WebsocketEmitter
 
-# creating projects and the projects of the logged-in user, outside every project
+# creating a project, outside every project; the one endpoint file with two routers
 router = APIRouter(dependencies=[Depends(get_current_user)], tags=["project", "mcp"])
 # the project itself
 project = project_router("", tags=[])
@@ -55,20 +53,6 @@ def create_project(
 def get_project(*, db: DBSession, project_id: int) -> ProjectRead:
     db_obj = crud_project.read(db=db, id=project_id)
     return ProjectRead.model_validate(db_obj)
-
-
-@router.get(
-    "/users/me/projects",
-    response_model=list[ProjectRead],
-    summary="Returns all Projects of the logged-in User",
-)
-def get_user_projects(
-    *,
-    db: DBSession,
-    authz_user: AuthzUser = Depends(),
-) -> list[ProjectRead]:
-    db_obj = crud_user.read(db=db, id=authz_user.user.id)
-    return [ProjectRead.model_validate(proj) for proj in db_obj.projects]
 
 
 # --- update operations

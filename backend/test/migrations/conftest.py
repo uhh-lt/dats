@@ -685,8 +685,9 @@ def old_file_layout_database(
         command.upgrade(config, "head")
 
 
-# the composite keys, which add project_id to the tables of FILLED_TABLES
-COMPOSITE_KEYS = "e9c943a5f56d"
+# the composite keys, which add project_id to the tables of FILLED_TABLES and key
+# every project-owned table by (project_id, id)
+COMPOSITE_KEYS = "7f1bbe0f69d7"
 
 
 def rows_by_project(db: Session) -> dict[str, dict[int, int]]:

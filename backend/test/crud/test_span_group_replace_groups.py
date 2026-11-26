@@ -96,7 +96,10 @@ def test_replace_groups_twice_leaves_exactly_the_second_set(
     remaining_texts = sorted(
         span.span_text.text
         for span in crud_span_anno.read_by_user_and_sdoc(
-            db=db_session, user_id=fixture["user_id"], sdoc_id=fixture["sdoc_id"]
+            db=db_session,
+            project_id=fixture["project_id"],
+            user_id=fixture["user_id"],
+            sdoc_id=fixture["sdoc_id"],
         )
     )
     assert remaining_texts == ["d", "e", "f", "g"]
@@ -148,7 +151,10 @@ def test_replace_groups_without_codes_deletes_only_the_groups_of_that_name(
     remaining_ids = sorted(
         span.id
         for span in crud_span_anno.read_by_user_and_sdoc(
-            db=db_session, user_id=fixture["user_id"], sdoc_id=fixture["sdoc_id"]
+            db=db_session,
+            project_id=fixture["project_id"],
+            user_id=fixture["user_id"],
+            sdoc_id=fixture["sdoc_id"],
         )
     )
     assert remaining_ids == fixture["span_ids"]

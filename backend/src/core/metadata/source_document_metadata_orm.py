@@ -45,14 +45,14 @@ class SourceDocumentMetadataORM(ORMBase):
     project_metadata: Mapped["ProjectMetadataORM"] = relationship(
         "ProjectMetadataORM",
         back_populates="sdoc_metadata",
-        foreign_keys=[project_metadata_id],
+        primaryjoin="and_(ProjectMetadataORM.project_id == SourceDocumentMetadataORM.project_id, ProjectMetadataORM.id == foreign(SourceDocumentMetadataORM.project_metadata_id))",
     )
 
     source_document_id: Mapped[int] = mapped_column(Integer, nullable=False, index=True)
     source_document: Mapped["SourceDocumentORM"] = relationship(
         "SourceDocumentORM",
         back_populates="metadata_",
-        foreign_keys=[source_document_id],
+        primaryjoin="and_(SourceDocumentORM.project_id == SourceDocumentMetadataORM.project_id, SourceDocumentORM.id == foreign(SourceDocumentMetadataORM.source_document_id))",
     )
 
     __table_args__ = (
@@ -70,6 +70,7 @@ class SourceDocumentMetadataORM(ORMBase):
             name="CC_source_document_metadata_has_exactly_one_value",
         ),
         UniqueConstraint(
+            "project_id",
             "source_document_id",
             "project_metadata_id",
             name="UC_unique_metadata_sdoc_id_project_metadata_id",

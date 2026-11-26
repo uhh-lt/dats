@@ -8,7 +8,13 @@ from sqlalchemy import event
 from sqlalchemy.orm import Session
 
 from common.doc_type_enum import DocType
-from composite_keys_test_utils import TwoTenants, create_two_tenants
+from common.meta_type_enum import MetaType
+from composite_keys_test_utils import (
+    TwinProjects,
+    TwoTenants,
+    create_twin_projects,
+    create_two_tenants,
+)
 from core.annotation.span_annotation_dto import SpanAnnotationCreate
 from core.annotation.span_annotation_service import SpanAnnotationService
 from core.annotation.span_group_crud import crud_span_group
@@ -24,10 +30,13 @@ from core.doc.source_document_orm import SourceDocumentORM
 from core.memo.memo_crud import crud_memo
 from core.memo.memo_dto import MemoCreateIntern
 from core.memo.memo_enum import AttachedObjectType
+from core.metadata.project_metadata_orm import ProjectMetadataORM
+from core.metadata.source_document_metadata_orm import SourceDocumentMetadataORM
 from core.project.project_orm import ProjectORM
 from core.tag.tag_crud import crud_tag
 from core.tag.tag_dto import TagCreate
 from core.tag.tag_orm import TagORM
+from dats_test_utils import create_text_document
 from feature_test_utils import create_project_with_features
 from pipeline_test_utils import set_step_status
 
@@ -394,3 +403,59 @@ def step_status_project(db_session, test_project, test_user) -> StepStatusProjec
 def two_tenants(db_session: Session, test_user, test_project) -> TwoTenants:
     """The rows of every project-owned table in two projects (see TwoTenants)."""
     return create_two_tenants(db_session, user=test_user, project=test_project)
+
+
+@pytest.fixture(scope="function")
+def twin_projects(db_session: Session, test_user, test_project) -> TwinProjects:
+    """Two projects that hold the same ids in every project-owned table (see
+    TwinProjects)."""
+    return create_twin_projects(db_session, user=test_user, project=test_project)
+
+
+class ProjectWithNotes(TypedDict):
+    project_id: int
+    note_ids: list[int]
+
+
+@pytest.fixture(scope="function")
+def project_with_notes(db_session: Session, test_project) -> ProjectWithNotes:
+    """
+    This fixture sets up the following project:
+
+    - The test project with the writable text metadata key "note" (string).
+    - Ten text documents "note_0.txt" to "note_9.txt" (without the initial
+      metadata of the project), each with the "note" value "note i".
+      `note_ids[i]` is the id of the value of "note_i.txt".
+    """
+    p = test_project.id
+    key = ProjectMetadataORM(
+        key="note",
+        metatype=MetaType.STRING,
+        read_only=False,
+        doctype=DocType.text,
+        description="",
+        project_id=p,
+    )
+    db_session.add(key)
+    db_session.flush()
+    note_ids = []
+    for i in range(10):
+        sdoc = create_text_document(
+            db_session,
+            project=test_project,
+            filename=f"note_{i}.txt",
+            name=f"note_{i}",
+            sentences=["A note."],
+            initialize_metadata=False,
+        )
+        note = SourceDocumentMetadataORM(
+            str_value=f"note {i}",
+            project_id=p,
+            project_metadata_id=key.id,
+            source_document_id=sdoc.id,
+        )
+        db_session.add(note)
+        db_session.flush()
+        note_ids.append(note.id)
+    db_session.commit()
+    return {"project_id": p, "note_ids": note_ids}

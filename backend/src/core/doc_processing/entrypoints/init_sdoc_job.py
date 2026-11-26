@@ -48,7 +48,11 @@ def handle_init_sdoc_job(payload: SdocInitJobInput, job: Job) -> SdocInitJobOutp
             db=db, project_id=payload.project_id
         )
         roots = ArtefactService().plan_document(
-            db=db, sdoc_id=sdoc_db_obj.id, doctype=payload.doctype, demand=demand
+            db=db,
+            project_id=payload.project_id,
+            sdoc_id=sdoc_db_obj.id,
+            doctype=payload.doctype,
+            demand=demand,
         )
 
         # create empty sdoc data

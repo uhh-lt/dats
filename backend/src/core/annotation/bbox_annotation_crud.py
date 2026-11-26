@@ -10,7 +10,6 @@ from core.annotation.bbox_annotation_dto import (
 )
 from core.annotation.bbox_annotation_orm import BBoxAnnotationORM
 from core.code.code_orm import CodeORM
-from core.doc.source_document_orm import SourceDocumentORM
 from core.memo.object_handle_orm import ObjectHandleORM
 from repos.db.crud_base import BATCH_SIZE
 from repos.db.project_crud_base import ProjectCRUDBase
@@ -48,23 +47,12 @@ class CRUDBBoxAnnotation(
         *,
         project_id: int,
     ) -> list[BBoxAnnotationORM]:
-        query = (
+        return (
             db.query(self.model)
             .options(*self._load_options())
-            .join(
-                AnnotationDocumentORM,
-                AnnotationDocumentORM.id == self.model.annotation_document_id,
-            )
-            .join(
-                SourceDocumentORM,
-                SourceDocumentORM.id == AnnotationDocumentORM.source_document_id,
-            )
-            .where(
-                SourceDocumentORM.project_id == project_id,
-            )
+            .where(self.model.project_id == project_id)
+            .all()
         )
-
-        return query.all()
 
     def read_by_project_and_uuid(
         self,
@@ -112,34 +100,6 @@ class CRUDBBoxAnnotation(
                 )
                 .all()
             )
-        return db_objs
-
-    def read_by_users_and_sdoc(
-        self,
-        db: Session,
-        *,
-        user_ids: list[int],
-        sdoc_id: int,
-        exclude_disabled_codes: bool = True,
-    ) -> list[BBoxAnnotationORM]:
-        if not user_ids:
-            return []
-
-        db_objs: list[BBoxAnnotationORM] = []
-        for i in range(0, len(user_ids), BATCH_SIZE):
-            batch_user_ids = user_ids[i : i + BATCH_SIZE]
-            query = (
-                db.query(self.model)
-                .options(*self._load_options())
-                .join(self.model.annotation_document)
-                .where(
-                    AnnotationDocumentORM.user_id.in_(batch_user_ids),
-                    AnnotationDocumentORM.source_document_id == sdoc_id,
-                )
-            )
-            if exclude_disabled_codes:
-                query = query.join(self.model.code).where(CodeORM.enabled == True)  # noqa: E712
-            db_objs.extend(query.all())
         return db_objs
 
     def read_by_user(

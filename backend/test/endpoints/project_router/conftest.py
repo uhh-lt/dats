@@ -1,16 +1,57 @@
 from collections.abc import Generator
-from typing import Any
+from itertools import count
+from typing import Any, Callable, TypedDict
 
 import pytest
 from fastapi.testclient import TestClient
+from sqlalchemy.orm import Session
 
-from composite_keys_test_utils import TwoTenants, create_two_tenants
+from common.languages_enum import Language
+from composite_keys_test_utils import (
+    TenantRows,
+    TwinProjects,
+    TwoTenants,
+    create_tenant_rows,
+    create_twin_projects,
+    create_two_tenants,
+)
+from core.project.project_crud import crud_project
+from core.project.project_orm import ProjectORM
+from core.prompt.prompt_enum import TaskType
 from core.user.user_crud import crud_user
 from core.user.user_dto import UserCreate
+from core.user.user_orm import UserORM
 from dats_test_utils import create_user_client
+from feature_test_utils import create_project_with_features
 from job_test_utils import store_job
+from modules.classifier.classifier_dto import (
+    ClassifierInferenceParams,
+    ClassifierJobInput,
+)
+from modules.classifier.classifier_enum import ClassifierModel, ClassifierTask
+from modules.concept_over_time_analysis.cota_dto import COTARefinementJobInput
+from modules.crawler.crawler_job import CrawlerJobInput
+from modules.duplicate_finder.duplicate_finder_job import DuplicateFinderInput
+from modules.eximport.export_enum import ExportJobType
+from modules.eximport.export_job_dto import ExportJobInput
+from modules.eximport.import_enum import ImportJobType
+from modules.eximport.import_job_dto import ImportJobInput
+from modules.llm_assistant.llm_assistant_job_dto import LLMAssistantJobInput
+from modules.perspectives.cluster_embedding_crud import crud_cluster_embedding
+from modules.perspectives.cluster_embedding_dto import ClusterObjectIdentifier
+from modules.perspectives.perspectives_enum import PerspectivesJobType
+from modules.perspectives.perspectives_job_dto import (
+    PerspectivesJobInput,
+    RefineModelParams,
+)
+from modules.tag_recommendation.tag_recommendation_dto import (
+    TagRecommendationJobInput,
+)
+from repos.vector.weaviate_repo import WeaviateRepo
+from systems.artefact_system.artefact_dto import ProcessingSettings
 from systems.job_system.job_dto import JobInputBase
 from systems.job_system.job_service import JobService
+from systems.job_system.job_system_enum import EndpointGeneration
 
 
 @pytest.fixture(scope="function")
@@ -34,30 +75,158 @@ def tenants(db_session, test_user, test_project) -> TwoTenants:
     return create_two_tenants(db_session, user=test_user, project=test_project)
 
 
-# per tenant ("own", "foreign"): the id of a job of every job type by job type
-TenantJobs = dict[str, dict[str, str]]
+# a valid input of every job type with endpoints, on the rows of a tenant
+JOB_INPUTS: dict[str, Callable[[TenantRows, UserORM], JobInputBase]] = {
+    "classifier": lambda rows, user: ClassifierJobInput(
+        project_id=rows["project"].id,
+        task_type=ClassifierTask.INFERENCE,
+        model_type=ClassifierModel.DOCUMENT,
+        task_parameters=ClassifierInferenceParams(
+            task_type=ClassifierTask.INFERENCE,
+            classifier_id=rows["classifier"].id,
+            sdoc_ids=[rows["sdoc"].id],
+            delete_existing_work=False,
+        ),
+    ),
+    "cota_refinement": lambda rows, user: COTARefinementJobInput(
+        project_id=rows["project"].id, cota_id=rows["cota"].id
+    ),
+    "crawler": lambda rows, user: CrawlerJobInput(
+        project_id=rows["project"].id,
+        urls=[],
+        settings=ProcessingSettings(
+            extract_images=False,
+            pages_per_chunk=1,
+            language=Language.english,
+            model="default",
+        ),
+    ),
+    "duplicate_finder": lambda rows, user: DuplicateFinderInput(
+        project_id=rows["project"].id, max_different_words=0, tag_id=None
+    ),
+    "export": lambda rows, user: ExportJobInput(
+        project_id=rows["project"].id,
+        export_job_type=ExportJobType.ALL_SDOCS,
+        specific_export_job_parameters=None,
+    ),
+    "import": lambda rows, user: ImportJobInput(
+        project_id=rows["project"].id,
+        import_job_type=ImportJobType.CODES,
+        user_id=user.id,
+        temporary_file_id="none",
+        file_name="codes.csv",
+    ),
+    "llm_assistant": lambda rows, user: LLMAssistantJobInput(
+        project_id=rows["project"].id,
+        task_type=TaskType.ANNOTATION,
+        sdoc_ids=[rows["sdoc"].id],
+        model="default",
+        prompt_version_id=rows["prompt_version"].id,
+        virtual_user_id=rows["virtual_user"].id,
+    ),
+    "perspectives": lambda rows, user: PerspectivesJobInput(
+        project_id=rows["project"].id,
+        aspect_id=rows["aspect"].id,
+        perspectives_job_type=PerspectivesJobType.REFINE_MODEL,
+        parameters=RefineModelParams(
+            perspectives_job_type=PerspectivesJobType.REFINE_MODEL
+        ),
+    ),
+    "tag_recommendation": lambda rows, user: TagRecommendationJobInput(
+        project_id=rows["project"].id
+    ),
+}
+
+
+class PathTenant(TypedDict):
+    """What the path ids of the project routes name in one project: the
+    `TenantRows`, one job of every job type with endpoints (its id by job type,
+    its input from `JOB_INPUTS`, started by the test user) and the user
+    "member_<p>@dats.org", a member of only this project. Both clusters of
+    "Aspect <p>" have the embedding [1, 0]."""
+
+    rows: TenantRows
+    jobs: dict[str, str]
+    member: UserORM
+
+
+def _create_path_tenant(db: Session, rows: TenantRows, user: UserORM) -> PathTenant:
+    """Store the jobs (without enqueueing them, so no worker runs them), add the
+    member to the project of the rows and embed its clusters."""
+    job_types = [
+        job_type
+        for job_type, job in JobService().job_registry.items()
+        if job["generate_endpoints"] != EndpointGeneration.NONE
+    ]
+    missing = set(job_types) - set(JOB_INPUTS)
+    assert not missing, f"add an input of the job types {missing} to JOB_INPUTS"
+    project_id = rows["project"].id
+    member = crud_user.create(
+        db=db,
+        create_dto=UserCreate(
+            first_name="Member",
+            last_name=str(project_id),
+            email=f"member_{project_id}@dats.org",
+            password="MemberPassword123",
+        ),
+    )
+    crud_project.associate_user(db=db, project_id=project_id, user_id=member.id)
+    db.commit()
+    for cluster in (rows["cluster"], rows["child_cluster"]):
+        crud_cluster_embedding.create(
+            WeaviateRepo().get_client(),
+            project_id=project_id,
+            id=ClusterObjectIdentifier(
+                aspect_id=rows["aspect"].id, cluster_id=cluster.id
+            ),
+            embedding=[1.0, 0.0],
+        )
+    return {
+        "rows": rows,
+        "jobs": {
+            job_type: store_job(job_type, JOB_INPUTS[job_type](rows, user))
+            for job_type in job_types
+        },
+        "member": member,
+    }
 
 
 @pytest.fixture(scope="function")
-def tenant_jobs(tenants: TwoTenants) -> TenantJobs:
+def path_tenants(db_session, test_user, tenants: TwoTenants) -> dict[str, PathTenant]:
     """
-    This fixture stores one job of every registered job type in each project of
-    `tenants`, without enqueueing it, so no worker runs it: `own` holds the job
-    ids of the test project, `foreign` those of "Foreign Project", by job type.
+    This fixture extends `tenants` by the jobs and the member of each project
+    (see `PathTenant`): `own` in the test project, `foreign` in "Foreign
+    Project".
 
-    Non-obvious derived behavior: the jobs carry a bare `JobInputBase` as input,
-    so only the routes that read the job without its input succeed with them;
-    the routes of a job of another project fail before they read the input.
+    Non-obvious derived behavior: the jobs are QUEUED but on no queue, so an
+    abort or a retry of them changes nothing (both answer false).
     """
     return {
-        tenant: {
-            job_type: store_job(
-                job_type, JobInputBase(project_id=tenants[tenant]["project"].id)
-            )
-            for job_type in JobService().job_registry
-        }
+        tenant: _create_path_tenant(db_session, tenants[tenant], test_user)
         for tenant in ("own", "foreign")
     }
+
+
+@pytest.fixture(scope="function")
+def new_own_path_tenant(
+    db_session, test_user, test_project: ProjectORM
+) -> Callable[[], PathTenant]:
+    """A factory of a `PathTenant` (with the rows of `create_tenant_rows`) in a
+    new project "Own Project <n>" (n = 1, 2, ...) of the test user with the
+    features of the test project, for a request that deletes what it names."""
+    numbers = count(1)
+
+    def create() -> PathTenant:
+        project = create_project_with_features(
+            db_session,
+            test_user,
+            title=f"Own Project {next(numbers)}",
+            features=list(test_project.enabled_features),
+        )
+        rows = create_tenant_rows(db_session, project=project, user=test_user)
+        return _create_path_tenant(db_session, rows, test_user)
+
+    return create
 
 
 @pytest.fixture(scope="function")
@@ -77,3 +246,20 @@ def non_member_client(app_client, db_session) -> Generator[TestClient, Any, None
     client = create_user_client(app_client, user)
     yield client
     client.close()
+
+
+@pytest.fixture(scope="function")
+def twins(db_session, test_user, test_project) -> TwinProjects:
+    """
+    This fixture sets up two projects that hold the same ids (see
+    `composite_keys_test_utils.TwinProjects`):
+
+    - `project`: the test project with one row of every project-owned table
+      (`rows`, see `composite_keys_test_utils.TenantRows`).
+    - `twin`: "Twin Project" with the same features and a copy of every row of the
+      test project with the same id.
+
+    Non-obvious derived behavior: only the SQL rows are copied, so a read of
+    Elasticsearch, Weaviate or files finds nothing in either project.
+    """
+    return create_twin_projects(db_session, user=test_user, project=test_project)

@@ -3,7 +3,6 @@
 /* tslint:disable */
 /* eslint-disable */
 import type { FeatureActivation } from "@models/FeatureActivation";
-import type { FeatureRead } from "@models/FeatureRead";
 import type { ProjectFeatureRead } from "@models/ProjectFeatureRead";
 import type { CancelablePromise } from "../core/CancelablePromise";
 import { OpenAPI } from "../core/OpenAPI";
@@ -104,17 +103,6 @@ export class FeatureService {
       errors: {
         422: `Validation Error`,
       },
-    });
-  }
-  /**
-   * Returns all Features a Project can enable
-   * @returns FeatureRead Successful Response
-   * @throws ApiError
-   */
-  public static getAll(): CancelablePromise<Array<FeatureRead>> {
-    return __request(OpenAPI, {
-      method: "GET",
-      url: "/features",
     });
   }
 }

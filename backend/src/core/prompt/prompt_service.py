@@ -601,7 +601,10 @@ class PromptService(metaclass=SingletonMeta):
                 )
                 for span in sorted(
                     crud_span_anno.read_by_user_and_sdoc(
-                        db=db, user_id=annotation.user_id, sdoc_id=annotation.sdoc_id
+                        db=db,
+                        project_id=project_id,
+                        user_id=annotation.user_id,
+                        sdoc_id=annotation.sdoc_id,
                     ),
                     key=lambda span: (span.begin, span.end),
                 )

@@ -60,7 +60,7 @@ class SourceDocumentORM(ORMBase):
         back_populates="source_document",
         cascade="all, delete-orphan",
         passive_deletes=True,
-        foreign_keys="ObjectHandleORM.source_document_id",
+        primaryjoin="and_(SourceDocumentORM.project_id == ObjectHandleORM.project_id, SourceDocumentORM.id == foreign(ObjectHandleORM.source_document_id))",
     )
     data: Mapped["SourceDocumentDataORM"] = relationship(
         "SourceDocumentDataORM",
@@ -68,7 +68,7 @@ class SourceDocumentORM(ORMBase):
         back_populates="source_document",
         cascade="all, delete-orphan",
         passive_deletes=True,
-        foreign_keys="SourceDocumentDataORM.id",
+        primaryjoin="and_(SourceDocumentORM.project_id == SourceDocumentDataORM.project_id, SourceDocumentORM.id == foreign(SourceDocumentDataORM.id))",
     )
 
     # many to one
@@ -83,7 +83,9 @@ class SourceDocumentORM(ORMBase):
 
     folder_id: Mapped[int] = mapped_column(Integer, nullable=False, index=True)
     folder: Mapped["FolderORM"] = relationship(
-        "FolderORM", back_populates="source_documents", foreign_keys=[folder_id]
+        "FolderORM",
+        back_populates="source_documents",
+        primaryjoin="and_(FolderORM.project_id == SourceDocumentORM.project_id, FolderORM.id == foreign(SourceDocumentORM.folder_id))",
     )
 
     # one to many
@@ -92,7 +94,7 @@ class SourceDocumentORM(ORMBase):
         back_populates="source_document",
         cascade="all, delete-orphan",
         passive_deletes=True,
-        foreign_keys="SourceDocumentMetadataORM.source_document_id",
+        primaryjoin="and_(SourceDocumentORM.project_id == SourceDocumentMetadataORM.project_id, SourceDocumentORM.id == foreign(SourceDocumentMetadataORM.source_document_id))",
     )
 
     annotation_documents: Mapped[list["AnnotationDocumentORM"]] = relationship(
@@ -100,7 +102,7 @@ class SourceDocumentORM(ORMBase):
         back_populates="source_document",
         cascade="all, delete-orphan",
         passive_deletes=True,
-        foreign_keys="AnnotationDocumentORM.source_document_id",
+        primaryjoin="and_(SourceDocumentORM.project_id == AnnotationDocumentORM.project_id, SourceDocumentORM.id == foreign(AnnotationDocumentORM.source_document_id))",
     )
 
     word_frequencies: Mapped[list["WordFrequencyORM"]] = relationship(
@@ -108,7 +110,7 @@ class SourceDocumentORM(ORMBase):
         back_populates="source_document",
         cascade="all, delete-orphan",
         passive_deletes=True,
-        foreign_keys="WordFrequencyORM.sdoc_id",
+        primaryjoin="and_(SourceDocumentORM.project_id == WordFrequencyORM.project_id, SourceDocumentORM.id == foreign(WordFrequencyORM.sdoc_id))",
     )
 
     # the status of the planned pipeline steps (crud_sdoc_step_status)
@@ -117,7 +119,7 @@ class SourceDocumentORM(ORMBase):
         back_populates="source_document",
         cascade="all, delete-orphan",
         passive_deletes=True,
-        foreign_keys="SourceDocumentStepStatusORM.sdoc_id",
+        primaryjoin="and_(SourceDocumentORM.project_id == SourceDocumentStepStatusORM.project_id, SourceDocumentORM.id == foreign(SourceDocumentStepStatusORM.sdoc_id))",
     )
 
     tag_recommendation_link: Mapped[list["TagRecommendationLinkORM"]] = relationship(
@@ -125,7 +127,7 @@ class SourceDocumentORM(ORMBase):
         back_populates="source_document",
         cascade="all, delete-orphan",
         passive_deletes=True,
-        foreign_keys="TagRecommendationLinkORM.source_document_id",
+        primaryjoin="and_(SourceDocumentORM.project_id == TagRecommendationLinkORM.project_id, SourceDocumentORM.id == foreign(TagRecommendationLinkORM.source_document_id))",
     )
 
     # many to many
@@ -141,7 +143,7 @@ class SourceDocumentORM(ORMBase):
         back_populates="source_document",
         cascade="all, delete-orphan",
         passive_deletes=True,
-        foreign_keys="DocumentAspectORM.sdoc_id",
+        primaryjoin="and_(SourceDocumentORM.project_id == DocumentAspectORM.project_id, SourceDocumentORM.id == foreign(DocumentAspectORM.sdoc_id))",
     )
     aspects: Mapped[list["AspectORM"]] = relationship(
         "AspectORM",
@@ -155,7 +157,7 @@ class SourceDocumentORM(ORMBase):
         back_populates="source_document",
         cascade="all, delete-orphan",
         passive_deletes=True,
-        foreign_keys="DocumentClusterORM.sdoc_id",
+        primaryjoin="and_(SourceDocumentORM.project_id == DocumentClusterORM.project_id, SourceDocumentORM.id == foreign(DocumentClusterORM.sdoc_id))",
     )
     clusters: Mapped[list["ClusterORM"]] = relationship(
         "ClusterORM",

@@ -5,6 +5,8 @@ from common.dependencies import get_current_user
 from config import conf
 from core.info.info_dto import InstanceInfo
 from repos.llm_repo import LLMRepo
+from systems.feature_system.feature_dto import FeatureRead
+from systems.feature_system.feature_service import FeatureService
 
 router = APIRouter(tags=["general"])
 
@@ -33,6 +35,16 @@ def info():
 )
 def get_available_models() -> list[str]:
     return LLMRepo().get_available_llms()
+
+
+@router.get(
+    "/info/features",
+    dependencies=[Depends(get_current_user)],
+    response_model=list[FeatureRead],
+    summary="Returns all Features a Project can enable",
+)
+def get_features() -> list[FeatureRead]:
+    return FeatureService().read_all()
 
 
 # Allow to view docs without being logged in (?)

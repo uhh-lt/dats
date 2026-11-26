@@ -2,6 +2,7 @@
 /* istanbul ignore file */
 /* tslint:disable */
 /* eslint-disable */
+import type { FeatureRead } from "@models/FeatureRead";
 import type { InstanceInfo } from "@models/InstanceInfo";
 import type { CancelablePromise } from "../core/CancelablePromise";
 import { OpenAPI } from "../core/OpenAPI";
@@ -38,6 +39,17 @@ export class GeneralService {
     return __request(OpenAPI, {
       method: "GET",
       url: "/info/llms",
+    });
+  }
+  /**
+   * Returns all Features a Project can enable
+   * @returns FeatureRead Successful Response
+   * @throws ApiError
+   */
+  public static getFeatures(): CancelablePromise<Array<FeatureRead>> {
+    return __request(OpenAPI, {
+      method: "GET",
+      url: "/info/features",
     });
   }
   /**

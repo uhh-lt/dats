@@ -49,7 +49,7 @@ class AnnotationDocumentORM(ORMBase):
         back_populates="annotation_document",
         cascade="all, delete-orphan",
         passive_deletes=True,
-        foreign_keys="SpanAnnotationORM.annotation_document_id",
+        primaryjoin="and_(AnnotationDocumentORM.project_id == SpanAnnotationORM.project_id, AnnotationDocumentORM.id == foreign(SpanAnnotationORM.annotation_document_id))",
     )
 
     span_groups: Mapped[list["SpanGroupORM"]] = relationship(
@@ -57,7 +57,7 @@ class AnnotationDocumentORM(ORMBase):
         back_populates="annotation_document",
         cascade="all, delete-orphan",
         passive_deletes=True,
-        foreign_keys="SpanGroupORM.annotation_document_id",
+        primaryjoin="and_(AnnotationDocumentORM.project_id == SpanGroupORM.project_id, AnnotationDocumentORM.id == foreign(SpanGroupORM.annotation_document_id))",
     )
 
     bbox_annotations: Mapped[list["BBoxAnnotationORM"]] = relationship(
@@ -65,7 +65,7 @@ class AnnotationDocumentORM(ORMBase):
         back_populates="annotation_document",
         cascade="all, delete-orphan",
         passive_deletes=True,
-        foreign_keys="BBoxAnnotationORM.annotation_document_id",
+        primaryjoin="and_(AnnotationDocumentORM.project_id == BBoxAnnotationORM.project_id, AnnotationDocumentORM.id == foreign(BBoxAnnotationORM.annotation_document_id))",
     )
 
     sentence_annotations: Mapped[list["SentenceAnnotationORM"]] = relationship(
@@ -73,7 +73,7 @@ class AnnotationDocumentORM(ORMBase):
         back_populates="annotation_document",
         cascade="all, delete-orphan",
         passive_deletes=True,
-        foreign_keys="SentenceAnnotationORM.annotation_document_id",
+        primaryjoin="and_(AnnotationDocumentORM.project_id == SentenceAnnotationORM.project_id, AnnotationDocumentORM.id == foreign(SentenceAnnotationORM.annotation_document_id))",
     )
 
     # many to one
@@ -86,7 +86,7 @@ class AnnotationDocumentORM(ORMBase):
     source_document: Mapped["SourceDocumentORM"] = relationship(
         "SourceDocumentORM",
         back_populates="annotation_documents",
-        foreign_keys=[source_document_id],
+        primaryjoin="and_(SourceDocumentORM.project_id == AnnotationDocumentORM.project_id, SourceDocumentORM.id == foreign(AnnotationDocumentORM.source_document_id))",
     )
 
     user_id: Mapped[int] = mapped_column(
@@ -103,6 +103,7 @@ class AnnotationDocumentORM(ORMBase):
         PrimaryKeyConstraint("project_id", "id", name="annotationdocument_pkey"),
         # one annotation document per user and document
         UniqueConstraint(
+            "project_id",
             "source_document_id",
             "user_id",
             name="UC_annotationdocument_source_document_id_user_id",

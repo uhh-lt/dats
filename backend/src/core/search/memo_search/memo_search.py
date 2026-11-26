@@ -58,6 +58,7 @@ def find_memos(
     """
     builder = SearchBuilder(
         db=db,
+        project_id=project_id,
         filter=request.filter,
         sorts=request.sorts,
         group_by=request.group_by,
@@ -119,6 +120,7 @@ def find_memo_groups(
     """
     builder = SearchBuilder(
         db=db,
+        project_id=project_id,
         filter=request.filter,
         sorts=[],
         group_by=request.group_by,

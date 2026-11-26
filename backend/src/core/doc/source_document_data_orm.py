@@ -24,7 +24,9 @@ class SourceDocumentDataORM(ORMBase):
         Integer, autoincrement=False, nullable=False, index=True
     )
     source_document: Mapped["SourceDocumentORM"] = relationship(
-        "SourceDocumentORM", back_populates="data", foreign_keys=[id]
+        "SourceDocumentORM",
+        back_populates="data",
+        primaryjoin="and_(SourceDocumentORM.project_id == SourceDocumentDataORM.project_id, SourceDocumentORM.id == foreign(SourceDocumentDataORM.id))",
     )
     project_id: Mapped[int] = mapped_column(
         Integer,

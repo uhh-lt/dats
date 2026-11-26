@@ -44,12 +44,10 @@ class CodeFrequencyService(metaclass=SingletonMeta):
                 func.count(SpanAnnotationORM.id),
             )
             .join(
-                AnnotationDocumentORM,
-                AnnotationDocumentORM.id == SpanAnnotationORM.annotation_document_id,
+                SpanAnnotationORM.annotation_document,
             )
             .join(
-                SourceDocumentORM,
-                SourceDocumentORM.id == AnnotationDocumentORM.source_document_id,
+                AnnotationDocumentORM.source_document,
             )
             .group_by(SpanAnnotationORM.code_id)
         )
@@ -69,13 +67,10 @@ class CodeFrequencyService(metaclass=SingletonMeta):
                 func.count(SentenceAnnotationORM.id),
             )
             .join(
-                AnnotationDocumentORM,
-                AnnotationDocumentORM.id
-                == SentenceAnnotationORM.annotation_document_id,
+                SentenceAnnotationORM.annotation_document,
             )
             .join(
-                SourceDocumentORM,
-                SourceDocumentORM.id == AnnotationDocumentORM.source_document_id,
+                AnnotationDocumentORM.source_document,
             )
             .group_by(SentenceAnnotationORM.code_id)
         )
@@ -95,12 +90,10 @@ class CodeFrequencyService(metaclass=SingletonMeta):
                 func.count(BBoxAnnotationORM.id),
             )
             .join(
-                AnnotationDocumentORM,
-                AnnotationDocumentORM.id == BBoxAnnotationORM.annotation_document_id,
+                BBoxAnnotationORM.annotation_document,
             )
             .join(
-                SourceDocumentORM,
-                SourceDocumentORM.id == AnnotationDocumentORM.source_document_id,
+                AnnotationDocumentORM.source_document,
             )
             .group_by(BBoxAnnotationORM.code_id)
         )
@@ -158,14 +151,12 @@ class CodeFrequencyService(metaclass=SingletonMeta):
                 func.count().label("count"),
             )
             .join(
-                AnnotationDocumentORM,
-                AnnotationDocumentORM.source_document_id == SourceDocumentORM.id,
+                SourceDocumentORM.annotation_documents,
             )
             .join(
-                SpanAnnotationORM,
-                SpanAnnotationORM.annotation_document_id == AnnotationDocumentORM.id,
+                AnnotationDocumentORM.span_annotations,
             )
-            .join(CodeORM, CodeORM.id == SpanAnnotationORM.code_id)
+            .join(SpanAnnotationORM.code)
             .join(SpanTextORM, SpanTextORM.id == SpanAnnotationORM.span_text_id)
         )
         # noinspection PyUnresolvedReferences
@@ -205,20 +196,14 @@ class CodeFrequencyService(metaclass=SingletonMeta):
                 CodeORM,
                 func.count().label("count"),
             )
+            .join(SourceDocumentORM.data)
             .join(
-                SourceDocumentDataORM,
-                SourceDocumentDataORM.id == SourceDocumentORM.id,
+                SourceDocumentORM.annotation_documents,
             )
             .join(
-                AnnotationDocumentORM,
-                AnnotationDocumentORM.source_document_id == SourceDocumentORM.id,
+                AnnotationDocumentORM.sentence_annotations,
             )
-            .join(
-                SentenceAnnotationORM,
-                SentenceAnnotationORM.annotation_document_id
-                == AnnotationDocumentORM.id,
-            )
-            .join(CodeORM, CodeORM.id == SentenceAnnotationORM.code_id)
+            .join(SentenceAnnotationORM.code)
         )
         # noinspection PyUnresolvedReferences
         query = query.filter(
@@ -267,14 +252,12 @@ class CodeFrequencyService(metaclass=SingletonMeta):
                 func.count().label("count"),
             )
             .join(
-                AnnotationDocumentORM,
-                AnnotationDocumentORM.source_document_id == SourceDocumentORM.id,
+                SourceDocumentORM.annotation_documents,
             )
             .join(
-                BBoxAnnotationORM,
-                BBoxAnnotationORM.annotation_document_id == AnnotationDocumentORM.id,
+                AnnotationDocumentORM.bbox_annotations,
             )
-            .join(CodeORM, CodeORM.id == BBoxAnnotationORM.code_id)
+            .join(BBoxAnnotationORM.code)
         )
         # noinspection PyUnresolvedReferences
         query = query.filter(

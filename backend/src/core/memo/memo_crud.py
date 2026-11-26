@@ -235,7 +235,7 @@ class CRUDMemo(ProjectCRUDBase[MemoORM, MemoCreateIntern, MemoUpdate]):
             memo_id=memo_id, user_id=user_id, project_id=project_id
         )
         upsert_stmt = insert_stmt.on_conflict_do_update(
-            index_elements=["user_id", "memo_id"],
+            index_elements=["project_id", "user_id", "memo_id"],
             set_={"last_opened": insert_stmt.excluded.last_opened},
         )
         db.execute(upsert_stmt)

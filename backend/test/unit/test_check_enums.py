@@ -119,11 +119,10 @@ def test_check_enums_detects_all_enum_kinds_and_subclasses() -> None:
         pytest.param("class ExampleType(IntEnum):", set(), id="intenum"),
         pytest.param("class ExampleType(int, enum.Enum):", set(), id="int-enum"),
         pytest.param("class ExampleType(Enum):", {"value-type"}, id="plain-enum"),
-        pytest.param("class Crud(Enum):", set(), id="crud-registry"),
     ],
 )
 def test_check_enums_requires_a_value_type(enum_class: str, expected: set[str]) -> None:
-    """Enums need a str or int value type, except the CRUD registries."""
+    """Enums need a str or int value type."""
     source = (
         "import enum\nfrom enum import Enum, IntEnum, StrEnum\n\n\n"
         f"{enum_class}\n    A = 'a'\n"

@@ -75,7 +75,9 @@ class CRUDSourceDocument(
     ) -> SDocStatus:
         self.exists(db=db, project_id=project_id, id=sdoc_id, raise_error=True)
         status = document_status(
-            crud_sdoc_step_status.read_by_sdoc(db=db, sdoc_id=sdoc_id).values()
+            crud_sdoc_step_status.read_by_sdoc(
+                db=db, project_id=project_id, sdoc_id=sdoc_id
+            ).values()
         )
         if status != SDocStatus.finished and raise_error_on_unfinished:
             raise SourceDocumentPreprocessingUnfinishedError(sdoc_id=sdoc_id)
@@ -92,35 +94,6 @@ class CRUDSourceDocument(
             )
             .all()
         )
-
-    def read_by_project_and_tag(
-        self,
-        db: Session,
-        *,
-        project_id: int,
-        tag_id: int,
-        only_finished: bool = True,
-        skip: int | None = None,
-        limit: int | None = None,
-    ) -> list[SourceDocumentORM]:
-        query = db.query(self.model).join(SourceDocumentORM, TagORM.source_documents)
-        if only_finished:
-            query = query.filter(
-                self.model.project_id == project_id,
-                document_status_filter(SDocStatus.finished),
-                TagORM.id == tag_id,
-            )
-        else:
-            query = query.filter(
-                self.model.project_id == project_id, TagORM.id == tag_id
-            )
-
-        if skip is not None:
-            query = query.offset(skip)
-        if limit is not None:
-            query = query.limit(limit)
-
-        return query.all()
 
     def read_by_project(
         self,

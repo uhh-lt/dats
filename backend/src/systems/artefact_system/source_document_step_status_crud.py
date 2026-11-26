@@ -39,7 +39,7 @@ class CRUDSourceDocumentStepStatus(
         SourceDocumentStepStatusORM,
         SourceDocumentStepStatusCreate,
         UpdateNotAllowed,
-        tuple[int, str],  # (sdoc id, step)
+        tuple[int, int, str],  # (project id, sdoc id, step)
     ]
 ):
     """The generic reads and writes of the pipeline step statuses. The status
@@ -55,25 +55,29 @@ class CRUDSourceDocumentStepStatus(
 
     ### READ OPERATIONS ###
 
-    def read_by_sdoc(self, db: Session, *, sdoc_id: int) -> StepStatus:
+    def read_by_sdoc(self, db: Session, *, project_id: int, sdoc_id: int) -> StepStatus:
         """
         Read the status of the planned steps of the document.
 
         Args:
+            project_id: The project of the document.
             sdoc_id: The document.
 
         Returns:
             The status per planned step; steps that are not planned are missing.
         """
-        return self.read_by_sdocs(db=db, sdoc_ids=[sdoc_id])[sdoc_id]
+        return self.read_by_sdocs(db=db, project_id=project_id, sdoc_ids=[sdoc_id])[
+            sdoc_id
+        ]
 
     def read_by_sdocs(
-        self, db: Session, *, sdoc_ids: list[int]
+        self, db: Session, *, project_id: int, sdoc_ids: list[int]
     ) -> dict[int, StepStatus]:
         """
         Read the status of the planned steps of the documents.
 
         Args:
+            project_id: The project of the documents.
             sdoc_ids: The documents.
 
         Returns:
@@ -85,7 +89,8 @@ class CRUDSourceDocumentStepStatus(
             batch_ids = sdoc_ids[i : i + BATCH_SIZE]
             rows = db.execute(
                 select(self.model.sdoc_id, self.model.step, self.model.status).where(
-                    self.model.sdoc_id.in_(batch_ids)
+                    self.model.project_id == project_id,
+                    self.model.sdoc_id.in_(batch_ids),
                 )
             ).all()
             for sdoc_id, step, status in rows:
@@ -129,7 +134,11 @@ class CRUDSourceDocumentStepStatus(
                 status = aliased(self.model)
                 query = query.outerjoin(
                     status,
-                    and_(status.sdoc_id == sdoc.id, status.step == key),
+                    and_(
+                        status.project_id == sdoc.project_id,
+                        status.sdoc_id == sdoc.id,
+                        status.step == key,
+                    ),
                 )
                 order.append(direction.apply(status.status))
                 continue
@@ -147,6 +156,7 @@ class CRUDSourceDocumentStepStatus(
         self,
         db: Session,
         *,
+        project_id: int,
         sdoc_ids: list[int],
         steps: Iterable[str],
         status: SDocStatus,
@@ -156,6 +166,7 @@ class CRUDSourceDocumentStepStatus(
         that are not planned yet.
 
         Args:
+            project_id: The project of the documents.
             sdoc_ids: The documents.
             steps: The steps.
             status: The new status.
@@ -163,7 +174,7 @@ class CRUDSourceDocumentStepStatus(
         steps = list(steps)
         if not sdoc_ids or not steps:
             return
-        self._lock_sdocs(db=db, sdoc_ids=sdoc_ids)
+        self._lock_sdocs(db=db, project_id=project_id, sdoc_ids=sdoc_ids)
         for i in range(0, len(sdoc_ids), BATCH_SIZE):
             batch_ids = sdoc_ids[i : i + BATCH_SIZE]
             step_values = (
@@ -180,33 +191,42 @@ class CRUDSourceDocumentStepStatus(
                     SourceDocumentORM.project_id,
                 )
                 .join(step_values, true())
-                .where(SourceDocumentORM.id.in_(batch_ids)),
+                .where(
+                    SourceDocumentORM.project_id == project_id,
+                    SourceDocumentORM.id.in_(batch_ids),
+                ),
             )
             db.execute(
                 stmt.on_conflict_do_update(
-                    index_elements=[self.model.sdoc_id, self.model.step],
+                    index_elements=[
+                        self.model.project_id,
+                        self.model.sdoc_id,
+                        self.model.step,
+                    ],
                     set_={"status": stmt.excluded.status},
                 ).execution_options(synchronize_session=False)
             )
         db.flush()
 
     def update_pending_to_erroneous(
-        self, db: Session, *, sdoc_id: int, steps: list[str]
+        self, db: Session, *, project_id: int, sdoc_id: int, steps: list[str]
     ) -> None:
         """
         Set the given steps of the document that are pending (processing) to
         erroneous; steps with another status or not planned keep it.
 
         Args:
+            project_id: The project of the document.
             sdoc_id: The document.
             steps: The steps to fail.
         """
         if not steps:
             return
-        self._lock_sdocs(db=db, sdoc_ids=[sdoc_id])
+        self._lock_sdocs(db=db, project_id=project_id, sdoc_ids=[sdoc_id])
         db.execute(
             update(self.model)
             .where(
+                self.model.project_id == project_id,
                 self.model.sdoc_id == sdoc_id,
                 self.model.step.in_(steps),
                 self.model.status == SDocStatus.processing,
@@ -253,8 +273,12 @@ class CRUDSourceDocumentStepStatus(
                 self.model.sdoc_id,
                 *[mask.label(status.name) for status, mask in masks.items()],
             )
-            .join(sdoc, sdoc.id == self.model.sdoc_id)
-            .where(sdoc.project_id == project_id)
+            .join(
+                sdoc,
+                (sdoc.project_id == self.model.project_id)
+                & (sdoc.id == self.model.sdoc_id),
+            )
+            .where(self.model.project_id == project_id)
             .group_by(self.model.sdoc_id)
             .subquery()
         )
@@ -285,14 +309,17 @@ class CRUDSourceDocumentStepStatus(
             for row in rows
         ]
 
-    def _lock_sdocs(self, *, db: Session, sdoc_ids: list[int]) -> None:
+    def _lock_sdocs(self, *, db: Session, project_id: int, sdoc_ids: list[int]) -> None:
         """Lock the documents' rows for a change of their step statuses, in the
         lock order of the artefact system."""
         ids = sorted(set(sdoc_ids))
         for i in range(0, len(ids), BATCH_SIZE):
             db.execute(
                 select(SourceDocumentORM.id)
-                .where(SourceDocumentORM.id.in_(ids[i : i + BATCH_SIZE]))
+                .where(
+                    SourceDocumentORM.project_id == project_id,
+                    SourceDocumentORM.id.in_(ids[i : i + BATCH_SIZE]),
+                )
                 .order_by(SourceDocumentORM.id)
                 .with_for_update(key_share=True)
             )

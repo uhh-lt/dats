@@ -2,7 +2,6 @@ import gc
 
 from sqlalchemy.orm import Session
 
-from common.crud_enum import Crud
 from common.singleton_meta import SingletonMeta
 from modules.classifier.classifier_crud import crud_classifier
 from modules.classifier.classifier_dto import (
@@ -12,6 +11,7 @@ from modules.classifier.classifier_dto import (
 )
 from modules.classifier.classifier_enum import ClassifierModel, ClassifierTask
 from modules.classifier.classifier_exceptions import UnsupportedClassifierJobError
+from modules.classifier.classifier_orm import ClassifierORM
 from modules.classifier.models.doc_class_model_service import (
     DocClassificationModelService,
 )
@@ -61,8 +61,8 @@ class ClassifierService(metaclass=SingletonMeta):
         crud_classifier.delete(db=db, project_id=project_id, id=classifier_id)
 
         # delete its files
-        FileCRUDBase.delete_by_entity(
-            Crud.CLASSIFIER, project_id=project_id, ids=[classifier_id]
+        FileCRUDBase.delete_by_owner(
+            ClassifierORM, project_id=project_id, ids=[classifier_id]
         )
         return c_read
 

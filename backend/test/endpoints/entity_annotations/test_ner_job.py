@@ -3,6 +3,7 @@ from sqlalchemy.orm import Session
 
 from core.annotation.span_annotation_crud import crud_span_anno
 from core.code.code_crud import crud_code
+from core.doc.source_document_orm import SourceDocumentORM
 from core.user.user_crud import SYSTEM_USER_ID
 from feature_test_utils import SDOC_SENTENCES
 from repos.ray.ray_repo import RayRepo
@@ -43,11 +44,11 @@ def _run_ner(project: TextStepsProject, entities: dict[str, str]) -> None:
         )
 
 
-def _system_spans(db: Session, sdoc_id: int) -> list[tuple[str, str]]:
+def _system_spans(db: Session, sdoc: SourceDocumentORM) -> list[tuple[str, str]]:
     """The spans of the system user: text and code name."""
     db.expire_all()
     spans = crud_span_anno.read_by_user_and_sdoc(
-        db=db, user_id=SYSTEM_USER_ID, sdoc_id=sdoc_id
+        db=db, project_id=sdoc.project_id, user_id=SYSTEM_USER_ID, sdoc_id=sdoc.id
     )
     return sorted(
         (
@@ -65,7 +66,7 @@ def test_ner_job_stores_the_entities_as_spans_of_the_system_user(
     spans of the system user with their system codes."""
     _run_ner(text_steps_project, {"world": "ORG", "cat": "PERSON"})
 
-    assert _system_spans(db_session, text_steps_project["text"].id) == [
+    assert _system_spans(db_session, text_steps_project["text"]) == [
         ("cat", "PERSON"),
         ("world", "ORG"),
     ]
@@ -79,6 +80,4 @@ def test_ner_job_replaces_the_entities_of_an_earlier_run(
     _run_ner(text_steps_project, {"world": "ORG"})
     _run_ner(text_steps_project, {"mat": "PER"})
 
-    assert _system_spans(db_session, text_steps_project["text"].id) == [
-        ("mat", "PERSON")
-    ]
+    assert _system_spans(db_session, text_steps_project["text"]) == [("mat", "PERSON")]

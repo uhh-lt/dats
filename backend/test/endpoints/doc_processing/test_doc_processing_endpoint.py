@@ -563,6 +563,36 @@ def test_retry_requeues_a_failed_step_job_which_runs(
     assert read_step_status(db_session, sdoc_id, "text_extraction") == 1
 
 
+def test_retry_of_a_document_of_another_project_retries_nothing(
+    client: TestClient,
+    db_session,
+    test_project: ProjectORM,
+    recompute_project: RecomputeProject,
+    held_jobs: HeldJobs,
+):
+    """The failed text extraction of text_done (as above) is a job of "Recompute
+    Project": retrying the document from the test project, another project of
+    the user, matches no failed job and leaves the step erroneous."""
+    p = recompute_project
+    sdoc_id = p["text_done"].id
+    response = _recompute(client, p["project"].id, "text_extraction", [sdoc_id])
+    assert response.status_code == 200, response.text
+    with failing_started_hook():
+        held_jobs.run("text_extraction")
+
+    response = client.post(
+        f"/projects/{test_project.id}/doc-processing/retry",
+        params={"doctype": DocType.text.value},
+        json=[sdoc_id],
+    )
+
+    assert response.status_code == 200, response.text
+    assert response.json().startswith("Retried 0 / 0 jobs")
+    held_jobs.run("text_extraction")
+    assert len(held_jobs.ran("text_extraction")) == 1
+    assert read_step_status(db_session, sdoc_id, "text_extraction") == -100
+
+
 # ===========================================================================
 # RECOMPUTE (/projects/{project_id}/doc-processing/recompute) TESTS
 # ===========================================================================
@@ -591,6 +621,22 @@ def test_recompute_starts_the_step_of_each_document(
     assert response.status_code == 200, response.text
     assert response.json() == 1
     assert started_steps(held_jobs) == {sdoc_id: ["language_detection"]}
+
+
+def test_recompute_of_a_document_of_another_project_is_not_found(
+    client: TestClient,
+    test_project: ProjectORM,
+    recompute_project: RecomputeProject,
+    held_jobs: HeldJobs,
+):
+    """Recomputing text_done of "Recompute Project" from the test project, another
+    project of the user, answers 404 and starts nothing."""
+    sdoc_id = recompute_project["text_done"].id
+
+    response = _recompute(client, test_project.id, "language_detection", [sdoc_id])
+
+    assert response.status_code == 404, response.text
+    assert started_steps(held_jobs) == {}
 
 
 def test_recompute_of_a_document_without_input_data_marks_it_erroneous(

@@ -49,7 +49,7 @@ class ObjectHandleORM(ORMBase):
         back_populates="attached_to",
         cascade="all, delete-orphan",
         passive_deletes=True,
-        foreign_keys="MemoORM.attached_to_id",
+        primaryjoin="and_(ObjectHandleORM.project_id == MemoORM.project_id, ObjectHandleORM.id == foreign(MemoORM.attached_to_id))",
     )
 
     # many to one: the project the handle belongs to
@@ -71,45 +71,51 @@ class ObjectHandleORM(ORMBase):
 
     code_id: Mapped[int | None] = mapped_column(Integer, index=True)
     code: Mapped["CodeORM"] = relationship(
-        "CodeORM", back_populates="object_handle", foreign_keys=[code_id]
+        "CodeORM",
+        back_populates="object_handle",
+        primaryjoin="and_(CodeORM.project_id == ObjectHandleORM.project_id, CodeORM.id == foreign(ObjectHandleORM.code_id))",
     )
 
     source_document_id: Mapped[int | None] = mapped_column(Integer, index=True)
     source_document: Mapped["SourceDocumentORM"] = relationship(
         "SourceDocumentORM",
         back_populates="object_handle",
-        foreign_keys=[source_document_id],
+        primaryjoin="and_(SourceDocumentORM.project_id == ObjectHandleORM.project_id, SourceDocumentORM.id == foreign(ObjectHandleORM.source_document_id))",
     )
 
     span_annotation_id: Mapped[int | None] = mapped_column(Integer, index=True)
     span_annotation: Mapped["SpanAnnotationORM"] = relationship(
         "SpanAnnotationORM",
         back_populates="object_handle",
-        foreign_keys=[span_annotation_id],
+        primaryjoin="and_(SpanAnnotationORM.project_id == ObjectHandleORM.project_id, SpanAnnotationORM.id == foreign(ObjectHandleORM.span_annotation_id))",
     )
 
     span_group_id: Mapped[int | None] = mapped_column(Integer, index=True)
     span_group: Mapped["SpanGroupORM"] = relationship(
-        "SpanGroupORM", back_populates="object_handle", foreign_keys=[span_group_id]
+        "SpanGroupORM",
+        back_populates="object_handle",
+        primaryjoin="and_(SpanGroupORM.project_id == ObjectHandleORM.project_id, SpanGroupORM.id == foreign(ObjectHandleORM.span_group_id))",
     )
 
     bbox_annotation_id: Mapped[int | None] = mapped_column(Integer, index=True)
     bbox_annotation: Mapped["BBoxAnnotationORM"] = relationship(
         "BBoxAnnotationORM",
         back_populates="object_handle",
-        foreign_keys=[bbox_annotation_id],
+        primaryjoin="and_(BBoxAnnotationORM.project_id == ObjectHandleORM.project_id, BBoxAnnotationORM.id == foreign(ObjectHandleORM.bbox_annotation_id))",
     )
 
     sentence_annotation_id: Mapped[int | None] = mapped_column(Integer, index=True)
     sentence_annotation: Mapped["SentenceAnnotationORM"] = relationship(
         "SentenceAnnotationORM",
         back_populates="object_handle",
-        foreign_keys=[sentence_annotation_id],
+        primaryjoin="and_(SentenceAnnotationORM.project_id == ObjectHandleORM.project_id, SentenceAnnotationORM.id == foreign(ObjectHandleORM.sentence_annotation_id))",
     )
 
     tag_id: Mapped[int | None] = mapped_column(Integer, index=True)
     tag: Mapped["TagORM"] = relationship(
-        "TagORM", back_populates="object_handle", foreign_keys=[tag_id]
+        "TagORM",
+        back_populates="object_handle",
+        primaryjoin="and_(TagORM.project_id == ObjectHandleORM.project_id, TagORM.id == foreign(ObjectHandleORM.tag_id))",
     )
 
     # one handle per object of a project
@@ -148,6 +154,7 @@ class ObjectHandleORM(ORMBase):
             name="CC_object_handle_attached_project_is_own_project",
         ),
         UniqueConstraint(
+            "project_id",
             "attached_project_id",
             "code_id",
             "source_document_id",

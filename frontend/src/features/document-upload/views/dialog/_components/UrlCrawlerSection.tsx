@@ -67,7 +67,6 @@ export function UrlCrawlerSection({ projectId }: UrlCrawlerSectionProps) {
         projectId,
         requestBody: {
           settings: settings,
-          project_id: projectId,
           urls: urls,
         },
       },

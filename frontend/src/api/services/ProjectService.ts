@@ -84,15 +84,4 @@ export class ProjectService {
       },
     });
   }
-  /**
-   * Returns all Projects of the logged-in User
-   * @returns ProjectRead Successful Response
-   * @throws ApiError
-   */
-  public static getUserProjects(): CancelablePromise<Array<ProjectRead>> {
-    return __request(OpenAPI, {
-      method: "GET",
-      url: "/users/me/projects",
-    });
-  }
 }

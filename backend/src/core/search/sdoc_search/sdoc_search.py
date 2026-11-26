@@ -57,7 +57,7 @@ def filter_sdoc_ids(
     page_size: int | None = None,
     show_child_folders: bool = False,
 ) -> tuple[list[int], int]:
-    builder = SearchBuilder(db, filter, sorts)
+    builder = SearchBuilder(db, project_id=project_id, filter=filter, sorts=sorts)
     # build the initial subquery that just queries all sdoc_ids of the project
     if folder_id is None:
         subquery = builder.init_subquery(
@@ -73,23 +73,25 @@ def filter_sdoc_ids(
         if show_child_folders:
             # Query all descendant folder IDs recursively using a recursive CTE
             cte = (
-                db.query(FolderORM.id)
-                .filter(FolderORM.id == folder_id)
+                db.query(FolderORM.project_id, FolderORM.id)
+                .filter(FolderORM.project_id == project_id, FolderORM.id == folder_id)
                 .cte(name="descendant_folders", recursive=True)
             )
             cte_alias = cte.alias()
             cte = cte.union_all(
-                db.query(FolderORM.id).join(  # type: ignore
-                    cte_alias, FolderORM.parent_id == cte_alias.c.id
+                db.query(FolderORM.project_id, FolderORM.id).join(  # type: ignore
+                    cte_alias,
+                    (FolderORM.project_id == cte_alias.c.project_id)
+                    & (FolderORM.parent_id == cte_alias.c.id),
                 )
             )
-            descendant_ids = [row[0] for row in db.query(cte).all()]
+            descendant_ids = [row.id for row in db.query(cte).all()]
 
             subquery = builder.init_subquery(
                 db.query(
                     SourceDocumentORM.id,
                 )
-                .join(FolderORM, SourceDocumentORM.folder_id == FolderORM.id)
+                .join(SourceDocumentORM.folder)
                 .group_by(SourceDocumentORM.id)
                 .filter(
                     SourceDocumentORM.project_id == project_id,
@@ -101,7 +103,7 @@ def filter_sdoc_ids(
                 db.query(
                     SourceDocumentORM.id,
                 )
-                .join(FolderORM, SourceDocumentORM.folder_id == FolderORM.id)
+                .join(SourceDocumentORM.folder)
                 .group_by(SourceDocumentORM.id)
                 .filter(
                     SourceDocumentORM.project_id == project_id,
@@ -112,7 +114,9 @@ def filter_sdoc_ids(
     builder.init_query(
         db.query(
             SourceDocumentORM.id,
-        ).join(subquery, SourceDocumentORM.id == subquery.c.id)
+        )
+        .join(subquery, SourceDocumentORM.id == subquery.c.id)
+        .filter(SourceDocumentORM.project_id == project_id)
     ).build_query()
     result_rows, total_results = builder.execute_query(
         page_number=page_number,

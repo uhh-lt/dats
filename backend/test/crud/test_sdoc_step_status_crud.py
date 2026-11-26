@@ -16,9 +16,11 @@ PROCESSING = SDocStatus.processing
 ERRONEOUS = SDocStatus.erroneous
 
 
-def _read(db: Session, sdoc_id: int) -> dict[str, SDocStatus]:
+def _read(db: Session, project_id: int, sdoc_id: int) -> dict[str, SDocStatus]:
     db.expire_all()
-    return crud_sdoc_step_status.read_by_sdoc(db=db, sdoc_id=sdoc_id)
+    return crud_sdoc_step_status.read_by_sdoc(
+        db=db, project_id=project_id, sdoc_id=sdoc_id
+    )
 
 
 # ===========================================================================
@@ -34,7 +36,9 @@ def test_read_by_sdocs_returns_the_planned_steps_in_input_order(
     p = step_status_project
     ids = [p["image"].id, p["failed"].id]
 
-    result = crud_sdoc_step_status.read_by_sdocs(db=db_session, sdoc_ids=ids)
+    result = crud_sdoc_step_status.read_by_sdocs(
+        db=db_session, project_id=p["project"].id, sdoc_ids=ids
+    )
 
     assert list(result) == ids
     assert result[p["image"].id] == {}
@@ -62,7 +66,9 @@ def test_count_by_project_groups_the_documents_by_step_status(
         return frozenset(status.items())
 
     text_status = {
-        name: crud_sdoc_step_status.read_by_sdoc(db=db_session, sdoc_id=p[name].id)
+        name: crud_sdoc_step_status.read_by_sdoc(
+            db=db_session, project_id=p["project"].id, sdoc_id=p[name].id
+        )
         for name in ("done", "running", "failed")
     }
     assert {(doctype, key(status)): count for doctype, status, count in counts} == {
@@ -115,20 +121,21 @@ def test_update_status_plans_new_steps_and_overwrites_planned_ones(
 
     crud_sdoc_step_status.update_status(
         db=db_session,
+        project_id=p["project"].id,
         sdoc_ids=[p["running"].id, p["image"].id],
         steps=["tokens_sentences", "es_index"],
         status=FINISHED,
     )
     db_session.commit()
 
-    assert _read(db_session, p["running"].id) == {
+    assert _read(db_session, p["project"].id, p["running"].id) == {
         "html_extraction": FINISHED,
         "text_extraction": FINISHED,
         "language_detection": PROCESSING,
         "tokens_sentences": FINISHED,
         "es_index": FINISHED,
     }
-    assert _read(db_session, p["image"].id) == {
+    assert _read(db_session, p["project"].id, p["image"].id) == {
         "tokens_sentences": FINISHED,
         "es_index": FINISHED,
     }
@@ -143,12 +150,13 @@ def test_update_pending_to_erroneous_fails_only_processing_steps(
 
     crud_sdoc_step_status.update_pending_to_erroneous(
         db=db_session,
+        project_id=p["project"].id,
         sdoc_id=p["running"].id,
         steps=["text_extraction", "tokens_sentences", "named_entity_recognition"],
     )
     db_session.commit()
 
-    assert _read(db_session, p["running"].id) == {
+    assert _read(db_session, p["project"].id, p["running"].id) == {
         "html_extraction": FINISHED,
         "text_extraction": FINISHED,
         "language_detection": PROCESSING,
@@ -171,9 +179,9 @@ def test_deleting_a_document_deletes_its_step_statuses(
     crud_sdoc.delete(db=db_session, project_id=p["project"].id, id=sdoc_id)
     db_session.commit()
 
-    assert crud_sdoc_step_status.read_by_sdocs(db=db_session, sdoc_ids=[sdoc_id]) == {
-        sdoc_id: {}
-    }
+    assert crud_sdoc_step_status.read_by_sdocs(
+        db=db_session, project_id=p["project"].id, sdoc_ids=[sdoc_id]
+    ) == {sdoc_id: {}}
 
 
 # ===========================================================================

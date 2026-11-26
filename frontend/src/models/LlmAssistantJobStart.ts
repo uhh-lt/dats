@@ -1,0 +1,36 @@
+/* generated using openapi-typescript-codegen -- do not edit */
+/* istanbul ignore file */
+/* tslint:disable */
+/* eslint-disable */
+import type { PromptSnapshot } from "./PromptSnapshot";
+import type { TaskType } from "./TaskType";
+export type LlmAssistantJobStart = {
+  /**
+   * The task of the prompt
+   */
+  task_type: TaskType;
+  /**
+   * IDs of the source documents to process
+   */
+  sdoc_ids: Array<number>;
+  /**
+   * Large Language Model to use for the job
+   */
+  model: string;
+  /**
+   * ID of the prompt version to run. Exactly one of prompt_version_id and draft is set.
+   */
+  prompt_version_id?: number | null;
+  /**
+   * An unsaved prompt to run, e.g. the prompt of the wizard. Exactly one of prompt_version_id and draft is set.
+   */
+  draft?: PromptSnapshot | null;
+  /**
+   * Virtual user of the project the annotations are written into. Required for span and sentence annotation, unused otherwise.
+   */
+  virtual_user_id?: number | null;
+  /**
+   * Delete the existing annotations of the virtual user for the documents and codes of the prompt before creating new ones
+   */
+  delete_existing_annotations?: boolean;
+};

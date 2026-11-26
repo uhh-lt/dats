@@ -126,6 +126,7 @@ Aim to cover the full input space of an endpoint, not just the happy path:
 - **Boundary conditions**: empty results, pagination across pages, single vs. multiple matches.
 - **Invalid input**: wrong-typed values, malformed values, operator/column mismatches, missing or contradictory parameters. Assert the expected error status (400/422/500/...) and match on the error message.
 - **Edge cases**: nonexistent ids or keys, deprecated values, empty fixtures states (e.g. no favorites).
+- **Other projects**: every module tests, with a two-project fixture (`composite_keys_test_utils.create_two_tenants`) and the own id as control, that an id of another project in a body field of a write is rejected (409) and in a query filter matches nothing.
 
 Because the fixture data is deterministic, every one of these cases has a known expected result — assert exact results, not just status codes.
 

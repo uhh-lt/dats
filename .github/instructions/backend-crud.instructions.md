@@ -84,6 +84,10 @@ A CRUD with no custom methods is just `class CRUDAspect(SQLCRUDBase[...]):` + `p
 - Overrides of the base write methods keep the base parameters exactly (see _Exactly the generic DTOs_); other methods name their parameters freely.
 - Return ORM objects (`<Entity>ORM`, `list[<Entity>ORM]`, `<Entity>ORM | None`), ids, counts (`int`) or `dict[int, ...]` mappings, never Read DTOs. DTOs are built outside the CRUD: in the module's service if it has one (`whiteboard_service.read_whiteboard_data`), in a module `*_utils.py` when several modules need it (`memo_utils.get_memo_read_dto_from_orm`), otherwise in the endpoint or job (`api_key_endpoint`, `duplicate_finder_job`).
 
+### Project Scope
+
+- Ids are unique per project only (ADR 0013): every hand-written join between project-owned tables compares `project_id` and the id (or joins through the relationship attribute), and every filter by ids of a project-owned table also filters by `project_id`.
+
 ### Session Handling
 
 - **Flush only**: write methods end with `db.flush()` (plus `db.refresh(obj)` when DB-generated values are needed). Never call `db.commit()` or `db.rollback()`.
@@ -120,7 +124,7 @@ A CRUD with no custom methods is just `class CRUDAspect(SQLCRUDBase[...]):` + `p
 ## Variations
 
 - **Project key** (`span_annotation_crud`, `code_crud`, `tag_crud`): a table with the primary key `(project_id, id)` extends `ProjectCRUDBase` (`repos/db/project_crud_base.py`), whose base methods take `project_id` plus plain ids (`crud_span_anno.read(db=db, project_id=project_id, id=anno_id)`) and whose create DTOs carry no `project_id`. Overrides keep these signatures, and custom methods that read or write by id take `project_id` too.
-- **Composite primary key** (`document_aspect_crud`, `document_cluster_crud`, `word_frequency_crud`): pass the key type as the fourth generic parameter, in key column order: `SQLCRUDBase[DocumentAspectORM, DocumentAspectCreate, DocumentAspectUpdate, tuple[int, int]]` for `(sdoc_id, aspect_id)`. The base builds every id filter from the model's primary key (`tuple_(...).in_(ids)`), so `read`, `read_by_ids`, `update_multi`, `delete_multi` and `exists` take these tuples and need no override. The parameter defaults to `int` (a single `id` column).
+- **Composite primary key** (`document_aspect_crud`, `document_cluster_crud`, `word_frequency_crud`): pass the key type as the fourth generic parameter, in key column order: `SQLCRUDBase[DocumentAspectORM, DocumentAspectCreate, DocumentAspectUpdate, tuple[int, int, int]]` for `(project_id, sdoc_id, aspect_id)`. The base builds every id filter from the model's primary key (`tuple_(...).in_(ids)`), so `read`, `read_by_ids`, `update_multi`, `delete_multi` and `exists` take these tuples and need no override. The parameter defaults to `int` (a single `id` column).
 
 ## Examples
 

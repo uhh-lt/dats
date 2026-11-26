@@ -89,10 +89,5 @@ class CRUDProject(SQLCRUDBase[ProjectORM, ProjectCreate, ProjectUpdate]):
 
         return user_db_obj
 
-    def exists_by_title(self, db: Session, *, title: str) -> bool:
-        return (
-            db.query(self.model).filter(self.model.title == title).first() is not None
-        )
-
 
 crud_project = CRUDProject(ProjectORM)

@@ -239,7 +239,7 @@ def test_import_of_entity_spans_keeps_the_annotations_on_one_set_of_system_codes
         db=db_session, project_id=target.id, only_finished=False
     )
     spans = crud_span_anno.read_by_user_and_sdoc(
-        db=db_session, user_id=test_user.id, sdoc_id=sdoc.id
+        db=db_session, project_id=target.id, user_id=test_user.id, sdoc_id=sdoc.id
     )
     assert sorted((s.span_text.text, s.code_id) for s in spans) == [
         ("Ada", person.id),

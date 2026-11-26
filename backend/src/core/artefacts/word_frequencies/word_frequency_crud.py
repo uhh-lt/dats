@@ -13,7 +13,7 @@ class CRUDWordFrequency(
         WordFrequencyORM,
         WordFrequencyCreate,
         UpdateNotAllowed,
-        tuple[int, str],  # (sdoc_id, word)
+        tuple[int, int, str],  # (project_id, sdoc_id, word)
     ]
 ):
     ### READ OPERATIONS ###
@@ -72,7 +72,7 @@ class CRUDWordFrequency(
         self,
         db: Session,
         *,
-        ids: list[tuple[int, str]],
+        ids: list[tuple[int, int, str]],
         update_dtos: list[UpdateNotAllowed],
     ) -> list[WordFrequencyORM]:
         raise NotImplementedError()
@@ -83,9 +83,19 @@ class CRUDWordFrequency(
         self,
         db: Session,
         *,
+        project_id: int,
         sdoc_id: int,
     ) -> None:
-        db.query(WordFrequencyORM).filter(WordFrequencyORM.sdoc_id == sdoc_id).delete()
+        """
+        Delete the word frequencies of a document.
+
+        Args:
+            project_id: The project of the document.
+            sdoc_id: The document.
+        """
+        db.query(self.model).filter(
+            self.model.project_id == project_id, self.model.sdoc_id == sdoc_id
+        ).delete()
         db.flush()
 
 

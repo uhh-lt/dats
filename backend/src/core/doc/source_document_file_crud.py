@@ -2,11 +2,11 @@ from pathlib import Path
 
 from loguru import logger
 
-from common.crud_enum import Crud
 from core.doc.source_document_dto import (
     SDOC_FILENAME_MAX_LENGTH,
     SDOC_SUFFIX_MAX_LENGTH,
 )
+from core.doc.source_document_orm import SourceDocumentORM
 from repos.filesystem.file_crud_base import FileCRUDBase
 
 
@@ -26,7 +26,7 @@ class CRUDSourceDocumentFile(FileCRUDBase):
     `sdoc_files/<sdoc_id>/<filename>`."""
 
     folder = "sdoc_files"
-    entity = Crud.SOURCE_DOCUMENT
+    owner = SourceDocumentORM
 
 
 crud_sdoc_file = CRUDSourceDocumentFile()

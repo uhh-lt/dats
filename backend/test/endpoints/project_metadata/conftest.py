@@ -4,6 +4,7 @@ import pytest
 
 from common.doc_type_enum import DocType
 from common.meta_type_enum import MetaType
+from composite_keys_test_utils import TwoTenants, create_two_tenants
 from core.metadata.project_metadata_crud import crud_project_meta
 from core.metadata.project_metadata_dto import ProjectMetadataCreate
 from core.metadata.project_metadata_orm import ProjectMetadataORM
@@ -80,3 +81,17 @@ def project_with_metadata(db_session, test_project, test_user) -> ProjectWithMet
         "project": test_project,
         "metadata": metadata,
     }
+
+
+@pytest.fixture(scope="function")
+def tenants(db_session, test_user, test_project) -> TwoTenants:
+    """
+    This fixture sets up two projects with one row of every project-owned table
+    each (see `composite_keys_test_utils.TenantRows` for the full inventory):
+    `own` in the test project, `foreign` in "Foreign Project". Each has the
+    project metadata "key_<p>" (string, text documents, description "").
+
+    Non-obvious derived behavior: the test user is a member of both projects, so
+    an id of the other project is the only reason a request fails.
+    """
+    return create_two_tenants(db_session, user=test_user, project=test_project)

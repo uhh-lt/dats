@@ -4,6 +4,7 @@ import pytest
 from sqlalchemy.orm import Session
 
 from core.artefacts.word_frequencies.word_frequency_crud import crud_word_frequency
+from dats_test_utils import ProjectWithSdoc
 from repos.db import crud_base
 from repos.db.sql_exceptions import NoSuchElementError
 
@@ -18,42 +19,64 @@ def small_batches(monkeypatch: pytest.MonkeyPatch) -> None:
 
 @pytest.mark.usefixtures("small_batches")
 def test_read_by_ids_with_tuple_ids_returns_input_order(
-    db_session: Session, sdoc_with_word_frequencies: SdocWithWordFrequencies
+    db_session: Session,
+    project_with_sdoc: ProjectWithSdoc,
+    sdoc_with_word_frequencies: SdocWithWordFrequencies,
 ) -> None:
+    project_id = project_with_sdoc["project"].id
     sdoc_id = sdoc_with_word_frequencies["sdoc_id"]
     words = sdoc_with_word_frequencies["words"]
-    ids = [(sdoc_id, words[i]) for i in [3, 0, 2, 1]]
+    ids = [(project_id, sdoc_id, words[i]) for i in [3, 0, 2, 1]]
 
     result = crud_word_frequency.read_by_ids(db=db_session, ids=ids)
 
-    assert [(wf.sdoc_id, wf.word) for wf in result] == ids
+    assert [(wf.project_id, wf.sdoc_id, wf.word) for wf in result] == ids
     assert [wf.count for wf in result] == [4, 1, 3, 2]
 
 
 def test_read_with_tuple_id_and_missing_key_names_all_key_columns(
-    db_session: Session, sdoc_with_word_frequencies: SdocWithWordFrequencies
+    db_session: Session,
+    project_with_sdoc: ProjectWithSdoc,
+    sdoc_with_word_frequencies: SdocWithWordFrequencies,
 ) -> None:
+    project_id = project_with_sdoc["project"].id
     sdoc_id = sdoc_with_word_frequencies["sdoc_id"]
 
-    assert crud_word_frequency.read(db=db_session, id=(sdoc_id, "crud-beta")).count == 2
+    assert (
+        crud_word_frequency.read(
+            db=db_session, id=(project_id, sdoc_id, "crud-beta")
+        ).count
+        == 2
+    )
     with pytest.raises(NoSuchElementError) as error:
-        crud_word_frequency.read(db=db_session, id=(sdoc_id, "crud-missing"))
+        crud_word_frequency.read(
+            db=db_session, id=(project_id, sdoc_id, "crud-missing")
+        )
     assert "sdoc_id" in str(error.value) and "crud-missing" in str(error.value)
 
 
 @pytest.mark.usefixtures("small_batches")
 def test_delete_multi_with_tuple_ids_deletes_only_those_keys(
-    db_session: Session, sdoc_with_word_frequencies: SdocWithWordFrequencies
+    db_session: Session,
+    project_with_sdoc: ProjectWithSdoc,
+    sdoc_with_word_frequencies: SdocWithWordFrequencies,
 ) -> None:
+    project_id = project_with_sdoc["project"].id
     sdoc_id = sdoc_with_word_frequencies["sdoc_id"]
     words = sdoc_with_word_frequencies["words"]
 
     deleted = crud_word_frequency.delete_multi(
         db=db_session,
-        ids=[(sdoc_id, words[0]), (sdoc_id, words[2]), (sdoc_id, words[0])],
+        ids=[
+            (project_id, sdoc_id, words[0]),
+            (project_id, sdoc_id, words[2]),
+            (project_id, sdoc_id, words[0]),
+        ],
     )
 
     assert deleted == 2
-    assert not crud_word_frequency.exists(db=db_session, id=(sdoc_id, words[0]))
-    assert crud_word_frequency.exists(db=db_session, id=(sdoc_id, words[1]))
-    assert crud_word_frequency.exists(db=db_session, id=(sdoc_id, words[3]))
+    assert not crud_word_frequency.exists(
+        db=db_session, id=(project_id, sdoc_id, words[0])
+    )
+    assert crud_word_frequency.exists(db=db_session, id=(project_id, sdoc_id, words[1]))
+    assert crud_word_frequency.exists(db=db_session, id=(project_id, sdoc_id, words[3]))

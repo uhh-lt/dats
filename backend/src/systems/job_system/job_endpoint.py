@@ -1,6 +1,8 @@
 from typing import Any, Callable, Type
 
 from fastapi import Depends
+from fastapi.exceptions import RequestValidationError
+from pydantic import BaseModel, ValidationError, create_model
 from sqlalchemy.orm import Session
 
 from common.project_router import project_router
@@ -13,6 +15,17 @@ router = project_router("/jobs", tags=["job"])
 
 
 job_service = JobService()
+
+
+def _job_input(
+    input_model: Type[JobInputBase], *, project_id: int, body: BaseModel
+) -> JobInputBase:
+    """The job input of the start body in the project of the path. The validators
+    of the input run here, so their errors answer 422 like a body error."""
+    try:
+        return input_model(project_id=project_id, **body.model_dump())
+    except ValidationError as error:
+        raise RequestValidationError(error.errors(), body=body.model_dump())
 
 
 def register_job_endpoints(
@@ -36,14 +49,24 @@ def register_job_endpoints(
     starts = endpoint_generation in (EndpointGeneration.ALL, EndpointGeneration.MINIMAL)
     lists = endpoint_generation in (EndpointGeneration.ALL, EndpointGeneration.READ)
 
+    # The body of the start route: the fields of the job input without
+    # `project_id`, which comes from the path
+    start_model = create_model(
+        f"{job_name}JobStart",
+        **{
+            name: (field.annotation, field)
+            for name, field in input_model.model_fields.items()
+            if name != "project_id"
+        },  # type: ignore[call-overload]
+    )
+
     # Start job
     def start_job(
         project_id: int,
-        payload: input_model,  # type: ignore
+        body: start_model,  # type: ignore[valid-type]
         authz_user: AuthzUser = Depends(),
     ):
-        # the job runs in the project of the path
-        payload.project_id = project_id
+        payload = _job_input(input_model, project_id=project_id, body=body)
         if validate_input is not None:
             validate_input(authz_user.db, payload)
         job = job_service.start_job(job_type=job_type, payload=payload)

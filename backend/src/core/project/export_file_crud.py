@@ -15,7 +15,7 @@ class CRUDExportFile(FileCRUDBase):
     a new id. Writing an export deletes the project's expired exports."""
 
     folder = "exports"
-    entity = None
+    owner = None
 
     ### WRITE OPERATIONS ###
 

@@ -1,5 +1,6 @@
 from typing import TypedDict, TypeVar
 
+from sqlalchemy import case, delete, insert, literal, select
 from sqlalchemy.orm import Session
 
 from common.doc_type_enum import DocType
@@ -40,6 +41,7 @@ from modules.classifier.classifier_orm import (
 )
 from modules.concept_over_time_analysis.cota_orm import ConceptOverTimeAnalysisORM
 from modules.experiment.experiment_orm import ExperimentORM, ExperimentRunORM
+from modules.perspectives.aspect_dto import PipelineSettings
 from modules.perspectives.aspect_orm import AspectORM
 from modules.perspectives.cluster_orm import ClusterORM
 from modules.perspectives.document_aspect_orm import DocumentAspectORM
@@ -49,6 +51,7 @@ from modules.tag_recommendation.tag_recommendation_orm import TagRecommendationL
 from modules.timeline_analysis.timeline_analysis_enum import TimelineAnalysisType
 from modules.timeline_analysis.timeline_analysis_orm import TimelineAnalysisORM
 from modules.whiteboard.whiteboard_orm import WhiteboardORM
+from repos.db.orm_base import ORMBase
 from systems.artefact_system.source_document_step_status_orm import (
     SourceDocumentStepStatusORM,
 )
@@ -103,9 +106,11 @@ class TenantRows(TypedDict):
       `user`)
     - classifier "Classifier <p>" linked to "Code <p>" and "Tag <p>", with one
       evaluation
-    - aspect "Aspect <p>" of "Tag <p>" with cluster "Cluster <p>" and its child
-      "Child cluster <p>"; the document has a document aspect and is in the
-      cluster
+    - aspect "Aspect <p>" of "Tag <p>" (default pipeline settings, rewriting
+      model "default") with cluster "Cluster <p>" and its child "Child cluster
+      <p>" (both computed: description "Description", coordinates (0, 0)); the
+      document has a document aspect (content "", coordinates (0, 0)) and is in
+      the cluster
     - a tag recommendation of "Tag <p>" for the document
     - the analyses without project-owned parent: whiteboard "Whiteboard <p>",
       timeline analysis "Timeline <p>" (documents) and concept over time
@@ -467,6 +472,9 @@ def create_tenant_rows(
             name=f"Aspect {p}",
             doc_embedding_prompt="",
             is_hierarchical=False,
+            pipeline_settings=PipelineSettings(rewriting_model="default").model_dump(
+                mode="json"
+            ),
             project_id=p,
             tag_id=tag.id,
         ),
@@ -475,6 +483,9 @@ def create_tenant_rows(
         db,
         ClusterORM(
             name=f"Cluster {p}",
+            description="Description",
+            x=0.0,
+            y=0.0,
             is_outlier=False,
             level=0,
             project_id=p,
@@ -485,6 +496,9 @@ def create_tenant_rows(
         db,
         ClusterORM(
             name=f"Child cluster {p}",
+            description="Description",
+            x=0.0,
+            y=0.0,
             is_outlier=False,
             level=1,
             project_id=p,
@@ -495,7 +509,7 @@ def create_tenant_rows(
     document_aspect = _add(
         db,
         DocumentAspectORM(
-            project_id=p, sdoc_id=sdoc.id, aspect_id=aspect.id, content=""
+            project_id=p, sdoc_id=sdoc.id, aspect_id=aspect.id, content="", x=0.0, y=0.0
         ),
     )
     document_cluster = _add(
@@ -593,3 +607,69 @@ def create_two_tenants(
     foreign = create_tenant_rows(db, project=foreign_project, user=user)
     db.commit()
     return {"own": own, "foreign": foreign}
+
+
+# tables with a project_id that are no rows of the project: the membership and the
+# virtual users, which are global users
+NOT_COPIED_TABLES = {"projectuserlinktable", "user"}
+
+
+def copy_project_rows(db: Session, *, source_id: int, target_id: int) -> list[str]:
+    """Replace the rows of every project-owned table of the target project with
+    copies of the rows of the source project that keep their ids, so both projects
+    hold the same ids. A copy differs from its row in project_id only (and in
+    attached_project_id, which names the own project).
+
+    Returns:
+        The names of the copied tables.
+    """
+    tables = [
+        table
+        for table in ORMBase.metadata.sorted_tables
+        if "project_id" in table.c and table.name not in NOT_COPIED_TABLES
+    ]
+    for table in reversed(tables):
+        db.execute(delete(table).where(table.c.project_id == target_id))
+    for table in tables:
+        columns = [
+            literal(target_id).label(column.name)
+            if column.name == "project_id"
+            else case((column.is_(None), None), else_=literal(target_id)).label(
+                column.name
+            )
+            if column.name == "attached_project_id"
+            else column
+            for column in table.c
+        ]
+        db.execute(
+            insert(table).from_select(
+                [column.name for column in table.c],
+                select(*columns).where(table.c.project_id == source_id),
+            )
+        )
+    db.flush()
+    return [table.name for table in tables]
+
+
+class TwinProjects(TypedDict):
+    """The rows of `create_tenant_rows` (see TenantRows) in the given project
+    (`rows`), and the project "Twin Project" of the same user with the same enabled
+    features, whose rows are copies of every row of the given project with the same
+    ids (`copy_project_rows`). Both projects hold the same ids, so a read that
+    matches a row by its id alone finds the rows of both."""
+
+    project: ProjectORM
+    twin: ProjectORM
+    rows: TenantRows
+
+
+def create_twin_projects(
+    db: Session, *, user: UserORM, project: ProjectORM
+) -> TwinProjects:
+    rows = create_tenant_rows(db, project=project, user=user)
+    twin = create_project_with_features(
+        db, user, title="Twin Project", features=list(project.enabled_features)
+    )
+    copy_project_rows(db, source_id=project.id, target_id=twin.id)
+    db.commit()
+    return {"project": project, "twin": twin, "rows": rows}

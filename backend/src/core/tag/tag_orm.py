@@ -46,7 +46,7 @@ class TagORM(ORMBase):
         back_populates="tag",
         cascade="all, delete-orphan",
         passive_deletes=True,
-        foreign_keys="ObjectHandleORM.tag_id",
+        primaryjoin="and_(TagORM.project_id == ObjectHandleORM.project_id, TagORM.id == foreign(ObjectHandleORM.tag_id))",
     )
 
     # many to one
@@ -63,7 +63,7 @@ class TagORM(ORMBase):
         back_populates="predicted_tag",
         cascade="all, delete-orphan",
         passive_deletes=True,
-        foreign_keys="TagRecommendationLinkORM.predicted_tag_id",
+        primaryjoin="and_(TagORM.project_id == TagRecommendationLinkORM.project_id, TagORM.id == foreign(TagRecommendationLinkORM.predicted_tag_id))",
     )
 
     # many to many
@@ -78,16 +78,15 @@ class TagORM(ORMBase):
     parent_id: Mapped[int | None] = mapped_column(Integer, index=True)
     parent: Mapped["TagORM | None"] = relationship(
         "TagORM",
-        remote_side=[id],
         back_populates="children",
-        foreign_keys=[parent_id],
+        primaryjoin="and_(remote(TagORM.project_id) == TagORM.project_id, remote(TagORM.id) == foreign(TagORM.parent_id))",
     )
     children: Mapped[list["TagORM"]] = relationship(
         "TagORM",
         back_populates="parent",
         cascade="all, delete-orphan",
         passive_deletes=True,
-        foreign_keys=[parent_id],
+        primaryjoin="and_(remote(TagORM.project_id) == TagORM.project_id, remote(foreign(TagORM.parent_id)) == TagORM.id)",
     )
 
     __table_args__ = (
@@ -113,18 +112,21 @@ class TagORM(ORMBase):
 
 
 class SourceDocumentTagLinkTable(ORMBase):
-    source_document_id: Mapped[int] = mapped_column(
-        Integer, primary_key=True, index=True
-    )
-    tag_id: Mapped[int] = mapped_column(Integer, primary_key=True, index=True)
+    source_document_id: Mapped[int] = mapped_column(Integer, index=True)
+    tag_id: Mapped[int] = mapped_column(Integer, index=True)
     project_id: Mapped[int] = mapped_column(
         Integer,
         ForeignKey("project.id", ondelete="CASCADE"),
         nullable=False,
-        index=True,
     )
 
     __table_args__ = (
+        PrimaryKeyConstraint(
+            "project_id",
+            "source_document_id",
+            "tag_id",
+            name="sourcedocumenttaglinktable_pkey",
+        ),
         ForeignKeyConstraint(
             ["project_id", "source_document_id"],
             ["sourcedocument.project_id", "sourcedocument.id"],

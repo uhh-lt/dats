@@ -26,6 +26,7 @@ def test_read_by_user_and_sdoc_dtos_use_constant_queries(
             SpanAnnotationRead.model_validate(span)
             for span in crud_span_anno.read_by_user_and_sdoc(
                 db=db_session,
+                project_id=sdoc_with_span_annotations["project_id"],
                 user_id=sdoc_with_span_annotations["user_id"],
                 sdoc_id=sdoc_with_span_annotations["sdoc_id"],
             )

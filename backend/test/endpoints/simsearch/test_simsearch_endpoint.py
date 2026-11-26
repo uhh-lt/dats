@@ -15,7 +15,7 @@ from repos.ray.dto.clip import (
 )
 from repos.ray.ray_repo import RayRepo
 
-from .conftest import SimSearchProject
+from .conftest import SimSearchProject, TaggedImages
 
 EMPTY_FILTER = {"id": "root", "logic_operator": "and", "items": []}
 
@@ -173,6 +173,76 @@ def test_search_by_the_id_of_a_text_document_is_rejected(
     assert response.status_code == 400, response.text
     assert "not an image" in response.text
     assert clip_calls == {"text": [], "image": []}
+
+
+def test_search_by_an_image_of_another_project_is_not_found(
+    client: TestClient,
+    tagged_images: TaggedImages,
+    clip_calls: dict[str, list[object]],
+):
+    """The image of "Foreign Project", another project of the user, is no query
+    of the test project: 404, nothing is embedded."""
+    p = tagged_images["project"]
+
+    response = _search(
+        client,
+        "/simsearch/images",
+        p["project"].id,
+        tagged_images["foreign_image"].id,
+    )
+
+    assert response.status_code == 404, response.text
+    assert clip_calls == {"text": [], "image": []}
+
+
+@pytest.mark.parametrize(
+    "tag,expected",
+    [
+        # the own tag "Images" holds the own image
+        pytest.param("own_tag", "own", id="own-tag"),
+        # the tag "Images" of another project holds no document of this project
+        pytest.param("foreign_tag", None, id="foreign-tag"),
+    ],
+)
+def test_image_search_filtered_by_a_tag_of_another_project_finds_nothing(
+    client: TestClient,
+    tagged_images: TaggedImages,
+    clip_calls: dict[str, list[object]],
+    tag: str,
+    expected: str | None,
+):
+    """A text query ([1, 0]) finds the own image ([1, 0]) when the filter holds
+    the own tag, and nothing when it holds the tag of the other project."""
+    p = tagged_images["project"]
+    tag_id = (
+        tagged_images["own_tag"].id
+        if tag == "own_tag"
+        else tagged_images["foreign_tag"].id
+    )
+
+    response = client.post(
+        f"/projects/{p['project'].id}/simsearch/images",
+        params={"top_k": 10, "threshold": 0.75},
+        json={
+            "query": "red",
+            "filter": {
+                "id": "root",
+                "logic_operator": "and",
+                "items": [
+                    {
+                        "id": "tag",
+                        "column": "SD_TAG_ID_LIST_RECURSIVE",
+                        "operator": "IDLR_CONTAINS",
+                        "value": tag_id,
+                    }
+                ],
+            },
+        },
+    )
+
+    assert response.status_code == 200, response.text
+    hits = [SimSearchImageHit.model_validate(h).sdoc_id for h in response.json()]
+    assert hits == ([p["image"].id] if expected == "own" else [])
 
 
 # ===========================================================================

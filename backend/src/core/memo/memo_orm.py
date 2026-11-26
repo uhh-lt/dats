@@ -45,7 +45,7 @@ class MemoORM(ORMBase):
         "ObjectHandleORM",
         uselist=False,
         back_populates="attached_memos",
-        foreign_keys=[attached_to_id],
+        primaryjoin="and_(ObjectHandleORM.project_id == MemoORM.project_id, ObjectHandleORM.id == foreign(MemoORM.attached_to_id))",
     )
 
     project_id: Mapped[int] = mapped_column(
@@ -86,21 +86,22 @@ class MemoORM(ORMBase):
 
 
 class MemoFavoriteLinkTable(ORMBase):
-    memo_id: Mapped[int] = mapped_column(Integer, primary_key=True, index=True)
+    memo_id: Mapped[int] = mapped_column(Integer, index=True)
     user_id: Mapped[int] = mapped_column(
         Integer,
         ForeignKey("user.id", ondelete="CASCADE"),
-        primary_key=True,
         index=True,
     )
     project_id: Mapped[int] = mapped_column(
         Integer,
         ForeignKey("project.id", ondelete="CASCADE"),
         nullable=False,
-        index=True,
     )
 
     __table_args__ = (
+        PrimaryKeyConstraint(
+            "project_id", "memo_id", "user_id", name="memofavoritelinktable_pkey"
+        ),
         ForeignKeyConstraint(
             ["project_id", "memo_id"],
             ["memo.project_id", "memo.id"],
@@ -120,15 +121,13 @@ class MemoRecentORM(ORMBase):
     user_id: Mapped[int] = mapped_column(
         Integer,
         ForeignKey("user.id", ondelete="CASCADE"),
-        primary_key=True,
         index=True,
     )
-    memo_id: Mapped[int] = mapped_column(Integer, primary_key=True, index=True)
+    memo_id: Mapped[int] = mapped_column(Integer, index=True)
     project_id: Mapped[int] = mapped_column(
         Integer,
         ForeignKey("project.id", ondelete="CASCADE"),
         nullable=False,
-        index=True,
     )
     last_opened: Mapped[datetime] = mapped_column(
         DateTime(timezone=True),
@@ -138,9 +137,15 @@ class MemoRecentORM(ORMBase):
     )
 
     # many to one
-    memo: Mapped["MemoORM"] = relationship("MemoORM", foreign_keys=[memo_id])
+    memo: Mapped["MemoORM"] = relationship(
+        "MemoORM",
+        primaryjoin="and_(MemoORM.project_id == MemoRecentORM.project_id, MemoORM.id == foreign(MemoRecentORM.memo_id))",
+    )
 
     __table_args__ = (
+        PrimaryKeyConstraint(
+            "project_id", "user_id", "memo_id", name="memorecent_pkey"
+        ),
         Index("ix_memorecent_user_last_opened", "user_id", "last_opened"),
         ForeignKeyConstraint(
             ["project_id", "memo_id"],

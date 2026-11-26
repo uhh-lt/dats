@@ -96,7 +96,7 @@ hardcodes entity specifics.
 Lifecycle (strict order — each step validates the previous):
 
 ```python
-builder = SearchBuilder(db, filter=..., sorts=..., group_by=..., user_id=...)
+builder = SearchBuilder(db, project_id=..., filter=..., sorts=..., group_by=..., user_id=...)
 builder.init_subquery(entity_specific_projection)   # 1. provide the base projection
 subquery = builder.build_subquery()                  # 2. columns augment + freeze it
 builder.init_query(db.query(subquery.c.id))          # 3. outer query over subquery
@@ -151,7 +151,7 @@ store human-readable filters while the backend filters on stable ids.
 parent id (tag/code/folder) into all descendant ids via a recursive CTE
 (`get_descendant_ids`) before filtering.
 
-Entry point: `apply_filtering(query, filter, subquery_dict)`.
+Entry point: `apply_filtering(query, filter, subquery_dict, project_id)`.
 
 ---
 

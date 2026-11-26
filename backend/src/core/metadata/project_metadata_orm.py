@@ -32,7 +32,7 @@ class ProjectMetadataORM(ORMBase):
         back_populates="project_metadata",
         cascade="all, delete-orphan",
         passive_deletes=True,
-        foreign_keys="SourceDocumentMetadataORM.project_metadata_id",
+        primaryjoin="and_(ProjectMetadataORM.project_id == SourceDocumentMetadataORM.project_id, ProjectMetadataORM.id == foreign(SourceDocumentMetadataORM.project_metadata_id))",
     )
 
     # many to one

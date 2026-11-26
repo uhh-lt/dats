@@ -48,25 +48,6 @@ def test_get_project_returns_the_project(client: TestClient, test_project):
 
 
 # ===========================================================================
-# GET MY PROJECTS (GET /users/me/projects) TESTS
-# ===========================================================================
-
-
-def test_get_user_projects_lists_the_projects_of_the_user(
-    client: TestClient, test_project
-):
-    """The projects of the logged-in user include a project they just created."""
-    created = client.put("/projects", json={"title": "Mine", "description": ""})
-    assert created.status_code == 200, created.text
-
-    response = client.get("/users/me/projects")
-
-    assert response.status_code == 200, response.text
-    project_ids = {ProjectRead.model_validate(p).id for p in response.json()}
-    assert project_ids == {test_project.id, created.json()["id"]}
-
-
-# ===========================================================================
 # DELETE PROJECT (/projects/{project_id}) TESTS
 # ===========================================================================
 

@@ -1,7 +1,10 @@
+from datetime import date
 from typing import TypedDict
 
 import pytest
+from fastapi.encoders import jsonable_encoder
 
+from composite_keys_test_utils import TwoTenants, create_two_tenants
 from core.project.project_orm import ProjectORM
 from core.user.user_orm import UserORM
 from feature_test_utils import (
@@ -9,10 +12,13 @@ from feature_test_utils import (
     create_featureless_project,
     create_sentence_embedding_project,
 )
+from modules.concept_over_time_analysis.cota_crud import crud_cota
 from modules.concept_over_time_analysis.cota_dto import (
     COTAConcept,
     COTACreateIntern,
     COTARead,
+    COTASentence,
+    COTAUpdateIntern,
 )
 from modules.concept_over_time_analysis.cota_service import COTAService
 
@@ -86,3 +92,38 @@ def embedded_cota(
         for i, n in (("c1", "greeting"), ("c2", "animal"))
     ]
     return project, cota.model_copy(update={"concepts": concepts})
+
+
+@pytest.fixture(scope="function")
+def tenants(db_session, test_user, test_project) -> TwoTenants:
+    """
+    This fixture sets up two projects with one row of every project-owned table
+    each (see `composite_keys_test_utils.TenantRows` for the full inventory):
+    `own` in the test project, `foreign` in "Foreign Project". The search space
+    of "COTA <p>" holds sentence 0 ("Alpha beta.", dated 2020-01-01, no concept
+    annotation) of "doc_<p>.txt" of its project.
+
+    Non-obvious derived behavior: the test user is a member of both projects, so
+    an id of the other project is the only reason a request fails.
+    """
+    tenants = create_two_tenants(db_session, user=test_user, project=test_project)
+    for rows in (tenants["own"], tenants["foreign"]):
+        sentence = COTASentence(
+            sdoc_id=rows["sdoc"].id,
+            sentence_id=0,
+            concept_similarities={},
+            concept_probabilities={},
+            concept_annotation=None,
+            x=0.0,
+            y=0.0,
+            date=date(2020, 1, 1),
+            text="Alpha beta.",
+        )
+        crud_cota.update(
+            db=db_session,
+            project_id=rows["project"].id,
+            id=rows["cota"].id,
+            update_dto=COTAUpdateIntern(search_space=[jsonable_encoder(sentence)]),
+        )
+    db_session.commit()
+    return tenants

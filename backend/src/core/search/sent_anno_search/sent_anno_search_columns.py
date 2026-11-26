@@ -152,13 +152,10 @@ class SentAnnoColumns(str, AbstractColumns):
                     )
                 )
                 query_builder._join_subquery(
-                    AnnotationDocumentORM,
-                    AnnotationDocumentORM.id
-                    == SentenceAnnotationORM.annotation_document_id,
+                    SentenceAnnotationORM.annotation_document,
                 )
                 query_builder._join_subquery(
-                    SourceDocumentORM,
-                    SourceDocumentORM.id == AnnotationDocumentORM.source_document_id,
+                    AnnotationDocumentORM.source_document,
                 )
                 query_builder._join_subquery(SourceDocumentORM.tags, isouter=True)
             case SentAnnoColumns.FOLDER_ID_LIST_RECURSIVE:
@@ -170,17 +167,13 @@ class SentAnnoColumns(str, AbstractColumns):
                     )
                 )
                 query_builder._join_subquery(
-                    AnnotationDocumentORM,
-                    AnnotationDocumentORM.id
-                    == SentenceAnnotationORM.annotation_document_id,
+                    SentenceAnnotationORM.annotation_document,
                 )
                 query_builder._join_subquery(
-                    SourceDocumentORM,
-                    SourceDocumentORM.id == AnnotationDocumentORM.source_document_id,
+                    AnnotationDocumentORM.source_document,
                 )
                 query_builder._join_subquery(
-                    FolderORM,
-                    FolderORM.id == SourceDocumentORM.folder_id,
+                    SourceDocumentORM.folder,
                     isouter=True,
                 )
 
@@ -188,12 +181,9 @@ class SentAnnoColumns(str, AbstractColumns):
         match self:
             case SentAnnoColumns.SOURCE_DOCUMENT_NAME:
                 query_builder._join_query(
-                    AnnotationDocumentORM,
-                    AnnotationDocumentORM.id
-                    == SentenceAnnotationORM.annotation_document_id,
+                    SentenceAnnotationORM.annotation_document,
                 )._join_query(
-                    SourceDocumentORM,
-                    SourceDocumentORM.id == AnnotationDocumentORM.source_document_id,
+                    AnnotationDocumentORM.source_document,
                 )
             case SentAnnoColumns.MEMO_CONTENT:
                 # Memos are collaborative: match memo content regardless of who
@@ -203,9 +193,7 @@ class SentAnnoColumns(str, AbstractColumns):
                 )._join_query(ObjectHandleORM.attached_memos, isouter=True)
             case SentAnnoColumns.USER_ID:
                 query_builder._join_query(
-                    AnnotationDocumentORM,
-                    AnnotationDocumentORM.id
-                    == SentenceAnnotationORM.annotation_document_id,
+                    SentenceAnnotationORM.annotation_document,
                 )._join_query(
                     UserORM,
                     UserORM.id == AnnotationDocumentORM.user_id,
