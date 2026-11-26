@@ -37,3 +37,15 @@ Migration `807bab97f373_file_store` moves existing uploads, derived media, model
 !!! warning "Back up before upgrading"
 
     Back up both the database and the filesystem before running this migration. It cannot be downgraded: the old file layout and dropped database columns are not restored.
+
+### Upgrading to per-project composite foreign keys
+
+Migration `e9c943a5f56d_composite_keys_per_project` ensures every project-owned table has a required `project_id`, backfilling it from parent rows where the column is added, and replaces foreign keys between project-owned tables with composite foreign keys. PostgreSQL then rejects references between rows of different projects. The migration runs automatically at backend startup and requires no configuration changes.
+
+The migration also renames `objecthandle.project_id` to `attached_project_id` and adds a new `project_id` that identifies the project owning the handle.
+
+!!! warning "Back up and allow time for the upgrade"
+
+    Back up the database before upgrading. The backfill rewrites rows in the affected tables, so the migration can take several minutes on a large installation. It fails and rolls back if existing references cross project boundaries.
+
+    The migration drops the legacy `objecthandle.user_id` and `objecthandle.memo_id` columns. A downgrade restores these columns empty; their previous values are not recovered.
