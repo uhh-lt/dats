@@ -93,7 +93,7 @@ def _project_owned_tables(inspector: sa.Inspector) -> list[str]:
 
 
 # ===========================================================================
-# COMPOSITE KEYS (e9c943a5f56d) TESTS
+# COMPOSITE KEYS (7f1bbe0f69d7) TESTS
 # ===========================================================================
 
 # --- A. the schema at head --------------------------------------------------
@@ -138,6 +138,34 @@ def test_every_project_owned_table_with_an_id_has_the_key_project_id_and_id(
         assert ["project_id", "id"] not in [
             uc["column_names"] for uc in inspector.get_unique_constraints(table)
         ], table
+
+
+def test_every_primary_key_is_named_after_its_table(db_session: Session):
+    """Every primary key is named <table>_pkey, also on the tables that were
+    renamed (tag, tagrecommendationlink, sourcedocumenttaglinktable)."""
+    inspector = sa.inspect(db_session.get_bind())
+
+    for table in inspector.get_table_names():
+        if table == "alembic_version":
+            continue
+        assert inspector.get_pk_constraint(table)["name"] == f"{table}_pkey", table
+
+
+def test_every_key_of_a_project_owned_table_starts_with_project_id(
+    db_session: Session,
+):
+    """Ids are unique per project only: the primary key of every project-owned
+    table, also of the tables keyed by their references (link tables, step
+    statuses, word frequencies), and every unique constraint over an id column
+    starts with project_id."""
+    inspector = sa.inspect(db_session.get_bind())
+
+    for table in _project_owned_tables(inspector):
+        pk_columns = inspector.get_pk_constraint(table)["constrained_columns"]
+        assert pk_columns[0] == "project_id", (table, pk_columns)
+        for uc in inspector.get_unique_constraints(table):
+            if any(c == "id" or c.endswith("_id") for c in uc["column_names"]):
+                assert uc["column_names"][0] == "project_id", (table, uc)
 
 
 def test_foreign_keys_onto_project_owned_tables_are_composite(db_session: Session):
