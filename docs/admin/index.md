@@ -37,3 +37,9 @@ Migration `807bab97f373_file_store` moves existing uploads, derived media, model
 !!! warning "Back up before upgrading"
 
     Back up both the database and the filesystem before running this migration. It cannot be downgraded: the old file layout and dropped database columns are not restored.
+
+## Upgrading to project-scoped annotation APIs
+
+Span, sentence and bbox annotation routes move to `/projects/{project_id}/span-annotations`, `/projects/{project_id}/sentence-annotations` and `/projects/{project_id}/bbox-annotations`, respectively. The memo routes for creating a memo, reading memos of an attached object and generating a memo suggestion additionally require a `project_id` query parameter. These are breaking API changes without compatibility routes; update external API clients with the DATS deployment. MCP clients discover the changed generated tool names and arguments from the server.
+
+Stop the stack before upgrading and deploy the frontend and backend together. At backend startup, migration `5fbb71fe6f2b` runs with the other migrations and changes the primary key of the `spanannotation`, `sentenceannotation` and `bboxannotation` tables to `(project_id, id)`, dropping their redundant `project_id` indexes. Annotation ids and existing rows are preserved.
