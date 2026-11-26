@@ -2189,28 +2189,6 @@
         }
       }
     },
-    "/features": {
-      "get": {
-        "tags": ["feature"],
-        "summary": "Returns all Features a Project can enable",
-        "operationId": "get_all",
-        "responses": {
-          "200": {
-            "description": "Successful Response",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "items": { "$ref": "#/components/schemas/FeatureRead" },
-                  "type": "array",
-                  "title": "Response Feature-Get All"
-                }
-              }
-            }
-          }
-        },
-        "security": [{ "OAuth2PasswordBearer": [] }]
-      }
-    },
     "/projects/{project_id}/folders": {
       "put": {
         "tags": ["folder"],
@@ -2552,6 +2530,28 @@
                   "items": { "type": "string" },
                   "type": "array",
                   "title": "Response General-Get Available Models"
+                }
+              }
+            }
+          }
+        },
+        "security": [{ "OAuth2PasswordBearer": [] }]
+      }
+    },
+    "/info/features": {
+      "get": {
+        "tags": ["general"],
+        "summary": "Returns all Features a Project can enable",
+        "operationId": "get_features",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": { "$ref": "#/components/schemas/FeatureRead" },
+                  "type": "array",
+                  "title": "Response General-Get Features"
                 }
               }
             }
@@ -3583,6 +3583,74 @@
         }
       }
     },
+    "/users/me": {
+      "get": {
+        "tags": ["user"],
+        "summary": "Returns the current (logged in) user",
+        "operationId": "get_me",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/UserRead" } } }
+          }
+        },
+        "security": [{ "OAuth2PasswordBearer": [] }]
+      },
+      "delete": {
+        "tags": ["user"],
+        "summary": "Removes the logged-in User",
+        "operationId": "delete_me",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/UserRead" } } }
+          }
+        },
+        "security": [{ "OAuth2PasswordBearer": [] }]
+      },
+      "patch": {
+        "tags": ["user"],
+        "summary": "Updates the logged-in User",
+        "operationId": "update_me",
+        "requestBody": {
+          "content": { "application/json": { "schema": { "$ref": "#/components/schemas/UserUpdate" } } },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/UserRead" } } }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/HTTPValidationError" } } }
+          }
+        },
+        "security": [{ "OAuth2PasswordBearer": [] }]
+      }
+    },
+    "/users/me/projects": {
+      "get": {
+        "tags": ["user"],
+        "summary": "Returns all Projects of the logged-in User",
+        "operationId": "get_user_projects",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": { "$ref": "#/components/schemas/ProjectRead" },
+                  "type": "array",
+                  "title": "Response User-Get User Projects"
+                }
+              }
+            }
+          }
+        },
+        "security": [{ "OAuth2PasswordBearer": [] }]
+      }
+    },
     "/projects/{project_id}/memos": {
       "put": {
         "tags": ["memo"],
@@ -4489,28 +4557,6 @@
           "422": {
             "description": "Validation Error",
             "content": { "application/json": { "schema": { "$ref": "#/components/schemas/HTTPValidationError" } } }
-          }
-        },
-        "security": [{ "OAuth2PasswordBearer": [] }]
-      }
-    },
-    "/users/me/projects": {
-      "get": {
-        "tags": ["project"],
-        "summary": "Returns all Projects of the logged-in User",
-        "operationId": "get_user_projects",
-        "responses": {
-          "200": {
-            "description": "Successful Response",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "items": { "$ref": "#/components/schemas/ProjectRead" },
-                  "type": "array",
-                  "title": "Response Project-Get User Projects"
-                }
-              }
-            }
           }
         },
         "security": [{ "OAuth2PasswordBearer": [] }]
@@ -8604,52 +8650,6 @@
             "content": { "application/json": { "schema": { "$ref": "#/components/schemas/HTTPValidationError" } } }
           }
         }
-      }
-    },
-    "/users/me": {
-      "get": {
-        "tags": ["user"],
-        "summary": "Returns the current (logged in) user",
-        "operationId": "get_me",
-        "responses": {
-          "200": {
-            "description": "Successful Response",
-            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/UserRead" } } }
-          }
-        },
-        "security": [{ "OAuth2PasswordBearer": [] }]
-      },
-      "delete": {
-        "tags": ["user"],
-        "summary": "Removes the logged-in User",
-        "operationId": "delete_me",
-        "responses": {
-          "200": {
-            "description": "Successful Response",
-            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/UserRead" } } }
-          }
-        },
-        "security": [{ "OAuth2PasswordBearer": [] }]
-      },
-      "patch": {
-        "tags": ["user"],
-        "summary": "Updates the logged-in User",
-        "operationId": "update_me",
-        "requestBody": {
-          "content": { "application/json": { "schema": { "$ref": "#/components/schemas/UserUpdate" } } },
-          "required": true
-        },
-        "responses": {
-          "200": {
-            "description": "Successful Response",
-            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/UserRead" } } }
-          },
-          "422": {
-            "description": "Validation Error",
-            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/HTTPValidationError" } } }
-          }
-        },
-        "security": [{ "OAuth2PasswordBearer": [] }]
       }
     },
     "/projects/{project_id}/whiteboards": {

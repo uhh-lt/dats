@@ -53,14 +53,14 @@ ROUTES_OUTSIDE_PROJECTS = {
     "PUT /users/me/api-keys",
     "DELETE /users/me/api-keys/{api_key_id}",
     "GET /users/me/projects",
-    # a new project, the features a project can enable
+    # a new project
     "PUT /projects",
-    "GET /features",
     # the server
     "GET /",
     "GET /heartbeat",
     "GET /info",
     "GET /info/llms",
+    "GET /info/features",
     # the websocket and the MCP server (which forwards to the API routes)
     "WEBSOCKET /ws",
     "MOUNT /",

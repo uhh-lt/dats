@@ -3,6 +3,7 @@
 /* tslint:disable */
 /* eslint-disable */
 import type { ProjectAddUser } from "@models/ProjectAddUser";
+import type { ProjectRead } from "@models/ProjectRead";
 import type { ProjectUserLinks } from "@models/ProjectUserLinks";
 import type { UserRead } from "@models/UserRead";
 import type { UserUpdate } from "@models/UserUpdate";
@@ -11,6 +12,55 @@ import type { CancelablePromise } from "../core/CancelablePromise";
 import { OpenAPI } from "../core/OpenAPI";
 import { request as __request } from "../core/request";
 export class UserService {
+  /**
+   * Returns the current (logged in) user
+   * @returns UserRead Successful Response
+   * @throws ApiError
+   */
+  public static getMe(): CancelablePromise<UserRead> {
+    return __request(OpenAPI, {
+      method: "GET",
+      url: "/users/me",
+    });
+  }
+  /**
+   * Removes the logged-in User
+   * @returns UserRead Successful Response
+   * @throws ApiError
+   */
+  public static deleteMe(): CancelablePromise<UserRead> {
+    return __request(OpenAPI, {
+      method: "DELETE",
+      url: "/users/me",
+    });
+  }
+  /**
+   * Updates the logged-in User
+   * @returns UserRead Successful Response
+   * @throws ApiError
+   */
+  public static updateMe({ requestBody }: { requestBody: UserUpdate }): CancelablePromise<UserRead> {
+    return __request(OpenAPI, {
+      method: "PATCH",
+      url: "/users/me",
+      body: requestBody,
+      mediaType: "application/json",
+      errors: {
+        422: `Validation Error`,
+      },
+    });
+  }
+  /**
+   * Returns all Projects of the logged-in User
+   * @returns ProjectRead Successful Response
+   * @throws ApiError
+   */
+  public static getUserProjects(): CancelablePromise<Array<ProjectRead>> {
+    return __request(OpenAPI, {
+      method: "GET",
+      url: "/users/me/projects",
+    });
+  }
   /**
    * Creates a virtual user (a user that cannot log in) in the Project
    * @returns UserRead Successful Response
@@ -143,44 +193,6 @@ export class UserService {
         project_id: projectId,
         user_id: userId,
       },
-      errors: {
-        422: `Validation Error`,
-      },
-    });
-  }
-  /**
-   * Returns the current (logged in) user
-   * @returns UserRead Successful Response
-   * @throws ApiError
-   */
-  public static getMe(): CancelablePromise<UserRead> {
-    return __request(OpenAPI, {
-      method: "GET",
-      url: "/users/me",
-    });
-  }
-  /**
-   * Removes the logged-in User
-   * @returns UserRead Successful Response
-   * @throws ApiError
-   */
-  public static deleteMe(): CancelablePromise<UserRead> {
-    return __request(OpenAPI, {
-      method: "DELETE",
-      url: "/users/me",
-    });
-  }
-  /**
-   * Updates the logged-in User
-   * @returns UserRead Successful Response
-   * @throws ApiError
-   */
-  public static updateMe({ requestBody }: { requestBody: UserUpdate }): CancelablePromise<UserRead> {
-    return __request(OpenAPI, {
-      method: "PATCH",
-      url: "/users/me",
-      body: requestBody,
-      mediaType: "application/json",
       errors: {
         422: `Validation Error`,
       },

@@ -6,7 +6,7 @@ paths:
 
 # Endpoint Pattern
 
-Endpoint modules define the REST API surface of the backend. Each file owns one router for one resource or module (two when it also has routes outside projects, see "Project Routes") and groups its routes into labeled sections. Consistency matters because the frontend API client is generated from these routes, and the websocket sync protocol (which keeps all connected clients up to date) is driven entirely by conventions in these files.
+Endpoint modules define the REST API surface of the backend. Each file owns exactly one router for one resource or module and groups its routes into labeled sections. Consistency matters because the frontend API client is generated from these routes, and the websocket sync protocol (which keeps all connected clients up to date) is driven entirely by conventions in these files.
 
 ## File Structure
 
@@ -69,7 +69,7 @@ router = project_router("/examples", tags=["example"], feature=FEATURE)
 Every resource of a project lives under `/projects/{project_id}/...` (#928); `span_annotation_endpoint.py` is the example.
 
 - **Router**: `router = project_router("/<resources>", tags=[...], feature=FEATURE)` (`common/project_router.py`) checks the membership and, for a feature module, the feature for every route; omit `feature` in core.
-- **Routes outside projects too**: a file that also has routes outside projects (`/users/me`, `/projects`, `/features`) declares them on `router = APIRouter(...)` with the tags and without a prefix (an included router gets both) and its project routes on `project = project_router(..., tags=[])`, included right after with `router.include_router(project)` (`user_endpoint.py`).
+- **Routes outside projects**: a resource outside every project gets its own file with a plain `APIRouter(prefix=...)` (`me_endpoint.py` for `/users/me`, `info_endpoint.py`); the one exception is `project_endpoint.py`, whose `PUT /projects` (create) sits on a second router next to the project router.
 - **Project from the path only**: every route takes `project_id: int`; request and create DTOs carry no `project_id`.
 - **Paths**: plural kebab-case collections (`/span-annotations`), one resource at `/{<entity>_id}`, links at `/{<entity>_id}/<others>/{<other>_id}` (PUT adds, DELETE removes), bulk routes at `/bulk` declared before `/{<entity>_id}`, computations at `POST /<verb>`.
 - **Bulk links**: bulk links at `/bulk/<others>` (`/tags/bulk/source-documents`): PUT adds, DELETE removes, PATCH does both.

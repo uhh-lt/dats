@@ -1,7 +1,7 @@
 import { DocprocessingService } from "@api/services/DocprocessingService";
 import { FeatureService } from "@api/services/FeatureService";
-import { ProjectService } from "@api/services/ProjectService";
 import { SourceDocumentService } from "@api/services/SourceDocumentService";
+import { UserService } from "@api/services/UserService";
 import { FeatureStatus } from "@models/FeatureStatus";
 import type { ProjectFeatureRead } from "@models/ProjectFeatureRead";
 import type { SDocStatus } from "@models/SDocStatus";
@@ -25,7 +25,7 @@ export const projectQueries = {
   userProjects: () =>
     queryOptions({
       queryKey: [...projectQueries.all(), "user"] as const,
-      queryFn: () => ProjectService.getUserProjects(),
+      queryFn: () => UserService.getUserProjects(),
       staleTime: 1000 * 60 * 5,
     }),
 

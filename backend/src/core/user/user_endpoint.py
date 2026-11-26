@@ -1,34 +1,24 @@
-from fastapi import APIRouter, Depends
+from fastapi import Depends
 
 from common.dats_event import DATSEvent
-from common.dependencies import DBSession, get_current_user
+from common.dependencies import DBSession
 from common.project_router import project_router
 from core.auth.auth_exceptions import InvalidError
-from core.auth.authz_user import AuthzUser
 from core.project.project_crud import crud_project
 from core.project.project_dto import ProjectUserLinks
 from core.project.project_service import ProjectService
 from core.user.user_crud import crud_user
-from core.user.user_dto import (
-    ProjectAddUser,
-    UserRead,
-    UserUpdate,
-    VirtualUserCreate,
-)
-from core.user.user_orm import UserORM
+from core.user.user_dto import ProjectAddUser, UserRead, UserUpdate, VirtualUserCreate
 from systems.websocket_system.websocket_dependency import WebsocketEmitter
 
-# the logged-in user, outside every project
-router = APIRouter(dependencies=[Depends(get_current_user)], tags=["user", "mcp"])
 # the users of a project: its members and its virtual users
-project = project_router("", tags=[])
-router.include_router(project)
+router = project_router("", tags=["user", "mcp"])
 
 
 # --- create operations
 
 
-@project.put(
+@router.put(
     "/virtual-users",
     response_model=UserRead,
     summary="Creates a virtual user (a user that cannot log in) in the Project",
@@ -52,15 +42,6 @@ def create_virtual_user(
 
 
 @router.get(
-    "/users/me",
-    response_model=UserRead,
-    summary="Returns the current (logged in) user",
-)
-def get_me(*, user: UserORM = Depends(get_current_user)) -> UserRead:
-    return UserRead.model_validate(user)
-
-
-@project.get(
     "/members",
     response_model=list[UserRead],
     summary=(
@@ -79,26 +60,6 @@ def get_by_project(*, project_id: int, db: DBSession) -> list[UserRead]:
 
 
 @router.patch(
-    "/users/me",
-    response_model=UserRead,
-    summary="Updates the logged-in User",
-)
-def update_me(
-    *,
-    db: DBSession,
-    user: UserUpdate,
-    authz_user: AuthzUser = Depends(),
-    ws: WebsocketEmitter = Depends(),
-) -> UserRead:
-    db_user = crud_user.update(db=db, id=authz_user.user.id, update_dto=user)
-    result = UserRead.model_validate(db_user)
-    # Notify all collaborators across every project the user belongs to
-    member_ids = {member.id for project in db_user.projects for member in project.users}
-    ws.emit_to_users(DATSEvent.USER_UPDATED, result, user_ids=list(member_ids))
-    return result
-
-
-@project.patch(
     "/virtual-users/{user_id}",
     response_model=UserRead,
     summary="Updates the virtual user with the given ID of the Project",
@@ -123,7 +84,7 @@ def update_by_id(
     return result
 
 
-@project.put(
+@router.put(
     "/members",
     response_model=ProjectUserLinks,
     summary="Adds the existing User with the given email to the Project as a member",
@@ -157,30 +118,6 @@ def associate_user_to_project(
 
 
 @router.delete(
-    "/users/me",
-    response_model=UserRead,
-    summary="Removes the logged-in User",
-)
-def delete_me(
-    *,
-    db: DBSession,
-    authz_user: AuthzUser = Depends(),
-    ws: WebsocketEmitter = Depends(),
-) -> UserRead:
-    # Capture collaborators BEFORE deletion: deleting the user cascades the
-    # membership rows, so they cannot be re-read afterwards.
-    member_ids = {
-        member.id
-        for project in crud_user.read(db=db, id=authz_user.user.id).projects
-        for member in project.users
-    }
-    db_user = crud_user.delete(db=db, id=authz_user.user.id)
-    result = UserRead.model_validate(db_user)
-    ws.emit_to_users(DATSEvent.USER_DELETED, result, user_ids=list(member_ids))
-    return result
-
-
-@project.delete(
     "/virtual-users/{user_id}",
     response_model=UserRead,
     summary=(
@@ -204,7 +141,7 @@ def delete_by_id(
     return result
 
 
-@project.delete(
+@router.delete(
     "/members/{user_id}",
     response_model=ProjectUserLinks,
     summary="Removes the member with the given ID from the Project",

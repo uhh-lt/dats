@@ -96,7 +96,7 @@ The keyword statistics (`backend/src/modules/keyword_statistics/`) are a small, 
    )
    ```
 
-Then regenerate the API client (`just update-api`); the frontend reads the features from `GET /features` and needs a change only for a page or a gate. The rules a module developer must follow are in [`.github/instructions/backend-module.instructions.md`](https://github.com/uhh-lt/dats/blob/main/.github/instructions/backend-module.instructions.md).
+Then regenerate the API client (`just update-api`); the frontend reads the features from `GET /info/features` and needs a change only for a page or a gate. The rules a module developer must follow are in [`.github/instructions/backend-module.instructions.md`](https://github.com/uhh-lt/dats/blob/main/.github/instructions/backend-module.instructions.md).
 
 ## Features
 
