@@ -23,7 +23,7 @@ An entity that can be listed with filters, sorting and infinite scrolling (sdocs
 | `toolbar/`                       | `FilterTableToolbarProps` (`table`, `selectedData`, `anchor`), `Redux` / `URL` / `LocalFilterTableToolbarLeft` (the matching dialog), `FilterTableToolbarRight`                                                                                                                                                                                                            |
 | `table/`                         | `FilterTable` (MRT table with virtualization, infinite scroll, selection, manual sorting and the toolbars), `FilterTableContainerProps`, the variant props `ReduxFilterTableProps` / `URLFilterTableProps` / `LocalFilterTableProps`                                                                                                                                       |
 
-The query side is defined by the domain's factory (see `frontend-api.instructions.md`): `<domain>Queries.search(projectId, request)` (an `infiniteQueryOptions` leaf), `searchScope()` and `tableInfo(projectId)`, whose key is `tableInfoQueries.byDomain("<domain>", projectId)` and whose `queryFn` maps the backend infos with `toColumnInfos`.
+The query side is defined by the domain's factory (see `frontend-api.instructions.md`): `<domain>Queries.search(projectId, request)` (an `infiniteQueryOptions` leaf), `searchScope(projectId)` and `tableInfo(projectId)`, whose key is `tableInfoQueries.byDomain("<domain>", projectId)` and whose `queryFn` maps the backend infos with `toColumnInfos`.
 
 ## File Structure
 

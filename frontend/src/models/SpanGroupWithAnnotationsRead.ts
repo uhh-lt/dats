@@ -13,6 +13,10 @@ export type SpanGroupWithAnnotationsRead = {
    */
   id: number;
   /**
+   * Project the SpanGroup belongs to
+   */
+  project_id: number;
+  /**
    * User that created the SpanGroup
    */
   user_id: number;

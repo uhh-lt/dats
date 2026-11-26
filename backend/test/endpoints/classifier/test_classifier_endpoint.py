@@ -147,7 +147,6 @@ def test_classifier_of_another_project_is_not_found(
 def test_start_job_invalid_task_type(client: TestClient, test_project):
     """Starting a job with an unknown task_type in task_parameters is rejected with 422."""
     payload = {
-        "project_id": test_project.id,
         "task_type": "training",
         "model_type": "span",
         "task_parameters": {"task_type": "bogus"},
@@ -159,7 +158,6 @@ def test_start_job_invalid_task_type(client: TestClient, test_project):
 def test_start_job_missing_params(client: TestClient, test_project):
     """Starting a training job without the required task parameters is rejected with 422."""
     payload = {
-        "project_id": test_project.id,
         "task_type": "training",
         "model_type": "span",
         "task_parameters": {"task_type": "training"},
@@ -205,7 +203,7 @@ def test_start_job_nonexistent_project(client: TestClient):
     )
     response = client.post(
         "/projects/999999/jobs/classifier",
-        json=request.model_dump(mode="json"),
+        json=request.model_dump(mode="json", exclude={"project_id"}),
     )
     assert response.status_code in (403, 404), response.text
 

@@ -25,18 +25,13 @@ def validate_llm_assistant_input(db: Session, payload: LLMAssistantJobInput) -> 
     no virtual user of the project before the job is enqueued: the LLM Assistant
     never writes into another user's annotations."""
     crud_sdoc.read_by_ids(db=db, project_id=payload.project_id, ids=payload.sdoc_ids)
-    _assert_virtual_user_of_project(db=db, payload=payload)
+    validate_llm_assistant_retry(db=db, payload=payload)
 
 
 def validate_llm_assistant_retry(db: Session, payload: LLMAssistantJobInput) -> None:
-    """Like `validate_llm_assistant_input`, but documents deleted since the job
-    started do not block its retry: the job reads the documents within its project
-    and gives the missing ones an error result."""
-    _assert_virtual_user_of_project(db=db, payload=payload)
-
-
-def _assert_virtual_user_of_project(db: Session, payload: LLMAssistantJobInput) -> None:
-    """Reject a user that is no virtual user of the job's project."""
+    """Reject a user that is no virtual user of the job's project. Documents deleted
+    since the job started do not block its retry: the job reads the documents within
+    its project and gives the missing ones an error result."""
     user_id = payload.virtual_user_id
     if (
         user_id is not None

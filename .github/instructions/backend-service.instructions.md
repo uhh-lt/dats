@@ -36,8 +36,8 @@ class ExampleService(metaclass=SingletonMeta):
         return super(ExampleService, cls).__new__(cls)
 
     # 4. Public methods: db session passed in as first argument after self
-    def reset(self, *, db: Session, example_id: int) -> ExampleRead:
-        db_obj = crud_example.read(db=db, id=example_id)  # raises NoSuchElementError
+    def reset(self, *, db: Session, project_id: int, example_id: int) -> ExampleRead:
+        db_obj = crud_example.read(db=db, project_id=project_id, id=example_id)  # raises NoSuchElementError
         ...
         return ExampleRead.model_validate(db_obj)
 
@@ -65,7 +65,7 @@ class ExampleService(metaclass=SingletonMeta):
 - **No per-request state**: Singleton attributes hold only dependencies and static dispatch tables (`cls.export_method_for_job_type: dict[ExportJobType, Callable[..., Path]] = {...}`). Everything else is passed as a method argument.
 - **No module functions**: Even stateless services are classes (`StatisticsService`); helpers become private methods. Module-level code is limited to constants, private helper types (`TypedDict` / `NamedTuple`) and `_private` functions.
 - **No service for plain CRUD**: Endpoints that only call CRUD methods use the `crud_*` singletons directly; create a service only for logic beyond one CRUD call.
-- **CRUDs are imported, not wrapped**: Use the `crud_*` module singletons directly (`crud_cota.read(db=db, id=...)`). Do not put them on the service.
+- **CRUDs are imported, not wrapped**: Use the `crud_*` module singletons directly (`crud_cota.read(db=db, project_id=project_id, id=...)`). Do not put them on the service.
 
 ### Database Session and Transactions
 
@@ -78,7 +78,7 @@ class ExampleService(metaclass=SingletonMeta):
 
 ### Errors
 
-- **Existence checks via CRUD**: Check existence by calling `crud_x.read(db=db, id=...)` (raises `NoSuchElementError`) or `crud_x.exists(db=db, id=..., raise_error=True)`. Do not write `if obj is None` checks after `read`.
+- **Existence checks via CRUD**: Check existence by calling `crud_x.read(db=db, project_id=project_id, id=...)` (raises `NoSuchElementError`) or `crud_x.exists(db=db, project_id=project_id, id=..., raise_error=True)`. Do not write `if obj is None` checks after `read`.
 - **Invalid input**: Raise `ValueError` with a message naming the offending ids/values.
 - **Domain errors**: Module-specific failures (unsupported job type, empty dataset, unsupported MIME type, ...) raise exception classes from `<module>_exceptions.py`; a dispatch `match`/dict lookup with no handler raises `Unsupported<X>Error`. Never `raise Exception(...)`.
 - **No exception classes in services**: Define them in `<module>_exceptions.py`, never in the service (this holds for every backend file).
@@ -93,7 +93,7 @@ class ExampleService(metaclass=SingletonMeta):
 ### Return Types
 
 - **Read DTOs for endpoints**: Public methods called by endpoints return the module's `<X>Read` DTO (`XRead.model_validate(db_obj)`) or another response DTO (`ChatSessionResponse`, `list[AnnoscalingResult]`), never ORM objects or tuples. The endpoint only calls the service, emits and returns the result (`result = ProjectService().create_project(...)`).
-- **ORMs only privately**: Public methods return DTOs, also when another service, a job or a test fixture calls them; only private helpers (`_name`) return ORM objects. A caller that needs the ORM object reads it by the returned id (`crud_span_anno.read(db=db, id=dto.id)`).
+- **ORMs only privately**: Public methods return DTOs, also when another service, a job or a test fixture calls them; only private helpers (`_name`) return ORM objects. A caller that needs the ORM object reads it by the returned id (`crud_span_anno.read(db=db, project_id=dto.project_id, id=dto.id)`).
 - **Build DTOs from eager reads**: build Read DTOs from objects returned by a CRUD read method (which applies the CRUD's `_load_options()`). After `create_multi` / `update_multi`, re-read the objects with `read_by_ids` before converting them (`SpanAnnotationService._to_read_dtos`).
 - **Batch methods keep input order**: a method that takes a list returns its results in the order of that list, and a delete returns the DTOs snapshotted (via `read_by_ids`) before it deletes (`SourceDocumentService.delete_multi`, `MemoService.delete_multi`).
 - **Jobs**: Methods that start jobs return the `Job` (or `list[Job]`); job handlers return the `<X>JobOutput`.

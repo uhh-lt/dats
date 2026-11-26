@@ -19,7 +19,7 @@ export const ImportJobsView = memo(({ projectId }: ImportJobsViewProps) => {
   const allImportJobs = useMemo(() => importJobs || [], [importJobs]);
 
   // the list and the jobs its items follow
-  const { refresh: handleRefresh, isFetching: isImportFetching } = useRefreshJobs(importQueries.job);
+  const { refresh: handleRefresh, isFetching: isImportFetching } = useRefreshJobs(importQueries.job, projectId);
 
   return (
     <DialogSection

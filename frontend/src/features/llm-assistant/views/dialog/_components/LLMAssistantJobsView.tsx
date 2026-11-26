@@ -18,7 +18,10 @@ export function LLMAssistantJobsView() {
   const allLLMAssistantJobs = useMemo(() => llmAssistantJobs || [], [llmAssistantJobs]);
 
   // the list and the jobs its items follow
-  const { refresh: handleRefresh, isFetching: isFetchingLLMAssistantJobs } = useRefreshJobs(llmAssistantQueries.job);
+  const { refresh: handleRefresh, isFetching: isFetchingLLMAssistantJobs } = useRefreshJobs(
+    llmAssistantQueries.job,
+    projectId,
+  );
 
   return (
     <DialogSection

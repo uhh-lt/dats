@@ -5,32 +5,29 @@ import { queryOptions, skipToken } from "@tanstack/react-query";
  * Query factory for tags.
  *
  *   tagQueries.all()                         ["tag"]
+ *   tagQueries.projectScope(projectId)       ["tag", "project", projectId]
  *   tagQueries.byProject(projectId)          ["tag", "project", projectId]
- *   tagQueries.idsBySdoc(projectId, sdocId)  ["tag", "sdoc", sdocId, projectId]
- *   tagQueries.sdocCount(projectId, sdocIds) ["tag", "sdocCount", projectId, sdocIds]
- *
- * The routes need the project, but the sdoc id already determines it: the project comes last in the idsBySdoc key, so
- * the prefix by sdoc (idsBySdocOfSdocScope) covers it.
+ *   tagQueries.idsBySdoc(projectId, sdocId)  ["tag", "project", projectId, "sdoc", sdocId]
+ *   tagQueries.sdocCount(projectId, sdocIds) ["tag", "project", projectId, "sdocCount", sdocIds]
  */
 export const tagQueries = {
   all: () => ["tag"] as const,
+  // prefix of all tag queries of one project
+  projectScope: (projectId: number | null | undefined) => [...tagQueries.all(), "project", projectId] as const,
 
   // all tags of a project
-  byProjectScope: () => [...tagQueries.all(), "project"] as const,
   byProject: (projectId: number | undefined) =>
     queryOptions({
-      queryKey: [...tagQueries.byProjectScope(), projectId] as const,
+      queryKey: tagQueries.projectScope(projectId),
       queryFn: projectId === undefined ? skipToken : () => TagService.getByProject({ projectId }),
       staleTime: 1000 * 60 * 5,
     }),
 
   // tag ids of source documents
-  idsBySdocScope: () => [...tagQueries.all(), "sdoc"] as const,
-  // prefix of the tag ids of one sdoc, for cache writes
-  idsBySdocOfSdocScope: (sdocId: number) => [...tagQueries.idsBySdocScope(), sdocId] as const,
+  idsBySdocScope: (projectId: number | null | undefined) => [...tagQueries.projectScope(projectId), "sdoc"] as const,
   idsBySdoc: (projectId: number | null | undefined, sdocId: number | null | undefined) =>
     queryOptions({
-      queryKey: [...tagQueries.idsBySdocScope(), sdocId, projectId] as const,
+      queryKey: [...tagQueries.idsBySdocScope(projectId), sdocId] as const,
       queryFn:
         !projectId || !sdocId
           ? skipToken
@@ -42,10 +39,10 @@ export const tagQueries = {
     }),
 
   // number of documents per tag, for the given documents
-  sdocCountScope: () => [...tagQueries.all(), "sdocCount"] as const,
+  sdocCountScope: (projectId: number) => [...tagQueries.projectScope(projectId), "sdocCount"] as const,
   sdocCount: (projectId: number, sdocIds: number[]) =>
     queryOptions({
-      queryKey: [...tagQueries.sdocCountScope(), projectId, sdocIds] as const,
+      queryKey: [...tagQueries.sdocCountScope(projectId), sdocIds] as const,
       queryFn: async () => {
         const stringRecord = await TagService.countTags({ projectId, requestBody: { sdoc_ids: sdocIds } });
         return new Map(Object.entries(stringRecord).map(([key, val]) => [parseInt(key, 10), val]));

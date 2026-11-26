@@ -8,20 +8,21 @@ export type FolderMap = Record<number, FolderRead>;
 /**
  * Query factory for folders.
  *
- *   folderQueries.all()                                   ["folder"]
- *   folderQueries.byProject(projectId, folderType)        ["folder", "project", projectId, folderType]
- *   folderQueries.sdocIdsPerDoctype(projectId, sdocFolderId) ["folder", "sdocIdsPerDoctype", sdocFolderId, projectId]
+ *   folderQueries.all()                                       ["folder"]
+ *   folderQueries.projectScope(projectId)                     ["folder", "project", projectId]
+ *   folderQueries.byProject(projectId, folderType)            ["folder", "project", projectId, "type", folderType]
+ *   folderQueries.sdocIdsPerDoctype(projectId, sdocFolderId)  ["folder", "project", projectId, "sdocIdsPerDoctype", sdocFolderId]
  */
 export const folderQueries = {
   all: () => ["folder"] as const,
+  // prefix of all folder queries of one project
+  projectScope: (projectId: number | null | undefined) => [...folderQueries.all(), "project", projectId] as const,
 
   // all folders of a project and type, as a map by folder id
-  byProjectScope: () => [...folderQueries.all(), "project"] as const,
-  // prefix of all folder types of one project (for invalidation)
-  byProjectOfProjectScope: (projectId: number) => [...folderQueries.byProjectScope(), projectId] as const,
+  byProjectScope: (projectId: number | undefined) => [...folderQueries.projectScope(projectId), "type"] as const,
   byProject: (projectId: number | undefined, folderType: FolderType) =>
     queryOptions({
-      queryKey: [...folderQueries.byProjectScope(), projectId, folderType] as const,
+      queryKey: [...folderQueries.byProjectScope(projectId), folderType] as const,
       queryFn:
         projectId === undefined
           ? skipToken
@@ -36,10 +37,11 @@ export const folderQueries = {
     }),
 
   // ids of the sdocs in a folder, grouped by doctype
-  sdocIdsPerDoctypeScope: () => [...folderQueries.all(), "sdocIdsPerDoctype"] as const,
+  sdocIdsPerDoctypeScope: (projectId: number | null | undefined) =>
+    [...folderQueries.projectScope(projectId), "sdocIdsPerDoctype"] as const,
   sdocIdsPerDoctype: (projectId: number | null | undefined, sdocFolderId: number | null | undefined) =>
     queryOptions({
-      queryKey: [...folderQueries.sdocIdsPerDoctypeScope(), sdocFolderId, projectId] as const,
+      queryKey: [...folderQueries.sdocIdsPerDoctypeScope(projectId), sdocFolderId] as const,
       queryFn:
         !projectId || !sdocFolderId
           ? skipToken

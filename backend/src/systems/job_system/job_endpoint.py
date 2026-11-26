@@ -2,7 +2,7 @@ from typing import Any, Callable, Type
 
 from fastapi import Depends
 from fastapi.exceptions import RequestValidationError
-from pydantic import BaseModel, ValidationError, create_model
+from pydantic import BaseModel, ConfigDict, ValidationError, create_model
 from sqlalchemy.orm import Session
 
 from common.project_router import project_router
@@ -50,9 +50,10 @@ def register_job_endpoints(
     lists = endpoint_generation in (EndpointGeneration.ALL, EndpointGeneration.READ)
 
     # The body of the start route: the fields of the job input without
-    # `project_id`, which comes from the path
+    # `project_id`, which comes from the path; unknown fields answer 422
     start_model = create_model(
         f"{job_name}JobStart",
+        __config__=ConfigDict(extra="forbid"),
         **{
             name: (field.annotation, field)
             for name, field in input_model.model_fields.items()

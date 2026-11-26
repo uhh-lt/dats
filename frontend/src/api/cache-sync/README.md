@@ -120,6 +120,12 @@ Per-event logic builds on shared primitives in [\_utils/](_utils):
 4. **DB cascades need explicit invalidation.** The frontend can't observe a
    backend cascade (e.g. deleting a code deletes its annotations), so the
    brain invalidates the affected derived caches for that event.
+5. **Every write starts from the project.** Ids are unique per project only,
+   and the websocket carries the events of all projects of the user, so every
+   key comes from the payload's `project_id` (`tagQueries.idsBySdocScope(projectId)`),
+   never from a prefix without the project. An event payload without
+   `project_id` gets one in the backend DTO. Only the websocket reconnect
+   refetches the jobs of all projects, which all missed their events.
 
 ## Adding a new entity event
 

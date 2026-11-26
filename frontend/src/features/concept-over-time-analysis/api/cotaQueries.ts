@@ -9,19 +9,21 @@ export type CotaMap = Record<number, COTARead>;
 /**
  * Query factory for concept-over-time analyses (COTA).
  *
- *   cotaQueries.all()                  ["cota"]
- *   cotaQueries.byProject(projectId)   ["cota", "project", projectId]
+ *   cotaQueries.all()                     ["cota"]
+ *   cotaQueries.projectScope(projectId)   ["cota", "project", projectId]
+ *   cotaQueries.byProject(projectId)      ["cota", "project", projectId]
  *
  * The refinement job of a COTA is a background job, `cotaQueries.job`.
  */
 export const cotaQueries = {
   all: () => ["cota"] as const,
+  // prefix of all COTA queries of one project
+  projectScope: (projectId: number) => [...cotaQueries.all(), "project", projectId] as const,
 
   // all COTAs of a project, as a map by id
-  byProjectScope: () => [...cotaQueries.all(), "project"] as const,
   byProject: (projectId: number) =>
     queryOptions({
-      queryKey: [...cotaQueries.byProjectScope(), projectId] as const,
+      queryKey: cotaQueries.projectScope(projectId),
       queryFn: async () => {
         const data = await ConceptOverTimeAnalysisService.getByProject({ projectId });
         return data.reduce<CotaMap>((acc, cota) => {

@@ -37,6 +37,7 @@ class TagRecommendationLinkCreate(TagRecommendationLinkBaseDTO):
 
 
 class TagRecommendationLinkRead(TagRecommendationLinkBaseDTO):
+    project_id: int = Field(description="ID of the project of the recommendation")
     model_config = ConfigDict(from_attributes=True)
 
 

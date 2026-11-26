@@ -13,6 +13,7 @@ from pydantic import BaseModel
 from common.singleton_meta import SingletonMeta
 from config import conf
 from repos.llm_enum import ProviderType
+from repos.llm_exceptions import LLMChatSessionNotFoundError
 from repos.repo_base import RepoBase
 
 T = TypeVar("T", bound=BaseModel)
@@ -64,6 +65,8 @@ class LLMRepo(RepoBase, metaclass=SingletonMeta):
         self.__llm_conn: OpenAI | None = None
         self.__llm_chat_sessions: dict[str, list[dict]] = dict()
         self.__llm_chat_session_timestamps: dict[str, float] = dict()
+        # the project and the user of each session
+        self.__llm_chat_session_owners: dict[str, tuple[int, int]] = dict()
         self.__max_llm_chat_sessions = 50
         self.__max_llm_chat_session_age = 7 * 24 * 60 * 60  # 7 days
 
@@ -126,6 +129,7 @@ class LLMRepo(RepoBase, metaclass=SingletonMeta):
         logger.info("Resetting LLM chat sessions...")
         self.__llm_chat_sessions.clear()
         self.__llm_chat_session_timestamps.clear()
+        self.__llm_chat_session_owners.clear()
         self.__vlm_chat_sessions.clear()
         self.__vlm_chat_session_timestamps.clear()
 
@@ -157,20 +161,22 @@ class LLMRepo(RepoBase, metaclass=SingletonMeta):
     def get_available_llms(self) -> list[str]:
         return self._fetch_available_models(provider=ProviderType.LLM)
 
-    def _start_llm_chat_session(self) -> str:
+    def _start_llm_chat_session(self, *, project_id: int, user_id: int) -> str:
         session_id = str(uuid4())
         logger.info(f"Started new LLM chat session {session_id}.")
         self.__llm_chat_sessions[session_id] = []
         self.__llm_chat_session_timestamps[session_id] = time.time()
+        self.__llm_chat_session_owners[session_id] = (project_id, user_id)
 
         if len(self.__llm_chat_sessions) > self.__max_llm_chat_sessions:
-            for session_id, timestamp in self.__llm_chat_session_timestamps.items():
+            for old_id, timestamp in list(self.__llm_chat_session_timestamps.items()):
                 if time.time() - timestamp > self.__max_llm_chat_session_age:
                     logger.warning(
-                        f"Removing session ID {session_id} due to age of {time.time() - timestamp} seconds."
+                        f"Removing session ID {old_id} due to age of {time.time() - timestamp} seconds."
                     )
-                    self.__llm_chat_sessions.pop(session_id)
-                    self.__llm_chat_session_timestamps.pop(session_id)
+                    self.__llm_chat_sessions.pop(old_id)
+                    self.__llm_chat_session_timestamps.pop(old_id)
+                    self.__llm_chat_session_owners.pop(old_id)
 
         return session_id
 
@@ -184,17 +190,27 @@ class LLMRepo(RepoBase, metaclass=SingletonMeta):
         self,
         model: str,
         user_prompt: str,
+        *,
+        project_id: int,
+        user_id: int,
         system_prompt: str | None = None,
         response_model: Type[T] | None = None,
         session_id: str | None = None,
     ) -> tuple[str | T, str]:
+        """Chat in the session `session_id`, or in a new session of the project and
+        user. A session of another project or user answers 404."""
+        owner = self.__llm_chat_session_owners.get(session_id or "")
+        if owner is not None and owner != (project_id, user_id):
+            raise LLMChatSessionNotFoundError(session_id or "")
         if self.__llm_conn is None:
             raise RuntimeError("LLMRepo is not connected. Call connect() first.")
 
         model = self._validate_llm_name(model)
 
         if session_id is None:
-            session_id = self._start_llm_chat_session()
+            session_id = self._start_llm_chat_session(
+                project_id=project_id, user_id=user_id
+            )
             messages = self.__llm_chat_sessions[session_id]
         else:
             messages = self.__llm_chat_sessions.get(session_id, None)
@@ -202,7 +218,9 @@ class LLMRepo(RepoBase, metaclass=SingletonMeta):
                 logger.warning(
                     f"Session ID {session_id} is not valid. Creating a new session."
                 )
-                session_id = self._start_llm_chat_session()
+                session_id = self._start_llm_chat_session(
+                    project_id=project_id, user_id=user_id
+                )
                 messages = self.__llm_chat_sessions[session_id]
 
         # only add system prompt if it is the first message

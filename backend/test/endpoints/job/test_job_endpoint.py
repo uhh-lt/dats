@@ -32,7 +32,8 @@ def test_duplicate_finder_job_is_rejected_when_the_feature_is_disabled(
     )
 
     response = client.post(
-        f"/projects/{project_id}/jobs/duplicate-finder", json=payload.model_dump()
+        f"/projects/{project_id}/jobs/duplicate-finder",
+        json=payload.model_dump(exclude={"project_id"}),
     )
 
     assert_feature_disabled(response, "duplicate_finder")
@@ -46,7 +47,7 @@ def test_tag_recommendation_job_is_rejected_when_the_feature_is_disabled(
 
     response = client.post(
         f"/projects/{project_id}/{TAG_RECOMMENDATION}",
-        json=payload.model_dump(mode="json"),
+        json=payload.model_dump(mode="json", exclude={"project_id"}),
     )
 
     assert_feature_disabled(response, "tag_recommendation")
@@ -65,6 +66,32 @@ def test_start_job_runs_in_the_project_of_the_path(
     assert job.get_project_id() == test_project.id
     assert job.job.kwargs["payload"].project_id == test_project.id
     assert response.json()["project_id"] == test_project.id
+
+
+@pytest.mark.parametrize(
+    "field",
+    [
+        # old clients still send the project in the body
+        pytest.param("project_id", id="project-id"),
+        # any other field the start body does not know
+        pytest.param("no_such_field", id="unknown-field"),
+    ],
+)
+def test_start_job_rejects_unknown_body_fields(
+    client: TestClient,
+    test_project: ProjectORM,
+    tag_recommendation_jobs: TagRecommendationJobs,
+    field: str,
+):
+    """A start body with a field the `<JobName>JobStart` model does not declare
+    answers 422 instead of ignoring the field."""
+    response = client.post(
+        f"/projects/{test_project.id}/{TAG_RECOMMENDATION}",
+        json={field: test_project.id},
+    )
+
+    assert response.status_code == 422, response.text
+    assert field in response.text
 
 
 def test_every_generated_job_start_body_has_no_project(client: TestClient):
@@ -95,7 +122,7 @@ def test_start_job_of_a_non_member_is_forbidden(
 
     response = non_member_client.post(
         f"/projects/{test_project.id}/{TAG_RECOMMENDATION}",
-        json=payload.model_dump(mode="json"),
+        json=payload.model_dump(mode="json", exclude={"project_id"}),
     )
 
     assert response.status_code == 403, response.text

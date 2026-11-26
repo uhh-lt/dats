@@ -21,7 +21,7 @@ const usePollProcessingSimpleSdocStatus = (projectId: number) => {
       const currentLength = query.state.data.length;
       // Only invalidate if previous length > 0 and current length == 0
       if (previousLengthRef.current > 0 && currentLength === 0) {
-        queryClient.invalidateQueries({ queryKey: sdocQueries.searchOfProjectScope(projectId) });
+        queryClient.invalidateQueries({ queryKey: sdocQueries.searchScope(projectId) });
       }
       previousLengthRef.current = currentLength;
       return 3000;

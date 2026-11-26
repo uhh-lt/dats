@@ -170,9 +170,10 @@ BODIES: dict[str, Callable[[TenantRows], Any]] = {
     "POST /projects/{project_id}/perspectives/aspects/{aspect_id}/revert-labels": (
         lambda rows: {"sdoc_ids": [rows["sdoc"].id], "filter": _NO_FILTER, "sorts": []}
     ),
-    "PUT /projects/{project_id}/prompts/{prompt_id}/versions": (
-        lambda rows: {"text": rows["prompt_version"].text}
-    ),
+    "PUT /projects/{project_id}/prompts/{prompt_id}/versions": lambda rows: {
+        "text": "<document:whole> <codes> <output-format:inline>",
+        "codes": [{"code_id": rows["code"].id, "name": "Code", "description": ""}],
+    },
     "PATCH /projects/{project_id}/prompts/{prompt_id}": (
         lambda rows: {"name": "renamed"}
     ),
@@ -210,6 +211,31 @@ QUERIES: dict[str, dict[str, str]] = {
     "POST /projects/{project_id}/perspectives/aspects/{aspect_id}/revert-labels": {
         "search_query": ""
     },
+}
+
+# the routes that answer no 2xx with the path ids of the own tenant, by
+# "<METHOD> <path>": their status and why the fixture cannot give them a 2xx
+OWN_ID_EXCEPTIONS: dict[str, tuple[int, str]] = {
+    "PATCH /projects/{project_id}/experiments/{experiment_id}/scores": (
+        409,
+        "the experiment has no gold annotator",
+    ),
+    "PATCH /projects/{project_id}/experiments/runs/{run_id}/scores": (
+        409,
+        "the experiment of the run has no gold annotator",
+    ),
+    "DELETE /projects/{project_id}/experiments/{experiment_id}": (
+        409,
+        "the virtual user of its run is the test user, who is still in use",
+    ),
+    "DELETE /projects/{project_id}/experiments/runs/{run_id}": (
+        409,
+        "the virtual user of the run is the test user, who is still in use",
+    ),
+    "PUT /projects/{project_id}/span-annotations/{span_annotation_id}/span-groups/{span_group_id}": (
+        409,
+        "the span annotation is in the span group already",
+    ),
 }
 
 # per annotation route group: the fixture row of its resource, the id field of its
@@ -357,11 +383,11 @@ def test_path_id_of_another_project_is_not_found(
     new_own_path_tenant: Callable[[], PathTenant],
 ) -> None:
     """Every project route answers 404 when one of its path ids belongs to the other
-    project and the others to the path's project, and a status other than 404 and
-    403 when all belong to the path's project (so the 404 comes from the foreign
-    id); the user is a member of both. The request with own ids comes last, and a
-    DELETE route gets its own new project, so no request deletes what a later one
-    names."""
+    project and the others to the path's project, and 2xx (the status of
+    OWN_ID_EXCEPTIONS for the routes listed there) when all belong to the path's
+    project (so the 404 comes from the foreign id); the user is a member of both.
+    The request with own ids comes last, and a DELETE route gets its own new
+    project, so no request deletes what a later one names."""
     foreign = path_tenants["foreign"]
     failures: list[str] = []
     routes = _project_routes(client)
@@ -387,7 +413,10 @@ def test_path_id_of_another_project_is_not_found(
         url, response = _request_with_path_ids(
             client, method, path, {name: own for name in names}, own
         )
-        if response.status_code in (403, 404):
+        exception = OWN_ID_EXCEPTIONS.get(f"{method} {path}")
+        if not (
+            response.status_code == exception[0] if exception else response.is_success
+        ):
             failures.append(
                 f"{method} {url} (all own): {response.status_code} "
                 f"{response.text[:200]}"

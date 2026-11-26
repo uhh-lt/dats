@@ -28,34 +28,38 @@ export const hasJobActions = (jobQueries: JobActionQueries): jobQueries is JobQu
   jobQueries.actions !== undefined;
 
 export interface JobQueriesWithoutList<TJob> extends JobActionQueries {
+  projectScope: (
+    projectId: number | null | undefined,
+  ) => readonly [string, "job", "project", number | null | undefined];
   byId: (projectId: number | null | undefined, jobId: string | null | undefined) => ReturnType<typeof jobById<TJob>>;
 }
 
 interface JobQueriesWithList<TJob> extends JobQueriesWithoutList<TJob> {
-  byProjectScope: () => readonly [string, "job", "project"];
   byProject: (projectId: number) => ReturnType<typeof jobsByProject<TJob>>;
 }
 
+type ProjectScope = (projectId: number | null | undefined) => readonly unknown[];
+
 const jobById = <TJob>(
-  scope: readonly unknown[],
+  projectScope: ProjectScope,
   projectId: number | null | undefined,
   jobId: string | null | undefined,
   fetchJob: (job: JobRef) => Promise<TJob>,
 ) =>
   queryOptions({
-    queryKey: [...scope, "detail", jobId, projectId] as const,
+    queryKey: [...projectScope(projectId), "detail", jobId] as const,
     queryFn: !projectId || !jobId ? skipToken : () => fetchJob({ projectId, jobId }),
     // kept fresh by the cache-sync code (JOB_UPDATED), useLiveJob polls while the websocket is down
     staleTime: Infinity,
   });
 
 const jobsByProject = <TJob>(
-  scope: readonly unknown[],
+  projectScope: ProjectScope,
   projectId: number,
   fetchJobs: (projectId: number) => Promise<TJob[]>,
 ) =>
   queryOptions({
-    queryKey: [...scope, projectId] as const,
+    queryKey: [...projectScope(projectId)] as const,
     queryFn: () => fetchJobs(projectId),
     // kept fresh by the cache-sync code, which upserts every JOB_UPDATED into the list
     staleTime: Infinity,
@@ -64,10 +68,11 @@ const jobsByProject = <TJob>(
 /**
  * Builds the queries of the background job of a domain, the `job` object of its query factory:
  *
- *   xQueries.job.all()                 [<domain>, "job"]
- *   xQueries.job.byId(projectId, jobId)  [<domain>, "job", "detail", jobId, projectId]
- *   xQueries.job.byProject(projectId)  [<domain>, "job", "project", projectId]     (only if the domain lists its jobs)
- *   xQueries.job.actions               abort and retry                              (only if the type generates them)
+ *   xQueries.job.all()                   [<domain>, "job"]
+ *   xQueries.job.projectScope(projectId) [<domain>, "job", "project", projectId]
+ *   xQueries.job.byId(projectId, jobId)  [<domain>, "job", "project", projectId, "detail", jobId]
+ *   xQueries.job.byProject(projectId)    [<domain>, "job", "project", projectId]  (only if the domain lists its jobs)
+ *   xQueries.job.actions                 abort and retry                          (only if the type generates them)
  *
  * Every job type has this shape, so the cache-sync code can handle all of them the same way. It writes every job
  * update into both caches, so they never go stale and are not refetched when a view mounts or the window gets focus.
@@ -91,13 +96,13 @@ export function createJobQueries<TJob>(
   actions?: JobActions,
 ) {
   const all = () => [root, "job"] as const;
+  const projectScope = (projectId: number | null | undefined) => [...all(), "project", projectId] as const;
   const byId = (projectId: number | null | undefined, jobId: string | null | undefined) =>
-    jobById([...all()], projectId, jobId, fetchJob);
-  if (!fetchJobs) return { all, byId };
+    jobById(projectScope, projectId, jobId, fetchJob);
+  if (!fetchJobs) return { all, projectScope, byId };
 
-  const byProjectScope = () => [...all(), "project"] as const;
-  const byProject = (projectId: number) => jobsByProject(byProjectScope(), projectId, fetchJobs);
-  return { all, byId, byProjectScope, byProject, actions };
+  const byProject = (projectId: number) => jobsByProject(projectScope, projectId, fetchJobs);
+  return { all, projectScope, byId, byProject, actions };
 }
 
 /**

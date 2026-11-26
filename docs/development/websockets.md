@@ -46,10 +46,10 @@ Backend (`backend/src/common/dats_event.py`):
 
 1. Add the event type to the `DATSEvent` enum.
 2. Add one line to the `_DATS_EVENT_PAYLOADS` registry mapping the event type to its payload DTO (a read model, `list[...]`, or `Union[...]`). The concrete event class is generated from this table — no separate class to write. The payload DTO must survive the fan-out round trip with every field intact: never hide a required field with `Field(..., exclude=True)` (the field is missing after serialization and the receiving workers drop the event), and keep secrets out of read DTOs instead. `backend/test/unit/test_websocket_envelope.py` round-trips every registered event through the envelope and fails if a payload loses a field.
-3. Emit the event from an endpoint via the `WebsocketEmitter` dependency (`ws: WebsocketEmitter = Depends()`), choosing the audience: `emit_to_project`, `emit_dtos_to_projects` (batch of read DTOs, e.g. service results, grouped by their `project_id`), `emit_to_user`, `emit_to_users`, or `emit_to_all`. The emitter queues the send as a FastAPI `BackgroundTasks` task so it fires after the DB commit, and automatically excludes the acting user.
+3. Emit the event from an endpoint via the `WebsocketEmitter` dependency (`ws: WebsocketEmitter = Depends()`), choosing the audience: `emit_to_project`, `emit_to_user`, `emit_to_users`, or `emit_to_all`. The emitter queues the send as a FastAPI `BackgroundTasks` task so it fires after the DB commit, and automatically excludes the acting user.
 
    ```python
-   ws.emit_to_project(DATSEvent.CODE_CREATED, result, project_id=code.project_id)
+   ws.emit_to_project(DATSEvent.CODE_CREATED, result, project_id=project_id)
    ```
 
 4. Regenerate the API client (`just update-api`). The event union is exposed via OpenAPI webhooks, so this produces the matching `frontend/src/models/<Name>Event.ts` and updates `frontend/src/models/datsEvents.ts`.

@@ -34,6 +34,7 @@ class SpanGroupUpdate(BaseModel, UpdateDTOBase):
 # Properties for reading (as in ORM)
 class SpanGroupRead(SpanGroupBaseDTO):
     id: int = Field(description="ID of the SpanGroup")
+    project_id: int = Field(description="Project the SpanGroup belongs to")
     user_id: int = Field(description="User that created the SpanGroup")
     sdoc_id: int = Field(description="SourceDocument the SpanGroup refers to")
     created: datetime = Field(description="Created timestamp of the SpanGroup")

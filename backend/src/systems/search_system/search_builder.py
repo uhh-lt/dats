@@ -12,8 +12,8 @@ from sqlalchemy.sql.selectable import Subquery
 
 from common.meta_type_enum import MetaType
 from core.doc.source_document_orm import SourceDocumentORM
+from core.metadata.project_metadata_crud import crud_project_meta
 from core.metadata.project_metadata_dto import ProjectMetadataRead
-from core.metadata.project_metadata_orm import ProjectMetadataORM
 from core.metadata.source_document_metadata_orm import SourceDocumentMetadataORM
 from systems.search_system.filtering import (
     Filter,
@@ -176,13 +176,11 @@ class SearchBuilder:
             raise ValueError("Subquery is already built!")
 
         # select the correct value column based on the metadata type
+        # a metadata of another project answers 404
         project_metadata = ProjectMetadataRead.model_validate(
-            self.db.query(ProjectMetadataORM)
-            .filter(
-                ProjectMetadataORM.project_id == self.project_id,
-                ProjectMetadataORM.id == project_metadata_id,
+            crud_project_meta.read(
+                db=self.db, project_id=self.project_id, id=project_metadata_id
             )
-            .first()
         )
         metadata = aliased(SourceDocumentMetadataORM)
         match project_metadata.metatype:
@@ -207,7 +205,7 @@ class SearchBuilder:
                 & (metadata.source_document_id == SourceDocumentORM.id)
                 & (metadata.project_metadata_id == project_metadata_id),
             )
-            .group_by(metadata.id)
+            .group_by(metadata.project_id, metadata.id)
         )
 
     def init_subquery(self, subquery: Query) -> "SearchBuilder":

@@ -7,6 +7,7 @@ import { AnnotationMode } from "../_types/AnnotationMode";
 
 export interface AnnotationsState {
   // project state:
+  projectId: number | undefined; // the project of the ids below (they are persisted, see ProjectActions.changeProject)
   selectedCodeId: number | undefined; // the code selected in the code explorer, used to compute which codes are shown in the annotation menu.
   hoveredCodeId: number | undefined; // the code hovered in the code explorer, used to compute highlightings.
   mostRecentCodeId: number | undefined; // the most recently applied code, it is always at the top of the annotation menu and the default code for new annotations.
@@ -19,6 +20,7 @@ export interface AnnotationsState {
 
 const initialState: AnnotationsState = {
   // project state:
+  projectId: undefined,
   selectedCodeId: undefined,
   hoveredCodeId: undefined,
   mostRecentCodeId: undefined,
@@ -106,8 +108,11 @@ const annotationsSlice = createSlice({
     },
   },
   extraReducers: (builder) => {
-    builder.addCase(ProjectActions.changeProject, (state) => {
+    builder.addCase(ProjectActions.changeProject, (state, action) => {
+      // the persisted ids may belong to another project (another tab saved them), so compare, not only on a switch
+      if (state.projectId === action.payload) return;
       console.log("Project changed! Resetting 'annotations' state.");
+      state.projectId = action.payload;
       state.selectedCodeId = initialState.selectedCodeId;
       state.hoveredCodeId = initialState.hoveredCodeId;
       state.mostRecentCodeId = initialState.mostRecentCodeId;

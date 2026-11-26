@@ -8,19 +8,23 @@ export type SdocMetadataMap = Record<number, SourceDocumentMetadataRead>;
 /**
  * Query factory for the metadata values of source documents.
  *
- *   sdocMetadataQueries.all()                         ["sdocMetadata"]
- *   sdocMetadataQueries.bySdoc(sdocId)                ["sdocMetadata", "sdoc", sdocId]
- *   sdocMetadataQueries.bySdocAndKey(sdocId, key)     ["sdocMetadata", "sdocByKey", sdocId, key]
- *   sdocMetadataQueries.sdocCountWithDate(projId, id) ["sdocMetadata", "sdocCountWithDate", projId, metadataId]
+ *   sdocMetadataQueries.all()                                ["sdocMetadata"]
+ *   sdocMetadataQueries.projectScope(projectId)              ["sdocMetadata", "project", projectId]
+ *   sdocMetadataQueries.bySdoc(projectId, sdocId)            ["sdocMetadata", "project", projectId, "sdoc", sdocId]
+ *   sdocMetadataQueries.bySdocAndKey(projectId, sdocId, key) ["sdocMetadata", "project", projectId, "sdocByKey", sdocId, key]
+ *   sdocMetadataQueries.sdocCountWithDate(projectId, id)     ["sdocMetadata", "project", projectId, "sdocCountWithDate", id]
  */
 export const sdocMetadataQueries = {
   all: () => ["sdocMetadata"] as const,
+  // prefix of all sdoc metadata queries of one project
+  projectScope: (projectId: number | null | undefined) => [...sdocMetadataQueries.all(), "project", projectId] as const,
 
   // metadata values of one sdoc, as a map by project metadata id
-  bySdocScope: () => [...sdocMetadataQueries.all(), "sdoc"] as const,
+  bySdocScope: (projectId: number | null | undefined) =>
+    [...sdocMetadataQueries.projectScope(projectId), "sdoc"] as const,
   bySdoc: (projectId: number | null | undefined, sdocId: number | null | undefined) =>
     queryOptions({
-      queryKey: [...sdocMetadataQueries.bySdocScope(), sdocId, projectId] as const,
+      queryKey: [...sdocMetadataQueries.bySdocScope(projectId), sdocId] as const,
       queryFn:
         !projectId || !sdocId
           ? skipToken
@@ -35,11 +39,13 @@ export const sdocMetadataQueries = {
     }),
 
   // legacy: one metadata value of an sdoc by its key (TODO: remove together with its hook)
-  bySdocAndKeyScope: () => [...sdocMetadataQueries.all(), "sdocByKey"] as const,
-  bySdocAndKeyOfSdocScope: (sdocId: number) => [...sdocMetadataQueries.bySdocAndKeyScope(), sdocId] as const,
+  bySdocAndKeyScope: (projectId: number | null | undefined) =>
+    [...sdocMetadataQueries.projectScope(projectId), "sdocByKey"] as const,
+  bySdocAndKeyOfSdocScope: (projectId: number, sdocId: number) =>
+    [...sdocMetadataQueries.bySdocAndKeyScope(projectId), sdocId] as const,
   bySdocAndKey: (projectId: number | null | undefined, sdocId: number | null | undefined, key: string) =>
     queryOptions({
-      queryKey: [...sdocMetadataQueries.bySdocAndKeyScope(), sdocId, key, projectId] as const,
+      queryKey: [...sdocMetadataQueries.bySdocAndKeyScope(projectId), sdocId, key] as const,
       queryFn:
         !projectId || !sdocId
           ? skipToken
@@ -51,10 +57,11 @@ export const sdocMetadataQueries = {
     }),
 
   // number of sdocs that have a valid date for a date metadata
-  sdocCountWithDateScope: () => [...sdocMetadataQueries.all(), "sdocCountWithDate"] as const,
+  sdocCountWithDateScope: (projectId: number) =>
+    [...sdocMetadataQueries.projectScope(projectId), "sdocCountWithDate"] as const,
   sdocCountWithDate: (projectId: number, dateMetadataId: number) =>
     queryOptions({
-      queryKey: [...sdocMetadataQueries.sdocCountWithDateScope(), projectId, dateMetadataId] as const,
+      queryKey: [...sdocMetadataQueries.sdocCountWithDateScope(projectId), dateMetadataId] as const,
       queryFn: () => SdocMetadataService.countSdocsWithDateMetadata({ projectId, dateMetadataId }),
     }),
 };

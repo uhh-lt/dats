@@ -5,6 +5,7 @@
 import type { Body_tag_count_tags } from "@models/Body_tag_count_tags";
 import type { Body_tag_update_sdoc_tags_bulk } from "@models/Body_tag_update_sdoc_tags_bulk";
 import type { SdocTagLinks } from "@models/SdocTagLinks";
+import type { SdocTagLinksResult } from "@models/SdocTagLinksResult";
 import type { SourceDocumentTagMultiLink } from "@models/SourceDocumentTagMultiLink";
 import type { TagCreate } from "@models/TagCreate";
 import type { TagRead } from "@models/TagRead";
@@ -67,7 +68,7 @@ export class TagService {
   }
   /**
    * Links the Tags with the SourceDocuments and returns the resulting tags per document
-   * @returns SdocTagLinks Successful Response
+   * @returns SdocTagLinksResult Successful Response
    * @throws ApiError
    */
   public static linkTagsBulk({
@@ -76,7 +77,7 @@ export class TagService {
   }: {
     projectId: number;
     requestBody: SourceDocumentTagMultiLink;
-  }): CancelablePromise<SdocTagLinks> {
+  }): CancelablePromise<SdocTagLinksResult> {
     return __request(OpenAPI, {
       method: "PUT",
       url: "/projects/{project_id}/tags/bulk/source-documents",
@@ -92,7 +93,7 @@ export class TagService {
   }
   /**
    * Links and unlinks Tags of the SourceDocuments and returns the resulting tags per document
-   * @returns SdocTagLinks Successful Response
+   * @returns SdocTagLinksResult Successful Response
    * @throws ApiError
    */
   public static updateSdocTagsBulk({
@@ -101,7 +102,7 @@ export class TagService {
   }: {
     projectId: number;
     requestBody: Body_tag_update_sdoc_tags_bulk;
-  }): CancelablePromise<SdocTagLinks> {
+  }): CancelablePromise<SdocTagLinksResult> {
     return __request(OpenAPI, {
       method: "PATCH",
       url: "/projects/{project_id}/tags/bulk/source-documents",
@@ -117,7 +118,7 @@ export class TagService {
   }
   /**
    * Unlinks the Tags from the SourceDocuments and returns the resulting tags per document
-   * @returns SdocTagLinks Successful Response
+   * @returns SdocTagLinksResult Successful Response
    * @throws ApiError
    */
   public static unlinkTagsBulk({
@@ -126,7 +127,7 @@ export class TagService {
   }: {
     projectId: number;
     requestBody: SourceDocumentTagMultiLink;
-  }): CancelablePromise<SdocTagLinks> {
+  }): CancelablePromise<SdocTagLinksResult> {
     return __request(OpenAPI, {
       method: "DELETE",
       url: "/projects/{project_id}/tags/bulk/source-documents",
@@ -255,7 +256,7 @@ export class TagService {
   }
   /**
    * Sets the Tags of each SourceDocument to the given Tags and returns the resulting tags per document
-   * @returns SdocTagLinks Successful Response
+   * @returns SdocTagLinksResult Successful Response
    * @throws ApiError
    */
   public static setSdocTagsBulk({
@@ -264,7 +265,7 @@ export class TagService {
   }: {
     projectId: number;
     requestBody: SdocTagLinks;
-  }): CancelablePromise<SdocTagLinks> {
+  }): CancelablePromise<SdocTagLinksResult> {
     return __request(OpenAPI, {
       method: "PATCH",
       url: "/projects/{project_id}/tags/bulk/source-documents/set",

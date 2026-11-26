@@ -9,13 +9,16 @@ export type TableInfoOptions = UseQueryOptions<ColumnInfo[], Error, ColumnInfo[]
  * domain factories (e.g. `sdocQueries.tableInfo`); they use these keys, so that the cache-sync code can invalidate all of them.
  *
  *   tableInfoQueries.all()                       ["tableInfo"]
- *   tableInfoQueries.byDomain(domain, projId)    ["tableInfo", domain, projId]
- *   tableInfoQueries.timeline(projId, type, id)  ["tableInfo", "timelineAnalysis", projId, type, id]
+ *   tableInfoQueries.projectScope(projId)        ["tableInfo", "project", projId]
+ *   tableInfoQueries.byDomain(domain, projId)    ["tableInfo", "project", projId, domain]
+ *   tableInfoQueries.timeline(projId, type, id)  ["tableInfo", "project", projId, "timelineAnalysis", type, id]
  */
 export const tableInfoQueries = {
   all: () => ["tableInfo"] as const,
+  // prefix of all table infos of one project
+  projectScope: (projectId: number) => [...tableInfoQueries.all(), "project", projectId] as const,
   // typed as a plain QueryKey, so that all tableInfo leaves have the same options type (TableInfoOptions)
-  byDomain: (domain: string, projectId: number): QueryKey => [...tableInfoQueries.all(), domain, projectId],
+  byDomain: (domain: string, projectId: number): QueryKey => [...tableInfoQueries.projectScope(projectId), domain],
   // the column infos of one timeline analysis (they depend on its type)
   timeline: (projectId: number, timelineAnalysisType: string, timelineAnalysisId: number): QueryKey => [
     ...tableInfoQueries.byDomain("timelineAnalysis", projectId),

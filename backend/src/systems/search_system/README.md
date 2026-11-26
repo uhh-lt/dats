@@ -215,12 +215,12 @@ explicitly opts in.
 Grouping is an **aggregate + drill-down** design, not "return all rows pre-grouped."
 A grouped view is built from **two kinds of requests**:
 
-1. **Group query** — `POST /search/{entity}/groups` with a `GroupQueryRequest`
+1. **Group query** — `POST /projects/{project_id}/search/{entity}/groups` with a `GroupQueryRequest`
    (`filter` + `group_by`). Returns a `GroupPage` of `GroupSummary` buckets:
    `(key, label, total_results, target_id, target_type)`. **No rows here** — just the
    group headers and their counts. This is cheap and drives the accordion headers.
 
-2. **Drill-down row query** — `POST /search/{entity}` with a normal `QueryRequest`
+2. **Drill-down row query** — `POST /projects/{project_id}/search/{entity}` with a normal `QueryRequest`
    that _also_ sets `group_by` **and** `group_key` to one bucket's `key`. The row
    query then filters to just that group (`exprs.key == group_key`) and returns a
    `Page[Row]` of the rows inside it. `group_by` without `group_key` has no effect on

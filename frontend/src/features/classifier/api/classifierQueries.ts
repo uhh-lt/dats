@@ -22,18 +22,20 @@ export interface ClassifierDatasetStatisticsParams {
  * Query factory for classifiers. (The classifier background jobs are `classifierQueries.job`.)
  *
  *   classifierQueries.all()                     ["classifier"]
+ *   classifierQueries.projectScope(projectId)   ["classifier", "project", projectId]
  *   classifierQueries.byProject(projectId)      ["classifier", "project", projectId]
- *   classifierQueries.info(projectId)           ["classifier", "info", projectId]
- *   classifierQueries.datasetStatistics(params) ["classifier", "datasetStatistics", ...params]
+ *   classifierQueries.info(projectId)           ["classifier", "project", projectId, "info"]
+ *   classifierQueries.datasetStatistics(params) ["classifier", "project", projectId, "datasetStatistics", ...params]
  */
 export const classifierQueries = {
   all: () => ["classifier"] as const,
+  // prefix of all classifier queries of one project
+  projectScope: (projectId: number | undefined) => [...classifierQueries.all(), "project", projectId] as const,
 
   // all classifiers of a project, as a map by id
-  byProjectScope: () => [...classifierQueries.all(), "project"] as const,
   byProject: (projectId: number) =>
     queryOptions({
-      queryKey: [...classifierQueries.byProjectScope(), projectId] as const,
+      queryKey: classifierQueries.projectScope(projectId),
       queryFn: async () => {
         const classifiers = await ClassifierService.getByProject({ projectId });
         return classifiers.reduce<ClassifierMap>((acc, classifier) => {
@@ -44,17 +46,18 @@ export const classifierQueries = {
       staleTime: 1000 * 60 * 5,
     }),
 
-  infoScope: () => [...classifierQueries.all(), "info"] as const,
+  infoScope: (projectId: number | undefined) => [...classifierQueries.projectScope(projectId), "info"] as const,
   info: (projectId: number | undefined) =>
     queryOptions({
-      queryKey: [...classifierQueries.infoScope(), projectId] as const,
+      queryKey: classifierQueries.infoScope(projectId),
       queryFn: projectId === undefined ? skipToken : () => ClassifierService.getClassifierInfo({ projectId }),
       // Classifier settings come from backend configuration and do not change at
       // runtime, so one response can be reused for the lifetime of the frontend.
       staleTime: Infinity,
     }),
 
-  datasetStatisticsScope: () => [...classifierQueries.all(), "datasetStatistics"] as const,
+  datasetStatisticsScope: (projectId: number) =>
+    [...classifierQueries.projectScope(projectId), "datasetStatistics"] as const,
   datasetStatistics: ({
     projectId,
     model,
@@ -66,8 +69,7 @@ export const classifierQueries = {
   }: ClassifierDatasetStatisticsParams) =>
     queryOptions({
       queryKey: [
-        ...classifierQueries.datasetStatisticsScope(),
-        projectId,
+        ...classifierQueries.datasetStatisticsScope(projectId),
         model,
         classIds,
         userIds,

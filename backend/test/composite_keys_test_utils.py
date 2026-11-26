@@ -663,13 +663,20 @@ class TwinProjects(TypedDict):
     rows: TenantRows
 
 
-def create_twin_projects(
-    db: Session, *, user: UserORM, project: ProjectORM
-) -> TwinProjects:
-    rows = create_tenant_rows(db, project=project, user=user)
+def create_twin(db: Session, *, user: UserORM, project: ProjectORM) -> ProjectORM:
+    """Create "Twin Project" with the features of `project` and a copy of every
+    row of `project` with the same id (`copy_project_rows`)."""
     twin = create_project_with_features(
         db, user, title="Twin Project", features=list(project.enabled_features)
     )
     copy_project_rows(db, source_id=project.id, target_id=twin.id)
     db.commit()
+    return twin
+
+
+def create_twin_projects(
+    db: Session, *, user: UserORM, project: ProjectORM
+) -> TwinProjects:
+    rows = create_tenant_rows(db, project=project, user=user)
+    twin = create_twin(db, user=user, project=project)
     return {"project": project, "twin": twin, "rows": rows}

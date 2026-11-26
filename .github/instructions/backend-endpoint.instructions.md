@@ -85,7 +85,7 @@ Every resource of a project lives under `/projects/{project_id}/...` (#928); `sp
 - **Emit after mutating**: Call `ws.emit_to_project(DATSEvent.<ENTITY>_<CREATED|UPDATED|DELETED>, result, project_id=...)` after the crud/service call. Use `ws.emit_to_user(...)` instead for user-scoped entities (e.g. search views, API keys).
 - **Return the mutated object**: Every mutation (and every sync event) returns the mutated object as its read DTO — the emitted payload _is_ the returned value. Convert ORM objects with `XRead.model_validate(db_obj)`.
 - **Deletes return the pre-delete DTO**: Snapshot `XRead.model_validate(db_obj)` and `project_id` _before_ calling delete, then emit and return the snapshot.
-- **Bulk mutations**: Emit a single `DATSEvent.<ENTITY>_..._BATCH` event with the list of results, guarded by `if results:`. Service results are read DTOs: emit them with `ws.emit_dtos_to_projects(event, results)`, which groups by their `project_id`. Return the results in the order of the request.
+- **Bulk mutations**: Emit a single `DATSEvent.<ENTITY>_..._BATCH` event with the list of results, guarded by `if results:`. Emit them with `ws.emit_to_project(event, results, project_id=project_id)`, the project of the path. Return the results in the order of the request.
 
 ### Function Naming
 
@@ -116,6 +116,6 @@ Every resource of a project lives under `/projects/{project_id}/...` (#928); `sp
 See:
 
 - [backend/src/core/code/code_endpoint.py](backend/src/core/code/code_endpoint.py) — canonical CRUD with sync (create/get/update/delete).
-- [backend/src/core/annotation/span_annotation_endpoint.py](backend/src/core/annotation/span_annotation_endpoint.py) — bulk create/update/delete through a service with `emit_dtos_to_projects`.
+- [backend/src/core/annotation/span_annotation_endpoint.py](backend/src/core/annotation/span_annotation_endpoint.py) — bulk create/update/delete through a service with one `emit_to_project` per batch.
 - [backend/src/modules/concept_over_time_analysis/cota_endpoint.py](backend/src/modules/concept_over_time_analysis/cota_endpoint.py) — canonical section blocks including job operations.
 - [backend/src/modules/word_frequency/word_frequency_endpoint.py](backend/src/modules/word_frequency/word_frequency_endpoint.py) — POST computations without sync.

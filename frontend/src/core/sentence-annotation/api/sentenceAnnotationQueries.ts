@@ -9,13 +9,11 @@ import { infiniteQueryOptions, queryOptions, skipToken } from "@tanstack/react-q
  * (SentenceAnnotatorResult), not a flat list.
  *
  *   sentenceAnnotationQueries.all()                              ["sentenceAnnotation"]
- *   sentenceAnnotationQueries.byId(projectId, sentenceAnnoId)    ["sentenceAnnotation", "detail", sentenceAnnoId, projectId]
- *   sentenceAnnotationQueries.bySdoc(projectId, sdocId, userId)  ["sentenceAnnotation", "sdoc", sdocId, userId, projectId]
- *   sentenceAnnotationQueries.tableInfo(projectId)               ["tableInfo", "sentence", projectId]
- *   sentenceAnnotationQueries.search(projectId, request)           ["sentenceAnnotation", "search", request, projectId]
- *
- * The routes need the project, but the ids already determine it: the project comes last in the keys, so the prefixes
- * by id cover it.
+ *   sentenceAnnotationQueries.projectScope(projectId)            ["sentenceAnnotation", "project", projectId]
+ *   sentenceAnnotationQueries.byId(projectId, sentenceAnnoId)    ["sentenceAnnotation", "project", projectId, "detail", sentenceAnnoId]
+ *   sentenceAnnotationQueries.bySdoc(projectId, sdocId, userId)  ["sentenceAnnotation", "project", projectId, "sdoc", sdocId, userId]
+ *   sentenceAnnotationQueries.tableInfo(projectId)               ["tableInfo", "project", projectId, "sentence"]
+ *   sentenceAnnotationQueries.search(projectId, request)         ["sentenceAnnotation", "project", projectId, "search", request]
  */
 export const sentenceAnnotationQueries = {
   all: () => ["sentenceAnnotation"] as const,
@@ -23,10 +21,15 @@ export const sentenceAnnotationQueries = {
   // the mutations that update a cache optimistically (see rollbackOptimisticUpdate); only these are counted there
   optimisticMutationScope: () => [...sentenceAnnotationQueries.all(), "optimistic"] as const,
 
-  byIdScope: () => [...sentenceAnnotationQueries.all(), "detail"] as const,
+  // prefix of all sentence annotation queries of one project
+  projectScope: (projectId: number | null | undefined) =>
+    [...sentenceAnnotationQueries.all(), "project", projectId] as const,
+
+  byIdScope: (projectId: number | null | undefined) =>
+    [...sentenceAnnotationQueries.projectScope(projectId), "detail"] as const,
   byId: (projectId: number | null | undefined, sentenceAnnoId: number | null | undefined) =>
     queryOptions({
-      queryKey: [...sentenceAnnotationQueries.byIdScope(), sentenceAnnoId, projectId] as const,
+      queryKey: [...sentenceAnnotationQueries.byIdScope(projectId), sentenceAnnoId] as const,
       queryFn:
         !projectId || !sentenceAnnoId
           ? skipToken
@@ -34,14 +37,15 @@ export const sentenceAnnotationQueries = {
       staleTime: 1000 * 60 * 5,
     }),
 
-  bySdocScope: () => [...sentenceAnnotationQueries.all(), "sdoc"] as const,
+  bySdocScope: (projectId: number | null | undefined) =>
+    [...sentenceAnnotationQueries.projectScope(projectId), "sdoc"] as const,
   bySdoc: (
     projectId: number | null | undefined,
     sdocId: number | null | undefined,
     userId: number | null | undefined,
   ) =>
     queryOptions({
-      queryKey: [...sentenceAnnotationQueries.bySdocScope(), sdocId, userId, projectId] as const,
+      queryKey: [...sentenceAnnotationQueries.bySdocScope(projectId), sdocId, userId] as const,
       queryFn:
         !projectId || !sdocId || !userId
           ? skipToken
@@ -55,10 +59,10 @@ export const sentenceAnnotationQueries = {
       staleTime: Infinity,
     }),
 
-  searchScope: () => [...sentenceAnnotationQueries.all(), "search"] as const,
+  searchScope: (projectId: number) => [...sentenceAnnotationQueries.projectScope(projectId), "search"] as const,
   search: (projectId: number, request: QueryRequest_SentAnnoColumns_) =>
     infiniteQueryOptions({
-      queryKey: [...sentenceAnnotationQueries.searchScope(), request, projectId] as const,
+      queryKey: [...sentenceAnnotationQueries.searchScope(projectId), request] as const,
       queryFn: ({ pageParam }) =>
         SearchService.searchSentenceAnnotations({ projectId, requestBody: { ...request, page_number: pageParam } }),
       initialPageParam: 0,

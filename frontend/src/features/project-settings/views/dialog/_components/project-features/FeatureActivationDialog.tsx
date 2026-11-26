@@ -28,7 +28,7 @@ export function FeatureActivationDialog({ projectId, feature, state, onClose }: 
   const isComplete = state?.status === FeatureStatus.PARTLY_AVAILABLE;
   const verb = isComplete ? "Complete" : "Enable";
 
-  const refreshHealthTable = useRefreshHealthTable();
+  const refreshHealthTable = useRefreshHealthTable(projectId);
   const handleSuccess = useCallback(() => {
     refreshHealthTable();
     onClose();

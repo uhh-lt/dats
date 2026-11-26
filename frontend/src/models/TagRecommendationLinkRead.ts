@@ -23,4 +23,8 @@ export type TagRecommendationLinkRead = {
    * Reviewed status of the recommendation
    */
   is_reviewed?: boolean;
+  /**
+   * ID of the project of the recommendation
+   */
+  project_id: number;
 };

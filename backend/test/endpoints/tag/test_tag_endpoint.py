@@ -431,7 +431,7 @@ def test_link_tags_bulk_without_documents_returns_no_links(
     )
 
     assert resp.status_code == 200, resp.text
-    assert resp.json() == {"links": {}}
+    assert resp.json() == {"links": {}, "project_id": test_project.id}
 
 
 # ===========================================================================
@@ -564,7 +564,7 @@ def test_unlink_tags_bulk(client: TestClient, project_with_sdoc_and_multiple_tag
     )
 
     assert resp.status_code == 200, resp.text
-    assert resp.json() == {"links": {str(sdoc.id): []}}
+    assert resp.json() == {"links": {str(sdoc.id): []}, "project_id": project.id}
 
 
 def test_unlink_tags_bulk_of_another_project_removes_nothing(

@@ -28,24 +28,24 @@ export const createSearchViewHooks = <TView extends SearchViewBase>(entityType: 
       // Serialize updates per entity: rapid successive patches (e.g. toggling properties)
       // must reach the server in click order, since each patch is merged onto server state.
       scope: { id: `searchViews-update-${entityType}` },
-      onMutate: async ({ viewId, requestBody }) => {
-        // Optimistically merge the patch into every cached view list containing this view
-        // (the update DTO carries no project_id, so match by view id). This makes the UI
+      onMutate: async ({ projectId, viewId, requestBody }) => {
+        // Optimistically merge the patch into the cached view list of the project. This makes the UI
         // react instantly and ensures the next click reads fresh state.
-        const key = searchViewQueries.byProjectOfEntityScope(entityType);
+        const key = searchViewQueries.byProject<TView>(entityType, projectId).queryKey;
         await queryClient.cancelQueries({ queryKey: key });
-        const previousEntries = queryClient.getQueriesData<TView[]>({ queryKey: key });
-        queryClient.setQueriesData<TView[]>({ queryKey: key }, (views) =>
-          (views ?? []).map((candidate) =>
+        const previousViews = queryClient.getQueryData(key);
+        queryClient.setQueryData(key, (views) =>
+          views?.map((candidate) =>
             candidate.id === viewId ? ({ ...candidate, ...requestBody } as TView) : candidate,
           ),
         );
-        return { previousEntries };
+        return { previousViews };
       },
-      onError: (error, _variables, context) => {
-        for (const [key, views] of context?.previousEntries ?? []) {
-          queryClient.setQueryData(key, views);
-        }
+      onError: (error, { projectId }, context) => {
+        queryClient.setQueryData(
+          searchViewQueries.byProject<TView>(entityType, projectId).queryKey,
+          context?.previousViews,
+        );
         console.error("Failed to update search view:", error);
       },
       meta: {

@@ -1,5 +1,5 @@
 import { TagService } from "@api/services/TagService";
-import { SdocTagLinks } from "@models/SdocTagLinks";
+import { SdocTagLinksResult } from "@models/SdocTagLinksResult";
 import { TagRead } from "@models/TagRead";
 import { useAppSelector } from "@store/storeHooks";
 import { useMutation, useQuery } from "@tanstack/react-query";
@@ -67,7 +67,7 @@ const useBulkSetTags = () =>
     mutationFn: TagService.setSdocTagsBulk,
     meta: {
       datsEvent: "SDOC_TAGS_LINKED",
-      successMessage: (data: SdocTagLinks) => `Updated tags for ${Object.keys(data.links).length} documents`,
+      successMessage: (data: SdocTagLinksResult) => `Updated tags for ${Object.keys(data.links).length} documents`,
     },
   });
 
@@ -77,7 +77,7 @@ const useBulkLinkTags = () =>
     mutationFn: TagService.linkTagsBulk,
     meta: {
       datsEvent: "SDOC_TAGS_LINKED",
-      successMessage: (data: SdocTagLinks) => `Updated tags for ${Object.keys(data.links).length} documents`,
+      successMessage: (data: SdocTagLinksResult) => `Updated tags for ${Object.keys(data.links).length} documents`,
     },
   });
 
@@ -87,7 +87,7 @@ const useBulkUnlinkTags = () =>
     mutationFn: TagService.unlinkTagsBulk,
     meta: {
       datsEvent: "SDOC_TAGS_LINKED",
-      successMessage: (data: SdocTagLinks) => `Updated tags for ${Object.keys(data.links).length} documents`,
+      successMessage: (data: SdocTagLinksResult) => `Updated tags for ${Object.keys(data.links).length} documents`,
     },
   });
 
@@ -97,7 +97,7 @@ const useBulkUpdateTags = () =>
     mutationFn: TagService.updateSdocTagsBulk,
     meta: {
       datsEvent: "SDOC_TAGS_LINKED",
-      successMessage: (data: SdocTagLinks) => `Updated tags for ${Object.keys(data.links).length} documents`,
+      successMessage: (data: SdocTagLinksResult) => `Updated tags for ${Object.keys(data.links).length} documents`,
     },
   });
 

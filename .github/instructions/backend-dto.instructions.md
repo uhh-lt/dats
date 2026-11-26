@@ -28,7 +28,7 @@ class FooBaseDTO(BaseModel):
 
 # Properties for creation
 class FooCreate(FooBaseDTO):
-    project_id: int = Field(description="Project the Foo belongs to")
+    pass
 
 
 # Properties for updating
@@ -65,7 +65,7 @@ class FooRead(FooBaseDTO):
 - **Naming**: `<Entity>BaseDTO`, `<Entity>Create`, `<Entity>Update`, `<Entity>Read`. `<Entity>` is the full PascalCase entity name used by the ORM (`SpanAnnotation`, `SourceDocument`).
 - **BaseDTO**: holds only fields shared by Create and Read. Omit it when the two share nothing (`ClusterCreate(BaseModel)`, `DocumentAspectCreate(BaseModel)`).
 - **Create**: extends `<Entity>BaseDTO` and adds the required foreign keys (`code_id`, `sdoc_id`) but never `project_id`, which comes from the path. Use `pass` when nothing is added.
-- **CreateIntern**: when the server fills in fields the client must not send (`project_id`, `user_id`, `uuid`, serialized `content`), the endpoint takes `<Entity>Create` and the service builds `<Entity>CreateIntern` for the CRUD layer. Same for `<Entity>UpdateIntern`.
+- **CreateIntern**: when the server fills in fields the client must not send (`user_id`, `uuid`, serialized `content`; `ProjectCRUDBase` sets `project_id` itself), the endpoint takes `<Entity>Create` and the service builds `<Entity>CreateIntern` for the CRUD layer. Same for `<Entity>UpdateIntern`.
 - **Update**: `class <Entity>Update(BaseModel, UpdateDTOBase)`, not derived from BaseDTO. Every field is `T | None = Field(..., default=None)` and repeats the description of the matching BaseDTO field. `*UpdateBulk` and `*UpdateIntern` DTOs inherit `UpdateDTOBase` too; no other class does.
 - **Empty updates are rejected**: `UpdateDTOBase` fails validation when none of the optional fields is in `model_fields_set` (an empty PATCH returns 422). An explicit `null` counts as set. Required fields never count. Build an `...UpdateIntern` only once its fields are known (never empty and mutated afterwards).
 - **Non-nullable fields**: list the fields whose column is NOT NULL in `non_nullable_fields: ClassVar[frozenset[str]]`; `UpdateDTOBase` rejects an explicit `null` for them with 422 instead of failing in the service or database (see `CodeUpdate`).

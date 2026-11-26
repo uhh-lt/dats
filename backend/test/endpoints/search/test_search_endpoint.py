@@ -3388,3 +3388,41 @@ def test_search_annotations_by_an_id_of_another_project_matches_nothing(
     assert response.status_code == 200, response.text
     ids = [row["id"] for row in response.json()["items"]]
     assert ids == ([own[result_row].id] if tenant == "own" else [])
+
+
+@pytest.mark.parametrize("tenant", ["own", "foreign"])
+def test_search_sdocs_by_a_metadata_of_another_project_answers_404(
+    client: TestClient, tenants: TwoTenants, tenant: str
+):
+    """Filtering the documents of "Tenant Project" by the value "value" of its
+    metadata "key_<p>" finds "doc_<p>.txt"; the metadata of "Foreign Project"
+    answers 404 (was 500)."""
+    own, foreign = tenants["own"], tenants["foreign"]
+    metadata = (own if tenant == "own" else foreign)["project_metadata"]
+
+    response = client.post(
+        _url("/search/source-documents", own["project"].id),
+        params={"search_query": "", "expert_mode": False, "highlight": False},
+        json={
+            "filter": {
+                "id": "root",
+                "logic_operator": "and",
+                "items": [
+                    {
+                        "id": "f",
+                        "column": metadata.id,
+                        "operator": "STRING_EQUALS",
+                        "value": "value",
+                    }
+                ],
+            },
+            "sorts": [],
+        },
+    )
+
+    if tenant == "foreign":
+        assert response.status_code == 404, response.text
+        return
+    assert response.status_code == 200, response.text
+    hits = PaginatedSDocHits.model_validate(response.json())
+    assert list(hits.sdocs) == [own["sdoc"].id]

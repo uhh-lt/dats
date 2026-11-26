@@ -145,6 +145,72 @@ def test_rag_session_retrieves_nothing_of_a_document_of_another_project(
     assert context.splitlines() == []
 
 
+@pytest.fixture
+def stubbed_clip(monkeypatch: pytest.MonkeyPatch) -> None:
+    """CLIP embeds every text to [1, 0]; the LLM is not replaced."""
+
+    def embed_text(self, clip_input: ClipTextEmbeddingInput) -> ClipEmbeddingOutput:
+        return ClipEmbeddingOutput(embeddings=[[1.0, 0.0] for _ in clip_input.text])
+
+    monkeypatch.setattr(RayRepo, "clip_text_embedding", embed_text)
+
+
+def test_rag_session_of_another_project_answers_404(
+    client: TestClient,
+    chat_session_id: str,
+    sentence_embedding_project: SentenceEmbeddingProject,
+    stubbed_clip: None,
+):
+    """The RAG route checks the session the same way: the session of
+    `test_project` answers 404 in "RAG Only"."""
+    response = client.post(
+        f"/projects/{sentence_embedding_project['project'].id}/rag/session",
+        params={
+            "top_k": 10,
+            "threshold": 0.75,
+            "model": "default",
+            "session_id": chat_session_id,
+        },
+        json={"query": "a greeting", "sdoc_ids": []},
+    )
+
+    assert response.status_code == 404, response.text
+
+
+# ===========================================================================
+# CHAT SESSION (/projects/{project_id}/rag/chat-session) TESTS
+# ===========================================================================
+
+
+def test_chat_session_of_another_project_answers_404(
+    client: TestClient,
+    chat_session_id: str,
+    sentence_embedding_project: SentenceEmbeddingProject,
+):
+    """The session of `test_user` in `test_project` is unknown in "RAG Only",
+    another project of the same user: 404 before any LLM call."""
+    response = client.get(
+        f"/projects/{sentence_embedding_project['project'].id}/rag/chat-session",
+        params={"model": "default", "prompt": "hi", "session_id": chat_session_id},
+    )
+
+    assert response.status_code == 404, response.text
+    assert chat_session_id in response.text
+
+
+def test_chat_session_of_another_user_answers_404(
+    other_member_client: TestClient, chat_session_id: str, test_project
+):
+    """The session of `test_user` is unknown to another member of the same
+    project: 404 before any LLM call."""
+    response = other_member_client.get(
+        f"/projects/{test_project.id}/rag/chat-session",
+        params={"model": "default", "prompt": "hi", "session_id": chat_session_id},
+    )
+
+    assert response.status_code == 404, response.text
+
+
 # ===========================================================================
 # FEATURE DECLARATION (rag_feature.py)
 # ===========================================================================

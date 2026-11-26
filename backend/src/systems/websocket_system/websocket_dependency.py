@@ -1,18 +1,9 @@
-from collections.abc import Sequence
-from typing import Protocol
-
 from fastapi import BackgroundTasks, Depends
 from loguru import logger
 
 from common.dats_event import DATS_EVENT_TO_MODEL, DATSEvent, DATSEventBase
 from core.auth.authz_user import AuthzUser
 from systems.websocket_system.websocket_service import WebsocketService
-
-
-class ProjectScopedDTO(Protocol):
-    """A read DTO that names the project it belongs to."""
-
-    project_id: int
 
 
 class WebsocketEmitter:
@@ -88,24 +79,6 @@ class WebsocketEmitter:
             f"Queued event '{event_type}' for project {project_id} "
             f"(exclude_user_id={exclude_user_id})"
         )
-
-    def emit_dtos_to_projects(
-        self, event_type: DATSEvent, dtos: Sequence[ProjectScopedDTO]
-    ) -> None:
-        """Group read DTOs by their `project_id` and emit one batch event per project.
-
-        Use it for service results, which are read DTOs instead of ORM objects. Each
-        emitted event carries only the DTOs of that project, in their input order.
-
-        Args:
-            event_type: The batch event type.
-            dtos: The mutation results.
-        """
-        groups: dict[int, list[ProjectScopedDTO]] = {}
-        for dto in dtos:
-            groups.setdefault(dto.project_id, []).append(dto)
-        for project_id, group in groups.items():
-            self.emit_to_project(event_type, group, project_id=project_id)
 
     def emit_to_user(self, event_type: DATSEvent, payload, *, user_id: int) -> None:
         """Emit an event to a single user after commit.

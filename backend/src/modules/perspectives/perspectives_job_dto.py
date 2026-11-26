@@ -1,6 +1,6 @@
 from typing import Literal
 
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, ConfigDict, Field
 
 from modules.perspectives.cluster_dto import ClusterCreate
 from modules.perspectives.perspectives_enum import PerspectivesJobType
@@ -8,18 +8,24 @@ from systems.job_system.job_dto import JobInputBase, JobRead
 
 
 class CreateAspectParams(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
     perspectives_job_type: Literal[PerspectivesJobType.CREATE_ASPECT] = Field(
         description="Type of the PerspectivesJob"
     )
 
 
 class AddMissingDocsToAspectParams(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
     perspectives_job_type: Literal[PerspectivesJobType.ADD_MISSING_DOCS_TO_ASPECT] = (
         Field(description="Type of the PerspectivesJob")
     )
 
 
 class CreateClusterWithNameParams(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
     perspectives_job_type: Literal[PerspectivesJobType.CREATE_CLUSTER_WITH_NAME] = (
         Field(description="Type of the PerspectivesJob")
     )
@@ -27,6 +33,8 @@ class CreateClusterWithNameParams(BaseModel):
 
 
 class CreateClusterWithSdocsParams(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
     perspectives_job_type: Literal[PerspectivesJobType.CREATE_CLUSTER_WITH_SDOCS] = (
         Field(description="Type of the PerspectivesJob")
     )
@@ -36,6 +44,8 @@ class CreateClusterWithSdocsParams(BaseModel):
 
 
 class RemoveClusterParams(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
     perspectives_job_type: Literal[PerspectivesJobType.REMOVE_CLUSTER] = Field(
         description="Type of the PerspectivesJob"
     )
@@ -43,6 +53,8 @@ class RemoveClusterParams(BaseModel):
 
 
 class MergeClustersParams(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
     perspectives_job_type: Literal[PerspectivesJobType.MERGE_CLUSTERS] = Field(
         description="Type of the PerspectivesJob"
     )
@@ -53,6 +65,8 @@ class MergeClustersParams(BaseModel):
 
 
 class SplitClusterParams(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
     perspectives_job_type: Literal[PerspectivesJobType.SPLIT_CLUSTER] = Field(
         description="Type of the PerspectivesJob"
     )
@@ -63,6 +77,8 @@ class SplitClusterParams(BaseModel):
 
 
 class ChangeClusterParams(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
     perspectives_job_type: Literal[PerspectivesJobType.CHANGE_CLUSTER] = Field(
         description="Type of the PerspectivesJob"
     )
@@ -75,18 +91,24 @@ class ChangeClusterParams(BaseModel):
 
 
 class RefineModelParams(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
     perspectives_job_type: Literal[PerspectivesJobType.REFINE_MODEL] = Field(
         description="Type of the PerspectivesJob"
     )
 
 
 class ResetModelParams(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
     perspectives_job_type: Literal[PerspectivesJobType.RESET_MODEL] = Field(
         description="Type of the PerspectivesJob"
     )
 
 
 class RecomputeClusterTitleAndDescriptionParams(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
     perspectives_job_type: Literal[
         PerspectivesJobType.RECOMPUTE_CLUSTER_TITLE_AND_DESCRIPTION
     ] = Field(description="Type of the PerspectivesJob")

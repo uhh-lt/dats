@@ -217,6 +217,8 @@ class COTARead(ConceptOverTimeAnalysisBaseDTO):
 
 
 class COTARefinementHyperparameters(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
     cem_training_epochs: int = Field(
         description="Number of epochs to train the Concept Embedding Model",
         default=10,

@@ -10,7 +10,8 @@ const useRetryDocProcessingJobs = () =>
     mutationKey: [...healthQueries.all(), "retryDocProcessingJobs"],
     mutationFn: DocprocessingService.retryFailedSdocs,
     // the steps compute again: the features they belong to are computing (the steps send no events)
-    onSuccess: () => queryClient.invalidateQueries({ queryKey: projectQueries.featuresScope() }),
+    onSuccess: (_data, { projectId }) =>
+      queryClient.invalidateQueries({ queryKey: projectQueries.features(projectId).queryKey }),
     meta: {
       successMessage: (data: string) => data,
     },
@@ -21,7 +22,8 @@ const useRecomputeDocProcessingJobs = () =>
     mutationKey: [...healthQueries.all(), "recomputeDocProcessingJobs"],
     mutationFn: DocprocessingService.recomputeProcessingStep,
     // see useRetryDocProcessingJobs
-    onSuccess: () => queryClient.invalidateQueries({ queryKey: projectQueries.featuresScope() }),
+    onSuccess: (_data, { projectId }) =>
+      queryClient.invalidateQueries({ queryKey: projectQueries.features(projectId).queryKey }),
     meta: {
       successMessage: (
         data: number,
