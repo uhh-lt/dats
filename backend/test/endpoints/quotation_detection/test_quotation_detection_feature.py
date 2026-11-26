@@ -60,9 +60,9 @@ def test_create_project_leaves_quotation_detection_off_unless_requested(
     """A project created without `enabled_features` does not enable quotation
     detection (it runs a hosted model for every German text document); one that
     names it enables it."""
-    default = client.put("/project", json={"title": "Default", "description": ""})
+    default = client.put("/projects", json={"title": "Default", "description": ""})
     requested = client.put(
-        "/project",
+        "/projects",
         json=ProjectCreate(
             title="Requested", description="", enabled_features=[FEATURE]
         ).model_dump(mode="json"),
@@ -83,7 +83,7 @@ def test_enable_creates_the_quotation_codes_disable_keeps_them_and_enable_reuses
     """A project without quotation detection has no quotation code; Enable
     creates the tree as system codes; Disable keeps it; a second Enable reuses
     the same codes and creates no second tree."""
-    path = f"/feature/project/{plain_project.id}/{FEATURE}"
+    path = f"/projects/{plain_project.id}/features/{FEATURE}"
     activation = FeatureActivation(settings=SETTINGS).model_dump(mode="json")
     assert _quotation_codes(db_session, plain_project.id) == {}
 

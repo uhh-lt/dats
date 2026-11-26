@@ -61,7 +61,7 @@ class VirtualUserProject(TypedDict):
 
     Non-obvious derived behavior:
 
-    - Virtual users are no project members, but `/user/{project_id}/user` lists
+    - Virtual users are no project members, but `/projects/{project_id}/members` lists
       them after the members: the system user, `user`, `run1`, `run2`.
     - Virtual users can never log in: their password is no valid hash, and login,
       tokens and API keys reject virtual users.

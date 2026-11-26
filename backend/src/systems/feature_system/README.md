@@ -22,7 +22,7 @@ WORD_FREQUENCY = register_feature(
 | Argument             | Meaning                                                                                                          |
 | -------------------- | ---------------------------------------------------------------------------------------------------------------- |
 | name                 | The text name, stored in `project.enabled_features` and named in the URLs; it never changes without a migration. |
-| `title`, `description` | Shown by the frontend, which reads them from `GET /feature`, with the titles of the artefacts the feature requires besides the core artefacts (what enabling it computes). |
+| `title`, `description` | Shown by the frontend, which reads them from `GET /features`, with the titles of the artefacts the feature requires besides the core artefacts (what enabling it computes). |
 | `area`               | `FeatureArea`; features are listed by area, then by title.                                                     |
 | `requires_artefacts` | The artefacts the feature reads; at least one of them is not a core artefact (`always`).                        |
 | `default_enabled`    | Whether a new project without a feature list enables it.                                                       |
@@ -51,7 +51,7 @@ The `set_up` hook may create anything else the module needs in the project (meta
 
 ## Actions
 
-One endpoint per action: `POST /feature/project/{project_id}/{feature}/{enable|complete|disable}`.
+One endpoint per action: `POST /projects/{project_id}/features/{feature}/{enable|complete|disable}`.
 
 | Action   | What it does                                                        | Allowed when              |
 | -------- | ------------------------------------------------------------------- | ------------------------- |

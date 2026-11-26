@@ -64,9 +64,16 @@ def _counts(score: AgreementScore) -> tuple[int, int, int]:
 
 def _virtual_user_names(client: TestClient, project_id: int) -> set[str]:
     """The names of all virtual users of the project."""
-    response = client.get(f"/user/{project_id}/user")
+    response = client.get(f"/projects/{project_id}/members")
     assert response.status_code == 200, response.text
     return {user["first_name"] for user in response.json() if user["is_virtual"]}
+
+
+def _project_user_names(client: TestClient, project_id: int) -> dict[int, str]:
+    """The names of all users of the project (members and virtual users) by id."""
+    response = client.get(f"/projects/{project_id}/members")
+    assert response.status_code == 200, response.text
+    return {user["id"]: user["first_name"] for user in response.json()}
 
 
 def _wait_for_run(
@@ -289,7 +296,7 @@ def test_create_run_writes_into_a_new_virtual_user_and_fails_with_an_invalid_mod
     assert run.model == INVALID_MODEL
     assert run.sdoc_ids == experiment.sdoc_ids
     assert run.user_id == p["gold_user"].id
-    users_response = client.get(f"/user/{p['project'].id}/user")
+    users_response = client.get(f"/projects/{p['project'].id}/members")
     assert users_response.status_code == 200, users_response.text
     virtual_user = next(
         user for user in users_response.json() if user["id"] == run.virtual_user_id
@@ -562,9 +569,8 @@ def test_update_experiment_renames_the_virtual_users_of_its_runs(
         json={"name": "Stage 2"},
     )
     assert response.status_code == 200, response.text
-    response = client.get(f"/user/by_id/{run_user_id}")
-    assert response.status_code == 200, response.text
-    assert response.json()["first_name"] == "Stage 2-Baseline"
+    names = _project_user_names(client, p["project"].id)
+    assert names[run_user_id] == "Stage 2-Baseline"
 
 
 def test_update_experiment_rejects_a_name_whose_run_user_name_is_taken(
@@ -580,9 +586,8 @@ def test_update_experiment_rejects_a_name_whose_run_user_name_is_taken(
     )
     assert response.status_code == 409, response.text
     assert _get_experiment(client, p["project"].id, experiment.id).name == "ExperimentB"
-    response = client.get(f"/user/by_id/{run_user_id}")
-    assert response.status_code == 200, response.text
-    assert response.json()["first_name"] == "ExperimentB-Baseline"
+    names = _project_user_names(client, p["project"].id)
+    assert names[run_user_id] == "ExperimentB-Baseline"
 
 
 @pytest.mark.parametrize(
@@ -808,7 +813,7 @@ def test_delete_experiment_deletes_its_runs_virtual_users_and_their_annotations(
     assert ExperimentRead.model_validate(response.json()).id == experiment_id
 
     assert client.get(_url(p["project"].id, f"/{experiment_id}")).status_code == 404
-    assert client.get(f"/user/by_id/{run_user_id}").status_code == 404
+    assert run_user_id not in _project_user_names(client, p["project"].id)
     spans_url = f"/projects/{p['project'].id}/span-annotations"
     assert client.get(f"{spans_url}/{run_anna_id}").status_code == 404
     gold_response = client.get(f"{spans_url}/{p['gold_anna'].id}")
@@ -885,7 +890,7 @@ def test_delete_run_deletes_its_virtual_user_and_annotations(
 
     assert result.id == experiment_id
     assert result.runs == []
-    assert client.get(f"/user/by_id/{run_user_id}").status_code == 404
+    assert run_user_id not in _project_user_names(client, p["project"].id)
     spans_url = f"/projects/{p['project'].id}/span-annotations"
     assert client.get(f"{spans_url}/{run_met_id}").status_code == 404
     assert client.get(f"{spans_url}/{p['gold_bob'].id}").status_code == 200

@@ -96,7 +96,7 @@ The keyword statistics (`backend/src/modules/keyword_statistics/`) are a small, 
    )
    ```
 
-Then regenerate the API client (`just update-api`); the frontend reads the features from `GET /feature` and needs a change only for a page or a gate. The rules a module developer must follow are in [`.github/instructions/backend-module.instructions.md`](https://github.com/uhh-lt/dats/blob/main/.github/instructions/backend-module.instructions.md).
+Then regenerate the API client (`just update-api`); the frontend reads the features from `GET /features` and needs a change only for a page or a gate. The rules a module developer must follow are in [`.github/instructions/backend-module.instructions.md`](https://github.com/uhh-lt/dats/blob/main/.github/instructions/backend-module.instructions.md).
 
 ## Features
 
@@ -140,4 +140,4 @@ Then regenerate the API client (`just update-api`); the frontend reads the featu
 | `object_bboxes`       | on demand | `modules/object_detection`           |
 | `quotations`          | on demand | `modules/quotation_detection`        |
 
-The registries are the source of truth: `feature_registry` and `artefact_registry` list what is registered at runtime, and `GET /feature` lists the features with their status per project.
+The registries are the source of truth: `feature_registry` and `artefact_registry` list what is registered at runtime, and `GET /projects/{project_id}/features` lists the features with their status in a project.

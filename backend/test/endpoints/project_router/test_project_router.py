@@ -44,7 +44,12 @@ PATH_IDS: dict[str, Callable[[TenantRows], int]] = {
     "prompt_id": lambda rows: rows["prompt"].id,
     "version_id": lambda rows: rows["prompt_version"].id,
     "view_id": lambda rows: rows["search_view"].id,
+    # a virtual user belongs to its project; it is no member of any project
+    "user_id": lambda rows: rows["virtual_user"].id,
 }
+
+# path parameters that name no row of a project (a feature is named by its name)
+NON_ID_PARAMS = {"feature"}
 
 # an empty document filter
 _NO_FILTER = {"id": "root", "logic_operator": "and", "items": []}
@@ -128,6 +133,9 @@ BODIES: dict[str, Callable[[TenantRows], Any]] = {
     "PATCH /projects/{project_id}/search-views/{view_id}": (
         lambda rows: {"name": "renamed"}
     ),
+    "PATCH /projects/{project_id}/virtual-users/{user_id}": (
+        lambda rows: {"first_name": "renamed"}
+    ),
     "PATCH /projects/{project_id}/source-document-metadata/{sdoc_metadata_id}": (
         lambda rows: {
             "str_value": "changed",
@@ -196,7 +204,11 @@ def _project_routes(client: TestClient) -> list[tuple[str, APIRoute]]:
 
 
 def _path_params(route: APIRoute) -> list[str]:
-    return [name for name in re.findall(r"{(\w+)}", route.path) if name != "project_id"]
+    return [
+        name
+        for name in re.findall(r"{(\w+)}", route.path)
+        if name != "project_id" and name not in NON_ID_PARAMS
+    ]
 
 
 def _path_id(

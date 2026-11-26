@@ -47,18 +47,6 @@ class UserRead(UserBaseDTO):
     model_config = ConfigDict(from_attributes=True)
 
 
-class PublicUserRead(BaseModel):
-    """A user object with information that everybody may see."""
-
-    id: int = Field(description="ID of the User")
-    is_virtual: bool = Field(
-        description="Whether the User is a virtual user (one project, no login)"
-    )
-    first_name: str = Field(description="First name of the User")
-    last_name: str = Field(description="Last name of the User")
-    model_config = ConfigDict(from_attributes=True)
-
-
 class UserLogin(BaseModel):
     username: str = Field(description="E-Mail of the User")
     password: str = Field(description="Hashed password of the User")

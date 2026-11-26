@@ -62,7 +62,7 @@ class DATSAPI:
 
     def me(self):
         r = requests.get(
-            self.BASE_PATH + "user/me",
+            self.BASE_PATH + "users/me",
             headers={"Authorization": f"Bearer {self.access_token}"},
         )
         r.raise_for_status()
@@ -73,7 +73,7 @@ class DATSAPI:
 
     def create_project(self, title: str, description: str):
         r = requests.put(
-            self.BASE_PATH + "project",
+            self.BASE_PATH + "projects",
             data=json.dumps({"title": title, "description": description}),
             headers={
                 "Authorization": f"Bearer {self.access_token}",
@@ -87,7 +87,7 @@ class DATSAPI:
 
     def get_proj_by_id(self, proj_id: int):
         r = requests.get(
-            self.BASE_PATH + f"project/{proj_id}",
+            self.BASE_PATH + f"projects/{proj_id}",
             headers={"Authorization": f"Bearer {self.access_token}"},
         )
         r.raise_for_status()
@@ -103,7 +103,7 @@ class DATSAPI:
 
     def read_all_projects(self):
         r = requests.get(
-            self.BASE_PATH + "project/user/projects",
+            self.BASE_PATH + "users/me/projects",
             headers={"Authorization": f"Bearer {self.access_token}"},
         )
         r.raise_for_status()

@@ -16,7 +16,7 @@ from core.auth.security import generate_api_key, hash_api_key
 from core.user.user_orm import UserORM
 from systems.websocket_system.websocket_dependency import WebsocketEmitter
 
-router = APIRouter(prefix="/api-keys", tags=["api-key"])
+router = APIRouter(prefix="/users/me/api-keys", tags=["api-key"])
 
 
 # --- create operations
@@ -89,17 +89,17 @@ def list_api_keys(
 
 
 @router.delete(
-    "/{key_id}",
+    "/{api_key_id}",
     summary="Revoke/Delete an API key.",
 )
 def delete_api_key(
     *,
     db: DBSession,
-    key_id: int,
+    api_key_id: int,
     current_user: UserORM = Depends(get_current_user),
     ws: WebsocketEmitter = Depends(),
 ) -> ApiKeyRead:
-    db_key = crud_api_key.read_if_exists(db=db, id=key_id)
+    db_key = crud_api_key.read_if_exists(db=db, id=api_key_id)
 
     if not db_key or db_key.user_id != current_user.id:
         raise HTTPException(
@@ -107,7 +107,7 @@ def delete_api_key(
             detail="API Key not found.",
         )
 
-    crud_api_key.delete(db=db, id=key_id)
+    crud_api_key.delete(db=db, id=api_key_id)
     result = ApiKeyRead.model_validate(db_key)
     ws.emit_to_user(DATSEvent.API_KEY_DELETED, result, user_id=current_user.id)
     return result

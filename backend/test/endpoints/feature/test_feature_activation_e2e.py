@@ -24,7 +24,7 @@ SETTINGS = ProcessingSettings(
 
 def _activate(client: TestClient, project_id: int, feature: str) -> None:
     response = client.post(
-        f"/feature/project/{project_id}/{feature}/enable",
+        f"/projects/{project_id}/features/{feature}/enable",
         json=FeatureActivation(settings=SETTINGS).model_dump(mode="json"),
     )
     assert response.status_code == 200, response.text

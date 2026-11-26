@@ -2,6 +2,7 @@ from fastapi import APIRouter, Depends
 
 from common.dats_event import DATSEvent
 from common.dependencies import DBSession, get_current_user
+from common.project_router import project_router
 from core.auth.authz_user import AuthzUser
 from core.project.project_crud import crud_project
 from core.project.project_dto import (
@@ -14,18 +15,18 @@ from core.user.user_crud import crud_user
 from core.user.user_orm import UserORM
 from systems.websocket_system.websocket_dependency import WebsocketEmitter
 
-router = APIRouter(
-    prefix="/project",
-    dependencies=[Depends(get_current_user)],
-    tags=["project", "mcp"],
-)
+# creating projects and the projects of the logged-in user, outside every project
+router = APIRouter(dependencies=[Depends(get_current_user)], tags=["project", "mcp"])
+# the project itself
+project = project_router("", tags=[])
+router.include_router(project)
 
 
 # --- create operations
 
 
 @router.put(
-    "",
+    "/projects",
     response_model=ProjectRead,
     summary="Creates a new Project",
 )
@@ -46,25 +47,18 @@ def create_project(
 # --- read operations
 
 
-@router.get(
-    "/{project_id}",
+@project.get(
+    "",
     response_model=ProjectRead,
     summary="Returns the Project with the given ID if it exists",
 )
-def get_project(
-    *,
-    db: DBSession,
-    project_id: int,
-    authz_user: AuthzUser = Depends(),
-) -> ProjectRead:
-    authz_user.assert_in_project(project_id)
-
+def get_project(*, db: DBSession, project_id: int) -> ProjectRead:
     db_obj = crud_project.read(db=db, id=project_id)
     return ProjectRead.model_validate(db_obj)
 
 
 @router.get(
-    "/user/projects",
+    "/users/me/projects",
     response_model=list[ProjectRead],
     summary="Returns all Projects of the logged-in User",
 )
@@ -80,8 +74,8 @@ def get_user_projects(
 # --- update operations
 
 
-@router.patch(
-    "/{project_id}",
+@project.patch(
+    "",
     response_model=ProjectRead,
     summary="Updates the Project with the given ID.",
 )
@@ -90,12 +84,10 @@ def update_project(
     db: DBSession,
     project_id: int,
     proj: ProjectUpdate,
-    authz_user: AuthzUser = Depends(),
     ws: WebsocketEmitter = Depends(),
 ) -> ProjectRead:
-    authz_user.assert_in_project(project_id)
     # title and description only: the enabled features change only through
-    # FeatureService (the /feature/project/... endpoints)
+    # FeatureService (the /projects/{project_id}/features/... endpoints)
     db_obj = crud_project.update(db=db, id=project_id, update_dto=proj)
     result = ProjectRead.model_validate(db_obj)
     ws.emit_to_project(DATSEvent.PROJECT_UPDATED, result, project_id=project_id)
@@ -105,8 +97,8 @@ def update_project(
 # --- delete operations
 
 
-@router.delete(
-    "/{project_id}",
+@project.delete(
+    "",
     response_model=ProjectRead,
     summary="Removes the Project with the given ID.",
 )
@@ -114,10 +106,8 @@ def delete_project(
     *,
     db: DBSession,
     project_id: int,
-    authz_user: AuthzUser = Depends(),
     ws: WebsocketEmitter = Depends(),
 ) -> ProjectRead:
-    authz_user.assert_in_project(project_id)
     # Capture the member ids and payload BEFORE deletion: the delete cascades the
     # membership rows, so the post-commit background task cannot re-read them.
     member_ids = [user.id for user in crud_project.read(db=db, id=project_id).users]

@@ -104,7 +104,7 @@ class DATSAPI:
 
     def read_project_users(self, project_id: int) -> list[dict[str, Any]]:
         """The members and virtual users of the project."""
-        return self._get(f"user/{project_id}/user")
+        return self._get(f"projects/{project_id}/members")
 
     def read_project_codes(self, project_id: int) -> list[dict[str, Any]]:
         return self._get(f"projects/{project_id}/codes")
