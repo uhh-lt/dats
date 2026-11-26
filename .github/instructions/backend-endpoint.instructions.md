@@ -6,7 +6,7 @@ paths:
 
 # Endpoint Pattern
 
-Endpoint modules define the REST API surface of the backend. Each file owns exactly one `APIRouter` for one resource or module and groups its routes into labeled sections. Consistency matters because the frontend API client is generated from these routes, and the websocket sync protocol (which keeps all connected clients up to date) is driven entirely by conventions in these files.
+Endpoint modules define the REST API surface of the backend. Each file owns one router for one resource or module (two when it also has routes outside projects, see "Project Routes") and groups its routes into labeled sections. Consistency matters because the frontend API client is generated from these routes, and the websocket sync protocol (which keeps all connected clients up to date) is driven entirely by conventions in these files.
 
 ## File Structure
 
@@ -24,8 +24,8 @@ from modules.example.example_dto import ExampleCreate, ExampleRead, ExampleUpdat
 from modules.example.example_feature import FEATURE
 from systems.websocket_system.websocket_dependency import WebsocketEmitter
 
-# 2. Router: one per file, under /projects/{project_id}/<resources>; it checks the
-#    membership (and the feature) for every route.
+# 2. Router: under /projects/{project_id}/<resources>; it checks the membership
+#    (and the feature) for every route.
 router = project_router("/examples", tags=["example"], feature=FEATURE)
 
 # 3. Optional: service singletons used by the routes below.
@@ -45,7 +45,7 @@ router = project_router("/examples", tags=["example"], feature=FEATURE)
 # @router.delete("/{example_id}", ...) -> delete_*
 
 # --- job operations (only if the module starts background jobs)
-# @router.post("/start_job", ...) -> *_job
+# @router.post("/{example_id}/<verb>", ...) -> <verb>_*; read the job at /jobs/<job-type>
 
 # --- other operations (computations, exports, etc.)
 # @router.post("/compute", ...) -> descriptive verb names
