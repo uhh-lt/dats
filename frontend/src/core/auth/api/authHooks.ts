@@ -4,8 +4,8 @@ import { useMutation, UseMutationOptions } from "@tanstack/react-query";
 
 type LoginVariables = Parameters<typeof AuthenticationService.login>[0];
 type LoginData = Awaited<ReturnType<typeof AuthenticationService.login>>;
-type RefreshVariables = Parameters<typeof AuthenticationService.refreshAccessToken>[0];
-type RefreshData = Awaited<ReturnType<typeof AuthenticationService.refreshAccessToken>>;
+type RefreshVariables = Parameters<typeof AuthenticationService.refreshAccess>[0];
+type RefreshData = Awaited<ReturnType<typeof AuthenticationService.refreshAccess>>;
 
 // the root of the mutation keys of the authentication (there are no auth queries: the session lives in the AuthProvider)
 const authKey = ["auth"] as const;
@@ -33,7 +33,7 @@ const useRefreshAccessToken = (
 ) =>
   useMutation({
     mutationKey: [...authKey, "refreshAccessToken"],
-    mutationFn: AuthenticationService.refreshAccessToken,
+    mutationFn: AuthenticationService.refreshAccess,
     retry: false,
     ...options,
   });

@@ -16,8 +16,8 @@ class ProjectMetadataService(metaclass=SingletonMeta):
 
     def update(
         self,
-        db: Session,
         *,
+        db: Session,
         project_id: int,
         id: int,
         update_dto: ProjectMetadataUpdate,
@@ -49,8 +49,8 @@ class ProjectMetadataService(metaclass=SingletonMeta):
 
     def update_multi(
         self,
-        db: Session,
         *,
+        db: Session,
         project_id: int,
         update_dtos: list[ProjectMetadataUpdateBulk],
     ) -> list[ProjectMetadataRead]:
@@ -100,7 +100,7 @@ class ProjectMetadataService(metaclass=SingletonMeta):
             )
         ]
 
-    def delete(self, db: Session, *, project_id: int, id: int) -> ProjectMetadataRead:
+    def delete(self, *, db: Session, project_id: int, id: int) -> ProjectMetadataRead:
         """
         Delete a user-defined project metadata key with the values of all documents.
 

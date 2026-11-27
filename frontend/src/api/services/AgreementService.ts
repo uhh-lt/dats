@@ -43,7 +43,7 @@ export class AgreementService {
    * @returns string Successful Response
    * @throws ApiError
    */
-  public static exportAgreementCounts({
+  public static export({
     projectId,
     requestBody,
   }: {

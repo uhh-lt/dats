@@ -26,7 +26,7 @@ const useUpdateTimelineAnalysis = () =>
 const useRecomputeTimelineAnalysis = () =>
   useMutation({
     mutationKey: [...timelineAnalysisQueries.all(), "recomputeTimelineAnalysis"],
-    mutationFn: TimelineAnalysisService.recomputeById,
+    mutationFn: TimelineAnalysisService.recompute,
     meta: {
       datsEvent: "TIMELINE_ANALYSIS_UPDATED",
       successMessage: (timeline: TimelineAnalysisRead) => `Recomputed Timeline Analysis "${timeline.name}"`,
@@ -36,7 +36,7 @@ const useRecomputeTimelineAnalysis = () =>
 const useDuplicateTimelineAnalysis = () =>
   useMutation({
     mutationKey: [...timelineAnalysisQueries.all(), "duplicateTimelineAnalysis"],
-    mutationFn: TimelineAnalysisService.duplicateById,
+    mutationFn: TimelineAnalysisService.duplicate,
     meta: {
       datsEvent: "TIMELINE_ANALYSIS_CREATED",
       successMessage: (timeline: TimelineAnalysisRead) => `Duplicated Timeline Analysis "${timeline.name}"`,

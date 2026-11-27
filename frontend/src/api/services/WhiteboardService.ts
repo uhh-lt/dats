@@ -65,7 +65,7 @@ export class WhiteboardService {
    * @returns WhiteboardRead Successful Response
    * @throws ApiError
    */
-  public static duplicateById({
+  public static duplicate({
     projectId,
     whiteboardId,
   }: {

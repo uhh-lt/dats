@@ -288,6 +288,7 @@ class DocProcessingService(metaclass=SingletonMeta):
 
     def recompute_processing_step(
         self,
+        *,
         db: Session,
         project_id: int,
         sdoc_ids: list[int],

@@ -16,7 +16,7 @@ export class AnnotationScalingService {
    * @returns AnnoscalingResult Successful Response
    * @throws ApiError
    */
-  public static suggest({
+  public static computeSuggestions({
     projectId,
     requestBody,
   }: {

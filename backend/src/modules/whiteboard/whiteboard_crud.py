@@ -19,6 +19,7 @@ class CRUDWhiteboard(
             .filter(
                 self.model.project_id == project_id,
             )
+            .order_by(self.model.id)
             .all()
         )
         return db_obj

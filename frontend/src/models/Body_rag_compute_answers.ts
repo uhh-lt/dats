@@ -2,7 +2,7 @@
 /* istanbul ignore file */
 /* tslint:disable */
 /* eslint-disable */
-export type Body_llmAssistant_count_existing_assistant_annotations = {
-  sdoc_ids: Array<number>;
-  code_ids: Array<number>;
+export type Body_rag_compute_answers = {
+  query: string;
+  sdoc_ids: Array<number> | null;
 };

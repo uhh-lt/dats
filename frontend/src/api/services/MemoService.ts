@@ -243,7 +243,7 @@ export class MemoService {
    * @returns string Successful Response
    * @throws ApiError
    */
-  public static suggest({
+  public static computeSuggestions({
     projectId,
     attachedObjectType,
     attachedObjectId,
@@ -256,7 +256,7 @@ export class MemoService {
   }): CancelablePromise<string> {
     return __request(OpenAPI, {
       method: "POST",
-      url: "/projects/{project_id}/memos/suggest",
+      url: "/projects/{project_id}/memos/suggestions",
       path: {
         project_id: projectId,
       },

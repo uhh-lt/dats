@@ -5,7 +5,7 @@ import { agreementQueries } from "./agreementQueries";
 const useExportAgreementCounts = () =>
   useMutation({
     mutationKey: [...agreementQueries.all(), "exportAgreementCounts"],
-    mutationFn: AgreementService.exportAgreementCounts,
+    mutationFn: AgreementService.export,
     meta: {
       errorMessage: "Failed to export the agreement counts",
     },

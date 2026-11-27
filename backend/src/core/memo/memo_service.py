@@ -34,8 +34,8 @@ class MemoService(metaclass=SingletonMeta):
 
     def read_attached_object(
         self,
-        db: Session,
         *,
+        db: Session,
         project_id: int,
         attached_object_type: AttachedObjectType,
         attached_object_id: int,
@@ -69,7 +69,7 @@ class MemoService(metaclass=SingletonMeta):
         return crud.read(db=db, project_id=project_id, id=attached_object_id)
 
     def create(
-        self, db: Session, *, project_id: int, user_id: int, create_dto: MemoCreate
+        self, *, db: Session, project_id: int, user_id: int, create_dto: MemoCreate
     ) -> MemoRead:
         """
         Create a memo of the user attached to an object of the project. An object
@@ -108,8 +108,8 @@ class MemoService(metaclass=SingletonMeta):
 
     def read_by_project(
         self,
-        db: Session,
         *,
+        db: Session,
         project_id: int,
         user_id: int,
         attached_object_type: AttachedObjectType | None,
@@ -152,8 +152,8 @@ class MemoService(metaclass=SingletonMeta):
 
     def create_multi_for_attached_objects(
         self,
-        db: Session,
         *,
+        db: Session,
         project_id: int,
         attached_object_type: AttachedObjectType,
         attached_object_ids: list[int],
@@ -187,8 +187,8 @@ class MemoService(metaclass=SingletonMeta):
 
     def copy_to_attached_objects(
         self,
-        db: Session,
         *,
+        db: Session,
         project_id: int,
         attached_object_type: AttachedObjectType,
         source_object_ids: list[int],
@@ -265,8 +265,8 @@ class MemoService(metaclass=SingletonMeta):
 
     def update(
         self,
-        db: Session,
         *,
+        db: Session,
         project_id: int,
         user_id: int,
         id: int,
@@ -293,8 +293,8 @@ class MemoService(metaclass=SingletonMeta):
 
     def update_multi(
         self,
-        db: Session,
         *,
+        db: Session,
         project_id: int,
         user_id: int,
         update_dtos: list[MemoUpdateBulk],
@@ -359,7 +359,7 @@ class MemoService(metaclass=SingletonMeta):
         )
 
     def delete_multi(
-        self, db: Session, *, project_id: int, user_id: int, ids: list[int]
+        self, *, db: Session, project_id: int, user_id: int, ids: list[int]
     ) -> list[MemoRead]:
         """
         Delete memos.

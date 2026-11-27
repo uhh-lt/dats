@@ -7,11 +7,11 @@ router = project_router("/search-annotate", tags=["searchAnnotate"])
 
 
 @router.post(
-    "/auto-annotate",
+    "/candidates",
     response_model=PaginatedSpanAnnotationHits,
     summary="Returns the character & token-level positions needed for creating SpanAnnotations.",
 )
-def auto_annotate(
+def compute_candidates(
     *,
     db: DBSession,
     project_id: int,

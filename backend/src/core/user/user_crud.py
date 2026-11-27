@@ -78,6 +78,49 @@ class CRUDUser(SQLCRUDBase[UserORM, UserCreate, UserUpdate]):
             .all()
         )
 
+    def read_by_project_and_ids(
+        self, db: Session, *, project_id: int, ids: list[int]
+    ) -> list[UserORM]:
+        """
+        Read users of a project (members and virtual users) by id.
+
+        Args:
+            project_id: The project.
+            ids: The ids to read.
+
+        Returns:
+            The users, in the order of `ids`; raises NoSuchElementError for an id
+            that is no user of the project.
+        """
+        users = {
+            user.id: user for user in self.read_by_project(db, project_id=project_id)
+        }
+        for id in ids:
+            if id not in users:
+                raise NoSuchElementError(self.model, project_id=project_id, id=id)
+        return [users[id] for id in ids]
+
+    def read_by_project_and_emails(
+        self, db: Session, *, project_id: int, emails: list[str]
+    ) -> list[UserORM]:
+        """
+        Read users of a project (members and virtual users) by email.
+
+        Args:
+            project_id: The project.
+            emails: The emails to read.
+
+        Returns:
+            The users with one of the emails, ordered like `read_by_project`; an
+            email of no user of the project matches nothing.
+        """
+        wanted = set(emails)
+        return [
+            user
+            for user in self.read_by_project(db, project_id=project_id)
+            if user.email in wanted
+        ]
+
     def read_virtual_user(self, db: Session, *, project_id: int, id: int) -> UserORM:
         """
         Read a virtual user of the project.

@@ -26,11 +26,15 @@ Rules (the rule id is printed with every violation):
     no-events           No DATSEvent / websocket imports and no `emit_*` calls; the
                         endpoint emits after the service call.
     no-exception-class  No exception classes; they live in <module>_exceptions.py.
+    method-signature    Every public method of a *Service class is keyword-only, with
+                        `db` first and `project_id` second where it takes them
+                        (`self, *, db, project_id, ...`).
 
 Documented variations (VARIATIONS below) skip the shape rules that do not apply:
 
     systems   JobService / WebsocketService: SingletonMeta with `__init__` state
-              (skip new-signature; the websocket system may use events).
+              (skip new-signature and method-signature; the websocket system may
+              use events).
     per-job   PerspectivesService(job): a plain class created per job run
               (skip service-class and new-signature).
     strategy  classifier/models/*_class_model_service.py: an ABC hierarchy selected
@@ -130,6 +134,30 @@ def has_singleton_meta(cls: ast.ClassDef) -> bool:
         k.arg == "metaclass" and name_of(k.value) == "SingletonMeta"
         for k in cls.keywords
     )
+
+
+def check_signatures(cls: ast.ClassDef, p: str) -> list[Violation]:
+    """method-signature: `self, *, db, project_id, ...` for every public method."""
+    violations: list[Violation] = []
+    for fn in cls.body:
+        if not isinstance(fn, (ast.FunctionDef, ast.AsyncFunctionDef)):
+            continue
+        if fn.name.startswith("_"):
+            continue
+        args = fn.args
+        positional = [a.arg for a in args.posonlyargs + args.args][1:]
+        keywords = [a.arg for a in args.kwonlyargs]
+        expected = [n for n in ("db", "project_id") if n in keywords]
+        if positional or args.vararg:
+            message = f"Positional parameters {positional} (make them keyword-only)."
+        elif keywords[: len(expected)] != expected:
+            message = f"Parameters {keywords} (start with {expected})."
+        else:
+            continue
+        violations.append(
+            Violation(p, fn.lineno, "method-signature", message, cls.name, fn.name)
+        )
+    return violations
 
 
 def check_new(cls: ast.ClassDef, p: str) -> list[Violation]:
@@ -300,6 +328,13 @@ def check_source(path: Path, source: str) -> list[Violation]:
                     f"Public module-level function '{node.name}' (make it a method of the service).",
                 )
             )
+
+    # method-signature (the classes of the file named *Service, not the models of
+    # a strategy file, whose methods the training framework calls positionally)
+    if kind != SYSTEMS:
+        for node in tree.body:
+            if isinstance(node, ast.ClassDef) and node.name.endswith("Service"):
+                violations.extend(check_signatures(node, p))
 
     if kind in (PER_JOB, STRATEGY):
         return violations

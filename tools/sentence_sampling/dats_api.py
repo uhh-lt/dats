@@ -122,7 +122,7 @@ class DATSAPI:
         """All documents of the project with the document status
         (-100 erroneous, 0 processing, 1 finished)."""
         return self._get(
-            f"projects/{project_id}/doc-processing/status?status={status}"
+            f"projects/{project_id}/doc-processing/statuses?status={status}"
         )
 
     def read_sdoc_data(self, project_id: int, sdoc_id: int) -> dict[str, Any]:

@@ -49,7 +49,7 @@ def create(
     response_model=WhiteboardRead,
     summary="Duplicates the Whiteboard with the given ID if it exists",
 )
-def duplicate_by_id(
+def duplicate(
     *,
     db: DBSession,
     project_id: int,

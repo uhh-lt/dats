@@ -120,7 +120,7 @@ def compute_dataset_statistics(
     project_id: int,
     request: ClassifierDatasetStatisticsRequest,
 ) -> ClassifierDatasetStatistics:
-    tcs = ClassifierService().get_model_service(request.model)
+    tcs = ClassifierService().get_model_service(model_type=request.model)
     return tcs.compute_dataset_statistics(
         db=db,
         project_id=project_id,

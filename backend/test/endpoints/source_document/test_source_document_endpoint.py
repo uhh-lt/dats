@@ -65,6 +65,56 @@ def test_get_source_document_of_another_project_is_not_found(
     assert response.status_code == 404, response.text
 
 
+@pytest.mark.parametrize(
+    "path",
+    [
+        # the document
+        pytest.param("", id="document"),
+        # the document with its data
+        pytest.param("/data", id="data"),
+    ],
+)
+def test_get_unfinished_document_only_if_finished_is_a_conflict(
+    client: TestClient, project_with_unfinished_sdoc, path: str
+):
+    """A document whose processing is unfinished answers 409 with
+    `only_if_finished=true` and 200 without the flag (the default is false)."""
+    sdoc = project_with_unfinished_sdoc["source_document"]
+
+    response = client.get(
+        _url(sdoc.project_id, f"/{sdoc.id}{path}"),
+        params={"only_if_finished": True},
+    )
+    assert response.status_code == 409, response.text
+
+    response = client.get(_url(sdoc.project_id, f"/{sdoc.id}{path}"))
+    assert response.status_code == 200, response.text
+
+
+@pytest.mark.parametrize(
+    "path",
+    [
+        # the document
+        pytest.param("", id="document"),
+        # the document with its data
+        pytest.param("/data", id="data"),
+    ],
+)
+def test_get_finished_document_only_if_finished(
+    client: TestClient, project_with_sdoc, path: str
+):
+    """A finished document (no step is unfinished) answers 200 with
+    `only_if_finished=true`."""
+    sdoc = project_with_sdoc["source_document"]
+
+    response = client.get(
+        _url(sdoc.project_id, f"/{sdoc.id}{path}"),
+        params={"only_if_finished": True},
+    )
+
+    assert response.status_code == 200, response.text
+
+
 def test_get_by_id_with_data(
     client: TestClient,
     project_with_sdoc,
@@ -345,24 +395,24 @@ def test_update_sdoc_cannot_write_step_statuses(client: TestClient, project_with
     assert client.get(_url(sdoc.project_id, f"/{sdoc.id}")).status_code == 200
 
 
-def test_get_same_folder_sdocs(client: TestClient, project_with_sdocs_in_same_folder):
+def test_get_siblings(client: TestClient, project_with_sdocs_in_same_folder):
     sdoc = project_with_sdocs_in_same_folder["source_documents"][0]
     sdoc_2 = project_with_sdocs_in_same_folder["source_documents"][1]
 
-    resp = client.get(_url(sdoc.project_id, f"/{sdoc.id}/same-folder"))
+    resp = client.get(_url(sdoc.project_id, f"/{sdoc.id}/siblings"))
     assert resp.status_code == 200, resp.text
 
     ids = resp.json()
     assert ids == [sdoc.id, sdoc_2.id]
 
 
-def test_get_same_folder_sdocs_of_another_project_is_not_found(
+def test_get_siblings_of_another_project_is_not_found(
     client: TestClient, project_with_sdoc, foreign_project_with_sdoc
 ):
     project = project_with_sdoc["project"]
     foreign = foreign_project_with_sdoc["source_document"]
 
-    response = client.get(_url(project.id, f"/{foreign.id}/same-folder"))
+    response = client.get(_url(project.id, f"/{foreign.id}/siblings"))
 
     assert response.status_code == 404, response.text
 

@@ -64,7 +64,7 @@ export class TimelineAnalysisService {
    * @returns TimelineAnalysisRead Successful Response
    * @throws ApiError
    */
-  public static duplicateById({
+  public static duplicate({
     projectId,
     timelineAnalysisId,
   }: {
@@ -180,7 +180,7 @@ export class TimelineAnalysisService {
    * @returns TimelineAnalysisRead Successful Response
    * @throws ApiError
    */
-  public static recomputeById({
+  public static recompute({
     projectId,
     timelineAnalysisId,
   }: {

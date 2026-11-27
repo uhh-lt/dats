@@ -19,7 +19,11 @@ class CRUDApiKey(SQLCRUDBase[ApiKeyORM, ApiKeyCreate, UpdateNotAllowed]):
 
     def read_by_user(self, db: Session, *, user_id: int) -> list[ApiKeyORM]:
         return list(
-            db.execute(select(self.model).where(self.model.user_id == user_id))
+            db.execute(
+                select(self.model)
+                .where(self.model.user_id == user_id)
+                .order_by(self.model.id)
+            )
             .scalars()
             .all()
         )

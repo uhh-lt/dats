@@ -12,7 +12,7 @@ export class KeywordStatisticsService {
    * @returns KeywordStat Successful Response
    * @throws ApiError
    */
-  public static filterKeywordStats({
+  public static computeKeywordStatistics({
     projectId,
     requestBody,
     sortByGlobal = false,

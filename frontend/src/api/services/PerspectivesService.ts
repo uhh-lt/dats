@@ -6,8 +6,8 @@ import type { AspectCreate } from "@models/AspectCreate";
 import type { AspectRead } from "@models/AspectRead";
 import type { AspectUpdate } from "@models/AspectUpdate";
 import type { Body_perspectives_accept_labels } from "@models/Body_perspectives_accept_labels";
+import type { Body_perspectives_compute_visualization } from "@models/Body_perspectives_compute_visualization";
 import type { Body_perspectives_revert_labels } from "@models/Body_perspectives_revert_labels";
-import type { Body_perspectives_visualize_documents } from "@models/Body_perspectives_visualize_documents";
 import type { ClusterRead } from "@models/ClusterRead";
 import type { ClusterUpdate } from "@models/ClusterUpdate";
 import type { PerspectivesClusterSimilarities } from "@models/PerspectivesClusterSimilarities";
@@ -286,7 +286,7 @@ export class PerspectivesService {
    * @returns PerspectivesVisualization Successful Response
    * @throws ApiError
    */
-  public static visualizeDocuments({
+  public static computeVisualization({
     projectId,
     aspectId,
     searchQuery,
@@ -295,11 +295,11 @@ export class PerspectivesService {
     projectId: number;
     aspectId: number;
     searchQuery: string;
-    requestBody: Body_perspectives_visualize_documents;
+    requestBody: Body_perspectives_compute_visualization;
   }): CancelablePromise<PerspectivesVisualization> {
     return __request(OpenAPI, {
       method: "POST",
-      url: "/projects/{project_id}/perspectives/aspects/{aspect_id}/visualize",
+      url: "/projects/{project_id}/perspectives/aspects/{aspect_id}/visualization",
       path: {
         project_id: projectId,
         aspect_id: aspectId,

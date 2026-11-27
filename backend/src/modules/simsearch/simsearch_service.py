@@ -44,6 +44,7 @@ class SimSearchService(metaclass=SingletonMeta):
 
     def find_similar_sentences(
         self,
+        *,
         db: Session,
         project_id: int,
         query: str | int,
@@ -80,6 +81,7 @@ class SimSearchService(metaclass=SingletonMeta):
 
     def find_similar_images(
         self,
+        *,
         db: Session,
         project_id: int,
         query: str | int,

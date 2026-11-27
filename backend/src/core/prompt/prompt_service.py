@@ -234,8 +234,8 @@ class PromptService(metaclass=SingletonMeta):
         self,
         *,
         db: Session,
-        version_id: int,
         project_id: int,
+        version_id: int,
         task_type: TaskType | None = None,
     ) -> PromptSnapshot:
         """Return what a run needs to render a stored version.

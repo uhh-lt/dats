@@ -165,7 +165,7 @@ BODIES: dict[str, Callable[[TenantRows], Any]] = {
     "PATCH /projects/{project_id}/perspectives/aspects/{aspect_id}/clusters/{cluster_id}": (
         lambda rows: {"name": "renamed"}
     ),
-    "POST /projects/{project_id}/perspectives/aspects/{aspect_id}/visualize": (
+    "POST /projects/{project_id}/perspectives/aspects/{aspect_id}/visualization": (
         lambda rows: {"filter": _NO_FILTER, "sorts": []}
     ),
     "PATCH /projects/{project_id}/perspectives/aspects/{aspect_id}/accept-labels": (
@@ -206,7 +206,7 @@ QUERIES: dict[str, dict[str, str]] = {
     "GET /projects/{project_id}/perspectives/aspects/{aspect_id}/clusters": {
         "sdoc_id": "0"
     },
-    "POST /projects/{project_id}/perspectives/aspects/{aspect_id}/visualize": {
+    "POST /projects/{project_id}/perspectives/aspects/{aspect_id}/visualization": {
         "search_query": ""
     },
     "PATCH /projects/{project_id}/perspectives/aspects/{aspect_id}/accept-labels": {

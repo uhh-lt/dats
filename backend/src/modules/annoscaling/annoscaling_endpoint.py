@@ -26,7 +26,7 @@ ass: AnnoScalingService = AnnoScalingService()
     summary="Suggest annotations",
     description="Suggest annotations",
 )
-def suggest(
+def compute_suggestions(
     *,
     db: DBSession,
     project_id: int,

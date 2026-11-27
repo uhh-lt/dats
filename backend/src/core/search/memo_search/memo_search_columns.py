@@ -362,7 +362,9 @@ class MemoColumns(str, AbstractColumns):
                     for object_type, i in zip(types, ids)
                 ]
             case MemoColumns.USER_ID:
-                users = crud_user.read_by_ids(db, ids=ids)
+                users = crud_user.read_by_project_and_ids(
+                    db, project_id=project_id, ids=ids
+                )
                 return [user.email for user in users]
             case _:
                 raise NotImplementedError(f"Cannot resolve ID for {self}!")
@@ -411,7 +413,9 @@ class MemoColumns(str, AbstractColumns):
                     for object_type, name in zip(types, names)
                 ]
             case MemoColumns.USER_ID:
-                users = crud_user.read_by_emails(db, emails=names)
+                users = crud_user.read_by_project_and_emails(
+                    db, project_id=project_id, emails=names
+                )
                 return [user.id for user in users]
             case _:
                 raise NotImplementedError(f"Cannot resolve name for {self}!")

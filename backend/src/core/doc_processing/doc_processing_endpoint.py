@@ -28,7 +28,7 @@ router = project_router("/doc-processing", tags=["docProcessing"])
     response_model=list[SdocHealthColumn],
     summary="Get all columns (the pipeline steps) for the given document type, with whether each is a core step",
 )
-def get_search_columns_by_doctype(
+def get_columns(
     *,
     project_id: int,
     doctype: DocType,
@@ -37,11 +37,11 @@ def get_search_columns_by_doctype(
 
 
 @router.post(
-    "/search",
+    "/statuses",
     response_model=SdocHealthResult,
     summary="Get all SourceDocumentStatusDetailed for the Project with the given ID by status",
 )
-def search_sdoc_health(
+def search_statuses(
     *,
     db: DBSession,
     project_id: int,
@@ -61,11 +61,11 @@ def search_sdoc_health(
 
 
 @router.get(
-    "/status",
+    "/statuses",
     response_model=list[SourceDocumentStatusSimple],
     summary="Get all SourceDocumentStatusSimple for the Project with the given ID by status",
 )
-def get_simple_sdoc_status_by_project_and_status(
+def get_statuses(
     *,
     db: DBSession,
     project_id: int,
@@ -91,7 +91,7 @@ def get_simple_sdoc_status_by_project_and_status(
     response_model=int,
     summary="Uploads one or multiple files to the Project with the given ID if it exists",
 )
-def upload_files(
+def upload(
     *,
     db: DBSession,
     project_id: int,
@@ -121,7 +121,7 @@ def upload_files(
     response_model=str,
     summary="Retries doc processing jobs for SourceDocuments in the given Project and document type",
 )
-def retry_failed_sdocs(
+def retry(
     *,
     project_id: int,
     doctype: DocType,
@@ -139,7 +139,7 @@ def retry_failed_sdocs(
     response_model=int,
     summary="Recomputes the processing step for all SourceDocuments in the Project",
 )
-def recompute_processing_step(
+def recompute(
     *,
     db: DBSession,
     project_id: int,

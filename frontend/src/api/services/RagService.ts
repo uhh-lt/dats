@@ -2,7 +2,7 @@
 /* istanbul ignore file */
 /* tslint:disable */
 /* eslint-disable */
-import type { Body_rag_rag_session } from "@models/Body_rag_rag_session";
+import type { Body_rag_compute_answers } from "@models/Body_rag_compute_answers";
 import type { ChatSessionResponse } from "@models/ChatSessionResponse";
 import type { CancelablePromise } from "../core/CancelablePromise";
 import { OpenAPI } from "../core/OpenAPI";
@@ -13,7 +13,7 @@ export class RagService {
    * @returns ChatSessionResponse Successful Response
    * @throws ApiError
    */
-  public static ragSession({
+  public static computeAnswers({
     projectId,
     topK,
     threshold,
@@ -25,12 +25,12 @@ export class RagService {
     topK: number;
     threshold: number;
     model: string;
-    requestBody: Body_rag_rag_session;
+    requestBody: Body_rag_compute_answers;
     sessionId?: string | null;
   }): CancelablePromise<ChatSessionResponse> {
     return __request(OpenAPI, {
       method: "POST",
-      url: "/projects/{project_id}/rag/session",
+      url: "/projects/{project_id}/rag/answers",
       path: {
         project_id: projectId,
       },

@@ -70,8 +70,7 @@ export const sdocQueries = {
   sameFolder: (projectId: number | null | undefined, sdocId: number | null | undefined) =>
     queryOptions({
       queryKey: [...sdocQueries.sameFolderScope(projectId), sdocId] as const,
-      queryFn:
-        !projectId || !sdocId ? skipToken : () => SourceDocumentService.getSameFolderSdocs({ projectId, sdocId }),
+      queryFn: !projectId || !sdocId ? skipToken : () => SourceDocumentService.getSiblings({ projectId, sdocId }),
       staleTime: Infinity,
     }),
 

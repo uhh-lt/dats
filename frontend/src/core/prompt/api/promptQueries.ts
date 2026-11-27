@@ -67,7 +67,8 @@ export const promptQueries = {
   preview: (projectId: number | undefined, request: PromptPreviewRequest | undefined) =>
     queryOptions({
       queryKey: [...promptQueries.previewScope(projectId), request] as const,
-      queryFn: !projectId || !request ? skipToken : () => PromptService.preview({ projectId, requestBody: request }),
+      queryFn:
+        !projectId || !request ? skipToken : () => PromptService.computePreview({ projectId, requestBody: request }),
       retry: false,
       placeholderData: keepPreviousData,
     }),

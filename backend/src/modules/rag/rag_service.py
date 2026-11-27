@@ -24,13 +24,14 @@ class RAGService(metaclass=SingletonMeta):
 
     def retrieval_augmented_generation_with_session(
         self,
+        *,
+        db: Session,
         project_id: int,
         user_id: int,
         query: str,
         top_k: int,
         threshold: float,
         model: str,
-        db: Session,
         session_id: str | None = None,
         sdoc_ids: list[int] | None = None,
     ) -> ChatSessionResponse:

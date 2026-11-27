@@ -8,12 +8,12 @@ from .conftest import LLMAssistantProject
 
 
 def _count_url(project_id: int) -> str:
-    return f"/projects/{project_id}/llm-assistant/count-existing-annotations"
+    return f"/projects/{project_id}/llm-assistant/existing-annotation-counts"
 
 
 # ===========================================================================
 # COUNT EXISTING ANNOTATIONS
-# (/projects/{project_id}/llm-assistant/count-existing-annotations) TESTS
+# (/projects/{project_id}/llm-assistant/existing-annotation-counts) TESTS
 # ===========================================================================
 
 

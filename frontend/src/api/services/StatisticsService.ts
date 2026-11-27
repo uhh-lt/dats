@@ -13,7 +13,7 @@ export class StatisticsService {
    * @returns SpanEntityStat Successful Response
    * @throws ApiError
    */
-  public static filterCodeStats({
+  public static computeCodeStatistics({
     projectId,
     codeId,
     requestBody,
@@ -28,7 +28,7 @@ export class StatisticsService {
   }): CancelablePromise<Array<SpanEntityStat>> {
     return __request(OpenAPI, {
       method: "POST",
-      url: "/projects/{project_id}/statistics/codes",
+      url: "/projects/{project_id}/code-statistics",
       path: {
         project_id: projectId,
       },
@@ -53,7 +53,7 @@ export class StatisticsService {
    * @returns TagStat Successful Response
    * @throws ApiError
    */
-  public static filterTagStats({
+  public static computeTagStatistics({
     projectId,
     requestBody,
     sortByGlobal = false,
@@ -66,7 +66,7 @@ export class StatisticsService {
   }): CancelablePromise<Array<TagStat>> {
     return __request(OpenAPI, {
       method: "POST",
-      url: "/projects/{project_id}/statistics/tags",
+      url: "/projects/{project_id}/tag-statistics",
       path: {
         project_id: projectId,
       },

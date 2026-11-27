@@ -21,7 +21,7 @@ export const annoscalingQueries = {
         !codeId || !antiCodeId
           ? skipToken
           : () =>
-              AnnotationScalingService.suggest({
+              AnnotationScalingService.computeSuggestions({
                 projectId,
                 requestBody: { code_id: codeId, reject_code_id: antiCodeId, top_k: 10 },
               }),

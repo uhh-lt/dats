@@ -14,7 +14,7 @@ router = project_router("/document-samples", tags=["documentSample"])
     response_model=list[SampledSdocsResults],
     summary="Sample & Aggregate Source Documents by tags.",
 )
-def sample_sdocs_by_tags(
+def compute_document_samples(
     *,
     db: DBSession,
     project_id: int,

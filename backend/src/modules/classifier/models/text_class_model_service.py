@@ -22,6 +22,7 @@ class TextClassificationModelService(ABC):
     @abstractmethod
     def compute_dataset_statistics(
         self,
+        *,
         db: Session,
         project_id: int,
         tag_ids: list[int],
@@ -36,7 +37,7 @@ class TextClassificationModelService(ABC):
 
     @abstractmethod
     def train(
-        self, db: Session, job: Job, payload: ClassifierJobInput, model_dir: Path
+        self, *, db: Session, job: Job, payload: ClassifierJobInput, model_dir: Path
     ) -> ClassifierJobOutput:
         """Trains the model, with its checkpoints and logs in the scratch folder
         `model_dir`, and moves the best checkpoint into the classifier's folder."""
@@ -44,14 +45,14 @@ class TextClassificationModelService(ABC):
 
     @abstractmethod
     def eval(
-        self, db: Session, job: Job, payload: ClassifierJobInput
+        self, *, db: Session, job: Job, payload: ClassifierJobInput
     ) -> ClassifierJobOutput:
         """Evaluates the model."""
         pass
 
     @abstractmethod
     def infer(
-        self, db: Session, job: Job, payload: ClassifierJobInput
+        self, *, db: Session, job: Job, payload: ClassifierJobInput
     ) -> ClassifierJobOutput:
         """Performs inference with the model."""
         pass

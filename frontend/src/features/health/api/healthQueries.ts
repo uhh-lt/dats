@@ -3,7 +3,7 @@ import { DocType } from "@models/DocType";
 import { infiniteQueryOptions, queryOptions } from "@tanstack/react-query";
 
 /** The arguments of the health search, as the backend takes them (the page is added by the query). */
-type SdocHealthSearchRequest = Omit<Parameters<typeof DocProcessingService.searchSdocHealth>[0], "page">;
+type SdocHealthSearchRequest = Omit<Parameters<typeof DocProcessingService.searchStatuses>[0], "page">;
 
 /**
  * Query factory for the sdoc health view.
@@ -22,7 +22,7 @@ export const healthQueries = {
   columns: (projectId: number, doctype: DocType) =>
     queryOptions({
       queryKey: [...healthQueries.columnsScope(projectId), doctype] as const,
-      queryFn: () => DocProcessingService.getSearchColumnsByDoctype({ projectId, doctype }),
+      queryFn: () => DocProcessingService.getColumns({ projectId, doctype }),
       staleTime: Infinity,
     }),
 
@@ -30,7 +30,7 @@ export const healthQueries = {
   search: (request: SdocHealthSearchRequest) =>
     infiniteQueryOptions({
       queryKey: [...healthQueries.searchScope(request.projectId), request] as const,
-      queryFn: ({ pageParam }) => DocProcessingService.searchSdocHealth({ ...request, page: pageParam }),
+      queryFn: ({ pageParam }) => DocProcessingService.searchStatuses({ ...request, page: pageParam }),
       initialPageParam: 0,
       getNextPageParam: (_lastGroup, groups) => groups.length,
       staleTime: 1000 * 60 * 5,

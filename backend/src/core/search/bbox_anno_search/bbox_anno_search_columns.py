@@ -249,7 +249,9 @@ class BBoxColumns(str, AbstractColumns):
                 codes = crud_code.read_by_ids(db, project_id=project_id, ids=ids)
                 return [code.name for code in codes]
             case BBoxColumns.USER_ID | BBoxColumns.SOURCE_USER_ID:
-                users = crud_user.read_by_ids(db, ids=ids)
+                users = crud_user.read_by_project_and_ids(
+                    db, project_id=project_id, ids=ids
+                )
                 return [user.email for user in users]
             case _:
                 raise NotImplementedError(f"Cannot resolve ID for {self}!")
@@ -273,7 +275,9 @@ class BBoxColumns(str, AbstractColumns):
                 result = crud_code.read_by_names(db, project_id=project_id, names=names)
                 return [code.id for code in result]
             case BBoxColumns.USER_ID | BBoxColumns.SOURCE_USER_ID:
-                result = crud_user.read_by_emails(db, emails=names)
+                result = crud_user.read_by_project_and_emails(
+                    db, project_id=project_id, emails=names
+                )
                 return [user.id for user in result]
             case _:
                 raise NotImplementedError(f"Cannot resolve name for {self}!")

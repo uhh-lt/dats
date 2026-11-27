@@ -30,8 +30,8 @@ class SentenceAnnotationService(metaclass=SingletonMeta):
 
     def create(
         self,
-        db: Session,
         *,
+        db: Session,
         project_id: int,
         user_id: int,
         create_dto: SentenceAnnotationCreate,
@@ -57,8 +57,8 @@ class SentenceAnnotationService(metaclass=SingletonMeta):
 
     def create_multi(
         self,
-        db: Session,
         *,
+        db: Session,
         project_id: int,
         user_id: int,
         create_dtos: list[SentenceAnnotationCreate],
@@ -142,8 +142,8 @@ class SentenceAnnotationService(metaclass=SingletonMeta):
 
     def update_multi(
         self,
-        db: Session,
         *,
+        db: Session,
         project_id: int,
         update_dtos: list[SentenceAnnotationUpdateBulk],
     ) -> list[SentenceAnnotationRead]:
@@ -172,8 +172,8 @@ class SentenceAnnotationService(metaclass=SingletonMeta):
 
     def update(
         self,
-        db: Session,
         *,
+        db: Session,
         project_id: int,
         id: int,
         update_dto: SentenceAnnotationUpdate,
@@ -190,7 +190,7 @@ class SentenceAnnotationService(metaclass=SingletonMeta):
         return self._to_read_dtos(db=db, project_id=project_id, ids=[db_obj.id])[0]
 
     def read_by_sentence(
-        self, db: Session, *, project_id: int, user_id: int, sdoc_id: int
+        self, *, db: Session, project_id: int, user_id: int, sdoc_id: int
     ) -> SentenceAnnotatorResult:
         """
         Read the sentence annotations of a user in a text document, grouped by the
@@ -232,7 +232,7 @@ class SentenceAnnotationService(metaclass=SingletonMeta):
         return SentenceAnnotatorResult(sentence_annotations=result)
 
     def delete_multi(
-        self, db: Session, *, project_id: int, ids: list[int]
+        self, *, db: Session, project_id: int, ids: list[int]
     ) -> list[SentenceAnnotationRead]:
         """
         Delete sentence annotations.

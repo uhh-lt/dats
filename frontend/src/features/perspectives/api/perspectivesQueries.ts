@@ -2,7 +2,7 @@ import { JobService } from "@api/services/JobService";
 import { createJobQueries } from "@core/job";
 import { PerspectivesService } from "@api/services/PerspectivesService";
 import type { AspectRead } from "@models/AspectRead";
-import type { Body_perspectives_visualize_documents } from "@models/Body_perspectives_visualize_documents";
+import type { Body_perspectives_compute_visualization } from "@models/Body_perspectives_compute_visualization";
 import { queryOptions, skipToken } from "@tanstack/react-query";
 
 export type AspectMap = Record<number, AspectRead>;
@@ -67,7 +67,7 @@ export const perspectivesQueries = {
     projectId: number | undefined,
     aspectId: number,
     searchQuery: string,
-    filter: Body_perspectives_visualize_documents["filter"],
+    filter: Body_perspectives_compute_visualization["filter"],
   ) =>
     queryOptions({
       queryKey: [...perspectivesQueries.visualizationOfAspectScope(projectId, aspectId), searchQuery, filter] as const,
@@ -75,7 +75,7 @@ export const perspectivesQueries = {
         projectId === undefined
           ? skipToken
           : () =>
-              PerspectivesService.visualizeDocuments({
+              PerspectivesService.computeVisualization({
                 projectId,
                 aspectId,
                 searchQuery,

@@ -1017,7 +1017,7 @@ def test_update_prompt_of_another_project_is_not_found(
 
 
 # ===========================================================================
-# BUILD EXAMPLES (POST /projects/{project_id}/prompts/build-examples) TESTS
+# EXAMPLES (POST /projects/{project_id}/prompts/examples) TESTS
 # ===========================================================================
 
 
@@ -1029,7 +1029,7 @@ def _post_examples(
     project_key: str = "project",
 ):
     return client.post(
-        _prompts_url(project[project_key].id, "/build-examples"),  # type: ignore[literal-required]
+        _prompts_url(project[project_key].id, "/examples"),  # type: ignore[literal-required]
         json=PromptExamplesCreate(
             kind=kind,
             annotation_ids=annotation_ids,
@@ -1203,7 +1203,7 @@ def test_create_examples_rejects_an_empty_selection(
 ) -> None:
     """At least one annotation is required (HTTP 422)."""
     response = client.post(
-        _prompts_url(prompt_project["project"].id, "/build-examples"),
+        _prompts_url(prompt_project["project"].id, "/examples"),
         json={
             "kind": PromptExampleKind.SPAN.value,
             "annotation_ids": [],

@@ -4,7 +4,7 @@ import { PerspectivesService } from "@api/services/PerspectivesService";
 import { RagService } from "@api/services/RagService";
 import { MyFilter } from "@core/filter";
 import { AspectRead } from "@models/AspectRead";
-import { Body_perspectives_visualize_documents } from "@models/Body_perspectives_visualize_documents";
+import { Body_perspectives_compute_visualization } from "@models/Body_perspectives_compute_visualization";
 import { ClusterRead } from "@models/ClusterRead";
 import { PerspectivesJobRead } from "@models/PerspectivesJobRead";
 import { PerspectivesJobStart } from "@models/PerspectivesJobStart";
@@ -93,7 +93,7 @@ const useUpdateClusterDetails = () =>
 const useRAGChat = () =>
   useMutation({
     mutationKey: [...perspectivesQueries.all(), "rAGChat"],
-    mutationFn: RagService.ragSession,
+    mutationFn: RagService.computeAnswers,
   });
 
 const useGetDocVisualization = (aspectId: number) => {
@@ -122,7 +122,7 @@ const useLabelDocs = (projectId: number, aspectId: number) => {
         searchQuery,
         requestBody: {
           sdoc_ids: sdocIds,
-          filter: filter as Body_perspectives_visualize_documents["filter"],
+          filter: filter as Body_perspectives_compute_visualization["filter"],
           sorts: [],
         },
       }),
@@ -132,7 +132,7 @@ const useLabelDocs = (projectId: number, aspectId: number) => {
           projectId,
           aspectId,
           searchQuery,
-          filter as Body_perspectives_visualize_documents["filter"],
+          filter as Body_perspectives_compute_visualization["filter"],
         ).queryKey,
         data,
       );
@@ -155,7 +155,7 @@ const useUnlabelDocs = (projectId: number, aspectId: number) => {
         searchQuery,
         requestBody: {
           sdoc_ids: sdocIds,
-          filter: filter as Body_perspectives_visualize_documents["filter"],
+          filter: filter as Body_perspectives_compute_visualization["filter"],
           sorts: [],
         },
       }),
@@ -165,7 +165,7 @@ const useUnlabelDocs = (projectId: number, aspectId: number) => {
           projectId,
           aspectId,
           searchQuery,
-          filter as Body_perspectives_visualize_documents["filter"],
+          filter as Body_perspectives_compute_visualization["filter"],
         ).queryKey,
         data,
       );

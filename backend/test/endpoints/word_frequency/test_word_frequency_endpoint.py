@@ -20,7 +20,7 @@ def test_info_is_rejected_when_word_frequency_is_disabled(
 
 
 # ===========================================================================
-# WORD FREQUENCY ANALYSIS (/projects/{project_id}/word-frequencies/analysis, /export) TESTS
+# WORD FREQUENCIES (/projects/{project_id}/word-frequencies, /export) TESTS
 # ===========================================================================
 
 
@@ -28,7 +28,7 @@ def test_analysis_is_rejected_when_word_frequency_is_disabled(
     client: TestClient, featureless_project: FeaturelessProject
 ):
     response = client.post(
-        f"/projects/{featureless_project['project'].id}/word-frequencies/analysis",
+        f"/projects/{featureless_project['project'].id}/word-frequencies",
         params={"page": 0, "page_size": 10},
         json={"filter": EMPTY_FILTER, "sorts": []},
     )

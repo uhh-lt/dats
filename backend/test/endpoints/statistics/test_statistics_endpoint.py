@@ -4,7 +4,7 @@ from composite_keys_test_utils import TwoTenants
 from modules.statistics.statistics_dto import SpanEntityStat, TagStat
 
 # ===========================================================================
-# CODE STATISTICS (/projects/{project_id}/statistics/codes) TESTS
+# CODE STATISTICS (/projects/{project_id}/code-statistics) TESTS
 # ===========================================================================
 
 
@@ -12,7 +12,7 @@ def _code_stats(
     client: TestClient, project_id: int, code_id: int, sdoc_ids: list[int]
 ) -> list[SpanEntityStat]:
     response = client.post(
-        f"/projects/{project_id}/statistics/codes",
+        f"/projects/{project_id}/code-statistics",
         params={"code_id": code_id},
         json=sdoc_ids,
     )
@@ -62,14 +62,14 @@ def test_code_statistics_of_no_documents_are_empty(
 
 
 # ===========================================================================
-# TAG STATISTICS (/projects/{project_id}/statistics/tags) TESTS
+# TAG STATISTICS (/projects/{project_id}/tag-statistics) TESTS
 # ===========================================================================
 
 
 def _tag_stats(
     client: TestClient, project_id: int, sdoc_ids: list[int]
 ) -> list[TagStat]:
-    response = client.post(f"/projects/{project_id}/statistics/tags", json=sdoc_ids)
+    response = client.post(f"/projects/{project_id}/tag-statistics", json=sdoc_ids)
     assert response.status_code == 200, response.text
     return [TagStat.model_validate(stat) for stat in response.json()]
 

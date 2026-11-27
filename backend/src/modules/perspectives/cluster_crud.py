@@ -98,6 +98,7 @@ class CRUDCluster(
                 self.model.aspect_id == aspect_id,
                 DocumentClusterORM.sdoc_id == sdoc_id,
             )
+            .order_by(self.model.id)
             .all()
         )
 

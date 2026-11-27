@@ -21,12 +21,7 @@ class SpanGroupService(metaclass=SingletonMeta):
         return super(SpanGroupService, cls).__new__(cls)
 
     def create(
-        self,
-        db: Session,
-        *,
-        project_id: int,
-        user_id: int,
-        create_dto: SpanGroupCreate,
+        self, *, db: Session, project_id: int, user_id: int, create_dto: SpanGroupCreate
     ) -> SpanGroupRead:
         """
         Create a span group of a user, creating a missing annotation document. The
@@ -56,7 +51,7 @@ class SpanGroupService(metaclass=SingletonMeta):
         return SpanGroupRead.model_validate(db_obj)
 
     def read_annotations(
-        self, db: Session, *, project_id: int, id: int
+        self, *, db: Session, project_id: int, id: int
     ) -> list[SpanAnnotationRead]:
         """
         Read the span annotations of a span group.
@@ -83,7 +78,7 @@ class SpanGroupService(metaclass=SingletonMeta):
         ]
 
     def read_with_annotations_by_user(
-        self, db: Session, *, project_id: int, user_id: int, sdoc_id: int | None
+        self, *, db: Session, project_id: int, user_id: int, sdoc_id: int | None
     ) -> list[SpanGroupWithAnnotationsRead]:
         """
         Read the span groups of a user in the project, optionally only those in a

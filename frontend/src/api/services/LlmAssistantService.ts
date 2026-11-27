@@ -2,7 +2,7 @@
 /* istanbul ignore file */
 /* tslint:disable */
 /* eslint-disable */
-import type { Body_llmAssistant_count_existing_assistant_annotations } from "@models/Body_llmAssistant_count_existing_assistant_annotations";
+import type { Body_llmAssistant_compute_existing_annotation_counts } from "@models/Body_llmAssistant_compute_existing_annotation_counts";
 import type { TaskType } from "@models/TaskType";
 import type { CancelablePromise } from "../core/CancelablePromise";
 import { OpenAPI } from "../core/OpenAPI";
@@ -13,7 +13,7 @@ export class LlmAssistantService {
    * @returns number Successful Response
    * @throws ApiError
    */
-  public static countExistingAssistantAnnotations({
+  public static computeExistingAnnotationCounts({
     projectId,
     taskType,
     virtualUserId,
@@ -22,11 +22,11 @@ export class LlmAssistantService {
     projectId: number;
     taskType: TaskType;
     virtualUserId: number;
-    requestBody: Body_llmAssistant_count_existing_assistant_annotations;
+    requestBody: Body_llmAssistant_compute_existing_annotation_counts;
   }): CancelablePromise<Record<string, number>> {
     return __request(OpenAPI, {
       method: "POST",
-      url: "/projects/{project_id}/llm-assistant/count-existing-annotations",
+      url: "/projects/{project_id}/llm-assistant/existing-annotation-counts",
       path: {
         project_id: projectId,
       },

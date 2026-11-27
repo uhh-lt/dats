@@ -93,6 +93,7 @@ class CRUDSourceDocument(
                 self.model.project_id == project_id,
                 document_status_filter(status),
             )
+            .order_by(self.model.id)
             .all()
         )
 

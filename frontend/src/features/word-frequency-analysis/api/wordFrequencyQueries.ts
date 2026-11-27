@@ -3,7 +3,7 @@ import { tableInfoQueries, toColumnInfos } from "@core/filter";
 import { infiniteQueryOptions, queryOptions } from "@tanstack/react-query";
 
 /** The arguments of the word frequency search, as the backend takes them (the page is added by the query). */
-type WordFrequencySearchRequest = Omit<Parameters<typeof WordFrequencyService.wordFrequencyAnalysis>[0], "page">;
+type WordFrequencySearchRequest = Omit<Parameters<typeof WordFrequencyService.computeWordFrequencies>[0], "page">;
 
 /**
  * Query factory for the word frequency analysis.
@@ -22,7 +22,7 @@ export const wordFrequencyQueries = {
   tableInfo: (projectId: number) =>
     queryOptions({
       queryKey: tableInfoQueries.byDomain("wordFrequency", projectId),
-      queryFn: async () => toColumnInfos(await WordFrequencyService.wordFrequencyAnalysisInfo({ projectId })),
+      queryFn: async () => toColumnInfos(await WordFrequencyService.getInfo({ projectId })),
       staleTime: Infinity,
     }),
 
@@ -30,7 +30,7 @@ export const wordFrequencyQueries = {
   search: (request: WordFrequencySearchRequest) =>
     infiniteQueryOptions({
       queryKey: [...wordFrequencyQueries.searchScope(request.projectId), request] as const,
-      queryFn: ({ pageParam }) => WordFrequencyService.wordFrequencyAnalysis({ ...request, page: pageParam }),
+      queryFn: ({ pageParam }) => WordFrequencyService.computeWordFrequencies({ ...request, page: pageParam }),
       initialPageParam: 0,
       getNextPageParam: (_lastGroup, groups) => groups.length,
       staleTime: 1000 * 60 * 5,

@@ -175,6 +175,7 @@ class CodeFrequencyService(metaclass=SingletonMeta):
             CodeORM.id,
             SpanTextORM.text,
         )
+        query = query.order_by(SourceDocumentORM.id, CodeORM.id, SpanTextORM.text)
         res = query.all()
         span_code_occurrences = [
             CodeOccurrence(
@@ -223,6 +224,12 @@ class CodeFrequencyService(metaclass=SingletonMeta):
             SentenceAnnotationORM.sentence_id_end,
             CodeORM.project_id,
             CodeORM.id,
+        )
+        query = query.order_by(
+            SourceDocumentORM.id,
+            CodeORM.id,
+            SentenceAnnotationORM.sentence_id_start,
+            SentenceAnnotationORM.sentence_id_end,
         )
         res = query.all()
         sent_code_occurrences: list[CodeOccurrence] = []
@@ -274,6 +281,9 @@ class CodeFrequencyService(metaclass=SingletonMeta):
             CodeORM.project_id,
             CodeORM.id,
             BBoxAnnotationORM.annotation_document_id,
+        )
+        query = query.order_by(
+            SourceDocumentORM.id, CodeORM.id, BBoxAnnotationORM.annotation_document_id
         )
         res = query.all()
         bbox_code_occurrences = [

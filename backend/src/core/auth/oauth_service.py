@@ -52,12 +52,12 @@ class OAuthService(metaclass=SingletonMeta):
 
         return super(OAuthService, cls).__new__(cls)
 
-    async def login(self, request: Request, provider: str, redirect_uri: str):
+    async def login(self, *, request: Request, provider: str, redirect_uri: str):
         client = self.__get_provider_client(provider)
         return await client.authorize_redirect(request, redirect_uri)
 
     async def authenticate_oidc(
-        self, db: Session, request: Request, provider: str
+        self, *, db: Session, request: Request, provider: str
     ) -> UserRead:
         try:
             client = self.__get_provider_client(provider)

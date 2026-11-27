@@ -16,8 +16,8 @@ class SearchViewService(metaclass=SingletonMeta):
 
     def create(
         self,
-        db: Session,
         *,
+        db: Session,
         project_id: int,
         user_id: int,
         create_dto: SearchViewCreateUnion,

@@ -34,7 +34,7 @@ class ClassifierService(metaclass=SingletonMeta):
         return super(ClassifierService, cls).__new__(cls)
 
     def get_model_service(
-        self, model_type: ClassifierModel
+        self, *, model_type: ClassifierModel
     ) -> TextClassificationModelService:
         match model_type:
             case ClassifierModel.DOCUMENT:
@@ -51,7 +51,7 @@ class ClassifierService(metaclass=SingletonMeta):
         job.update(status_message=description)
 
     def delete_classifier_by_id(
-        self, db: Session, project_id: int, classifier_id: int
+        self, *, db: Session, project_id: int, classifier_id: int
     ) -> ClassifierRead:
         # make sure that classifier exists
         db_obj = crud_classifier.read(db=db, project_id=project_id, id=classifier_id)
@@ -67,7 +67,7 @@ class ClassifierService(metaclass=SingletonMeta):
         return c_read
 
     def handle_classifier_job(
-        self, db: Session, job: Job, payload: ClassifierJobInput
+        self, *, db: Session, job: Job, payload: ClassifierJobInput
     ) -> ClassifierJobOutput:
         import torch
 
@@ -79,7 +79,7 @@ class ClassifierService(metaclass=SingletonMeta):
         )
 
         # get the correct classifier service
-        tcs = self.get_model_service(payload.model_type)
+        tcs = self.get_model_service(model_type=payload.model_type)
 
         # execute the correct function
         try:
@@ -88,11 +88,13 @@ class ClassifierService(metaclass=SingletonMeta):
                     # checkpoints and logs go to a scratch folder, the best
                     # checkpoint moves to the folder of the new classifier
                     with crud_temporary_file.folder() as model_dir:
-                        result = tcs.train(db, job, payload, model_dir)
+                        result = tcs.train(
+                            db=db, job=job, payload=payload, model_dir=model_dir
+                        )
                 case ClassifierTask.EVALUATION:
-                    result = tcs.eval(db, job, payload)
+                    result = tcs.eval(db=db, job=job, payload=payload)
                 case ClassifierTask.INFERENCE:
-                    result = tcs.infer(db, job, payload)
+                    result = tcs.infer(db=db, job=job, payload=payload)
                 case _:
                     raise UnsupportedClassifierJobError(  # type: ignore
                         payload.task_type, payload.model_type

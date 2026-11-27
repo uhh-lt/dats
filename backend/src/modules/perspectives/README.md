@@ -105,7 +105,7 @@ The API surface, under `/projects/{project_id}`. Key interactions:
 
 - **Jobs**: POST `/projects/{project_id}/jobs/perspectives` with the body `{"aspect_id": ..., "parameters": {...}}` starts the pipeline (async).
 - **CRUD**: Standard Create/Read/Update/Delete for Aspects at `/projects/{project_id}/perspectives/aspects`, and PATCH `/projects/{project_id}/perspectives/aspects/{aspect_id}/clusters/{cluster_id}` for a cluster of an aspect.
-- **Visualization**: POST `/projects/{project_id}/perspectives/aspects/{aspect_id}/visualize` returns data for the frontend Scatterplot (docs, coords, cluster colors).
+- **Visualization**: POST `/projects/{project_id}/perspectives/aspects/{aspect_id}/visualization` returns data for the frontend Scatterplot (docs, coords, cluster colors).
 - **Labeling**: PATCH `/projects/{project_id}/perspectives/aspects/{aspect_id}/accept-labels` / `/revert-labels` for user feedback.
 
 ## API & Frontend Interaction
@@ -113,7 +113,7 @@ The API surface, under `/projects/{project_id}`. Key interactions:
 1.  **Creation**: Frontend calls PUT `/projects/{project_id}/perspectives/aspects`. This immediately triggers a background Job.
 2.  **Monitoring**: Frontend polls `/projects/{project_id}/jobs/perspectives/{job_id}` to show a progress bar.
 3.  **Visualization**:
-    - Call `/projects/{project_id}/perspectives/aspects/{aspect_id}/visualize` to get all points (x, y) and their cluster assignments.
+    - Call `/projects/{project_id}/perspectives/aspects/{aspect_id}/visualization` to get all points (x, y) and their cluster assignments.
     - Call `/projects/{project_id}/perspectives/aspects/{aspect_id}/cluster-similarities` to get a similarity matrix for the cluster map.
 4.  **Interaction**:
     - When a user clicks a point, frontend fetches details via `/projects/{project_id}/perspectives/aspects/{aspect_id}/source-documents/{sdoc_id}`.

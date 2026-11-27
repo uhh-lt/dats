@@ -290,6 +290,7 @@ PARAMETERS: dict[str, Callable[[TenantRows], Any]] = {
     "ml_job_id": lambda rows: rows["tag_recommendation"].ml_job_id,
     "steps": lambda rows: [rows["step_status"].step],
     "order_by": lambda rows: [(rows["step_status"].step, SortDirection.ASC)],
+    "emails": lambda rows: [rows["virtual_user"].email],
 }
 
 # the parameters whose value is a column of the CRUD's own rows in the project: the
@@ -429,7 +430,7 @@ def _service_reads(lone: LoneProject) -> dict[str, Read]:
         ),
         "word_frequency by tag": lambda db, project_id: (
             WordFrequencyService().word_frequency(
-                db,
+                db=db,
                 project_id=project_id,
                 filter=Filter[WordFrequencyColumns].model_validate(
                     _ids_filter("WF_TAG_ID_LIST_RECURSIVE", tag_id)

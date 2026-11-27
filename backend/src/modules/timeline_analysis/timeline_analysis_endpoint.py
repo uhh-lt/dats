@@ -51,7 +51,7 @@ def create(
     response_model=TimelineAnalysisRead,
     summary="Duplicates the TimelineAnalysis with the given ID if it exists",
 )
-def duplicate_by_id(
+def duplicate(
     *,
     db: DBSession,
     project_id: int,
@@ -135,7 +135,7 @@ def update_by_id(
     response_model=TimelineAnalysisRead,
     summary="Recomputes the TimelineAnalysis with the given ID if it exists",
 )
-def recompute_by_id(
+def recompute(
     *,
     db: DBSession,
     project_id: int,

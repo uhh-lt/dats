@@ -11,7 +11,7 @@ class AuthService(metaclass=SingletonMeta):
     def __new__(cls, *args, **kwargs):
         return super(AuthService, cls).__new__(cls)
 
-    def authenticate(self, db: Session, *, user_login: UserLogin) -> UserRead | None:
+    def authenticate(self, *, db: Session, user_login: UserLogin) -> UserRead | None:
         try:
             user = crud_user.read_by_email(db=db, email=user_login.username)
         except NoSuchElementError:

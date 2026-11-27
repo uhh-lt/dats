@@ -217,7 +217,7 @@ export class ExperimentService {
    * @returns ExperimentRead Successful Response
    * @throws ApiError
    */
-  public static refreshAllRunScores({
+  public static refreshScores({
     projectId,
     experimentId,
   }: {

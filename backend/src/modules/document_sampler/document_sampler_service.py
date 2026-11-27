@@ -84,6 +84,7 @@ class DocumentSamplerService(metaclass=SingletonMeta):
                 TagORM.id.in_(all_tag_ids),
             )
             .group_by(SourceDocumentORM.id)
+            .order_by(SourceDocumentORM.id)
             # this having clause ensures that the document has one tag from each group
             .having(
                 and_(

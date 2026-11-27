@@ -394,7 +394,7 @@ def test_upload_of_html_without_page_markers_chunks_it_by_characters(
 
 
 # ===========================================================================
-# SEARCH SDOC HEALTH (/projects/{project_id}/doc-processing/search) TESTS
+# SEARCH STATUSES (/projects/{project_id}/doc-processing/statuses) TESTS
 # ===========================================================================
 
 
@@ -427,7 +427,7 @@ def test_upload_of_html_without_page_markers_chunks_it_by_characters(
         ),
     ],
 )
-def test_search_sdoc_health_sorts_by_the_status_of_a_step_or_a_column(
+def test_search_statuses_sorts_by_the_status_of_a_step_or_a_column(
     client: TestClient,
     feature_project: FeatureProject,
     sorts: list[tuple[str, SortDirection]],
@@ -438,7 +438,7 @@ def test_search_sdoc_health_sorts_by_the_status_of_a_step_or_a_column(
     (documents without the step last) or a column, then by name; the total
     counts all text documents."""
     response = client.post(
-        f"/projects/{feature_project['project'].id}/doc-processing/search",
+        f"/projects/{feature_project['project'].id}/doc-processing/statuses",
         params={"doctype": DocType.text.value, "page": 0, "page_size": page_size},
         json=[
             SdocHealthSort(column=column, direction=direction).model_dump()
@@ -452,14 +452,14 @@ def test_search_sdoc_health_sorts_by_the_status_of_a_step_or_a_column(
     assert result.total_results == 2
 
 
-def test_search_sdoc_health_ignores_the_row_of_an_unregistered_step(
+def test_search_statuses_ignores_the_row_of_an_unregistered_step(
     client: TestClient, removed_step_project: RemovedStepProject
 ):
     """The status row of "removed_step" belongs to no registered step: the
     health view shows the registered steps of the document only and answers as
     usual."""
     response = client.post(
-        f"/projects/{removed_step_project['project'].id}/doc-processing/search",
+        f"/projects/{removed_step_project['project'].id}/doc-processing/statuses",
         params={"doctype": DocType.text.value, "page": 0, "page_size": 10},
         json=[],
     )

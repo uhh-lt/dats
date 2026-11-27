@@ -396,11 +396,11 @@ def _build_document_visualization(
 
 
 @router.post(
-    "/aspects/{aspect_id}/visualize",
+    "/aspects/{aspect_id}/visualization",
     response_model=PerspectivesVisualization,
     summary="Returns data for visualizing the documents of the given aspect.",
 )
-def visualize_documents(
+def compute_visualization(
     *,
     db: DBSession,
     project_id: int,

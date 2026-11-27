@@ -129,12 +129,12 @@ def test_span_annotation_unit_count_is_the_number_of_annotated_words(
     assert [(result.date, result.count) for result in concept.results] == [("2020", 4)]
 
 
-def test_date_metadata_of_another_project_matches_nothing(
+def test_date_metadata_of_another_project_is_not_found(
     client: TestClient, timeline_project: TimelineProject, other_project: ProjectORM
 ) -> None:
-    """The date metadata of the settings is matched within the analysis' project:
-    with the "published" field of the test project, an analysis of another
-    project has no dates, not the date range of the test project."""
+    """The date metadata of the settings is read within the analysis' project, as a
+    JSON field has no foreign key: the "published" field of the test project
+    answers 404 for an analysis of another project, which keeps its settings."""
     timeline_analysis = _create(client, other_project.id, "Foreign dates")
 
     response = client.patch(
@@ -142,6 +142,6 @@ def test_date_metadata_of_another_project_matches_nothing(
         json=_all_spans_update(timeline_project["published_field"].id),
     )
 
-    assert response.status_code == 200, response.text
-    [concept] = TimelineAnalysisRead.model_validate(response.json()).concepts
-    assert concept.results == []
+    assert response.status_code == 404, response.text
+    response = client.get(_url(other_project.id, f"/{timeline_analysis.id}"))
+    assert TimelineAnalysisRead.model_validate(response.json()) == timeline_analysis
