@@ -1,10 +1,12 @@
 import secrets
 from uuid import uuid4
 
-from sqlalchemy import select
+from sqlalchemy import Select, select, union
 from sqlalchemy.orm import Session, joinedload
 
+from core.annotation.annotation_document_orm import AnnotationDocumentORM
 from core.auth.security import generate_password_hash
+from core.memo.memo_orm import MemoORM
 from core.project.project_orm import ProjectUserLinkTable
 from core.user.user_dto import UserCreate, UserUpdate
 from core.user.user_orm import UserORM
@@ -82,7 +84,9 @@ class CRUDUser(SQLCRUDBase[UserORM, UserCreate, UserUpdate]):
         self, db: Session, *, project_id: int, ids: list[int]
     ) -> list[UserORM]:
         """
-        Read users of a project (members and virtual users) by id.
+        Read users with rows in a project by id: its members, its virtual users and
+        the users with an annotation document or a memo there (a removed member
+        keeps them).
 
         Args:
             project_id: The project.
@@ -90,11 +94,21 @@ class CRUDUser(SQLCRUDBase[UserORM, UserCreate, UserUpdate]):
 
         Returns:
             The users, in the order of `ids`; raises NoSuchElementError for an id
-            that is no user of the project.
+            of a user without rows in the project.
         """
-        users = {
-            user.id: user for user in self.read_by_project(db, project_id=project_id)
-        }
+        users: dict[int, UserORM] = {}
+        unique_ids = list(dict.fromkeys(ids))
+        for i in range(0, len(unique_ids), BATCH_SIZE):
+            batch_ids = unique_ids[i : i + BATCH_SIZE]
+            for user in (
+                db.query(self.model)
+                .filter(
+                    self.model.id.in_(batch_ids),
+                    self.model.id.in_(self._project_user_ids(project_id)),
+                )
+                .all()
+            ):
+                users[user.id] = user
         for id in ids:
             if id not in users:
                 raise NoSuchElementError(self.model, project_id=project_id, id=id)
@@ -104,22 +118,28 @@ class CRUDUser(SQLCRUDBase[UserORM, UserCreate, UserUpdate]):
         self, db: Session, *, project_id: int, emails: list[str]
     ) -> list[UserORM]:
         """
-        Read users of a project (members and virtual users) by email.
+        Read users with rows in a project by email, the same users as
+        `read_by_project_and_ids`.
 
         Args:
             project_id: The project.
             emails: The emails to read.
 
         Returns:
-            The users with one of the emails, ordered like `read_by_project`; an
-            email of no user of the project matches nothing.
+            The users with one of the emails, ordered by id; an email of a user
+            without rows in the project matches nothing.
         """
-        wanted = set(emails)
-        return [
-            user
-            for user in self.read_by_project(db, project_id=project_id)
-            if user.email in wanted
-        ]
+        if not emails:
+            return []
+        return (
+            db.query(self.model)
+            .filter(
+                self.model.email.in_(emails),
+                self.model.id.in_(self._project_user_ids(project_id)),
+            )
+            .order_by(self.model.id)
+            .all()
+        )
 
     def read_virtual_user(self, db: Session, *, project_id: int, id: int) -> UserORM:
         """
@@ -190,6 +210,22 @@ class CRUDUser(SQLCRUDBase[UserORM, UserCreate, UserUpdate]):
                 else update_dto
                 for update_dto in update_dtos
             ],
+        )
+
+    def _project_user_ids(self, project_id: int) -> Select:
+        """The ids of the users with rows in the project: its members, its virtual
+        users and the users with an annotation document or a memo there."""
+        return select(
+            union(
+                select(ProjectUserLinkTable.user_id).where(
+                    ProjectUserLinkTable.project_id == project_id
+                ),
+                select(self.model.id).where(self.model.project_id == project_id),
+                select(AnnotationDocumentORM.user_id).where(
+                    AnnotationDocumentORM.project_id == project_id
+                ),
+                select(MemoORM.user_id).where(MemoORM.project_id == project_id),
+            ).subquery()
         )
 
 

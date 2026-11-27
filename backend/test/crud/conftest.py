@@ -19,6 +19,7 @@ from composite_keys_test_utils import (
     create_twin_projects,
     create_two_tenants,
 )
+from core.annotation.annotation_document_crud import crud_adoc
 from core.annotation.span_annotation_dto import SpanAnnotationCreate
 from core.annotation.span_annotation_service import SpanAnnotationService
 from core.annotation.span_group_crud import crud_span_group
@@ -36,10 +37,14 @@ from core.memo.memo_dto import MemoCreateIntern
 from core.memo.memo_enum import AttachedObjectType
 from core.metadata.project_metadata_orm import ProjectMetadataORM
 from core.metadata.source_document_metadata_orm import SourceDocumentMetadataORM
+from core.project.project_crud import crud_project
 from core.project.project_orm import ProjectORM
 from core.tag.tag_crud import crud_tag
 from core.tag.tag_dto import TagCreate
 from core.tag.tag_orm import TagORM
+from core.user.user_crud import crud_user
+from core.user.user_dto import UserCreate
+from core.user.user_orm import UserORM
 from dats_test_utils import create_text_document
 from feature_test_utils import create_project_with_features
 from modules.timeline_analysis.timeline_analysis_enum import TimelineAnalysisType
@@ -408,6 +413,53 @@ def step_status_project(db_session, test_project, test_user) -> StepStatusProjec
 def tenants(db_session: Session, test_user, test_project) -> TwoTenants:
     """The rows of every project-owned table in two projects (see TwoTenants)."""
     return create_two_tenants(db_session, user=test_user, project=test_project)
+
+
+class TenantsWithFormerMember(TypedDict):
+    tenants: TwoTenants
+    former_member: UserORM
+    outsider: UserORM
+
+
+@pytest.fixture(scope="function")
+def tenants_with_former_member(
+    db_session: Session, tenants: TwoTenants
+) -> TenantsWithFormerMember:
+    """
+    The two projects of `tenants`, plus two users:
+
+    - `former_member` ("former@dats.org"): was a member of the own project, has
+      an annotation document of "doc_<p>.txt" there and was removed from the
+      project, which keeps the annotation document.
+    - `outsider` ("outsider@dats.org"): has no rows in either project.
+    """
+    own = tenants["own"]
+    former_member, outsider = (
+        crud_user.create(
+            db=db_session,
+            create_dto=UserCreate(
+                email=email, first_name=name, last_name="User", password="unused"
+            ),
+        )
+        for email, name in [
+            ("former@dats.org", "Former"),
+            ("outsider@dats.org", "Outsider"),
+        ]
+    )
+    crud_project.associate_user(
+        db=db_session, project_id=own["project"].id, user_id=former_member.id
+    )
+    crud_adoc.exists_or_create(
+        db=db_session,
+        project_id=own["project"].id,
+        user_id=former_member.id,
+        sdoc_id=own["sdoc"].id,
+    )
+    crud_project.dissociate_user(
+        db=db_session, project_id=own["project"].id, user_id=former_member.id
+    )
+    db_session.commit()
+    return {"tenants": tenants, "former_member": former_member, "outsider": outsider}
 
 
 @pytest.fixture(scope="function")

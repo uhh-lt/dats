@@ -16,8 +16,9 @@ from systems.search_system.abstract_column import AbstractColumns
 # USER ID FILTERS: IDS TO EMAILS AND BACK (`*_columns.py`) TESTS
 # ===========================================================================
 # The export of a filter turns its user ids into emails (`resolve_ids`) and the
-# import turns them back (`resolve_names`); both resolve the members and the
-# virtual users of the filter's project only.
+# import turns them back (`resolve_names`); both resolve the users with rows in
+# the filter's project only: its members, its virtual users and the users with
+# an annotation document or a memo there.
 
 USER_COLUMNS = [
     # the annotators of a document
@@ -84,3 +85,31 @@ def test_user_emails_resolve_to_the_ids_of_the_project_users(
     )
 
     assert ids == [test_user.id, own_virtual_user.id]
+
+
+@pytest.mark.parametrize("column", USER_COLUMNS)
+def test_a_removed_member_with_annotations_still_resolves(
+    db_session: Session,
+    tenants_with_former_member,
+    column: AbstractColumns,
+) -> None:
+    """A removed member keeps the annotations of the project, so a saved filter
+    on it still exports and imports; a user without rows in the project still
+    does not resolve."""
+    project_id = tenants_with_former_member["tenants"]["own"]["project"].id
+    former_member = tenants_with_former_member["former_member"]
+    outsider = tenants_with_former_member["outsider"]
+
+    emails = column.resolve_ids(
+        db_session, project_id=project_id, ids=[former_member.id]
+    )
+    ids = column.resolve_names(
+        db_session,
+        project_id=project_id,
+        names=[former_member.email, outsider.email],
+    )
+
+    assert emails == [former_member.email]
+    assert ids == [former_member.id]
+    with pytest.raises(NoSuchElementError):
+        column.resolve_ids(db_session, project_id=project_id, ids=[outsider.id])
