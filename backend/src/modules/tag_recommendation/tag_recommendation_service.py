@@ -52,9 +52,10 @@ class TagRecommendationService(metaclass=SingletonMeta):
 
     def classify_untagged_documents(
         self,
+        *,
         db: Session,
-        ml_job_id: str,
         project_id: int,
+        ml_job_id: str,
         tag_ids: list[int] = [],
         method: TagRecommendationMethod = TagRecommendationMethod.KNN,
         multi_class: bool = False,

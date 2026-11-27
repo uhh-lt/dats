@@ -103,13 +103,13 @@ class ExampleService(metaclass=SingletonMeta):
 
 `backend/lint/check_services.py` knows these variations and skips the shape rules for them (the content rules still apply):
 
-- **Systems singletons** (`JobService`, `WebsocketService`): hold per-process mutable state, so they set it in `__init__` and have explicit lifecycle methods (`initialize()`, `startup()`). Only use this for infrastructure in `systems/`.
+- **Systems singletons** (`JobService`, `WebsocketService`): hold per-process mutable state, so they set it in `__init__` and have explicit lifecycle methods (`initialize()`, `startup()`), and keep their positional signatures. Only use this for infrastructure in `systems/`.
 - **Per-job service** (`PerspectivesService(job)`): a plain class created by the job handler for one job run when state (the `Job`, a device) is bound to a single execution.
-- **Strategy hierarchy** (`classifier/models/*_class_model_service.py`): an `ABC` base (`TextClassificationModelService`) with `@abstractmethod` `train`/`eval`/`infer`; a singleton facade (`ClassifierService.get_model_service`) selects the implementation.
+- **Strategy hierarchy** (`classifier/models/*_class_model_service.py`): an `ABC` base (`TextClassificationModelService`) with `@abstractmethod` `train`/`eval`/`infer`; a singleton facade (`ClassifierService.get_model_service`) selects the implementation, and the Lightning models in these files keep the positional signatures their framework calls.
 
 ## Lint
 
-`just lint backend` runs [check_services.py](backend/lint/check_services.py) (`--help` lists the rules: service class, `__new__` signature, no module functions, no HTTP, no bare `Exception`, no commits, no events, no exception classes) and [check_exceptions.py](backend/lint/check_exceptions.py) (exception classes only in `*_exceptions.py`).
+`just lint backend` runs [check_services.py](backend/lint/check_services.py) (`--help` lists the rules: service class, `__new__` signature, no module functions, no HTTP, no bare `Exception`, no commits, no events, no exception classes, the method signature) and [check_exceptions.py](backend/lint/check_exceptions.py) (exception classes only in `*_exceptions.py`).
 
 ## Examples
 

@@ -430,7 +430,7 @@ def _service_reads(lone: LoneProject) -> dict[str, Read]:
         ),
         "word_frequency by tag": lambda db, project_id: (
             WordFrequencyService().word_frequency(
-                db,
+                db=db,
                 project_id=project_id,
                 filter=Filter[WordFrequencyColumns].model_validate(
                     _ids_filter("WF_TAG_ID_LIST_RECURSIVE", tag_id)

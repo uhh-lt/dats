@@ -27,9 +27,7 @@ class WordFrequencyService(metaclass=SingletonMeta):
         return super(WordFrequencyService, cls).__new__(cls)
 
     def word_frequency_info(
-        self,
-        db: Session,
-        project_id: int,
+        self, *, db: Session, project_id: int
     ) -> list[ColumnInfo[WordFrequencyColumns]]:
         project_metadata = [
             ProjectMetadataRead.model_validate(pm)
@@ -48,6 +46,7 @@ class WordFrequencyService(metaclass=SingletonMeta):
 
     def word_frequency(
         self,
+        *,
         db: Session,
         project_id: int,
         filter: Filter[WordFrequencyColumns],
@@ -155,10 +154,7 @@ class WordFrequencyService(metaclass=SingletonMeta):
         )
 
     def word_frequency_export(
-        self,
-        db: Session,
-        project_id: int,
-        filter: Filter[WordFrequencyColumns],
+        self, *, db: Session, project_id: int, filter: Filter[WordFrequencyColumns]
     ) -> str:
         wf_result = self.word_frequency(
             db=db, project_id=project_id, filter=filter, sorts=[]

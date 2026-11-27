@@ -139,7 +139,7 @@ class PerspectivesService:
         }
         self.method_for_job_type: dict[
             PerspectivesJobType,
-            Callable[[Session, int, int, PerspectivesJobParams], None],
+            Callable[..., None],
         ] = {
             PerspectivesJobType.CREATE_ASPECT: self.create_aspect,
             PerspectivesJobType.ADD_MISSING_DOCS_TO_ASPECT: self.add_missing_docs_to_aspect,
@@ -154,7 +154,7 @@ class PerspectivesService:
             PerspectivesJobType.RECOMPUTE_CLUSTER_TITLE_AND_DESCRIPTION: self.recompute_cluster_title_and_description,
         }
 
-    def handle_perspectives_job(self, db: Session, payload: PerspectivesJobInput):
+    def handle_perspectives_job(self, *, db: Session, payload: PerspectivesJobInput):
         # Set initial status
         self.job.update(
             current_step=0,
@@ -164,7 +164,10 @@ class PerspectivesService:
 
         # Execute the correct function
         self.method_for_job_type[payload.perspectives_job_type](
-            db, payload.project_id, payload.aspect_id, payload.parameters
+            db=db,
+            project_id=payload.project_id,
+            aspect_id=payload.aspect_id,
+            params=payload.parameters,
         )
 
     def _log_status_msg(self, status_msg: str):
@@ -1083,6 +1086,7 @@ class PerspectivesService:
 
     def create_aspect(
         self,
+        *,
         db: Session,
         project_id: int,
         aspect_id: int,
@@ -1136,6 +1140,7 @@ class PerspectivesService:
 
     def add_missing_docs_to_aspect(
         self,
+        *,
         db: Session,
         project_id: int,
         aspect_id: int,
@@ -1150,6 +1155,7 @@ class PerspectivesService:
 
     def create_cluster_with_name(
         self,
+        *,
         db: Session,
         project_id: int,
         aspect_id: int,
@@ -1276,6 +1282,7 @@ class PerspectivesService:
 
     def create_cluster_with_sdocs(
         self,
+        *,
         db: Session,
         project_id: int,
         aspect_id: int,
@@ -1352,6 +1359,7 @@ class PerspectivesService:
 
     def remove_cluster(
         self,
+        *,
         db: Session,
         project_id: int,
         aspect_id: int,
@@ -1487,6 +1495,7 @@ class PerspectivesService:
 
     def merge_clusters(
         self,
+        *,
         db: Session,
         project_id: int,
         aspect_id: int,
@@ -1547,6 +1556,7 @@ class PerspectivesService:
 
     def split_cluster(
         self,
+        *,
         db: Session,
         project_id: int,
         aspect_id: int,
@@ -1614,6 +1624,7 @@ class PerspectivesService:
 
     def change_cluster(
         self,
+        *,
         db: Session,
         project_id: int,
         aspect_id: int,
@@ -1739,6 +1750,7 @@ class PerspectivesService:
 
     def refine_cluster_model(
         self,
+        *,
         db: Session,
         project_id: int,
         aspect_id: int,
@@ -1811,6 +1823,7 @@ class PerspectivesService:
 
     def reset_cluster_model(
         self,
+        *,
         db: Session,
         project_id: int,
         aspect_id: int,
@@ -1825,6 +1838,7 @@ class PerspectivesService:
 
     def recompute_cluster_title_and_description(
         self,
+        *,
         db: Session,
         project_id: int,
         aspect_id: int,

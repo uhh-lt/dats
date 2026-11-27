@@ -82,7 +82,7 @@ class ExportService(metaclass=SingletonMeta):
         return super(ExportService, cls).__new__(cls)
 
     def handle_export_job(
-        self, db: Session, export_id: str, payload: ExportJobInput
+        self, *, db: Session, export_id: str, payload: ExportJobInput
     ) -> ExportJobOutput:
         """Writes the export into the project's export `export_id` (the id of
         the export job)."""

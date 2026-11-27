@@ -17,8 +17,8 @@ class SourceDocumentMetadataService(metaclass=SingletonMeta):
 
     def update(
         self,
-        db: Session,
         *,
+        db: Session,
         project_id: int,
         id: int,
         update_dto: SourceDocumentMetadataUpdate,
@@ -36,8 +36,8 @@ class SourceDocumentMetadataService(metaclass=SingletonMeta):
 
     def update_multi(
         self,
-        db: Session,
         *,
+        db: Session,
         project_id: int,
         update_dtos: list[SourceDocumentMetadataUpdateBulk],
     ) -> list[SourceDocumentMetadataRead]:
@@ -80,7 +80,7 @@ class SourceDocumentMetadataService(metaclass=SingletonMeta):
         ]
 
     def delete(
-        self, db: Session, *, project_id: int, id: int
+        self, *, db: Session, project_id: int, id: int
     ) -> SourceDocumentMetadataRead:
         """
         Delete a user-editable source document metadata value.

@@ -202,7 +202,9 @@ def auth_content(
 @router.get("/oidc/login")
 async def oidc_login(request: Request, provider: str, redirect_uri: str) -> Response:
     try:
-        return await oauth_service.login(request, provider, redirect_uri)
+        return await oauth_service.login(
+            request=request, provider=provider, redirect_uri=redirect_uri
+        )
     except Exception as e:
         raise HTTPException(status_code=400, detail=str(e))
 

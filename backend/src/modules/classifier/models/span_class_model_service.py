@@ -588,6 +588,7 @@ class SpanClassificationModelService(TextClassificationModelService):
 
     def compute_dataset_statistics(
         self,
+        *,
         db: Session,
         project_id: int,
         tag_ids: list[int],
@@ -693,7 +694,7 @@ class SpanClassificationModelService(TextClassificationModelService):
         )
 
     def train(
-        self, db: Session, job: Job, payload: ClassifierJobInput, model_dir: Path
+        self, *, db: Session, job: Job, payload: ClassifierJobInput, model_dir: Path
     ) -> ClassifierJobOutput:
         assert payload.model_type == ClassifierModel.SPAN, "Expected SPAN model type!"
         parameters = payload.task_parameters
@@ -996,7 +997,7 @@ class SpanClassificationModelService(TextClassificationModelService):
         )
 
     def eval(
-        self, db: Session, job: Job, payload: ClassifierJobInput
+        self, *, db: Session, job: Job, payload: ClassifierJobInput
     ) -> ClassifierJobOutput:
         assert payload.model_type == ClassifierModel.SPAN, "Expected SPAN model type!"
         parameters = payload.task_parameters
@@ -1150,7 +1151,7 @@ class SpanClassificationModelService(TextClassificationModelService):
         )
 
     def infer(
-        self, db: Session, job: Job, payload: ClassifierJobInput
+        self, *, db: Session, job: Job, payload: ClassifierJobInput
     ) -> ClassifierJobOutput:
         assert payload.model_type == ClassifierModel.SPAN, "Expected SPAN model type!"
         parameters = payload.task_parameters

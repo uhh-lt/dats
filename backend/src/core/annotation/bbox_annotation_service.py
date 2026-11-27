@@ -27,8 +27,8 @@ class BBoxAnnotationService(metaclass=SingletonMeta):
 
     def create(
         self,
-        db: Session,
         *,
+        db: Session,
         project_id: int,
         user_id: int,
         create_dto: BBoxAnnotationCreate,
@@ -54,8 +54,8 @@ class BBoxAnnotationService(metaclass=SingletonMeta):
 
     def create_multi(
         self,
-        db: Session,
         *,
+        db: Session,
         project_id: int,
         user_id: int,
         create_dtos: list[BBoxAnnotationCreate],
@@ -141,8 +141,8 @@ class BBoxAnnotationService(metaclass=SingletonMeta):
 
     def update_multi(
         self,
-        db: Session,
         *,
+        db: Session,
         project_id: int,
         update_dtos: list[BBoxAnnotationUpdateBulk],
     ) -> list[BBoxAnnotationRead]:
@@ -170,7 +170,7 @@ class BBoxAnnotationService(metaclass=SingletonMeta):
         )
 
     def update(
-        self, db: Session, *, project_id: int, id: int, update_dto: BBoxAnnotationUpdate
+        self, *, db: Session, project_id: int, id: int, update_dto: BBoxAnnotationUpdate
     ) -> BBoxAnnotationRead:
         """
         Update an annotation of the project.
@@ -184,7 +184,7 @@ class BBoxAnnotationService(metaclass=SingletonMeta):
         return self._to_read_dtos(db=db, project_id=project_id, ids=[db_obj.id])[0]
 
     def delete_multi(
-        self, db: Session, *, project_id: int, ids: list[int]
+        self, *, db: Session, project_id: int, ids: list[int]
     ) -> list[BBoxAnnotationRead]:
         """
         Delete bbox annotations.

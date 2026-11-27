@@ -237,6 +237,20 @@ def test_check_services_accepts_valid_service_and_variations(
             "self.ws.emit_to_project(db_obj)",
             id="events-emit",
         ),
+        # db as a positional parameter
+        pytest.param(
+            "method-signature",
+            "def reset(self, *, db: Session, example_id: int)",
+            "def reset(self, db: Session, *, example_id: int)",
+            id="method-signature-positional",
+        ),
+        # db not the first keyword
+        pytest.param(
+            "method-signature",
+            "def reset(self, *, db: Session, example_id: int)",
+            "def reset(self, *, example_id: int, db: Session)",
+            id="method-signature-order",
+        ),
         # exception class in the service file
         pytest.param(
             "no-exception-class",

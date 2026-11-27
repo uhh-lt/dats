@@ -73,7 +73,7 @@ class ImportService(metaclass=SingletonMeta):
         with zipfile.ZipFile(path_to_zip_file, "r") as zip_ref:
             zip_ref.extractall(unzip_target)
 
-    def handle_import_job(self, db: Session, payload: ImportJobInput) -> None:
+    def handle_import_job(self, *, db: Session, payload: ImportJobInput) -> None:
         # Check project exists
         crud_project.exists(
             db=db,

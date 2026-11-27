@@ -18,6 +18,7 @@ class LLMAssistantService(metaclass=SingletonMeta):
 
     def count_existing_assistant_annotations(
         self,
+        *,
         db: Session,
         project_id: int,
         task_type: TaskType,
