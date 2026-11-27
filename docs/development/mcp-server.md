@@ -25,7 +25,7 @@ Add `"mcp"` to the endpoint's `tags` list in its router:
 ```python
 router = project_router(
     "/codes",
-    tags=["code", "mcp"],  # ← "mcp" tag exposes this router's endpoints as MCP tools
+    tags=["codes", "mcp"],  # ← "mcp" tag exposes this router's endpoints as MCP tools
 )
 ```
 
