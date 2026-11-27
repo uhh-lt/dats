@@ -20,6 +20,7 @@ from pydantic import BaseModel, EmailStr
 
 from bootstrap import register_jobs
 from common.dats_event import DATS_EVENT_TO_MODEL, DATSEvent
+from modules.eximport.export_job_dto import ExportJobInput
 from modules.llm_assistant.llm_assistant_job_dto import LLMAssistantJobInput
 from systems.search_system.abstract_column import AbstractColumns
 from systems.search_system.filtering import FilterExpression
@@ -33,9 +34,11 @@ register_jobs()
 MAX_DEPTH = 6
 
 # Optional fields the samples leave empty, because a validator allows only one
-# of several optional fields.
+# of several optional fields or ties a field to another.
 EMPTY_FIELDS: dict[type[BaseModel], set[str]] = {
     LLMAssistantJobInput: {"prompt_version_id"},
+    # the sampled type ALL_DATA takes no parameters
+    ExportJobInput: {"specific_export_job_parameters"},
 }
 
 
