@@ -10,6 +10,14 @@ class ImportJobPreparationError(Exception):
         super().__init__(f"Cannot prepare and create the Import Job! {cause}")
 
 
+@exception_handler(status.HTTP_400_BAD_REQUEST)
+class ImportFileInvalidError(Exception):
+    """Raised when the uploaded file does not fit the import job type."""
+
+    def __init__(self, reason: str) -> None:
+        super().__init__(f"The file cannot be imported: {reason}")
+
+
 @exception_handler(status.HTTP_500_INTERNAL_SERVER_ERROR)
 class UnsupportedImportJobTypeError(Exception):
     def __init__(self, import_job_type: ImportJobType) -> None:

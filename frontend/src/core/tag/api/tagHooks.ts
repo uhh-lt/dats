@@ -1,5 +1,5 @@
 import { TagsService } from "@api/services/TagsService";
-import { SdocTagLinksResult } from "@models/SdocTagLinksResult";
+import { SourceDocumentTagLinksResult } from "@models/SourceDocumentTagLinksResult";
 import { TagRead } from "@models/TagRead";
 import { useAppSelector } from "@store/storeHooks";
 import { useMutation, useQuery } from "@tanstack/react-query";
@@ -64,40 +64,44 @@ const useDeleteTag = () =>
 const useBulkSetTags = () =>
   useMutation({
     mutationKey: [...tagQueries.all(), "bulkSetTags"],
-    mutationFn: TagsService.replaceSdocTagsBulk,
+    mutationFn: TagsService.replaceSourceDocumentsBulk,
     meta: {
       datsEvent: "SDOC_TAGS_LINKED",
-      successMessage: (data: SdocTagLinksResult) => `Updated tags for ${Object.keys(data.links).length} documents`,
+      successMessage: (data: SourceDocumentTagLinksResult) =>
+        `Updated tags for ${Object.keys(data.links).length} documents`,
     },
   });
 
 const useBulkLinkTags = () =>
   useMutation({
     mutationKey: [...tagQueries.all(), "bulkLinkTags"],
-    mutationFn: TagsService.linkTagsBulk,
+    mutationFn: TagsService.addSourceDocumentsBulk,
     meta: {
       datsEvent: "SDOC_TAGS_LINKED",
-      successMessage: (data: SdocTagLinksResult) => `Updated tags for ${Object.keys(data.links).length} documents`,
+      successMessage: (data: SourceDocumentTagLinksResult) =>
+        `Updated tags for ${Object.keys(data.links).length} documents`,
     },
   });
 
 const useBulkUnlinkTags = () =>
   useMutation({
     mutationKey: [...tagQueries.all(), "bulkUnlinkTags"],
-    mutationFn: TagsService.unlinkTagsBulk,
+    mutationFn: TagsService.removeSourceDocumentsBulk,
     meta: {
       datsEvent: "SDOC_TAGS_LINKED",
-      successMessage: (data: SdocTagLinksResult) => `Updated tags for ${Object.keys(data.links).length} documents`,
+      successMessage: (data: SourceDocumentTagLinksResult) =>
+        `Updated tags for ${Object.keys(data.links).length} documents`,
     },
   });
 
 const useBulkUpdateTags = () =>
   useMutation({
     mutationKey: [...tagQueries.all(), "bulkUpdateTags"],
-    mutationFn: TagsService.updateSdocTagsBulk,
+    mutationFn: TagsService.updateSourceDocumentsBulk,
     meta: {
       datsEvent: "SDOC_TAGS_LINKED",
-      successMessage: (data: SdocTagLinksResult) => `Updated tags for ${Object.keys(data.links).length} documents`,
+      successMessage: (data: SourceDocumentTagLinksResult) =>
+        `Updated tags for ${Object.keys(data.links).length} documents`,
     },
   });
 

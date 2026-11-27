@@ -5,7 +5,7 @@
 import type { OutputFormat } from "@models/OutputFormat";
 import type { PromptContent } from "@models/PromptContent";
 import type { PromptCreate } from "@models/PromptCreate";
-import type { PromptExamplesCreate } from "@models/PromptExamplesCreate";
+import type { PromptExamplesRequest } from "@models/PromptExamplesRequest";
 import type { PromptLanguage } from "@models/PromptLanguage";
 import type { PromptPreview } from "@models/PromptPreview";
 import type { PromptPreviewRequest } from "@models/PromptPreviewRequest";
@@ -90,64 +90,6 @@ export class PromptsService {
       path: {
         project_id: projectId,
         prompt_id: promptId,
-      },
-      body: requestBody,
-      mediaType: "application/json",
-      errors: {
-        400: `The request breaks a rule of the domain`,
-        403: `The user is no member of the project, or the feature is disabled`,
-        404: `A path id, or an id the route reads, is not in the project`,
-        409: `A body id violates a foreign key, or a value a unique constraint`,
-        422: `Validation Error`,
-      },
-    });
-  }
-  /**
-   * Turns span or sentence annotations into few-shot examples for a prompt
-   * @returns any Successful Response
-   * @throws ApiError
-   */
-  public static computeExamples({
-    projectId,
-    requestBody,
-  }: {
-    projectId: number;
-    requestBody: PromptExamplesCreate;
-  }): CancelablePromise<Array<SpanPromptExample | SentencePromptExample>> {
-    return __request(OpenAPI, {
-      method: "POST",
-      url: "/projects/{project_id}/prompts/examples",
-      path: {
-        project_id: projectId,
-      },
-      body: requestBody,
-      mediaType: "application/json",
-      errors: {
-        400: `The request breaks a rule of the domain`,
-        403: `The user is no member of the project, or the feature is disabled`,
-        404: `A path id, or an id the route reads, is not in the project`,
-        409: `A body id violates a foreign key, or a value a unique constraint`,
-        422: `Validation Error`,
-      },
-    });
-  }
-  /**
-   * Returns the rendered prompt of a stored version or an unsaved draft for one message of a document
-   * @returns PromptPreview Successful Response
-   * @throws ApiError
-   */
-  public static computePreview({
-    projectId,
-    requestBody,
-  }: {
-    projectId: number;
-    requestBody: PromptPreviewRequest;
-  }): CancelablePromise<PromptPreview> {
-    return __request(OpenAPI, {
-      method: "POST",
-      url: "/projects/{project_id}/prompts/preview",
-      path: {
-        project_id: projectId,
       },
       body: requestBody,
       mediaType: "application/json",
@@ -271,6 +213,64 @@ export class PromptsService {
       path: {
         project_id: projectId,
         prompt_id: promptId,
+      },
+      body: requestBody,
+      mediaType: "application/json",
+      errors: {
+        400: `The request breaks a rule of the domain`,
+        403: `The user is no member of the project, or the feature is disabled`,
+        404: `A path id, or an id the route reads, is not in the project`,
+        409: `A body id violates a foreign key, or a value a unique constraint`,
+        422: `Validation Error`,
+      },
+    });
+  }
+  /**
+   * Turns span or sentence annotations into few-shot examples for a prompt
+   * @returns any Successful Response
+   * @throws ApiError
+   */
+  public static computeExamples({
+    projectId,
+    requestBody,
+  }: {
+    projectId: number;
+    requestBody: PromptExamplesRequest;
+  }): CancelablePromise<Array<SpanPromptExample | SentencePromptExample>> {
+    return __request(OpenAPI, {
+      method: "POST",
+      url: "/projects/{project_id}/prompts/examples",
+      path: {
+        project_id: projectId,
+      },
+      body: requestBody,
+      mediaType: "application/json",
+      errors: {
+        400: `The request breaks a rule of the domain`,
+        403: `The user is no member of the project, or the feature is disabled`,
+        404: `A path id, or an id the route reads, is not in the project`,
+        409: `A body id violates a foreign key, or a value a unique constraint`,
+        422: `Validation Error`,
+      },
+    });
+  }
+  /**
+   * Returns the rendered prompt of a stored version or an unsaved draft for one message of a document
+   * @returns PromptPreview Successful Response
+   * @throws ApiError
+   */
+  public static computePreview({
+    projectId,
+    requestBody,
+  }: {
+    projectId: number;
+    requestBody: PromptPreviewRequest;
+  }): CancelablePromise<PromptPreview> {
+    return __request(OpenAPI, {
+      method: "POST",
+      url: "/projects/{project_id}/prompts/preview",
+      path: {
+        project_id: projectId,
       },
       body: requestBody,
       mediaType: "application/json",

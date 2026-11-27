@@ -2,9 +2,9 @@
 /* istanbul ignore file */
 /* tslint:disable */
 /* eslint-disable */
-export type SentenceAnnotationCountRequest = {
+export type AnnotationCountRequest = {
   /**
-   * The User whose SentenceAnnotations are counted
+   * The User whose annotations are counted
    */
   user_id: number;
   /**

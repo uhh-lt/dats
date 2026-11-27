@@ -30,7 +30,7 @@ export const sdocMetadataQueries = {
         !projectId || !sdocId
           ? skipToken
           : async () => {
-              const metadata = await SourceDocumentMetadataService.getBySdoc({ projectId, sdocId });
+              const metadata = await SourceDocumentMetadataService.getByProject({ projectId, sdocId });
               return metadata.reduce<SdocMetadataMap>((acc, m) => {
                 acc[m.project_metadata_id] = m;
                 return acc;
@@ -51,7 +51,7 @@ export const sdocMetadataQueries = {
         !projectId || !sdocId
           ? skipToken
           : async () => {
-              const [metadata] = await SourceDocumentMetadataService.getBySdoc({ projectId, sdocId, key });
+              const [metadata] = await SourceDocumentMetadataService.getByProject({ projectId, sdocId, key });
               if (!metadata) throw new Error(`The document has no metadata "${key}"`);
               return metadata;
             },

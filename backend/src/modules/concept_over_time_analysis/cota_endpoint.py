@@ -181,7 +181,7 @@ def remove_sentences(
     "/{cota_id}/reset",
     response_model=ConceptOverTimeAnalysisRead,
     summary="Resets the ConceptOverTimeAnalysis",
-    description="Resets the ConceptOverTimeAnalysis deleting model, embeddings, refinement jobs and resetting the search space",
+    description="Resets the ConceptOverTimeAnalysis: clears its search space and its last refinement job",
 )
 def reset(
     *,

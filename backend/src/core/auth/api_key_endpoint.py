@@ -93,6 +93,7 @@ def get_api_keys(
 
 @router.delete(
     "/{api_key_id}",
+    response_model=ApiKeyRead,
     summary="Revoke/Delete an API key.",
 )
 def delete_api_key(

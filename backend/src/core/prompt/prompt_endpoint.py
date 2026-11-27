@@ -8,7 +8,7 @@ from core.prompt.prompt_dto import (
     PromptContent,
     PromptCreate,
     PromptExample,
-    PromptExamplesCreate,
+    PromptExamplesRequest,
     PromptPreview,
     PromptPreviewRequest,
     PromptRead,
@@ -75,34 +75,6 @@ def create_version(
     )
     ws.emit_to_project(DATSEvent.PROMPT_UPDATED, result, project_id=project_id)
     return result
-
-
-@router.post(
-    "/examples",
-    response_model=list[PromptExample],
-    summary="Turns span or sentence annotations into few-shot examples for a prompt",
-)
-def compute_examples(
-    *,
-    db: DBSession,
-    project_id: int,
-    examples: PromptExamplesCreate,
-) -> list[PromptExample]:
-    return pts.create_prompt_examples(db=db, project_id=project_id, create_dto=examples)
-
-
-@router.post(
-    "/preview",
-    response_model=PromptPreview,
-    summary="Returns the rendered prompt of a stored version or an unsaved draft for one message of a document",
-)
-def compute_preview(
-    *,
-    db: DBSession,
-    project_id: int,
-    request: PromptPreviewRequest,
-) -> PromptPreview:
-    return pts.preview_prompt(db=db, project_id=project_id, request=request)
 
 
 # --- read operations
@@ -183,3 +155,34 @@ def update_by_id(
     )
     ws.emit_to_project(DATSEvent.PROMPT_UPDATED, result, project_id=project_id)
     return result
+
+
+# --- other operations
+
+
+@router.post(
+    "/examples",
+    response_model=list[PromptExample],
+    summary="Turns span or sentence annotations into few-shot examples for a prompt",
+)
+def compute_examples(
+    *,
+    db: DBSession,
+    project_id: int,
+    examples: PromptExamplesRequest,
+) -> list[PromptExample]:
+    return pts.create_prompt_examples(db=db, project_id=project_id, create_dto=examples)
+
+
+@router.post(
+    "/preview",
+    response_model=PromptPreview,
+    summary="Returns the rendered prompt of a stored version or an unsaved draft for one message of a document",
+)
+def compute_preview(
+    *,
+    db: DBSession,
+    project_id: int,
+    request: PromptPreviewRequest,
+) -> PromptPreview:
+    return pts.preview_prompt(db=db, project_id=project_id, request=request)

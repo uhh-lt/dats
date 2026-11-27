@@ -99,7 +99,7 @@ export class UsersService {
    * @returns ProjectRead Successful Response
    * @throws ApiError
    */
-  public static getUserProjects(): CancelablePromise<Array<ProjectRead>> {
+  public static getProjects(): CancelablePromise<Array<ProjectRead>> {
     return __request(OpenAPI, {
       method: "GET",
       url: "/users/me/projects",

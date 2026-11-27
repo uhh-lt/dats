@@ -33,7 +33,7 @@ def get_me(*, user: UserORM = Depends(get_current_user)) -> UserRead:
     response_model=list[ProjectRead],
     summary="Returns all Projects of the logged-in User",
 )
-def get_user_projects(
+def get_projects(
     *,
     db: DBSession,
     authz_user: AuthzUser = Depends(),

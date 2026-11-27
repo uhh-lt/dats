@@ -2,7 +2,7 @@
 /* istanbul ignore file */
 /* tslint:disable */
 /* eslint-disable */
-export type SdocTagLinks = {
+export type SourceDocumentTagReplaceRequest = {
   /**
    * Map of sdoc_id to its complete list of tag IDs
    */

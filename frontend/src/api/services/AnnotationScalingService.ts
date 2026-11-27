@@ -13,19 +13,19 @@ export class AnnotationScalingService {
   /**
    * Suggest annotations
    * Suggest annotations
-   * @returns AnnoscalingResult Successful Response
+   * @returns SpanAnnotationRead Successful Response
    * @throws ApiError
    */
-  public static computeSuggestions({
+  public static confirmSuggestions({
     projectId,
     requestBody,
   }: {
     projectId: number;
-    requestBody: AnnoscalingSuggest;
-  }): CancelablePromise<Array<AnnoscalingResult>> {
+    requestBody: AnnoscalingConfirmSuggest;
+  }): CancelablePromise<Array<SpanAnnotationRead>> {
     return __request(OpenAPI, {
-      method: "POST",
-      url: "/projects/{project_id}/annotation-scaling/suggestions",
+      method: "PUT",
+      url: "/projects/{project_id}/annotation-scaling/suggestions/confirm",
       path: {
         project_id: projectId,
       },
@@ -43,19 +43,19 @@ export class AnnotationScalingService {
   /**
    * Suggest annotations
    * Suggest annotations
-   * @returns SpanAnnotationRead Successful Response
+   * @returns AnnoscalingResult Successful Response
    * @throws ApiError
    */
-  public static confirmSuggestions({
+  public static computeSuggestions({
     projectId,
     requestBody,
   }: {
     projectId: number;
-    requestBody: AnnoscalingConfirmSuggest;
-  }): CancelablePromise<Array<SpanAnnotationRead>> {
+    requestBody: AnnoscalingSuggest;
+  }): CancelablePromise<Array<AnnoscalingResult>> {
     return __request(OpenAPI, {
-      method: "PUT",
-      url: "/projects/{project_id}/annotation-scaling/suggestions/confirm",
+      method: "POST",
+      url: "/projects/{project_id}/annotation-scaling/suggestions",
       path: {
         project_id: projectId,
       },

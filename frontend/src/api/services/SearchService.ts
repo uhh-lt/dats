@@ -31,7 +31,7 @@ export class SearchService {
    * @returns ColumnInfo_SdocColumns_ Successful Response
    * @throws ApiError
    */
-  public static searchSdocColumns({
+  public static getSourceDocumentColumns({
     projectId,
   }: {
     projectId: number;
@@ -52,11 +52,111 @@ export class SearchService {
     });
   }
   /**
+   * Returns Memo Table Info.
+   * @returns ColumnInfo_MemoColumns_ Successful Response
+   * @throws ApiError
+   */
+  public static getMemoColumns({
+    projectId,
+  }: {
+    projectId: number;
+  }): CancelablePromise<Array<ColumnInfo_MemoColumns_>> {
+    return __request(OpenAPI, {
+      method: "GET",
+      url: "/projects/{project_id}/search/memos/columns",
+      path: {
+        project_id: projectId,
+      },
+      errors: {
+        400: `The request breaks a rule of the domain`,
+        403: `The user is no member of the project, or the feature is disabled`,
+        404: `A path id, or an id the route reads, is not in the project`,
+        409: `A body id violates a foreign key, or a value a unique constraint`,
+        422: `Validation Error`,
+      },
+    });
+  }
+  /**
+   * Returns SpanAnnotationSearch Info.
+   * @returns ColumnInfo_SpanColumns_ Successful Response
+   * @throws ApiError
+   */
+  public static getSpanAnnotationColumns({
+    projectId,
+  }: {
+    projectId: number;
+  }): CancelablePromise<Array<ColumnInfo_SpanColumns_>> {
+    return __request(OpenAPI, {
+      method: "GET",
+      url: "/projects/{project_id}/search/span-annotations/columns",
+      path: {
+        project_id: projectId,
+      },
+      errors: {
+        400: `The request breaks a rule of the domain`,
+        403: `The user is no member of the project, or the feature is disabled`,
+        404: `A path id, or an id the route reads, is not in the project`,
+        409: `A body id violates a foreign key, or a value a unique constraint`,
+        422: `Validation Error`,
+      },
+    });
+  }
+  /**
+   * Returns SentenceAnnotationSearch Info.
+   * @returns ColumnInfo_SentAnnoColumns_ Successful Response
+   * @throws ApiError
+   */
+  public static getSentenceAnnotationColumns({
+    projectId,
+  }: {
+    projectId: number;
+  }): CancelablePromise<Array<ColumnInfo_SentAnnoColumns_>> {
+    return __request(OpenAPI, {
+      method: "GET",
+      url: "/projects/{project_id}/search/sentence-annotations/columns",
+      path: {
+        project_id: projectId,
+      },
+      errors: {
+        400: `The request breaks a rule of the domain`,
+        403: `The user is no member of the project, or the feature is disabled`,
+        404: `A path id, or an id the route reads, is not in the project`,
+        409: `A body id violates a foreign key, or a value a unique constraint`,
+        422: `Validation Error`,
+      },
+    });
+  }
+  /**
+   * Returns BBoxAnnotationSearch Info.
+   * @returns ColumnInfo_BBoxColumns_ Successful Response
+   * @throws ApiError
+   */
+  public static getBboxAnnotationColumns({
+    projectId,
+  }: {
+    projectId: number;
+  }): CancelablePromise<Array<ColumnInfo_BBoxColumns_>> {
+    return __request(OpenAPI, {
+      method: "GET",
+      url: "/projects/{project_id}/search/bbox-annotations/columns",
+      path: {
+        project_id: projectId,
+      },
+      errors: {
+        400: `The request breaks a rule of the domain`,
+        403: `The user is no member of the project, or the feature is disabled`,
+        404: `A path id, or an id the route reads, is not in the project`,
+        409: `A body id violates a foreign key, or a value a unique constraint`,
+        422: `Validation Error`,
+      },
+    });
+  }
+  /**
    * Returns all SourceDocument Ids and their scores and (optional) hightlights that match the query parameters.
    * @returns PaginatedSDocHits Successful Response
    * @throws ApiError
    */
-  public static searchSdocs({
+  public static searchSourceDocuments({
     projectId,
     requestBody,
   }: {
@@ -71,31 +171,6 @@ export class SearchService {
       },
       body: requestBody,
       mediaType: "application/json",
-      errors: {
-        400: `The request breaks a rule of the domain`,
-        403: `The user is no member of the project, or the feature is disabled`,
-        404: `A path id, or an id the route reads, is not in the project`,
-        409: `A body id violates a foreign key, or a value a unique constraint`,
-        422: `Validation Error`,
-      },
-    });
-  }
-  /**
-   * Returns Memo Table Info.
-   * @returns ColumnInfo_MemoColumns_ Successful Response
-   * @throws ApiError
-   */
-  public static searchMemoColumns({
-    projectId,
-  }: {
-    projectId: number;
-  }): CancelablePromise<Array<ColumnInfo_MemoColumns_>> {
-    return __request(OpenAPI, {
-      method: "GET",
-      url: "/projects/{project_id}/search/memos/columns",
-      path: {
-        project_id: projectId,
-      },
       errors: {
         400: `The request breaks a rule of the domain`,
         403: `The user is no member of the project, or the feature is disabled`,
@@ -164,31 +239,6 @@ export class SearchService {
     });
   }
   /**
-   * Returns SpanAnnotationSearch Info.
-   * @returns ColumnInfo_SpanColumns_ Successful Response
-   * @throws ApiError
-   */
-  public static searchSpanAnnotationColumns({
-    projectId,
-  }: {
-    projectId: number;
-  }): CancelablePromise<Array<ColumnInfo_SpanColumns_>> {
-    return __request(OpenAPI, {
-      method: "GET",
-      url: "/projects/{project_id}/search/span-annotations/columns",
-      path: {
-        project_id: projectId,
-      },
-      errors: {
-        400: `The request breaks a rule of the domain`,
-        403: `The user is no member of the project, or the feature is disabled`,
-        404: `A path id, or an id the route reads, is not in the project`,
-        409: `A body id violates a foreign key, or a value a unique constraint`,
-        422: `Validation Error`,
-      },
-    });
-  }
-  /**
    * Returns SpanAnnotationSearch.
    * @returns Page_SpanAnnotationRow_ Successful Response
    * @throws ApiError
@@ -247,31 +297,6 @@ export class SearchService {
     });
   }
   /**
-   * Returns SentenceAnnotationSearch Info.
-   * @returns ColumnInfo_SentAnnoColumns_ Successful Response
-   * @throws ApiError
-   */
-  public static searchSentenceAnnotationColumns({
-    projectId,
-  }: {
-    projectId: number;
-  }): CancelablePromise<Array<ColumnInfo_SentAnnoColumns_>> {
-    return __request(OpenAPI, {
-      method: "GET",
-      url: "/projects/{project_id}/search/sentence-annotations/columns",
-      path: {
-        project_id: projectId,
-      },
-      errors: {
-        400: `The request breaks a rule of the domain`,
-        403: `The user is no member of the project, or the feature is disabled`,
-        404: `A path id, or an id the route reads, is not in the project`,
-        409: `A body id violates a foreign key, or a value a unique constraint`,
-        422: `Validation Error`,
-      },
-    });
-  }
-  /**
    * Returns Sentence Annotations.
    * @returns Page_SentenceAnnotationRow_ Successful Response
    * @throws ApiError
@@ -320,31 +345,6 @@ export class SearchService {
       },
       body: requestBody,
       mediaType: "application/json",
-      errors: {
-        400: `The request breaks a rule of the domain`,
-        403: `The user is no member of the project, or the feature is disabled`,
-        404: `A path id, or an id the route reads, is not in the project`,
-        409: `A body id violates a foreign key, or a value a unique constraint`,
-        422: `Validation Error`,
-      },
-    });
-  }
-  /**
-   * Returns BBoxAnnotationSearch Info.
-   * @returns ColumnInfo_BBoxColumns_ Successful Response
-   * @throws ApiError
-   */
-  public static searchBboxAnnotationColumns({
-    projectId,
-  }: {
-    projectId: number;
-  }): CancelablePromise<Array<ColumnInfo_BBoxColumns_>> {
-    return __request(OpenAPI, {
-      method: "GET",
-      url: "/projects/{project_id}/search/bbox-annotations/columns",
-      path: {
-        project_id: projectId,
-      },
       errors: {
         400: `The request breaks a rule of the domain`,
         403: `The user is no member of the project, or the feature is disabled`,

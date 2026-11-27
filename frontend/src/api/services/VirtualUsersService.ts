@@ -14,7 +14,7 @@ export class VirtualUsersService {
    * @returns UserRead Successful Response
    * @throws ApiError
    */
-  public static createVirtualUser({
+  public static create({
     projectId,
     requestBody,
   }: {
@@ -43,7 +43,7 @@ export class VirtualUsersService {
    * @returns UserRead Successful Response
    * @throws ApiError
    */
-  public static updateVirtualUser({
+  public static updateById({
     projectId,
     virtualUserId,
     requestBody,
@@ -75,7 +75,7 @@ export class VirtualUsersService {
    * @returns UserRead Successful Response
    * @throws ApiError
    */
-  public static deleteVirtualUser({
+  public static deleteById({
     projectId,
     virtualUserId,
   }: {

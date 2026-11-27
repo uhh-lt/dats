@@ -46,7 +46,7 @@ export const whiteboardQueries = {
     queryOptions({
       queryKey: [...whiteboardQueries.dataScope(projectId), whiteboardId] as const,
       queryFn: async () => {
-        const whiteboardData = await WhiteboardsService.getDataById({ projectId, whiteboardId });
+        const whiteboardData = await WhiteboardsService.getData({ projectId, whiteboardId });
 
         whiteboardData.span_annotations.forEach((sa) => {
           queryClient.setQueryData(spanAnnotationQueries.byId(sa.project_id, sa.id).queryKey, sa);

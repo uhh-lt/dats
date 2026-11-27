@@ -143,7 +143,7 @@ class CRUDSourceDocumentStepStatus(
                 order.append(direction.apply(status.status))
                 continue
             order.append(direction.apply(key))
-        query = query.order_by(*order, sdoc.name.asc())
+        query = query.order_by(*order, sdoc.name.asc(), sdoc.id.asc())
         if offset is not None:
             query = query.offset(offset)
         if limit is not None:

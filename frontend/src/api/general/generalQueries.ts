@@ -15,14 +15,14 @@ export const generalQueries = {
   availableModels: () =>
     queryOptions({
       queryKey: [...generalQueries.all(), "availableModels"] as const,
-      queryFn: () => InfoService.getAvailableModels(),
+      queryFn: () => InfoService.getLlms(),
     }),
 
   // the configuration of the instance (is OIDC enabled, Sentry/Glitchtip DSN, ...)
   instanceInfo: () =>
     queryOptions({
       queryKey: [...generalQueries.all(), "instanceInfo"] as const,
-      queryFn: () => InfoService.info(),
+      queryFn: () => InfoService.getInfo(),
       staleTime: Infinity,
     }),
 };

@@ -38,27 +38,6 @@ def get_columns(
     return DocProcessingService().read_health_columns(doctype=doctype)
 
 
-@router.post(
-    "/statuses",
-    response_model=SdocHealthResult,
-    summary="Get all SourceDocumentStatusDetailed for the Project with the given ID by status",
-)
-def search_statuses(
-    *,
-    db: DBSession,
-    project_id: int,
-    request: SdocHealthSearchRequest,
-) -> SdocHealthResult:
-    return DocProcessingService().search_sdoc_health(
-        db=db,
-        project_id=project_id,
-        doctype=request.doctype,
-        sorts=request.sorts,
-        page=request.page_number,
-        page_size=request.page_size,
-    )
-
-
 @router.get(
     "/statuses",
     response_model=list[SourceDocumentStatusSimple],
@@ -82,7 +61,28 @@ def get_statuses(
     ]
 
 
-# --- job operations
+# --- other operations
+
+
+@router.post(
+    "/statuses",
+    response_model=SdocHealthResult,
+    summary="Get all SourceDocumentStatusDetailed for the Project with the given ID by status",
+)
+def search_statuses(
+    *,
+    db: DBSession,
+    project_id: int,
+    request: SdocHealthSearchRequest,
+) -> SdocHealthResult:
+    return DocProcessingService().search_sdoc_health(
+        db=db,
+        project_id=project_id,
+        doctype=request.doctype,
+        sorts=request.sorts,
+        page=request.page_number,
+        page_size=request.page_size,
+    )
 
 
 @router.post(

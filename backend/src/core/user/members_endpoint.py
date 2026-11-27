@@ -23,7 +23,7 @@ router = project_router("/members", tags=["members", "mcp"])
     response_model=ProjectUserLinks,
     summary="Adds the existing User with the given email to the Project as a member",
 )
-def associate_user_to_project(
+def create(
     *,
     project_id: int,
     user: ProjectAddUser,
@@ -74,7 +74,7 @@ def get_by_project(*, project_id: int, db: DBSession) -> list[UserRead]:
     response_model=ProjectUserLinks,
     summary="Removes the member with the given ID from the Project",
 )
-def dissociate_user_from_project(
+def delete_by_id(
     *,
     project_id: int,
     user_id: int,

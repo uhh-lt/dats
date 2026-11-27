@@ -211,6 +211,7 @@ class ArtefactService(metaclass=SingletonMeta):
         )
         return [s for s in graph.roots(doctype) if s in needed]
 
+    # check_services: allow method-signature (commits its planning before it starts the steps)
     def plan_core_steps(
         self, *, project_id: int, sdoc_ids: list[int], settings: ProcessingSettings
     ) -> list[Job]:
@@ -246,6 +247,7 @@ class ArtefactService(metaclass=SingletonMeta):
             jobs.extend(job for job in started.values() if job is not None)
         return jobs
 
+    # check_services: allow method-signature (opens its own transactions, one commit per batch)
     def handle_artefact_computation_job(
         self, *, job: Job, payload: ArtefactComputationJobInput
     ) -> None:

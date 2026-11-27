@@ -28,6 +28,64 @@ export class AuthenticationService {
     });
   }
   /**
+   * Returns success if the user can access the content
+   * @returns any Successful Response
+   * @throws ApiError
+   */
+  public static authContent({ xOriginalUri }: { xOriginalUri?: string | null }): CancelablePromise<any> {
+    return __request(OpenAPI, {
+      method: "GET",
+      url: "/authentication/content",
+      headers: {
+        "x-original-uri": xOriginalUri,
+      },
+      errors: {
+        422: `Validation Error`,
+      },
+    });
+  }
+  /**
+   * Redirects to the login page of the OIDC provider
+   * @returns any Successful Response
+   * @throws ApiError
+   */
+  public static oidcLogin({
+    provider,
+    redirectUri,
+  }: {
+    provider: string;
+    redirectUri: string;
+  }): CancelablePromise<any> {
+    return __request(OpenAPI, {
+      method: "GET",
+      url: "/authentication/oidc/login",
+      query: {
+        provider: provider,
+        redirect_uri: redirectUri,
+      },
+      errors: {
+        422: `Validation Error`,
+      },
+    });
+  }
+  /**
+   * Logs the user in after the OIDC provider redirected back
+   * @returns any Successful Response
+   * @throws ApiError
+   */
+  public static oidcCallback({ provider }: { provider: string }): CancelablePromise<any> {
+    return __request(OpenAPI, {
+      method: "GET",
+      url: "/authentication/oidc/callback",
+      query: {
+        provider: provider,
+      },
+      errors: {
+        422: `Validation Error`,
+      },
+    });
+  }
+  /**
    * Returns the JWT access token for the provided user login data if the login was successful. This is usually only called from an OAuth2 client!
    * @returns UserAuthorizationHeaderData Successful Response
    * @throws ApiError
@@ -84,65 +142,7 @@ export class AuthenticationService {
     });
   }
   /**
-   * Returns success if the user can access the content
-   * @returns any Successful Response
-   * @throws ApiError
-   */
-  public static authContent({ xOriginalUri }: { xOriginalUri?: string | null }): CancelablePromise<any> {
-    return __request(OpenAPI, {
-      method: "GET",
-      url: "/authentication/content",
-      headers: {
-        "x-original-uri": xOriginalUri,
-      },
-      errors: {
-        422: `Validation Error`,
-      },
-    });
-  }
-  /**
-   * Oidc Login
-   * @returns any Successful Response
-   * @throws ApiError
-   */
-  public static oidcLogin({
-    provider,
-    redirectUri,
-  }: {
-    provider: string;
-    redirectUri: string;
-  }): CancelablePromise<any> {
-    return __request(OpenAPI, {
-      method: "GET",
-      url: "/authentication/oidc/login",
-      query: {
-        provider: provider,
-        redirect_uri: redirectUri,
-      },
-      errors: {
-        422: `Validation Error`,
-      },
-    });
-  }
-  /**
-   * Oidc Callback
-   * @returns any Successful Response
-   * @throws ApiError
-   */
-  public static oidcCallback({ provider }: { provider: string }): CancelablePromise<any> {
-    return __request(OpenAPI, {
-      method: "GET",
-      url: "/authentication/oidc/callback",
-      query: {
-        provider: provider,
-      },
-      errors: {
-        422: `Validation Error`,
-      },
-    });
-  }
-  /**
-   * Sync Session
+   * Sets the access token of the request as the session cookie
    * @returns any Successful Response
    * @throws ApiError
    */

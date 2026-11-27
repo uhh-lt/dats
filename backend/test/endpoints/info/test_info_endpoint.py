@@ -1,9 +1,28 @@
 from fastapi.testclient import TestClient
 
+from config import conf
+from core.info.info_dto import InstanceInfo
 from pipeline_test_utils import artefact_named
 from systems.feature_system.feature_dto import FeatureRead
 from systems.feature_system.feature_registry import Feature, feature_registry
 from systems.feature_system.feature_system_enum import FeatureArea
+
+# ===========================================================================
+# GET INFO (/info) TESTS
+# ===========================================================================
+
+
+def test_get_info_describes_the_instance_from_the_config(client: TestClient):
+    """The instance information comes from the config: the enabled OIDC
+    providers and whether the instance is stable."""
+    response = client.get("/info")
+
+    assert response.status_code == 200, response.text
+    info = InstanceInfo.model_validate(response.json())
+    assert info.oidc_provider_names == [x.name for x in conf.auth.oidc if x.enabled]
+    assert info.is_oidc_enabled == bool(info.oidc_provider_names)
+    assert info.is_stable == conf.api.is_stable
+
 
 # ===========================================================================
 # GET FEATURES (/info/features) TESTS

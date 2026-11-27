@@ -79,7 +79,7 @@ export const spanAnnotationQueries = {
   tableInfo: (projectId: number) =>
     queryOptions({
       queryKey: tableInfoQueries.byDomain("span", projectId),
-      queryFn: async () => toColumnInfos(await SearchService.searchSpanAnnotationColumns({ projectId })),
+      queryFn: async () => toColumnInfos(await SearchService.getSpanAnnotationColumns({ projectId })),
       staleTime: Infinity,
     }),
 

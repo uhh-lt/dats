@@ -3,7 +3,9 @@ for a user who is a member of both projects: a path id of another project answer
 404, a body id of another project in a write is rejected by the composite foreign
 key (409), and a filter id of another project matches nothing."""
 
+import ast
 import re
+from pathlib import Path
 from typing import Any, Callable
 
 import pytest
@@ -210,11 +212,12 @@ BODIES: dict[str, Callable[[TenantRows], Any]] = {
     ),
 }
 
-# the required query parameters of the routes with a path id, by "<METHOD> <path>"
-QUERIES: dict[str, dict[str, str]] = {
-    "GET /projects/{project_id}/perspectives/aspects/{aspect_id}/clusters": {
-        "sdoc_id": "0"
-    },
+# the required query parameters of the routes with a path id on the rows of a
+# tenant, by "<METHOD> <path>"
+QUERIES: dict[str, Callable[[TenantRows], dict[str, Any]]] = {
+    "GET /projects/{project_id}/perspectives/aspects/{aspect_id}/clusters": (
+        lambda rows: {"sdoc_id": rows["sdoc"].id}
+    ),
 }
 
 # the routes that answer no 2xx with the path ids of the own tenant, by
@@ -332,10 +335,11 @@ def _request_with_path_ids(
     }
     url = path.format(project_id=own["rows"]["project"].id, **values)
     body = BODIES.get(f"{method} {path}")
+    query = QUERIES.get(f"{method} {path}")
     response = client.request(
         method,
         url,
-        params=QUERIES.get(f"{method} {path}"),
+        params=query(own["rows"]) if query is not None else None,
         json=body(own["rows"]) if body is not None else None,
     )
     return url, response
@@ -380,7 +384,7 @@ def test_every_project_route_is_covered(client: TestClient) -> None:
             if param.field_info.is_required()
         ]
         if _path_params(path) and required_queries:
-            assert set(required_queries) <= set(QUERIES.get(f"{method} {path}", {})), (
+            assert f"{method} {path}" in QUERIES, (
                 f"{method} {path}: add {required_queries} to QUERIES"
             )
 
@@ -644,9 +648,9 @@ def test_search_filter_by_a_code_of_another_project_matches_nothing(
 # ===========================================================================
 # ALL ROUTES: REQUEST SHAPES
 # ===========================================================================
-# The guide's "Request shape": the input of a create, an update, an action or a
-# computation is one body DTO (a bare list only on a bulk route), and query
-# parameters belong to GET reads only.
+# The guide's "Everything else" under "Input": the input of a create, an update, an
+# action or a computation is one body DTO (a bare list only on a bulk route), and
+# query parameters belong to GET reads only.
 
 # routes whose request shape is fixed from outside, by "<METHOD> <path>"
 REQUEST_SHAPE_EXCEPTIONS = {
@@ -716,3 +720,68 @@ def test_every_route_has_the_tag_of_its_first_path_segment(app: FastAPI) -> None
         if operation["tags"][0] != _first_segment_tag(path)
     ]
     assert violations == []
+
+
+# ===========================================================================
+# ALL ROUTES: GUARDS OF THE ROUTER RULE AND THE INPUT RULE
+# ===========================================================================
+# One router per endpoint file, the router sets the tag, and a GET takes no body.
+
+ENDPOINT_FILES = sorted(
+    Path(__file__).parents[3].joinpath("src").rglob("*_endpoint.py")
+)
+ROUTE_DECORATORS = {"get", "put", "patch", "post", "delete", "api_route", "websocket"}
+# the endpoint files with two routers, and why (the kept exceptions of the rules)
+TWO_ROUTER_FILES = {
+    # PUT /projects creates a project outside every project, without the
+    # membership check of the project router
+    "project_endpoint.py",
+}
+
+
+def _calls(path: Path) -> list[ast.Call]:
+    return [
+        node
+        for node in ast.walk(ast.parse(path.read_text()))
+        if isinstance(node, ast.Call)
+    ]
+
+
+def test_no_route_sets_a_tag() -> None:
+    """The router sets the tag; a route decorator with `tags=` would add a tag
+    after the router's (an `mcp` tag would make the route an MCP tool)."""
+    tagged = [
+        f"{path.name}:{call.lineno}"
+        for path in ENDPOINT_FILES
+        for call in _calls(path)
+        if isinstance(call.func, ast.Attribute)
+        and call.func.attr in ROUTE_DECORATORS
+        and any(keyword.arg == "tags" for keyword in call.keywords)
+    ]
+    assert tagged == []
+
+
+def test_every_endpoint_file_has_one_router() -> None:
+    """One router per endpoint file, except the kept exceptions."""
+    counts = {
+        path.name: sum(
+            isinstance(call.func, ast.Name)
+            and call.func.id in ("APIRouter", "project_router")
+            for call in _calls(path)
+        )
+        for path in ENDPOINT_FILES
+    }
+    assert {name: count for name, count in counts.items() if count != 1} == {
+        name: 2 for name in TWO_ROUTER_FILES
+    }
+
+
+def test_no_get_route_takes_a_body(app: FastAPI) -> None:
+    """A read whose input needs a body is a POST; a GET takes query parameters
+    only."""
+    schema = app.openapi()
+    assert [
+        path
+        for path, operations in schema["paths"].items()
+        if "requestBody" in operations.get("get", {})
+    ] == []

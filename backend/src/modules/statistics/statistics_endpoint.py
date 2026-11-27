@@ -11,6 +11,9 @@ from modules.statistics.statistics_service import StatisticsService
 router = project_router("/statistics", tags=["statistics"])
 
 
+# --- other operations
+
+
 @router.post(
     "/codes",
     response_model=list[SpanEntityStat],

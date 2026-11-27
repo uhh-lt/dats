@@ -50,7 +50,7 @@ class CRUDFolder(ProjectCRUDBase[FolderORM, FolderCreate, FolderUpdate]):
         return (
             db.query(self.model)
             .filter(self.model.project_id == project_id)
-            .order_by(self.model.name)
+            .order_by(self.model.name, self.model.id)
             .all()
         )
 
@@ -63,7 +63,7 @@ class CRUDFolder(ProjectCRUDBase[FolderORM, FolderCreate, FolderUpdate]):
                 self.model.project_id == project_id,
                 self.model.folder_type == folder_type,
             )
-            .order_by(self.model.name)
+            .order_by(self.model.name, self.model.id)
             .all()
         )
 

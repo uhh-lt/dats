@@ -404,7 +404,7 @@ class DATSAPI:
             },
         )
         r.raise_for_status()
-        # Response is SdocTagLinks: {"links": {sdoc_id: [tag_id, ...], ...}}
+        # Response is SourceDocumentTagLinksResult: {"links": {sdoc_id: [tag_id, ...], ...}}
         links: dict[str, list[int]] = r.json().get("links", {})
         logger.info(
             f"Applied tags {tag_ids} to documents {sdoc_ids}! Resulting links: {links}"

@@ -12,8 +12,15 @@ from systems.feature_system.feature_service import FeatureService
 router = APIRouter(tags=["info"])
 
 
-@router.get("/info", response_model=InstanceInfo)
-def info():
+# --- read operations
+
+
+@router.get(
+    "/info",
+    response_model=InstanceInfo,
+    summary="Returns the information of the DATS instance",
+)
+def get_info():
     return InstanceInfo(
         is_oidc_enabled=len(conf.auth.oidc) > 0
         and any(x.enabled for x in conf.auth.oidc),
@@ -29,7 +36,7 @@ def info():
     response_model=list[str],
     summary="Get all available LLM models from the LLM Provider",
 )
-def get_available_models() -> list[str]:
+def get_llms() -> list[str]:
     return LLMRepo().get_available_llms()
 
 

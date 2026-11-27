@@ -56,27 +56,6 @@ def enable(
     return project.enabled_features
 
 
-@router.post(
-    "/{feature}/complete",
-    response_model=list[str],
-    summary="Completes the partly available Feature: computes its data for the documents that lack it. Returns the enabled Features",
-)
-def complete(
-    *,
-    db: DBSession,
-    project_id: int,
-    feature: str,
-    activation: FeatureActivation,
-) -> list[str]:
-    project = FeatureService().complete_feature(
-        db=db,
-        project_id=project_id,
-        feature=FeatureService().read_by_name(name=feature),
-        settings=activation.settings,
-    )
-    return project.enabled_features
-
-
 @router.patch(
     "/{feature}/disable",
     response_model=list[str],
@@ -95,4 +74,28 @@ def disable(
         feature=FeatureService().read_by_name(name=feature),
     )
     ws.emit_to_project(DATSEvent.PROJECT_UPDATED, project, project_id=project_id)
+    return project.enabled_features
+
+
+# --- job operations
+
+
+@router.post(
+    "/{feature}/complete",
+    response_model=list[str],
+    summary="Completes the partly available Feature: computes its data for the documents that lack it. Returns the enabled Features",
+)
+def complete(
+    *,
+    db: DBSession,
+    project_id: int,
+    feature: str,
+    activation: FeatureActivation,
+) -> list[str]:
+    project = FeatureService().complete_feature(
+        db=db,
+        project_id=project_id,
+        feature=FeatureService().read_by_name(name=feature),
+        settings=activation.settings,
+    )
     return project.enabled_features

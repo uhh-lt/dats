@@ -9,11 +9,11 @@ import { OpenAPI } from "../core/OpenAPI";
 import { request as __request } from "../core/request";
 export class InfoService {
   /**
-   * Info
+   * Returns the information of the DATS instance
    * @returns InstanceInfo Successful Response
    * @throws ApiError
    */
-  public static info(): CancelablePromise<InstanceInfo> {
+  public static getInfo(): CancelablePromise<InstanceInfo> {
     return __request(OpenAPI, {
       method: "GET",
       url: "/info",
@@ -24,7 +24,7 @@ export class InfoService {
    * @returns string Successful Response
    * @throws ApiError
    */
-  public static getAvailableModels(): CancelablePromise<Array<string>> {
+  public static getLlms(): CancelablePromise<Array<string>> {
     return __request(OpenAPI, {
       method: "GET",
       url: "/info/llms",

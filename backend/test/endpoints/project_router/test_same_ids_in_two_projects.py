@@ -240,6 +240,43 @@ ARGUMENTS: dict[str, Callable[[TenantRows], dict[str, Any]]] = {
     },
 }
 
+# further requests of a route that ARGUMENTS or the plain GET already compares, by
+# a name of their own: filters that join further rows
+VARIANTS: dict[str, tuple[str, Callable[[TenantRows], dict[str, Any]]]] = {
+    "GET /projects/{project_id}/memos?recent=true": (
+        "GET /projects/{project_id}/memos",
+        lambda rows: {"params": {"recent": True}},
+    ),
+    "GET /projects/{project_id}/source-documents/count?date_metadata_id=": (
+        "GET /projects/{project_id}/source-documents/count",
+        lambda rows: {"params": {"date_metadata_id": rows["project_metadata"].id}},
+    ),
+}
+
+# the POST routes that are no read of ARGUMENTS, by "<METHOD> <path>": why the
+# twin test does not compare them
+NOT_COMPARED_POSTS: dict[str, str] = {
+    "POST /projects/{project_id}/annotation-scaling/suggestions": (
+        "needs the sentence embeddings of the hosted embedding model"
+    ),
+    "POST /projects/{project_id}/memos/suggestion": "asks the hosted LLM",
+    "POST /projects/{project_id}/rag/answer": "asks the hosted LLM",
+    "POST /projects/{project_id}/concept-over-time-analyses/{cota_id}/refine": (
+        "starts a job"
+    ),
+    "POST /projects/{project_id}/doc-processing/upload": "uploads documents",
+    "POST /projects/{project_id}/doc-processing/retry": "starts jobs",
+    "POST /projects/{project_id}/doc-processing/recompute": "starts jobs",
+    "POST /projects/{project_id}/features/{feature}/complete": "starts a job",
+}
+
+# the reads that answer no 200 on the rows of a tenant, by "<METHOD> <path>": why
+NOT_OK_READS: dict[str, str] = {
+    "GET /projects/{project_id}/perspectives/aspects/{aspect_id}/cluster-similarities": (
+        "404: the cluster of the rows has no embedding in Weaviate"
+    ),
+}
+
 # the answer of a route: status and body
 Answer = tuple[int, Any]
 
@@ -291,13 +328,17 @@ def _reads(client: TestClient, rows: TenantRows) -> dict[str, Read]:
         if key in ARGUMENTS:
             arguments = ARGUMENTS[key](rows)
         elif method == "GET" and all(name in PATH_IDS for name in names):
-            arguments = {"params": QUERIES.get(key)}
+            query = QUERIES.get(key)
+            arguments = {"params": query(rows) if query is not None else None}
         else:
             continue
         values = {name: PATH_IDS[name](rows) for name in names}
         reads[key] = (method, path, values, arguments)
     missing = set(ARGUMENTS) - set(reads)
     assert not missing, f"ARGUMENTS names unknown routes {missing}"
+    for name, (key, variant) in VARIANTS.items():
+        method, path, values, _ = reads[key]
+        reads[name] = (method, path, values, variant(rows))
     return reads
 
 
@@ -344,6 +385,21 @@ def test_every_get_route_with_a_required_query_has_arguments(
     assert missing == []
 
 
+def test_every_post_route_is_a_compared_read_or_named(client: TestClient) -> None:
+    """Every POST route of a project is a read in ARGUMENTS, a job route under
+    /jobs or in NOT_COMPARED_POSTS with its reason, so a new POST read is
+    compared by the twin test."""
+    unnamed = [
+        f"{method} {path}"
+        for method, path, _ in _project_routes(client)
+        if method == "POST"
+        and f"{method} {path}" not in ARGUMENTS
+        and f"{method} {path}" not in NOT_COMPARED_POSTS
+        and not path.startswith("/projects/{project_id}/jobs/")
+    ]
+    assert unnamed == []
+
+
 def test_every_read_route_answers_the_same_after_a_project_with_the_same_ids_exists(
     client: TestClient, lone_project: LoneProject
 ) -> None:
@@ -351,7 +407,7 @@ def test_every_read_route_answers_the_same_after_a_project_with_the_same_ids_exi
     body in the test project before and after the twin exists, and the twin answers
     what the test project answered alone, with its own project id (apart from the
     routes of the project and its members, which the twin does not copy). Every
-    route of ARGUMENTS and at least 100 reads in all answer 200 alone."""
+    read answers 200 alone, except those of NOT_OK_READS."""
     project = lone_project["project"]
     reads = _reads(client, lone_project["rows"])
     alone = _answers(client, reads, project.id)
@@ -360,14 +416,14 @@ def test_every_read_route_answers_the_same_after_a_project_with_the_same_ids_exi
         for key, answer in alone.items()
         if key in ARGUMENTS and answer[0] != 200
     }
-    ok = sum(status == 200 for status, _ in alone.values())
+    not_ok = {key for key, (status, _) in alone.items() if status != 200}
 
     twin = lone_project["create_twin"]()
     after = _answers(client, reads, project.id)
     in_twin = _answers(client, reads, twin.id)
 
     assert failed == {}
-    assert ok >= 100
+    assert not_ok == set(NOT_OK_READS)
     assert _differences(after, alone) == []
     expected_in_twin = {
         key: (status, _in_project(content, project.id, twin.id))

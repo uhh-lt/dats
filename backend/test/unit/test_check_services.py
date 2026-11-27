@@ -251,6 +251,27 @@ def test_check_services_accepts_valid_service_and_variations(
             "def reset(self, *, example_id: int, db: Session)",
             id="method-signature-order",
         ),
+        # a static method: its first parameter is no `self`
+        pytest.param(
+            "method-signature",
+            "    def reset(self, *, db: Session, example_id: int)",
+            "    @staticmethod\n    def reset(db: Session, *, example_id: int)",
+            id="method-signature-staticmethod",
+        ),
+        # project_id without db
+        pytest.param(
+            "method-signature",
+            "def reset(self, *, db: Session, example_id: int)",
+            "def reset(self, *, project_id: int, example_id: int)",
+            id="method-signature-project-without-db",
+        ),
+        # a job handler with its payload before db
+        pytest.param(
+            "method-signature",
+            "def reset(self, *, db: Session, example_id: int)",
+            "def handle_example_job(self, *, payload: int, db: Session, example_id: int)",
+            id="method-signature-job-handler-order",
+        ),
         # exception class in the service file
         pytest.param(
             "no-exception-class",
@@ -270,6 +291,19 @@ def test_check_services_reports_exactly_the_violated_rule(
 
 
 # --- C. variations, output and CLI ---------------------------------------------
+
+
+def test_check_services_allows_a_marked_signature_exception() -> None:
+    """`# check_services: allow method-signature (<reason>)` directly above a
+    method exempts its signature, and only that rule."""
+    marked = VALID_SERVICE.replace(
+        "    def reset(self, *, db: Session, example_id: int)",
+        "    # check_services: allow method-signature (no SQL)\n"
+        "    def reset(self, *, project_id: int, example_id: int)",
+        1,
+    )
+
+    assert rules(marked) == set()
 
 
 def test_check_services_variations_still_apply_the_content_rules() -> None:

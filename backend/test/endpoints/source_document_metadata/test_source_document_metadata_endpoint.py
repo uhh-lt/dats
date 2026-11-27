@@ -165,6 +165,28 @@ def test_update_sdoc_metadata(
         assert updated.date_value == payload.get("date_value")
 
 
+def test_update_sdoc_metadata_with_a_value_of_the_wrong_type_is_rejected(
+    client: TestClient, project_with_sdoc_and_projmeta_and_sdocmeta
+):
+    """The project metadata is a string: a number value breaks a rule of the
+    domain (400)."""
+    sm = project_with_sdoc_and_projmeta_and_sdocmeta["source_document_metadata"]
+
+    resp = client.patch(
+        f"/projects/{sm.project_id}/source-document-metadata/{sm.id}",
+        json={
+            "str_value": None,
+            "int_value": 5,
+            "boolean_value": None,
+            "date_value": None,
+            "list_value": None,
+        },
+    )
+
+    assert resp.status_code == 400, resp.text
+    assert "wrong type" in resp.text
+
+
 def test_update_by_id_if_not_exists(
     client: TestClient,
     test_project,

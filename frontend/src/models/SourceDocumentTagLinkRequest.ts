@@ -2,7 +2,7 @@
 /* istanbul ignore file */
 /* tslint:disable */
 /* eslint-disable */
-export type SourceDocumentTagMultiLink = {
+export type SourceDocumentTagLinkRequest = {
   /**
    * List of IDs of SourceDocuments
    */

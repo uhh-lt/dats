@@ -53,7 +53,7 @@ export const perspectivesQueries = {
       queryFn:
         !projectId || !aspectId || !sdocId
           ? skipToken
-          : () => PerspectivesService.getDocaspectById({ projectId, aspectId, sdocId }),
+          : () => PerspectivesService.getSourceDocument({ projectId, aspectId, sdocId }),
       staleTime: Infinity,
     }),
 

@@ -3,9 +3,9 @@ from fastapi import Depends
 from common.dats_event import DATSEvent
 from common.dependencies import DBSession
 from common.project_router import project_router
+from core.annotation.annotation_document_dto import AnnotationCountRequest
 from core.annotation.sentence_annotation_crud import crud_sentence_anno
 from core.annotation.sentence_annotation_dto import (
-    SentenceAnnotationCountRequest,
     SentenceAnnotationCreate,
     SentenceAnnotationRead,
     SentenceAnnotationUpdate,
@@ -251,7 +251,7 @@ def count(
     *,
     db: DBSession,
     project_id: int,
-    request: SentenceAnnotationCountRequest,
+    request: AnnotationCountRequest,
 ) -> dict[int, int]:
     return crud_sentence_anno.count_by_codes_and_sdocs_and_user(
         db=db,

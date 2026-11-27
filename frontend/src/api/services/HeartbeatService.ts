@@ -7,11 +7,11 @@ import { OpenAPI } from "../core/OpenAPI";
 import { request as __request } from "../core/request";
 export class HeartbeatService {
   /**
-   * Heartbeat
-   * @returns any Successful Response
+   * Answers true while the API is up
+   * @returns boolean Successful Response
    * @throws ApiError
    */
-  public static heartbeat(): CancelablePromise<any> {
+  public static heartbeat(): CancelablePromise<boolean> {
     return __request(OpenAPI, {
       method: "GET",
       url: "/heartbeat",

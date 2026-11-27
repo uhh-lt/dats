@@ -42,13 +42,13 @@ export const timelineAnalysisQueries = {
       queryFn: async () => {
         switch (type) {
           case TimelineAnalysisType.DOCUMENT:
-            return toColumnInfos(await SearchService.searchSdocColumns({ projectId }));
+            return toColumnInfos(await SearchService.getSourceDocumentColumns({ projectId }));
           case TimelineAnalysisType.BBOX_ANNOTATION:
-            return toColumnInfos(await SearchService.searchBboxAnnotationColumns({ projectId }));
+            return toColumnInfos(await SearchService.getBboxAnnotationColumns({ projectId }));
           case TimelineAnalysisType.SENTENCE_ANNOTATION:
-            return toColumnInfos(await SearchService.searchSentenceAnnotationColumns({ projectId }));
+            return toColumnInfos(await SearchService.getSentenceAnnotationColumns({ projectId }));
           case TimelineAnalysisType.SPAN_ANNOTATION:
-            return toColumnInfos(await SearchService.searchSpanAnnotationColumns({ projectId }));
+            return toColumnInfos(await SearchService.getSpanAnnotationColumns({ projectId }));
           default:
             return [];
         }

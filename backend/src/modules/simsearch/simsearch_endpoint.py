@@ -13,6 +13,9 @@ router = project_router(
 )
 
 
+# --- other operations
+
+
 @router.post(
     "/sentences",
     response_model=list[SimSearchSentenceHit],

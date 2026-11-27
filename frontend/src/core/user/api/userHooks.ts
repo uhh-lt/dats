@@ -42,7 +42,7 @@ const useUpdateMe = () =>
 const useAddUserToProject = () =>
   useMutation({
     mutationKey: [...userQueries.all(), "addUserToProject"],
-    mutationFn: MembersService.associateUserToProject,
+    mutationFn: MembersService.create,
     meta: {
       datsEvent: "PROJECT_USERS_LINKED",
       successMessage: (data: ProjectUserLinks) => `Added user to project (${data.users.length} members)`,
@@ -52,7 +52,7 @@ const useAddUserToProject = () =>
 const useRemoveUserFromProject = () =>
   useMutation({
     mutationKey: [...userQueries.all(), "removeUserFromProject"],
-    mutationFn: MembersService.dissociateUserFromProject,
+    mutationFn: MembersService.deleteById,
     meta: {
       datsEvent: "PROJECT_USERS_LINKED",
       successMessage: (data: ProjectUserLinks) => `Removed user from project (${data.users.length} members)`,
@@ -62,7 +62,7 @@ const useRemoveUserFromProject = () =>
 const useCreateVirtualUser = () =>
   useMutation({
     mutationKey: [...userQueries.all(), "createVirtualUser"],
-    mutationFn: VirtualUsersService.createVirtualUser,
+    mutationFn: VirtualUsersService.create,
     meta: {
       datsEvent: "USER_CREATED",
       successMessage: (user: UserRead) => `Created virtual user ${user.first_name}`,
@@ -74,7 +74,7 @@ const useCreateVirtualUser = () =>
 const useUpdateUser = () =>
   useMutation({
     mutationKey: [...userQueries.all(), "updateUser"],
-    mutationFn: VirtualUsersService.updateVirtualUser,
+    mutationFn: VirtualUsersService.updateById,
     meta: {
       datsEvent: "USER_UPDATED",
       successMessage: (user: UserRead) => `Renamed virtual user to ${user.first_name}`,
@@ -85,7 +85,7 @@ const useUpdateUser = () =>
 const useDeleteUser = () =>
   useMutation({
     mutationKey: [...userQueries.all(), "deleteUser"],
-    mutationFn: VirtualUsersService.deleteVirtualUser,
+    mutationFn: VirtualUsersService.deleteById,
     meta: {
       datsEvent: "USER_DELETED",
       successMessage: (user: UserRead) => `Deleted virtual user ${user.first_name} and its annotations`,

@@ -163,7 +163,7 @@ export class FoldersService {
    * @returns number Successful Response
    * @throws ApiError
    */
-  public static getSdocIdsInFolderByDoctype({
+  public static getSourceDocuments({
     projectId,
     folderId,
   }: {

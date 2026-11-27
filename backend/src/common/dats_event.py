@@ -20,7 +20,7 @@ from core.metadata.project_metadata_dto import ProjectMetadataRead
 from core.metadata.source_document_metadata_dto import SourceDocumentMetadataRead
 from core.project.project_dto import ProjectRead, ProjectUserLinks
 from core.prompt.prompt_dto import PromptRead
-from core.tag.tag_dto import SdocTagLinksResult, TagRead
+from core.tag.tag_dto import SourceDocumentTagLinksResult, TagRead
 from core.user.user_dto import UserRead
 from modules.classifier.classifier_dto import ClassifierRead
 from modules.concept_over_time_analysis.cota_dto import ConceptOverTimeAnalysisRead
@@ -185,7 +185,7 @@ _DATS_EVENT_PAYLOADS: dict[DATSEvent, object] = {
     DATSEvent.SDOC_UPDATED: SourceDocumentRead,
     DATSEvent.SDOC_DELETED: SourceDocumentRead,
     DATSEvent.SDOC_DELETED_BATCH: list[SourceDocumentRead],
-    DATSEvent.SDOC_TAGS_LINKED: SdocTagLinksResult,
+    DATSEvent.SDOC_TAGS_LINKED: SourceDocumentTagLinksResult,
     DATSEvent.SPAN_ANNOTATION_CREATED: SpanAnnotationRead,
     DATSEvent.SPAN_ANNOTATION_UPDATED: SpanAnnotationRead,
     DATSEvent.SPAN_ANNOTATION_DELETED: SpanAnnotationDeleted,

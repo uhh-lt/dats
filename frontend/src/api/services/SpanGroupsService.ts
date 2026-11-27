@@ -231,7 +231,7 @@ export class SpanGroupsService {
    * @returns SpanAnnotationRead Successful Response
    * @throws ApiError
    */
-  public static getAnnotations({
+  public static getSpanAnnotations({
     projectId,
     spanGroupId,
   }: {

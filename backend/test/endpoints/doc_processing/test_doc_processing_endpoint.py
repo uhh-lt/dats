@@ -459,6 +459,24 @@ def test_search_statuses_sorts_by_the_status_of_a_step_or_a_column(
     assert result.total_results == 2
 
 
+def test_search_statuses_by_an_unknown_column_is_rejected(
+    client: TestClient, feature_project: FeatureProject
+):
+    """A sort column that is neither a step nor a column of the document
+    answers 400."""
+    response = client.post(
+        f"/projects/{feature_project['project'].id}/doc-processing/statuses",
+        json=SdocHealthSearchRequest(
+            doctype=DocType.text,
+            sorts=[SdocHealthSort(column="__class__", direction=SortDirection.ASC)],
+            page_number=0,
+            page_size=10,
+        ).model_dump(mode="json"),
+    )
+
+    assert response.status_code == 400, response.text
+
+
 def test_search_statuses_ignores_the_row_of_an_unregistered_step(
     client: TestClient, removed_step_project: RemovedStepProject
 ):
@@ -647,6 +665,20 @@ def test_recompute_of_a_document_of_another_project_is_not_found(
     response = _recompute(client, test_project.id, "language_detection", [sdoc_id])
 
     assert response.status_code == 404, response.text
+    assert started_steps(held_jobs) == {}
+
+
+def test_recompute_without_documents_is_rejected(
+    client: TestClient,
+    recompute_project: RecomputeProject,
+    held_jobs: HeldJobs,
+):
+    """An empty document list answers 400 and starts nothing."""
+    response = _recompute(
+        client, recompute_project["project"].id, "language_detection", []
+    )
+
+    assert response.status_code == 400, response.text
     assert started_steps(held_jobs) == {}
 
 

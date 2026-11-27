@@ -2,7 +2,7 @@
 /* istanbul ignore file */
 /* tslint:disable */
 /* eslint-disable */
-import type { SpanAnnotationCountRequest } from "@models/SpanAnnotationCountRequest";
+import type { AnnotationCountRequest } from "@models/AnnotationCountRequest";
 import type { SpanAnnotationCreate } from "@models/SpanAnnotationCreate";
 import type { SpanAnnotationDeleted } from "@models/SpanAnnotationDeleted";
 import type { SpanAnnotationRead } from "@models/SpanAnnotationRead";
@@ -262,7 +262,7 @@ export class SpanAnnotationsService {
     requestBody,
   }: {
     projectId: number;
-    requestBody: SpanAnnotationCountRequest;
+    requestBody: AnnotationCountRequest;
   }): CancelablePromise<Record<string, number>> {
     return __request(OpenAPI, {
       method: "POST",

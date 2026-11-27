@@ -111,7 +111,7 @@ def get_by_id(
     response_model=list[SpanAnnotationRead],
     summary="Returns all SpanAnnotations in the SpanGroup with the given ID",
 )
-def get_annotations(
+def get_span_annotations(
     *,
     db: DBSession,
     project_id: int,

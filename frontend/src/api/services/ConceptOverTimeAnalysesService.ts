@@ -253,7 +253,7 @@ export class ConceptOverTimeAnalysesService {
   }
   /**
    * Resets the ConceptOverTimeAnalysis
-   * Resets the ConceptOverTimeAnalysis deleting model, embeddings, refinement jobs and resetting the search space
+   * Resets the ConceptOverTimeAnalysis: clears its search space and its last refinement job
    * @returns ConceptOverTimeAnalysisRead Successful Response
    * @throws ApiError
    */

@@ -73,7 +73,7 @@ export const bboxAnnotationQueries = {
   tableInfo: (projectId: number) =>
     queryOptions({
       queryKey: tableInfoQueries.byDomain("bbox", projectId),
-      queryFn: async () => toColumnInfos(await SearchService.searchBboxAnnotationColumns({ projectId })),
+      queryFn: async () => toColumnInfos(await SearchService.getBboxAnnotationColumns({ projectId })),
       staleTime: Infinity,
     }),
 

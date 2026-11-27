@@ -2,10 +2,10 @@
 /* istanbul ignore file */
 /* tslint:disable */
 /* eslint-disable */
-import type { SdocTagLinks } from "@models/SdocTagLinks";
-import type { SdocTagLinksResult } from "@models/SdocTagLinksResult";
-import type { SourceDocumentTagMultiLink } from "@models/SourceDocumentTagMultiLink";
-import type { SourceDocumentTagMultiLinkRequest } from "@models/SourceDocumentTagMultiLinkRequest";
+import type { SourceDocumentTagChangeRequest } from "@models/SourceDocumentTagChangeRequest";
+import type { SourceDocumentTagLinkRequest } from "@models/SourceDocumentTagLinkRequest";
+import type { SourceDocumentTagLinksResult } from "@models/SourceDocumentTagLinksResult";
+import type { SourceDocumentTagReplaceRequest } from "@models/SourceDocumentTagReplaceRequest";
 import type { TagCountRequest } from "@models/TagCountRequest";
 import type { TagCreate } from "@models/TagCreate";
 import type { TagRead } from "@models/TagRead";
@@ -76,16 +76,16 @@ export class TagsService {
   }
   /**
    * Links the Tags with the SourceDocuments and returns the resulting tags per document
-   * @returns SdocTagLinksResult Successful Response
+   * @returns SourceDocumentTagLinksResult Successful Response
    * @throws ApiError
    */
-  public static linkTagsBulk({
+  public static addSourceDocumentsBulk({
     projectId,
     requestBody,
   }: {
     projectId: number;
-    requestBody: SourceDocumentTagMultiLink;
-  }): CancelablePromise<SdocTagLinksResult> {
+    requestBody: SourceDocumentTagLinkRequest;
+  }): CancelablePromise<SourceDocumentTagLinksResult> {
     return __request(OpenAPI, {
       method: "PUT",
       url: "/projects/{project_id}/tags/bulk/source-documents",
@@ -105,16 +105,16 @@ export class TagsService {
   }
   /**
    * Links and unlinks Tags of the SourceDocuments and returns the resulting tags per document
-   * @returns SdocTagLinksResult Successful Response
+   * @returns SourceDocumentTagLinksResult Successful Response
    * @throws ApiError
    */
-  public static updateSdocTagsBulk({
+  public static updateSourceDocumentsBulk({
     projectId,
     requestBody,
   }: {
     projectId: number;
-    requestBody: SourceDocumentTagMultiLinkRequest;
-  }): CancelablePromise<SdocTagLinksResult> {
+    requestBody: SourceDocumentTagChangeRequest;
+  }): CancelablePromise<SourceDocumentTagLinksResult> {
     return __request(OpenAPI, {
       method: "PATCH",
       url: "/projects/{project_id}/tags/bulk/source-documents",
@@ -134,16 +134,16 @@ export class TagsService {
   }
   /**
    * Unlinks the Tags from the SourceDocuments and returns the resulting tags per document
-   * @returns SdocTagLinksResult Successful Response
+   * @returns SourceDocumentTagLinksResult Successful Response
    * @throws ApiError
    */
-  public static unlinkTagsBulk({
+  public static removeSourceDocumentsBulk({
     projectId,
     requestBody,
   }: {
     projectId: number;
-    requestBody: SourceDocumentTagMultiLink;
-  }): CancelablePromise<SdocTagLinksResult> {
+    requestBody: SourceDocumentTagLinkRequest;
+  }): CancelablePromise<SourceDocumentTagLinksResult> {
     return __request(OpenAPI, {
       method: "DELETE",
       url: "/projects/{project_id}/tags/bulk/source-documents",
@@ -242,7 +242,7 @@ export class TagsService {
    * @returns number Successful Response
    * @throws ApiError
    */
-  public static getSdocIdsByTagId({
+  public static getSourceDocuments({
     projectId,
     tagId,
   }: {
@@ -296,16 +296,16 @@ export class TagsService {
   }
   /**
    * Sets the Tags of each SourceDocument to the given Tags and returns the resulting tags per document
-   * @returns SdocTagLinksResult Successful Response
+   * @returns SourceDocumentTagLinksResult Successful Response
    * @throws ApiError
    */
-  public static replaceSdocTagsBulk({
+  public static replaceSourceDocumentsBulk({
     projectId,
     requestBody,
   }: {
     projectId: number;
-    requestBody: SdocTagLinks;
-  }): CancelablePromise<SdocTagLinksResult> {
+    requestBody: SourceDocumentTagReplaceRequest;
+  }): CancelablePromise<SourceDocumentTagLinksResult> {
     return __request(OpenAPI, {
       method: "PATCH",
       url: "/projects/{project_id}/tags/bulk/source-documents/replace",

@@ -14,7 +14,7 @@ export class SourceDocumentMetadataService {
    * @returns SourceDocumentMetadataRead Successful Response
    * @throws ApiError
    */
-  public static getBySdoc({
+  public static getByProject({
     projectId,
     sdocId,
     key,

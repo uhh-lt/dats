@@ -26,7 +26,7 @@ export const projectQueries = {
   userProjects: () =>
     queryOptions({
       queryKey: [...projectQueries.all(), "user"] as const,
-      queryFn: () => UsersService.getUserProjects(),
+      queryFn: () => UsersService.getProjects(),
       staleTime: 1000 * 60 * 5,
     }),
 

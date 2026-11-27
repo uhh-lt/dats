@@ -20,7 +20,7 @@ router = project_router("/virtual-users", tags=["virtualUsers", "mcp"])
     response_model=UserRead,
     summary="Creates a virtual user (a user that cannot log in) in the Project",
 )
-def create_virtual_user(
+def create(
     *,
     project_id: int,
     virtual_user: VirtualUserCreate,
@@ -43,7 +43,7 @@ def create_virtual_user(
     response_model=UserRead,
     summary="Updates the virtual user with the given ID of the Project",
 )
-def update_virtual_user(
+def update_by_id(
     *,
     project_id: int,
     virtual_user_id: int,
@@ -75,7 +75,7 @@ def update_virtual_user(
         "deleted here (HTTP 409); delete its run in the Experiment Studio."
     ),
 )
-def delete_virtual_user(
+def delete_by_id(
     *,
     project_id: int,
     virtual_user_id: int,

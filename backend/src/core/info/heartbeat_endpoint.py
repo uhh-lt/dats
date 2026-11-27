@@ -4,6 +4,9 @@ from fastapi import APIRouter
 router = APIRouter(prefix="/heartbeat", tags=["heartbeat"])
 
 
-@router.get("")
-def heartbeat():
+# --- read operations
+
+
+@router.get("", response_model=bool, summary="Answers true while the API is up")
+def heartbeat() -> bool:
     return True

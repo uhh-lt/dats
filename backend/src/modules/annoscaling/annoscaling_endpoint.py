@@ -21,27 +21,7 @@ router = project_router(
 ass: AnnoScalingService = AnnoScalingService()
 
 
-@router.post(
-    "/suggestions",
-    summary="Suggest annotations",
-    description="Suggest annotations",
-)
-def compute_suggestions(
-    *,
-    db: DBSession,
-    project_id: int,
-    dto: AnnoscalingSuggest,
-    authz_user: AuthzUser = Depends(),
-) -> list[AnnoscalingResult]:
-
-    return ass.suggest(
-        db=db,
-        project_id=project_id,
-        user_ids=[authz_user.user.id],
-        code_id=dto.code_id,
-        reject_code_id=dto.reject_code_id,
-        top_k=dto.top_k,
-    )
+# --- create operations
 
 
 @router.put(
@@ -75,3 +55,30 @@ def confirm_suggestions(
             project_id=project_id,
         )
     return results
+
+
+# --- other operations
+
+
+@router.post(
+    "/suggestions",
+    response_model=list[AnnoscalingResult],
+    summary="Suggest annotations",
+    description="Suggest annotations",
+)
+def compute_suggestions(
+    *,
+    db: DBSession,
+    project_id: int,
+    dto: AnnoscalingSuggest,
+    authz_user: AuthzUser = Depends(),
+) -> list[AnnoscalingResult]:
+
+    return ass.suggest(
+        db=db,
+        project_id=project_id,
+        user_ids=[authz_user.user.id],
+        code_id=dto.code_id,
+        reject_code_id=dto.reject_code_id,
+        top_k=dto.top_k,
+    )

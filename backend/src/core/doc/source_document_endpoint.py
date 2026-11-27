@@ -88,7 +88,7 @@ def get_by_id(
     response_model=SourceDocumentDataRead,
     summary="Returns the SourceDocumentData of the SourceDocument with the given ID if it exists",
 )
-def get_by_id_with_data(
+def get_data(
     *,
     db: DBSession,
     project_id: int,

@@ -181,7 +181,7 @@ export class WhiteboardsService {
    * @returns WhiteboardData Successful Response
    * @throws ApiError
    */
-  public static getDataById({
+  public static getData({
     projectId,
     whiteboardId,
   }: {

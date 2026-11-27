@@ -3,8 +3,8 @@ from fastapi.testclient import TestClient
 
 from composite_keys_test_utils import TwoTenants
 from core.tag.tag_dto import (
-    SdocTagLinks,
-    SourceDocumentTagMultiLink,
+    SourceDocumentTagLinkRequest,
+    SourceDocumentTagReplaceRequest,
     TagCreate,
     TagRead,
     TagUpdate,
@@ -17,9 +17,9 @@ def _tags_url(project_id: int) -> str:
 
 
 def _links(response_json: dict) -> dict[int, set[int]]:
-    """The tag ids per document of an SdocTagLinks response, as sets (the order of
+    """The tag ids per document of an SourceDocumentTagReplaceRequest response, as sets (the order of
     the tag ids is not deterministic)."""
-    links = SdocTagLinks.model_validate(response_json).links
+    links = SourceDocumentTagReplaceRequest.model_validate(response_json).links
     return {sdoc_id: set(tag_ids) for sdoc_id, tag_ids in links.items()}
 
 
@@ -270,6 +270,19 @@ def test_update_tag_with_a_parent_of_another_project_is_a_conflict(
     assert TagRead.model_validate(resp.json()).parent_id == own["tag"].id
 
 
+def test_update_tag_as_its_own_parent_is_rejected(
+    client: TestClient, tenants: TwoTenants
+):
+    """A tag cannot become its own parent (400, a rule of the domain)."""
+    own = tenants["own"]
+    url = f"{_tags_url(own['project'].id)}/{own['tag'].id}"
+
+    resp = client.patch(url, json={"parent_id": own["tag"].id})
+
+    assert resp.status_code == 400, resp.text
+    assert "its own parent" in resp.text
+
+
 # ===========================================================================
 # UPDATE TAGS BULK (PATCH /projects/{project_id}/tags/bulk) TESTS
 # ===========================================================================
@@ -383,7 +396,7 @@ def test_link_tags_bulk(
     sdoc = project_with_multiple_sdocs_and_multiple_tags["source_document2"]
     tag1 = project_with_multiple_sdocs_and_multiple_tags["tag1"]
     tag2 = project_with_multiple_sdocs_and_multiple_tags["tag2"]
-    payload = SourceDocumentTagMultiLink(
+    payload = SourceDocumentTagLinkRequest(
         source_document_ids=[sdoc.id], tag_ids=[tag1.id, tag2.id]
     )
 
@@ -519,7 +532,9 @@ def test_set_sdoc_tags_bulk(
     sdoc2 = project_with_multiple_sdocs_and_multiple_tags["source_document2"]
     tag1 = project_with_multiple_sdocs_and_multiple_tags["tag1"]
     tag2 = project_with_multiple_sdocs_and_multiple_tags["tag2"]
-    payload = SdocTagLinks(links={sdoc1.id: [tag2.id], sdoc2.id: [tag1.id, tag2.id]})
+    payload = SourceDocumentTagReplaceRequest(
+        links={sdoc1.id: [tag2.id], sdoc2.id: [tag1.id, tag2.id]}
+    )
 
     resp = client.patch(
         f"{_tags_url(project.id)}/bulk/source-documents/replace",
@@ -536,7 +551,9 @@ def test_set_sdoc_tags_bulk_with_a_document_of_another_project_is_a_conflict(
     """A document of another project gets no tags of the path's project: the
     composite foreign key rejects the link (409)."""
     own, foreign = tenants["own"], tenants["foreign"]
-    payload = SdocTagLinks(links={foreign["bare_sdoc"].id: [own["tag"].id]})
+    payload = SourceDocumentTagReplaceRequest(
+        links={foreign["bare_sdoc"].id: [own["tag"].id]}
+    )
 
     resp = client.patch(
         f"{_tags_url(own['project'].id)}/bulk/source-documents/replace",

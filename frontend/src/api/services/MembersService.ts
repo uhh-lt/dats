@@ -14,7 +14,7 @@ export class MembersService {
    * @returns ProjectUserLinks Successful Response
    * @throws ApiError
    */
-  public static associateUserToProject({
+  public static create({
     projectId,
     requestBody,
   }: {
@@ -64,7 +64,7 @@ export class MembersService {
    * @returns ProjectUserLinks Successful Response
    * @throws ApiError
    */
-  public static dissociateUserFromProject({
+  public static deleteById({
     projectId,
     userId,
   }: {

@@ -175,7 +175,7 @@ export class SourceDocumentsService {
    * @returns SourceDocumentDataRead Successful Response
    * @throws ApiError
    */
-  public static getByIdWithData({
+  public static getData({
     projectId,
     sdocId,
     onlyIfFinished = false,

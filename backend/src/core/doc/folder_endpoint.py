@@ -78,7 +78,7 @@ def get_by_id(
     response_model=dict[DocType, list[int]],
     summary="Returns lists of source document ids per doctype in the specified sdoc folder",
 )
-def get_sdoc_ids_in_folder_by_doctype(
+def get_source_documents(
     *,
     db: DBSession,
     project_id: int,
@@ -88,7 +88,7 @@ def get_sdoc_ids_in_folder_by_doctype(
     if folder.folder_type != FolderType.SDOC_FOLDER:
         raise FolderNotSdocFolderError(folder_id=folder_id)
     result: dict[DocType, list[int]] = {dt: [] for dt in DocType}
-    for sdoc in folder.source_documents:
+    for sdoc in sorted(folder.source_documents, key=lambda sdoc: sdoc.id):
         result[DocType(sdoc.doctype)].append(sdoc.id)
     return result
 

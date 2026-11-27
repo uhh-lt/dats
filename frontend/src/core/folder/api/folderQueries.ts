@@ -45,7 +45,7 @@ export const folderQueries = {
       queryFn:
         !projectId || !sdocFolderId
           ? skipToken
-          : () => FoldersService.getSdocIdsInFolderByDoctype({ projectId, folderId: sdocFolderId }),
+          : () => FoldersService.getSourceDocuments({ projectId, folderId: sdocFolderId }),
       staleTime: 1000 * 60 * 5,
     }),
 };

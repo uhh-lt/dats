@@ -9,6 +9,9 @@ from modules.search_annotate.search_annotate_dto import (
 router = project_router("/search-annotate", tags=["searchAnnotate"])
 
 
+# --- other operations
+
+
 @router.post(
     "/candidates",
     response_model=PaginatedSpanAnnotationHits,

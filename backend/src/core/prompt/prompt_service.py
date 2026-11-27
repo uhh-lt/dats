@@ -17,8 +17,8 @@ from core.prompt.prompt_dto import (
     PromptCreate,
     PromptCreateIntern,
     PromptExample,
-    PromptExamplesCreate,
     PromptExampleSpan,
+    PromptExamplesRequest,
     PromptPreview,
     PromptPreviewRequest,
     PromptRead,
@@ -191,7 +191,7 @@ class PromptService(metaclass=SingletonMeta):
         ]
 
     def create_prompt_examples(
-        self, *, db: Session, project_id: int, create_dto: PromptExamplesCreate
+        self, *, db: Session, project_id: int, create_dto: PromptExamplesRequest
     ) -> list[PromptExample]:
         """Turn annotations into few-shot examples, in the order of the annotation ids.
 

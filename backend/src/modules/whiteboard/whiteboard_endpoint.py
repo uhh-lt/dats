@@ -101,7 +101,7 @@ def get_by_id(
     response_model=WhiteboardData,
     summary="Returns the data of the objects on the Whiteboard with the given ID",
 )
-def get_data_by_id(
+def get_data(
     *,
     db: DBSession,
     project_id: int,

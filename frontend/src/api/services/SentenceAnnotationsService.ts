@@ -2,7 +2,7 @@
 /* istanbul ignore file */
 /* tslint:disable */
 /* eslint-disable */
-import type { SentenceAnnotationCountRequest } from "@models/SentenceAnnotationCountRequest";
+import type { AnnotationCountRequest } from "@models/AnnotationCountRequest";
 import type { SentenceAnnotationCreate } from "@models/SentenceAnnotationCreate";
 import type { SentenceAnnotationRead } from "@models/SentenceAnnotationRead";
 import type { SentenceAnnotationUpdate } from "@models/SentenceAnnotationUpdate";
@@ -295,7 +295,7 @@ export class SentenceAnnotationsService {
     requestBody,
   }: {
     projectId: number;
-    requestBody: SentenceAnnotationCountRequest;
+    requestBody: AnnotationCountRequest;
   }): CancelablePromise<Record<string, number>> {
     return __request(OpenAPI, {
       method: "POST",

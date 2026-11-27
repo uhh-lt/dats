@@ -2,8 +2,8 @@
 /* istanbul ignore file */
 /* tslint:disable */
 /* eslint-disable */
-import type { SdocTagLinksResult } from "./SdocTagLinksResult";
+import type { SourceDocumentTagLinksResult } from "./SourceDocumentTagLinksResult";
 export type SdocTagsLinkedEvent = {
   type?: string;
-  payload: SdocTagLinksResult;
+  payload: SourceDocumentTagLinksResult;
 };

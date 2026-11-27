@@ -46,7 +46,7 @@ export const sdocQueries = {
   data: (projectId: number, sdocId: number) =>
     queryOptions({
       queryKey: [...sdocQueries.dataScope(projectId), sdocId] as const,
-      queryFn: () => SourceDocumentsService.getByIdWithData({ projectId, sdocId }),
+      queryFn: () => SourceDocumentsService.getData({ projectId, sdocId }),
       staleTime: Infinity,
     }),
 
@@ -90,7 +90,7 @@ export const sdocQueries = {
   idsByTag: (projectId: number | null | undefined, tagId: number | null | undefined) =>
     queryOptions({
       queryKey: [...sdocQueries.idsByTagScope(projectId), tagId] as const,
-      queryFn: !projectId || !tagId ? skipToken : () => TagsService.getSdocIdsByTagId({ projectId, tagId }),
+      queryFn: !projectId || !tagId ? skipToken : () => TagsService.getSourceDocuments({ projectId, tagId }),
     }),
 
   // user ids that annotated the sdoc
@@ -107,7 +107,7 @@ export const sdocQueries = {
   tableInfo: (projectId: number) =>
     queryOptions({
       queryKey: tableInfoQueries.byDomain("sdoc", projectId),
-      queryFn: async () => toColumnInfos(await SearchService.searchSdocColumns({ projectId })),
+      queryFn: async () => toColumnInfos(await SearchService.getSourceDocumentColumns({ projectId })),
       staleTime: Infinity,
     }),
 
@@ -118,7 +118,7 @@ export const sdocQueries = {
     infiniteQueryOptions({
       queryKey: [...sdocQueries.searchScope(projectId), request] as const,
       queryFn: async ({ pageParam }) => {
-        const data = await SearchService.searchSdocs({
+        const data = await SearchService.searchSourceDocuments({
           projectId,
           requestBody: { ...request, highlight: true, page_number: pageParam },
         });

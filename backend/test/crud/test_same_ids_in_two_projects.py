@@ -260,6 +260,7 @@ def _assert_same_answers(
 # the value of a parameter of a CRUD read, by its name, on the rows of the project
 PARAMETERS: dict[str, Callable[[TenantRows], Any]] = {
     "user_id": lambda rows: rows["adoc"].user_id,
+    "opened_by_user_id": lambda rows: rows["adoc"].user_id,
     "sdoc_id": lambda rows: rows["sdoc"].id,
     "sdoc_ids": lambda rows: [rows["sdoc"].id],
     "code_id": lambda rows: rows["code"].id,
@@ -324,7 +325,10 @@ def _crud_reads(db: Session, rows: TenantRows) -> dict[str, Read]:
             arguments: dict[str, Any] = {}
             for parameter in parameters.values():
                 if parameter.name in ("db", "project_id") or (
+                    # an optional parameter is passed when its value is known, so
+                    # its filter or join is compared too
                     parameter.default is not parameter.empty
+                    and parameter.name not in PARAMETERS
                 ):
                     continue
                 column = parameter.name.removesuffix("s")

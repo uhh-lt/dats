@@ -12,8 +12,8 @@ from core.prompt.prompt_dto import (
     PromptContent,
     PromptCreate,
     PromptExample,
-    PromptExamplesCreate,
     PromptExampleSpan,
+    PromptExamplesRequest,
     PromptMetadataField,
     PromptPreview,
     PromptPreviewRequest,
@@ -1030,7 +1030,7 @@ def _post_examples(
 ):
     return client.post(
         _prompts_url(project[project_key].id, "/examples"),  # type: ignore[literal-required]
-        json=PromptExamplesCreate(
+        json=PromptExamplesRequest(
             kind=kind,
             annotation_ids=annotation_ids,
         ).model_dump(mode="json"),

@@ -112,49 +112,6 @@
         }
       }
     },
-    "/projects/{project_id}/annotation-scaling/suggestions": {
-      "post": {
-        "tags": ["annotationScaling"],
-        "summary": "Suggest annotations",
-        "description": "Suggest annotations",
-        "operationId": "compute_suggestions",
-        "security": [{ "OAuth2PasswordBearer": [] }],
-        "parameters": [
-          {
-            "name": "project_id",
-            "in": "path",
-            "required": true,
-            "schema": { "type": "integer", "title": "Project Id" }
-          }
-        ],
-        "requestBody": {
-          "required": true,
-          "content": { "application/json": { "schema": { "$ref": "#/components/schemas/AnnoscalingSuggest" } } }
-        },
-        "responses": {
-          "200": {
-            "description": "Successful Response",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "array",
-                  "items": { "$ref": "#/components/schemas/AnnoscalingResult" },
-                  "title": "Response Annotationscaling-Compute Suggestions"
-                }
-              }
-            }
-          },
-          "400": { "description": "The request breaks a rule of the domain" },
-          "403": { "description": "The user is no member of the project, or the feature is disabled" },
-          "404": { "description": "A path id, or an id the route reads, is not in the project" },
-          "409": { "description": "A body id violates a foreign key, or a value a unique constraint" },
-          "422": {
-            "description": "Validation Error",
-            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/HTTPValidationError" } } }
-          }
-        }
-      }
-    },
     "/projects/{project_id}/annotation-scaling/suggestions/confirm": {
       "put": {
         "tags": ["annotationScaling"],
@@ -183,6 +140,49 @@
                   "type": "array",
                   "items": { "$ref": "#/components/schemas/SpanAnnotationRead" },
                   "title": "Response Annotationscaling-Confirm Suggestions"
+                }
+              }
+            }
+          },
+          "400": { "description": "The request breaks a rule of the domain" },
+          "403": { "description": "The user is no member of the project, or the feature is disabled" },
+          "404": { "description": "A path id, or an id the route reads, is not in the project" },
+          "409": { "description": "A body id violates a foreign key, or a value a unique constraint" },
+          "422": {
+            "description": "Validation Error",
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/HTTPValidationError" } } }
+          }
+        }
+      }
+    },
+    "/projects/{project_id}/annotation-scaling/suggestions": {
+      "post": {
+        "tags": ["annotationScaling"],
+        "summary": "Suggest annotations",
+        "description": "Suggest annotations",
+        "operationId": "compute_suggestions",
+        "security": [{ "OAuth2PasswordBearer": [] }],
+        "parameters": [
+          {
+            "name": "project_id",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "integer", "title": "Project Id" }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": { "application/json": { "schema": { "$ref": "#/components/schemas/AnnoscalingSuggest" } } }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": { "$ref": "#/components/schemas/AnnoscalingResult" },
+                  "title": "Response Annotationscaling-Compute Suggestions"
                 }
               }
             }
@@ -287,6 +287,68 @@
         }
       }
     },
+    "/authentication/content": {
+      "get": {
+        "tags": ["authentication"],
+        "summary": "Returns success if the user can access the content",
+        "operationId": "auth_content",
+        "parameters": [
+          {
+            "name": "x-original-uri",
+            "in": "header",
+            "required": false,
+            "schema": { "anyOf": [{ "type": "string" }, { "type": "null" }], "title": "X-Original-Uri" }
+          }
+        ],
+        "responses": {
+          "200": { "description": "Successful Response", "content": { "application/json": { "schema": {} } } },
+          "422": {
+            "description": "Validation Error",
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/HTTPValidationError" } } }
+          }
+        }
+      }
+    },
+    "/authentication/oidc/login": {
+      "get": {
+        "tags": ["authentication"],
+        "summary": "Redirects to the login page of the OIDC provider",
+        "operationId": "oidc_login",
+        "parameters": [
+          { "name": "provider", "in": "query", "required": true, "schema": { "type": "string", "title": "Provider" } },
+          {
+            "name": "redirect_uri",
+            "in": "query",
+            "required": true,
+            "schema": { "type": "string", "title": "Redirect Uri" }
+          }
+        ],
+        "responses": {
+          "200": { "description": "Successful Response", "content": { "application/json": { "schema": {} } } },
+          "422": {
+            "description": "Validation Error",
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/HTTPValidationError" } } }
+          }
+        }
+      }
+    },
+    "/authentication/oidc/callback": {
+      "get": {
+        "tags": ["authentication"],
+        "summary": "Logs the user in after the OIDC provider redirected back",
+        "operationId": "oidc_callback",
+        "parameters": [
+          { "name": "provider", "in": "query", "required": true, "schema": { "type": "string", "title": "Provider" } }
+        ],
+        "responses": {
+          "200": { "description": "Successful Response", "content": { "application/json": { "schema": {} } } },
+          "422": {
+            "description": "Validation Error",
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/HTTPValidationError" } } }
+          }
+        }
+      }
+    },
     "/authentication/login": {
       "post": {
         "tags": ["authentication"],
@@ -355,72 +417,10 @@
         }
       }
     },
-    "/authentication/content": {
-      "get": {
-        "tags": ["authentication"],
-        "summary": "Returns success if the user can access the content",
-        "operationId": "auth_content",
-        "parameters": [
-          {
-            "name": "x-original-uri",
-            "in": "header",
-            "required": false,
-            "schema": { "anyOf": [{ "type": "string" }, { "type": "null" }], "title": "X-Original-Uri" }
-          }
-        ],
-        "responses": {
-          "200": { "description": "Successful Response", "content": { "application/json": { "schema": {} } } },
-          "422": {
-            "description": "Validation Error",
-            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/HTTPValidationError" } } }
-          }
-        }
-      }
-    },
-    "/authentication/oidc/login": {
-      "get": {
-        "tags": ["authentication"],
-        "summary": "Oidc Login",
-        "operationId": "oidc_login",
-        "parameters": [
-          { "name": "provider", "in": "query", "required": true, "schema": { "type": "string", "title": "Provider" } },
-          {
-            "name": "redirect_uri",
-            "in": "query",
-            "required": true,
-            "schema": { "type": "string", "title": "Redirect Uri" }
-          }
-        ],
-        "responses": {
-          "200": { "description": "Successful Response", "content": { "application/json": { "schema": {} } } },
-          "422": {
-            "description": "Validation Error",
-            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/HTTPValidationError" } } }
-          }
-        }
-      }
-    },
-    "/authentication/oidc/callback": {
-      "get": {
-        "tags": ["authentication"],
-        "summary": "Oidc Callback",
-        "operationId": "oidc_callback",
-        "parameters": [
-          { "name": "provider", "in": "query", "required": true, "schema": { "type": "string", "title": "Provider" } }
-        ],
-        "responses": {
-          "200": { "description": "Successful Response", "content": { "application/json": { "schema": {} } } },
-          "422": {
-            "description": "Validation Error",
-            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/HTTPValidationError" } } }
-          }
-        }
-      }
-    },
     "/authentication/sync-session": {
       "post": {
         "tags": ["authentication"],
-        "summary": "Sync Session",
+        "summary": "Sets the access token of the request as the session cookie",
         "operationId": "sync_session",
         "responses": {
           "200": { "description": "Successful Response", "content": { "application/json": { "schema": {} } } }
@@ -1481,7 +1481,7 @@
       "patch": {
         "tags": ["conceptOverTimeAnalyses"],
         "summary": "Resets the ConceptOverTimeAnalysis",
-        "description": "Resets the ConceptOverTimeAnalysis deleting model, embeddings, refinement jobs and resetting the search space",
+        "description": "Resets the ConceptOverTimeAnalysis: clears its search space and its last refinement job",
         "operationId": "reset",
         "security": [{ "OAuth2PasswordBearer": [] }],
         "parameters": [
@@ -1591,38 +1591,6 @@
       }
     },
     "/projects/{project_id}/doc-processing/statuses": {
-      "post": {
-        "tags": ["docProcessing"],
-        "summary": "Get all SourceDocumentStatusDetailed for the Project with the given ID by status",
-        "operationId": "search_statuses",
-        "security": [{ "OAuth2PasswordBearer": [] }],
-        "parameters": [
-          {
-            "name": "project_id",
-            "in": "path",
-            "required": true,
-            "schema": { "type": "integer", "title": "Project Id" }
-          }
-        ],
-        "requestBody": {
-          "required": true,
-          "content": { "application/json": { "schema": { "$ref": "#/components/schemas/SdocHealthSearchRequest" } } }
-        },
-        "responses": {
-          "200": {
-            "description": "Successful Response",
-            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/SdocHealthResult" } } }
-          },
-          "400": { "description": "The request breaks a rule of the domain" },
-          "403": { "description": "The user is no member of the project, or the feature is disabled" },
-          "404": { "description": "A path id, or an id the route reads, is not in the project" },
-          "409": { "description": "A body id violates a foreign key, or a value a unique constraint" },
-          "422": {
-            "description": "Validation Error",
-            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/HTTPValidationError" } } }
-          }
-        }
-      },
       "get": {
         "tags": ["docProcessing"],
         "summary": "Get all SourceDocumentStatusSimple for the Project with the given ID by status",
@@ -1649,6 +1617,38 @@
                 }
               }
             }
+          },
+          "400": { "description": "The request breaks a rule of the domain" },
+          "403": { "description": "The user is no member of the project, or the feature is disabled" },
+          "404": { "description": "A path id, or an id the route reads, is not in the project" },
+          "409": { "description": "A body id violates a foreign key, or a value a unique constraint" },
+          "422": {
+            "description": "Validation Error",
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/HTTPValidationError" } } }
+          }
+        }
+      },
+      "post": {
+        "tags": ["docProcessing"],
+        "summary": "Get all SourceDocumentStatusDetailed for the Project with the given ID by status",
+        "operationId": "search_statuses",
+        "security": [{ "OAuth2PasswordBearer": [] }],
+        "parameters": [
+          {
+            "name": "project_id",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "integer", "title": "Project Id" }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": { "application/json": { "schema": { "$ref": "#/components/schemas/SdocHealthSearchRequest" } } }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/SdocHealthResult" } } }
           },
           "400": { "description": "The request breaks a rule of the domain" },
           "403": { "description": "The user is no member of the project, or the feature is disabled" },
@@ -2265,6 +2265,41 @@
         }
       }
     },
+    "/projects/{project_id}/features/{feature}/disable": {
+      "patch": {
+        "tags": ["features"],
+        "summary": "Disables the partly or fully available Feature in the Project; its data is kept. Returns the enabled Features",
+        "operationId": "disable",
+        "security": [{ "OAuth2PasswordBearer": [] }],
+        "parameters": [
+          {
+            "name": "project_id",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "integer", "title": "Project Id" }
+          },
+          { "name": "feature", "in": "path", "required": true, "schema": { "type": "string", "title": "Feature" } }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": { "type": "array", "items": { "type": "string" }, "title": "Response Features-Disable" }
+              }
+            }
+          },
+          "400": { "description": "The request breaks a rule of the domain" },
+          "403": { "description": "The user is no member of the project, or the feature is disabled" },
+          "404": { "description": "A path id, or an id the route reads, is not in the project" },
+          "409": { "description": "A body id violates a foreign key, or a value a unique constraint" },
+          "422": {
+            "description": "Validation Error",
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/HTTPValidationError" } } }
+          }
+        }
+      }
+    },
     "/projects/{project_id}/features/{feature}/complete": {
       "post": {
         "tags": ["features"],
@@ -2290,41 +2325,6 @@
             "content": {
               "application/json": {
                 "schema": { "type": "array", "items": { "type": "string" }, "title": "Response Features-Complete" }
-              }
-            }
-          },
-          "400": { "description": "The request breaks a rule of the domain" },
-          "403": { "description": "The user is no member of the project, or the feature is disabled" },
-          "404": { "description": "A path id, or an id the route reads, is not in the project" },
-          "409": { "description": "A body id violates a foreign key, or a value a unique constraint" },
-          "422": {
-            "description": "Validation Error",
-            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/HTTPValidationError" } } }
-          }
-        }
-      }
-    },
-    "/projects/{project_id}/features/{feature}/disable": {
-      "patch": {
-        "tags": ["features"],
-        "summary": "Disables the partly or fully available Feature in the Project; its data is kept. Returns the enabled Features",
-        "operationId": "disable",
-        "security": [{ "OAuth2PasswordBearer": [] }],
-        "parameters": [
-          {
-            "name": "project_id",
-            "in": "path",
-            "required": true,
-            "schema": { "type": "integer", "title": "Project Id" }
-          },
-          { "name": "feature", "in": "path", "required": true, "schema": { "type": "string", "title": "Feature" } }
-        ],
-        "responses": {
-          "200": {
-            "description": "Successful Response",
-            "content": {
-              "application/json": {
-                "schema": { "type": "array", "items": { "type": "string" }, "title": "Response Features-Disable" }
               }
             }
           },
@@ -2515,7 +2515,7 @@
       "get": {
         "tags": ["folders"],
         "summary": "Returns lists of source document ids per doctype in the specified sdoc folder",
-        "operationId": "get_sdoc_ids_in_folder_by_doctype",
+        "operationId": "get_source_documents",
         "security": [{ "OAuth2PasswordBearer": [] }],
         "parameters": [
           {
@@ -2535,7 +2535,7 @@
                   "type": "object",
                   "additionalProperties": { "type": "array", "items": { "type": "integer" } },
                   "propertyNames": { "$ref": "#/components/schemas/DocType" },
-                  "title": "Response Folders-Get Sdoc Ids In Folder By Doctype"
+                  "title": "Response Folders-Get Source Documents"
                 }
               }
             }
@@ -2604,10 +2604,15 @@
     "/heartbeat": {
       "get": {
         "tags": ["heartbeat"],
-        "summary": "Heartbeat",
+        "summary": "Answers true while the API is up",
         "operationId": "heartbeat",
         "responses": {
-          "200": { "description": "Successful Response", "content": { "application/json": { "schema": {} } } }
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": { "schema": { "type": "boolean", "title": "Response Heartbeat-Heartbeat" } }
+            }
+          }
         }
       }
     },
@@ -2686,8 +2691,8 @@
     "/info": {
       "get": {
         "tags": ["info"],
-        "summary": "Info",
-        "operationId": "info",
+        "summary": "Returns the information of the DATS instance",
+        "operationId": "get_info",
         "responses": {
           "200": {
             "description": "Successful Response",
@@ -2700,17 +2705,13 @@
       "get": {
         "tags": ["info"],
         "summary": "Get all available LLM models from the LLM Provider",
-        "operationId": "get_available_models",
+        "operationId": "get_llms",
         "responses": {
           "200": {
             "description": "Successful Response",
             "content": {
               "application/json": {
-                "schema": {
-                  "items": { "type": "string" },
-                  "type": "array",
-                  "title": "Response Info-Get Available Models"
-                }
+                "schema": { "items": { "type": "string" }, "type": "array", "title": "Response Info-Get Llms" }
               }
             }
           }
@@ -3879,7 +3880,7 @@
       "get": {
         "tags": ["users"],
         "summary": "Returns all Projects of the logged-in User",
-        "operationId": "get_user_projects",
+        "operationId": "get_projects",
         "responses": {
           "200": {
             "description": "Successful Response",
@@ -3888,7 +3889,7 @@
                 "schema": {
                   "items": { "$ref": "#/components/schemas/ProjectRead" },
                   "type": "array",
-                  "title": "Response Users-Get User Projects"
+                  "title": "Response Users-Get Projects"
                 }
               }
             }
@@ -3901,7 +3902,7 @@
       "put": {
         "tags": ["members"],
         "summary": "Adds the existing User with the given email to the Project as a member",
-        "operationId": "associate_user_to_project",
+        "operationId": "create",
         "security": [{ "OAuth2PasswordBearer": [] }],
         "parameters": [
           {
@@ -3971,7 +3972,7 @@
       "delete": {
         "tags": ["members"],
         "summary": "Removes the member with the given ID from the Project",
-        "operationId": "dissociate_user_from_project",
+        "operationId": "delete_by_id",
         "security": [{ "OAuth2PasswordBearer": [] }],
         "parameters": [
           {
@@ -4074,7 +4075,7 @@
             "name": "limit",
             "in": "query",
             "required": false,
-            "schema": { "anyOf": [{ "type": "integer" }, { "type": "null" }], "title": "Limit" }
+            "schema": { "anyOf": [{ "type": "integer", "minimum": 1 }, { "type": "null" }], "title": "Limit" }
           }
         ],
         "responses": {
@@ -4558,7 +4559,7 @@
       "get": {
         "tags": ["perspectives"],
         "summary": "Returns the Document Aspect Content for the given IDs.",
-        "operationId": "get_docaspect_by_id",
+        "operationId": "get_source_document",
         "security": [{ "OAuth2PasswordBearer": [] }],
         "parameters": [
           {
@@ -4580,7 +4581,7 @@
             "description": "Successful Response",
             "content": {
               "application/json": {
-                "schema": { "type": "string", "title": "Response Perspectives-Get Docaspect By Id" }
+                "schema": { "type": "string", "title": "Response Perspectives-Get Source Document" }
               }
             }
           },
@@ -4640,6 +4641,39 @@
         }
       }
     },
+    "/projects/{project_id}/perspectives/aspects/{aspect_id}/cluster-similarities": {
+      "get": {
+        "tags": ["perspectives"],
+        "summary": "Returns data for visualizing the cluster similarities of the given aspect.",
+        "operationId": "get_cluster_similarities",
+        "security": [{ "OAuth2PasswordBearer": [] }],
+        "parameters": [
+          {
+            "name": "project_id",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "integer", "title": "Project Id" }
+          },
+          { "name": "aspect_id", "in": "path", "required": true, "schema": { "type": "integer", "title": "Aspect Id" } }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": { "schema": { "$ref": "#/components/schemas/PerspectivesClusterSimilarities" } }
+            }
+          },
+          "400": { "description": "The request breaks a rule of the domain" },
+          "403": { "description": "The user is no member of the project, or the feature is disabled" },
+          "404": { "description": "A path id, or an id the route reads, is not in the project" },
+          "409": { "description": "A body id violates a foreign key, or a value a unique constraint" },
+          "422": {
+            "description": "Validation Error",
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/HTTPValidationError" } } }
+          }
+        }
+      }
+    },
     "/projects/{project_id}/perspectives/aspects/{aspect_id}/clusters/{cluster_id}": {
       "patch": {
         "tags": ["perspectives"],
@@ -4674,43 +4708,6 @@
           "200": {
             "description": "Successful Response",
             "content": { "application/json": { "schema": { "$ref": "#/components/schemas/ClusterRead" } } }
-          },
-          "400": { "description": "The request breaks a rule of the domain" },
-          "403": { "description": "The user is no member of the project, or the feature is disabled" },
-          "404": { "description": "A path id, or an id the route reads, is not in the project" },
-          "409": { "description": "A body id violates a foreign key, or a value a unique constraint" },
-          "422": {
-            "description": "Validation Error",
-            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/HTTPValidationError" } } }
-          }
-        }
-      }
-    },
-    "/projects/{project_id}/perspectives/aspects/{aspect_id}/visualization": {
-      "post": {
-        "tags": ["perspectives"],
-        "summary": "Returns data for visualizing the documents of the given aspect.",
-        "operationId": "compute_visualization",
-        "security": [{ "OAuth2PasswordBearer": [] }],
-        "parameters": [
-          {
-            "name": "project_id",
-            "in": "path",
-            "required": true,
-            "schema": { "type": "integer", "title": "Project Id" }
-          },
-          { "name": "aspect_id", "in": "path", "required": true, "schema": { "type": "integer", "title": "Aspect Id" } }
-        ],
-        "requestBody": {
-          "required": true,
-          "content": { "application/json": { "schema": { "$ref": "#/components/schemas/VisualizationRequest" } } }
-        },
-        "responses": {
-          "200": {
-            "description": "Successful Response",
-            "content": {
-              "application/json": { "schema": { "$ref": "#/components/schemas/PerspectivesVisualization" } }
-            }
           },
           "400": { "description": "The request breaks a rule of the domain" },
           "403": { "description": "The user is no member of the project, or the feature is disabled" },
@@ -4797,11 +4794,11 @@
         }
       }
     },
-    "/projects/{project_id}/perspectives/aspects/{aspect_id}/cluster-similarities": {
-      "get": {
+    "/projects/{project_id}/perspectives/aspects/{aspect_id}/visualization": {
+      "post": {
         "tags": ["perspectives"],
-        "summary": "Returns data for visualizing the cluster similarities of the given aspect.",
-        "operationId": "get_cluster_similarities",
+        "summary": "Returns data for visualizing the documents of the given aspect.",
+        "operationId": "compute_visualization",
         "security": [{ "OAuth2PasswordBearer": [] }],
         "parameters": [
           {
@@ -4812,11 +4809,15 @@
           },
           { "name": "aspect_id", "in": "path", "required": true, "schema": { "type": "integer", "title": "Aspect Id" } }
         ],
+        "requestBody": {
+          "required": true,
+          "content": { "application/json": { "schema": { "$ref": "#/components/schemas/VisualizationRequest" } } }
+        },
         "responses": {
           "200": {
             "description": "Successful Response",
             "content": {
-              "application/json": { "schema": { "$ref": "#/components/schemas/PerspectivesClusterSimilarities" } }
+              "application/json": { "schema": { "$ref": "#/components/schemas/PerspectivesVisualization" } }
             }
           },
           "400": { "description": "The request breaks a rule of the domain" },
@@ -5275,94 +5276,6 @@
         }
       }
     },
-    "/projects/{project_id}/prompts/examples": {
-      "post": {
-        "tags": ["prompts"],
-        "summary": "Turns span or sentence annotations into few-shot examples for a prompt",
-        "operationId": "compute_examples",
-        "security": [{ "OAuth2PasswordBearer": [] }],
-        "parameters": [
-          {
-            "name": "project_id",
-            "in": "path",
-            "required": true,
-            "schema": { "type": "integer", "title": "Project Id" }
-          }
-        ],
-        "requestBody": {
-          "required": true,
-          "content": { "application/json": { "schema": { "$ref": "#/components/schemas/PromptExamplesCreate" } } }
-        },
-        "responses": {
-          "200": {
-            "description": "Successful Response",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "array",
-                  "items": {
-                    "oneOf": [
-                      { "$ref": "#/components/schemas/SpanPromptExample" },
-                      { "$ref": "#/components/schemas/SentencePromptExample" }
-                    ],
-                    "discriminator": {
-                      "propertyName": "kind",
-                      "mapping": {
-                        "SPAN": "#/components/schemas/SpanPromptExample",
-                        "SENTENCE": "#/components/schemas/SentencePromptExample"
-                      }
-                    }
-                  },
-                  "title": "Response Prompts-Compute Examples"
-                }
-              }
-            }
-          },
-          "400": { "description": "The request breaks a rule of the domain" },
-          "403": { "description": "The user is no member of the project, or the feature is disabled" },
-          "404": { "description": "A path id, or an id the route reads, is not in the project" },
-          "409": { "description": "A body id violates a foreign key, or a value a unique constraint" },
-          "422": {
-            "description": "Validation Error",
-            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/HTTPValidationError" } } }
-          }
-        }
-      }
-    },
-    "/projects/{project_id}/prompts/preview": {
-      "post": {
-        "tags": ["prompts"],
-        "summary": "Returns the rendered prompt of a stored version or an unsaved draft for one message of a document",
-        "operationId": "compute_preview",
-        "security": [{ "OAuth2PasswordBearer": [] }],
-        "parameters": [
-          {
-            "name": "project_id",
-            "in": "path",
-            "required": true,
-            "schema": { "type": "integer", "title": "Project Id" }
-          }
-        ],
-        "requestBody": {
-          "required": true,
-          "content": { "application/json": { "schema": { "$ref": "#/components/schemas/PromptPreviewRequest" } } }
-        },
-        "responses": {
-          "200": {
-            "description": "Successful Response",
-            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/PromptPreview" } } }
-          },
-          "400": { "description": "The request breaks a rule of the domain" },
-          "403": { "description": "The user is no member of the project, or the feature is disabled" },
-          "404": { "description": "A path id, or an id the route reads, is not in the project" },
-          "409": { "description": "A body id violates a foreign key, or a value a unique constraint" },
-          "422": {
-            "description": "Validation Error",
-            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/HTTPValidationError" } } }
-          }
-        }
-      }
-    },
     "/projects/{project_id}/prompts/task-info": {
       "get": {
         "tags": ["prompts"],
@@ -5505,6 +5418,94 @@
         }
       }
     },
+    "/projects/{project_id}/prompts/examples": {
+      "post": {
+        "tags": ["prompts"],
+        "summary": "Turns span or sentence annotations into few-shot examples for a prompt",
+        "operationId": "compute_examples",
+        "security": [{ "OAuth2PasswordBearer": [] }],
+        "parameters": [
+          {
+            "name": "project_id",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "integer", "title": "Project Id" }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": { "application/json": { "schema": { "$ref": "#/components/schemas/PromptExamplesRequest" } } }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "oneOf": [
+                      { "$ref": "#/components/schemas/SpanPromptExample" },
+                      { "$ref": "#/components/schemas/SentencePromptExample" }
+                    ],
+                    "discriminator": {
+                      "propertyName": "kind",
+                      "mapping": {
+                        "SPAN": "#/components/schemas/SpanPromptExample",
+                        "SENTENCE": "#/components/schemas/SentencePromptExample"
+                      }
+                    }
+                  },
+                  "title": "Response Prompts-Compute Examples"
+                }
+              }
+            }
+          },
+          "400": { "description": "The request breaks a rule of the domain" },
+          "403": { "description": "The user is no member of the project, or the feature is disabled" },
+          "404": { "description": "A path id, or an id the route reads, is not in the project" },
+          "409": { "description": "A body id violates a foreign key, or a value a unique constraint" },
+          "422": {
+            "description": "Validation Error",
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/HTTPValidationError" } } }
+          }
+        }
+      }
+    },
+    "/projects/{project_id}/prompts/preview": {
+      "post": {
+        "tags": ["prompts"],
+        "summary": "Returns the rendered prompt of a stored version or an unsaved draft for one message of a document",
+        "operationId": "compute_preview",
+        "security": [{ "OAuth2PasswordBearer": [] }],
+        "parameters": [
+          {
+            "name": "project_id",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "integer", "title": "Project Id" }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": { "application/json": { "schema": { "$ref": "#/components/schemas/PromptPreviewRequest" } } }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/PromptPreview" } } }
+          },
+          "400": { "description": "The request breaks a rule of the domain" },
+          "403": { "description": "The user is no member of the project, or the feature is disabled" },
+          "404": { "description": "A path id, or an id the route reads, is not in the project" },
+          "409": { "description": "A body id violates a foreign key, or a value a unique constraint" },
+          "422": {
+            "description": "Validation Error",
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/HTTPValidationError" } } }
+          }
+        }
+      }
+    },
     "/projects/{project_id}/rag/answer": {
       "post": {
         "tags": ["rag"],
@@ -5579,7 +5580,7 @@
       "get": {
         "tags": ["search"],
         "summary": "Returns Search Info.",
-        "operationId": "search_sdoc_columns",
+        "operationId": "get_source_document_columns",
         "security": [{ "OAuth2PasswordBearer": [] }],
         "parameters": [
           {
@@ -5597,7 +5598,159 @@
                 "schema": {
                   "type": "array",
                   "items": { "$ref": "#/components/schemas/ColumnInfo_SdocColumns_" },
-                  "title": "Response Search-Search Sdoc Columns"
+                  "title": "Response Search-Get Source Document Columns"
+                }
+              }
+            }
+          },
+          "400": { "description": "The request breaks a rule of the domain" },
+          "403": { "description": "The user is no member of the project, or the feature is disabled" },
+          "404": { "description": "A path id, or an id the route reads, is not in the project" },
+          "409": { "description": "A body id violates a foreign key, or a value a unique constraint" },
+          "422": {
+            "description": "Validation Error",
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/HTTPValidationError" } } }
+          }
+        }
+      }
+    },
+    "/projects/{project_id}/search/memos/columns": {
+      "get": {
+        "tags": ["search"],
+        "summary": "Returns Memo Table Info.",
+        "operationId": "get_memo_columns",
+        "security": [{ "OAuth2PasswordBearer": [] }],
+        "parameters": [
+          {
+            "name": "project_id",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "integer", "title": "Project Id" }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": { "$ref": "#/components/schemas/ColumnInfo_MemoColumns_" },
+                  "title": "Response Search-Get Memo Columns"
+                }
+              }
+            }
+          },
+          "400": { "description": "The request breaks a rule of the domain" },
+          "403": { "description": "The user is no member of the project, or the feature is disabled" },
+          "404": { "description": "A path id, or an id the route reads, is not in the project" },
+          "409": { "description": "A body id violates a foreign key, or a value a unique constraint" },
+          "422": {
+            "description": "Validation Error",
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/HTTPValidationError" } } }
+          }
+        }
+      }
+    },
+    "/projects/{project_id}/search/span-annotations/columns": {
+      "get": {
+        "tags": ["search"],
+        "summary": "Returns SpanAnnotationSearch Info.",
+        "operationId": "get_span_annotation_columns",
+        "security": [{ "OAuth2PasswordBearer": [] }],
+        "parameters": [
+          {
+            "name": "project_id",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "integer", "title": "Project Id" }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": { "$ref": "#/components/schemas/ColumnInfo_SpanColumns_" },
+                  "title": "Response Search-Get Span Annotation Columns"
+                }
+              }
+            }
+          },
+          "400": { "description": "The request breaks a rule of the domain" },
+          "403": { "description": "The user is no member of the project, or the feature is disabled" },
+          "404": { "description": "A path id, or an id the route reads, is not in the project" },
+          "409": { "description": "A body id violates a foreign key, or a value a unique constraint" },
+          "422": {
+            "description": "Validation Error",
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/HTTPValidationError" } } }
+          }
+        }
+      }
+    },
+    "/projects/{project_id}/search/sentence-annotations/columns": {
+      "get": {
+        "tags": ["search"],
+        "summary": "Returns SentenceAnnotationSearch Info.",
+        "operationId": "get_sentence_annotation_columns",
+        "security": [{ "OAuth2PasswordBearer": [] }],
+        "parameters": [
+          {
+            "name": "project_id",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "integer", "title": "Project Id" }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": { "$ref": "#/components/schemas/ColumnInfo_SentAnnoColumns_" },
+                  "title": "Response Search-Get Sentence Annotation Columns"
+                }
+              }
+            }
+          },
+          "400": { "description": "The request breaks a rule of the domain" },
+          "403": { "description": "The user is no member of the project, or the feature is disabled" },
+          "404": { "description": "A path id, or an id the route reads, is not in the project" },
+          "409": { "description": "A body id violates a foreign key, or a value a unique constraint" },
+          "422": {
+            "description": "Validation Error",
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/HTTPValidationError" } } }
+          }
+        }
+      }
+    },
+    "/projects/{project_id}/search/bbox-annotations/columns": {
+      "get": {
+        "tags": ["search"],
+        "summary": "Returns BBoxAnnotationSearch Info.",
+        "operationId": "get_bbox_annotation_columns",
+        "security": [{ "OAuth2PasswordBearer": [] }],
+        "parameters": [
+          {
+            "name": "project_id",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "integer", "title": "Project Id" }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": { "$ref": "#/components/schemas/ColumnInfo_BBoxColumns_" },
+                  "title": "Response Search-Get Bbox Annotation Columns"
                 }
               }
             }
@@ -5617,7 +5770,7 @@
       "post": {
         "tags": ["search"],
         "summary": "Returns all SourceDocument Ids and their scores and (optional) hightlights that match the query parameters.",
-        "operationId": "search_sdocs",
+        "operationId": "search_source_documents",
         "security": [{ "OAuth2PasswordBearer": [] }],
         "parameters": [
           {
@@ -5637,44 +5790,6 @@
           "200": {
             "description": "Successful Response",
             "content": { "application/json": { "schema": { "$ref": "#/components/schemas/PaginatedSDocHits" } } }
-          },
-          "400": { "description": "The request breaks a rule of the domain" },
-          "403": { "description": "The user is no member of the project, or the feature is disabled" },
-          "404": { "description": "A path id, or an id the route reads, is not in the project" },
-          "409": { "description": "A body id violates a foreign key, or a value a unique constraint" },
-          "422": {
-            "description": "Validation Error",
-            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/HTTPValidationError" } } }
-          }
-        }
-      }
-    },
-    "/projects/{project_id}/search/memos/columns": {
-      "get": {
-        "tags": ["search"],
-        "summary": "Returns Memo Table Info.",
-        "operationId": "search_memo_columns",
-        "security": [{ "OAuth2PasswordBearer": [] }],
-        "parameters": [
-          {
-            "name": "project_id",
-            "in": "path",
-            "required": true,
-            "schema": { "type": "integer", "title": "Project Id" }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "Successful Response",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "array",
-                  "items": { "$ref": "#/components/schemas/ColumnInfo_MemoColumns_" },
-                  "title": "Response Search-Search Memo Columns"
-                }
-              }
-            }
           },
           "400": { "description": "The request breaks a rule of the domain" },
           "403": { "description": "The user is no member of the project, or the feature is disabled" },
@@ -5757,44 +5872,6 @@
         }
       }
     },
-    "/projects/{project_id}/search/span-annotations/columns": {
-      "get": {
-        "tags": ["search"],
-        "summary": "Returns SpanAnnotationSearch Info.",
-        "operationId": "search_span_annotation_columns",
-        "security": [{ "OAuth2PasswordBearer": [] }],
-        "parameters": [
-          {
-            "name": "project_id",
-            "in": "path",
-            "required": true,
-            "schema": { "type": "integer", "title": "Project Id" }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "Successful Response",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "array",
-                  "items": { "$ref": "#/components/schemas/ColumnInfo_SpanColumns_" },
-                  "title": "Response Search-Search Span Annotation Columns"
-                }
-              }
-            }
-          },
-          "400": { "description": "The request breaks a rule of the domain" },
-          "403": { "description": "The user is no member of the project, or the feature is disabled" },
-          "404": { "description": "A path id, or an id the route reads, is not in the project" },
-          "409": { "description": "A body id violates a foreign key, or a value a unique constraint" },
-          "422": {
-            "description": "Validation Error",
-            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/HTTPValidationError" } } }
-          }
-        }
-      }
-    },
     "/projects/{project_id}/search/span-annotations": {
       "post": {
         "tags": ["search"],
@@ -5853,44 +5930,6 @@
           "200": {
             "description": "Successful Response",
             "content": { "application/json": { "schema": { "$ref": "#/components/schemas/GroupPage" } } }
-          },
-          "400": { "description": "The request breaks a rule of the domain" },
-          "403": { "description": "The user is no member of the project, or the feature is disabled" },
-          "404": { "description": "A path id, or an id the route reads, is not in the project" },
-          "409": { "description": "A body id violates a foreign key, or a value a unique constraint" },
-          "422": {
-            "description": "Validation Error",
-            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/HTTPValidationError" } } }
-          }
-        }
-      }
-    },
-    "/projects/{project_id}/search/sentence-annotations/columns": {
-      "get": {
-        "tags": ["search"],
-        "summary": "Returns SentenceAnnotationSearch Info.",
-        "operationId": "search_sentence_annotation_columns",
-        "security": [{ "OAuth2PasswordBearer": [] }],
-        "parameters": [
-          {
-            "name": "project_id",
-            "in": "path",
-            "required": true,
-            "schema": { "type": "integer", "title": "Project Id" }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "Successful Response",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "array",
-                  "items": { "$ref": "#/components/schemas/ColumnInfo_SentAnnoColumns_" },
-                  "title": "Response Search-Search Sentence Annotation Columns"
-                }
-              }
-            }
           },
           "400": { "description": "The request breaks a rule of the domain" },
           "403": { "description": "The user is no member of the project, or the feature is disabled" },
@@ -5965,44 +6004,6 @@
           "200": {
             "description": "Successful Response",
             "content": { "application/json": { "schema": { "$ref": "#/components/schemas/GroupPage" } } }
-          },
-          "400": { "description": "The request breaks a rule of the domain" },
-          "403": { "description": "The user is no member of the project, or the feature is disabled" },
-          "404": { "description": "A path id, or an id the route reads, is not in the project" },
-          "409": { "description": "A body id violates a foreign key, or a value a unique constraint" },
-          "422": {
-            "description": "Validation Error",
-            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/HTTPValidationError" } } }
-          }
-        }
-      }
-    },
-    "/projects/{project_id}/search/bbox-annotations/columns": {
-      "get": {
-        "tags": ["search"],
-        "summary": "Returns BBoxAnnotationSearch Info.",
-        "operationId": "search_bbox_annotation_columns",
-        "security": [{ "OAuth2PasswordBearer": [] }],
-        "parameters": [
-          {
-            "name": "project_id",
-            "in": "path",
-            "required": true,
-            "schema": { "type": "integer", "title": "Project Id" }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "Successful Response",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "array",
-                  "items": { "$ref": "#/components/schemas/ColumnInfo_BBoxColumns_" },
-                  "title": "Response Search-Search Bbox Annotation Columns"
-                }
-              }
-            }
           },
           "400": { "description": "The request breaks a rule of the domain" },
           "403": { "description": "The user is no member of the project, or the feature is disabled" },
@@ -6732,9 +6733,7 @@
         ],
         "requestBody": {
           "required": true,
-          "content": {
-            "application/json": { "schema": { "$ref": "#/components/schemas/SentenceAnnotationCountRequest" } }
-          }
+          "content": { "application/json": { "schema": { "$ref": "#/components/schemas/AnnotationCountRequest" } } }
         },
         "responses": {
           "200": {
@@ -7039,7 +7038,7 @@
       "get": {
         "tags": ["sourceDocuments"],
         "summary": "Returns the SourceDocumentData of the SourceDocument with the given ID if it exists",
-        "operationId": "get_by_id_with_data",
+        "operationId": "get_data",
         "security": [{ "OAuth2PasswordBearer": [] }],
         "parameters": [
           {
@@ -7229,7 +7228,7 @@
       "get": {
         "tags": ["sourceDocumentMetadata"],
         "summary": "Returns the SourceDocumentMetadata of the SourceDocument, optionally only the one with the given key",
-        "operationId": "get_by_sdoc",
+        "operationId": "get_by_project",
         "security": [{ "OAuth2PasswordBearer": [] }],
         "parameters": [
           {
@@ -7254,7 +7253,7 @@
                 "schema": {
                   "type": "array",
                   "items": { "$ref": "#/components/schemas/SourceDocumentMetadataRead" },
-                  "title": "Response Sourcedocumentmetadata-Get By Sdoc"
+                  "title": "Response Sourcedocumentmetadata-Get By Project"
                 }
               }
             }
@@ -7785,7 +7784,7 @@
         ],
         "requestBody": {
           "required": true,
-          "content": { "application/json": { "schema": { "$ref": "#/components/schemas/SpanAnnotationCountRequest" } } }
+          "content": { "application/json": { "schema": { "$ref": "#/components/schemas/AnnotationCountRequest" } } }
         },
         "responses": {
           "200": {
@@ -8088,7 +8087,7 @@
       "get": {
         "tags": ["spanGroups"],
         "summary": "Returns all SpanAnnotations in the SpanGroup with the given ID",
-        "operationId": "get_annotations",
+        "operationId": "get_span_annotations",
         "security": [{ "OAuth2PasswordBearer": [] }],
         "parameters": [
           {
@@ -8112,7 +8111,7 @@
                 "schema": {
                   "type": "array",
                   "items": { "$ref": "#/components/schemas/SpanAnnotationRead" },
-                  "title": "Response Spangroups-Get Annotations"
+                  "title": "Response Spangroups-Get Span Annotations"
                 }
               }
             }
@@ -8292,7 +8291,7 @@
       "put": {
         "tags": ["tags"],
         "summary": "Links the Tags with the SourceDocuments and returns the resulting tags per document",
-        "operationId": "link_tags_bulk",
+        "operationId": "add_source_documents_bulk",
         "security": [{ "OAuth2PasswordBearer": [] }],
         "parameters": [
           {
@@ -8304,12 +8303,16 @@
         ],
         "requestBody": {
           "required": true,
-          "content": { "application/json": { "schema": { "$ref": "#/components/schemas/SourceDocumentTagMultiLink" } } }
+          "content": {
+            "application/json": { "schema": { "$ref": "#/components/schemas/SourceDocumentTagLinkRequest" } }
+          }
         },
         "responses": {
           "200": {
             "description": "Successful Response",
-            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/SdocTagLinksResult" } } }
+            "content": {
+              "application/json": { "schema": { "$ref": "#/components/schemas/SourceDocumentTagLinksResult" } }
+            }
           },
           "400": { "description": "The request breaks a rule of the domain" },
           "403": { "description": "The user is no member of the project, or the feature is disabled" },
@@ -8324,7 +8327,7 @@
       "patch": {
         "tags": ["tags"],
         "summary": "Links and unlinks Tags of the SourceDocuments and returns the resulting tags per document",
-        "operationId": "update_sdoc_tags_bulk",
+        "operationId": "update_source_documents_bulk",
         "security": [{ "OAuth2PasswordBearer": [] }],
         "parameters": [
           {
@@ -8337,13 +8340,15 @@
         "requestBody": {
           "required": true,
           "content": {
-            "application/json": { "schema": { "$ref": "#/components/schemas/SourceDocumentTagMultiLinkRequest" } }
+            "application/json": { "schema": { "$ref": "#/components/schemas/SourceDocumentTagChangeRequest" } }
           }
         },
         "responses": {
           "200": {
             "description": "Successful Response",
-            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/SdocTagLinksResult" } } }
+            "content": {
+              "application/json": { "schema": { "$ref": "#/components/schemas/SourceDocumentTagLinksResult" } }
+            }
           },
           "400": { "description": "The request breaks a rule of the domain" },
           "403": { "description": "The user is no member of the project, or the feature is disabled" },
@@ -8358,7 +8363,7 @@
       "delete": {
         "tags": ["tags"],
         "summary": "Unlinks the Tags from the SourceDocuments and returns the resulting tags per document",
-        "operationId": "unlink_tags_bulk",
+        "operationId": "remove_source_documents_bulk",
         "security": [{ "OAuth2PasswordBearer": [] }],
         "parameters": [
           {
@@ -8370,12 +8375,16 @@
         ],
         "requestBody": {
           "required": true,
-          "content": { "application/json": { "schema": { "$ref": "#/components/schemas/SourceDocumentTagMultiLink" } } }
+          "content": {
+            "application/json": { "schema": { "$ref": "#/components/schemas/SourceDocumentTagLinkRequest" } }
+          }
         },
         "responses": {
           "200": {
             "description": "Successful Response",
-            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/SdocTagLinksResult" } } }
+            "content": {
+              "application/json": { "schema": { "$ref": "#/components/schemas/SourceDocumentTagLinksResult" } }
+            }
           },
           "400": { "description": "The request breaks a rule of the domain" },
           "403": { "description": "The user is no member of the project, or the feature is disabled" },
@@ -8485,7 +8494,7 @@
       "get": {
         "tags": ["tags"],
         "summary": "Returns the IDs of the SourceDocuments linked with the Tag.",
-        "operationId": "get_sdoc_ids_by_tag_id",
+        "operationId": "get_source_documents",
         "security": [{ "OAuth2PasswordBearer": [] }],
         "parameters": [
           {
@@ -8504,7 +8513,7 @@
                 "schema": {
                   "type": "array",
                   "items": { "type": "integer" },
-                  "title": "Response Tags-Get Sdoc Ids By Tag Id"
+                  "title": "Response Tags-Get Source Documents"
                 }
               }
             }
@@ -8570,7 +8579,7 @@
       "patch": {
         "tags": ["tags"],
         "summary": "Sets the Tags of each SourceDocument to the given Tags and returns the resulting tags per document",
-        "operationId": "replace_sdoc_tags_bulk",
+        "operationId": "replace_source_documents_bulk",
         "security": [{ "OAuth2PasswordBearer": [] }],
         "parameters": [
           {
@@ -8582,12 +8591,16 @@
         ],
         "requestBody": {
           "required": true,
-          "content": { "application/json": { "schema": { "$ref": "#/components/schemas/SdocTagLinks" } } }
+          "content": {
+            "application/json": { "schema": { "$ref": "#/components/schemas/SourceDocumentTagReplaceRequest" } }
+          }
         },
         "responses": {
           "200": {
             "description": "Successful Response",
-            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/SdocTagLinksResult" } } }
+            "content": {
+              "application/json": { "schema": { "$ref": "#/components/schemas/SourceDocumentTagLinksResult" } }
+            }
           },
           "400": { "description": "The request breaks a rule of the domain" },
           "403": { "description": "The user is no member of the project, or the feature is disabled" },
@@ -8981,7 +8994,7 @@
       "put": {
         "tags": ["virtualUsers"],
         "summary": "Creates a virtual user (a user that cannot log in) in the Project",
-        "operationId": "create_virtual_user",
+        "operationId": "create",
         "security": [{ "OAuth2PasswordBearer": [] }],
         "parameters": [
           {
@@ -9015,7 +9028,7 @@
       "patch": {
         "tags": ["virtualUsers"],
         "summary": "Updates the virtual user with the given ID of the Project",
-        "operationId": "update_virtual_user",
+        "operationId": "update_by_id",
         "security": [{ "OAuth2PasswordBearer": [] }],
         "parameters": [
           {
@@ -9053,7 +9066,7 @@
       "delete": {
         "tags": ["virtualUsers"],
         "summary": "Removes the virtual user with the given ID of the Project together with all its annotations and memos. The virtual user of an experiment run cannot be deleted here (HTTP 409); delete its run in the Experiment Studio.",
-        "operationId": "delete_virtual_user",
+        "operationId": "delete_by_id",
         "security": [{ "OAuth2PasswordBearer": [] }],
         "parameters": [
           {
@@ -9303,7 +9316,7 @@
       "get": {
         "tags": ["whiteboards"],
         "summary": "Returns the data of the objects on the Whiteboard with the given ID",
-        "operationId": "get_data_by_id",
+        "operationId": "get_data",
         "security": [{ "OAuth2PasswordBearer": [] }],
         "parameters": [
           {
@@ -10893,6 +10906,26 @@
         "type": "object",
         "required": ["cota_sentence_ids"],
         "title": "AnnotateSentencesRequest"
+      },
+      "AnnotationCountRequest": {
+        "properties": {
+          "user_id": { "type": "integer", "title": "User Id", "description": "The User whose annotations are counted" },
+          "sdoc_ids": {
+            "items": { "type": "integer" },
+            "type": "array",
+            "title": "Sdoc Ids",
+            "description": "The SourceDocuments to count in"
+          },
+          "code_ids": {
+            "items": { "type": "integer" },
+            "type": "array",
+            "title": "Code Ids",
+            "description": "The Codes to count"
+          }
+        },
+        "type": "object",
+        "required": ["user_id", "sdoc_ids", "code_ids"],
+        "title": "AnnotationCountRequest"
       },
       "AnnotationLLMAssistantJobResult": {
         "properties": {
@@ -17813,7 +17846,7 @@
         "title": "PromptExampleSpan",
         "description": "An annotated span within the text of a span example."
       },
-      "PromptExamplesCreate": {
+      "PromptExamplesRequest": {
         "properties": {
           "kind": { "$ref": "#/components/schemas/PromptExampleKind", "description": "The kind of the annotations" },
           "annotation_ids": {
@@ -17826,7 +17859,7 @@
         },
         "type": "object",
         "required": ["kind", "annotation_ids"],
-        "title": "PromptExamplesCreate",
+        "title": "PromptExamplesRequest",
         "description": "Selects annotations to turn into few-shot examples."
       },
       "PromptLanguage": {
@@ -18826,41 +18859,10 @@
         "required": ["sdoc_id", "name", "status", "failed_job_uuids", "failed_job_status_msgs"],
         "title": "SdocStatusRow"
       },
-      "SdocTagLinks": {
-        "properties": {
-          "links": {
-            "additionalProperties": { "items": { "type": "integer" }, "type": "array" },
-            "type": "object",
-            "title": "Links",
-            "description": "Map of sdoc_id to its complete list of tag IDs"
-          }
-        },
-        "type": "object",
-        "required": ["links"],
-        "title": "SdocTagLinks"
-      },
-      "SdocTagLinksResult": {
-        "properties": {
-          "links": {
-            "additionalProperties": { "items": { "type": "integer" }, "type": "array" },
-            "type": "object",
-            "title": "Links",
-            "description": "Map of sdoc_id to its complete list of tag IDs"
-          },
-          "project_id": {
-            "type": "integer",
-            "title": "Project Id",
-            "description": "ID of the Project of the SourceDocuments"
-          }
-        },
-        "type": "object",
-        "required": ["links", "project_id"],
-        "title": "SdocTagLinksResult"
-      },
       "SdocTagsLinkedEvent": {
         "properties": {
           "type": { "type": "string", "const": "SDOC_TAGS_LINKED", "title": "Type", "default": "SDOC_TAGS_LINKED" },
-          "payload": { "$ref": "#/components/schemas/SdocTagLinksResult" }
+          "payload": { "$ref": "#/components/schemas/SourceDocumentTagLinksResult" }
         },
         "type": "object",
         "required": ["payload"],
@@ -19087,30 +19089,6 @@
         "type": "object",
         "required": ["timeline_analysis_type", "filter"],
         "title": "SentAnnoTimelineAnalysisFilter"
-      },
-      "SentenceAnnotationCountRequest": {
-        "properties": {
-          "user_id": {
-            "type": "integer",
-            "title": "User Id",
-            "description": "The User whose SentenceAnnotations are counted"
-          },
-          "sdoc_ids": {
-            "items": { "type": "integer" },
-            "type": "array",
-            "title": "Sdoc Ids",
-            "description": "The SourceDocuments to count in"
-          },
-          "code_ids": {
-            "items": { "type": "integer" },
-            "type": "array",
-            "title": "Code Ids",
-            "description": "The Codes to count"
-          }
-        },
-        "type": "object",
-        "required": ["user_id", "sdoc_ids", "code_ids"],
-        "title": "SentenceAnnotationCountRequest"
       },
       "SentenceAnnotationCreate": {
         "properties": {
@@ -20196,26 +20174,7 @@
         ],
         "title": "SourceDocumentStatusSimple"
       },
-      "SourceDocumentTagMultiLink": {
-        "properties": {
-          "source_document_ids": {
-            "items": { "type": "integer" },
-            "type": "array",
-            "title": "Source Document Ids",
-            "description": "List of IDs of SourceDocuments"
-          },
-          "tag_ids": {
-            "items": { "type": "integer" },
-            "type": "array",
-            "title": "Tag Ids",
-            "description": "List of IDs of Tags"
-          }
-        },
-        "type": "object",
-        "required": ["source_document_ids", "tag_ids"],
-        "title": "SourceDocumentTagMultiLink"
-      },
-      "SourceDocumentTagMultiLinkRequest": {
+      "SourceDocumentTagChangeRequest": {
         "properties": {
           "source_document_ids": {
             "items": { "type": "integer" },
@@ -20238,7 +20197,57 @@
         },
         "type": "object",
         "required": ["source_document_ids", "link_tag_ids", "unlink_tag_ids"],
-        "title": "SourceDocumentTagMultiLinkRequest"
+        "title": "SourceDocumentTagChangeRequest"
+      },
+      "SourceDocumentTagLinkRequest": {
+        "properties": {
+          "source_document_ids": {
+            "items": { "type": "integer" },
+            "type": "array",
+            "title": "Source Document Ids",
+            "description": "List of IDs of SourceDocuments"
+          },
+          "tag_ids": {
+            "items": { "type": "integer" },
+            "type": "array",
+            "title": "Tag Ids",
+            "description": "List of IDs of Tags"
+          }
+        },
+        "type": "object",
+        "required": ["source_document_ids", "tag_ids"],
+        "title": "SourceDocumentTagLinkRequest"
+      },
+      "SourceDocumentTagLinksResult": {
+        "properties": {
+          "links": {
+            "additionalProperties": { "items": { "type": "integer" }, "type": "array" },
+            "type": "object",
+            "title": "Links",
+            "description": "Map of sdoc_id to its complete list of tag IDs"
+          },
+          "project_id": {
+            "type": "integer",
+            "title": "Project Id",
+            "description": "ID of the Project of the SourceDocuments"
+          }
+        },
+        "type": "object",
+        "required": ["links", "project_id"],
+        "title": "SourceDocumentTagLinksResult"
+      },
+      "SourceDocumentTagReplaceRequest": {
+        "properties": {
+          "links": {
+            "additionalProperties": { "items": { "type": "integer" }, "type": "array" },
+            "type": "object",
+            "title": "Links",
+            "description": "Map of sdoc_id to its complete list of tag IDs"
+          }
+        },
+        "type": "object",
+        "required": ["links"],
+        "title": "SourceDocumentTagReplaceRequest"
       },
       "SourceDocumentUpdate": {
         "properties": {
@@ -20312,30 +20321,6 @@
         "type": "object",
         "required": ["timeline_analysis_type", "filter"],
         "title": "SpanAnnoTimelineAnalysisFilter"
-      },
-      "SpanAnnotationCountRequest": {
-        "properties": {
-          "user_id": {
-            "type": "integer",
-            "title": "User Id",
-            "description": "The User whose SpanAnnotations are counted"
-          },
-          "sdoc_ids": {
-            "items": { "type": "integer" },
-            "type": "array",
-            "title": "Sdoc Ids",
-            "description": "The SourceDocuments to count in"
-          },
-          "code_ids": {
-            "items": { "type": "integer" },
-            "type": "array",
-            "title": "Code Ids",
-            "description": "The Codes to count"
-          }
-        },
-        "type": "object",
-        "required": ["user_id", "sdoc_ids", "code_ids"],
-        "title": "SpanAnnotationCountRequest"
       },
       "SpanAnnotationCreate": {
         "properties": {
