@@ -169,7 +169,7 @@ export class SentenceAnnotationsService {
    * @returns SentenceAnnotatorResult Successful Response
    * @throws ApiError
    */
-  public static getPerSentence({
+  public static getSentenceMap({
     projectId,
     userId,
     sdocId,
@@ -180,7 +180,7 @@ export class SentenceAnnotationsService {
   }): CancelablePromise<SentenceAnnotatorResult> {
     return __request(OpenAPI, {
       method: "GET",
-      url: "/projects/{project_id}/sentence-annotations/per-sentence",
+      url: "/projects/{project_id}/sentence-annotations/sentence-map",
       path: {
         project_id: projectId,
       },

@@ -104,14 +104,14 @@ def get_by_project(
 
 
 @router.get(
-    "/per-sentence",
+    "/sentence-map",
     response_model=SentenceAnnotatorResult,
     summary=(
         "Returns the SentenceAnnotations of the User in the SourceDocument, grouped "
         "by sentence"
     ),
 )
-def get_per_sentence(
+def get_sentence_map(
     *,
     db: DBSession,
     project_id: int,

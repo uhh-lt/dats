@@ -34,7 +34,7 @@ ARGUMENTS: dict[str, Callable[[TenantRows], dict[str, Any]]] = {
     "GET /projects/{project_id}/sentence-annotations": lambda rows: {
         "params": {"user_id": rows["adoc"].user_id}
     },
-    "GET /projects/{project_id}/sentence-annotations/per-sentence": lambda rows: {
+    "GET /projects/{project_id}/sentence-annotations/sentence-map": lambda rows: {
         "params": {"user_id": rows["adoc"].user_id, "sdoc_id": rows["sdoc"].id}
     },
     "GET /projects/{project_id}/bbox-annotations": lambda rows: {

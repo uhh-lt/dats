@@ -223,7 +223,7 @@ def _run_a_sentence_annotations(
     sentence."""
     base = project["base"]
     response = client.get(
-        f"/projects/{base['project'].id}/sentence-annotations/per-sentence",
+        f"/projects/{base['project'].id}/sentence-annotations/sentence-map",
         params={"user_id": base["run_a"].id, "sdoc_id": base["target_sdoc"].id},
     )
     assert response.status_code == 200, response.text
