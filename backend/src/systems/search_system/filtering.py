@@ -141,7 +141,11 @@ class FilterExpression(BaseModel, Generic[T]):
                 self.column.get_filter_column(subquery_dict), value=self.value
             )
 
-    def resolve_ids(self, db: Session, project_id: int) -> "FilterExpression[T]":
+    def resolve_ids(self, db: Session, project_id: int) -> "FilterExpression[T] | None":
+        """The expression with names instead of ids, for the export; None if none
+        of its ids resolves (e.g. a user no longer in the project), so the
+        exported filter leaves the condition out. A list keeps the ids that
+        resolve."""
         # We don't need to resolve IDs for metadata columns
         if isinstance(self.column, int):
             return self
@@ -174,7 +178,7 @@ class FilterExpression(BaseModel, Generic[T]):
                 db=db, project_id=project_id, ids=[int(self.value)]
             )
             if len(resolved_ids) == 0:
-                raise FilterValueNotFoundError(self.value, self.column)
+                return None
             self.value = resolved_ids[0]
             return self
 
@@ -201,8 +205,8 @@ class FilterExpression(BaseModel, Generic[T]):
             resolved_ids = self.column.resolve_ids(
                 db=db, project_id=project_id, ids=ids
             )
-            if len(ids) > 1 and len(resolved_ids) == 0:
-                raise FilterValueNotFoundError(ids, self.column)
+            if ids and not resolved_ids:
+                return None
             self.value = resolved_ids
             return self
 
@@ -311,7 +315,9 @@ class Filter(BaseModel, Generic[T]):
         # Resolve IDs for each FilterExpression in the filter
         for item in filter.items:
             if isinstance(item, FilterExpression):
-                resolved_items.append(item.resolve_ids(db=db, project_id=project_id))
+                resolved_item = item.resolve_ids(db=db, project_id=project_id)
+                if resolved_item is not None:
+                    resolved_items.append(resolved_item)
             else:
                 resolved_items.append(
                     Filter.resolve_ids(item, db=db, project_id=project_id)
