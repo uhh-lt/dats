@@ -44,7 +44,7 @@ ROUTES_OUTSIDE_PROJECTS = {
     "GET /authentication/oidc/callback",
     "GET /authentication/oidc/login",
     "POST /authentication/refresh-access",
-    "POST /authentication/register",
+    "PUT /authentication/register",
     "POST /authentication/sync-session",
     # the logged-in user
     "GET /users/me",

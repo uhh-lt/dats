@@ -18,7 +18,7 @@ export class AuthenticationService {
    */
   public static register({ requestBody }: { requestBody: UserCreate }): CancelablePromise<UserRead> {
     return __request(OpenAPI, {
-      method: "POST",
+      method: "PUT",
       url: "/authentication/register",
       body: requestBody,
       mediaType: "application/json",

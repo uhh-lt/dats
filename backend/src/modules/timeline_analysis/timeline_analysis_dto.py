@@ -129,7 +129,7 @@ class TimelineAnalysisCreate(TimelineAnalysisBaseDTO):
     pass
 
 
-class TimelineAnalysisCreateIntern(TimelineAnalysisCreate):
+class TimelineAnalysisCreateIntern(TimelineAnalysisBaseDTO):
     settings: dict[str, Any] | None = Field(
         description="TimelineAnalysisSettings as JSON.",
         default=None,

@@ -52,7 +52,7 @@ class ExperimentRunCreate(ExperimentRunBaseDTO):
     pass
 
 
-class ExperimentRunCreateIntern(ExperimentRunCreate):
+class ExperimentRunCreateIntern(ExperimentRunBaseDTO):
     experiment_id: int = Field(description="ID of the experiment of the run")
     sdoc_ids: list[int] = Field(description="IDs of the documents the run runs on")
     virtual_user_id: int = Field(

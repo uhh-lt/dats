@@ -274,7 +274,7 @@ class WhiteboardCreate(WhiteboardBaseDTO):
     pass
 
 
-class WhiteboardCreateIntern(WhiteboardCreate):
+class WhiteboardCreateIntern(WhiteboardBaseDTO):
     content: dict[str, Any] | None = Field(
         description="Content of the Whiteboard as JSON", default=None
     )

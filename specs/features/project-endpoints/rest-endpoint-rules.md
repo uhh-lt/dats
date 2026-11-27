@@ -10,14 +10,15 @@ A path is read from left to right: method, start, item, end. Then come input, ou
 
 **The method says what happens.**
 
-| Example                   | Case                     |
-| ------------------------- | ------------------------ |
-| `GET /codes/{code_id}`    | reads                    |
-| `PUT /codes`              | creates                  |
-| `PATCH /codes/{code_id}`  | changes stored state     |
-| `DELETE /codes/{code_id}` | deletes                  |
-| `POST /code-frequencies`  | computes, stores nothing |
-| `POST /jobs/perspectives` | starts a job             |
+| Example                        | Case                            |
+| ------------------------------ | ------------------------------- |
+| `GET /codes/{code_id}`         | reads                           |
+| `PUT /codes`                   | creates                         |
+| `PUT /authentication/register` | creates, also outside a project |
+| `PATCH /codes/{code_id}`       | changes stored state            |
+| `DELETE /codes/{code_id}`      | deletes                         |
+| `POST /code-frequencies`       | computes, stores nothing        |
+| `POST /jobs/perspectives`      | starts a job                    |
 
 ## 2. Path
 

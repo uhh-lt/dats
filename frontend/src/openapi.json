@@ -267,7 +267,7 @@
       }
     },
     "/authentication/register": {
-      "post": {
+      "put": {
         "tags": ["authentication"],
         "summary": "Registers a new User and returns it with the generated ID.",
         "operationId": "register",
@@ -16996,9 +16996,9 @@
             "title": "Is Accepted",
             "description": "Indicates whether the document<->cluster assignment is accepted by a user"
           },
-          "in_searchresult": {
+          "in_search_result": {
             "type": "boolean",
-            "title": "In Searchresult",
+            "title": "In Search Result",
             "description": "Indicates whether the document is part of the search result"
           },
           "is_outlier": {
@@ -17008,7 +17008,7 @@
           }
         },
         "type": "object",
-        "required": ["sdoc_id", "cluster_id", "x", "y", "is_accepted", "in_searchresult", "is_outlier"],
+        "required": ["sdoc_id", "cluster_id", "x", "y", "is_accepted", "in_search_result", "is_outlier"],
         "title": "PerspectivesDoc"
       },
       "PerspectivesJobInput": {

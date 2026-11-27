@@ -51,7 +51,7 @@ oauth_service = OAuthService()
 router = APIRouter(prefix="/authentication", tags=["authentication"])
 
 
-@router.post(
+@router.put(
     "/register",
     response_model=UserRead,
     summary="Registers a new User and returns it with the generated ID.",

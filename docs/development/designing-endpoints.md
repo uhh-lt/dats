@@ -12,14 +12,15 @@ A path is read from left to right: method, start, item, end. Then come the input
 
 **The method says what happens.**
 
-| Example                   | Case                     |
-| ------------------------- | ------------------------ |
-| `GET /codes/{code_id}`    | reads                    |
-| `PUT /codes`              | creates                  |
-| `PATCH /codes/{code_id}`  | changes stored state     |
-| `DELETE /codes/{code_id}` | deletes                  |
-| `POST /code-frequencies`  | computes, stores nothing |
-| `POST /jobs/perspectives` | starts a job             |
+| Example                        | Case                            |
+| ------------------------------ | ------------------------------- |
+| `GET /codes/{code_id}`         | reads                           |
+| `PUT /codes`                   | creates                         |
+| `PUT /authentication/register` | creates, also outside a project |
+| `PATCH /codes/{code_id}`       | changes stored state            |
+| `DELETE /codes/{code_id}`      | deletes                         |
+| `POST /code-frequencies`       | computes, stores nothing        |
+| `POST /jobs/perspectives`      | starts a job                    |
 
 Many public APIs use `POST` for every write; DATS picks the method by the effect, also for an action: marking a memo as recent changes state (`PATCH /memos/{memo_id}/mark-recent`), duplicating creates a row (`PUT /whiteboards/{whiteboard_id}/duplicate`).
 

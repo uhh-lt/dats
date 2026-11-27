@@ -98,7 +98,7 @@ class ConceptOverTimeAnalysisCreate(ConceptOverTimeAnalysisBaseDTO):
     pass
 
 
-class ConceptOverTimeAnalysisCreateIntern(ConceptOverTimeAnalysisCreate):
+class ConceptOverTimeAnalysisCreateIntern(ConceptOverTimeAnalysisBaseDTO):
     timeline_settings: dict[str, Any] | None = Field(
         description="Timeline Settings of the ConceptOverTimeAnalysis as JSON.",
         default=None,

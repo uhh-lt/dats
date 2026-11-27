@@ -108,7 +108,7 @@ export const MapPlot = memo(({ vis }: MapPlotProps) => {
       if (doc.is_outlier) {
         (trace.marker!.size as number[]).push(4);
         (trace.marker!.color as Color[]).push("lightgrey");
-      } else if (!doc.in_searchresult) {
+      } else if (!doc.in_search_result) {
         (trace.marker!.size as number[]).push(4);
         (trace.marker!.color as Color[]).push("lightgrey");
       } else if (highlightReviewedDocs && !doc.is_accepted) {
@@ -139,7 +139,7 @@ export const MapPlot = memo(({ vis }: MapPlotProps) => {
       if (doc.is_outlier) {
         (trace.marker!.size as number[]).push(4);
         (trace.marker!.color as Color[]).push("lightgrey");
-      } else if (!doc.in_searchresult) {
+      } else if (!doc.in_search_result) {
         (trace.marker!.size as number[]).push(4);
         (trace.marker!.color as Color[]).push("lightgrey");
       } else if (highlightReviewedDocs && !doc.is_accepted) {

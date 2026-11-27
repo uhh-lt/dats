@@ -26,7 +26,7 @@ export type PerspectivesDoc = {
   /**
    * Indicates whether the document is part of the search result
    */
-  in_searchresult: boolean;
+  in_search_result: boolean;
   /**
    * Indicates whether the document is an outlier
    */

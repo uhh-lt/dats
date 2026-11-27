@@ -14,7 +14,7 @@ class PerspectivesDoc(BaseModel):
     is_accepted: bool = Field(
         description="Indicates whether the document<->cluster assignment is accepted by a user",
     )
-    in_searchresult: bool = Field(
+    in_search_result: bool = Field(
         description="Indicates whether the document is part of the search result",
     )
     is_outlier: bool = Field(
