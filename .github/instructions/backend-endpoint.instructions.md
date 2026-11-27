@@ -21,34 +21,35 @@ from common.dependencies import DBSession
 from common.project_router import project_router
 from core.auth.authz_user import AuthzUser
 from modules.example.example_dto import ExampleCreate, ExampleRead, ExampleUpdate
-from modules.example.example_feature import FEATURE
+from modules.example.example_feature import EXAMPLE
 from systems.websocket_system.websocket_dependency import WebsocketEmitter
 
 # 2. Router: under /projects/{project_id}/<resources>; it checks the membership
 #    (and the feature) for every route.
-router = project_router("/examples", tags=["example"], feature=FEATURE)
+router = project_router("/examples", tags=["example"], feature=EXAMPLE)
 
 # 3. Optional: service singletons used by the routes below.
 # es: ExampleService = ExampleService()
 
 
 # --- create operations
-# @router.put("", ...) -> create_*
+# @router.put("", ...) -> create
 
 # --- read operations
-# @router.get("/{example_id}", ...) -> get_*
+# @router.get("/{example_id}", ...) -> get_by_id
 
 # --- update operations
-# @router.patch("/{example_id}", ...) -> update_*
+# @router.patch("/{example_id}", ...) -> update_by_id
 
 # --- delete operations
-# @router.delete("/{example_id}", ...) -> delete_*
+# @router.delete("/{example_id}", ...) -> delete_by_id
 
 # --- job operations (only if the module starts background jobs)
-# @router.post("/{example_id}/<verb>", ...) -> <verb>_*; read the job at /jobs/<job-type>
+# @router.post("/{example_id}/<verb>", ...) -> <verb>; read the job at
+# /projects/{project_id}/jobs/<job-type>/{job_id}
 
 # --- other operations (computations, exports, etc.)
-# @router.post("/compute", ...) -> descriptive verb names
+# @router.post("/<verb>", ...) -> <verb>_<object>
 ```
 
 ## Rules
@@ -68,14 +69,14 @@ router = project_router("/examples", tags=["example"], feature=FEATURE)
 
 Every resource of a project lives under `/projects/{project_id}/...` (#928); `span_annotation_endpoint.py` is the example.
 
-- **Router**: `router = project_router("/<resources>", tags=[...], feature=FEATURE)` (`common/project_router.py`) checks the membership and, for a feature module, the feature for every route; omit `feature` in core.
+- **Router**: `router = project_router("/<resources>", tags=[...], feature=<FEATURE>)` (`common/project_router.py`) checks the membership and, for a feature module, the feature for every route; omit `feature` in core.
 - **Routes outside projects**: a resource outside every project gets its own file with a plain `APIRouter(prefix=...)` (`me_endpoint.py` for `/users/me`, `info_endpoint.py`); the one exception is `project_endpoint.py`, whose `PUT /projects` (create) sits on a second router next to the project router.
 - **Project from the path only**: every route takes `project_id: int`; request and create DTOs carry no `project_id`.
 - **Paths**: plural kebab-case collections (`/span-annotations`), one resource at `/{<entity>_id}`, links at `/{<entity>_id}/<others>/{<other>_id}` (PUT adds, DELETE removes), bulk routes at `/bulk` declared before `/{<entity>_id}`, computations at `POST /<verb>`.
 - **Bulk links**: bulk links at `/bulk/<others>` (`/tags/bulk/source-documents`): PUT adds, DELETE removes, PATCH does both.
 - **Filters**: optional query parameters on the collection (`GET /span-annotations?user_id=1&sdoc_id=2`), never one route per filter combination.
 - **Path ids**: read every id of the path within the project (`crud_x.read(db=db, project_id=project_id, id=...)`), so an id of another project answers 404.
-- **Body ids**: a reference in the body of a write (`code_id`, `sdoc_id`) is left to the composite foreign key, so an id of another project answers 409; services do not pre-check body references.
+- **Body ids**: a reference in the body of a write (`code_id`, `sdoc_id`) is left to the composite foreign key, so an id of another project answers 409; an id that no foreign key holds (an id list, a JSON field) is read within the project by the route or service, so it answers 404.
 - **Query ids**: a filter id of another project matches nothing.
 - **Emit to the path's project**: `ws.emit_to_project(event, result, project_id=project_id)`, also for batch events.
 
@@ -89,10 +90,7 @@ Every resource of a project lives under `/projects/{project_id}/...` (#928); `sp
 
 ### Function Naming
 
-- **CRUD prefixes are fixed**: `create_*` (never `add_*`, never `create_new_*`), `get_*` (never `read_*`), `update_*`, `delete_*`. No mixing.
-- **Handlers vs. CRUDs**: route handlers use `get_*`, while the CRUDs they call use `read_*` (see `backend-crud.instructions.md`).
-- **Canonical names**: `get_by_id`, `get_by_project`, `update_by_id`, `delete_by_id`; bulk variants end in `*_bulk`.
-- **Computations/jobs** use descriptive verbs, e.g. `search_sdocs`, `word_frequency_analysis`, `suggest`.
+- **Handlers vs. CRUDs**: route handlers use `get_*`, while the CRUDs they call use `read_*` (see `backend-crud.instructions.md`); the names themselves follow "Handler names" under "REST Design".
 
 ### Endpoint Anatomy
 
@@ -102,7 +100,7 @@ Every resource of a project lives under `/projects/{project_id}/...` (#928); `sp
 
 ### Feature Gating
 
-- **Project router**: a project router of a feature gates every route (`project_router(..., feature=FEATURE)`, with the object `register_feature` returned, imported from the module's `*_feature.py`).
+- **Project router**: a project router of a feature gates every route (`project_router(..., feature=WORD_FREQUENCY)`, with the object `register_feature` returned, imported from the module's `*_feature.py` and named after the feature).
 - **Generated job routes**: jobs with generated endpoints (`/projects/{project_id}/jobs/<job-type>`) are gated by their `validate_input` hook, not by a dependency.
 - **Job routes**: a hand-written route that reads or controls a job lives under `/projects/{project_id}/jobs/<job-type>` and reads the job with `JobService().read_project_job(...)` (404 for a job of another project); a job that a module route starts generates its reads with `EndpointGeneration.READ`.
 - **Enabled, not ready**: gating checks only that the feature is enabled; never reject a request because its data is still being computed.
@@ -110,6 +108,28 @@ Every resource of a project lives under `/projects/{project_id}/...` (#928); `sp
 ### Imports
 
 - **Own-folder DTOs only**: An endpoint may only import `*_dto` modules from its own folder. The rule is checked by `backend/lint/check_endpoints.py`, but the script does not run automatically yet and still reports existing violations.
+
+## REST Design
+
+- **Methods**: `GET` reads, `PUT` creates, `PATCH` changes stored state, `DELETE` deletes and `POST` computes without storing or starts a job; an action takes the method of its effect (`PATCH /memos/{memo_id}/mark-recent`, `PUT /whiteboards/{whiteboard_id}/duplicate`).
+- **Router and prefix**: one endpoint file and one router per module; the prefix is either a resource (`/codes`) or a module namespace with resources below it (`/perspectives/aspects`), never both at once.
+- **Collections**: a resource is a plural kebab-case noun (`/span-annotations`) with one item at `/{<entity>_id}`, and every path segment is kebab-case.
+- **Nested or flat**: does the child have exactly one owner, or does it point at several things? An owned child (it exists only inside one parent and is deleted with it) is nested one level under the parent and answers 404 for a child of another parent (`/experiments/{experiment_id}/runs/{run_id}`), while a resource that refers to several others stays flat with filters (`/span-annotations?sdoc_id=`).
+- **Parts**: `GET /{<entity>_id}/<noun>` returns a part or a view of one resource (`/data`, `/urls`), never the rows of a resource with its own collection.
+- **Links**: a link is `PUT` and `DELETE /{<entity>_id}/<others>/{<other>_id}`, its list `GET /{<entity>_id}/<others>`, bulk links `/bulk/<others>`.
+- **Actions**: an action is the last path segment and an imperative verb, `/{<entity>_id}/<verb>` on one resource and `/<verb>` on the collection (`/concept-over-time-analyses/{cota_id}/refine`, `/search-views/reorder`).
+- **Computations**: a computation of a resource is `POST /<resources>/<verb>` or `POST /<resources>/{<entity>_id}/<verb>`, a module that only computes names its router after the result as a plural noun (`/code-frequencies`) and computes at `POST ""` or `POST /<noun>`, and no prefix is a bare module name with only verbs below it.
+- **Read variants**: a read of the items of a collection is the collection `GET` with query parameters (`GET /memos?recent=true`), a read of another shape is a noun sub-path declared before `/{<entity>_id}` (`/count`, `/info`), and no path is `/by-<field>`.
+- **Reads with id lists**: a read whose input holds lists of ids is a `POST` (`POST /tags/count`), one with scalars only a `GET` (`GET /source-documents/count`).
+- **Bulk**: a bulk route is `/bulk` with the method of the single route and a list body, answers in the order of the request, and a bulk action is `/bulk/<verb>` or `/bulk/<others>/<verb>` (`/tags/bulk/source-documents/replace`).
+- **Jobs**: a job starts at `POST /jobs/<job-type>` or, when it works on one resource, at `POST /<resources>/{<entity>_id}/<verb>`, with its whole input in the body, is read at `GET /projects/{project_id}/jobs/<job-type>/{job_id}`, and every route under `/jobs` has the tag `job`.
+- **me**: `/users/me` stands for the logged-in user, everything personal lives below it (`/users/me/api-keys`), and no route takes another user's id outside a project.
+- **Status codes**: every route answers 200 with a body; 400 for a rule of the domain, 403 for a non-member or a disabled feature, 404 for an unknown path id or an id the route reads, 409 for a violated foreign key or unique constraint, 422 for an invalid request (`project_router` documents 400 to 409 once).
+- **Errors in endpoints**: endpoint code raises domain exceptions from `*_exceptions.py`, never `ValueError`, `Exception` or `assert`.
+- **Handler names**: the handler name is the method of the generated client; the main resource of a file uses `create`, `get_by_id`, `get_by_project`, `update_by_id`, `delete_by_id`, `create_bulk`, `update_bulk`, `delete_bulk` without the entity, a child resource in the same file keeps the entity (`create_run`, `update_cluster`), an action is named like its path verb (`duplicate`, `refine`) and a computation `<verb>_<object>`.
+- **Path parameters**: a path id is `{<entity>_id}` with the entity's snake_case name, the same in every route, or one of the abbreviations `sdoc`, `sdoc_metadata`, `cota`, and a nested child drops its parent's name (`{run_id}` below `/experiments/{experiment_id}`).
+- **Tags**: the first tag is the router prefix as a singular camelCase noun (`spanAnnotation`, `codeFrequency`), and `mcp` is set on the router only.
+- **Request shape**: a create, an update and a computation take one body DTO, query parameters are scalars that filter, sort or page, and no loose `Body()` lists stand next to a DTO.
 
 ## Examples
 
