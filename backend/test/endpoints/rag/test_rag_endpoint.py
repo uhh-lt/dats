@@ -161,8 +161,8 @@ def test_rag_session_of_another_project_answers_404(
     sentence_embedding_project: SentenceEmbeddingProject,
     stubbed_clip: None,
 ):
-    """The RAG route checks the session the same way: the session of
-    `test_project` answers 404 in "RAG Only"."""
+    """The session of `test_user` in `test_project` is unknown in "RAG Only",
+    another project of the same user: 404."""
     response = client.post(
         f"/projects/{sentence_embedding_project['project'].id}/rag/session",
         params={
@@ -177,35 +177,23 @@ def test_rag_session_of_another_project_answers_404(
     assert response.status_code == 404, response.text
 
 
-# ===========================================================================
-# CHAT SESSION (/projects/{project_id}/rag/chat-session) TESTS
-# ===========================================================================
-
-
-def test_chat_session_of_another_project_answers_404(
-    client: TestClient,
+def test_rag_session_of_another_user_answers_404(
+    other_member_client: TestClient,
     chat_session_id: str,
-    sentence_embedding_project: SentenceEmbeddingProject,
-):
-    """The session of `test_user` in `test_project` is unknown in "RAG Only",
-    another project of the same user: 404 before any LLM call."""
-    response = client.get(
-        f"/projects/{sentence_embedding_project['project'].id}/rag/chat-session",
-        params={"model": "default", "prompt": "hi", "session_id": chat_session_id},
-    )
-
-    assert response.status_code == 404, response.text
-    assert chat_session_id in response.text
-
-
-def test_chat_session_of_another_user_answers_404(
-    other_member_client: TestClient, chat_session_id: str, test_project
+    test_project,
+    stubbed_clip: None,
 ):
     """The session of `test_user` is unknown to another member of the same
-    project: 404 before any LLM call."""
-    response = other_member_client.get(
-        f"/projects/{test_project.id}/rag/chat-session",
-        params={"model": "default", "prompt": "hi", "session_id": chat_session_id},
+    project: 404."""
+    response = other_member_client.post(
+        f"/projects/{test_project.id}/rag/session",
+        params={
+            "top_k": 10,
+            "threshold": 0.75,
+            "model": "default",
+            "session_id": chat_session_id,
+        },
+        json={"query": "a greeting", "sdoc_ids": []},
     )
 
     assert response.status_code == 404, response.text

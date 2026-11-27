@@ -15,7 +15,7 @@ router = project_router(
 
 
 @router.post(
-    "/keywords",
+    "",
     response_model=list[KeywordStat],
     summary="Returns KeywordStats for the given SourceDocuments.",
 )

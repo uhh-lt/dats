@@ -4,7 +4,6 @@ from fastapi.testclient import TestClient
 from common.meta_type_enum import MetaType
 from composite_keys_test_utils import TwoTenants
 from core.metadata.source_document_metadata_dto import (
-    DateMetadataCountResult,
     SourceDocumentMetadataRead,
     SourceDocumentMetadataUpdate,
     SourceDocumentMetadataUpdateBulk,
@@ -312,49 +311,6 @@ def test_delete_by_id_if_not_exists(
     )
 
     assert response.status_code == 404, response.text
-
-
-# ===========================================================================
-# COUNT SDOCS WITH DATE METADATA
-# (/projects/{project_id}/source-document-metadata/date-count) TESTS
-# ===========================================================================
-
-
-def test_count_sdocs_with_date_metadata_counts_the_documents_with_a_date(
-    client: TestClient, project_with_date_metadata
-):
-    """The text document has a date for the text key "published", the image
-    document has none; both count towards all documents of the project."""
-    project_id = project_with_date_metadata["project"].id
-    metadata_id = project_with_date_metadata["date_metadata"].id
-
-    response = client.get(
-        f"/projects/{project_id}/source-document-metadata/date-count",
-        params={"date_metadata_id": metadata_id},
-    )
-
-    assert response.status_code == 200, response.text
-    assert DateMetadataCountResult.model_validate(
-        response.json()
-    ) == DateMetadataCountResult(sdocs_with_date=1, sdocs_total=2)
-
-
-def test_count_sdocs_with_date_metadata_of_another_project_matches_nothing(
-    client: TestClient, project_with_date_metadata, foreign_date_metadata
-):
-    """The date key of another project of the user matches no document of the
-    path's project, although its own document has a date."""
-    project_id = project_with_date_metadata["project"].id
-
-    response = client.get(
-        f"/projects/{project_id}/source-document-metadata/date-count",
-        params={"date_metadata_id": foreign_date_metadata.id},
-    )
-
-    assert response.status_code == 200, response.text
-    assert DateMetadataCountResult.model_validate(
-        response.json()
-    ) == DateMetadataCountResult(sdocs_with_date=0, sdocs_total=2)
 
 
 # ===========================================================================

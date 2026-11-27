@@ -288,10 +288,3 @@ class SourceDocumentMetadataReadResolved(SourceDocumentMetadataBaseDTO):
                     source_document_id=source_document_id,
                     project_metadata=project_metadata,
                 )
-
-
-class DateMetadataCountResult(BaseModel):
-    sdocs_with_date: int = Field(
-        description="Number of SourceDocuments of the Project with a value for the date metadata"
-    )
-    sdocs_total: int = Field(description="Number of all SourceDocuments of the Project")

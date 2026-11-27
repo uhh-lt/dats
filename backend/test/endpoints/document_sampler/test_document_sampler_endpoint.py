@@ -4,7 +4,7 @@ from composite_keys_test_utils import TwoTenants
 from modules.document_sampler.document_sampler_dto import SampledSdocsResults
 
 # ===========================================================================
-# SAMPLE BY TAGS (/projects/{project_id}/document-sampler/sample-by-tags) TESTS
+# SAMPLE BY TAGS (/projects/{project_id}/document-samples) TESTS
 # ===========================================================================
 
 
@@ -12,7 +12,7 @@ def _sample(
     client: TestClient, project_id: int, tag_groups: list[list[int]]
 ) -> list[SampledSdocsResults]:
     response = client.post(
-        f"/projects/{project_id}/document-sampler/sample-by-tags",
+        f"/projects/{project_id}/document-samples",
         params={"n": 1, "frac": 1.0},
         json=tag_groups,
     )

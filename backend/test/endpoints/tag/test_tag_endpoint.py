@@ -506,7 +506,7 @@ def test_update_sdoc_tags_bulk_linking_a_tag_of_another_project_is_a_conflict(
 
 
 # ===========================================================================
-# SET LINKS (PATCH /projects/{project_id}/tags/bulk/source-documents/set) TESTS
+# REPLACE LINKS (PATCH /projects/{project_id}/tags/bulk/source-documents/replace) TESTS
 # ===========================================================================
 
 
@@ -522,7 +522,7 @@ def test_set_sdoc_tags_bulk(
     payload = SdocTagLinks(links={sdoc1.id: [tag2.id], sdoc2.id: [tag1.id, tag2.id]})
 
     resp = client.patch(
-        f"{_tags_url(project.id)}/bulk/source-documents/set",
+        f"{_tags_url(project.id)}/bulk/source-documents/replace",
         json=payload.model_dump(),
     )
 
@@ -539,7 +539,7 @@ def test_set_sdoc_tags_bulk_with_a_document_of_another_project_is_a_conflict(
     payload = SdocTagLinks(links={foreign["bare_sdoc"].id: [own["tag"].id]})
 
     resp = client.patch(
-        f"{_tags_url(own['project'].id)}/bulk/source-documents/set",
+        f"{_tags_url(own['project'].id)}/bulk/source-documents/replace",
         json=payload.model_dump(),
     )
 

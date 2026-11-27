@@ -31,8 +31,8 @@ def _url(project_id: int, path: str = "") -> str:
         pytest.param("GET", "", id="get"),
         pytest.param("PUT", "/duplicate", id="duplicate"),
         pytest.param("PATCH", "", id="update"),
-        pytest.param("PATCH", "/annotate", id="annotate"),
-        pytest.param("PATCH", "/remove", id="remove"),
+        pytest.param("PATCH", "/annotate-sentences", id="annotate"),
+        pytest.param("PATCH", "/remove-sentences", id="remove"),
         pytest.param("PATCH", "/reset", id="reset"),
         pytest.param("POST", "/refine", id="refine"),
         pytest.param("DELETE", "", id="delete"),
@@ -51,8 +51,8 @@ def test_cota_of_another_project_is_not_found(
     other_project, other_cota = embedded_cota
     bodies = {
         "PATCH ": {"name": "renamed"},
-        "PATCH /annotate": [],
-        "PATCH /remove": [],
+        "PATCH /annotate-sentences": [],
+        "PATCH /remove-sentences": [],
         "POST /refine": COTARefinementHyperparameters().model_dump(mode="json"),
     }
 
@@ -153,7 +153,7 @@ def test_update_cota_with_date_metadata_of_another_project_is_not_found(
 
 
 # ===========================================================================
-# ANNOTATE AND REMOVE SENTENCES (/projects/{project_id}/concept-over-time-analyses/{cota_id}/annotate, .../remove) TESTS
+# ANNOTATE AND REMOVE SENTENCES (/projects/{project_id}/concept-over-time-analyses/{cota_id}/annotate-sentences, .../remove-sentences) TESTS
 # ===========================================================================
 
 
@@ -161,9 +161,9 @@ def test_update_cota_with_date_metadata_of_another_project_is_not_found(
     "path,params",
     [
         # annotate the sentence with a concept
-        pytest.param("/annotate", {"concept_id": "c1"}, id="annotate"),
+        pytest.param("/annotate-sentences", {"concept_id": "c1"}, id="annotate"),
         # remove the sentence from the search space
-        pytest.param("/remove", None, id="remove"),
+        pytest.param("/remove-sentences", None, id="remove"),
     ],
 )
 def test_sentence_of_another_project_is_not_found(
@@ -193,7 +193,7 @@ def test_sentence_of_another_project_is_not_found(
     assert response.status_code == 200, response.text
     search_space = COTARead.model_validate(response.json()).search_space
     assert [(s.sdoc_id, s.concept_annotation) for s in search_space] == (
-        [(own["sdoc"].id, "c1")] if path == "/annotate" else []
+        [(own["sdoc"].id, "c1")] if path == "/annotate-sentences" else []
     )
 
 

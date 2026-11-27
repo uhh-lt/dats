@@ -144,7 +144,7 @@ def logout(
 
 
 @router.post(
-    "/refresh_access",
+    "/refresh-access",
     summary="Uses the given refresh token to obtain a new access token.",
 )
 def refresh_access_token(

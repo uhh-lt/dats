@@ -105,6 +105,7 @@ class ExperimentService(metaclass=SingletonMeta):
         *,
         db: Session,
         project_id: int,
+        experiment_id: int,
         create_dto: ExperimentRunCreate,
         user_id: int,
     ) -> ExperimentRunCreated:
@@ -115,7 +116,7 @@ class ExperimentService(metaclass=SingletonMeta):
         """
         # 1) check that the experiment has a gold annotator and the prompt version fits
         experiment = crud_experiment.read(
-            db=db, project_id=project_id, id=create_dto.experiment_id
+            db=db, project_id=project_id, id=experiment_id
         )
         self._assert_gold_annotator(experiment=experiment)
         self._assert_eligible_prompt_version(
@@ -170,9 +171,11 @@ class ExperimentService(metaclass=SingletonMeta):
     # READ (the log of a run is read by its export)
 
     def _read_run_log(
-        self, *, db: Session, project_id: int, run_id: int
+        self, *, db: Session, project_id: int, experiment_id: int, run_id: int
     ) -> ExperimentRunLog:
-        run = crud_experiment_run.read(db=db, project_id=project_id, id=run_id)
+        run = crud_experiment_run.read_by_experiment(
+            db=db, project_id=project_id, experiment_id=experiment_id, id=run_id
+        )
         experiment = run.experiment
         version = crud_prompt_version.read(
             db=db, project_id=project_id, id=run.prompt_version_id
@@ -264,11 +267,13 @@ class ExperimentService(metaclass=SingletonMeta):
         )
 
     def refresh_run_scores(
-        self, *, db: Session, project_id: int, run_id: int
+        self, *, db: Session, project_id: int, experiment_id: int, run_id: int
     ) -> ExperimentRead:
         """Recompute the stored agreement of a run, e.g. after the gold annotator
         changed annotations. Refused if the gold annotator was deleted."""
-        run = crud_experiment_run.read(db=db, project_id=project_id, id=run_id)
+        run = crud_experiment_run.read_by_experiment(
+            db=db, project_id=project_id, experiment_id=experiment_id, id=run_id
+        )
         gold_user_id = self._assert_gold_annotator(experiment=run.experiment)
         self._store_scores(db=db, run=run, gold_user_id=gold_user_id)
         return self._read_experiment(
@@ -319,10 +324,12 @@ class ExperimentService(metaclass=SingletonMeta):
         return result
 
     def delete_run(
-        self, *, db: Session, project_id: int, run_id: int
+        self, *, db: Session, project_id: int, experiment_id: int, run_id: int
     ) -> ExperimentRunDeleted:
         """Delete a run together with its virtual user and its annotations."""
-        run = crud_experiment_run.read(db=db, project_id=project_id, id=run_id)
+        run = crud_experiment_run.read_by_experiment(
+            db=db, project_id=project_id, experiment_id=experiment_id, id=run_id
+        )
         run_dto = ExperimentRunRead.model_validate(run)
         virtual_user = UserRead.model_validate(
             crud_user.read(db=db, id=run.virtual_user_id)
@@ -365,6 +372,7 @@ class ExperimentService(metaclass=SingletonMeta):
         *,
         db: Session,
         project_id: int,
+        experiment_id: int,
         run_id: int,
         export_format: ExperimentRunLogFormat,
     ) -> str:
@@ -374,7 +382,9 @@ class ExperimentService(metaclass=SingletonMeta):
         scoring) with the run's configuration in every row, or one row without
         scores if none are stored. Returns the relative URL of the file.
         """
-        log = self._read_run_log(db=db, project_id=project_id, run_id=run_id)
+        log = self._read_run_log(
+            db=db, project_id=project_id, experiment_id=experiment_id, run_id=run_id
+        )
         fn = f"experiment_{log.experiment_id}_run_{log.run_id}_log"
         match export_format:
             case ExperimentRunLogFormat.JSON:

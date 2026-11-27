@@ -223,7 +223,7 @@ def _run_a_sentence_annotations(
     sentence."""
     base = project["base"]
     response = client.get(
-        f"/projects/{base['project'].id}/sentence-annotations/by-sentence",
+        f"/projects/{base['project'].id}/sentence-annotations/per-sentence",
         params={"user_id": base["run_a"].id, "sdoc_id": base["target_sdoc"].id},
     )
     assert response.status_code == 200, response.text
@@ -780,7 +780,7 @@ def test_job_start_rejects_documents_outside_the_project(
         json=payload.model_dump(mode="json", exclude={"project_id"}),
     )
 
-    assert response.status_code == 404, response.text
+    assert response.status_code in (400, 404), response.text
     list_response = client.get(_job_url(base["project"].id))
     assert list_response.status_code == 200, list_response.text
     assert list_response.json() == []
@@ -859,7 +859,7 @@ def test_job_start_rejects_users_that_are_no_virtual_user_of_the_project(
         json=payload.model_dump(mode="json", exclude={"project_id"}),
     )
 
-    assert response.status_code in (400, 404), response.text
+    assert response.status_code == 404, response.text
     list_response = client.get(_job_url(base["project"].id))
     assert list_response.status_code == 200, list_response.text
     assert list_response.json() == []

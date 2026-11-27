@@ -1,12 +1,9 @@
-from sqlalchemy import func
 from sqlalchemy.orm import Session
 
 from common.singleton_meta import SingletonMeta
-from core.doc.source_document_orm import SourceDocumentORM
 from core.metadata.metadata_exceptions import ReadOnlyMetadataError
 from core.metadata.source_document_metadata_crud import crud_sdoc_meta
 from core.metadata.source_document_metadata_dto import (
-    DateMetadataCountResult,
     SourceDocumentMetadataRead,
     SourceDocumentMetadataUpdate,
     SourceDocumentMetadataUpdateBulk,
@@ -17,35 +14,6 @@ from core.metadata.source_document_metadata_orm import SourceDocumentMetadataORM
 class SourceDocumentMetadataService(metaclass=SingletonMeta):
     def __new__(cls, *args, **kwargs):
         return super(SourceDocumentMetadataService, cls).__new__(cls)
-
-    def count_sdocs_with_date_metadata(
-        self, db: Session, *, project_id: int, date_metadata_id: int
-    ) -> DateMetadataCountResult:
-        """
-        Count the source documents of a project that have a value for the date
-        metadata key, and all source documents of the project.
-        """
-        # 1) the documents with a date value
-        query = (
-            db.query(func.count(SourceDocumentORM.id))
-            .join(SourceDocumentORM.metadata_)
-            .filter(
-                SourceDocumentORM.project_id == project_id,
-                SourceDocumentMetadataORM.project_metadata_id == date_metadata_id,
-                SourceDocumentMetadataORM.date_value.isnot(None),
-            )
-        )
-        sdocs_with_valid_date = query.scalar()
-
-        # 2) all documents
-        query = db.query(func.count(SourceDocumentORM.id)).filter(
-            SourceDocumentORM.project_id == project_id
-        )
-        sdocs_total = query.scalar()
-
-        return DateMetadataCountResult(
-            sdocs_with_date=sdocs_with_valid_date, sdocs_total=sdocs_total
-        )
 
     def update(
         self,

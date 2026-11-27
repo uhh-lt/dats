@@ -1,11 +1,7 @@
 from common.dependencies import DBSession
 from common.project_router import project_router
-from core.artefacts.word_frequencies.word_frequency_crud import crud_word_frequency
 from modules.word_frequency.word_frequency_columns import WordFrequencyColumns
-from modules.word_frequency.word_frequency_dto import (
-    WordFrequencyRead,
-    WordFrequencyResult,
-)
+from modules.word_frequency.word_frequency_dto import WordFrequencyResult
 from modules.word_frequency.word_frequency_feature import WORD_FREQUENCY
 from modules.word_frequency.word_frequency_service import WordFrequencyService
 from systems.search_system.column_info import ColumnInfo
@@ -35,25 +31,6 @@ def word_frequency_analysis_info(
         db=db,
         project_id=project_id,
     )
-
-
-@router.get(
-    "",
-    response_model=list[WordFrequencyRead],
-    summary="Returns the word frequencies of the SourceDocument",
-)
-def get_word_frequencies(
-    *,
-    db: DBSession,
-    project_id: int,
-    sdoc_id: int,
-) -> list[WordFrequencyRead]:
-    return [
-        WordFrequencyRead.model_validate(wf)
-        for wf in crud_word_frequency.read_by_sdoc(
-            db=db, project_id=project_id, sdoc_id=sdoc_id
-        )
-    ]
 
 
 # --- other operations

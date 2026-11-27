@@ -1,10 +1,4 @@
-from pydantic import BaseModel, ConfigDict, Field
-
-from core.artefacts.word_frequencies.word_frequency_dto import WordFrequencyBase
-
-
-class WordFrequencyRead(WordFrequencyBase):
-    model_config = ConfigDict(from_attributes=True)
+from pydantic import BaseModel, Field
 
 
 class WordFrequencyStat(BaseModel):

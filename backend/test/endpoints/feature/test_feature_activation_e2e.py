@@ -23,7 +23,7 @@ SETTINGS = ProcessingSettings(
 
 
 def _activate(client: TestClient, project_id: int, feature: str) -> None:
-    response = client.post(
+    response = client.patch(
         f"/projects/{project_id}/features/{feature}/enable",
         json=FeatureActivation(settings=SETTINGS).model_dump(mode="json"),
     )

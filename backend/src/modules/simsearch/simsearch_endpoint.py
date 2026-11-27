@@ -10,7 +10,9 @@ from modules.simsearch.simsearch_feature import SEMANTIC_SEARCH
 from modules.simsearch.simsearch_service import SimSearchService
 from systems.search_system.filtering import Filter
 
-router = project_router("/simsearch", tags=["simsearch"], feature=SEMANTIC_SEARCH)
+router = project_router(
+    "/similarity-search", tags=["simsearch"], feature=SEMANTIC_SEARCH
+)
 
 
 @router.post(

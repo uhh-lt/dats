@@ -61,14 +61,14 @@ def test_enable_creates_the_codes_and_disable_keeps_them(
     assert _codes(db_session, project.id) == {}
 
     base = f"/projects/{project.id}/features/{coded_feature.name}"
-    enabled = client.post(
+    enabled = client.patch(
         f"{base}/enable",
         json=FeatureActivation(settings=SETTINGS).model_dump(mode="json"),
     )
     assert enabled.status_code == 200, enabled.text
     assert _codes(db_session, project.id) == dict.fromkeys(CODE_NAMES, True)
 
-    disabled = client.post(f"{base}/disable")
+    disabled = client.patch(f"{base}/disable")
     assert disabled.status_code == 200, disabled.text
     assert _codes(db_session, project.id) == dict.fromkeys(CODE_NAMES, True)
 
@@ -139,13 +139,13 @@ def test_enable_runs_the_set_up_hook_after_the_codes_and_disable_does_not(
     base = f"/projects/{project.id}/features/{hooked_feature['feature'].name}"
     activation = FeatureActivation(settings=SETTINGS).model_dump(mode="json")
 
-    assert client.post(f"{base}/enable", json=activation).status_code == 200
+    assert client.patch(f"{base}/enable", json=activation).status_code == 200
     assert hooked_feature["calls"] == [(project.id, HOOK_FINDS_ALL)]
 
-    assert client.post(f"{base}/disable").status_code == 200
+    assert client.patch(f"{base}/disable").status_code == 200
     assert hooked_feature["calls"] == [(project.id, HOOK_FINDS_ALL)]
 
-    assert client.post(f"{base}/enable", json=activation).status_code == 200
+    assert client.patch(f"{base}/enable", json=activation).status_code == 200
     assert hooked_feature["calls"] == [
         (project.id, HOOK_FINDS_ALL),
         (project.id, HOOK_FINDS_ALL),

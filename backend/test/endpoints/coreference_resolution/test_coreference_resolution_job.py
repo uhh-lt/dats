@@ -93,12 +93,12 @@ def _texts(groups: list[SpanGroupWithAnnotationsRead]) -> list[list[str]]:
 
 
 # ===========================================================================
-# ENABLE (/projects/{project_id}/features/coreference_resolution/enable) TESTS
+# ENABLE (PATCH /projects/{project_id}/features/coreference_resolution/enable) TESTS
 # ===========================================================================
 
 
 def _enable(client: TestClient, project_id: int) -> None:
-    response = client.post(
+    response = client.patch(
         f"/projects/{project_id}/features/{FEATURE}/enable",
         json=FeatureActivation(settings=SETTINGS).model_dump(mode="json"),
     )
@@ -181,7 +181,7 @@ def test_enable_creates_the_mention_code_and_disable_keeps_it(
     created = mention()
     assert created is not None and created.is_system
 
-    response = client.post(
+    response = client.patch(
         f"/projects/{codeless_project.id}/features/{FEATURE}/disable"
     )
     assert response.status_code == 200, response.text

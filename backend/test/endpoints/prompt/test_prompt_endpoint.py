@@ -24,7 +24,6 @@ from core.prompt.prompt_dto import (
     PromptTaskInfo,
     PromptUpdate,
     PromptVersionCreate,
-    PromptVersionRead,
     SentencePromptExample,
     SpanPromptExample,
 )
@@ -820,7 +819,7 @@ def test_create_version_of_an_unknown_prompt_is_not_found(
 
 
 # ===========================================================================
-# READ (GET /projects/{project_id}/prompts[/{prompt_id}|/versions/{version_id}]) TESTS
+# READ (GET /projects/{project_id}/prompts[/{prompt_id}]) TESTS
 # ===========================================================================
 
 
@@ -869,18 +868,17 @@ def test_get_returns_a_prompt_and_a_version(
     client: TestClient,
     prompt_project: PromptProject,
 ) -> None:
-    """A prompt and each of its versions can be read by id, with all selections."""
+    """A prompt can be read by id with each of its versions and all selections."""
     project = prompt_project
     project_id = project["project"].id
     prompt = project["span_prompt"]
     prompt_response = client.get(f"{_prompts_url(project_id)}/{prompt.id}")
     assert prompt_response.status_code == 200, prompt_response.text
-    assert PromptRead.model_validate(prompt_response.json()) == prompt
+    read_prompt = PromptRead.model_validate(prompt_response.json())
+    assert read_prompt == prompt
 
     version = prompt.versions[1]
-    version_response = client.get(f"{_prompts_url(project_id)}/versions/{version.id}")
-    assert version_response.status_code == 200, version_response.text
-    read = PromptVersionRead.model_validate(version_response.json())
+    read = next(v for v in read_prompt.versions if v.id == version.id)
     assert read == version
     assert read.codes == [
         prompt_code(project["person_code"]),
@@ -898,60 +896,40 @@ def test_get_version_without_a_stored_reasoning_setting_reads_it_as_off(
     key in its stored settings; it is read with the setting off, so existing
     versions need no data migration."""
     project_id = prompt_project["project"].id
-    response = client.get(
-        f"{_prompts_url(project_id)}/versions/{version_without_reasoning_setting}"
-    )
+    prompt_id = prompt_project["span_prompt"].id
+    response = client.get(f"{_prompts_url(project_id)}/{prompt_id}")
     assert response.status_code == 200, response.text
-    read = PromptVersionRead.model_validate(response.json())
+    read = next(
+        version
+        for version in PromptRead.model_validate(response.json()).versions
+        if version.id == version_without_reasoning_setting
+    )
 
     assert read.settings.request_reasoning is False
     assert read.settings == PromptSettings()
 
 
-@pytest.mark.parametrize(
-    "path_key,row_key",
-    [
-        # GET /prompts/{prompt_id} with a prompt of the other project.
-        pytest.param("", "prompt", id="prompt"),
-        # GET /prompts/versions/{version_id} with a version of the other project.
-        pytest.param("/versions", "prompt_version", id="version"),
-    ],
-)
-def test_get_prompt_or_version_of_another_project_is_not_found(
+def test_get_prompt_of_another_project_is_not_found(
     client: TestClient,
     tenants: TwoTenants,
-    path_key: str,
-    row_key: str,
 ) -> None:
-    """A prompt or version of another project of the user is not found in the
-    path's project (HTTP 404), but is found in its own project."""
+    """A prompt of another project of the user is not found in the path's project
+    (HTTP 404), but is found in its own project."""
     own, foreign = tenants["own"], tenants["foreign"]
-    row_id = foreign[row_key].id  # type: ignore[literal-required]
+    prompt_id = foreign["prompt"].id
 
-    response = client.get(f"{_prompts_url(own['project'].id)}{path_key}/{row_id}")
+    response = client.get(f"{_prompts_url(own['project'].id)}/{prompt_id}")
     assert response.status_code == 404, response.text
-    response = client.get(f"{_prompts_url(foreign['project'].id)}{path_key}/{row_id}")
+    response = client.get(f"{_prompts_url(foreign['project'].id)}/{prompt_id}")
     assert response.status_code == 200, response.text
 
 
-@pytest.mark.parametrize(
-    "path_key",
-    [
-        # GET /prompts/{prompt_id}
-        pytest.param("", id="prompt"),
-        # GET /prompts/versions/{version_id}
-        pytest.param("/versions", id="version"),
-    ],
-)
-def test_get_unknown_prompt_or_version_is_not_found(
+def test_get_unknown_prompt_is_not_found(
     client: TestClient,
     prompt_project: PromptProject,
-    path_key: str,
 ) -> None:
-    """Ids that do not exist answer HTTP 404."""
-    response = client.get(
-        f"{_prompts_url(prompt_project['project'].id)}{path_key}/999999"
-    )
+    """An id that does not exist answers HTTP 404."""
+    response = client.get(f"{_prompts_url(prompt_project['project'].id)}/999999")
     assert response.status_code == 404, response.text
 
 
@@ -1039,7 +1017,7 @@ def test_update_prompt_of_another_project_is_not_found(
 
 
 # ===========================================================================
-# CREATE EXAMPLES (POST /projects/{project_id}/prompts/examples) TESTS
+# BUILD EXAMPLES (POST /projects/{project_id}/prompts/build-examples) TESTS
 # ===========================================================================
 
 
@@ -1051,7 +1029,7 @@ def _post_examples(
     project_key: str = "project",
 ):
     return client.post(
-        _prompts_url(project[project_key].id, "/examples"),  # type: ignore[literal-required]
+        _prompts_url(project[project_key].id, "/build-examples"),  # type: ignore[literal-required]
         json=PromptExamplesCreate(
             kind=kind,
             annotation_ids=annotation_ids,
@@ -1225,7 +1203,7 @@ def test_create_examples_rejects_an_empty_selection(
 ) -> None:
     """At least one annotation is required (HTTP 422)."""
     response = client.post(
-        _prompts_url(prompt_project["project"].id, "/examples"),
+        _prompts_url(prompt_project["project"].id, "/build-examples"),
         json={
             "kind": PromptExampleKind.SPAN.value,
             "annotation_ids": [],

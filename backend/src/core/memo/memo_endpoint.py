@@ -16,7 +16,6 @@ from core.memo.memo_generation_service import MemoGenerationService
 from core.memo.memo_service import MemoService
 from core.memo.memo_utils import (
     get_memo_read_dto_from_orm,
-    get_memo_read_dtos_from_orms,
 )
 from systems.websocket_system.websocket_dependency import WebsocketEmitter
 
@@ -52,7 +51,7 @@ def create_memo(
 @router.get(
     "",
     response_model=list[MemoRead],
-    summary="Returns the Memos of the Project, optionally filtered by the attached object (attached_object_id needs attached_object_type) and the author (user_id).",
+    summary="Returns the Memos of the Project, optionally filtered by the attached object (attached_object_id needs attached_object_type), the author (user_id) and the memos the current user opened, most recently opened first (recent), at most limit.",
 )
 def get_by_project(
     *,
@@ -61,6 +60,8 @@ def get_by_project(
     attached_object_type: AttachedObjectType | None = None,
     attached_object_id: int | None = None,
     user_id: int | None = None,
+    recent: bool = False,
+    limit: int | None = None,
     authz_user: AuthzUser = Depends(),
 ) -> list[MemoRead]:
     return MemoService().read_by_project(
@@ -70,26 +71,8 @@ def get_by_project(
         attached_object_type=attached_object_type,
         attached_object_id=attached_object_id,
         author_id=user_id,
-    )
-
-
-@router.get(
-    "/recent",
-    response_model=list[MemoRead],
-    summary="Returns the current user's most recently opened Memos in the project",
-)
-def get_recent_memos(
-    *,
-    db: DBSession,
-    project_id: int,
-    limit: int = 10,
-    authz_user: AuthzUser = Depends(),
-) -> list[MemoRead]:
-    db_objs = crud_memo.read_recents(
-        db=db, project_id=project_id, user_id=authz_user.user.id, limit=limit
-    )
-    return get_memo_read_dtos_from_orms(
-        db=db, project_id=project_id, db_objs=db_objs, user_id=authz_user.user.id
+        recent=recent,
+        limit=limit,
     )
 
 
@@ -177,20 +160,24 @@ def update_by_id(
     return result
 
 
-@router.post(
-    "/{memo_id}/recent",
-    status_code=204,
-    summary="Records that the current user opened the Memo with the given ID",
+@router.patch(
+    "/{memo_id}/mark-recent",
+    response_model=MemoRead,
+    summary="Records that the current user opened the Memo with the given ID and returns the Memo",
 )
-def record_recent_memo(
+def mark_recent(
     *,
     db: DBSession,
     project_id: int,
     memo_id: int,
     authz_user: AuthzUser = Depends(),
-) -> None:
+) -> MemoRead:
     crud_memo.update_recent(
         db=db, project_id=project_id, memo_id=memo_id, user_id=authz_user.user.id
+    )
+    db_obj = crud_memo.read(db=db, project_id=project_id, id=memo_id)
+    return get_memo_read_dto_from_orm(
+        db=db, project_id=project_id, db_obj=db_obj, user_id=authz_user.user.id
     )
 
 

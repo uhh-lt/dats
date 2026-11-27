@@ -102,10 +102,10 @@ A wrapper around `SentenceTransformers` and `SetFit`.
 
 The API surface, under `/projects/{project_id}`. Key interactions:
 
-- **Jobs**: POST `/jobs/perspectives?aspect_id=` starts the pipeline (async).
+- **Jobs**: POST `/jobs/perspectives` with the body `{"aspect_id": ..., "parameters": {...}}` starts the pipeline (async).
 - **CRUD**: Standard Create/Read/Update/Delete for Aspects at `/perspectives/aspects`.
 - **Visualization**: POST `/perspectives/aspects/{aspect_id}/visualize` returns data for the frontend Scatterplot (docs, coords, cluster colors).
-- **Labeling**: POST `/perspectives/aspects/{aspect_id}/accept-labels` / `/revert-labels` for user feedback.
+- **Labeling**: PATCH `/perspectives/aspects/{aspect_id}/accept-labels` / `/revert-labels` for user feedback.
 
 ## API & Frontend Interaction
 

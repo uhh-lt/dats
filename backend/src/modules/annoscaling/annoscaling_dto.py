@@ -3,7 +3,7 @@ from pydantic import BaseModel, Field
 
 class AnnoscalingSuggest(BaseModel):
     code_id: int = Field(description="Code to provide suggestions for")
-    reject_cide_id: int = Field(description="Code to use as opposing code")
+    reject_code_id: int = Field(description="Code to use as opposing code")
     top_k: int = Field(description="Number of suggestions to provide")
 
 

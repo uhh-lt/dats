@@ -179,10 +179,9 @@ def _act(client: TestClient, project_id: int, feature: str, action: FeatureActio
     """Send the action (`/enable`, `/complete` or `/disable`) for the feature."""
     url = f"/projects/{project_id}/features/{feature}/{action.value}"
     if action == FeatureAction.DISABLE:
-        return client.post(url)
-    return client.post(
-        url, json=FeatureActivation(settings=SETTINGS).model_dump(mode="json")
-    )
+        return client.patch(url)
+    send = client.patch if action == FeatureAction.ENABLE else client.post
+    return send(url, json=FeatureActivation(settings=SETTINGS).model_dump(mode="json"))
 
 
 def _activate(client: TestClient, project_id: int, feature: str) -> list[str]:
@@ -293,7 +292,7 @@ def test_feature_action_on_an_unknown_feature_is_rejected(
 
 
 # ===========================================================================
-# ENABLE FEATURE (/projects/{project_id}/features/{feature}/enable) TESTS
+# ENABLE FEATURE (PATCH /projects/{project_id}/features/{feature}/enable) TESTS
 # ===========================================================================
 
 
@@ -699,7 +698,7 @@ def test_enable_feature_in_a_project_without_documents_starts_nothing(
 
 
 # ===========================================================================
-# COMPLETE FEATURE (/projects/{project_id}/features/{feature}/complete) TESTS
+# COMPLETE FEATURE (POST /projects/{project_id}/features/{feature}/complete) TESTS
 # ===========================================================================
 
 
@@ -837,7 +836,7 @@ def test_complete_feature_recovers_the_steps_an_advancing_with_redis_down_failed
 
 
 # ===========================================================================
-# DISABLE FEATURE (/projects/{project_id}/features/{feature}/disable) TESTS
+# DISABLE FEATURE (PATCH /projects/{project_id}/features/{feature}/disable) TESTS
 # ===========================================================================
 
 

@@ -378,7 +378,7 @@ def test_list_search_views_by_non_member_forbidden(
 
 
 # ===========================================================================
-# UPDATE SEARCH VIEW (PATCH /projects/{project_id}/search-views/{view_id}) TESTS
+# UPDATE SEARCH VIEW (PATCH /projects/{project_id}/search-views/{search_view_id}) TESTS
 # ===========================================================================
 
 
@@ -646,7 +646,7 @@ def test_update_search_view_by_non_owner_forbidden(
 
 
 # ===========================================================================
-# REORDER SEARCH VIEWS (PATCH /projects/{project_id}/search-views/order) TESTS
+# REORDER SEARCH VIEWS (PATCH /projects/{project_id}/search-views/reorder) TESTS
 # ===========================================================================
 
 
@@ -662,7 +662,7 @@ def test_reorder_search_views(
     ]
 
     response = client.patch(
-        f"{_views_url(project.id)}/order",
+        f"{_views_url(project.id)}/reorder",
         params={"entity_type": SearchEntityType.MEMO.value},
         json={"view_ids": list(reversed(ids))},
     )
@@ -684,7 +684,7 @@ def test_reorder_search_views_rejects_incomplete_id_set(
     ]
 
     response = client.patch(
-        f"{_views_url(project.id)}/order",
+        f"{_views_url(project.id)}/reorder",
         params={"entity_type": SearchEntityType.MEMO.value},
         json={"view_ids": ids},
     )
@@ -701,7 +701,7 @@ def test_reorder_search_views_rejects_a_view_of_another_project(
 
     def reorder(view_id: int):
         return client.patch(
-            f"{_views_url(own['project'].id)}/order",
+            f"{_views_url(own['project'].id)}/reorder",
             params={"entity_type": SearchEntityType.MEMO.value},
             json={"view_ids": [view_id]},
         )
@@ -722,7 +722,7 @@ def test_reorder_search_views_rejects_duplicate_ids(
     duplicate = search_view_project["memo_view_a"].id
 
     response = client.patch(
-        f"{_views_url(project.id)}/order",
+        f"{_views_url(project.id)}/reorder",
         params={"entity_type": SearchEntityType.MEMO.value},
         json={"view_ids": [duplicate, duplicate]},
     )
@@ -737,7 +737,7 @@ def test_reorder_search_views_by_non_member_forbidden(
 ):
     """A non-member cannot reorder the project's views (HTTP 403)."""
     response = non_member_client.patch(
-        f"{_views_url(test_project.id)}/order",
+        f"{_views_url(test_project.id)}/reorder",
         params={"entity_type": SearchEntityType.MEMO.value},
         json={"view_ids": []},
     )
@@ -745,7 +745,7 @@ def test_reorder_search_views_by_non_member_forbidden(
 
 
 # ===========================================================================
-# DELETE SEARCH VIEW (DELETE /projects/{project_id}/search-views/{view_id}) TESTS
+# DELETE SEARCH VIEW (DELETE /projects/{project_id}/search-views/{search_view_id}) TESTS
 # ===========================================================================
 
 

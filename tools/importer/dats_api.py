@@ -50,7 +50,7 @@ class DATSAPI:
             "accept": "application/json",
         }
         r = requests.post(
-            f"{self.BASE_PATH}authentication/refresh_access?refresh_token={self.refresh_token}",
+            f"{self.BASE_PATH}authentication/refresh-access?refresh_token={self.refresh_token}",
             headers=headers,
         )
         r.raise_for_status()
@@ -143,14 +143,16 @@ class DATSAPI:
         try:
             r = requests.get(
                 self.BASE_PATH
-                + f"projects/{proj_id}/source-documents/by-filename"
+                + f"projects/{proj_id}/source-documents"
                 + f"?filename={quote(filename)}&only_finished=false",
                 headers={"Authorization": f"Bearer {self.access_token}"},
             )
             if r.status_code != 200:
                 return None
-            sdoc_id = r.json()
-            return sdoc_id
+            sdocs = r.json()
+            if len(sdocs) == 0:
+                return None
+            return sdocs[0]["id"]
         except Exception:
             return None
 

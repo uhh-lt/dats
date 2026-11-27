@@ -739,7 +739,7 @@ def test_update_memos_bulk_with_a_memo_of_another_project_is_not_found(
 
 
 # ===========================================================================
-# RECENT MEMOS (POST …/memos/{memo_id}/recent, GET …/memos/recent) TESTS
+# RECENT MEMOS (PATCH …/memos/{memo_id}/mark-recent, GET …/memos?recent=true) TESTS
 # ===========================================================================
 #
 # Recents are per-user and per-project. The test client authenticates as `user`
@@ -749,27 +749,28 @@ def test_update_memos_bulk_with_a_memo_of_another_project_is_not_found(
 
 def _record_recent(client: TestClient, project_id: int, memo_id: int) -> None:
     """Record a memo-open for the requesting user and assert it succeeded."""
-    response = client.post(_url(project_id, f"/{memo_id}/recent"))
-    assert response.status_code == 204, response.text
+    response = client.patch(_url(project_id, f"/{memo_id}/mark-recent"))
+    assert response.status_code == 200, response.text
 
 
 def _get_recent_ids(client: TestClient, project_id: int, **params) -> list[int]:
     """Read the requesting user's recent memos and return their ids in order."""
-    response = client.get(_url(project_id, "/recent"), params=params)
+    response = client.get(_url(project_id), params={"recent": True, **params})
     assert response.status_code == 200, response.text
     return [MemoRead.model_validate(item).id for item in response.json()]
 
 
-def test_record_recent_memo_returns_no_content(
+def test_record_recent_memo_returns_the_memo(
     client: TestClient, memo_project: MemoProjectState
 ):
-    """Recording a recent returns 204 No Content and an empty body."""
+    """Recording a recent returns the opened memo as a MemoRead."""
     memo = memo_project["code_memo_a"]
 
-    response = client.post(_url(memo_project["project"].id, f"/{memo.id}/recent"))
+    response = client.patch(_url(memo_project["project"].id, f"/{memo.id}/mark-recent"))
 
-    assert response.status_code == 204, response.text
-    assert response.content == b""
+    assert response.status_code == 200, response.text
+    read = MemoRead.model_validate(response.json())
+    assert (read.id, read.title) == (memo.id, "Code Memo A")
 
 
 @pytest.mark.parametrize(
@@ -787,8 +788,8 @@ def test_record_recent_memo_not_in_the_project_is_not_found(
     client: TestClient, memo_project: MemoProjectState, memo_id_of
 ):
     """Recording a memo that does not exist in the path's project answers 404."""
-    response = client.post(
-        _url(memo_project["project"].id, f"/{memo_id_of(memo_project)}/recent")
+    response = client.patch(
+        _url(memo_project["project"].id, f"/{memo_id_of(memo_project)}/mark-recent")
     )
     assert response.status_code == 404, response.text
 
@@ -808,7 +809,7 @@ def test_get_recent_memos_returns_recorded_memos(
     memo = memo_project["code_memo_a"]
     _record_recent(client, project.id, memo.id)
 
-    response = client.get(_url(project.id, "/recent"))
+    response = client.get(_url(project.id), params={"recent": True})
 
     assert response.status_code == 200, response.text
     recents = [MemoRead.model_validate(item) for item in response.json()]
@@ -876,10 +877,12 @@ def test_get_recent_memos_non_member_project_returns_403(
 ):
     """A project the requesting user is not a member of (including a nonexistent
     one) yields 403."""
-    response = client.get(_url(memo_project["foreign_project"].id, "/recent"))
+    response = client.get(
+        _url(memo_project["foreign_project"].id), params={"recent": True}
+    )
     assert response.status_code == 403, response.text
 
-    response = client.get(_url(99999, "/recent"))
+    response = client.get(_url(99999), params={"recent": True})
     assert response.status_code == 403, response.text
 
 

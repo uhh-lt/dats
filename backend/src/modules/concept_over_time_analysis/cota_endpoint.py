@@ -116,21 +116,21 @@ def update_by_id(
     db: DBSession,
     project_id: int,
     cota_id: int,
-    cota_upate: COTAUpdate,
+    cota_update: COTAUpdate,
     ws: WebsocketEmitter = Depends(),
 ) -> COTARead:
     result = cotas.update(
         db=db,
         project_id=project_id,
         cota_id=cota_id,
-        cota_update=cota_upate,
+        cota_update=cota_update,
     )
     ws.emit_to_project(DATSEvent.COTA_UPDATED, result, project_id=project_id)
     return result
 
 
 @router.patch(
-    "/{cota_id}/annotate",
+    "/{cota_id}/annotate-sentences",
     response_model=COTARead,
     summary="Annotate (multiple) COTASentences",
 )
@@ -155,7 +155,7 @@ def annotate_cota_sentence(
 
 
 @router.patch(
-    "/{cota_id}/remove",
+    "/{cota_id}/remove-sentences",
     response_model=COTARead,
     summary="Remove (multiple) COTASentences from the search space",
 )

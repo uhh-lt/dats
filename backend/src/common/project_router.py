@@ -1,4 +1,5 @@
 from enum import Enum
+from typing import Any
 
 from fastapi import APIRouter, Depends
 
@@ -6,6 +7,18 @@ from common.dependencies import DBSession, get_current_user
 from core.auth.authz_user import AuthzUser
 from systems.feature_system.feature_registry import Feature
 from systems.feature_system.feature_service import FeatureService
+
+# the errors every project route can answer, documented once for all of them
+PROJECT_ROUTE_ERRORS: dict[int | str, dict[str, Any]] = {
+    400: {"description": "The request breaks a rule of the domain"},
+    403: {
+        "description": "The user is no member of the project, or the feature is disabled"
+    },
+    404: {"description": "A path id, or an id the route reads, is not in the project"},
+    409: {
+        "description": "A body id violates a foreign key, or a value a unique constraint"
+    },
+}
 
 
 def project_router(
@@ -42,4 +55,5 @@ def project_router(
         prefix=f"/projects/{{project_id}}{prefix}",
         dependencies=[Depends(get_current_user), Depends(check_project)],
         tags=tags,
+        responses=PROJECT_ROUTE_ERRORS,
     )

@@ -211,7 +211,7 @@ def test_get_map_thumbnail_url_if_not_exists(client: TestClient, test_project):
 
 
 # ===========================================================================
-# UPDATE CLUSTER (/projects/{project_id}/perspectives/clusters/{cluster_id}) TESTS
+# UPDATE CLUSTER (PATCH /projects/{project_id}/perspectives/aspects/{aspect_id}/clusters/{cluster_id}) TESTS
 # ===========================================================================
 
 
@@ -220,7 +220,10 @@ def test_update_cluster_renames_it(client: TestClient, tenants: TwoTenants):
     own = tenants["own"]
 
     response = client.patch(
-        _url(own["project"].id, f"/clusters/{own['cluster'].id}"),
+        _url(
+            own["project"].id,
+            f"/aspects/{own['aspect'].id}/clusters/{own['cluster'].id}",
+        ),
         json={"name": "Renamed"},
     )
 
@@ -236,11 +239,40 @@ def test_update_cluster_of_another_project_is_not_found(
     own, foreign = tenants["own"], tenants["foreign"]
 
     response = client.patch(
-        _url(own["project"].id, f"/clusters/{foreign['cluster'].id}"),
+        _url(
+            own["project"].id,
+            f"/aspects/{own['aspect'].id}/clusters/{foreign['cluster'].id}",
+        ),
         json={"name": "Renamed"},
     )
 
     assert response.status_code == 404, response.text
+
+
+def test_update_cluster_of_another_aspect_is_not_found(
+    client: TestClient, tenants: TwoTenants, aspects_with_files: AspectsWithFiles
+):
+    """The cluster "Cluster <p>" of "Aspect <p>" answers 404 under the aspect
+    "Mapped" of the same project and keeps its name."""
+    own = tenants["own"]
+    project_id = own["project"].id
+    other_aspect = aspects_with_files["mapped"]
+    assert other_aspect.project_id == project_id
+
+    response = client.patch(
+        _url(project_id, f"/aspects/{other_aspect.id}/clusters/{own['cluster'].id}"),
+        json={"name": "Renamed"},
+    )
+
+    assert response.status_code == 404, response.text
+    clusters = client.get(
+        _url(project_id, f"/aspects/{own['aspect'].id}/clusters"),
+        params={"sdoc_id": own["sdoc"].id},
+    )
+    assert clusters.status_code == 200, clusters.text
+    assert [ClusterRead.model_validate(c).name for c in clusters.json()] == [
+        own["cluster"].name
+    ]
 
 
 # ===========================================================================

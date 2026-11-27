@@ -49,7 +49,7 @@ class DATSAPI:
             if self.access_token != stale_access_token:
                 return
             r = requests.post(
-                self.base_url + "authentication/refresh_access",
+                self.base_url + "authentication/refresh-access",
                 params={"refresh_token": self.refresh_token},
                 timeout=TIMEOUT_SECONDS,
             )

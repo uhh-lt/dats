@@ -209,7 +209,7 @@ def test_the_overall_status_is_derived_from_the_step_statuses(
             db=db_session, project_id=project_id, status=status
         )
         assert {s.id for s in read} == sdoc_ids, status
-        assert crud_sdoc.count_by_project_and_status(
+        assert crud_sdoc.count_by_project(
             db=db_session, project_id=project_id, status=status
         ) == len(sdoc_ids), status
         for sdoc_id in sdoc_ids:

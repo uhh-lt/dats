@@ -250,7 +250,7 @@ def test_get_sentence_annotations_filter_of_other_project_matches_nothing(
 
 
 # ===========================================================================
-# GET BY SENTENCE (GET /projects/{project_id}/sentence-annotations/by-sentence) TESTS
+# GET PER SENTENCE (GET /projects/{project_id}/sentence-annotations/per-sentence) TESTS
 # ===========================================================================
 
 
@@ -265,7 +265,7 @@ def test_get_by_sdoc_and_user(
     sa = project_with_sentence_annotation["sentence_annotation"]
 
     resp = client.get(
-        _route(project.id) + "/by-sentence",
+        _route(project.id) + "/per-sentence",
         params={"user_id": test_user.id, "sdoc_id": sdoc.id},
     )
 
@@ -289,7 +289,7 @@ def test_get_by_sdoc_and_user_both_ids_not_exist(
 ):
     """A document that does not exist is not found."""
     resp = client.get(
-        _route(test_project.id) + "/by-sentence",
+        _route(test_project.id) + "/per-sentence",
         params={"user_id": 99999, "sdoc_id": 99999},
     )
 
@@ -305,7 +305,7 @@ def test_get_by_sentence_of_sdoc_of_other_project_is_not_found(
     foreign = two_tenants["foreign"]
 
     resp = client.get(
-        _route(own["project"].id) + "/by-sentence",
+        _route(own["project"].id) + "/per-sentence",
         params={"user_id": own["adoc"].user_id, "sdoc_id": foreign["sdoc"].id},
     )
 

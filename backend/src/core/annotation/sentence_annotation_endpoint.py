@@ -110,7 +110,7 @@ def get_sentence_annotations(
 
 
 @router.get(
-    "/by-sentence",
+    "/per-sentence",
     response_model=SentenceAnnotatorResult,
     summary=(
         "Returns the SentenceAnnotations of the User in the SourceDocument, grouped "

@@ -236,7 +236,7 @@ def test_get_users_by_project_lists_members_then_virtual_users(
 
 
 # ===========================================================================
-# UPDATE VIRTUAL USER (PATCH /projects/{project_id}/virtual-users/{user_id}) TESTS
+# UPDATE VIRTUAL USER (PATCH /projects/{project_id}/virtual-users/{virtual_user_id}) TESTS
 # ===========================================================================
 
 
@@ -335,7 +335,7 @@ def test_associate_virtual_user_to_project_is_rejected(
 
 
 # ===========================================================================
-# DELETE VIRTUAL USER (DELETE /projects/{project_id}/virtual-users/{user_id}) TESTS
+# DELETE VIRTUAL USER (DELETE /projects/{project_id}/virtual-users/{virtual_user_id}) TESTS
 # ===========================================================================
 
 

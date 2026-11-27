@@ -269,6 +269,7 @@ PARAMETERS: dict[str, Callable[[TenantRows], Any]] = {
     "folder_ids": lambda rows: [rows["folder"].id, rows["child_folder"].id],
     "tag_id": lambda rows: rows["tag"].id,
     "aspect_id": lambda rows: rows["aspect"].id,
+    "experiment_id": lambda rows: rows["experiment"].id,
     "cluster_id": lambda rows: rows["cluster"].id,
     "level": lambda rows: rows["cluster"].level,
     "prompt_id": lambda rows: rows["prompt"].id,

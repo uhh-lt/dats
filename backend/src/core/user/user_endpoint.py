@@ -60,25 +60,25 @@ def get_by_project(*, project_id: int, db: DBSession) -> list[UserRead]:
 
 
 @router.patch(
-    "/virtual-users/{user_id}",
+    "/virtual-users/{virtual_user_id}",
     response_model=UserRead,
     summary="Updates the virtual user with the given ID of the Project",
 )
 def update_by_id(
     *,
     project_id: int,
-    user_id: int,
+    virtual_user_id: int,
     user: UserUpdate,
     db: DBSession,
     ws: WebsocketEmitter = Depends(),
 ) -> UserRead:
-    crud_user.read_virtual_user(db=db, project_id=project_id, id=user_id)
+    crud_user.read_virtual_user(db=db, project_id=project_id, id=virtual_user_id)
     # the email and password of a virtual user are generated, never chosen
     if user.email is not None or user.password is not None:
         raise InvalidError("The email and password of a virtual user cannot be changed")
 
     result = UserRead.model_validate(
-        crud_user.update(db=db, id=user_id, update_dto=user)
+        crud_user.update(db=db, id=virtual_user_id, update_dto=user)
     )
     ws.emit_to_project(DATSEvent.USER_UPDATED, result, project_id=project_id)
     return result
@@ -118,7 +118,7 @@ def associate_user_to_project(
 
 
 @router.delete(
-    "/virtual-users/{user_id}",
+    "/virtual-users/{virtual_user_id}",
     response_model=UserRead,
     summary=(
         "Removes the virtual user with the given ID of the Project together with all "
@@ -129,14 +129,14 @@ def associate_user_to_project(
 def delete_by_id(
     *,
     project_id: int,
-    user_id: int,
+    virtual_user_id: int,
     db: DBSession,
     ws: WebsocketEmitter = Depends(),
 ) -> UserRead:
     result = UserRead.model_validate(
-        crud_user.read_virtual_user(db=db, project_id=project_id, id=user_id)
+        crud_user.read_virtual_user(db=db, project_id=project_id, id=virtual_user_id)
     )
-    crud_user.delete(db=db, id=user_id)
+    crud_user.delete(db=db, id=virtual_user_id)
     ws.emit_to_project(DATSEvent.USER_DELETED, result, project_id=project_id)
     return result
 

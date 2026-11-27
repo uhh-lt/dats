@@ -6,25 +6,28 @@ from modules.perspectives.perspectives_enum import PerspectivesJobType
 from modules.perspectives.perspectives_job_dto import (
     PerspectivesJobInput,
     PerspectivesJobRead,
+    PerspectivesJobStart,
     RecomputeClusterTitleAndDescriptionParams,
 )
 
 
 def _start(client: TestClient, project_id: int, aspect_id: int, cluster_id: int):
     """Start the recomputation of the cluster's title in the aspect."""
-    params = RecomputeClusterTitleAndDescriptionParams(
-        perspectives_job_type=PerspectivesJobType.RECOMPUTE_CLUSTER_TITLE_AND_DESCRIPTION,
-        cluster_id=cluster_id,
+    start = PerspectivesJobStart(
+        aspect_id=aspect_id,
+        parameters=RecomputeClusterTitleAndDescriptionParams(
+            perspectives_job_type=PerspectivesJobType.RECOMPUTE_CLUSTER_TITLE_AND_DESCRIPTION,
+            cluster_id=cluster_id,
+        ),
     )
     return client.post(
         f"/projects/{project_id}/jobs/perspectives",
-        params={"aspect_id": aspect_id},
-        json=params.model_dump(mode="json"),
+        json=start.model_dump(mode="json"),
     )
 
 
 # ===========================================================================
-# START PERSPECTIVES JOB (/projects/{project_id}/jobs/perspectives) TESTS
+# START PERSPECTIVES JOB (POST /projects/{project_id}/jobs/perspectives) TESTS
 # ===========================================================================
 
 

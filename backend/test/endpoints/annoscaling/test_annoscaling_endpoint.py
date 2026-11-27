@@ -21,7 +21,7 @@ CODE_ID = 1
 REJECT_CODE_ID = 2
 
 # ===========================================================================
-# SUGGEST (/projects/{project_id}/annotation-scaling/suggest) TESTS
+# SUGGEST (POST /projects/{project_id}/annotation-scaling/suggestions) TESTS
 # ===========================================================================
 
 
@@ -30,12 +30,12 @@ def test_suggest_is_rejected_when_annotation_scaling_is_disabled(
 ):
     dto = AnnoscalingSuggest(
         code_id=CODE_ID,
-        reject_cide_id=REJECT_CODE_ID,
+        reject_code_id=REJECT_CODE_ID,
         top_k=10,
     )
 
     response = client.post(
-        f"/projects/{featureless_project['project'].id}/annotation-scaling/suggest",
+        f"/projects/{featureless_project['project'].id}/annotation-scaling/suggestions",
         json=dto.model_dump(),
     )
 
@@ -51,12 +51,12 @@ def test_suggest_finds_the_nearest_sentences_without_semantic_search(
     text = p["project"]["text"]
     dto = AnnoscalingSuggest(
         code_id=p["accept"].id,
-        reject_cide_id=p["reject"].id,
+        reject_code_id=p["reject"].id,
         top_k=10,
     )
 
     response = client.post(
-        f"/projects/{p['project']['project'].id}/annotation-scaling/suggest",
+        f"/projects/{p['project']['project'].id}/annotation-scaling/suggestions",
         json=dto.model_dump(),
     )
 
@@ -68,7 +68,7 @@ def test_suggest_finds_the_nearest_sentences_without_semantic_search(
 
 
 # ===========================================================================
-# CONFIRM SUGGESTIONS (/projects/{project_id}/annotation-scaling/confirm-suggestions) TESTS
+# CONFIRM SUGGESTIONS (PUT /projects/{project_id}/annotation-scaling/suggestions/confirm) TESTS
 # ===========================================================================
 
 
@@ -82,9 +82,9 @@ def test_confirm_suggestions_is_rejected_when_annotation_scaling_is_disabled(
         reject=[],
     )
 
-    response = client.post(
+    response = client.put(
         f"/projects/{featureless_project['project'].id}"
-        "/annotation-scaling/confirm-suggestions",
+        "/annotation-scaling/suggestions/confirm",
         json=dto.model_dump(),
     )
 
@@ -104,9 +104,9 @@ def test_confirm_suggestions_with_a_code_of_another_project_is_a_conflict(
         reject=[],
     )
 
-    response = client.post(
+    response = client.put(
         f"/projects/{p['project']['project'].id}"
-        "/annotation-scaling/confirm-suggestions",
+        "/annotation-scaling/suggestions/confirm",
         json=dto.model_dump(),
     )
 

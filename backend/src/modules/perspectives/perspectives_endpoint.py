@@ -212,7 +212,7 @@ def update_aspect_by_id(
 
 
 @router.patch(
-    "/clusters/{cluster_id}",
+    "/aspects/{aspect_id}/clusters/{cluster_id}",
     response_model=ClusterRead,
     summary="Updates the Cluster's name and description.",
 )
@@ -220,10 +220,14 @@ def update_cluster_details(
     *,
     db: DBSession,
     project_id: int,
+    aspect_id: int,
     cluster_id: int,
     cluster_update: ClusterUpdate,
     ws: WebsocketEmitter = Depends(),
 ) -> ClusterRead:
+    crud_cluster.read_by_aspect(
+        db=db, project_id=project_id, aspect_id=aspect_id, id=cluster_id
+    )
     update_dto = ClusterUpdateIntern(
         **cluster_update.model_dump(exclude_unset=True), is_user_edited=True
     )
@@ -406,7 +410,7 @@ def visualize_documents(
     )
 
 
-@router.post(
+@router.patch(
     "/aspects/{aspect_id}/accept-labels",
     response_model=PerspectivesVisualization,
     summary="Accept the label of the provided SourceDocuments (by ID) and return the updated visualization.",
@@ -441,7 +445,7 @@ def accept_label(
     return result
 
 
-@router.post(
+@router.patch(
     "/aspects/{aspect_id}/revert-labels",
     response_model=PerspectivesVisualization,
     summary="Reverts the label of the provided SourceDocuments (by ID) and return the updated visualization.",

@@ -195,7 +195,7 @@ def update_sdoc_tags_bulk(
 
 
 @router.patch(
-    "/bulk/source-documents/set",
+    "/bulk/source-documents/replace",
     response_model=SdocTagLinksResult,
     summary=(
         "Sets the Tags of each SourceDocument to the given Tags and returns the "

@@ -22,7 +22,7 @@ ass: AnnoScalingService = AnnoScalingService()
 
 
 @router.post(
-    "/suggest",
+    "/suggestions",
     summary="Suggest annotations",
     description="Suggest annotations",
 )
@@ -39,13 +39,13 @@ def suggest(
         project_id=project_id,
         user_ids=[authz_user.user.id],
         code_id=dto.code_id,
-        reject_code_id=dto.reject_cide_id,
+        reject_code_id=dto.reject_code_id,
         top_k=dto.top_k,
     )
 
 
-@router.post(
-    "/confirm-suggestions",
+@router.put(
+    "/suggestions/confirm",
     response_model=list[SpanAnnotationRead],
     summary="Suggest annotations",
     description="Suggest annotations",

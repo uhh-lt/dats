@@ -4,14 +4,14 @@ from common.project_router import project_router
 from modules.code_frequency.code_frequency_dto import CodeFrequency, CodeOccurrence
 from modules.code_frequency.code_frequency_service import CodeFrequencyService
 
-router = project_router("/code-frequency", tags=["code_frequency"])
+router = project_router("/code-frequencies", tags=["code_frequency"])
 
 
 # --- other operations
 
 
 @router.post(
-    "/frequencies",
+    "",
     response_model=list[CodeFrequency],
     summary="Returns all SourceDocument IDs that match the query parameters.",
 )

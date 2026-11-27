@@ -51,7 +51,7 @@ The `set_up` hook may create anything else the module needs in the project (meta
 
 ## Actions
 
-One endpoint per action: `POST /projects/{project_id}/features/{feature}/{enable|complete|disable}`.
+One endpoint per action: `PATCH /projects/{project_id}/features/{feature}/enable`, `POST /projects/{project_id}/features/{feature}/complete` and `PATCH /projects/{project_id}/features/{feature}/disable`.
 
 | Action   | What it does                                                        | Allowed when              |
 | -------- | ------------------------------------------------------------------- | ------------------------- |
