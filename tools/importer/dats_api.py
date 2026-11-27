@@ -129,7 +129,7 @@ class DATSAPI:
 
         r = requests.get(
             self.BASE_PATH
-            + f"projects/{project_id}/doc-processing/status?status={status}",
+            + f"projects/{project_id}/doc-processing/statuses?status={status}",
             headers={"Authorization": f"Bearer {self.access_token}"},
         )
         r.raise_for_status()

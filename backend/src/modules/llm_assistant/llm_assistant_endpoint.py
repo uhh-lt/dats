@@ -12,14 +12,14 @@ llmas: LLMAssistantService = LLMAssistantService()
 
 
 @router.post(
-    "/count-existing-annotations",
+    "/existing-annotation-counts",
     response_model=dict[int, int],
     summary=(
         "Count the existing annotations of a virtual user per code, for the "
         "documents and codes of an LLM Assistant run"
     ),
 )
-def count_existing_assistant_annotations(
+def compute_existing_annotation_counts(
     *,
     db: DBSession,
     project_id: int,

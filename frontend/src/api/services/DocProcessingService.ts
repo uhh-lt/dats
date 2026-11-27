@@ -2,8 +2,8 @@
 /* istanbul ignore file */
 /* tslint:disable */
 /* eslint-disable */
-import type { Body_docProcessing_recompute_processing_step } from "@models/Body_docProcessing_recompute_processing_step";
-import type { Body_docProcessing_upload_files } from "@models/Body_docProcessing_upload_files";
+import type { Body_docProcessing_recompute } from "@models/Body_docProcessing_recompute";
+import type { Body_docProcessing_upload } from "@models/Body_docProcessing_upload";
 import type { DocType } from "@models/DocType";
 import type { SdocHealthColumn } from "@models/SdocHealthColumn";
 import type { SdocHealthResult } from "@models/SdocHealthResult";
@@ -19,7 +19,7 @@ export class DocProcessingService {
    * @returns SdocHealthColumn Successful Response
    * @throws ApiError
    */
-  public static getSearchColumnsByDoctype({
+  public static getColumns({
     projectId,
     doctype,
   }: {
@@ -49,7 +49,7 @@ export class DocProcessingService {
    * @returns SdocHealthResult Successful Response
    * @throws ApiError
    */
-  public static searchSdocHealth({
+  public static searchStatuses({
     projectId,
     doctype,
     page,
@@ -64,7 +64,7 @@ export class DocProcessingService {
   }): CancelablePromise<SdocHealthResult> {
     return __request(OpenAPI, {
       method: "POST",
-      url: "/projects/{project_id}/doc-processing/search",
+      url: "/projects/{project_id}/doc-processing/statuses",
       path: {
         project_id: projectId,
       },
@@ -89,7 +89,7 @@ export class DocProcessingService {
    * @returns SourceDocumentStatusSimple Successful Response
    * @throws ApiError
    */
-  public static getSimpleSdocStatusByProjectAndStatus({
+  public static getStatuses({
     projectId,
     status,
   }: {
@@ -98,7 +98,7 @@ export class DocProcessingService {
   }): CancelablePromise<Array<SourceDocumentStatusSimple>> {
     return __request(OpenAPI, {
       method: "GET",
-      url: "/projects/{project_id}/doc-processing/status",
+      url: "/projects/{project_id}/doc-processing/statuses",
       path: {
         project_id: projectId,
       },
@@ -119,12 +119,12 @@ export class DocProcessingService {
    * @returns number Successful Response
    * @throws ApiError
    */
-  public static uploadFiles({
+  public static upload({
     projectId,
     formData,
   }: {
     projectId: number;
-    formData: Body_docProcessing_upload_files;
+    formData: Body_docProcessing_upload;
   }): CancelablePromise<number> {
     return __request(OpenAPI, {
       method: "POST",
@@ -148,7 +148,7 @@ export class DocProcessingService {
    * @returns string Successful Response
    * @throws ApiError
    */
-  public static retryFailedSdocs({
+  public static retry({
     projectId,
     doctype,
     requestBody,
@@ -182,14 +182,14 @@ export class DocProcessingService {
    * @returns number Successful Response
    * @throws ApiError
    */
-  public static recomputeProcessingStep({
+  public static recompute({
     projectId,
     processingStep,
     requestBody,
   }: {
     projectId: number;
     processingStep: string;
-    requestBody: Body_docProcessing_recompute_processing_step;
+    requestBody: Body_docProcessing_recompute;
   }): CancelablePromise<number> {
     return __request(OpenAPI, {
       method: "POST",

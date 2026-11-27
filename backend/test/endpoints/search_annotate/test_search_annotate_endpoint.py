@@ -4,7 +4,7 @@ from feature_test_utils import FeaturelessProject
 from modules.search_annotate.search_annotate_dto import PaginatedSpanAnnotationHits
 
 # ===========================================================================
-# AUTO ANNOTATE (/projects/{project_id}/search-annotate/auto-annotate) TESTS
+# CANDIDATES (/projects/{project_id}/search-annotate/candidates) TESTS
 # ===========================================================================
 
 
@@ -15,7 +15,7 @@ def test_auto_annotate_works_in_a_project_without_features(
     index, where it finds the word "cat" of the project's document."""
     sdoc = featureless_project["sdoc"]
     response = client.post(
-        f"/projects/{featureless_project['project'].id}/search-annotate/auto-annotate",
+        f"/projects/{featureless_project['project'].id}/search-annotate/candidates",
         params={"query": "cat"},
     )
 
@@ -32,7 +32,7 @@ def test_auto_annotate_finds_nothing_in_another_project(
     """The word "cat" is only in the document of "Featureless Project", another
     project of the user: searching the (empty) test project finds nothing."""
     response = client.post(
-        f"/projects/{test_project.id}/search-annotate/auto-annotate",
+        f"/projects/{test_project.id}/search-annotate/candidates",
         params={"query": "cat"},
     )
 

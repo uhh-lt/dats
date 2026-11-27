@@ -21,7 +21,7 @@ router = project_router(
     response_model=list[ColumnInfo[WordFrequencyColumns]],
     summary="Returns WordFrequency Info.",
 )
-def word_frequency_analysis_info(
+def get_info(
     *,
     db: DBSession,
     project_id: int,
@@ -37,11 +37,11 @@ def word_frequency_analysis_info(
 
 
 @router.post(
-    "/analysis",
+    "",
     response_model=WordFrequencyResult,
     summary="Perform word frequency analysis.",
 )
-def word_frequency_analysis(
+def compute_word_frequencies(
     *,
     db: DBSession,
     project_id: int,
@@ -66,7 +66,7 @@ def word_frequency_analysis(
     response_model=str,
     summary="Export the word frequency analysis.",
 )
-def word_frequency_analysis_export(
+def export(
     *,
     db: DBSession,
     project_id: int,

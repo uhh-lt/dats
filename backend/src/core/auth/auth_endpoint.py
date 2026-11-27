@@ -147,7 +147,7 @@ def logout(
     "/refresh-access",
     summary="Uses the given refresh token to obtain a new access token.",
 )
-def refresh_access_token(
+def refresh_access(
     *,
     db: DBSession,
     dto: RefreshAccessTokenData = Depends(),

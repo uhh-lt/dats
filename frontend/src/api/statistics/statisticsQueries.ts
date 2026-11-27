@@ -31,7 +31,7 @@ export const statisticsQueries = {
       queryFn:
         !projectId || !sdocIds
           ? skipToken
-          : () => StatisticsService.filterCodeStats({ projectId, codeId, requestBody: sdocIds, sortByGlobal }),
+          : () => StatisticsService.computeCodeStatistics({ projectId, codeId, requestBody: sdocIds, sortByGlobal }),
       staleTime: 1000 * 60 * 5,
     }),
 
@@ -41,7 +41,7 @@ export const statisticsQueries = {
       queryKey: [...statisticsQueries.keywordStatsScope(projectId), sdocIds, sortByGlobal] as const,
       queryFn: !sdocIds
         ? skipToken
-        : () => KeywordStatisticsService.filterKeywordStats({ projectId, requestBody: sdocIds, sortByGlobal }),
+        : () => KeywordStatisticsService.computeKeywordStatistics({ projectId, requestBody: sdocIds, sortByGlobal }),
       staleTime: 1000 * 60 * 5,
     }),
 
@@ -51,7 +51,7 @@ export const statisticsQueries = {
       queryKey: [...statisticsQueries.tagStatsScope(projectId), sdocIds, sortByGlobal] as const,
       queryFn: !sdocIds
         ? skipToken
-        : () => StatisticsService.filterTagStats({ projectId, requestBody: sdocIds, sortByGlobal }),
+        : () => StatisticsService.computeTagStatistics({ projectId, requestBody: sdocIds, sortByGlobal }),
       staleTime: 1000 * 60 * 5,
     }),
 };

@@ -16,11 +16,11 @@ router = project_router("/rag", tags=["rag"], feature=RAG_CHAT)
 
 
 @router.post(
-    "/session",
+    "/answers",
     response_model=ChatSessionResponse,
     summary="Answer a query using Retrieval-Augmented Generation (RAG)",
 )
-def rag_session(
+def compute_answers(
     *,
     db: DBSession,
     project_id: int,

@@ -2,8 +2,8 @@
 /* istanbul ignore file */
 /* tslint:disable */
 /* eslint-disable */
-import type { Body_wordFrequency_word_frequency_analysis } from "@models/Body_wordFrequency_word_frequency_analysis";
-import type { Body_wordFrequency_word_frequency_analysis_export } from "@models/Body_wordFrequency_word_frequency_analysis_export";
+import type { Body_wordFrequency_compute_word_frequencies } from "@models/Body_wordFrequency_compute_word_frequencies";
+import type { Body_wordFrequency_export } from "@models/Body_wordFrequency_export";
 import type { ColumnInfo_WordFrequencyColumns_ } from "@models/ColumnInfo_WordFrequencyColumns_";
 import type { WordFrequencyResult } from "@models/WordFrequencyResult";
 import type { CancelablePromise } from "../core/CancelablePromise";
@@ -15,7 +15,7 @@ export class WordFrequencyService {
    * @returns ColumnInfo_WordFrequencyColumns_ Successful Response
    * @throws ApiError
    */
-  public static wordFrequencyAnalysisInfo({
+  public static getInfo({
     projectId,
   }: {
     projectId: number;
@@ -40,7 +40,7 @@ export class WordFrequencyService {
    * @returns WordFrequencyResult Successful Response
    * @throws ApiError
    */
-  public static wordFrequencyAnalysis({
+  public static computeWordFrequencies({
     projectId,
     page,
     pageSize,
@@ -49,11 +49,11 @@ export class WordFrequencyService {
     projectId: number;
     page: number;
     pageSize: number;
-    requestBody: Body_wordFrequency_word_frequency_analysis;
+    requestBody: Body_wordFrequency_compute_word_frequencies;
   }): CancelablePromise<WordFrequencyResult> {
     return __request(OpenAPI, {
       method: "POST",
-      url: "/projects/{project_id}/word-frequencies/analysis",
+      url: "/projects/{project_id}/word-frequencies",
       path: {
         project_id: projectId,
       },
@@ -77,12 +77,12 @@ export class WordFrequencyService {
    * @returns string Successful Response
    * @throws ApiError
    */
-  public static wordFrequencyAnalysisExport({
+  public static export({
     projectId,
     requestBody,
   }: {
     projectId: number;
-    requestBody: Body_wordFrequency_word_frequency_analysis_export;
+    requestBody: Body_wordFrequency_export;
   }): CancelablePromise<string> {
     return __request(OpenAPI, {
       method: "POST",

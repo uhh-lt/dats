@@ -3,15 +3,15 @@ from common.project_router import project_router
 from modules.statistics.statistics_dto import SpanEntityStat, TagStat
 from modules.statistics.statistics_service import StatisticsService
 
-router = project_router("/statistics", tags=["statistics"])
+router = project_router("", tags=["statistics"])
 
 
 @router.post(
-    "/codes",
+    "/code-statistics",
     response_model=list[SpanEntityStat],
     summary="Returns SpanEntityStats for the given SourceDocuments.",
 )
-def filter_code_stats(
+def compute_code_statistics(
     *,
     db: DBSession,
     # code stat params
@@ -39,11 +39,11 @@ def filter_code_stats(
 
 
 @router.post(
-    "/tags",
+    "/tag-statistics",
     response_model=list[TagStat],
     summary="Returns Stat for the given SourceDocuments.",
 )
-def filter_tag_stats(
+def compute_tag_statistics(
     *,
     db: DBSession,
     project_id: int,

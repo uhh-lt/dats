@@ -108,11 +108,11 @@ def get_by_id_with_data(
 
 
 @router.get(
-    "/{sdoc_id}/same-folder",
+    "/{sdoc_id}/siblings",
     response_model=list[int],
     summary="Returns the ids of SourceDocuments in the same folder as the SourceDocument with the given id.",
 )
-def get_same_folder_sdocs(
+def get_siblings(
     *,
     db: DBSession,
     project_id: int,

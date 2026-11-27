@@ -55,7 +55,7 @@ def create(
     response_model=ConceptOverTimeAnalysisRead,
     summary="Duplicates the ConceptOverTimeAnalysis with the given ID if it exists",
 )
-def duplicate_by_id(
+def duplicate(
     *,
     db: DBSession,
     project_id: int,

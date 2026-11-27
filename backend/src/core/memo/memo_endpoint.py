@@ -229,11 +229,11 @@ def delete_by_id(
 
 
 @router.post(
-    "/suggest",
+    "/suggestions",
     response_model=str,
     summary="Generates a 1–2 sentence memo suggestion using LLM based on the attached object",
 )
-def suggest(
+def compute_suggestions(
     *,
     db: DBSession,
     project_id: int,

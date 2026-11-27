@@ -26,7 +26,7 @@ const useUpdateWhiteboard = () =>
 const useDuplicateWhiteboard = () =>
   useMutation({
     mutationKey: [...whiteboardQueries.all(), "duplicateWhiteboard"],
-    mutationFn: WhiteboardService.duplicateById,
+    mutationFn: WhiteboardService.duplicate,
     meta: {
       datsEvent: "WHITEBOARD_CREATED",
       successMessage: (whiteboard: WhiteboardRead) => `Duplicated Whiteboard "${whiteboard.title}"`,

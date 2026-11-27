@@ -42,7 +42,7 @@ const useStartCrawlerJob = () =>
 const useUploadDocument = () =>
   useMutation({
     mutationKey: [...documentUploadQueries.all(), "uploadDocument"],
-    mutationFn: DocProcessingService.uploadFiles,
+    mutationFn: DocProcessingService.upload,
     meta: {
       successMessage: (data: number) =>
         `Successfully uploaded ${data} documents and started PreprocessingJob in the background!`,

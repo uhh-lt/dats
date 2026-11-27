@@ -9,7 +9,7 @@ const documentSamplerKey = ["documentSampler"] as const;
 const useSampleSdocsByTags = ({ onSuccess }: { onSuccess: (data: SampledSdocsResults[]) => void }) =>
   useMutation({
     mutationKey: [...documentSamplerKey, "sampleSdocsByTags"],
-    mutationFn: DocumentSampleService.sampleSdocsByTags,
+    mutationFn: DocumentSampleService.computeDocumentSamples,
     onSuccess,
   });
 

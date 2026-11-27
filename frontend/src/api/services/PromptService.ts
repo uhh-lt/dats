@@ -107,7 +107,7 @@ export class PromptService {
    * @returns any Successful Response
    * @throws ApiError
    */
-  public static buildExamples({
+  public static computeExamples({
     projectId,
     requestBody,
   }: {
@@ -116,7 +116,7 @@ export class PromptService {
   }): CancelablePromise<Array<SpanPromptExample | SentencePromptExample>> {
     return __request(OpenAPI, {
       method: "POST",
-      url: "/projects/{project_id}/prompts/build-examples",
+      url: "/projects/{project_id}/prompts/examples",
       path: {
         project_id: projectId,
       },
@@ -136,7 +136,7 @@ export class PromptService {
    * @returns PromptPreview Successful Response
    * @throws ApiError
    */
-  public static preview({
+  public static computePreview({
     projectId,
     requestBody,
   }: {

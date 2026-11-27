@@ -2,8 +2,7 @@
 /* istanbul ignore file */
 /* tslint:disable */
 /* eslint-disable */
-import type { ProcessingSettings } from "./ProcessingSettings";
-export type Body_docProcessing_recompute_processing_step = {
+export type Body_llmAssistant_compute_existing_annotation_counts = {
   sdoc_ids: Array<number>;
-  settings: ProcessingSettings;
+  code_ids: Array<number>;
 };

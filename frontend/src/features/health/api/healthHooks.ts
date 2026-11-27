@@ -1,5 +1,5 @@
 import { DocProcessingService } from "@api/services/DocProcessingService";
-import { Body_docProcessing_recompute_processing_step } from "@models/Body_docProcessing_recompute_processing_step";
+import { Body_docProcessing_recompute } from "@models/Body_docProcessing_recompute";
 import { queryClient } from "@api/queryClient";
 import { projectQueries } from "@core/project";
 import { useMutation } from "@tanstack/react-query";
@@ -8,7 +8,7 @@ import { healthQueries } from "./healthQueries";
 const useRetryDocProcessingJobs = () =>
   useMutation({
     mutationKey: [...healthQueries.all(), "retryDocProcessingJobs"],
-    mutationFn: DocProcessingService.retryFailedSdocs,
+    mutationFn: DocProcessingService.retry,
     // the steps compute again: the features they belong to are computing (the steps send no events)
     onSuccess: (_data, { projectId }) =>
       queryClient.invalidateQueries({ queryKey: projectQueries.features(projectId).queryKey }),
@@ -20,14 +20,14 @@ const useRetryDocProcessingJobs = () =>
 const useRecomputeDocProcessingJobs = () =>
   useMutation({
     mutationKey: [...healthQueries.all(), "recomputeDocProcessingJobs"],
-    mutationFn: DocProcessingService.recomputeProcessingStep,
+    mutationFn: DocProcessingService.recompute,
     // see useRetryDocProcessingJobs
     onSuccess: (_data, { projectId }) =>
       queryClient.invalidateQueries({ queryKey: projectQueries.features(projectId).queryKey }),
     meta: {
       successMessage: (
         data: number,
-        variables: { processingStep: string; requestBody: Body_docProcessing_recompute_processing_step },
+        variables: { processingStep: string; requestBody: Body_docProcessing_recompute },
       ) =>
         `Successfully started '${variables.processingStep}' recompute job for ${variables.requestBody.sdoc_ids.length} / ${data} documents!`,
     },

@@ -19,7 +19,7 @@ router = project_router(
     response_model=list[KeywordStat],
     summary="Returns KeywordStats for the given SourceDocuments.",
 )
-def filter_keyword_stats(
+def compute_keyword_statistics(
     *,
     db: DBSession,
     project_id: int,

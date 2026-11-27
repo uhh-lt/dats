@@ -21,7 +21,7 @@ const useCreateCota = () =>
 const useDuplicateCota = () =>
   useMutation({
     mutationKey: [...cotaQueries.all(), "duplicateCota"],
-    mutationFn: ConceptOverTimeAnalysisService.duplicateById,
+    mutationFn: ConceptOverTimeAnalysisService.duplicate,
     meta: {
       datsEvent: "COTA_CREATED",
       successMessage: (cota: ConceptOverTimeAnalysisRead) => `Duplicated ${cotaTitle()} "${cota.name}"`,

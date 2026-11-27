@@ -12,7 +12,7 @@ export class SearchAnnotateService {
    * @returns PaginatedSpanAnnotationHits Successful Response
    * @throws ApiError
    */
-  public static autoAnnotate({
+  public static computeCandidates({
     projectId,
     query,
   }: {
@@ -21,7 +21,7 @@ export class SearchAnnotateService {
   }): CancelablePromise<PaginatedSpanAnnotationHits> {
     return __request(OpenAPI, {
       method: "POST",
-      url: "/projects/{project_id}/search-annotate/auto-annotate",
+      url: "/projects/{project_id}/search-annotate/candidates",
       path: {
         project_id: projectId,
       },

@@ -395,24 +395,24 @@ def test_update_sdoc_cannot_write_step_statuses(client: TestClient, project_with
     assert client.get(_url(sdoc.project_id, f"/{sdoc.id}")).status_code == 200
 
 
-def test_get_same_folder_sdocs(client: TestClient, project_with_sdocs_in_same_folder):
+def test_get_siblings(client: TestClient, project_with_sdocs_in_same_folder):
     sdoc = project_with_sdocs_in_same_folder["source_documents"][0]
     sdoc_2 = project_with_sdocs_in_same_folder["source_documents"][1]
 
-    resp = client.get(_url(sdoc.project_id, f"/{sdoc.id}/same-folder"))
+    resp = client.get(_url(sdoc.project_id, f"/{sdoc.id}/siblings"))
     assert resp.status_code == 200, resp.text
 
     ids = resp.json()
     assert ids == [sdoc.id, sdoc_2.id]
 
 
-def test_get_same_folder_sdocs_of_another_project_is_not_found(
+def test_get_siblings_of_another_project_is_not_found(
     client: TestClient, project_with_sdoc, foreign_project_with_sdoc
 ):
     project = project_with_sdoc["project"]
     foreign = foreign_project_with_sdoc["source_document"]
 
-    response = client.get(_url(project.id, f"/{foreign.id}/same-folder"))
+    response = client.get(_url(project.id, f"/{foreign.id}/siblings"))
 
     assert response.status_code == 404, response.text
 

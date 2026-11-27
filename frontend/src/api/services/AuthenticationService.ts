@@ -68,7 +68,7 @@ export class AuthenticationService {
    * @returns UserAuthorizationHeaderData Successful Response
    * @throws ApiError
    */
-  public static refreshAccessToken({
+  public static refreshAccess({
     refreshToken,
   }: {
     refreshToken: string;

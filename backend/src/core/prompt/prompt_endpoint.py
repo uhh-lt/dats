@@ -78,11 +78,11 @@ def create_version(
 
 
 @router.post(
-    "/build-examples",
+    "/examples",
     response_model=list[PromptExample],
     summary="Turns span or sentence annotations into few-shot examples for a prompt",
 )
-def build_examples(
+def compute_examples(
     *,
     db: DBSession,
     project_id: int,
@@ -96,7 +96,7 @@ def build_examples(
     response_model=PromptPreview,
     summary="Returns the rendered prompt of a stored version or an unsaved draft for one message of a document",
 )
-def preview(
+def compute_preview(
     *,
     db: DBSession,
     project_id: int,

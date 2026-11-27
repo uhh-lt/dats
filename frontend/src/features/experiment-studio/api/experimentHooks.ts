@@ -81,7 +81,7 @@ const useRefreshRunScores = () =>
 const useRefreshAllRunScores = () =>
   useMutation({
     mutationKey: [...experimentQueries.all(), "refreshAllRunScores"],
-    mutationFn: ExperimentService.refreshAllRunScores,
+    mutationFn: ExperimentService.refreshScores,
     meta: {
       datsEvent: "EXPERIMENT_UPDATED",
       successMessage: "Recomputed the agreement of all finished runs with the gold annotator",

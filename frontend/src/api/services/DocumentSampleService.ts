@@ -12,7 +12,7 @@ export class DocumentSampleService {
    * @returns SampledSdocsResults Successful Response
    * @throws ApiError
    */
-  public static sampleSdocsByTags({
+  public static computeDocumentSamples({
     projectId,
     n,
     frac,

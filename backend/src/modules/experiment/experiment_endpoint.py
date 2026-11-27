@@ -170,7 +170,7 @@ def update_by_id(
         "of the gold annotator. Returns the experiment."
     ),
 )
-def refresh_all_run_scores(
+def refresh_scores(
     *,
     db: DBSession,
     project_id: int,

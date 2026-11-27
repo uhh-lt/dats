@@ -4,7 +4,7 @@
 /* eslint-disable */
 import type { Filter_SdocColumns__Input } from "./Filter_SdocColumns__Input";
 import type { Sort_SdocColumns_ } from "./Sort_SdocColumns_";
-export type Body_perspectives_visualize_documents = {
+export type Body_perspectives_compute_visualization = {
   /**
    * The filter of the Concept
    */

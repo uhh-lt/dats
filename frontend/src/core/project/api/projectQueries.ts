@@ -47,7 +47,7 @@ export const projectQueries = {
   sdocStatusSimple: (projectId: number, status: SDocStatus) =>
     queryOptions({
       queryKey: [...projectQueries.sdocStatusSimpleScope(projectId), status] as const,
-      queryFn: () => DocProcessingService.getSimpleSdocStatusByProjectAndStatus({ projectId, status }),
+      queryFn: () => DocProcessingService.getStatuses({ projectId, status }),
     }),
 
   // state (enabled, ready, coverage) of every toggleable feature in a project, as a map feature -> state; an

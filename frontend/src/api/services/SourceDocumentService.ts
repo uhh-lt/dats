@@ -208,7 +208,7 @@ export class SourceDocumentService {
    * @returns number Successful Response
    * @throws ApiError
    */
-  public static getSameFolderSdocs({
+  public static getSiblings({
     projectId,
     sdocId,
   }: {
@@ -217,7 +217,7 @@ export class SourceDocumentService {
   }): CancelablePromise<Array<number>> {
     return __request(OpenAPI, {
       method: "GET",
-      url: "/projects/{project_id}/source-documents/{sdoc_id}/same-folder",
+      url: "/projects/{project_id}/source-documents/{sdoc_id}/siblings",
       path: {
         project_id: projectId,
         sdoc_id: sdocId,

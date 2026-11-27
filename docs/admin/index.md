@@ -58,7 +58,6 @@ The release also renames or changes these routes. The paths are below `/projects
 | `POST /perspectives/aspects/{aspect_id}/accept-labels`, `/revert-labels`      | `PATCH /perspectives/aspects/{aspect_id}/accept-labels`, `/revert-labels`             |
 | `POST /jobs/perspectives?aspect_id=...` (body: the parameters)                | `POST /jobs/perspectives` (body `{"aspect_id": ..., "parameters": {...}}`)            |
 | `GET /prompts/versions/{version_id}`                                          | removed                                                                               |
-| `POST /prompts/examples`                                                      | `POST /prompts/build-examples`                                                        |
 | `POST /features/{feature}/enable`, `/disable`                                 | `PATCH /features/{feature}/enable`, `/disable`                                        |
 | `GET /memos/recent?limit=...`                                                 | `GET /memos?recent=true&limit=...`                                                    |
 | `POST /memos/{memo_id}/recent` (no response body)                             | `PATCH /memos/{memo_id}/mark-recent` (returns the memo)                               |
@@ -81,6 +80,17 @@ The release also renames or changes these routes. The paths are below `/projects
 | `GET /source-document-metadata/date-count?date_metadata_id=...` (two counts)  | `GET /source-documents/count?date_metadata_id=...` (one count)                        |
 | `PATCH /tags/bulk/source-documents/set`                                       | `PATCH /tags/bulk/source-documents/replace`                                           |
 | `PATCH /tag-recommendations/review` (body field `reviewd_recommendation_ids`) | `PATCH /tag-recommendations/review` (body field `reviewed_recommendation_ids`)        |
+| `POST /llm-assistant/count-existing-annotations`                              | `POST /llm-assistant/existing-annotation-counts`                                      |
+| `POST /search-annotate/auto-annotate`                                         | `POST /search-annotate/candidates`                                                    |
+| `POST /rag/session`                                                           | `POST /rag/answers`                                                                   |
+| `POST /doc-processing/search`                                                 | `POST /doc-processing/statuses`                                                       |
+| `GET /doc-processing/status?status=...`                                       | `GET /doc-processing/statuses?status=...`                                             |
+| `POST /perspectives/aspects/{aspect_id}/visualize`                            | `POST /perspectives/aspects/{aspect_id}/visualization`                                |
+| `POST /statistics/codes`                                                      | `POST /code-statistics`                                                               |
+| `POST /statistics/tags`                                                       | `POST /tag-statistics`                                                                |
+| `POST /word-frequencies/analysis`                                             | `POST /word-frequencies`                                                              |
+| `POST /memos/suggest`                                                         | `POST /memos/suggestions`                                                             |
+| `GET /source-documents/{sdoc_id}/same-folder`                                 | `GET /source-documents/{sdoc_id}/siblings`                                            |
 
 An installation whose `objecthandle` table holds handles of users or memos (rows with `user_id` or `memo_id` set) cannot upgrade: these handles belong to no project, so the new `project_id` stays empty and the migration rolls back. Before upgrading, find them with:
 

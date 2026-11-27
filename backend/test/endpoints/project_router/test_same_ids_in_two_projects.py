@@ -55,7 +55,7 @@ ARGUMENTS: dict[str, Callable[[TenantRows], dict[str, Any]]] = {
     "GET /projects/{project_id}/doc-processing/columns": lambda rows: {
         "params": {"doctype": "text"}
     },
-    "GET /projects/{project_id}/doc-processing/status": lambda rows: {
+    "GET /projects/{project_id}/doc-processing/statuses": lambda rows: {
         "params": {"status": 1}
     },
     "GET /projects/{project_id}/prompts/task-info": lambda rows: {
@@ -109,7 +109,7 @@ ARGUMENTS: dict[str, Callable[[TenantRows], dict[str, Any]]] = {
     "POST /projects/{project_id}/tags/count": lambda rows: {
         "json": {"sdoc_ids": [rows["sdoc"].id, rows["bare_sdoc"].id], "tag_ids": None}
     },
-    "POST /projects/{project_id}/doc-processing/search": lambda rows: {
+    "POST /projects/{project_id}/doc-processing/statuses": lambda rows: {
         "params": {"doctype": "text", "page": 0, "page_size": 10},
         "json": [],
     },
@@ -136,7 +136,7 @@ ARGUMENTS: dict[str, Callable[[TenantRows], dict[str, Any]]] = {
     "POST /projects/{project_id}/agreements/segment-texts": lambda rows: {
         "json": [{"sdoc_id": rows["sdoc"].id, "begin": 0, "end": 5}]
     },
-    "POST /projects/{project_id}/llm-assistant/count-existing-annotations": (
+    "POST /projects/{project_id}/llm-assistant/existing-annotation-counts": (
         lambda rows: {
             "params": {
                 "task_type": "ANNOTATION",
@@ -170,21 +170,21 @@ ARGUMENTS: dict[str, Callable[[TenantRows], dict[str, Any]]] = {
         "params": {"code_id": rows["code"].id, "return_children": True},
         "json": {"user_ids": [rows["adoc"].user_id], "doctypes": ["text"]},
     },
-    "POST /projects/{project_id}/statistics/codes": lambda rows: {
+    "POST /projects/{project_id}/code-statistics": lambda rows: {
         "params": {"code_id": rows["code"].id},
         "json": [rows["sdoc"].id, rows["bare_sdoc"].id],
     },
-    "POST /projects/{project_id}/statistics/tags": lambda rows: {
+    "POST /projects/{project_id}/tag-statistics": lambda rows: {
         "json": [rows["sdoc"].id, rows["bare_sdoc"].id]
     },
-    "POST /projects/{project_id}/word-frequencies/analysis": lambda rows: {
+    "POST /projects/{project_id}/word-frequencies": lambda rows: {
         "params": {"page": 0, "page_size": 10},
         "json": {"filter": _NO_FILTER, "sorts": []},
     },
     "POST /projects/{project_id}/word-frequencies/export": lambda rows: {
         "json": {"filter": _NO_FILTER, "sorts": []}
     },
-    "POST /projects/{project_id}/prompts/build-examples": lambda rows: {
+    "POST /projects/{project_id}/prompts/examples": lambda rows: {
         "json": {"kind": "SPAN", "annotation_ids": [rows["span"].id]}
     },
     "POST /projects/{project_id}/keyword-statistics": lambda rows: {
@@ -198,7 +198,7 @@ ARGUMENTS: dict[str, Callable[[TenantRows], dict[str, Any]]] = {
         "params": {"top_k": 10, "threshold": 0.0},
         "json": {"query": "text", "filter": _NO_FILTER},
     },
-    "POST /projects/{project_id}/perspectives/aspects/{aspect_id}/visualize": (
+    "POST /projects/{project_id}/perspectives/aspects/{aspect_id}/visualization": (
         lambda rows: {
             "params": {"search_query": ""},
             "json": {"filter": _NO_FILTER, "sorts": []},
@@ -207,7 +207,7 @@ ARGUMENTS: dict[str, Callable[[TenantRows], dict[str, Any]]] = {
     "POST /projects/{project_id}/experiments/{experiment_id}/runs/{run_id}/export-log": (
         lambda rows: {"params": {"export_format": "json"}}
     ),
-    "POST /projects/{project_id}/search-annotate/auto-annotate": lambda rows: {
+    "POST /projects/{project_id}/search-annotate/candidates": lambda rows: {
         "params": {"query": "text"}
     },
     "POST /projects/{project_id}/prompts/preview": lambda rows: {

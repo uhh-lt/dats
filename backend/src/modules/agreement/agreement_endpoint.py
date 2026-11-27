@@ -34,7 +34,7 @@ def compute_agreement(
     response_model=str,
     summary="Export the raw agreement counts (TP, FP, FN) per document and code as CSV.",
 )
-def export_agreement_counts(
+def export(
     *,
     db: DBSession,
     project_id: int,

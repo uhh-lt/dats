@@ -42,7 +42,7 @@ export const llmAssistantQueries = {
         !taskType || virtualUserId === undefined
           ? skipToken
           : () =>
-              LlmAssistantService.countExistingAssistantAnnotations({
+              LlmAssistantService.computeExistingAnnotationCounts({
                 projectId,
                 taskType,
                 virtualUserId,

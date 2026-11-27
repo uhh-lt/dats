@@ -72,7 +72,7 @@ export class ConceptOverTimeAnalysisService {
    * @returns ConceptOverTimeAnalysisRead Successful Response
    * @throws ApiError
    */
-  public static duplicateById({
+  public static duplicate({
     projectId,
     cotaId,
   }: {
