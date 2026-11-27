@@ -1,5 +1,5 @@
 import { queryClient } from "@api/queryClient";
-import { MemoService } from "@api/services/MemoService";
+import { MemosService } from "@api/services/MemosService";
 import { MemoRead } from "@models/MemoRead";
 import { useAppSelector } from "@store/storeHooks";
 import { useMutation, useQuery } from "@tanstack/react-query";
@@ -15,7 +15,7 @@ const useGetMemo = (memoId: number | null | undefined) => {
 const useCreateMemo = () =>
   useMutation({
     mutationKey: [...memoQueries.all(), "createMemo"],
-    mutationFn: MemoService.create,
+    mutationFn: MemosService.create,
     meta: {
       datsEvent: "MEMO_CREATED",
       successMessage: (memo: MemoRead) => `Created memo "${memo.title}"`,
@@ -25,7 +25,7 @@ const useCreateMemo = () =>
 const useUpdateMemo = () =>
   useMutation({
     mutationKey: [...memoQueries.all(), "updateMemo"],
-    mutationFn: MemoService.updateById,
+    mutationFn: MemosService.updateById,
     meta: {
       datsEvent: "MEMO_UPDATED",
       successMessage: (memo: MemoRead) => `Updated memo "${memo.title}"`,
@@ -35,7 +35,7 @@ const useUpdateMemo = () =>
 const useUpdateMemos = () =>
   useMutation({
     mutationKey: [...memoQueries.all(), "updateMemos"],
-    mutationFn: MemoService.updateBulk,
+    mutationFn: MemosService.updateBulk,
     meta: {
       datsEvent: "MEMO_UPDATED_BATCH",
       successMessage: (memos: MemoRead[]) => `Updated ${memos.length} memo(s)`,
@@ -45,7 +45,7 @@ const useUpdateMemos = () =>
 const useDeleteMemo = () =>
   useMutation({
     mutationKey: [...memoQueries.all(), "deleteMemo"],
-    mutationFn: MemoService.deleteById,
+    mutationFn: MemosService.deleteById,
     meta: {
       datsEvent: "MEMO_DELETED",
       successMessage: (memo: MemoRead) => `Deleted memo "${memo.title}"`,
@@ -56,7 +56,7 @@ const useDeleteMemos = () =>
   useMutation({
     mutationKey: [...memoQueries.all(), "deleteMemos"],
     mutationFn: ({ projectId, memoIds }: { projectId: number; memoIds: number[] }) =>
-      MemoService.deleteBulk({ projectId, requestBody: memoIds }),
+      MemosService.deleteBulk({ projectId, requestBody: memoIds }),
     meta: {
       datsEvent: "MEMO_DELETED_BATCH",
       successMessage: (memos: MemoRead[]) => `Deleted ${memos.length} memo(s)`,
@@ -66,7 +66,7 @@ const useDeleteMemos = () =>
 const useRecordRecentMemo = () =>
   useMutation({
     mutationKey: [...memoQueries.all(), "recordRecentMemo"],
-    mutationFn: MemoService.markRecent,
+    mutationFn: MemosService.markRecent,
     // The recent memos are private to the user, so there is no DATS event for this: refresh them here.
     onSuccess: (_data, { projectId }) => {
       queryClient.invalidateQueries({ queryKey: memoQueries.recent(projectId).queryKey });

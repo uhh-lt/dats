@@ -31,14 +31,14 @@ export class SearchService {
    * @returns ColumnInfo_SdocColumns_ Successful Response
    * @throws ApiError
    */
-  public static searchSdocInfo({
+  public static searchSdocColumns({
     projectId,
   }: {
     projectId: number;
   }): CancelablePromise<Array<ColumnInfo_SdocColumns_>> {
     return __request(OpenAPI, {
       method: "GET",
-      url: "/projects/{project_id}/search/source-documents/info",
+      url: "/projects/{project_id}/search/source-documents/columns",
       path: {
         project_id: projectId,
       },
@@ -85,14 +85,14 @@ export class SearchService {
    * @returns ColumnInfo_MemoColumns_ Successful Response
    * @throws ApiError
    */
-  public static searchMemoInfo({
+  public static searchMemoColumns({
     projectId,
   }: {
     projectId: number;
   }): CancelablePromise<Array<ColumnInfo_MemoColumns_>> {
     return __request(OpenAPI, {
       method: "GET",
-      url: "/projects/{project_id}/search/memos/info",
+      url: "/projects/{project_id}/search/memos/columns",
       path: {
         project_id: projectId,
       },
@@ -168,14 +168,14 @@ export class SearchService {
    * @returns ColumnInfo_SpanColumns_ Successful Response
    * @throws ApiError
    */
-  public static searchSpanAnnotationInfo({
+  public static searchSpanAnnotationColumns({
     projectId,
   }: {
     projectId: number;
   }): CancelablePromise<Array<ColumnInfo_SpanColumns_>> {
     return __request(OpenAPI, {
       method: "GET",
-      url: "/projects/{project_id}/search/span-annotations/info",
+      url: "/projects/{project_id}/search/span-annotations/columns",
       path: {
         project_id: projectId,
       },
@@ -251,14 +251,14 @@ export class SearchService {
    * @returns ColumnInfo_SentAnnoColumns_ Successful Response
    * @throws ApiError
    */
-  public static searchSentenceAnnotationInfo({
+  public static searchSentenceAnnotationColumns({
     projectId,
   }: {
     projectId: number;
   }): CancelablePromise<Array<ColumnInfo_SentAnnoColumns_>> {
     return __request(OpenAPI, {
       method: "GET",
-      url: "/projects/{project_id}/search/sentence-annotations/info",
+      url: "/projects/{project_id}/search/sentence-annotations/columns",
       path: {
         project_id: projectId,
       },
@@ -334,14 +334,14 @@ export class SearchService {
    * @returns ColumnInfo_BBoxColumns_ Successful Response
    * @throws ApiError
    */
-  public static searchBboxAnnotationInfo({
+  public static searchBboxAnnotationColumns({
     projectId,
   }: {
     projectId: number;
   }): CancelablePromise<Array<ColumnInfo_BBoxColumns_>> {
     return __request(OpenAPI, {
       method: "GET",
-      url: "/projects/{project_id}/search/bbox-annotations/info",
+      url: "/projects/{project_id}/search/bbox-annotations/columns",
       path: {
         project_id: projectId,
       },

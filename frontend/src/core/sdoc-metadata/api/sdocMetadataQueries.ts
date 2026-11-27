@@ -1,5 +1,5 @@
 import { SourceDocumentMetadataService } from "@api/services/SourceDocumentMetadataService";
-import { SourceDocumentService } from "@api/services/SourceDocumentService";
+import { SourceDocumentsService } from "@api/services/SourceDocumentsService";
 import type { SourceDocumentMetadataRead } from "@models/SourceDocumentMetadataRead";
 import { queryOptions, skipToken } from "@tanstack/react-query";
 
@@ -65,8 +65,8 @@ export const sdocMetadataQueries = {
       queryKey: [...sdocMetadataQueries.sdocCountWithDateScope(projectId), dateMetadataId] as const,
       queryFn: async () => {
         const [sdocsWithDate, sdocsTotal] = await Promise.all([
-          SourceDocumentService.count({ projectId, dateMetadataId }),
-          SourceDocumentService.count({ projectId }),
+          SourceDocumentsService.count({ projectId, dateMetadataId }),
+          SourceDocumentsService.count({ projectId }),
         ]);
         return { sdocs_with_date: sdocsWithDate, sdocs_total: sdocsTotal };
       },

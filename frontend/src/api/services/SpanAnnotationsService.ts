@@ -8,11 +8,10 @@ import type { SpanAnnotationDeleted } from "@models/SpanAnnotationDeleted";
 import type { SpanAnnotationRead } from "@models/SpanAnnotationRead";
 import type { SpanAnnotationUpdate } from "@models/SpanAnnotationUpdate";
 import type { SpanAnnotationUpdateBulk } from "@models/SpanAnnotationUpdateBulk";
-import type { SpanGroupRead } from "@models/SpanGroupRead";
 import type { CancelablePromise } from "../core/CancelablePromise";
 import { OpenAPI } from "../core/OpenAPI";
 import { request as __request } from "../core/request";
-export class SpanAnnotationService {
+export class SpanAnnotationsService {
   /**
    * Creates a SpanAnnotation
    * @returns SpanAnnotationRead Successful Response
@@ -166,68 +165,6 @@ export class SpanAnnotationService {
     });
   }
   /**
-   * Adds the SpanAnnotation to the SpanGroup
-   * @returns SpanAnnotationRead Successful Response
-   * @throws ApiError
-   */
-  public static addToSpanGroup({
-    projectId,
-    spanAnnotationId,
-    spanGroupId,
-  }: {
-    projectId: number;
-    spanAnnotationId: number;
-    spanGroupId: number;
-  }): CancelablePromise<SpanAnnotationRead> {
-    return __request(OpenAPI, {
-      method: "PUT",
-      url: "/projects/{project_id}/span-annotations/{span_annotation_id}/span-groups/{span_group_id}",
-      path: {
-        project_id: projectId,
-        span_annotation_id: spanAnnotationId,
-        span_group_id: spanGroupId,
-      },
-      errors: {
-        400: `The request breaks a rule of the domain`,
-        403: `The user is no member of the project, or the feature is disabled`,
-        404: `A path id, or an id the route reads, is not in the project`,
-        409: `A body id violates a foreign key, or a value a unique constraint`,
-        422: `Validation Error`,
-      },
-    });
-  }
-  /**
-   * Removes the SpanAnnotation from the SpanGroup
-   * @returns SpanAnnotationRead Successful Response
-   * @throws ApiError
-   */
-  public static removeFromSpanGroup({
-    projectId,
-    spanAnnotationId,
-    spanGroupId,
-  }: {
-    projectId: number;
-    spanAnnotationId: number;
-    spanGroupId: number;
-  }): CancelablePromise<SpanAnnotationRead> {
-    return __request(OpenAPI, {
-      method: "DELETE",
-      url: "/projects/{project_id}/span-annotations/{span_annotation_id}/span-groups/{span_group_id}",
-      path: {
-        project_id: projectId,
-        span_annotation_id: spanAnnotationId,
-        span_group_id: spanGroupId,
-      },
-      errors: {
-        400: `The request breaks a rule of the domain`,
-        403: `The user is no member of the project, or the feature is disabled`,
-        404: `A path id, or an id the route reads, is not in the project`,
-        409: `A body id violates a foreign key, or a value a unique constraint`,
-        422: `Validation Error`,
-      },
-    });
-  }
-  /**
    * Returns the SpanAnnotation with the given ID.
    * @returns SpanAnnotationRead Successful Response
    * @throws ApiError
@@ -316,62 +253,6 @@ export class SpanAnnotationService {
     });
   }
   /**
-   * Returns all SpanGroups that contain the SpanAnnotation.
-   * @returns SpanGroupRead Successful Response
-   * @throws ApiError
-   */
-  public static getSpanGroups({
-    projectId,
-    spanAnnotationId,
-  }: {
-    projectId: number;
-    spanAnnotationId: number;
-  }): CancelablePromise<Array<SpanGroupRead>> {
-    return __request(OpenAPI, {
-      method: "GET",
-      url: "/projects/{project_id}/span-annotations/{span_annotation_id}/span-groups",
-      path: {
-        project_id: projectId,
-        span_annotation_id: spanAnnotationId,
-      },
-      errors: {
-        400: `The request breaks a rule of the domain`,
-        403: `The user is no member of the project, or the feature is disabled`,
-        404: `A path id, or an id the route reads, is not in the project`,
-        409: `A body id violates a foreign key, or a value a unique constraint`,
-        422: `Validation Error`,
-      },
-    });
-  }
-  /**
-   * Removes the SpanAnnotation from all SpanGroups
-   * @returns SpanAnnotationRead Successful Response
-   * @throws ApiError
-   */
-  public static removeFromAllSpanGroups({
-    projectId,
-    spanAnnotationId,
-  }: {
-    projectId: number;
-    spanAnnotationId: number;
-  }): CancelablePromise<SpanAnnotationRead> {
-    return __request(OpenAPI, {
-      method: "DELETE",
-      url: "/projects/{project_id}/span-annotations/{span_annotation_id}/span-groups",
-      path: {
-        project_id: projectId,
-        span_annotation_id: spanAnnotationId,
-      },
-      errors: {
-        400: `The request breaks a rule of the domain`,
-        403: `The user is no member of the project, or the feature is disabled`,
-        404: `A path id, or an id the route reads, is not in the project`,
-        409: `A body id violates a foreign key, or a value a unique constraint`,
-        422: `Validation Error`,
-      },
-    });
-  }
-  /**
    * Counts the SpanAnnotations of the User per Code (by code_ids) in the SourceDocuments (by sdoc_ids)
    * @returns number Successful Response
    * @throws ApiError
@@ -385,7 +266,7 @@ export class SpanAnnotationService {
   }): CancelablePromise<Record<string, number>> {
     return __request(OpenAPI, {
       method: "POST",
-      url: "/projects/{project_id}/span-annotations/count",
+      url: "/projects/{project_id}/span-annotations/counts",
       path: {
         project_id: projectId,
       },

@@ -9,7 +9,7 @@ import type { WhiteboardUpdate } from "@models/WhiteboardUpdate";
 import type { CancelablePromise } from "../core/CancelablePromise";
 import { OpenAPI } from "../core/OpenAPI";
 import { request as __request } from "../core/request";
-export class WhiteboardService {
+export class WhiteboardsService {
   /**
    * Creates an Whiteboard
    * @returns WhiteboardRead Successful Response

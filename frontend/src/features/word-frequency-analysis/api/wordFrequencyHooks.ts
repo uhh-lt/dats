@@ -1,11 +1,11 @@
-import { WordFrequencyService } from "@api/services/WordFrequencyService";
+import { WordFrequenciesService } from "@api/services/WordFrequenciesService";
 import { useMutation } from "@tanstack/react-query";
 import { wordFrequencyQueries } from "./wordFrequencyQueries";
 
 const useExportWordFrequencies = () =>
   useMutation({
     mutationKey: [...wordFrequencyQueries.all(), "exportWordFrequencies"],
-    mutationFn: WordFrequencyService.export,
+    mutationFn: WordFrequenciesService.export,
   });
 
 export const WordFrequencyHooks = {

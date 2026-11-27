@@ -1,4 +1,4 @@
-import { AgreementService } from "@api/services/AgreementService";
+import { AgreementsService } from "@api/services/AgreementsService";
 import { AgreementParams } from "@models/AgreementParams";
 import { queryOptions, skipToken } from "@tanstack/react-query";
 
@@ -28,6 +28,6 @@ export const agreementQueries = {
       queryFn:
         projectId === undefined || params === undefined
           ? skipToken
-          : () => AgreementService.computeAgreement({ projectId, requestBody: params }),
+          : () => AgreementsService.computeAgreement({ projectId, requestBody: params }),
     }),
 };

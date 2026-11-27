@@ -2,27 +2,26 @@
 /* istanbul ignore file */
 /* tslint:disable */
 /* eslint-disable */
-import type { DocumentSampleRequest } from "@models/DocumentSampleRequest";
-import type { SampledSdocsResults } from "@models/SampledSdocsResults";
+import type { TagRecommendationLinkRead } from "@models/TagRecommendationLinkRead";
 import type { CancelablePromise } from "../core/CancelablePromise";
 import { OpenAPI } from "../core/OpenAPI";
 import { request as __request } from "../core/request";
-export class DocumentSampleService {
+export class TagRecommendationsService {
   /**
-   * Sample & Aggregate Source Documents by tags.
-   * @returns SampledSdocsResults Successful Response
+   * The endpoint receives IDs of wrongly and correctly tagged document recommendations and sets `is_accepted` to `true` or `false`, while setting the corresponding document tags if `true`.
+   * @returns TagRecommendationLinkRead Successful Response
    * @throws ApiError
    */
-  public static computeDocumentSamples({
+  public static updateRecommendations({
     projectId,
     requestBody,
   }: {
     projectId: number;
-    requestBody: DocumentSampleRequest;
-  }): CancelablePromise<Array<SampledSdocsResults>> {
+    requestBody: Array<number>;
+  }): CancelablePromise<Array<TagRecommendationLinkRead>> {
     return __request(OpenAPI, {
-      method: "POST",
-      url: "/projects/{project_id}/document-samples",
+      method: "PATCH",
+      url: "/projects/{project_id}/tag-recommendations/review",
       path: {
         project_id: projectId,
       },

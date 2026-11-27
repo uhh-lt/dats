@@ -1,4 +1,4 @@
-import { GeneralService } from "@api/services/GeneralService";
+import { InfoService } from "@api/services/InfoService";
 import { FeatureRead } from "@models/FeatureRead";
 import { queryOptions } from "@tanstack/react-query";
 import { Feature } from "../features";
@@ -29,7 +29,7 @@ export const featureQueries = {
     queryOptions({
       queryKey: [...featureQueries.all(), "list"] as const,
       queryFn: async () => {
-        const features = await GeneralService.getFeatures();
+        const features = await InfoService.getFeatures();
         reportMissingFeatures(features);
         return features;
       },

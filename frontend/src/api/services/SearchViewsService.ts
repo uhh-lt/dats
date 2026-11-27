@@ -19,7 +19,7 @@ import type { SpanSearchViewUpdate } from "@models/SpanSearchViewUpdate";
 import type { CancelablePromise } from "../core/CancelablePromise";
 import { OpenAPI } from "../core/OpenAPI";
 import { request as __request } from "../core/request";
-export class SearchViewService {
+export class SearchViewsService {
   /**
    * Creates a personal search view
    * @returns any Successful Response

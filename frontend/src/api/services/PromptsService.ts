@@ -2,18 +2,27 @@
 /* istanbul ignore file */
 /* tslint:disable */
 /* eslint-disable */
-import type { ExperimentCreate } from "@models/ExperimentCreate";
-import type { ExperimentRead } from "@models/ExperimentRead";
-import type { ExperimentRunCreate } from "@models/ExperimentRunCreate";
-import type { ExperimentRunLogExportRequest } from "@models/ExperimentRunLogExportRequest";
-import type { ExperimentUpdate } from "@models/ExperimentUpdate";
+import type { OutputFormat } from "@models/OutputFormat";
+import type { PromptContent } from "@models/PromptContent";
+import type { PromptCreate } from "@models/PromptCreate";
+import type { PromptExamplesCreate } from "@models/PromptExamplesCreate";
+import type { PromptLanguage } from "@models/PromptLanguage";
+import type { PromptPreview } from "@models/PromptPreview";
+import type { PromptPreviewRequest } from "@models/PromptPreviewRequest";
+import type { PromptRead } from "@models/PromptRead";
+import type { PromptTaskInfo } from "@models/PromptTaskInfo";
+import type { PromptUpdate } from "@models/PromptUpdate";
+import type { PromptVersionCreate } from "@models/PromptVersionCreate";
+import type { SentencePromptExample } from "@models/SentencePromptExample";
+import type { SpanPromptExample } from "@models/SpanPromptExample";
+import type { TaskType } from "@models/TaskType";
 import type { CancelablePromise } from "../core/CancelablePromise";
 import { OpenAPI } from "../core/OpenAPI";
 import { request as __request } from "../core/request";
-export class ExperimentService {
+export class PromptsService {
   /**
-   * Creates an experiment: documents, codes, task and a gold annotator who annotated every document
-   * @returns ExperimentRead Successful Response
+   * Creates a prompt with its first version
+   * @returns PromptRead Successful Response
    * @throws ApiError
    */
   public static create({
@@ -21,11 +30,11 @@ export class ExperimentService {
     requestBody,
   }: {
     projectId: number;
-    requestBody: ExperimentCreate;
-  }): CancelablePromise<ExperimentRead> {
+    requestBody: PromptCreate;
+  }): CancelablePromise<PromptRead> {
     return __request(OpenAPI, {
       method: "PUT",
-      url: "/projects/{project_id}/experiments",
+      url: "/projects/{project_id}/prompts",
       path: {
         project_id: projectId,
       },
@@ -41,14 +50,14 @@ export class ExperimentService {
     });
   }
   /**
-   * Returns all experiments of the project with their runs, newest first
-   * @returns ExperimentRead Successful Response
+   * Returns the prompts of the project with all their versions
+   * @returns PromptRead Successful Response
    * @throws ApiError
    */
-  public static getByProject({ projectId }: { projectId: number }): CancelablePromise<Array<ExperimentRead>> {
+  public static getByProject({ projectId }: { projectId: number }): CancelablePromise<Array<PromptRead>> {
     return __request(OpenAPI, {
       method: "GET",
-      url: "/projects/{project_id}/experiments",
+      url: "/projects/{project_id}/prompts",
       path: {
         project_id: projectId,
       },
@@ -62,25 +71,25 @@ export class ExperimentService {
     });
   }
   /**
-   * Creates and starts a run of an experiment with a prompt version and a model; the run writes into its own new virtual user. Returns the experiment.
-   * @returns ExperimentRead Successful Response
+   * Saves a prompt with its selections as the next immutable version of the prompt
+   * @returns PromptRead Successful Response
    * @throws ApiError
    */
-  public static createRun({
+  public static createVersion({
     projectId,
-    experimentId,
+    promptId,
     requestBody,
   }: {
     projectId: number;
-    experimentId: number;
-    requestBody: ExperimentRunCreate;
-  }): CancelablePromise<ExperimentRead> {
+    promptId: number;
+    requestBody: PromptVersionCreate;
+  }): CancelablePromise<PromptRead> {
     return __request(OpenAPI, {
       method: "PUT",
-      url: "/projects/{project_id}/experiments/{experiment_id}/runs",
+      url: "/projects/{project_id}/prompts/{prompt_id}/versions",
       path: {
         project_id: projectId,
-        experiment_id: experimentId,
+        prompt_id: promptId,
       },
       body: requestBody,
       mediaType: "application/json",
@@ -94,23 +103,144 @@ export class ExperimentService {
     });
   }
   /**
-   * Returns the experiment with its runs
-   * @returns ExperimentRead Successful Response
+   * Turns span or sentence annotations into few-shot examples for a prompt
+   * @returns any Successful Response
+   * @throws ApiError
+   */
+  public static computeExamples({
+    projectId,
+    requestBody,
+  }: {
+    projectId: number;
+    requestBody: PromptExamplesCreate;
+  }): CancelablePromise<Array<SpanPromptExample | SentencePromptExample>> {
+    return __request(OpenAPI, {
+      method: "POST",
+      url: "/projects/{project_id}/prompts/examples",
+      path: {
+        project_id: projectId,
+      },
+      body: requestBody,
+      mediaType: "application/json",
+      errors: {
+        400: `The request breaks a rule of the domain`,
+        403: `The user is no member of the project, or the feature is disabled`,
+        404: `A path id, or an id the route reads, is not in the project`,
+        409: `A body id violates a foreign key, or a value a unique constraint`,
+        422: `Validation Error`,
+      },
+    });
+  }
+  /**
+   * Returns the rendered prompt of a stored version or an unsaved draft for one message of a document
+   * @returns PromptPreview Successful Response
+   * @throws ApiError
+   */
+  public static computePreview({
+    projectId,
+    requestBody,
+  }: {
+    projectId: number;
+    requestBody: PromptPreviewRequest;
+  }): CancelablePromise<PromptPreview> {
+    return __request(OpenAPI, {
+      method: "POST",
+      url: "/projects/{project_id}/prompts/preview",
+      path: {
+        project_id: projectId,
+      },
+      body: requestBody,
+      mediaType: "application/json",
+      errors: {
+        400: `The request breaks a rule of the domain`,
+        403: `The user is no member of the project, or the feature is disabled`,
+        404: `A path id, or an id the route reads, is not in the project`,
+        409: `A body id violates a foreign key, or a value a unique constraint`,
+        422: `Validation Error`,
+      },
+    });
+  }
+  /**
+   * Returns the blocks that the prompts of a task can use
+   * @returns PromptTaskInfo Successful Response
+   * @throws ApiError
+   */
+  public static getTaskInfo({
+    projectId,
+    taskType,
+  }: {
+    projectId: number;
+    taskType: TaskType;
+  }): CancelablePromise<PromptTaskInfo> {
+    return __request(OpenAPI, {
+      method: "GET",
+      url: "/projects/{project_id}/prompts/task-info",
+      path: {
+        project_id: projectId,
+      },
+      query: {
+        task_type: taskType,
+      },
+      errors: {
+        400: `The request breaks a rule of the domain`,
+        403: `The user is no member of the project, or the feature is disabled`,
+        404: `A path id, or an id the route reads, is not in the project`,
+        409: `A body id violates a foreign key, or a value a unique constraint`,
+        422: `Validation Error`,
+      },
+    });
+  }
+  /**
+   * Returns the default prompt of an output format in a language
+   * @returns PromptContent Successful Response
+   * @throws ApiError
+   */
+  public static getDefault({
+    projectId,
+    outputFormat,
+    language,
+  }: {
+    projectId: number;
+    outputFormat: OutputFormat;
+    language: PromptLanguage;
+  }): CancelablePromise<PromptContent> {
+    return __request(OpenAPI, {
+      method: "GET",
+      url: "/projects/{project_id}/prompts/default",
+      path: {
+        project_id: projectId,
+      },
+      query: {
+        output_format: outputFormat,
+        language: language,
+      },
+      errors: {
+        400: `The request breaks a rule of the domain`,
+        403: `The user is no member of the project, or the feature is disabled`,
+        404: `A path id, or an id the route reads, is not in the project`,
+        409: `A body id violates a foreign key, or a value a unique constraint`,
+        422: `Validation Error`,
+      },
+    });
+  }
+  /**
+   * Returns the prompt with the given ID and all its versions
+   * @returns PromptRead Successful Response
    * @throws ApiError
    */
   public static getById({
     projectId,
-    experimentId,
+    promptId,
   }: {
     projectId: number;
-    experimentId: number;
-  }): CancelablePromise<ExperimentRead> {
+    promptId: number;
+  }): CancelablePromise<PromptRead> {
     return __request(OpenAPI, {
       method: "GET",
-      url: "/projects/{project_id}/experiments/{experiment_id}",
+      url: "/projects/{project_id}/prompts/{prompt_id}",
       path: {
         project_id: projectId,
-        experiment_id: experimentId,
+        prompt_id: promptId,
       },
       errors: {
         400: `The request breaks a rule of the domain`,
@@ -122,178 +252,25 @@ export class ExperimentService {
     });
   }
   /**
-   * Renames the experiment and the virtual users of its runs. Documents, codes, task and gold annotator are fixed when the experiment is created.
-   * @returns ExperimentRead Successful Response
+   * Renames or (un)archives the prompt (does not create a version)
+   * @returns PromptRead Successful Response
    * @throws ApiError
    */
   public static updateById({
     projectId,
-    experimentId,
+    promptId,
     requestBody,
   }: {
     projectId: number;
-    experimentId: number;
-    requestBody: ExperimentUpdate;
-  }): CancelablePromise<ExperimentRead> {
+    promptId: number;
+    requestBody: PromptUpdate;
+  }): CancelablePromise<PromptRead> {
     return __request(OpenAPI, {
       method: "PATCH",
-      url: "/projects/{project_id}/experiments/{experiment_id}",
+      url: "/projects/{project_id}/prompts/{prompt_id}",
       path: {
         project_id: projectId,
-        experiment_id: experimentId,
-      },
-      body: requestBody,
-      mediaType: "application/json",
-      errors: {
-        400: `The request breaks a rule of the domain`,
-        403: `The user is no member of the project, or the feature is disabled`,
-        404: `A path id, or an id the route reads, is not in the project`,
-        409: `A body id violates a foreign key, or a value a unique constraint`,
-        422: `Validation Error`,
-      },
-    });
-  }
-  /**
-   * Removes the experiment with all its runs and their virtual users, including their annotations
-   * @returns ExperimentRead Successful Response
-   * @throws ApiError
-   */
-  public static deleteById({
-    projectId,
-    experimentId,
-  }: {
-    projectId: number;
-    experimentId: number;
-  }): CancelablePromise<ExperimentRead> {
-    return __request(OpenAPI, {
-      method: "DELETE",
-      url: "/projects/{project_id}/experiments/{experiment_id}",
-      path: {
-        project_id: projectId,
-        experiment_id: experimentId,
-      },
-      errors: {
-        400: `The request breaks a rule of the domain`,
-        403: `The user is no member of the project, or the feature is disabled`,
-        404: `A path id, or an id the route reads, is not in the project`,
-        409: `A body id violates a foreign key, or a value a unique constraint`,
-        422: `Validation Error`,
-      },
-    });
-  }
-  /**
-   * Recomputes and stores the agreement of the run with the gold annotator. Returns the experiment.
-   * @returns ExperimentRead Successful Response
-   * @throws ApiError
-   */
-  public static refreshRunScores({
-    projectId,
-    experimentId,
-    runId,
-  }: {
-    projectId: number;
-    experimentId: number;
-    runId: number;
-  }): CancelablePromise<ExperimentRead> {
-    return __request(OpenAPI, {
-      method: "PATCH",
-      url: "/projects/{project_id}/experiments/{experiment_id}/runs/{run_id}/refresh-scores",
-      path: {
-        project_id: projectId,
-        experiment_id: experimentId,
-        run_id: runId,
-      },
-      errors: {
-        400: `The request breaks a rule of the domain`,
-        403: `The user is no member of the project, or the feature is disabled`,
-        404: `A path id, or an id the route reads, is not in the project`,
-        409: `A body id violates a foreign key, or a value a unique constraint`,
-        422: `Validation Error`,
-      },
-    });
-  }
-  /**
-   * Recomputes and stores the agreement of all finished runs of the experiment with the gold annotator, so that all runs are scored against the same state of the gold annotator. Returns the experiment.
-   * @returns ExperimentRead Successful Response
-   * @throws ApiError
-   */
-  public static refreshScores({
-    projectId,
-    experimentId,
-  }: {
-    projectId: number;
-    experimentId: number;
-  }): CancelablePromise<ExperimentRead> {
-    return __request(OpenAPI, {
-      method: "PATCH",
-      url: "/projects/{project_id}/experiments/{experiment_id}/refresh-scores",
-      path: {
-        project_id: projectId,
-        experiment_id: experimentId,
-      },
-      errors: {
-        400: `The request breaks a rule of the domain`,
-        403: `The user is no member of the project, or the feature is disabled`,
-        404: `A path id, or an id the route reads, is not in the project`,
-        409: `A body id violates a foreign key, or a value a unique constraint`,
-        422: `Validation Error`,
-      },
-    });
-  }
-  /**
-   * Removes the run with its virtual user and its annotations. Returns the experiment.
-   * @returns ExperimentRead Successful Response
-   * @throws ApiError
-   */
-  public static deleteRun({
-    projectId,
-    experimentId,
-    runId,
-  }: {
-    projectId: number;
-    experimentId: number;
-    runId: number;
-  }): CancelablePromise<ExperimentRead> {
-    return __request(OpenAPI, {
-      method: "DELETE",
-      url: "/projects/{project_id}/experiments/{experiment_id}/runs/{run_id}",
-      path: {
-        project_id: projectId,
-        experiment_id: experimentId,
-        run_id: runId,
-      },
-      errors: {
-        400: `The request breaks a rule of the domain`,
-        403: `The user is no member of the project, or the feature is disabled`,
-        404: `A path id, or an id the route reads, is not in the project`,
-        409: `A body id violates a foreign key, or a value a unique constraint`,
-        422: `Validation Error`,
-      },
-    });
-  }
-  /**
-   * Exports the log of a run as JSON or CSV. Returns the URL of the file.
-   * @returns string Successful Response
-   * @throws ApiError
-   */
-  public static exportRunLog({
-    projectId,
-    experimentId,
-    runId,
-    requestBody,
-  }: {
-    projectId: number;
-    experimentId: number;
-    runId: number;
-    requestBody: ExperimentRunLogExportRequest;
-  }): CancelablePromise<string> {
-    return __request(OpenAPI, {
-      method: "POST",
-      url: "/projects/{project_id}/experiments/{experiment_id}/runs/{run_id}/export-log",
-      path: {
-        project_id: projectId,
-        experiment_id: experimentId,
-        run_id: runId,
+        prompt_id: promptId,
       },
       body: requestBody,
       mediaType: "application/json",

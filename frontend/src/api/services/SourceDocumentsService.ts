@@ -2,37 +2,39 @@
 /* istanbul ignore file */
 /* tslint:disable */
 /* eslint-disable */
-import type { AnnotateSentencesRequest } from "@models/AnnotateSentencesRequest";
-import type { ConceptOverTimeAnalysisCreate } from "@models/ConceptOverTimeAnalysisCreate";
-import type { ConceptOverTimeAnalysisRead } from "@models/ConceptOverTimeAnalysisRead";
-import type { ConceptOverTimeAnalysisUpdate } from "@models/ConceptOverTimeAnalysisUpdate";
-import type { COTARefinementHyperparameters } from "@models/COTARefinementHyperparameters";
-import type { RemoveSentencesRequest } from "@models/RemoveSentencesRequest";
+import type { SDocStatus } from "@models/SDocStatus";
+import type { SourceDocumentDataRead } from "@models/SourceDocumentDataRead";
+import type { SourceDocumentRead } from "@models/SourceDocumentRead";
+import type { SourceDocumentUpdate } from "@models/SourceDocumentUpdate";
+import type { SourceDocumentUrls } from "@models/SourceDocumentUrls";
 import type { CancelablePromise } from "../core/CancelablePromise";
 import { OpenAPI } from "../core/OpenAPI";
 import { request as __request } from "../core/request";
-export class ConceptOverTimeAnalysisService {
+export class SourceDocumentsService {
   /**
-   * Creates an ConceptOverTimeAnalysis
-   * Creates an ConceptOverTimeAnalysis
-   * @returns ConceptOverTimeAnalysisRead Successful Response
+   * Returns the number of SourceDocuments of the Project, optionally only those with the given status or with a value for the given date metadata
+   * @returns number Successful Response
    * @throws ApiError
    */
-  public static create({
+  public static count({
     projectId,
-    requestBody,
+    status,
+    dateMetadataId,
   }: {
     projectId: number;
-    requestBody: ConceptOverTimeAnalysisCreate;
-  }): CancelablePromise<ConceptOverTimeAnalysisRead> {
+    status?: SDocStatus | null;
+    dateMetadataId?: number | null;
+  }): CancelablePromise<number> {
     return __request(OpenAPI, {
-      method: "PUT",
-      url: "/projects/{project_id}/concept-over-time-analyses",
+      method: "GET",
+      url: "/projects/{project_id}/source-documents/count",
       path: {
         project_id: projectId,
       },
-      body: requestBody,
-      mediaType: "application/json",
+      query: {
+        status: status,
+        date_metadata_id: dateMetadataId,
+      },
       errors: {
         400: `The request breaks a rule of the domain`,
         403: `The user is no member of the project, or the feature is disabled`,
@@ -43,21 +45,28 @@ export class ConceptOverTimeAnalysisService {
     });
   }
   /**
-   * Returns COTAs of the Project
-   * Returns the COTAs of the Project
-   * @returns ConceptOverTimeAnalysisRead Successful Response
+   * Returns the SourceDocument of the Project with the given filename: a list of one, or an empty list
+   * @returns SourceDocumentRead Successful Response
    * @throws ApiError
    */
   public static getByProject({
     projectId,
+    filename,
+    onlyFinished = true,
   }: {
     projectId: number;
-  }): CancelablePromise<Array<ConceptOverTimeAnalysisRead>> {
+    filename: string;
+    onlyFinished?: boolean;
+  }): CancelablePromise<Array<SourceDocumentRead>> {
     return __request(OpenAPI, {
       method: "GET",
-      url: "/projects/{project_id}/concept-over-time-analyses",
+      url: "/projects/{project_id}/source-documents",
       path: {
         project_id: projectId,
+      },
+      query: {
+        filename: filename,
+        only_finished: onlyFinished,
       },
       errors: {
         400: `The request breaks a rule of the domain`,
@@ -69,52 +78,28 @@ export class ConceptOverTimeAnalysisService {
     });
   }
   /**
-   * Duplicates the ConceptOverTimeAnalysis with the given ID if it exists
-   * @returns ConceptOverTimeAnalysisRead Successful Response
-   * @throws ApiError
-   */
-  public static duplicate({
-    projectId,
-    cotaId,
-  }: {
-    projectId: number;
-    cotaId: number;
-  }): CancelablePromise<ConceptOverTimeAnalysisRead> {
-    return __request(OpenAPI, {
-      method: "PUT",
-      url: "/projects/{project_id}/concept-over-time-analyses/{cota_id}/duplicate",
-      path: {
-        project_id: projectId,
-        cota_id: cotaId,
-      },
-      errors: {
-        400: `The request breaks a rule of the domain`,
-        403: `The user is no member of the project, or the feature is disabled`,
-        404: `A path id, or an id the route reads, is not in the project`,
-        409: `A body id violates a foreign key, or a value a unique constraint`,
-        422: `Validation Error`,
-      },
-    });
-  }
-  /**
-   * Returns the ConceptOverTimeAnalysis
-   * Returns the ConceptOverTimeAnalysis with the given ID if it exists
-   * @returns ConceptOverTimeAnalysisRead Successful Response
+   * Returns the SourceDocument with the given ID if it exists
+   * @returns SourceDocumentRead Successful Response
    * @throws ApiError
    */
   public static getById({
     projectId,
-    cotaId,
+    sdocId,
+    onlyIfFinished = false,
   }: {
     projectId: number;
-    cotaId: number;
-  }): CancelablePromise<ConceptOverTimeAnalysisRead> {
+    sdocId: number;
+    onlyIfFinished?: boolean;
+  }): CancelablePromise<SourceDocumentRead> {
     return __request(OpenAPI, {
       method: "GET",
-      url: "/projects/{project_id}/concept-over-time-analyses/{cota_id}",
+      url: "/projects/{project_id}/source-documents/{sdoc_id}",
       path: {
         project_id: projectId,
-        cota_id: cotaId,
+        sdoc_id: sdocId,
+      },
+      query: {
+        only_if_finished: onlyIfFinished,
       },
       errors: {
         400: `The request breaks a rule of the domain`,
@@ -126,26 +111,25 @@ export class ConceptOverTimeAnalysisService {
     });
   }
   /**
-   * Updates the ConceptOverTimeAnalysis
-   * Updates the ConceptOverTimeAnalysis with the given ID if it exists
-   * @returns ConceptOverTimeAnalysisRead Successful Response
+   * Updates the SourceDocument with the given ID.
+   * @returns SourceDocumentRead Successful Response
    * @throws ApiError
    */
   public static updateById({
     projectId,
-    cotaId,
+    sdocId,
     requestBody,
   }: {
     projectId: number;
-    cotaId: number;
-    requestBody: ConceptOverTimeAnalysisUpdate;
-  }): CancelablePromise<ConceptOverTimeAnalysisRead> {
+    sdocId: number;
+    requestBody: SourceDocumentUpdate;
+  }): CancelablePromise<SourceDocumentRead> {
     return __request(OpenAPI, {
       method: "PATCH",
-      url: "/projects/{project_id}/concept-over-time-analyses/{cota_id}",
+      url: "/projects/{project_id}/source-documents/{sdoc_id}",
       path: {
         project_id: projectId,
-        cota_id: cotaId,
+        sdoc_id: sdocId,
       },
       body: requestBody,
       mediaType: "application/json",
@@ -159,24 +143,23 @@ export class ConceptOverTimeAnalysisService {
     });
   }
   /**
-   * Removes the ConceptOverTimeAnalysis
-   * Removes the ConceptOverTimeAnalysis with the given ID if it exists
-   * @returns ConceptOverTimeAnalysisRead Successful Response
+   * Removes the SourceDocument with the given ID if it exists
+   * @returns SourceDocumentRead Successful Response
    * @throws ApiError
    */
   public static deleteById({
     projectId,
-    cotaId,
+    sdocId,
   }: {
     projectId: number;
-    cotaId: number;
-  }): CancelablePromise<ConceptOverTimeAnalysisRead> {
+    sdocId: number;
+  }): CancelablePromise<SourceDocumentRead> {
     return __request(OpenAPI, {
       method: "DELETE",
-      url: "/projects/{project_id}/concept-over-time-analyses/{cota_id}",
+      url: "/projects/{project_id}/source-documents/{sdoc_id}",
       path: {
         project_id: projectId,
-        cota_id: cotaId,
+        sdoc_id: sdocId,
       },
       errors: {
         400: `The request breaks a rule of the domain`,
@@ -188,119 +171,139 @@ export class ConceptOverTimeAnalysisService {
     });
   }
   /**
-   * Annotate (multiple) COTASentences
-   * @returns ConceptOverTimeAnalysisRead Successful Response
+   * Returns the SourceDocumentData of the SourceDocument with the given ID if it exists
+   * @returns SourceDocumentDataRead Successful Response
    * @throws ApiError
    */
-  public static annotateSentences({
+  public static getByIdWithData({
     projectId,
-    cotaId,
+    sdocId,
+    onlyIfFinished = false,
+  }: {
+    projectId: number;
+    sdocId: number;
+    onlyIfFinished?: boolean;
+  }): CancelablePromise<SourceDocumentDataRead> {
+    return __request(OpenAPI, {
+      method: "GET",
+      url: "/projects/{project_id}/source-documents/{sdoc_id}/data",
+      path: {
+        project_id: projectId,
+        sdoc_id: sdocId,
+      },
+      query: {
+        only_if_finished: onlyIfFinished,
+      },
+      errors: {
+        400: `The request breaks a rule of the domain`,
+        403: `The user is no member of the project, or the feature is disabled`,
+        404: `A path id, or an id the route reads, is not in the project`,
+        409: `A body id violates a foreign key, or a value a unique constraint`,
+        422: `Validation Error`,
+      },
+    });
+  }
+  /**
+   * Returns the ids of SourceDocuments in the same folder as the SourceDocument with the given id.
+   * @returns number Successful Response
+   * @throws ApiError
+   */
+  public static getSiblings({
+    projectId,
+    sdocId,
+  }: {
+    projectId: number;
+    sdocId: number;
+  }): CancelablePromise<Array<number>> {
+    return __request(OpenAPI, {
+      method: "GET",
+      url: "/projects/{project_id}/source-documents/{sdoc_id}/siblings",
+      path: {
+        project_id: projectId,
+        sdoc_id: sdocId,
+      },
+      errors: {
+        400: `The request breaks a rule of the domain`,
+        403: `The user is no member of the project, or the feature is disabled`,
+        404: `A path id, or an id the route reads, is not in the project`,
+        409: `A body id violates a foreign key, or a value a unique constraint`,
+        422: `Validation Error`,
+      },
+    });
+  }
+  /**
+   * Returns the URLs of the files of the SourceDocument with the given ID (relative to /content/).
+   * @returns SourceDocumentUrls Successful Response
+   * @throws ApiError
+   */
+  public static getUrls({
+    projectId,
+    sdocId,
+  }: {
+    projectId: number;
+    sdocId: number;
+  }): CancelablePromise<SourceDocumentUrls> {
+    return __request(OpenAPI, {
+      method: "GET",
+      url: "/projects/{project_id}/source-documents/{sdoc_id}/urls",
+      path: {
+        project_id: projectId,
+        sdoc_id: sdocId,
+      },
+      errors: {
+        400: `The request breaks a rule of the domain`,
+        403: `The user is no member of the project, or the feature is disabled`,
+        404: `A path id, or an id the route reads, is not in the project`,
+        409: `A body id violates a foreign key, or a value a unique constraint`,
+        422: `Validation Error`,
+      },
+    });
+  }
+  /**
+   * Returns IDs of users that annotated that SourceDocument.
+   * @returns number Successful Response
+   * @throws ApiError
+   */
+  public static getAnnotators({
+    projectId,
+    sdocId,
+  }: {
+    projectId: number;
+    sdocId: number;
+  }): CancelablePromise<Array<number>> {
+    return __request(OpenAPI, {
+      method: "GET",
+      url: "/projects/{project_id}/source-documents/{sdoc_id}/annotators",
+      path: {
+        project_id: projectId,
+        sdoc_id: sdocId,
+      },
+      errors: {
+        400: `The request breaks a rule of the domain`,
+        403: `The user is no member of the project, or the feature is disabled`,
+        404: `A path id, or an id the route reads, is not in the project`,
+        409: `A body id violates a foreign key, or a value a unique constraint`,
+        422: `Validation Error`,
+      },
+    });
+  }
+  /**
+   * Removes all SourceDocuments with the given IDs if they exist
+   * @returns SourceDocumentRead Successful Response
+   * @throws ApiError
+   */
+  public static deleteBulk({
+    projectId,
     requestBody,
   }: {
     projectId: number;
-    cotaId: number;
-    requestBody: AnnotateSentencesRequest;
-  }): CancelablePromise<ConceptOverTimeAnalysisRead> {
+    requestBody: Array<number>;
+  }): CancelablePromise<Array<SourceDocumentRead>> {
     return __request(OpenAPI, {
-      method: "PATCH",
-      url: "/projects/{project_id}/concept-over-time-analyses/{cota_id}/annotate-sentences",
+      method: "DELETE",
+      url: "/projects/{project_id}/source-documents/bulk",
       path: {
         project_id: projectId,
-        cota_id: cotaId,
-      },
-      body: requestBody,
-      mediaType: "application/json",
-      errors: {
-        400: `The request breaks a rule of the domain`,
-        403: `The user is no member of the project, or the feature is disabled`,
-        404: `A path id, or an id the route reads, is not in the project`,
-        409: `A body id violates a foreign key, or a value a unique constraint`,
-        422: `Validation Error`,
-      },
-    });
-  }
-  /**
-   * Remove (multiple) COTASentences from the search space
-   * @returns ConceptOverTimeAnalysisRead Successful Response
-   * @throws ApiError
-   */
-  public static removeSentences({
-    projectId,
-    cotaId,
-    requestBody,
-  }: {
-    projectId: number;
-    cotaId: number;
-    requestBody: RemoveSentencesRequest;
-  }): CancelablePromise<ConceptOverTimeAnalysisRead> {
-    return __request(OpenAPI, {
-      method: "PATCH",
-      url: "/projects/{project_id}/concept-over-time-analyses/{cota_id}/remove-sentences",
-      path: {
-        project_id: projectId,
-        cota_id: cotaId,
-      },
-      body: requestBody,
-      mediaType: "application/json",
-      errors: {
-        400: `The request breaks a rule of the domain`,
-        403: `The user is no member of the project, or the feature is disabled`,
-        404: `A path id, or an id the route reads, is not in the project`,
-        409: `A body id violates a foreign key, or a value a unique constraint`,
-        422: `Validation Error`,
-      },
-    });
-  }
-  /**
-   * Resets the ConceptOverTimeAnalysis
-   * Resets the ConceptOverTimeAnalysis deleting model, embeddings, refinement jobs and resetting the search space
-   * @returns ConceptOverTimeAnalysisRead Successful Response
-   * @throws ApiError
-   */
-  public static reset({
-    projectId,
-    cotaId,
-  }: {
-    projectId: number;
-    cotaId: number;
-  }): CancelablePromise<ConceptOverTimeAnalysisRead> {
-    return __request(OpenAPI, {
-      method: "PATCH",
-      url: "/projects/{project_id}/concept-over-time-analyses/{cota_id}/reset",
-      path: {
-        project_id: projectId,
-        cota_id: cotaId,
-      },
-      errors: {
-        400: `The request breaks a rule of the domain`,
-        403: `The user is no member of the project, or the feature is disabled`,
-        404: `A path id, or an id the route reads, is not in the project`,
-        409: `A body id violates a foreign key, or a value a unique constraint`,
-        422: `Validation Error`,
-      },
-    });
-  }
-  /**
-   * Refines the ConceptOverTimeAnalysis
-   * Starts the refinement job of the ConceptOverTimeAnalysis with the given ID; read the job at /jobs/cota-refinement
-   * @returns ConceptOverTimeAnalysisRead Successful Response
-   * @throws ApiError
-   */
-  public static refine({
-    projectId,
-    cotaId,
-    requestBody,
-  }: {
-    projectId: number;
-    cotaId: number;
-    requestBody: COTARefinementHyperparameters;
-  }): CancelablePromise<ConceptOverTimeAnalysisRead> {
-    return __request(OpenAPI, {
-      method: "POST",
-      url: "/projects/{project_id}/concept-over-time-analyses/{cota_id}/refine",
-      path: {
-        project_id: projectId,
-        cota_id: cotaId,
       },
       body: requestBody,
       mediaType: "application/json",

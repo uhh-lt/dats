@@ -1,4 +1,4 @@
-import { JobService } from "@api/services/JobService";
+import { JobsService } from "@api/services/JobsService";
 import { createJobQueries } from "@core/job";
 
 /**
@@ -15,7 +15,7 @@ export const importQueries = {
   // the background job of this domain
   job: createJobQueries(
     "import",
-    (job) => JobService.getImportJobById(job),
-    (projectId) => JobService.getImportJobsByProject({ projectId }),
+    (job) => JobsService.getImportJobById(job),
+    (projectId) => JobsService.getImportJobsByProject({ projectId }),
   ),
 };

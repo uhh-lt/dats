@@ -2,7 +2,7 @@
 /* istanbul ignore file */
 /* tslint:disable */
 /* eslint-disable */
-import type { Body_job_start_import_job } from "@models/Body_job_start_import_job";
+import type { Body_jobs_start_import_job } from "@models/Body_jobs_start_import_job";
 import type { ClassifierJobRead } from "@models/ClassifierJobRead";
 import type { ClassifierJobStart } from "@models/ClassifierJobStart";
 import type { COTARefinementJobRead } from "@models/COTARefinementJobRead";
@@ -19,10 +19,11 @@ import type { PerspectivesJobRead } from "@models/PerspectivesJobRead";
 import type { PerspectivesJobStart } from "@models/PerspectivesJobStart";
 import type { TagRecommendationJobRead } from "@models/TagRecommendationJobRead";
 import type { TagRecommendationJobStart } from "@models/TagRecommendationJobStart";
+import type { TagRecommendationResult } from "@models/TagRecommendationResult";
 import type { CancelablePromise } from "../core/CancelablePromise";
 import { OpenAPI } from "../core/OpenAPI";
 import { request as __request } from "../core/request";
-export class JobService {
+export class JobsService {
   /**
    * Starts an import job with the given parameters and file
    * @returns ImportJobRead Successful Response
@@ -33,7 +34,7 @@ export class JobService {
     formData,
   }: {
     projectId: number;
-    formData: Body_job_start_import_job;
+    formData: Body_jobs_start_import_job;
   }): CancelablePromise<ImportJobRead> {
     return __request(OpenAPI, {
       method: "POST",
@@ -889,6 +890,34 @@ export class JobService {
     return __request(OpenAPI, {
       method: "POST",
       url: "/projects/{project_id}/jobs/tag-recommendation/{job_id}/retry",
+      path: {
+        project_id: projectId,
+        job_id: jobId,
+      },
+      errors: {
+        400: `The request breaks a rule of the domain`,
+        403: `The user is no member of the project, or the feature is disabled`,
+        404: `A path id, or an id the route reads, is not in the project`,
+        409: `A body id violates a foreign key, or a value a unique constraint`,
+        422: `Validation Error`,
+      },
+    });
+  }
+  /**
+   * Retrieve all (non-reviewed) document tag recommendations of the given tag recommendation job.
+   * @returns TagRecommendationResult Successful Response
+   * @throws ApiError
+   */
+  public static getAllTagrecommendationsFromJob({
+    projectId,
+    jobId,
+  }: {
+    projectId: number;
+    jobId: string;
+  }): CancelablePromise<Array<TagRecommendationResult>> {
+    return __request(OpenAPI, {
+      method: "GET",
+      url: "/projects/{project_id}/jobs/tag-recommendation/{job_id}/recommendations",
       path: {
         project_id: projectId,
         job_id: jobId,

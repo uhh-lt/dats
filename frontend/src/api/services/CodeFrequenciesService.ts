@@ -9,7 +9,7 @@ import type { CodeOccurrenceRequest } from "@models/CodeOccurrenceRequest";
 import type { CancelablePromise } from "../core/CancelablePromise";
 import { OpenAPI } from "../core/OpenAPI";
 import { request as __request } from "../core/request";
-export class CodeFrequencyService {
+export class CodeFrequenciesService {
   /**
    * Returns all SourceDocument IDs that match the query parameters.
    * @returns CodeFrequency Successful Response

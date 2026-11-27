@@ -2,53 +2,30 @@
 /* istanbul ignore file */
 /* tslint:disable */
 /* eslint-disable */
-import type { FeatureActivation } from "@models/FeatureActivation";
-import type { ProjectFeatureRead } from "@models/ProjectFeatureRead";
+import type { AgreementParams } from "@models/AgreementParams";
+import type { AgreementResult } from "@models/AgreementResult";
+import type { SegmentTextsRequest } from "@models/SegmentTextsRequest";
 import type { CancelablePromise } from "../core/CancelablePromise";
 import { OpenAPI } from "../core/OpenAPI";
 import { request as __request } from "../core/request";
-export class FeatureService {
+export class AgreementsService {
   /**
-   * Returns the state of every Feature in the Project: enabled, status, ready and document counts
-   * @returns ProjectFeatureRead Successful Response
+   * Compare the annotations of two annotators: scores, confusion matrix and segments.
+   * @returns AgreementResult Successful Response
    * @throws ApiError
    */
-  public static getByProject({ projectId }: { projectId: number }): CancelablePromise<Array<ProjectFeatureRead>> {
-    return __request(OpenAPI, {
-      method: "GET",
-      url: "/projects/{project_id}/features",
-      path: {
-        project_id: projectId,
-      },
-      errors: {
-        400: `The request breaks a rule of the domain`,
-        403: `The user is no member of the project, or the feature is disabled`,
-        404: `A path id, or an id the route reads, is not in the project`,
-        409: `A body id violates a foreign key, or a value a unique constraint`,
-        422: `Validation Error`,
-      },
-    });
-  }
-  /**
-   * Enables the disabled Feature in the Project and computes its data for all documents. Returns the enabled Features
-   * @returns string Successful Response
-   * @throws ApiError
-   */
-  public static enable({
+  public static computeAgreement({
     projectId,
-    feature,
     requestBody,
   }: {
     projectId: number;
-    feature: string;
-    requestBody: FeatureActivation;
-  }): CancelablePromise<Array<string>> {
+    requestBody: AgreementParams;
+  }): CancelablePromise<AgreementResult> {
     return __request(OpenAPI, {
-      method: "PATCH",
-      url: "/projects/{project_id}/features/{feature}/enable",
+      method: "POST",
+      url: "/projects/{project_id}/agreements",
       path: {
         project_id: projectId,
-        feature: feature,
       },
       body: requestBody,
       mediaType: "application/json",
@@ -62,56 +39,54 @@ export class FeatureService {
     });
   }
   /**
-   * Completes the partly available Feature: computes its data for the documents that lack it. Returns the enabled Features
+   * Export the raw agreement counts (TP, FP, FN) per document and code as CSV.
    * @returns string Successful Response
    * @throws ApiError
    */
-  public static complete({
+  public static export({
     projectId,
-    feature,
     requestBody,
   }: {
     projectId: number;
-    feature: string;
-    requestBody: FeatureActivation;
+    requestBody: AgreementParams;
+  }): CancelablePromise<string> {
+    return __request(OpenAPI, {
+      method: "POST",
+      url: "/projects/{project_id}/agreements/export",
+      path: {
+        project_id: projectId,
+      },
+      body: requestBody,
+      mediaType: "application/json",
+      errors: {
+        400: `The request breaks a rule of the domain`,
+        403: `The user is no member of the project, or the feature is disabled`,
+        404: `A path id, or an id the route reads, is not in the project`,
+        409: `A body id violates a foreign key, or a value a unique constraint`,
+        422: `Validation Error`,
+      },
+    });
+  }
+  /**
+   * Returns the texts of segments (character ranges of documents), in the order of the request.
+   * @returns string Successful Response
+   * @throws ApiError
+   */
+  public static computeSegmentTexts({
+    projectId,
+    requestBody,
+  }: {
+    projectId: number;
+    requestBody: SegmentTextsRequest;
   }): CancelablePromise<Array<string>> {
     return __request(OpenAPI, {
       method: "POST",
-      url: "/projects/{project_id}/features/{feature}/complete",
+      url: "/projects/{project_id}/agreements/segment-texts",
       path: {
         project_id: projectId,
-        feature: feature,
       },
       body: requestBody,
       mediaType: "application/json",
-      errors: {
-        400: `The request breaks a rule of the domain`,
-        403: `The user is no member of the project, or the feature is disabled`,
-        404: `A path id, or an id the route reads, is not in the project`,
-        409: `A body id violates a foreign key, or a value a unique constraint`,
-        422: `Validation Error`,
-      },
-    });
-  }
-  /**
-   * Disables the partly or fully available Feature in the Project; its data is kept. Returns the enabled Features
-   * @returns string Successful Response
-   * @throws ApiError
-   */
-  public static disable({
-    projectId,
-    feature,
-  }: {
-    projectId: number;
-    feature: string;
-  }): CancelablePromise<Array<string>> {
-    return __request(OpenAPI, {
-      method: "PATCH",
-      url: "/projects/{project_id}/features/{feature}/disable",
-      path: {
-        project_id: projectId,
-        feature: feature,
-      },
       errors: {
         400: `The request breaks a rule of the domain`,
         403: `The user is no member of the project, or the feature is disabled`,

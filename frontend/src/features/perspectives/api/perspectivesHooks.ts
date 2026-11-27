@@ -1,5 +1,5 @@
 import { queryClient } from "@api/queryClient";
-import { JobService } from "@api/services/JobService";
+import { JobsService } from "@api/services/JobsService";
 import { PerspectivesService } from "@api/services/PerspectivesService";
 import { RagService } from "@api/services/RagService";
 import { MyFilter } from "@core/filter";
@@ -73,7 +73,8 @@ const useStartPerspectivesJob = () =>
       projectId: number;
       aspectId: number;
       requestBody: PerspectivesJobStart["parameters"];
-    }) => JobService.startPerspectivesJob({ projectId, requestBody: { aspect_id: aspectId, parameters: requestBody } }),
+    }) =>
+      JobsService.startPerspectivesJob({ projectId, requestBody: { aspect_id: aspectId, parameters: requestBody } }),
     meta: {
       datsEvent: "JOB_UPDATED",
       successMessage: (data: PerspectivesJobRead) => `Started TM Job as a new background task (ID: ${data.job_id})`,
@@ -93,7 +94,7 @@ const useUpdateClusterDetails = () =>
 const useRAGChat = () =>
   useMutation({
     mutationKey: [...perspectivesQueries.all(), "rAGChat"],
-    mutationFn: RagService.computeAnswers,
+    mutationFn: RagService.computeAnswer,
   });
 
 const useGetDocVisualization = (aspectId: number) => {

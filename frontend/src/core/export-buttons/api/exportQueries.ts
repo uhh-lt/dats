@@ -1,5 +1,5 @@
 import { createJobQueries } from "@core/job";
-import { JobService } from "@api/services/JobService";
+import { JobsService } from "@api/services/JobsService";
 
 /**
  * Query factory for the export (the export job).
@@ -13,5 +13,5 @@ export const exportQueries = {
   all: () => ["export"] as const,
 
   // the background job of this domain
-  job: createJobQueries("export", (job) => JobService.getExportJobById(job)),
+  job: createJobQueries("export", (job) => JobsService.getExportJobById(job)),
 };

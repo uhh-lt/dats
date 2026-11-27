@@ -2,16 +2,18 @@
 /* istanbul ignore file */
 /* tslint:disable */
 /* eslint-disable */
-import type { TimelineAnalysisCreate } from "@models/TimelineAnalysisCreate";
-import type { TimelineAnalysisRead } from "@models/TimelineAnalysisRead";
-import type { TimelineAnalysisUpdate } from "@models/TimelineAnalysisUpdate";
+import type { SpanAnnotationRead } from "@models/SpanAnnotationRead";
+import type { SpanGroupCreate } from "@models/SpanGroupCreate";
+import type { SpanGroupRead } from "@models/SpanGroupRead";
+import type { SpanGroupUpdate } from "@models/SpanGroupUpdate";
+import type { SpanGroupWithAnnotationsRead } from "@models/SpanGroupWithAnnotationsRead";
 import type { CancelablePromise } from "../core/CancelablePromise";
 import { OpenAPI } from "../core/OpenAPI";
 import { request as __request } from "../core/request";
-export class TimelineAnalysisService {
+export class SpanGroupsService {
   /**
-   * Creates an TimelineAnalysis
-   * @returns TimelineAnalysisRead Successful Response
+   * Creates a new SpanGroup and returns it with the generated ID.
+   * @returns SpanGroupRead Successful Response
    * @throws ApiError
    */
   public static create({
@@ -19,11 +21,11 @@ export class TimelineAnalysisService {
     requestBody,
   }: {
     projectId: number;
-    requestBody: TimelineAnalysisCreate;
-  }): CancelablePromise<TimelineAnalysisRead> {
+    requestBody: SpanGroupCreate;
+  }): CancelablePromise<SpanGroupRead> {
     return __request(OpenAPI, {
       method: "PUT",
-      url: "/projects/{project_id}/timeline-analyses",
+      url: "/projects/{project_id}/span-groups",
       path: {
         project_id: projectId,
       },
@@ -39,44 +41,31 @@ export class TimelineAnalysisService {
     });
   }
   /**
-   * Returns the TimelineAnalyses of the Project
-   * @returns TimelineAnalysisRead Successful Response
+   * Returns the SpanGroups of the User with their SpanAnnotations, optionally only those in the SourceDocument or those that contain the SpanAnnotation
+   * @returns SpanGroupWithAnnotationsRead Successful Response
    * @throws ApiError
    */
-  public static getByProject({ projectId }: { projectId: number }): CancelablePromise<Array<TimelineAnalysisRead>> {
-    return __request(OpenAPI, {
-      method: "GET",
-      url: "/projects/{project_id}/timeline-analyses",
-      path: {
-        project_id: projectId,
-      },
-      errors: {
-        400: `The request breaks a rule of the domain`,
-        403: `The user is no member of the project, or the feature is disabled`,
-        404: `A path id, or an id the route reads, is not in the project`,
-        409: `A body id violates a foreign key, or a value a unique constraint`,
-        422: `Validation Error`,
-      },
-    });
-  }
-  /**
-   * Duplicates the TimelineAnalysis with the given ID if it exists
-   * @returns TimelineAnalysisRead Successful Response
-   * @throws ApiError
-   */
-  public static duplicate({
+  public static getByProject({
     projectId,
-    timelineAnalysisId,
+    userId,
+    sdocId,
+    spanAnnotationId,
   }: {
     projectId: number;
-    timelineAnalysisId: number;
-  }): CancelablePromise<TimelineAnalysisRead> {
+    userId: number;
+    sdocId?: number | null;
+    spanAnnotationId?: number | null;
+  }): CancelablePromise<Array<SpanGroupWithAnnotationsRead>> {
     return __request(OpenAPI, {
-      method: "PUT",
-      url: "/projects/{project_id}/timeline-analyses/{timeline_analysis_id}/duplicate",
+      method: "GET",
+      url: "/projects/{project_id}/span-groups",
       path: {
         project_id: projectId,
-        timeline_analysis_id: timelineAnalysisId,
+      },
+      query: {
+        user_id: userId,
+        sdoc_id: sdocId,
+        span_annotation_id: spanAnnotationId,
       },
       errors: {
         400: `The request breaks a rule of the domain`,
@@ -88,23 +77,85 @@ export class TimelineAnalysisService {
     });
   }
   /**
-   * Returns the TimelineAnalysis with the given ID if it exists
-   * @returns TimelineAnalysisRead Successful Response
+   * Adds the SpanAnnotation to the SpanGroup
+   * @returns SpanAnnotationRead Successful Response
+   * @throws ApiError
+   */
+  public static addSpanAnnotation({
+    projectId,
+    spanGroupId,
+    spanAnnotationId,
+  }: {
+    projectId: number;
+    spanGroupId: number;
+    spanAnnotationId: number;
+  }): CancelablePromise<SpanAnnotationRead> {
+    return __request(OpenAPI, {
+      method: "PUT",
+      url: "/projects/{project_id}/span-groups/{span_group_id}/span-annotations/{span_annotation_id}",
+      path: {
+        project_id: projectId,
+        span_group_id: spanGroupId,
+        span_annotation_id: spanAnnotationId,
+      },
+      errors: {
+        400: `The request breaks a rule of the domain`,
+        403: `The user is no member of the project, or the feature is disabled`,
+        404: `A path id, or an id the route reads, is not in the project`,
+        409: `A body id violates a foreign key, or a value a unique constraint`,
+        422: `Validation Error`,
+      },
+    });
+  }
+  /**
+   * Removes the SpanAnnotation from the SpanGroup
+   * @returns SpanAnnotationRead Successful Response
+   * @throws ApiError
+   */
+  public static removeSpanAnnotation({
+    projectId,
+    spanGroupId,
+    spanAnnotationId,
+  }: {
+    projectId: number;
+    spanGroupId: number;
+    spanAnnotationId: number;
+  }): CancelablePromise<SpanAnnotationRead> {
+    return __request(OpenAPI, {
+      method: "DELETE",
+      url: "/projects/{project_id}/span-groups/{span_group_id}/span-annotations/{span_annotation_id}",
+      path: {
+        project_id: projectId,
+        span_group_id: spanGroupId,
+        span_annotation_id: spanAnnotationId,
+      },
+      errors: {
+        400: `The request breaks a rule of the domain`,
+        403: `The user is no member of the project, or the feature is disabled`,
+        404: `A path id, or an id the route reads, is not in the project`,
+        409: `A body id violates a foreign key, or a value a unique constraint`,
+        422: `Validation Error`,
+      },
+    });
+  }
+  /**
+   * Returns the SpanGroup with the given ID.
+   * @returns SpanGroupRead Successful Response
    * @throws ApiError
    */
   public static getById({
     projectId,
-    timelineAnalysisId,
+    spanGroupId,
   }: {
     projectId: number;
-    timelineAnalysisId: number;
-  }): CancelablePromise<TimelineAnalysisRead> {
+    spanGroupId: number;
+  }): CancelablePromise<SpanGroupRead> {
     return __request(OpenAPI, {
       method: "GET",
-      url: "/projects/{project_id}/timeline-analyses/{timeline_analysis_id}",
+      url: "/projects/{project_id}/span-groups/{span_group_id}",
       path: {
         project_id: projectId,
-        timeline_analysis_id: timelineAnalysisId,
+        span_group_id: spanGroupId,
       },
       errors: {
         400: `The request breaks a rule of the domain`,
@@ -116,25 +167,25 @@ export class TimelineAnalysisService {
     });
   }
   /**
-   * Updates the TimelineAnalysis with the given ID if it exists
-   * @returns TimelineAnalysisRead Successful Response
+   * Updates the SpanGroup with the given ID.
+   * @returns SpanGroupRead Successful Response
    * @throws ApiError
    */
   public static updateById({
     projectId,
-    timelineAnalysisId,
+    spanGroupId,
     requestBody,
   }: {
     projectId: number;
-    timelineAnalysisId: number;
-    requestBody: TimelineAnalysisUpdate;
-  }): CancelablePromise<TimelineAnalysisRead> {
+    spanGroupId: number;
+    requestBody: SpanGroupUpdate;
+  }): CancelablePromise<SpanGroupRead> {
     return __request(OpenAPI, {
       method: "PATCH",
-      url: "/projects/{project_id}/timeline-analyses/{timeline_analysis_id}",
+      url: "/projects/{project_id}/span-groups/{span_group_id}",
       path: {
         project_id: projectId,
-        timeline_analysis_id: timelineAnalysisId,
+        span_group_id: spanGroupId,
       },
       body: requestBody,
       mediaType: "application/json",
@@ -148,23 +199,23 @@ export class TimelineAnalysisService {
     });
   }
   /**
-   * Removes the TimelineAnalysis with the given ID if it exists
-   * @returns TimelineAnalysisRead Successful Response
+   * Deletes the SpanGroup with the given ID.
+   * @returns SpanGroupRead Successful Response
    * @throws ApiError
    */
   public static deleteById({
     projectId,
-    timelineAnalysisId,
+    spanGroupId,
   }: {
     projectId: number;
-    timelineAnalysisId: number;
-  }): CancelablePromise<TimelineAnalysisRead> {
+    spanGroupId: number;
+  }): CancelablePromise<SpanGroupRead> {
     return __request(OpenAPI, {
       method: "DELETE",
-      url: "/projects/{project_id}/timeline-analyses/{timeline_analysis_id}",
+      url: "/projects/{project_id}/span-groups/{span_group_id}",
       path: {
         project_id: projectId,
-        timeline_analysis_id: timelineAnalysisId,
+        span_group_id: spanGroupId,
       },
       errors: {
         400: `The request breaks a rule of the domain`,
@@ -176,23 +227,23 @@ export class TimelineAnalysisService {
     });
   }
   /**
-   * Recomputes the TimelineAnalysis with the given ID if it exists
-   * @returns TimelineAnalysisRead Successful Response
+   * Returns all SpanAnnotations in the SpanGroup with the given ID
+   * @returns SpanAnnotationRead Successful Response
    * @throws ApiError
    */
-  public static recompute({
+  public static getAnnotations({
     projectId,
-    timelineAnalysisId,
+    spanGroupId,
   }: {
     projectId: number;
-    timelineAnalysisId: number;
-  }): CancelablePromise<TimelineAnalysisRead> {
+    spanGroupId: number;
+  }): CancelablePromise<Array<SpanAnnotationRead>> {
     return __request(OpenAPI, {
-      method: "PATCH",
-      url: "/projects/{project_id}/timeline-analyses/{timeline_analysis_id}/recompute",
+      method: "GET",
+      url: "/projects/{project_id}/span-groups/{span_group_id}/span-annotations",
       path: {
         project_id: projectId,
-        timeline_analysis_id: timelineAnalysisId,
+        span_group_id: spanGroupId,
       },
       errors: {
         400: `The request breaks a rule of the domain`,

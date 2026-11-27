@@ -1,4 +1,4 @@
-import { TagService } from "@api/services/TagService";
+import { TagsService } from "@api/services/TagsService";
 import { SdocTagLinksResult } from "@models/SdocTagLinksResult";
 import { TagRead } from "@models/TagRead";
 import { useAppSelector } from "@store/storeHooks";
@@ -22,7 +22,7 @@ const useGetTag = (tagId: number | null | undefined) => {
 const useCreateTag = () =>
   useMutation({
     mutationKey: [...tagQueries.all(), "createTag"],
-    mutationFn: TagService.create,
+    mutationFn: TagsService.create,
     meta: {
       datsEvent: "TAG_CREATED",
       successMessage: (tag: TagRead) => `Created tag ${tag.name}`,
@@ -32,7 +32,7 @@ const useCreateTag = () =>
 const useUpdateTag = () =>
   useMutation({
     mutationKey: [...tagQueries.all(), "updateTag"],
-    mutationFn: TagService.updateById,
+    mutationFn: TagsService.updateById,
     meta: {
       datsEvent: "TAG_UPDATED",
       successMessage: (tag: TagRead) => `Updated tag ${tag.name}`,
@@ -42,7 +42,7 @@ const useUpdateTag = () =>
 const useUpdateBulkTag = () =>
   useMutation({
     mutationKey: [...tagQueries.all(), "updateBulkTag"],
-    mutationFn: TagService.updateBulk,
+    mutationFn: TagsService.updateBulk,
     meta: {
       datsEvent: "TAG_UPDATED_BATCH",
       successMessage: (tags: TagRead[]) => `Updated ${tags.length} tag(s)`,
@@ -54,7 +54,7 @@ const useUpdateBulkTag = () =>
 const useDeleteTag = () =>
   useMutation({
     mutationKey: [...tagQueries.all(), "deleteTag"],
-    mutationFn: TagService.deleteById,
+    mutationFn: TagsService.deleteById,
     meta: {
       datsEvent: "TAG_DELETED",
       successMessage: (tag: TagRead) => `Deleted tag ${tag.name}`,
@@ -64,7 +64,7 @@ const useDeleteTag = () =>
 const useBulkSetTags = () =>
   useMutation({
     mutationKey: [...tagQueries.all(), "bulkSetTags"],
-    mutationFn: TagService.replaceSdocTagsBulk,
+    mutationFn: TagsService.replaceSdocTagsBulk,
     meta: {
       datsEvent: "SDOC_TAGS_LINKED",
       successMessage: (data: SdocTagLinksResult) => `Updated tags for ${Object.keys(data.links).length} documents`,
@@ -74,7 +74,7 @@ const useBulkSetTags = () =>
 const useBulkLinkTags = () =>
   useMutation({
     mutationKey: [...tagQueries.all(), "bulkLinkTags"],
-    mutationFn: TagService.linkTagsBulk,
+    mutationFn: TagsService.linkTagsBulk,
     meta: {
       datsEvent: "SDOC_TAGS_LINKED",
       successMessage: (data: SdocTagLinksResult) => `Updated tags for ${Object.keys(data.links).length} documents`,
@@ -84,7 +84,7 @@ const useBulkLinkTags = () =>
 const useBulkUnlinkTags = () =>
   useMutation({
     mutationKey: [...tagQueries.all(), "bulkUnlinkTags"],
-    mutationFn: TagService.unlinkTagsBulk,
+    mutationFn: TagsService.unlinkTagsBulk,
     meta: {
       datsEvent: "SDOC_TAGS_LINKED",
       successMessage: (data: SdocTagLinksResult) => `Updated tags for ${Object.keys(data.links).length} documents`,
@@ -94,7 +94,7 @@ const useBulkUnlinkTags = () =>
 const useBulkUpdateTags = () =>
   useMutation({
     mutationKey: [...tagQueries.all(), "bulkUpdateTags"],
-    mutationFn: TagService.updateSdocTagsBulk,
+    mutationFn: TagsService.updateSdocTagsBulk,
     meta: {
       datsEvent: "SDOC_TAGS_LINKED",
       successMessage: (data: SdocTagLinksResult) => `Updated tags for ${Object.keys(data.links).length} documents`,
@@ -104,7 +104,7 @@ const useBulkUpdateTags = () =>
 const useCountTags = () =>
   useMutation({
     mutationKey: [...tagQueries.all(), "countTags"],
-    mutationFn: TagService.count,
+    mutationFn: TagsService.count,
   });
 
 interface UseProjectTagsQueryParams<T> {

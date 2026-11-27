@@ -1,4 +1,4 @@
-import { ExperimentService } from "@api/services/ExperimentService";
+import { ExperimentsService } from "@api/services/ExperimentsService";
 import { userQueries } from "@core/user";
 import type { ExperimentRead } from "@models/ExperimentRead";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
@@ -7,7 +7,7 @@ import { experimentQueries } from "./experimentQueries";
 const useCreateExperiment = () =>
   useMutation({
     mutationKey: [...experimentQueries.all(), "createExperiment"],
-    mutationFn: ExperimentService.create,
+    mutationFn: ExperimentsService.create,
     meta: {
       datsEvent: "EXPERIMENT_CREATED",
       successMessage: (experiment: ExperimentRead) => `Created experiment ${experiment.name}`,
@@ -25,7 +25,7 @@ const useRefreshUsers = () => {
 const useUpdateExperiment = () =>
   useMutation({
     mutationKey: [...experimentQueries.all(), "updateExperiment"],
-    mutationFn: ExperimentService.updateById,
+    mutationFn: ExperimentsService.updateById,
     // renaming an experiment renames the virtual users of its runs
     onSuccess: useRefreshUsers(),
     meta: {
@@ -37,7 +37,7 @@ const useUpdateExperiment = () =>
 const useDeleteExperiment = () =>
   useMutation({
     mutationKey: [...experimentQueries.all(), "deleteExperiment"],
-    mutationFn: ExperimentService.deleteById,
+    mutationFn: ExperimentsService.deleteById,
     onSuccess: useRefreshUsers(),
     meta: {
       datsEvent: "EXPERIMENT_DELETED",
@@ -48,7 +48,7 @@ const useDeleteExperiment = () =>
 const useCreateRun = () =>
   useMutation({
     mutationKey: [...experimentQueries.all(), "createRun"],
-    mutationFn: ExperimentService.createRun,
+    mutationFn: ExperimentsService.createRun,
     onSuccess: useRefreshUsers(),
     meta: {
       datsEvent: "EXPERIMENT_UPDATED",
@@ -60,7 +60,7 @@ const useCreateRun = () =>
 const useDeleteRun = () =>
   useMutation({
     mutationKey: [...experimentQueries.all(), "deleteRun"],
-    mutationFn: ExperimentService.deleteRun,
+    mutationFn: ExperimentsService.deleteRun,
     onSuccess: useRefreshUsers(),
     meta: {
       datsEvent: "EXPERIMENT_UPDATED",
@@ -71,7 +71,7 @@ const useDeleteRun = () =>
 const useRefreshRunScores = () =>
   useMutation({
     mutationKey: [...experimentQueries.all(), "refreshRunScores"],
-    mutationFn: ExperimentService.refreshRunScores,
+    mutationFn: ExperimentsService.refreshRunScores,
     meta: {
       datsEvent: "EXPERIMENT_UPDATED",
       successMessage: "Recomputed the agreement with the gold annotator",
@@ -81,7 +81,7 @@ const useRefreshRunScores = () =>
 const useRefreshAllRunScores = () =>
   useMutation({
     mutationKey: [...experimentQueries.all(), "refreshAllRunScores"],
-    mutationFn: ExperimentService.refreshScores,
+    mutationFn: ExperimentsService.refreshScores,
     meta: {
       datsEvent: "EXPERIMENT_UPDATED",
       successMessage: "Recomputed the agreement of all finished runs with the gold annotator",
@@ -91,7 +91,7 @@ const useRefreshAllRunScores = () =>
 const useExportRunLog = () =>
   useMutation({
     mutationKey: [...experimentQueries.all(), "exportRunLog"],
-    mutationFn: ExperimentService.exportRunLog,
+    mutationFn: ExperimentsService.exportRunLog,
     meta: {
       errorMessage: "Failed to export the run log",
     },

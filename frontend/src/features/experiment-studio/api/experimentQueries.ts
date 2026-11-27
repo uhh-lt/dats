@@ -1,4 +1,4 @@
-import { ExperimentService } from "@api/services/ExperimentService";
+import { ExperimentsService } from "@api/services/ExperimentsService";
 import type { ExperimentRead } from "@models/ExperimentRead";
 import { queryOptions } from "@tanstack/react-query";
 
@@ -23,7 +23,7 @@ export const experimentQueries = {
     queryOptions({
       queryKey: experimentQueries.projectScope(projectId),
       queryFn: async () => {
-        const data = await ExperimentService.getByProject({ projectId });
+        const data = await ExperimentsService.getByProject({ projectId });
         return data.reduce<ExperimentMap>((acc, experiment) => {
           acc[experiment.id] = experiment;
           return acc;

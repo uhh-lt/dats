@@ -1,5 +1,5 @@
-import { JobService } from "@api/services/JobService";
-import { TagRecommendationService } from "@api/services/TagRecommendationService";
+import { JobsService } from "@api/services/JobsService";
+import { TagRecommendationsService } from "@api/services/TagRecommendationsService";
 import { TagRecommendationJobRead } from "@models/TagRecommendationJobRead";
 import { useMutation } from "@tanstack/react-query";
 import { tagRecommendationQueries } from "./tagRecommendationQueries";
@@ -10,7 +10,7 @@ import { tagRecommendationQueries } from "./tagRecommendationQueries";
 const useReviewTagRecommendations = () =>
   useMutation({
     mutationKey: [...tagRecommendationQueries.all(), "reviewTagRecommendations"],
-    mutationFn: TagRecommendationService.updateRecommendations,
+    mutationFn: TagRecommendationsService.updateRecommendations,
     meta: {
       datsEvent: "TAG_RECOMMENDATION_REVIEWED_BATCH",
       successMessage: () => `Reviewed tags!`,
@@ -20,7 +20,7 @@ const useReviewTagRecommendations = () =>
 const useStartTagRecommendationJob = () =>
   useMutation({
     mutationKey: [...tagRecommendationQueries.job.all(), "start"],
-    mutationFn: JobService.startTagRecommendationJob,
+    mutationFn: JobsService.startTagRecommendationJob,
     meta: {
       datsEvent: "JOB_UPDATED",
       successMessage: (data: TagRecommendationJobRead) => `Started the tag recommendation (job ${data.job_id})`,

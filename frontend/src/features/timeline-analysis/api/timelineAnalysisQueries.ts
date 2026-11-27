@@ -1,5 +1,5 @@
 import { SearchService } from "@api/services/SearchService";
-import { TimelineAnalysisService } from "@api/services/TimelineAnalysisService";
+import { TimelineAnalysesService } from "@api/services/TimelineAnalysesService";
 import { tableInfoQueries, toColumnInfos } from "@core/filter";
 import type { TimelineAnalysisRead } from "@models/TimelineAnalysisRead";
 import { TimelineAnalysisType } from "@models/TimelineAnalysisType";
@@ -25,7 +25,7 @@ export const timelineAnalysisQueries = {
     queryOptions({
       queryKey: timelineAnalysisQueries.projectScope(projectId),
       queryFn: async () => {
-        const data = await TimelineAnalysisService.getByProject({ projectId });
+        const data = await TimelineAnalysesService.getByProject({ projectId });
         return data.reduce<TimelineMap>((acc, timeline) => {
           acc[timeline.id] = timeline;
           return acc;
@@ -42,13 +42,13 @@ export const timelineAnalysisQueries = {
       queryFn: async () => {
         switch (type) {
           case TimelineAnalysisType.DOCUMENT:
-            return toColumnInfos(await SearchService.searchSdocInfo({ projectId }));
+            return toColumnInfos(await SearchService.searchSdocColumns({ projectId }));
           case TimelineAnalysisType.BBOX_ANNOTATION:
-            return toColumnInfos(await SearchService.searchBboxAnnotationInfo({ projectId }));
+            return toColumnInfos(await SearchService.searchBboxAnnotationColumns({ projectId }));
           case TimelineAnalysisType.SENTENCE_ANNOTATION:
-            return toColumnInfos(await SearchService.searchSentenceAnnotationInfo({ projectId }));
+            return toColumnInfos(await SearchService.searchSentenceAnnotationColumns({ projectId }));
           case TimelineAnalysisType.SPAN_ANNOTATION:
-            return toColumnInfos(await SearchService.searchSpanAnnotationInfo({ projectId }));
+            return toColumnInfos(await SearchService.searchSpanAnnotationColumns({ projectId }));
           default:
             return [];
         }

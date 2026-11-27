@@ -1,10 +1,10 @@
-import { SearchViewService } from "@api/services/SearchViewService";
+import { SearchViewsService } from "@api/services/SearchViewsService";
 import { SearchEntityType } from "@models/SearchEntityType";
 import { queryOptions } from "@tanstack/react-query";
 import { SearchViewBase } from "../types/SearchViewBase";
 
 // the generated type of the endpoints: the union of the view types of all entities
-type AnySearchViewRead = Awaited<ReturnType<typeof SearchViewService.getByProject>>[number];
+type AnySearchViewRead = Awaited<ReturnType<typeof SearchViewsService.getByProject>>[number];
 
 /**
  * The search view endpoints return the views of one entity type only, but are generated with the union of all view
@@ -30,6 +30,6 @@ export const searchViewQueries = {
   byProject: <TView extends SearchViewBase = AnySearchViewRead>(entityType: SearchEntityType, projectId: number) =>
     queryOptions({
       queryKey: [...searchViewQueries.projectScope(projectId), entityType] as const,
-      queryFn: async () => asViewsOfEntity<TView>(await SearchViewService.getByProject({ projectId, entityType })),
+      queryFn: async () => asViewsOfEntity<TView>(await SearchViewsService.getByProject({ projectId, entityType })),
     }),
 };

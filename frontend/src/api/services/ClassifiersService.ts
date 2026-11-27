@@ -2,52 +2,24 @@
 /* istanbul ignore file */
 /* tslint:disable */
 /* eslint-disable */
-import type { CodeCreate } from "@models/CodeCreate";
-import type { CodeRead } from "@models/CodeRead";
-import type { CodeUpdate } from "@models/CodeUpdate";
-import type { CodeUpdateBulk } from "@models/CodeUpdateBulk";
+import type { ClassifierDatasetStatistics } from "@models/ClassifierDatasetStatistics";
+import type { ClassifierDatasetStatisticsRequest } from "@models/ClassifierDatasetStatisticsRequest";
+import type { ClassifierInfo } from "@models/ClassifierInfo";
+import type { ClassifierRead } from "@models/ClassifierRead";
+import type { ClassifierUpdate } from "@models/ClassifierUpdate";
 import type { CancelablePromise } from "../core/CancelablePromise";
 import { OpenAPI } from "../core/OpenAPI";
 import { request as __request } from "../core/request";
-export class CodeService {
+export class ClassifiersService {
   /**
-   * Creates a new Code and returns it with the generated ID.
-   * @returns CodeRead Successful Response
+   * Returns classifier models, thresholds, and training defaults
+   * @returns ClassifierInfo Successful Response
    * @throws ApiError
    */
-  public static create({
-    projectId,
-    requestBody,
-  }: {
-    projectId: number;
-    requestBody: CodeCreate;
-  }): CancelablePromise<CodeRead> {
-    return __request(OpenAPI, {
-      method: "PUT",
-      url: "/projects/{project_id}/codes",
-      path: {
-        project_id: projectId,
-      },
-      body: requestBody,
-      mediaType: "application/json",
-      errors: {
-        400: `The request breaks a rule of the domain`,
-        403: `The user is no member of the project, or the feature is disabled`,
-        404: `A path id, or an id the route reads, is not in the project`,
-        409: `A body id violates a foreign key, or a value a unique constraint`,
-        422: `Validation Error`,
-      },
-    });
-  }
-  /**
-   * Returns all Codes of the Project
-   * @returns CodeRead Successful Response
-   * @throws ApiError
-   */
-  public static getByProject({ projectId }: { projectId: number }): CancelablePromise<Array<CodeRead>> {
+  public static getInfo({ projectId }: { projectId: number }): CancelablePromise<ClassifierInfo> {
     return __request(OpenAPI, {
       method: "GET",
-      url: "/projects/{project_id}/codes",
+      url: "/projects/{project_id}/classifiers/info",
       path: {
         project_id: projectId,
       },
@@ -61,17 +33,16 @@ export class CodeService {
     });
   }
   /**
-   * Returns the Code with the given ID.
-   * @returns CodeRead Successful Response
+   * Returns all Classifiers of the Project
+   * @returns ClassifierRead Successful Response
    * @throws ApiError
    */
-  public static getById({ projectId, codeId }: { projectId: number; codeId: number }): CancelablePromise<CodeRead> {
+  public static getByProject({ projectId }: { projectId: number }): CancelablePromise<Array<ClassifierRead>> {
     return __request(OpenAPI, {
       method: "GET",
-      url: "/projects/{project_id}/codes/{code_id}",
+      url: "/projects/{project_id}/classifiers",
       path: {
         project_id: projectId,
-        code_id: codeId,
       },
       errors: {
         400: `The request breaks a rule of the domain`,
@@ -83,25 +54,25 @@ export class CodeService {
     });
   }
   /**
-   * Updates the Code with the given ID.
-   * @returns CodeRead Successful Response
+   * Updates the Classifier with the given ID.
+   * @returns ClassifierRead Successful Response
    * @throws ApiError
    */
   public static updateById({
     projectId,
-    codeId,
+    classifierId,
     requestBody,
   }: {
     projectId: number;
-    codeId: number;
-    requestBody: CodeUpdate;
-  }): CancelablePromise<CodeRead> {
+    classifierId: number;
+    requestBody: ClassifierUpdate;
+  }): CancelablePromise<ClassifierRead> {
     return __request(OpenAPI, {
       method: "PATCH",
-      url: "/projects/{project_id}/codes/{code_id}",
+      url: "/projects/{project_id}/classifiers/{classifier_id}",
       path: {
         project_id: projectId,
-        code_id: codeId,
+        classifier_id: classifierId,
       },
       body: requestBody,
       mediaType: "application/json",
@@ -115,17 +86,23 @@ export class CodeService {
     });
   }
   /**
-   * Deletes the Code with the given ID.
-   * @returns CodeRead Successful Response
+   * Deletes the Classifier with the given ID.
+   * @returns ClassifierRead Successful Response
    * @throws ApiError
    */
-  public static deleteById({ projectId, codeId }: { projectId: number; codeId: number }): CancelablePromise<CodeRead> {
+  public static deleteById({
+    projectId,
+    classifierId,
+  }: {
+    projectId: number;
+    classifierId: number;
+  }): CancelablePromise<ClassifierRead> {
     return __request(OpenAPI, {
       method: "DELETE",
-      url: "/projects/{project_id}/codes/{code_id}",
+      url: "/projects/{project_id}/classifiers/{classifier_id}",
       path: {
         project_id: projectId,
-        code_id: codeId,
+        classifier_id: classifierId,
       },
       errors: {
         400: `The request breaks a rule of the domain`,
@@ -137,20 +114,20 @@ export class CodeService {
     });
   }
   /**
-   * Updates the Codes with the given IDs.
-   * @returns CodeRead Successful Response
+   * Returns statistics of the dataset that would be created with these parameters
+   * @returns ClassifierDatasetStatistics Successful Response
    * @throws ApiError
    */
-  public static updateBulk({
+  public static computeDatasetStatistics({
     projectId,
     requestBody,
   }: {
     projectId: number;
-    requestBody: Array<CodeUpdateBulk>;
-  }): CancelablePromise<Array<CodeRead>> {
+    requestBody: ClassifierDatasetStatisticsRequest;
+  }): CancelablePromise<ClassifierDatasetStatistics> {
     return __request(OpenAPI, {
-      method: "PATCH",
-      url: "/projects/{project_id}/codes/bulk",
+      method: "POST",
+      url: "/projects/{project_id}/classifiers/dataset-statistics",
       path: {
         project_id: projectId,
       },

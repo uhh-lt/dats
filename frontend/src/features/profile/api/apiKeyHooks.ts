@@ -1,4 +1,4 @@
-import { ApiKeyService } from "@api/services/ApiKeyService";
+import { UsersService } from "@api/services/UsersService";
 import { ApiKeyCreatedResponse } from "@models/ApiKeyCreatedResponse";
 import { ApiKeyRead } from "@models/ApiKeyRead";
 import { useMutation } from "@tanstack/react-query";
@@ -9,7 +9,7 @@ import { apiKeyQueries } from "./apiKeyQueries";
 const useCreateApiKey = () =>
   useMutation({
     mutationKey: [...apiKeyQueries.all(), "createApiKey"],
-    mutationFn: ApiKeyService.create,
+    mutationFn: UsersService.createApiKey,
     meta: {
       datsEvent: "API_KEY_CREATED",
       successMessage: (createdKey: ApiKeyCreatedResponse) => `Created API key ${createdKey.name}`,
@@ -19,7 +19,7 @@ const useCreateApiKey = () =>
 const useDeleteApiKey = () =>
   useMutation({
     mutationKey: [...apiKeyQueries.all(), "deleteApiKey"],
-    mutationFn: ApiKeyService.deleteById,
+    mutationFn: UsersService.deleteApiKey,
     meta: {
       datsEvent: "API_KEY_DELETED",
       successMessage: (deletedKey: ApiKeyRead) => `Deleted API key ${deletedKey.name}`,

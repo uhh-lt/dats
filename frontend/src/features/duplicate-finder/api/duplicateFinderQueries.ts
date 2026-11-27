@@ -1,5 +1,5 @@
 import { createJobQueries } from "@core/job";
-import { JobService } from "@api/services/JobService";
+import { JobsService } from "@api/services/JobsService";
 
 /**
  * Query factory for the duplicate finder (the duplicate finder job).
@@ -13,5 +13,5 @@ export const duplicateFinderQueries = {
   all: () => ["duplicateFinder"] as const,
 
   // the background job of this domain
-  job: createJobQueries("duplicateFinder", (job) => JobService.getDuplicateFinderJobById(job)),
+  job: createJobQueries("duplicateFinder", (job) => JobsService.getDuplicateFinderJobById(job)),
 };

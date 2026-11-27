@@ -11,7 +11,7 @@ import type { SentenceAnnotatorResult } from "@models/SentenceAnnotatorResult";
 import type { CancelablePromise } from "../core/CancelablePromise";
 import { OpenAPI } from "../core/OpenAPI";
 import { request as __request } from "../core/request";
-export class SentenceAnnotationService {
+export class SentenceAnnotationsService {
   /**
    * Creates a SentenceAnnotation
    * @returns SentenceAnnotationRead Successful Response
@@ -299,7 +299,7 @@ export class SentenceAnnotationService {
   }): CancelablePromise<Record<string, number>> {
     return __request(OpenAPI, {
       method: "POST",
-      url: "/projects/{project_id}/sentence-annotations/count",
+      url: "/projects/{project_id}/sentence-annotations/counts",
       path: {
         project_id: projectId,
       },

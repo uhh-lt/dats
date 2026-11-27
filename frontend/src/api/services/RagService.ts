@@ -13,7 +13,7 @@ export class RagService {
    * @returns ChatSessionResponse Successful Response
    * @throws ApiError
    */
-  public static computeAnswers({
+  public static computeAnswer({
     projectId,
     requestBody,
   }: {
@@ -22,7 +22,7 @@ export class RagService {
   }): CancelablePromise<ChatSessionResponse> {
     return __request(OpenAPI, {
       method: "POST",
-      url: "/projects/{project_id}/rag/answers",
+      url: "/projects/{project_id}/rag/answer",
       path: {
         project_id: projectId,
       },

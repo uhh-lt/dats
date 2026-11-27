@@ -14,7 +14,7 @@ import type { TagUpdateBulk } from "@models/TagUpdateBulk";
 import type { CancelablePromise } from "../core/CancelablePromise";
 import { OpenAPI } from "../core/OpenAPI";
 import { request as __request } from "../core/request";
-export class TagService {
+export class TagsService {
   /**
    * Creates a new Tag and returns it with the generated ID.
    * @returns TagRead Successful Response
@@ -337,7 +337,7 @@ export class TagService {
   }): CancelablePromise<Record<string, number>> {
     return __request(OpenAPI, {
       method: "POST",
-      url: "/projects/{project_id}/tags/count",
+      url: "/projects/{project_id}/tags/counts",
       path: {
         project_id: projectId,
       },

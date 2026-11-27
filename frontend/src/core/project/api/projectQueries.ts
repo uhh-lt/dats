@@ -1,7 +1,7 @@
 import { DocProcessingService } from "@api/services/DocProcessingService";
-import { FeatureService } from "@api/services/FeatureService";
-import { SourceDocumentService } from "@api/services/SourceDocumentService";
-import { UserService } from "@api/services/UserService";
+import { FeaturesService } from "@api/services/FeaturesService";
+import { SourceDocumentsService } from "@api/services/SourceDocumentsService";
+import { UsersService } from "@api/services/UsersService";
 import { FeatureStatus } from "@models/FeatureStatus";
 import type { ProjectFeatureRead } from "@models/ProjectFeatureRead";
 import type { SDocStatus } from "@models/SDocStatus";
@@ -26,7 +26,7 @@ export const projectQueries = {
   userProjects: () =>
     queryOptions({
       queryKey: [...projectQueries.all(), "user"] as const,
-      queryFn: () => UserService.getUserProjects(),
+      queryFn: () => UsersService.getUserProjects(),
       staleTime: 1000 * 60 * 5,
     }),
 
@@ -38,7 +38,7 @@ export const projectQueries = {
   sdocStatusCount: (projectId: number, status: SDocStatus) =>
     queryOptions({
       queryKey: [...projectQueries.sdocStatusCountScope(projectId), status] as const,
-      queryFn: () => SourceDocumentService.count({ projectId, status }),
+      queryFn: () => SourceDocumentsService.count({ projectId, status }),
     }),
 
   // simple processing status of all documents of a project with the given status
@@ -58,7 +58,7 @@ export const projectQueries = {
     queryOptions({
       queryKey: projectQueries.featuresScope(projectId),
       queryFn: async () => {
-        const states = await FeatureService.getByProject({ projectId });
+        const states = await FeaturesService.getByProject({ projectId });
         return states.reduce<ProjectFeatureMap>((acc, state) => {
           acc[state.feature] = state;
           return acc;

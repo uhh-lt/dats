@@ -1,6 +1,6 @@
-import { JobService } from "@api/services/JobService";
+import { JobsService } from "@api/services/JobsService";
 import { createJobQueries } from "@core/job";
-import { ConceptOverTimeAnalysisService } from "@api/services/ConceptOverTimeAnalysisService";
+import { ConceptOverTimeAnalysesService } from "@api/services/ConceptOverTimeAnalysesService";
 import type { ConceptOverTimeAnalysisRead } from "@models/ConceptOverTimeAnalysisRead";
 import { queryOptions } from "@tanstack/react-query";
 
@@ -25,7 +25,7 @@ export const cotaQueries = {
     queryOptions({
       queryKey: cotaQueries.projectScope(projectId),
       queryFn: async () => {
-        const data = await ConceptOverTimeAnalysisService.getByProject({ projectId });
+        const data = await ConceptOverTimeAnalysesService.getByProject({ projectId });
         return data.reduce<CotaMap>((acc, cota) => {
           acc[cota.id] = cota;
           return acc;
@@ -35,5 +35,5 @@ export const cotaQueries = {
     }),
 
   // the refinement / background job of this domain
-  job: createJobQueries("cota", (job) => JobService.getCotaRefinementJobById(job)),
+  job: createJobQueries("cota", (job) => JobsService.getCotaRefinementJobById(job)),
 };

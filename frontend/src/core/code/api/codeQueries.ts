@@ -1,4 +1,4 @@
-import { CodeService } from "@api/services/CodeService";
+import { CodesService } from "@api/services/CodesService";
 import type { CodeRead } from "@models/CodeRead";
 import { queryOptions, skipToken } from "@tanstack/react-query";
 
@@ -24,7 +24,7 @@ export const codeQueries = {
         projectId === undefined
           ? skipToken
           : async () => {
-              const codes = await CodeService.getByProject({ projectId });
+              const codes = await CodesService.getByProject({ projectId });
               return codes.reduce<CodeMap>((acc, code) => {
                 acc[code.id] = code;
                 return acc;

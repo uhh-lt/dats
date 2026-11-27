@@ -2,80 +2,29 @@
 /* istanbul ignore file */
 /* tslint:disable */
 /* eslint-disable */
-import type { ProjectAddUser } from "@models/ProjectAddUser";
-import type { ProjectRead } from "@models/ProjectRead";
-import type { ProjectUserLinks } from "@models/ProjectUserLinks";
-import type { UserRead } from "@models/UserRead";
-import type { UserUpdate } from "@models/UserUpdate";
-import type { VirtualUserCreate } from "@models/VirtualUserCreate";
+import type { BBoxAnnotationCreate } from "@models/BBoxAnnotationCreate";
+import type { BBoxAnnotationRead } from "@models/BBoxAnnotationRead";
+import type { BBoxAnnotationUpdate } from "@models/BBoxAnnotationUpdate";
+import type { BBoxAnnotationUpdateBulk } from "@models/BBoxAnnotationUpdateBulk";
 import type { CancelablePromise } from "../core/CancelablePromise";
 import { OpenAPI } from "../core/OpenAPI";
 import { request as __request } from "../core/request";
-export class UserService {
+export class BboxAnnotationsService {
   /**
-   * Returns the current (logged in) user
-   * @returns UserRead Successful Response
+   * Creates a BBoxAnnotation
+   * @returns BBoxAnnotationRead Successful Response
    * @throws ApiError
    */
-  public static getMe(): CancelablePromise<UserRead> {
-    return __request(OpenAPI, {
-      method: "GET",
-      url: "/users/me",
-    });
-  }
-  /**
-   * Removes the logged-in User
-   * @returns UserRead Successful Response
-   * @throws ApiError
-   */
-  public static deleteMe(): CancelablePromise<UserRead> {
-    return __request(OpenAPI, {
-      method: "DELETE",
-      url: "/users/me",
-    });
-  }
-  /**
-   * Updates the logged-in User
-   * @returns UserRead Successful Response
-   * @throws ApiError
-   */
-  public static updateMe({ requestBody }: { requestBody: UserUpdate }): CancelablePromise<UserRead> {
-    return __request(OpenAPI, {
-      method: "PATCH",
-      url: "/users/me",
-      body: requestBody,
-      mediaType: "application/json",
-      errors: {
-        422: `Validation Error`,
-      },
-    });
-  }
-  /**
-   * Returns all Projects of the logged-in User
-   * @returns ProjectRead Successful Response
-   * @throws ApiError
-   */
-  public static getUserProjects(): CancelablePromise<Array<ProjectRead>> {
-    return __request(OpenAPI, {
-      method: "GET",
-      url: "/users/me/projects",
-    });
-  }
-  /**
-   * Creates a virtual user (a user that cannot log in) in the Project
-   * @returns UserRead Successful Response
-   * @throws ApiError
-   */
-  public static createVirtualUser({
+  public static create({
     projectId,
     requestBody,
   }: {
     projectId: number;
-    requestBody: VirtualUserCreate;
-  }): CancelablePromise<UserRead> {
+    requestBody: BBoxAnnotationCreate;
+  }): CancelablePromise<BBoxAnnotationRead> {
     return __request(OpenAPI, {
       method: "PUT",
-      url: "/projects/{project_id}/virtual-users",
+      url: "/projects/{project_id}/bbox-annotations",
       path: {
         project_id: projectId,
       },
@@ -91,134 +40,178 @@ export class UserService {
     });
   }
   /**
-   * Returns all Users of the Project with the given ID: its members, then its virtual users
-   * @returns UserRead Successful Response
+   * Returns the BBoxAnnotations of the User, optionally only those in the SourceDocument or with the Code
+   * @returns BBoxAnnotationRead Successful Response
    * @throws ApiError
    */
-  public static getByProject({ projectId }: { projectId: number }): CancelablePromise<Array<UserRead>> {
-    return __request(OpenAPI, {
-      method: "GET",
-      url: "/projects/{project_id}/members",
-      path: {
-        project_id: projectId,
-      },
-      errors: {
-        400: `The request breaks a rule of the domain`,
-        403: `The user is no member of the project, or the feature is disabled`,
-        404: `A path id, or an id the route reads, is not in the project`,
-        409: `A body id violates a foreign key, or a value a unique constraint`,
-        422: `Validation Error`,
-      },
-    });
-  }
-  /**
-   * Adds the existing User with the given email to the Project as a member
-   * @returns ProjectUserLinks Successful Response
-   * @throws ApiError
-   */
-  public static associateUserToProject({
-    projectId,
-    requestBody,
-  }: {
-    projectId: number;
-    requestBody: ProjectAddUser;
-  }): CancelablePromise<ProjectUserLinks> {
-    return __request(OpenAPI, {
-      method: "PUT",
-      url: "/projects/{project_id}/members",
-      path: {
-        project_id: projectId,
-      },
-      body: requestBody,
-      mediaType: "application/json",
-      errors: {
-        400: `The request breaks a rule of the domain`,
-        403: `The user is no member of the project, or the feature is disabled`,
-        404: `A path id, or an id the route reads, is not in the project`,
-        409: `A body id violates a foreign key, or a value a unique constraint`,
-        422: `Validation Error`,
-      },
-    });
-  }
-  /**
-   * Updates the virtual user with the given ID of the Project
-   * @returns UserRead Successful Response
-   * @throws ApiError
-   */
-  public static updateVirtualUser({
-    projectId,
-    virtualUserId,
-    requestBody,
-  }: {
-    projectId: number;
-    virtualUserId: number;
-    requestBody: UserUpdate;
-  }): CancelablePromise<UserRead> {
-    return __request(OpenAPI, {
-      method: "PATCH",
-      url: "/projects/{project_id}/virtual-users/{virtual_user_id}",
-      path: {
-        project_id: projectId,
-        virtual_user_id: virtualUserId,
-      },
-      body: requestBody,
-      mediaType: "application/json",
-      errors: {
-        400: `The request breaks a rule of the domain`,
-        403: `The user is no member of the project, or the feature is disabled`,
-        404: `A path id, or an id the route reads, is not in the project`,
-        409: `A body id violates a foreign key, or a value a unique constraint`,
-        422: `Validation Error`,
-      },
-    });
-  }
-  /**
-   * Removes the virtual user with the given ID of the Project together with all its annotations and memos. The virtual user of an experiment run cannot be deleted here (HTTP 409); delete its run in the Experiment Studio.
-   * @returns UserRead Successful Response
-   * @throws ApiError
-   */
-  public static deleteVirtualUser({
-    projectId,
-    virtualUserId,
-  }: {
-    projectId: number;
-    virtualUserId: number;
-  }): CancelablePromise<UserRead> {
-    return __request(OpenAPI, {
-      method: "DELETE",
-      url: "/projects/{project_id}/virtual-users/{virtual_user_id}",
-      path: {
-        project_id: projectId,
-        virtual_user_id: virtualUserId,
-      },
-      errors: {
-        400: `The request breaks a rule of the domain`,
-        403: `The user is no member of the project, or the feature is disabled`,
-        404: `A path id, or an id the route reads, is not in the project`,
-        409: `A body id violates a foreign key, or a value a unique constraint`,
-        422: `Validation Error`,
-      },
-    });
-  }
-  /**
-   * Removes the member with the given ID from the Project
-   * @returns ProjectUserLinks Successful Response
-   * @throws ApiError
-   */
-  public static dissociateUserFromProject({
+  public static getByProject({
     projectId,
     userId,
+    sdocId,
+    codeId,
   }: {
     projectId: number;
     userId: number;
-  }): CancelablePromise<ProjectUserLinks> {
+    sdocId?: number | null;
+    codeId?: number | null;
+  }): CancelablePromise<Array<BBoxAnnotationRead>> {
     return __request(OpenAPI, {
-      method: "DELETE",
-      url: "/projects/{project_id}/members/{user_id}",
+      method: "GET",
+      url: "/projects/{project_id}/bbox-annotations",
       path: {
         project_id: projectId,
-        user_id: userId,
       },
+      query: {
+        user_id: userId,
+        sdoc_id: sdocId,
+        code_id: codeId,
+      },
+      errors: {
+        400: `The request breaks a rule of the domain`,
+        403: `The user is no member of the project, or the feature is disabled`,
+        404: `A path id, or an id the route reads, is not in the project`,
+        409: `A body id violates a foreign key, or a value a unique constraint`,
+        422: `Validation Error`,
+      },
+    });
+  }
+  /**
+   * Returns the BBoxAnnotation with the given ID.
+   * @returns BBoxAnnotationRead Successful Response
+   * @throws ApiError
+   */
+  public static getById({
+    projectId,
+    bboxAnnotationId,
+  }: {
+    projectId: number;
+    bboxAnnotationId: number;
+  }): CancelablePromise<BBoxAnnotationRead> {
+    return __request(OpenAPI, {
+      method: "GET",
+      url: "/projects/{project_id}/bbox-annotations/{bbox_annotation_id}",
+      path: {
+        project_id: projectId,
+        bbox_annotation_id: bboxAnnotationId,
+      },
+      errors: {
+        400: `The request breaks a rule of the domain`,
+        403: `The user is no member of the project, or the feature is disabled`,
+        404: `A path id, or an id the route reads, is not in the project`,
+        409: `A body id violates a foreign key, or a value a unique constraint`,
+        422: `Validation Error`,
+      },
+    });
+  }
+  /**
+   * Updates the BBoxAnnotation with the given ID.
+   * @returns BBoxAnnotationRead Successful Response
+   * @throws ApiError
+   */
+  public static updateById({
+    projectId,
+    bboxAnnotationId,
+    requestBody,
+  }: {
+    projectId: number;
+    bboxAnnotationId: number;
+    requestBody: BBoxAnnotationUpdate;
+  }): CancelablePromise<BBoxAnnotationRead> {
+    return __request(OpenAPI, {
+      method: "PATCH",
+      url: "/projects/{project_id}/bbox-annotations/{bbox_annotation_id}",
+      path: {
+        project_id: projectId,
+        bbox_annotation_id: bboxAnnotationId,
+      },
+      body: requestBody,
+      mediaType: "application/json",
+      errors: {
+        400: `The request breaks a rule of the domain`,
+        403: `The user is no member of the project, or the feature is disabled`,
+        404: `A path id, or an id the route reads, is not in the project`,
+        409: `A body id violates a foreign key, or a value a unique constraint`,
+        422: `Validation Error`,
+      },
+    });
+  }
+  /**
+   * Deletes the BBoxAnnotation with the given ID.
+   * @returns BBoxAnnotationRead Successful Response
+   * @throws ApiError
+   */
+  public static deleteById({
+    projectId,
+    bboxAnnotationId,
+  }: {
+    projectId: number;
+    bboxAnnotationId: number;
+  }): CancelablePromise<BBoxAnnotationRead> {
+    return __request(OpenAPI, {
+      method: "DELETE",
+      url: "/projects/{project_id}/bbox-annotations/{bbox_annotation_id}",
+      path: {
+        project_id: projectId,
+        bbox_annotation_id: bboxAnnotationId,
+      },
+      errors: {
+        400: `The request breaks a rule of the domain`,
+        403: `The user is no member of the project, or the feature is disabled`,
+        404: `A path id, or an id the route reads, is not in the project`,
+        409: `A body id violates a foreign key, or a value a unique constraint`,
+        422: `Validation Error`,
+      },
+    });
+  }
+  /**
+   * Updates BBoxAnnotations in Bulk
+   * @returns BBoxAnnotationRead Successful Response
+   * @throws ApiError
+   */
+  public static updateBulk({
+    projectId,
+    requestBody,
+  }: {
+    projectId: number;
+    requestBody: Array<BBoxAnnotationUpdateBulk>;
+  }): CancelablePromise<Array<BBoxAnnotationRead>> {
+    return __request(OpenAPI, {
+      method: "PATCH",
+      url: "/projects/{project_id}/bbox-annotations/bulk",
+      path: {
+        project_id: projectId,
+      },
+      body: requestBody,
+      mediaType: "application/json",
+      errors: {
+        400: `The request breaks a rule of the domain`,
+        403: `The user is no member of the project, or the feature is disabled`,
+        404: `A path id, or an id the route reads, is not in the project`,
+        409: `A body id violates a foreign key, or a value a unique constraint`,
+        422: `Validation Error`,
+      },
+    });
+  }
+  /**
+   * Deletes all BBoxAnnotations with the given IDs.
+   * @returns BBoxAnnotationRead Successful Response
+   * @throws ApiError
+   */
+  public static deleteBulk({
+    projectId,
+    requestBody,
+  }: {
+    projectId: number;
+    requestBody: Array<number>;
+  }): CancelablePromise<Array<BBoxAnnotationRead>> {
+    return __request(OpenAPI, {
+      method: "DELETE",
+      url: "/projects/{project_id}/bbox-annotations/bulk",
+      path: {
+        project_id: projectId,
+      },
+      body: requestBody,
+      mediaType: "application/json",
       errors: {
         400: `The request breaks a rule of the domain`,
         403: `The user is no member of the project, or the feature is disabled`,

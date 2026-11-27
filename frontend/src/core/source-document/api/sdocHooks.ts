@@ -1,4 +1,4 @@
-import { SourceDocumentService } from "@api/services/SourceDocumentService";
+import { SourceDocumentsService } from "@api/services/SourceDocumentsService";
 import { SourceDocumentRead } from "@models/SourceDocumentRead";
 import { SourceDocumentUrls } from "@models/SourceDocumentUrls";
 import { useMutation, useQuery } from "@tanstack/react-query";
@@ -36,7 +36,7 @@ const useDeleteDocuments = () =>
   useMutation({
     mutationKey: [...sdocQueries.all(), "deleteDocuments"],
     mutationFn: ({ projectId, sdocIds }: { projectId: number; sdocIds: number[] }) =>
-      SourceDocumentService.deleteBulk({ projectId, requestBody: sdocIds }),
+      SourceDocumentsService.deleteBulk({ projectId, requestBody: sdocIds }),
     meta: {
       datsEvent: "SDOC_DELETED_BATCH",
       successMessage: (_data: SourceDocumentRead[], variables: { projectId: number; sdocIds: number[] }) =>
@@ -47,7 +47,7 @@ const useDeleteDocuments = () =>
 const useUpdateName = () =>
   useMutation({
     mutationKey: [...sdocQueries.all(), "updateName"],
-    mutationFn: SourceDocumentService.updateById,
+    mutationFn: SourceDocumentsService.updateById,
     meta: {
       datsEvent: "SDOC_UPDATED",
       successMessage: (sdoc: SourceDocumentRead) => `Updated document "${sdoc.filename}"`,

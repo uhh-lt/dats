@@ -24,7 +24,7 @@ export class StatisticsService {
   }): CancelablePromise<Array<SpanEntityStat>> {
     return __request(OpenAPI, {
       method: "POST",
-      url: "/projects/{project_id}/code-statistics",
+      url: "/projects/{project_id}/statistics/codes",
       path: {
         project_id: projectId,
       },
@@ -53,7 +53,7 @@ export class StatisticsService {
   }): CancelablePromise<Array<TagStat>> {
     return __request(OpenAPI, {
       method: "POST",
-      url: "/projects/{project_id}/tag-statistics",
+      url: "/projects/{project_id}/statistics/tags",
       path: {
         project_id: projectId,
       },

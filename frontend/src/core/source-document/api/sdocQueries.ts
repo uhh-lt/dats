@@ -1,7 +1,7 @@
 import { queryClient } from "@api/queryClient";
 import { SearchService } from "@api/services/SearchService";
-import { SourceDocumentService } from "@api/services/SourceDocumentService";
-import { TagService } from "@api/services/TagService";
+import { SourceDocumentsService } from "@api/services/SourceDocumentsService";
+import { TagsService } from "@api/services/TagsService";
 import { tableInfoQueries, toColumnInfos } from "@core/filter";
 import { folderQueries } from "@core/folder";
 import { tagQueries } from "@core/tag";
@@ -37,7 +37,7 @@ export const sdocQueries = {
   byId: (projectId: number, sdocId: number) =>
     queryOptions({
       queryKey: [...sdocQueries.byIdScope(projectId), sdocId] as const,
-      queryFn: () => SourceDocumentService.getById({ projectId, sdocId }),
+      queryFn: () => SourceDocumentsService.getById({ projectId, sdocId }),
       staleTime: Infinity,
     }),
 
@@ -46,7 +46,7 @@ export const sdocQueries = {
   data: (projectId: number, sdocId: number) =>
     queryOptions({
       queryKey: [...sdocQueries.dataScope(projectId), sdocId] as const,
-      queryFn: () => SourceDocumentService.getByIdWithData({ projectId, sdocId }),
+      queryFn: () => SourceDocumentsService.getByIdWithData({ projectId, sdocId }),
       staleTime: Infinity,
     }),
 
@@ -58,7 +58,7 @@ export const sdocQueries = {
       queryFn: !filename
         ? skipToken
         : () =>
-            SourceDocumentService.getByProject({ projectId, filename, onlyFinished: true }).then((sdocs) => {
+            SourceDocumentsService.getByProject({ projectId, filename, onlyFinished: true }).then((sdocs) => {
               if (sdocs.length === 0) throw new Error(`No document with the filename ${filename}`);
               return sdocs[0].id;
             }),
@@ -71,7 +71,7 @@ export const sdocQueries = {
   sameFolder: (projectId: number | null | undefined, sdocId: number | null | undefined) =>
     queryOptions({
       queryKey: [...sdocQueries.sameFolderScope(projectId), sdocId] as const,
-      queryFn: !projectId || !sdocId ? skipToken : () => SourceDocumentService.getSiblings({ projectId, sdocId }),
+      queryFn: !projectId || !sdocId ? skipToken : () => SourceDocumentsService.getSiblings({ projectId, sdocId }),
       staleTime: Infinity,
     }),
 
@@ -81,7 +81,7 @@ export const sdocQueries = {
   urls: (projectId: number | null | undefined, sdocId: number | null | undefined) =>
     queryOptions({
       queryKey: [...sdocQueries.urlsScope(projectId), sdocId] as const,
-      queryFn: !projectId || !sdocId ? skipToken : () => SourceDocumentService.getUrls({ projectId, sdocId }),
+      queryFn: !projectId || !sdocId ? skipToken : () => SourceDocumentsService.getUrls({ projectId, sdocId }),
     }),
 
   // ids of the sdocs that carry a tag
@@ -90,7 +90,7 @@ export const sdocQueries = {
   idsByTag: (projectId: number | null | undefined, tagId: number | null | undefined) =>
     queryOptions({
       queryKey: [...sdocQueries.idsByTagScope(projectId), tagId] as const,
-      queryFn: !projectId || !tagId ? skipToken : () => TagService.getSdocIdsByTagId({ projectId, tagId }),
+      queryFn: !projectId || !tagId ? skipToken : () => TagsService.getSdocIdsByTagId({ projectId, tagId }),
     }),
 
   // user ids that annotated the sdoc
@@ -99,7 +99,7 @@ export const sdocQueries = {
   annotators: (projectId: number | null | undefined, sdocId: number | null | undefined) =>
     queryOptions({
       queryKey: [...sdocQueries.annotatorsScope(projectId), sdocId] as const,
-      queryFn: !projectId || !sdocId ? skipToken : () => SourceDocumentService.getAnnotators({ projectId, sdocId }),
+      queryFn: !projectId || !sdocId ? skipToken : () => SourceDocumentsService.getAnnotators({ projectId, sdocId }),
       staleTime: 1000 * 60 * 5,
     }),
 
@@ -107,7 +107,7 @@ export const sdocQueries = {
   tableInfo: (projectId: number) =>
     queryOptions({
       queryKey: tableInfoQueries.byDomain("sdoc", projectId),
-      queryFn: async () => toColumnInfos(await SearchService.searchSdocInfo({ projectId })),
+      queryFn: async () => toColumnInfos(await SearchService.searchSdocColumns({ projectId })),
       staleTime: Infinity,
     }),
 

@@ -1,5 +1,5 @@
 import { queryClient } from "@api/queryClient";
-import { WhiteboardService } from "@api/services/WhiteboardService";
+import { WhiteboardsService } from "@api/services/WhiteboardsService";
 import { bboxAnnotationQueries } from "@core/bbox-annotation";
 import { CodeMap, codeQueries } from "@core/code";
 import { memoQueries } from "@core/memo";
@@ -30,7 +30,7 @@ export const whiteboardQueries = {
     queryOptions({
       queryKey: whiteboardQueries.projectScope(projectId),
       queryFn: async () => {
-        const data = await WhiteboardService.getByProject({ projectId });
+        const data = await WhiteboardsService.getByProject({ projectId });
         return data.reduce<WhiteboardMap>((acc, whiteboard) => {
           acc[whiteboard.id] = whiteboard;
           return acc;
@@ -46,7 +46,7 @@ export const whiteboardQueries = {
     queryOptions({
       queryKey: [...whiteboardQueries.dataScope(projectId), whiteboardId] as const,
       queryFn: async () => {
-        const whiteboardData = await WhiteboardService.getDataById({ projectId, whiteboardId });
+        const whiteboardData = await WhiteboardsService.getDataById({ projectId, whiteboardId });
 
         whiteboardData.span_annotations.forEach((sa) => {
           queryClient.setQueryData(spanAnnotationQueries.byId(sa.project_id, sa.id).queryKey, sa);

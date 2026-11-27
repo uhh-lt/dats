@@ -1,4 +1,4 @@
-import { ApiKeyService } from "@api/services/ApiKeyService";
+import { UsersService } from "@api/services/UsersService";
 import { queryOptions } from "@tanstack/react-query";
 
 /**
@@ -14,7 +14,7 @@ export const apiKeyQueries = {
   list: () =>
     queryOptions({
       queryKey: [...apiKeyQueries.all(), "list"] as const,
-      queryFn: () => ApiKeyService.getByUser(),
+      queryFn: () => UsersService.getApiKeys(),
       staleTime: 1000 * 60 * 5,
     }),
 };

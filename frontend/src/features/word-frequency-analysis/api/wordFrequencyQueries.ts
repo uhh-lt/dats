@@ -1,4 +1,4 @@
-import { WordFrequencyService } from "@api/services/WordFrequencyService";
+import { WordFrequenciesService } from "@api/services/WordFrequenciesService";
 import { tableInfoQueries, toColumnInfos } from "@core/filter";
 import type { WordFrequencySearchRequest } from "@models/WordFrequencySearchRequest";
 import { infiniteQueryOptions, queryOptions } from "@tanstack/react-query";
@@ -20,7 +20,7 @@ export const wordFrequencyQueries = {
   tableInfo: (projectId: number) =>
     queryOptions({
       queryKey: tableInfoQueries.byDomain("wordFrequency", projectId),
-      queryFn: async () => toColumnInfos(await WordFrequencyService.getInfo({ projectId })),
+      queryFn: async () => toColumnInfos(await WordFrequenciesService.getColumns({ projectId })),
       staleTime: Infinity,
     }),
 
@@ -30,7 +30,10 @@ export const wordFrequencyQueries = {
     infiniteQueryOptions({
       queryKey: [...wordFrequencyQueries.searchScope(projectId), request] as const,
       queryFn: ({ pageParam }) =>
-        WordFrequencyService.computeWordFrequencies({ projectId, requestBody: { ...request, page_number: pageParam } }),
+        WordFrequenciesService.computeWordFrequencies({
+          projectId,
+          requestBody: { ...request, page_number: pageParam },
+        }),
       initialPageParam: 0,
       getNextPageParam: (_lastGroup, groups) => groups.length,
       staleTime: 1000 * 60 * 5,

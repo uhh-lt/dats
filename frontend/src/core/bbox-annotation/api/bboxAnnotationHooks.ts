@@ -1,5 +1,5 @@
 import { queryClient } from "@api/queryClient";
-import { BboxAnnotationService } from "@api/services/BboxAnnotationService";
+import { BboxAnnotationsService } from "@api/services/BboxAnnotationsService";
 import { BBoxAnnotationRead } from "@models/BBoxAnnotationRead";
 import { BBoxAnnotationUpdate } from "@models/BBoxAnnotationUpdate";
 import { useMutation } from "@tanstack/react-query";
@@ -12,7 +12,7 @@ import { bboxAnnotationQueries } from "./bboxAnnotationQueries";
 const useCreateBBoxAnnotation = () =>
   useMutation({
     mutationKey: [...bboxAnnotationQueries.all(), "createBBoxAnnotation"],
-    mutationFn: BboxAnnotationService.create,
+    mutationFn: BboxAnnotationsService.create,
     meta: {
       datsEvent: "BBOX_ANNOTATION_CREATED",
       successMessage: (bbox: BBoxAnnotationRead) => `Created Bounding Box Annotation ${bbox.id}`,
@@ -27,7 +27,7 @@ const useUpdateBBoxAnnotation = () =>
       bboxToUpdate: BBoxAnnotationRead | number;
       requestBody: BBoxAnnotationUpdate;
     }) =>
-      BboxAnnotationService.updateById({
+      BboxAnnotationsService.updateById({
         projectId: variables.projectId,
         bboxAnnotationId:
           typeof variables.bboxToUpdate === "number" ? variables.bboxToUpdate : variables.bboxToUpdate.id,
@@ -80,7 +80,7 @@ const useUpdateBBoxAnnotation = () =>
 const useUpdateBulkBBoxAnnotation = () =>
   useMutation({
     mutationKey: [...bboxAnnotationQueries.all(), "updateBulkBBoxAnnotation"],
-    mutationFn: BboxAnnotationService.updateBulk,
+    mutationFn: BboxAnnotationsService.updateBulk,
     meta: {
       datsEvent: "BBOX_ANNOTATION_UPDATED_BATCH",
       successMessage: (data: BBoxAnnotationRead[]) => `Updated ${data.length} BBox Annotations`,
@@ -91,7 +91,7 @@ const useDeleteBBoxAnnotation = () =>
   useMutation({
     mutationKey: [...bboxAnnotationQueries.optimisticMutationScope(), "deleteBBoxAnnotation"],
     mutationFn: (variables: { projectId: number; bboxToDelete: BBoxAnnotationRead | number }) =>
-      BboxAnnotationService.deleteById({
+      BboxAnnotationsService.deleteById({
         projectId: variables.projectId,
         bboxAnnotationId:
           typeof variables.bboxToDelete === "number" ? variables.bboxToDelete : variables.bboxToDelete.id,
@@ -129,7 +129,7 @@ const useDeleteBBoxAnnotation = () =>
 const useDeleteBulkBBoxAnnotation = () =>
   useMutation({
     mutationKey: [...bboxAnnotationQueries.all(), "deleteBulkBBoxAnnotation"],
-    mutationFn: BboxAnnotationService.deleteBulk,
+    mutationFn: BboxAnnotationsService.deleteBulk,
     meta: {
       datsEvent: "BBOX_ANNOTATION_DELETED_BATCH",
       successMessage: (data: BBoxAnnotationRead[]) => `Deleted ${data.length} Bounding Box Annotations`,

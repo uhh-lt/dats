@@ -1,5 +1,5 @@
 import { queryClient } from "@api/queryClient";
-import { SearchViewService } from "@api/services/SearchViewService";
+import { SearchViewsService } from "@api/services/SearchViewsService";
 import { SearchEntityType } from "@models/SearchEntityType";
 import { useMutation } from "@tanstack/react-query";
 import { SearchViewBase } from "../types/SearchViewBase";
@@ -15,7 +15,7 @@ export const createSearchViewHooks = <TView extends SearchViewBase>(entityType: 
   const useCreateView = () =>
     useMutation({
       mutationKey: [...searchViewQueries.all(), entityType, "createView"],
-      mutationFn: SearchViewService.create,
+      mutationFn: SearchViewsService.create,
       meta: {
         datsEvent: "SEARCH_VIEW_CREATED",
       },
@@ -24,7 +24,7 @@ export const createSearchViewHooks = <TView extends SearchViewBase>(entityType: 
   const useUpdateView = () =>
     useMutation({
       mutationKey: [...searchViewQueries.all(), entityType, "updateView"],
-      mutationFn: SearchViewService.updateById,
+      mutationFn: SearchViewsService.updateById,
       // Serialize updates per entity: rapid successive patches (e.g. toggling properties)
       // must reach the server in click order, since each patch is merged onto server state.
       scope: { id: `searchViews-update-${entityType}` },
@@ -56,7 +56,7 @@ export const createSearchViewHooks = <TView extends SearchViewBase>(entityType: 
   const useReorderViews = (projectId: number) =>
     useMutation({
       mutationKey: [...searchViewQueries.all(), entityType, "reorderViews"],
-      mutationFn: SearchViewService.reorder,
+      mutationFn: SearchViewsService.reorder,
       scope: { id: `searchViews-order-${projectId}` },
       onMutate: async ({ requestBody }) => {
         const key = searchViewQueries.byProject<TView>(entityType, projectId).queryKey;
@@ -93,7 +93,7 @@ export const createSearchViewHooks = <TView extends SearchViewBase>(entityType: 
   const useDeleteView = () =>
     useMutation({
       mutationKey: [...searchViewQueries.all(), entityType, "deleteView"],
-      mutationFn: SearchViewService.deleteById,
+      mutationFn: SearchViewsService.deleteById,
       meta: {
         datsEvent: "SEARCH_VIEW_DELETED",
       },

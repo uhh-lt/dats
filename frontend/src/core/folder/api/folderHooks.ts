@@ -1,4 +1,4 @@
-import { FolderService } from "@api/services/FolderService";
+import { FoldersService } from "@api/services/FoldersService";
 import { FolderRead } from "@models/FolderRead";
 import { FolderType } from "@models/FolderType";
 import { useAppSelector } from "@store/storeHooks";
@@ -47,7 +47,7 @@ const useGetSdocFolder = (folderId: number | null | undefined) =>
 const useCreateFolder = () =>
   useMutation({
     mutationKey: [...folderQueries.all(), "createFolder"],
-    mutationFn: FolderService.create,
+    mutationFn: FoldersService.create,
     meta: {
       datsEvent: "FOLDER_CREATED",
       successMessage: (folder: FolderRead) => `Created folder ${folder.name}`,
@@ -57,7 +57,7 @@ const useCreateFolder = () =>
 const useUpdateFolder = () =>
   useMutation({
     mutationKey: [...folderQueries.all(), "updateFolder"],
-    mutationFn: FolderService.updateById,
+    mutationFn: FoldersService.updateById,
     meta: {
       datsEvent: "FOLDER_UPDATED",
       successMessage: (folder: FolderRead) => `Updated folder ${folder.name}`,
@@ -67,7 +67,7 @@ const useUpdateFolder = () =>
 const useUpdateFoldersBulk = () =>
   useMutation({
     mutationKey: [...folderQueries.all(), "updateFoldersBulk"],
-    mutationFn: FolderService.updateBulk,
+    mutationFn: FoldersService.updateBulk,
     meta: {
       datsEvent: "FOLDER_UPDATED_BATCH",
       successMessage: (data: FolderRead[]) => `Updated ${data.length} folder${data.length === 1 ? "" : "s"}!`,
@@ -77,7 +77,7 @@ const useUpdateFoldersBulk = () =>
 const useDeleteFolder = () =>
   useMutation({
     mutationKey: [...folderQueries.all(), "deleteFolder"],
-    mutationFn: FolderService.deleteById,
+    mutationFn: FoldersService.deleteById,
     meta: {
       datsEvent: "FOLDER_DELETED",
       successMessage: (folder: FolderRead) => `Deleted folder ${folder.name}`,

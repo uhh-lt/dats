@@ -38,7 +38,7 @@ A plain CRUD mutation needs **no `onSuccess` cache logic** — just a meta tag:
 
 ```ts
 useMutation({
-  mutationFn: CodeService.create,
+  mutationFn: CodesService.create,
   meta: { datsEvent: "CODE_CREATED", successMessage: "Created code" },
 });
 ```

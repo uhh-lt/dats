@@ -1,4 +1,4 @@
-import { PromptService } from "@api/services/PromptService";
+import { PromptsService } from "@api/services/PromptsService";
 import type { OutputFormat } from "@models/OutputFormat";
 import type { PromptLanguage } from "@models/PromptLanguage";
 import type { PromptPreviewRequest } from "@models/PromptPreviewRequest";
@@ -28,7 +28,7 @@ export const promptQueries = {
     queryOptions({
       queryKey: promptQueries.projectScope(projectId),
       queryFn: async () => {
-        const prompts = await PromptService.getByProject({ projectId });
+        const prompts = await PromptsService.getByProject({ projectId });
         return prompts.reduce<PromptMap>((acc, prompt) => {
           acc[prompt.id] = prompt;
           return acc;
@@ -42,7 +42,7 @@ export const promptQueries = {
   taskInfo: (projectId: number | undefined, taskType: TaskType | undefined) =>
     queryOptions({
       queryKey: [...promptQueries.taskInfoScope(projectId), taskType] as const,
-      queryFn: !projectId || !taskType ? skipToken : () => PromptService.getTaskInfo({ projectId, taskType }),
+      queryFn: !projectId || !taskType ? skipToken : () => PromptsService.getTaskInfo({ projectId, taskType }),
       staleTime: Infinity,
     }),
 
@@ -58,7 +58,7 @@ export const promptQueries = {
       queryFn:
         !projectId || !outputFormat || !language
           ? skipToken
-          : () => PromptService.getDefault({ projectId, outputFormat, language }),
+          : () => PromptsService.getDefault({ projectId, outputFormat, language }),
       staleTime: Infinity,
     }),
 
@@ -68,7 +68,7 @@ export const promptQueries = {
     queryOptions({
       queryKey: [...promptQueries.previewScope(projectId), request] as const,
       queryFn:
-        !projectId || !request ? skipToken : () => PromptService.computePreview({ projectId, requestBody: request }),
+        !projectId || !request ? skipToken : () => PromptsService.computePreview({ projectId, requestBody: request }),
       retry: false,
       placeholderData: keepPreviousData,
     }),

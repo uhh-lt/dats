@@ -1,4 +1,4 @@
-import { SentenceAnnotationService } from "@api/services/SentenceAnnotationService";
+import { SentenceAnnotationsService } from "@api/services/SentenceAnnotationsService";
 import { SearchService } from "@api/services/SearchService";
 import { tableInfoQueries, toColumnInfos } from "@core/filter";
 import type { QueryRequest_SentAnnoColumns_ } from "@models/QueryRequest_SentAnnoColumns_";
@@ -33,7 +33,7 @@ export const sentenceAnnotationQueries = {
       queryFn:
         !projectId || !sentenceAnnoId
           ? skipToken
-          : () => SentenceAnnotationService.getById({ projectId, sentenceAnnotationId: sentenceAnnoId }),
+          : () => SentenceAnnotationsService.getById({ projectId, sentenceAnnotationId: sentenceAnnoId }),
       staleTime: 1000 * 60 * 5,
     }),
 
@@ -49,13 +49,13 @@ export const sentenceAnnotationQueries = {
       queryFn:
         !projectId || !sdocId || !userId
           ? skipToken
-          : () => SentenceAnnotationService.getPerSentence({ projectId, userId, sdocId }),
+          : () => SentenceAnnotationsService.getPerSentence({ projectId, userId, sdocId }),
     }),
   // the column infos of the sentence annotation filter table
   tableInfo: (projectId: number) =>
     queryOptions({
       queryKey: tableInfoQueries.byDomain("sentence", projectId),
-      queryFn: async () => toColumnInfos(await SearchService.searchSentenceAnnotationInfo({ projectId })),
+      queryFn: async () => toColumnInfos(await SearchService.searchSentenceAnnotationColumns({ projectId })),
       staleTime: Infinity,
     }),
 

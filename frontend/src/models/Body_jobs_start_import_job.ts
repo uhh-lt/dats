@@ -3,7 +3,7 @@
 /* tslint:disable */
 /* eslint-disable */
 import type { ImportJobType } from "./ImportJobType";
-export type Body_job_start_import_job = {
+export type Body_jobs_start_import_job = {
   /**
    * The type of the import job
    */

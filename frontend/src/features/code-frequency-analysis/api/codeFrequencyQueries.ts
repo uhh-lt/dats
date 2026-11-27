@@ -1,4 +1,4 @@
-import { CodeFrequencyService } from "@api/services/CodeFrequencyService";
+import { CodeFrequenciesService } from "@api/services/CodeFrequenciesService";
 import { DocType } from "@models/DocType";
 import { queryOptions, skipToken } from "@tanstack/react-query";
 
@@ -20,7 +20,7 @@ export const codeFrequencyQueries = {
     queryOptions({
       queryKey: [...codeFrequencyQueries.frequenciesScope(projectId), userIds, codeIds, docTypes] as const,
       queryFn: () =>
-        CodeFrequencyService.computeCodeFrequencies({
+        CodeFrequenciesService.computeCodeFrequencies({
           projectId,
           requestBody: { user_ids: userIds, code_ids: codeIds, doctypes: docTypes },
         }),
@@ -45,7 +45,7 @@ export const codeFrequencyQueries = {
       queryFn: !codeId
         ? skipToken
         : () =>
-            CodeFrequencyService.computeCodeOccurrences({
+            CodeFrequenciesService.computeCodeOccurrences({
               projectId,
               requestBody: { code_id: codeId, return_children: returnChildren, user_ids: userIds, doctypes: docTypes },
             }),

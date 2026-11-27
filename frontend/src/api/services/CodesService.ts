@@ -2,18 +2,17 @@
 /* istanbul ignore file */
 /* tslint:disable */
 /* eslint-disable */
-import type { SpanAnnotationRead } from "@models/SpanAnnotationRead";
-import type { SpanGroupCreate } from "@models/SpanGroupCreate";
-import type { SpanGroupRead } from "@models/SpanGroupRead";
-import type { SpanGroupUpdate } from "@models/SpanGroupUpdate";
-import type { SpanGroupWithAnnotationsRead } from "@models/SpanGroupWithAnnotationsRead";
+import type { CodeCreate } from "@models/CodeCreate";
+import type { CodeRead } from "@models/CodeRead";
+import type { CodeUpdate } from "@models/CodeUpdate";
+import type { CodeUpdateBulk } from "@models/CodeUpdateBulk";
 import type { CancelablePromise } from "../core/CancelablePromise";
 import { OpenAPI } from "../core/OpenAPI";
 import { request as __request } from "../core/request";
-export class SpanGroupService {
+export class CodesService {
   /**
-   * Creates a new SpanGroup and returns it with the generated ID.
-   * @returns SpanGroupRead Successful Response
+   * Creates a new Code and returns it with the generated ID.
+   * @returns CodeRead Successful Response
    * @throws ApiError
    */
   public static create({
@@ -21,11 +20,11 @@ export class SpanGroupService {
     requestBody,
   }: {
     projectId: number;
-    requestBody: SpanGroupCreate;
-  }): CancelablePromise<SpanGroupRead> {
+    requestBody: CodeCreate;
+  }): CancelablePromise<CodeRead> {
     return __request(OpenAPI, {
       method: "PUT",
-      url: "/projects/{project_id}/span-groups",
+      url: "/projects/{project_id}/codes",
       path: {
         project_id: projectId,
       },
@@ -41,28 +40,16 @@ export class SpanGroupService {
     });
   }
   /**
-   * Returns the SpanGroups of the User with their SpanAnnotations, optionally only those in the SourceDocument
-   * @returns SpanGroupWithAnnotationsRead Successful Response
+   * Returns all Codes of the Project
+   * @returns CodeRead Successful Response
    * @throws ApiError
    */
-  public static getByProject({
-    projectId,
-    userId,
-    sdocId,
-  }: {
-    projectId: number;
-    userId: number;
-    sdocId?: number | null;
-  }): CancelablePromise<Array<SpanGroupWithAnnotationsRead>> {
+  public static getByProject({ projectId }: { projectId: number }): CancelablePromise<Array<CodeRead>> {
     return __request(OpenAPI, {
       method: "GET",
-      url: "/projects/{project_id}/span-groups",
+      url: "/projects/{project_id}/codes",
       path: {
         project_id: projectId,
-      },
-      query: {
-        user_id: userId,
-        sdoc_id: sdocId,
       },
       errors: {
         400: `The request breaks a rule of the domain`,
@@ -74,23 +61,17 @@ export class SpanGroupService {
     });
   }
   /**
-   * Returns the SpanGroup with the given ID.
-   * @returns SpanGroupRead Successful Response
+   * Returns the Code with the given ID.
+   * @returns CodeRead Successful Response
    * @throws ApiError
    */
-  public static getById({
-    projectId,
-    spanGroupId,
-  }: {
-    projectId: number;
-    spanGroupId: number;
-  }): CancelablePromise<SpanGroupRead> {
+  public static getById({ projectId, codeId }: { projectId: number; codeId: number }): CancelablePromise<CodeRead> {
     return __request(OpenAPI, {
       method: "GET",
-      url: "/projects/{project_id}/span-groups/{span_group_id}",
+      url: "/projects/{project_id}/codes/{code_id}",
       path: {
         project_id: projectId,
-        span_group_id: spanGroupId,
+        code_id: codeId,
       },
       errors: {
         400: `The request breaks a rule of the domain`,
@@ -102,25 +83,25 @@ export class SpanGroupService {
     });
   }
   /**
-   * Updates the SpanGroup with the given ID.
-   * @returns SpanGroupRead Successful Response
+   * Updates the Code with the given ID.
+   * @returns CodeRead Successful Response
    * @throws ApiError
    */
   public static updateById({
     projectId,
-    spanGroupId,
+    codeId,
     requestBody,
   }: {
     projectId: number;
-    spanGroupId: number;
-    requestBody: SpanGroupUpdate;
-  }): CancelablePromise<SpanGroupRead> {
+    codeId: number;
+    requestBody: CodeUpdate;
+  }): CancelablePromise<CodeRead> {
     return __request(OpenAPI, {
       method: "PATCH",
-      url: "/projects/{project_id}/span-groups/{span_group_id}",
+      url: "/projects/{project_id}/codes/{code_id}",
       path: {
         project_id: projectId,
-        span_group_id: spanGroupId,
+        code_id: codeId,
       },
       body: requestBody,
       mediaType: "application/json",
@@ -134,23 +115,17 @@ export class SpanGroupService {
     });
   }
   /**
-   * Deletes the SpanGroup with the given ID.
-   * @returns SpanGroupRead Successful Response
+   * Deletes the Code with the given ID.
+   * @returns CodeRead Successful Response
    * @throws ApiError
    */
-  public static deleteById({
-    projectId,
-    spanGroupId,
-  }: {
-    projectId: number;
-    spanGroupId: number;
-  }): CancelablePromise<SpanGroupRead> {
+  public static deleteById({ projectId, codeId }: { projectId: number; codeId: number }): CancelablePromise<CodeRead> {
     return __request(OpenAPI, {
       method: "DELETE",
-      url: "/projects/{project_id}/span-groups/{span_group_id}",
+      url: "/projects/{project_id}/codes/{code_id}",
       path: {
         project_id: projectId,
-        span_group_id: spanGroupId,
+        code_id: codeId,
       },
       errors: {
         400: `The request breaks a rule of the domain`,
@@ -162,24 +137,25 @@ export class SpanGroupService {
     });
   }
   /**
-   * Returns all SpanAnnotations in the SpanGroup with the given ID
-   * @returns SpanAnnotationRead Successful Response
+   * Updates the Codes with the given IDs.
+   * @returns CodeRead Successful Response
    * @throws ApiError
    */
-  public static getAnnotations({
+  public static updateBulk({
     projectId,
-    spanGroupId,
+    requestBody,
   }: {
     projectId: number;
-    spanGroupId: number;
-  }): CancelablePromise<Array<SpanAnnotationRead>> {
+    requestBody: Array<CodeUpdateBulk>;
+  }): CancelablePromise<Array<CodeRead>> {
     return __request(OpenAPI, {
-      method: "GET",
-      url: "/projects/{project_id}/span-groups/{span_group_id}/span-annotations",
+      method: "PATCH",
+      url: "/projects/{project_id}/codes/bulk",
       path: {
         project_id: projectId,
-        span_group_id: spanGroupId,
       },
+      body: requestBody,
+      mediaType: "application/json",
       errors: {
         400: `The request breaks a rule of the domain`,
         403: `The user is no member of the project, or the feature is disabled`,

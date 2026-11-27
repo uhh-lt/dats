@@ -1,4 +1,4 @@
-import { JobService } from "@api/services/JobService";
+import { JobsService } from "@api/services/JobsService";
 import { LlmAssistantJobRead } from "@models/LlmAssistantJobRead";
 import { TaskType } from "@models/TaskType";
 import { useMutation, useQuery } from "@tanstack/react-query";
@@ -7,7 +7,7 @@ import { ExistingAnnotationCountParams, llmAssistantQueries } from "./llmAssista
 const useStartLLMAssistantJob = () =>
   useMutation({
     mutationKey: [...llmAssistantQueries.job.all(), "start"],
-    mutationFn: JobService.startLlmAssistantJob,
+    mutationFn: JobsService.startLlmAssistantJob,
     meta: {
       datsEvent: "JOB_UPDATED",
       successMessage: (data: LlmAssistantJobRead) =>
