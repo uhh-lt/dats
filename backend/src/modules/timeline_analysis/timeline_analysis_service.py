@@ -17,6 +17,7 @@ from core.annotation.sentence_annotation_orm import SentenceAnnotationORM
 from core.annotation.span_annotation_crud import crud_span_anno
 from core.annotation.span_annotation_orm import SpanAnnotationORM
 from core.doc.source_document_orm import SourceDocumentORM
+from core.metadata.project_metadata_crud import crud_project_meta
 from core.metadata.source_document_metadata_orm import SourceDocumentMetadataORM
 from core.search.sdoc_search.sdoc_search_columns import SdocColumns
 from modules.timeline_analysis.timeline_analysis_crud import (
@@ -65,6 +66,13 @@ class TimelineAnalysisService(metaclass=SingletonMeta):
             exclude_unset=True, exclude={"concepts", "settings"}
         )
         if update_dto.settings is not None:
+            # a JSON column has no foreign key: the date metadata must be one of
+            # the project (raises NoSuchElementError)
+            date_metadata_id = update_dto.settings.date_metadata_id
+            if date_metadata_id is not None:
+                crud_project_meta.read(
+                    db=db, project_id=project_id, id=date_metadata_id
+                )
             update_data["settings"] = jsonable_encoder(update_dto.settings)
         if update_data:
             db_obj = crud_timeline_analysis.update(
