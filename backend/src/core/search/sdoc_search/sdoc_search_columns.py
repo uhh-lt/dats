@@ -212,7 +212,9 @@ class SdocColumns(str, AbstractColumns):
                 folders = crud_folder.read_by_ids(db, project_id=project_id, ids=ids)
                 return [folder.name for folder in folders]
             case SdocColumns.USER_ID_LIST:
-                users = crud_user.read_by_ids(db, ids=ids)
+                users = crud_user.read_by_project_and_ids(
+                    db, project_id=project_id, ids=ids
+                )
                 return [user.email for user in users]
             case _:
                 raise NotImplementedError(f"Cannot resolve ID for {self}!")
@@ -236,7 +238,9 @@ class SdocColumns(str, AbstractColumns):
                 )
                 return [folder.id for folder in result]
             case SdocColumns.USER_ID_LIST:
-                result = crud_user.read_by_emails(db, emails=names)
+                result = crud_user.read_by_project_and_emails(
+                    db, project_id=project_id, emails=names
+                )
                 return [user.id for user in result]
             case _:
                 raise NotImplementedError(f"Cannot resolve name for {self}!")
