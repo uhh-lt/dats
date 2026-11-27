@@ -65,8 +65,7 @@ ARGUMENTS: dict[str, Callable[[TenantRows], dict[str, Any]]] = {
         "params": {"output_format": "tags", "language": "en"}
     },
     "POST /projects/{project_id}/search/source-documents": lambda rows: {
-        "params": {"search_query": "", "expert_mode": False, "highlight": False},
-        "json": {"filter": _NO_FILTER, "sorts": []},
+        "json": {"filter": _NO_FILTER},
     },
     "POST /projects/{project_id}/search/memos": lambda rows: {
         "json": {"filter": _NO_FILTER}
@@ -93,15 +92,15 @@ ARGUMENTS: dict[str, Callable[[TenantRows], dict[str, Any]]] = {
         "json": {"filter": _NO_FILTER, "group_by": {"field": "BB_USER_ID"}}
     },
     "POST /projects/{project_id}/span-annotations/count": lambda rows: {
-        "params": {"user_id": rows["adoc"].user_id},
         "json": {
+            "user_id": rows["adoc"].user_id,
             "sdoc_ids": [rows["sdoc"].id],
             "code_ids": [rows["code"].id, rows["child_code"].id],
         },
     },
     "POST /projects/{project_id}/sentence-annotations/count": lambda rows: {
-        "params": {"user_id": rows["adoc"].user_id},
         "json": {
+            "user_id": rows["adoc"].user_id,
             "sdoc_ids": [rows["sdoc"].id],
             "code_ids": [rows["code"].id, rows["child_code"].id],
         },
@@ -110,8 +109,7 @@ ARGUMENTS: dict[str, Callable[[TenantRows], dict[str, Any]]] = {
         "json": {"sdoc_ids": [rows["sdoc"].id, rows["bare_sdoc"].id], "tag_ids": None}
     },
     "POST /projects/{project_id}/doc-processing/statuses": lambda rows: {
-        "params": {"doctype": "text", "page": 0, "page_size": 10},
-        "json": [],
+        "json": {"doctype": "text", "page_number": 0, "page_size": 10},
     },
     "POST /projects/{project_id}/agreements": lambda rows: {
         "json": {
@@ -134,20 +132,24 @@ ARGUMENTS: dict[str, Callable[[TenantRows], dict[str, Any]]] = {
         }
     },
     "POST /projects/{project_id}/agreements/segment-texts": lambda rows: {
-        "json": [{"sdoc_id": rows["sdoc"].id, "begin": 0, "end": 5}]
+        "json": {"ranges": [{"sdoc_id": rows["sdoc"].id, "begin": 0, "end": 5}]}
     },
     "POST /projects/{project_id}/llm-assistant/existing-annotation-counts": (
         lambda rows: {
-            "params": {
+            "json": {
                 "task_type": "ANNOTATION",
                 "virtual_user_id": rows["virtual_user"].id,
+                "sdoc_ids": [rows["sdoc"].id],
+                "code_ids": [rows["code"].id],
             },
-            "json": {"sdoc_ids": [rows["sdoc"].id], "code_ids": [rows["code"].id]},
         }
     ),
     "POST /projects/{project_id}/document-samples": lambda rows: {
-        "params": {"n": 10, "frac": 1.0},
-        "json": [[rows["tag"].id, rows["child_tag"].id]],
+        "json": {
+            "tag_groups": [[rows["tag"].id, rows["child_tag"].id]],
+            "n": 10,
+            "frac": 1.0,
+        },
     },
     "POST /projects/{project_id}/classifiers/dataset-statistics": lambda rows: {
         "json": {
@@ -167,48 +169,60 @@ ARGUMENTS: dict[str, Callable[[TenantRows], dict[str, Any]]] = {
         }
     },
     "POST /projects/{project_id}/code-frequencies/occurrences": lambda rows: {
-        "params": {"code_id": rows["code"].id, "return_children": True},
-        "json": {"user_ids": [rows["adoc"].user_id], "doctypes": ["text"]},
+        "json": {
+            "code_id": rows["code"].id,
+            "return_children": True,
+            "user_ids": [rows["adoc"].user_id],
+            "doctypes": ["text"],
+        },
     },
     "POST /projects/{project_id}/code-statistics": lambda rows: {
-        "params": {"code_id": rows["code"].id},
-        "json": [rows["sdoc"].id, rows["bare_sdoc"].id],
+        "json": {
+            "code_id": rows["code"].id,
+            "sdoc_ids": [rows["sdoc"].id, rows["bare_sdoc"].id],
+        },
     },
     "POST /projects/{project_id}/tag-statistics": lambda rows: {
-        "json": [rows["sdoc"].id, rows["bare_sdoc"].id]
+        "json": {"sdoc_ids": [rows["sdoc"].id, rows["bare_sdoc"].id]}
     },
     "POST /projects/{project_id}/word-frequencies": lambda rows: {
-        "params": {"page": 0, "page_size": 10},
-        "json": {"filter": _NO_FILTER, "sorts": []},
+        "json": {"filter": _NO_FILTER, "page_number": 0, "page_size": 10},
     },
     "POST /projects/{project_id}/word-frequencies/export": lambda rows: {
-        "json": {"filter": _NO_FILTER, "sorts": []}
+        "json": {"filter": _NO_FILTER}
     },
     "POST /projects/{project_id}/prompts/examples": lambda rows: {
         "json": {"kind": "SPAN", "annotation_ids": [rows["span"].id]}
     },
     "POST /projects/{project_id}/keyword-statistics": lambda rows: {
-        "json": [rows["sdoc"].id, rows["bare_sdoc"].id]
+        "json": {"sdoc_ids": [rows["sdoc"].id, rows["bare_sdoc"].id]}
     },
     "POST /projects/{project_id}/similarity-search/sentences": lambda rows: {
-        "params": {"top_k": 10, "threshold": 0.0},
-        "json": {"query": "text", "filter": _NO_FILTER},
+        "json": {
+            "query": "text",
+            "top_k": 10,
+            "threshold": 0.0,
+            "filter": _NO_FILTER,
+        },
     },
     "POST /projects/{project_id}/similarity-search/images": lambda rows: {
-        "params": {"top_k": 10, "threshold": 0.0},
-        "json": {"query": "text", "filter": _NO_FILTER},
+        "json": {
+            "query": "text",
+            "top_k": 10,
+            "threshold": 0.0,
+            "filter": _NO_FILTER,
+        },
     },
     "POST /projects/{project_id}/perspectives/aspects/{aspect_id}/visualization": (
         lambda rows: {
-            "params": {"search_query": ""},
-            "json": {"filter": _NO_FILTER, "sorts": []},
+            "json": {"search_query": "", "filter": _NO_FILTER},
         }
     ),
     "POST /projects/{project_id}/experiments/{experiment_id}/runs/{run_id}/export-log": (
-        lambda rows: {"params": {"export_format": "json"}}
+        lambda rows: {"json": {"export_format": "json"}}
     ),
     "POST /projects/{project_id}/search-annotate/candidates": lambda rows: {
-        "params": {"query": "text"}
+        "json": {"query": "text"}
     },
     "POST /projects/{project_id}/prompts/preview": lambda rows: {
         "json": {

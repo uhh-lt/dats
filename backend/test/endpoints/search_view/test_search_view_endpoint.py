@@ -663,8 +663,10 @@ def test_reorder_search_views(
 
     response = client.patch(
         f"{_views_url(project.id)}/reorder",
-        params={"entity_type": SearchEntityType.MEMO.value},
-        json={"view_ids": list(reversed(ids))},
+        json={
+            "entity_type": SearchEntityType.MEMO.value,
+            "view_ids": list(reversed(ids)),
+        },
     )
     assert response.status_code == 200, response.text
     reordered = [MemoSearchViewRead.model_validate(v) for v in response.json()]
@@ -685,8 +687,7 @@ def test_reorder_search_views_rejects_incomplete_id_set(
 
     response = client.patch(
         f"{_views_url(project.id)}/reorder",
-        params={"entity_type": SearchEntityType.MEMO.value},
-        json={"view_ids": ids},
+        json={"entity_type": SearchEntityType.MEMO.value, "view_ids": ids},
     )
     assert response.status_code == 400, response.text
 
@@ -702,8 +703,7 @@ def test_reorder_search_views_rejects_a_view_of_another_project(
     def reorder(view_id: int):
         return client.patch(
             f"{_views_url(own['project'].id)}/reorder",
-            params={"entity_type": SearchEntityType.MEMO.value},
-            json={"view_ids": [view_id]},
+            json={"entity_type": SearchEntityType.MEMO.value, "view_ids": [view_id]},
         )
 
     response = reorder(foreign["search_view"].id)
@@ -723,8 +723,10 @@ def test_reorder_search_views_rejects_duplicate_ids(
 
     response = client.patch(
         f"{_views_url(project.id)}/reorder",
-        params={"entity_type": SearchEntityType.MEMO.value},
-        json={"view_ids": [duplicate, duplicate]},
+        json={
+            "entity_type": SearchEntityType.MEMO.value,
+            "view_ids": [duplicate, duplicate],
+        },
     )
     assert response.status_code == 422, response.text
 
@@ -738,8 +740,7 @@ def test_reorder_search_views_by_non_member_forbidden(
     """A non-member cannot reorder the project's views (HTTP 403)."""
     response = non_member_client.patch(
         f"{_views_url(test_project.id)}/reorder",
-        params={"entity_type": SearchEntityType.MEMO.value},
-        json={"view_ids": []},
+        json={"entity_type": SearchEntityType.MEMO.value, "view_ids": []},
     )
     assert response.status_code == 403, response.text
 

@@ -2,7 +2,7 @@
 /* istanbul ignore file */
 /* tslint:disable */
 /* eslint-disable */
-import type { Body_sentenceAnnotation_count } from "@models/Body_sentenceAnnotation_count";
+import type { SentenceAnnotationCountRequest } from "@models/SentenceAnnotationCountRequest";
 import type { SentenceAnnotationCreate } from "@models/SentenceAnnotationCreate";
 import type { SentenceAnnotationRead } from "@models/SentenceAnnotationRead";
 import type { SentenceAnnotationUpdate } from "@models/SentenceAnnotationUpdate";
@@ -20,23 +20,15 @@ export class SentenceAnnotationService {
   public static create({
     projectId,
     requestBody,
-    userId,
   }: {
     projectId: number;
     requestBody: SentenceAnnotationCreate;
-    /**
-     * The current user (default) or a virtual user of the project
-     */
-    userId?: number | null;
   }): CancelablePromise<SentenceAnnotationRead> {
     return __request(OpenAPI, {
       method: "PUT",
       url: "/projects/{project_id}/sentence-annotations",
       path: {
         project_id: projectId,
-      },
-      query: {
-        user_id: userId,
       },
       body: requestBody,
       mediaType: "application/json",
@@ -93,23 +85,15 @@ export class SentenceAnnotationService {
   public static createBulk({
     projectId,
     requestBody,
-    userId,
   }: {
     projectId: number;
     requestBody: Array<SentenceAnnotationCreate>;
-    /**
-     * The current user (default) or a virtual user of the project
-     */
-    userId?: number | null;
   }): CancelablePromise<Array<SentenceAnnotationRead>> {
     return __request(OpenAPI, {
       method: "PUT",
       url: "/projects/{project_id}/sentence-annotations/bulk",
       path: {
         project_id: projectId,
-      },
-      query: {
-        user_id: userId,
       },
       body: requestBody,
       mediaType: "application/json",
@@ -308,21 +292,16 @@ export class SentenceAnnotationService {
    */
   public static count({
     projectId,
-    userId,
     requestBody,
   }: {
     projectId: number;
-    userId: number;
-    requestBody: Body_sentenceAnnotation_count;
+    requestBody: SentenceAnnotationCountRequest;
   }): CancelablePromise<Record<string, number>> {
     return __request(OpenAPI, {
       method: "POST",
       url: "/projects/{project_id}/sentence-annotations/count",
       path: {
         project_id: projectId,
-      },
-      query: {
-        user_id: userId,
       },
       body: requestBody,
       mediaType: "application/json",

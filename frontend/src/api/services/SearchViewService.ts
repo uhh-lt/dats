@@ -86,11 +86,9 @@ export class SearchViewService {
    */
   public static reorder({
     projectId,
-    entityType,
     requestBody,
   }: {
     projectId: number;
-    entityType: SearchEntityType;
     requestBody: SearchViewReorder;
   }): CancelablePromise<Array<MemoSearchViewRead | SpanSearchViewRead | SentenceSearchViewRead | BBoxSearchViewRead>> {
     return __request(OpenAPI, {
@@ -98,9 +96,6 @@ export class SearchViewService {
       url: "/projects/{project_id}/search-views/reorder",
       path: {
         project_id: projectId,
-      },
-      query: {
-        entity_type: entityType,
       },
       body: requestBody,
       mediaType: "application/json",

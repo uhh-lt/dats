@@ -15,7 +15,7 @@ def _create_api_key(
 ) -> ApiKeyCreatedResponse:
     """PUT /api-keys and return the validated response."""
     params: dict[str, str] = {"name": name, "expires_in": expires_in.value}
-    response = client.put("/users/me/api-keys", params=params)
+    response = client.put("/users/me/api-keys", json=params)
     assert response.status_code == 200, response.text
     return ApiKeyCreatedResponse.model_validate(response.json())
 
@@ -76,7 +76,7 @@ def test_create_api_key_appears_in_list_without_full_key(client: TestClient):
 def test_create_api_key_without_name_is_rejected(client: TestClient):
     """The required query parameter `name` is missing -> 422."""
     response = client.put(
-        "/users/me/api-keys", params={"expires_in": ExpiryDuration.NEVER.value}
+        "/users/me/api-keys", json={"expires_in": ExpiryDuration.NEVER.value}
     )
 
     assert response.status_code == 422, response.text
@@ -84,7 +84,7 @@ def test_create_api_key_without_name_is_rejected(client: TestClient):
 
 def test_create_api_key_without_expires_in_is_rejected(client: TestClient):
     """The required query parameter `expires_in` is missing -> 422."""
-    response = client.put("/users/me/api-keys", params={"name": "No Expiry Key"})
+    response = client.put("/users/me/api-keys", json={"name": "No Expiry Key"})
 
     assert response.status_code == 422, response.text
 
@@ -92,7 +92,7 @@ def test_create_api_key_without_expires_in_is_rejected(client: TestClient):
 def test_create_api_key_with_invalid_expires_in_is_rejected(client: TestClient):
     """An expires_in value outside the ExpiryDuration enum -> 422."""
     response = client.put(
-        "/users/me/api-keys", params={"name": "Bad Key", "expires_in": "forever"}
+        "/users/me/api-keys", json={"name": "Bad Key", "expires_in": "forever"}
     )
 
     assert response.status_code == 422, response.text

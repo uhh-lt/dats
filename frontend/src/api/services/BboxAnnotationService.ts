@@ -18,23 +18,15 @@ export class BboxAnnotationService {
   public static create({
     projectId,
     requestBody,
-    userId,
   }: {
     projectId: number;
     requestBody: BBoxAnnotationCreate;
-    /**
-     * The current user (default) or a virtual user of the project
-     */
-    userId?: number | null;
   }): CancelablePromise<BBoxAnnotationRead> {
     return __request(OpenAPI, {
       method: "PUT",
       url: "/projects/{project_id}/bbox-annotations",
       path: {
         project_id: projectId,
-      },
-      query: {
-        user_id: userId,
       },
       body: requestBody,
       mediaType: "application/json",

@@ -13,7 +13,6 @@ import type { DuplicateFinderJobStart } from "@models/DuplicateFinderJobStart";
 import type { ExportJobRead } from "@models/ExportJobRead";
 import type { ExportJobStart } from "@models/ExportJobStart";
 import type { ImportJobRead } from "@models/ImportJobRead";
-import type { ImportJobType } from "@models/ImportJobType";
 import type { LlmAssistantJobRead } from "@models/LlmAssistantJobRead";
 import type { LlmAssistantJobStart } from "@models/LlmAssistantJobStart";
 import type { PerspectivesJobRead } from "@models/PerspectivesJobRead";
@@ -31,11 +30,9 @@ export class JobService {
    */
   public static startImportJob({
     projectId,
-    importJobType,
     formData,
   }: {
     projectId: number;
-    importJobType: ImportJobType;
     formData: Body_job_start_import_job;
   }): CancelablePromise<ImportJobRead> {
     return __request(OpenAPI, {
@@ -43,9 +40,6 @@ export class JobService {
       url: "/projects/{project_id}/jobs/import",
       path: {
         project_id: projectId,
-      },
-      query: {
-        import_job_type: importJobType,
       },
       formData: formData,
       mediaType: "multipart/form-data",

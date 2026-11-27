@@ -3,8 +3,9 @@
 /* tslint:disable */
 /* eslint-disable */
 import type { Filter_WordFrequencyColumns_ } from "./Filter_WordFrequencyColumns_";
-import type { Sort_WordFrequencyColumns_ } from "./Sort_WordFrequencyColumns_";
-export type Body_wordFrequency_export = {
+export type WordFrequencyExportRequest = {
+  /**
+   * Column filter tree
+   */
   filter: Filter_WordFrequencyColumns_;
-  sorts: Array<Sort_WordFrequencyColumns_>;
 };

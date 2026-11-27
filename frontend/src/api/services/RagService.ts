@@ -2,8 +2,8 @@
 /* istanbul ignore file */
 /* tslint:disable */
 /* eslint-disable */
-import type { Body_rag_compute_answers } from "@models/Body_rag_compute_answers";
 import type { ChatSessionResponse } from "@models/ChatSessionResponse";
+import type { RAGAnswerRequest } from "@models/RAGAnswerRequest";
 import type { CancelablePromise } from "../core/CancelablePromise";
 import { OpenAPI } from "../core/OpenAPI";
 import { request as __request } from "../core/request";
@@ -15,30 +15,16 @@ export class RagService {
    */
   public static computeAnswers({
     projectId,
-    topK,
-    threshold,
-    model,
     requestBody,
-    sessionId,
   }: {
     projectId: number;
-    topK: number;
-    threshold: number;
-    model: string;
-    requestBody: Body_rag_compute_answers;
-    sessionId?: string | null;
+    requestBody: RAGAnswerRequest;
   }): CancelablePromise<ChatSessionResponse> {
     return __request(OpenAPI, {
       method: "POST",
       url: "/projects/{project_id}/rag/answers",
       path: {
         project_id: projectId,
-      },
-      query: {
-        top_k: topK,
-        threshold: threshold,
-        model: model,
-        session_id: sessionId,
       },
       body: requestBody,
       mediaType: "application/json",

@@ -2,11 +2,11 @@
 /* istanbul ignore file */
 /* tslint:disable */
 /* eslint-disable */
-export type Body_tag_update_sdoc_tags_bulk = {
+export type SourceDocumentTagMultiLinkRequest = {
   /**
    * The SourceDocuments to change
    */
-  sdoc_ids: Array<number>;
+  source_document_ids: Array<number>;
   /**
    * The Tags to link
    */

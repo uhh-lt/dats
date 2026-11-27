@@ -135,7 +135,7 @@ def login(
 def logout(
     *,
     db: DBSession,
-    dto: RefreshAccessTokenData = Depends(),
+    dto: RefreshAccessTokenData,
     response: Response,
 ) -> None:
     token = crud_refresh_token.read_and_verify(db, token_str=dto.refresh_token)
@@ -150,7 +150,7 @@ def logout(
 def refresh_access(
     *,
     db: DBSession,
-    dto: RefreshAccessTokenData = Depends(),
+    dto: RefreshAccessTokenData,
     response: Response,
 ) -> UserAuthorizationHeaderData:
     token = crud_refresh_token.read_and_verify(db, token_str=dto.refresh_token)

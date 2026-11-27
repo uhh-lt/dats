@@ -2,7 +2,11 @@ from fastapi.testclient import TestClient
 
 from common.doc_type_enum import DocType
 from composite_keys_test_utils import TwoTenants
-from modules.code_frequency.code_frequency_dto import CodeFrequency, CodeOccurrence
+from modules.code_frequency.code_frequency_dto import (
+    CodeFrequency,
+    CodeOccurrence,
+    CodeOccurrenceRequest,
+)
 
 # ===========================================================================
 # CODE FREQUENCIES (/projects/{project_id}/code-frequencies) TESTS
@@ -53,8 +57,12 @@ def _occurrences(
 ) -> list[CodeOccurrence]:
     response = client.post(
         f"/projects/{project_id}/code-frequencies/occurrences",
-        params={"code_id": code_id, "return_children": False},
-        json={"user_ids": [user_id], "doctypes": [DocType.text]},
+        json=CodeOccurrenceRequest(
+            code_id=code_id,
+            return_children=False,
+            user_ids=[user_id],
+            doctypes=[DocType.text],
+        ).model_dump(mode="json"),
     )
     assert response.status_code == 200, response.text
     return [CodeOccurrence.model_validate(o) for o in response.json()]

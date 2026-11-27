@@ -47,9 +47,7 @@ export const codeFrequencyQueries = {
         : () =>
             CodeFrequencyService.computeCodeOccurrences({
               projectId,
-              codeId,
-              requestBody: { user_ids: userIds, doctypes: docTypes },
-              returnChildren,
+              requestBody: { code_id: codeId, return_children: returnChildren, user_ids: userIds, doctypes: docTypes },
             }),
     }),
 };

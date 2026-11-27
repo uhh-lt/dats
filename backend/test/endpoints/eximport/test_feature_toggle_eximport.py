@@ -417,8 +417,11 @@ def _recompute(
 ):
     return client.post(
         f"/projects/{projects['target_project'].id}/doc-processing/recompute",
-        params={"processing_step": step},
-        json={"sdoc_ids": [sdoc_id], "settings": SETTINGS.model_dump(mode="json")},
+        json={
+            "processing_step": step,
+            "sdoc_ids": [sdoc_id],
+            "settings": SETTINGS.model_dump(mode="json"),
+        },
     )
 
 

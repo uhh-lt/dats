@@ -202,8 +202,7 @@ function SimilarSentencesTable({ cota, concept }: SimilarSentencesTableProps) {
     annotateCotaSentences.mutate({
       projectId: cota.project_id,
       cotaId: cota.id,
-      conceptId: conceptId,
-      requestBody: sentences,
+      requestBody: { cota_sentence_ids: sentences, concept_id: conceptId },
     });
   };
 
@@ -213,7 +212,7 @@ function SimilarSentencesTable({ cota, concept }: SimilarSentencesTableProps) {
       {
         projectId: cota.project_id,
         cotaId: cota.id,
-        requestBody: sentences,
+        requestBody: { cota_sentence_ids: sentences },
       },
       {
         onSuccess() {

@@ -9,8 +9,11 @@ from config import conf
 from core.doc.source_document_crud import crud_sdoc
 from core.doc.source_document_file_crud import crud_sdoc_file
 from core.doc_processing.doc_processing_dto import (
+    DocProcessingRecomputeRequest,
+    DocProcessingRetryRequest,
     SdocHealthColumn,
     SdocHealthResult,
+    SdocHealthSearchRequest,
     SdocHealthSort,
     SdocInitJobInput,
 )
@@ -439,11 +442,15 @@ def test_search_statuses_sorts_by_the_status_of_a_step_or_a_column(
     counts all text documents."""
     response = client.post(
         f"/projects/{feature_project['project'].id}/doc-processing/statuses",
-        params={"doctype": DocType.text.value, "page": 0, "page_size": page_size},
-        json=[
-            SdocHealthSort(column=column, direction=direction).model_dump()
-            for column, direction in sorts
-        ],
+        json=SdocHealthSearchRequest(
+            doctype=DocType.text,
+            sorts=[
+                SdocHealthSort(column=column, direction=direction)
+                for column, direction in sorts
+            ],
+            page_number=0,
+            page_size=page_size,
+        ).model_dump(mode="json"),
     )
 
     assert response.status_code == 200, response.text
@@ -460,8 +467,9 @@ def test_search_statuses_ignores_the_row_of_an_unregistered_step(
     usual."""
     response = client.post(
         f"/projects/{removed_step_project['project'].id}/doc-processing/statuses",
-        params={"doctype": DocType.text.value, "page": 0, "page_size": 10},
-        json=[],
+        json=SdocHealthSearchRequest(
+            doctype=DocType.text, page_number=0, page_size=10
+        ).model_dump(mode="json"),
     )
 
     assert response.status_code == 200, response.text
@@ -551,8 +559,9 @@ def test_retry_requeues_a_failed_step_job_which_runs(
 
     response = client.post(
         f"/projects/{p['project'].id}/doc-processing/retry",
-        params={"doctype": DocType.text.value},
-        json=[sdoc_id],
+        json=DocProcessingRetryRequest(
+            doctype=DocType.text, sdoc_ids=[sdoc_id]
+        ).model_dump(mode="json"),
     )
 
     assert response.status_code == 200, response.text
@@ -582,8 +591,9 @@ def test_retry_of_a_document_of_another_project_retries_nothing(
 
     response = client.post(
         f"/projects/{test_project.id}/doc-processing/retry",
-        params={"doctype": DocType.text.value},
-        json=[sdoc_id],
+        json=DocProcessingRetryRequest(
+            doctype=DocType.text, sdoc_ids=[sdoc_id]
+        ).model_dump(mode="json"),
     )
 
     assert response.status_code == 200, response.text
@@ -601,8 +611,9 @@ def test_retry_of_a_document_of_another_project_retries_nothing(
 def _recompute(client: TestClient, project_id: int, step: str, sdoc_ids: list[int]):
     return client.post(
         f"/projects/{project_id}/doc-processing/recompute",
-        params={"processing_step": step},
-        json={"sdoc_ids": sdoc_ids, "settings": SETTINGS.model_dump(mode="json")},
+        json=DocProcessingRecomputeRequest(
+            processing_step=step, sdoc_ids=sdoc_ids, settings=SETTINGS
+        ).model_dump(mode="json"),
     )
 
 

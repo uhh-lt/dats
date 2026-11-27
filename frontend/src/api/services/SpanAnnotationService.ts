@@ -2,7 +2,7 @@
 /* istanbul ignore file */
 /* tslint:disable */
 /* eslint-disable */
-import type { Body_spanAnnotation_count } from "@models/Body_spanAnnotation_count";
+import type { SpanAnnotationCountRequest } from "@models/SpanAnnotationCountRequest";
 import type { SpanAnnotationCreate } from "@models/SpanAnnotationCreate";
 import type { SpanAnnotationDeleted } from "@models/SpanAnnotationDeleted";
 import type { SpanAnnotationRead } from "@models/SpanAnnotationRead";
@@ -21,23 +21,15 @@ export class SpanAnnotationService {
   public static create({
     projectId,
     requestBody,
-    userId,
   }: {
     projectId: number;
     requestBody: SpanAnnotationCreate;
-    /**
-     * The current user (default) or a virtual user of the project
-     */
-    userId?: number | null;
   }): CancelablePromise<SpanAnnotationRead> {
     return __request(OpenAPI, {
       method: "PUT",
       url: "/projects/{project_id}/span-annotations",
       path: {
         project_id: projectId,
-      },
-      query: {
-        user_id: userId,
       },
       body: requestBody,
       mediaType: "application/json",
@@ -94,23 +86,15 @@ export class SpanAnnotationService {
   public static createBulk({
     projectId,
     requestBody,
-    userId,
   }: {
     projectId: number;
     requestBody: Array<SpanAnnotationCreate>;
-    /**
-     * The current user (default) or a virtual user of the project
-     */
-    userId?: number | null;
   }): CancelablePromise<Array<SpanAnnotationRead>> {
     return __request(OpenAPI, {
       method: "PUT",
       url: "/projects/{project_id}/span-annotations/bulk",
       path: {
         project_id: projectId,
-      },
-      query: {
-        user_id: userId,
       },
       body: requestBody,
       mediaType: "application/json",
@@ -394,21 +378,16 @@ export class SpanAnnotationService {
    */
   public static count({
     projectId,
-    userId,
     requestBody,
   }: {
     projectId: number;
-    userId: number;
-    requestBody: Body_spanAnnotation_count;
+    requestBody: SpanAnnotationCountRequest;
   }): CancelablePromise<Record<string, number>> {
     return __request(OpenAPI, {
       method: "POST",
       url: "/projects/{project_id}/span-annotations/count",
       path: {
         project_id: projectId,
-      },
-      query: {
-        user_id: userId,
       },
       body: requestBody,
       mediaType: "application/json",

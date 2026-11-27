@@ -3,6 +3,7 @@
 /* tslint:disable */
 /* eslint-disable */
 import type { Body_authentication_login } from "@models/Body_authentication_login";
+import type { RefreshAccessTokenData } from "@models/RefreshAccessTokenData";
 import type { UserAuthorizationHeaderData } from "@models/UserAuthorizationHeaderData";
 import type { UserCreate } from "@models/UserCreate";
 import type { UserRead } from "@models/UserRead";
@@ -51,13 +52,12 @@ export class AuthenticationService {
    * @returns any Successful Response
    * @throws ApiError
    */
-  public static logout({ refreshToken }: { refreshToken: string }): CancelablePromise<any> {
+  public static logout({ requestBody }: { requestBody: RefreshAccessTokenData }): CancelablePromise<any> {
     return __request(OpenAPI, {
       method: "POST",
       url: "/authentication/logout",
-      query: {
-        refresh_token: refreshToken,
-      },
+      body: requestBody,
+      mediaType: "application/json",
       errors: {
         422: `Validation Error`,
       },
@@ -69,16 +69,15 @@ export class AuthenticationService {
    * @throws ApiError
    */
   public static refreshAccess({
-    refreshToken,
+    requestBody,
   }: {
-    refreshToken: string;
+    requestBody: RefreshAccessTokenData;
   }): CancelablePromise<UserAuthorizationHeaderData> {
     return __request(OpenAPI, {
       method: "POST",
       url: "/authentication/refresh-access",
-      query: {
-        refresh_token: refreshToken,
-      },
+      body: requestBody,
+      mediaType: "application/json",
       errors: {
         422: `Validation Error`,
       },

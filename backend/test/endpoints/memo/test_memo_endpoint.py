@@ -1058,7 +1058,7 @@ def test_suggest_memo_for_an_object_not_in_the_project_is_not_found(
     LLM is asked, so an object that does not exist there answers 404."""
     response = client.post(
         _url(memo_project["project"].id, "/suggestions"),
-        params={
+        json={
             "attached_object_type": object_type.value,
             "attached_object_id": object_id_of(memo_project),
             "model": "unused",

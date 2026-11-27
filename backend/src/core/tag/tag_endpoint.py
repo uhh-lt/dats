@@ -1,4 +1,4 @@
-from fastapi import Body, Depends
+from fastapi import Depends
 from sqlalchemy.orm import Session
 
 from common.dats_event import DATSEvent
@@ -9,6 +9,8 @@ from core.tag.tag_dto import (
     SdocTagLinks,
     SdocTagLinksResult,
     SourceDocumentTagMultiLink,
+    SourceDocumentTagMultiLinkRequest,
+    TagCountRequest,
     TagCreate,
     TagRead,
     TagUpdate,
@@ -177,18 +179,24 @@ def update_sdoc_tags_bulk(
     *,
     db: DBSession,
     project_id: int,
-    sdoc_ids: list[int] = Body(description="The SourceDocuments to change"),
-    link_tag_ids: list[int] = Body(description="The Tags to link"),
-    unlink_tag_ids: list[int] = Body(description="The Tags to unlink"),
+    links: SourceDocumentTagMultiLinkRequest,
     ws: WebsocketEmitter = Depends(),
 ) -> SdocTagLinksResult:
     crud_tag.link_multi(
-        db=db, project_id=project_id, sdoc_ids=sdoc_ids, tag_ids=link_tag_ids
+        db=db,
+        project_id=project_id,
+        sdoc_ids=links.source_document_ids,
+        tag_ids=links.link_tag_ids,
     )
     crud_tag.unlink_multi(
-        db=db, project_id=project_id, sdoc_ids=sdoc_ids, tag_ids=unlink_tag_ids
+        db=db,
+        project_id=project_id,
+        sdoc_ids=links.source_document_ids,
+        tag_ids=links.unlink_tag_ids,
     )
-    result = _read_sdoc_tag_links(db, project_id=project_id, sdoc_ids=sdoc_ids)
+    result = _read_sdoc_tag_links(
+        db, project_id=project_id, sdoc_ids=links.source_document_ids
+    )
     if result.links:
         ws.emit_to_project(DATSEvent.SDOC_TAGS_LINKED, result, project_id=project_id)
     return result
@@ -301,11 +309,11 @@ def count(
     *,
     db: DBSession,
     project_id: int,
-    sdoc_ids: list[int] = Body(description="The SourceDocuments to count in"),
-    tag_ids: list[int] | None = Body(
-        default=None, description="The Tags to count; all Tags of the Project if null"
-    ),
+    request: TagCountRequest,
 ) -> dict[int, int]:
     return crud_tag.count_by_sdocs(
-        db=db, project_id=project_id, sdoc_ids=sdoc_ids, tag_ids=tag_ids
+        db=db,
+        project_id=project_id,
+        sdoc_ids=request.sdoc_ids,
+        tag_ids=request.tag_ids,
     )

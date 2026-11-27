@@ -1,4 +1,4 @@
-from fastapi import Depends, Query
+from fastapi import Depends
 
 from common.dats_event import DATSEvent
 from common.dependencies import DBSession
@@ -30,17 +30,13 @@ def create(
     db: DBSession,
     project_id: int,
     bbox: BBoxAnnotationCreate,
-    user_id: int | None = Query(
-        default=None,
-        description="The current user (default) or a virtual user of the project",
-    ),
     authz_user: AuthzUser = Depends(),
     ws: WebsocketEmitter = Depends(),
 ) -> BBoxAnnotationRead:
-    annotation_user_id = authz_user.assert_can_annotate_as(user_id, project_id)
+    authz_user.assert_can_annotate_as(bbox.user_id, project_id)
 
     result = BBoxAnnotationService().create(
-        db=db, project_id=project_id, user_id=annotation_user_id, create_dto=bbox
+        db=db, project_id=project_id, user_id=authz_user.user.id, create_dto=bbox
     )
     ws.emit_to_project(DATSEvent.BBOX_ANNOTATION_CREATED, result, project_id=project_id)
     return result

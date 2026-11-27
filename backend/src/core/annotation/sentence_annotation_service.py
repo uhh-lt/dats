@@ -4,9 +4,9 @@ from loguru import logger
 from sqlalchemy.orm import Session
 
 from common.singleton_meta import SingletonMeta
-from core.annotation.annotation_document_crud import crud_adoc
 from core.annotation.annotation_source_utils import (
     copy_annotation_source_memos,
+    read_annotation_documents,
     read_annotation_sources,
 )
 from core.annotation.sentence_annotation_crud import crud_sentence_anno
@@ -75,7 +75,7 @@ class SentenceAnnotationService(metaclass=SingletonMeta):
 
         Args:
             project_id: The project of the annotations.
-            user_id: The user the annotations belong to.
+            user_id: The user of the annotations whose `user_id` is not set.
             create_dtos: The annotations to create.
 
         Returns:
@@ -97,14 +97,12 @@ class SentenceAnnotationService(metaclass=SingletonMeta):
             create_dtos=create_dtos,
         )
 
-        # 2) find or create the user's annotation document of every source document
-        adoc_by_sdoc_id = crud_adoc.exists_or_create_multi(
+        # 2) find or create the annotation document of every user and source document
+        adoc_by_user_and_sdoc = read_annotation_documents(
             db=db,
             project_id=project_id,
             user_id=user_id,
-            sdoc_ids=list(
-                dict.fromkeys(create_dto.sdoc_id for create_dto, _ in annotations)
-            ),
+            create_dtos=[create_dto for create_dto, _ in annotations],
         )
 
         # 3) create the annotations, with the provenance of the copies
@@ -117,7 +115,9 @@ class SentenceAnnotationService(metaclass=SingletonMeta):
                     sentence_id_start=create_dto.sentence_id_start,
                     sentence_id_end=create_dto.sentence_id_end,
                     code_id=create_dto.code_id,
-                    annotation_document_id=adoc_by_sdoc_id[create_dto.sdoc_id].id,
+                    annotation_document_id=adoc_by_user_and_sdoc[
+                        (create_dto.user_id or user_id, create_dto.sdoc_id)
+                    ].id,
                     source_annotation_id=source.id if source else None,
                     source_user_id=source.user_id if source else None,
                     source_code_id=source.code_id if source else None,
@@ -198,7 +198,7 @@ class SentenceAnnotationService(metaclass=SingletonMeta):
 
         Args:
             project_id: The project of the document.
-            user_id: The user the annotations belong to.
+            user_id: The user of the annotations whose `user_id` is not set.
             sdoc_id: The text document.
 
         Returns:

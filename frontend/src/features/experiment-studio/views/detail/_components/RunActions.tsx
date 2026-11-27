@@ -62,7 +62,7 @@ export function RunActions({ projectId, experiment, run, scoring, onDeleted }: R
     (exportFormat: ExperimentRunLogFormat) => {
       setLogMenuAnchor(null);
       exportLogMutation(
-        { projectId, experimentId: run.experiment_id, runId: run.id, exportFormat },
+        { projectId, experimentId: run.experiment_id, runId: run.id, requestBody: { export_format: exportFormat } },
         { onSuccess: (url) => downloadFile(encodeURI("/content/" + url)) },
       );
     },

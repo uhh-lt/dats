@@ -1,6 +1,6 @@
 from typing import TypedDict
 
-from fastapi import Depends, UploadFile
+from fastapi import Depends, Form, UploadFile
 
 from common.project_router import project_router
 from core.auth.authz_user import AuthzUser
@@ -76,7 +76,7 @@ import_job_file_formats: dict[ImportJobType, FileFormat] = {
 def start_import_job(
     *,
     project_id: int,
-    import_job_type: ImportJobType,
+    import_job_type: ImportJobType = Form(description="The type of the import job"),
     uploaded_file: UploadFile,
     authz_user: AuthzUser = Depends(),
 ) -> ImportJobRead:

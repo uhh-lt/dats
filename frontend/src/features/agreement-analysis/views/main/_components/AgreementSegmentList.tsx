@@ -153,7 +153,9 @@ export function AgreementSegmentList({ result, codeIds, isOutdated, onRecompute 
     getSegmentTexts(
       {
         projectId,
-        requestBody: segments.map((segment) => ({ sdoc_id: segment.sdoc_id, begin: segment.begin, end: segment.end })),
+        requestBody: {
+          ranges: segments.map((segment) => ({ sdoc_id: segment.sdoc_id, begin: segment.begin, end: segment.end })),
+        },
       },
       {
         onSuccess: (texts) => {

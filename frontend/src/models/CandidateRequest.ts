@@ -2,7 +2,9 @@
 /* istanbul ignore file */
 /* tslint:disable */
 /* eslint-disable */
-export type Body_rag_compute_answers = {
+export type CandidateRequest = {
+  /**
+   * The text to search for
+   */
   query: string;
-  sdoc_ids: Array<number> | null;
 };

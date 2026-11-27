@@ -62,3 +62,17 @@ class SdocTagLinks(BaseModel):
 # The resulting tag IDs per SourceDocument of a project after a link/unlink/set operation
 class SdocTagLinksResult(SdocTagLinks):
     project_id: int = Field(description="ID of the Project of the SourceDocuments")
+
+
+# Links and unlinks Tags of multiple SourceDocuments at once
+class SourceDocumentTagMultiLinkRequest(BaseModel):
+    source_document_ids: list[int] = Field(description="The SourceDocuments to change")
+    link_tag_ids: list[int] = Field(description="The Tags to link")
+    unlink_tag_ids: list[int] = Field(description="The Tags to unlink")
+
+
+class TagCountRequest(BaseModel):
+    sdoc_ids: list[int] = Field(description="The SourceDocuments to count in")
+    tag_ids: list[int] | None = Field(
+        default=None, description="The Tags to count; all Tags of the Project if null"
+    )

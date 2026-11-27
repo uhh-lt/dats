@@ -40,9 +40,11 @@ from modules.perspectives.perspectives_job_dto import (
     PerspectivesJobInput,
 )
 from modules.perspectives.perspectives_vis_dto import (
+    LabelDocumentsRequest,
     PerspectivesClusterSimilarities,
     PerspectivesDoc,
     PerspectivesVisualization,
+    VisualizationRequest,
 )
 from repos.filesystem.file_crud_base import FileCRUDBase
 from systems.job_system.job_service import JobService
@@ -405,17 +407,15 @@ def compute_visualization(
     db: DBSession,
     project_id: int,
     aspect_id: int,
-    search_query: str,
-    filter: Filter[SdocColumns],
-    sorts: list[Sort[SdocColumns]],
+    request: VisualizationRequest,
 ) -> PerspectivesVisualization:
     return _build_document_visualization(
         db=db,
         project_id=project_id,
         aspect_id=aspect_id,
-        search_query=search_query,
-        filter=filter,
-        sorts=sorts,
+        search_query=request.search_query,
+        filter=request.filter,
+        sorts=request.sorts,
     )
 
 
@@ -429,17 +429,14 @@ def accept_labels(
     db: DBSession,
     project_id: int,
     aspect_id: int,
-    sdoc_ids: list[int],
-    search_query: str,
-    filter: Filter[SdocColumns],
-    sorts: list[Sort[SdocColumns]],
+    request: LabelDocumentsRequest,
 ) -> PerspectivesVisualization:
     crud_aspect.exists(db=db, project_id=project_id, id=aspect_id, raise_error=True)
     crud_document_cluster.set_labels(
         db=db,
         project_id=project_id,
         aspect_id=aspect_id,
-        sdoc_ids=sdoc_ids,
+        sdoc_ids=request.sdoc_ids,
         is_accepted=True,
     )
 
@@ -447,9 +444,9 @@ def accept_labels(
         db=db,
         project_id=project_id,
         aspect_id=aspect_id,
-        search_query=search_query,
-        filter=filter,
-        sorts=sorts,
+        search_query=request.search_query,
+        filter=request.filter,
+        sorts=request.sorts,
     )
     return result
 
@@ -464,17 +461,14 @@ def revert_labels(
     db: DBSession,
     project_id: int,
     aspect_id: int,
-    sdoc_ids: list[int],
-    search_query: str,
-    filter: Filter[SdocColumns],
-    sorts: list[Sort[SdocColumns]],
+    request: LabelDocumentsRequest,
 ) -> PerspectivesVisualization:
     crud_aspect.exists(db=db, project_id=project_id, id=aspect_id, raise_error=True)
     crud_document_cluster.set_labels(
         db=db,
         project_id=project_id,
         aspect_id=aspect_id,
-        sdoc_ids=sdoc_ids,
+        sdoc_ids=request.sdoc_ids,
         is_accepted=False,
     )
 
@@ -482,9 +476,9 @@ def revert_labels(
         db=db,
         project_id=project_id,
         aspect_id=aspect_id,
-        search_query=search_query,
-        filter=filter,
-        sorts=sorts,
+        search_query=request.search_query,
+        filter=request.filter,
+        sorts=request.sorts,
     )
     return result
 

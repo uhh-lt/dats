@@ -5,12 +5,13 @@ from common.dependencies import DBSession
 from common.project_router import project_router
 from modules.concept_over_time_analysis.cota_crud import crud_cota
 from modules.concept_over_time_analysis.cota_dto import (
+    AnnotateSentencesRequest,
     ConceptOverTimeAnalysisCreate,
     ConceptOverTimeAnalysisCreateIntern,
     ConceptOverTimeAnalysisRead,
     ConceptOverTimeAnalysisUpdate,
     COTARefinementHyperparameters,
-    COTASentenceID,
+    RemoveSentencesRequest,
 )
 from modules.concept_over_time_analysis.cota_feature import CONCEPTS_OVER_TIME
 from modules.concept_over_time_analysis.cota_service import COTAService
@@ -139,16 +140,15 @@ def annotate_sentences(
     db: DBSession,
     project_id: int,
     cota_id: int,
-    cota_sentence_ids: list[COTASentenceID],
-    concept_id: str | None = None,
+    request: AnnotateSentencesRequest,
     ws: WebsocketEmitter = Depends(),
 ) -> ConceptOverTimeAnalysisRead:
     result = cotas.annotate_sentences(
         db=db,
         project_id=project_id,
         cota_id=cota_id,
-        cota_sentence_ids=cota_sentence_ids,
-        concept_id=concept_id,
+        cota_sentence_ids=request.cota_sentence_ids,
+        concept_id=request.concept_id,
     )
     ws.emit_to_project(DATSEvent.COTA_UPDATED, result, project_id=project_id)
     return result
@@ -164,14 +164,14 @@ def remove_sentences(
     db: DBSession,
     project_id: int,
     cota_id: int,
-    cota_sentence_ids: list[COTASentenceID],
+    request: RemoveSentencesRequest,
     ws: WebsocketEmitter = Depends(),
 ) -> ConceptOverTimeAnalysisRead:
     result = cotas.remove_sentences(
         db=db,
         project_id=project_id,
         cota_id=cota_id,
-        cota_sentence_ids=cota_sentence_ids,
+        cota_sentence_ids=request.cota_sentence_ids,
     )
     ws.emit_to_project(DATSEvent.COTA_UPDATED, result, project_id=project_id)
     return result

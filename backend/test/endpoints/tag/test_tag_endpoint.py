@@ -474,7 +474,7 @@ def test_update_sdoc_tags_bulk_parametrize(
         2: project_with_sdoc_and_multiple_tags["tag2"],
     }
     payload = {
-        "sdoc_ids": [sdoc.id],
+        "source_document_ids": [sdoc.id],
         "unlink_tag_ids": [param_id2tag[i].id for i in unlink_ids],
         "link_tag_ids": [param_id2tag[i].id for i in link_ids],
     }
@@ -493,7 +493,7 @@ def test_update_sdoc_tags_bulk_linking_a_tag_of_another_project_is_a_conflict(
     (409)."""
     own, foreign = tenants["own"], tenants["foreign"]
     payload = {
-        "sdoc_ids": [own["sdoc"].id],
+        "source_document_ids": [own["sdoc"].id],
         "unlink_tag_ids": [],
         "link_tag_ids": [foreign["tag"].id],
     }

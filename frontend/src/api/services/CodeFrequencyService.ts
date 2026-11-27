@@ -2,10 +2,10 @@
 /* istanbul ignore file */
 /* tslint:disable */
 /* eslint-disable */
-import type { Body_codeFrequency_compute_code_frequencies } from "@models/Body_codeFrequency_compute_code_frequencies";
-import type { Body_codeFrequency_compute_code_occurrences } from "@models/Body_codeFrequency_compute_code_occurrences";
 import type { CodeFrequency } from "@models/CodeFrequency";
+import type { CodeFrequencyRequest } from "@models/CodeFrequencyRequest";
 import type { CodeOccurrence } from "@models/CodeOccurrence";
+import type { CodeOccurrenceRequest } from "@models/CodeOccurrenceRequest";
 import type { CancelablePromise } from "../core/CancelablePromise";
 import { OpenAPI } from "../core/OpenAPI";
 import { request as __request } from "../core/request";
@@ -20,7 +20,7 @@ export class CodeFrequencyService {
     requestBody,
   }: {
     projectId: number;
-    requestBody: Body_codeFrequency_compute_code_frequencies;
+    requestBody: CodeFrequencyRequest;
   }): CancelablePromise<Array<CodeFrequency>> {
     return __request(OpenAPI, {
       method: "POST",
@@ -46,24 +46,16 @@ export class CodeFrequencyService {
    */
   public static computeCodeOccurrences({
     projectId,
-    codeId,
-    returnChildren,
     requestBody,
   }: {
     projectId: number;
-    codeId: number;
-    returnChildren: boolean;
-    requestBody: Body_codeFrequency_compute_code_occurrences;
+    requestBody: CodeOccurrenceRequest;
   }): CancelablePromise<Array<CodeOccurrence>> {
     return __request(OpenAPI, {
       method: "POST",
       url: "/projects/{project_id}/code-frequencies/occurrences",
       path: {
         project_id: projectId,
-      },
-      query: {
-        code_id: codeId,
-        return_children: returnChildren,
       },
       body: requestBody,
       mediaType: "application/json",

@@ -5,6 +5,7 @@
 import type { AttachedObjectType } from "@models/AttachedObjectType";
 import type { MemoCreate } from "@models/MemoCreate";
 import type { MemoRead } from "@models/MemoRead";
+import type { MemoSuggestionRequest } from "@models/MemoSuggestionRequest";
 import type { MemoUpdate } from "@models/MemoUpdate";
 import type { MemoUpdateBulk } from "@models/MemoUpdateBulk";
 import type { CancelablePromise } from "../core/CancelablePromise";
@@ -245,14 +246,10 @@ export class MemoService {
    */
   public static computeSuggestions({
     projectId,
-    attachedObjectType,
-    attachedObjectId,
-    model,
+    requestBody,
   }: {
     projectId: number;
-    attachedObjectType: AttachedObjectType;
-    attachedObjectId: number;
-    model: string;
+    requestBody: MemoSuggestionRequest;
   }): CancelablePromise<string> {
     return __request(OpenAPI, {
       method: "POST",
@@ -260,11 +257,8 @@ export class MemoService {
       path: {
         project_id: projectId,
       },
-      query: {
-        attached_object_type: attachedObjectType,
-        attached_object_id: attachedObjectId,
-        model: model,
-      },
+      body: requestBody,
+      mediaType: "application/json",
       errors: {
         400: `The request breaks a rule of the domain`,
         403: `The user is no member of the project, or the feature is disabled`,

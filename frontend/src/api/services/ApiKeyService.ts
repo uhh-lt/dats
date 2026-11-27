@@ -2,37 +2,13 @@
 /* istanbul ignore file */
 /* tslint:disable */
 /* eslint-disable */
+import type { ApiKeyCreate } from "@models/ApiKeyCreate";
 import type { ApiKeyCreatedResponse } from "@models/ApiKeyCreatedResponse";
 import type { ApiKeyRead } from "@models/ApiKeyRead";
-import type { ExpiryDuration } from "@models/ExpiryDuration";
 import type { CancelablePromise } from "../core/CancelablePromise";
 import { OpenAPI } from "../core/OpenAPI";
 import { request as __request } from "../core/request";
 export class ApiKeyService {
-  /**
-   * Generate a new API key with optional expiration.
-   * @returns ApiKeyCreatedResponse Successful Response
-   * @throws ApiError
-   */
-  public static create({
-    name,
-    expiresIn,
-  }: {
-    name: string;
-    expiresIn: ExpiryDuration;
-  }): CancelablePromise<ApiKeyCreatedResponse> {
-    return __request(OpenAPI, {
-      method: "PUT",
-      url: "/users/me/api-keys",
-      query: {
-        name: name,
-        expires_in: expiresIn,
-      },
-      errors: {
-        422: `Validation Error`,
-      },
-    });
-  }
   /**
    * List all active API keys for the current user.
    * @returns ApiKeyRead Successful Response
@@ -42,6 +18,22 @@ export class ApiKeyService {
     return __request(OpenAPI, {
       method: "GET",
       url: "/users/me/api-keys",
+    });
+  }
+  /**
+   * Generate a new API key with optional expiration.
+   * @returns ApiKeyCreatedResponse Successful Response
+   * @throws ApiError
+   */
+  public static create({ requestBody }: { requestBody: ApiKeyCreate }): CancelablePromise<ApiKeyCreatedResponse> {
+    return __request(OpenAPI, {
+      method: "PUT",
+      url: "/users/me/api-keys",
+      body: requestBody,
+      mediaType: "application/json",
+      errors: {
+        422: `Validation Error`,
+      },
     });
   }
   /**

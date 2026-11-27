@@ -140,3 +140,9 @@ class AgreementTextRange(BaseModel):
     sdoc_id: int = Field(description="ID of the SourceDocument")
     begin: int = Field(description="Begin of the range in characters")
     end: int = Field(description="End of the range in characters (exclusive)")
+
+
+class SegmentTextsRequest(BaseModel):
+    ranges: list[AgreementTextRange] = Field(
+        description="The character ranges of documents, in the order of the result"
+    )

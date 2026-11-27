@@ -56,6 +56,11 @@ class SentenceAnnotationCreate(SentenceAnnotationBaseDTO):
             )
         return self
 
+    user_id: int | None = Field(
+        default=None,
+        description="The user the annotation belongs to: the current user (default) or a virtual user of the project",
+    )
+
 
 # Properties for updating
 class SentenceAnnotationUpdate(BaseModel, UpdateDTOBase):
@@ -135,3 +140,9 @@ class SentenceAnnotatorResult(BaseModel):
     sentence_annotations: dict[int, list[SentenceAnnotationRead]] = Field(
         description="A mapping of sentence IDs to their annotations"
     )
+
+
+class SentenceAnnotationCountRequest(BaseModel):
+    user_id: int = Field(description="The User whose SentenceAnnotations are counted")
+    sdoc_ids: list[int] = Field(description="The SourceDocuments to count in")
+    code_ids: list[int] = Field(description="The Codes to count")

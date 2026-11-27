@@ -18,3 +18,7 @@ class PaginatedSpanAnnotationHits(BaseModel):
     hits: list[SpanAnnotationHit] = Field(
         description=("The SpanAnnotation hits matching the search query.")
     )
+
+
+class CandidateRequest(BaseModel):
+    query: str = Field(description="The text to search for")

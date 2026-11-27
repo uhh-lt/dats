@@ -29,8 +29,7 @@ def test_analysis_is_rejected_when_word_frequency_is_disabled(
 ):
     response = client.post(
         f"/projects/{featureless_project['project'].id}/word-frequencies",
-        params={"page": 0, "page_size": 10},
-        json={"filter": EMPTY_FILTER, "sorts": []},
+        json={"page_number": 0, "page_size": 10, "filter": EMPTY_FILTER, "sorts": []},
     )
 
     assert_feature_disabled(response, "word_frequency")
@@ -41,7 +40,7 @@ def test_export_is_rejected_when_word_frequency_is_disabled(
 ):
     response = client.post(
         f"/projects/{featureless_project['project'].id}/word-frequencies/export",
-        json={"filter": EMPTY_FILTER, "sorts": []},
+        json={"filter": EMPTY_FILTER},
     )
 
     assert_feature_disabled(response, "word_frequency")

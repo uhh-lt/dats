@@ -6,10 +6,11 @@ import { tableInfoQueries, toColumnInfos } from "@core/filter";
 import { folderQueries } from "@core/folder";
 import { tagQueries } from "@core/tag";
 import { FolderType } from "@models/FolderType";
+import type { SourceDocumentSearchRequest } from "@models/SourceDocumentSearchRequest";
 import { infiniteQueryOptions, queryOptions, skipToken } from "@tanstack/react-query";
 
-/** The arguments of the document search, as the backend takes them (the page and the highlighting are added by the query). */
-type SdocSearchRequest = Omit<Parameters<typeof SearchService.searchSdocs>[0], "pageNumber" | "highlight">;
+/** The document search request, as the backend takes it (the page and the highlighting are added by the query). */
+type SdocSearchRequest = Omit<SourceDocumentSearchRequest, "page_number" | "highlight">;
 
 /**
  * Query factory for source documents (sdocs).
@@ -24,7 +25,7 @@ type SdocSearchRequest = Omit<Parameters<typeof SearchService.searchSdocs>[0], "
  *   sdocQueries.idsByTag(projectId, tagId)     ["sdoc", "project", projectId, "idsByTag", tagId]
  *   sdocQueries.annotators(projectId, sdocId)  ["sdoc", "project", projectId, "annotators", sdocId]
  *   sdocQueries.tableInfo(projectId)           ["tableInfo", "project", projectId, "sdoc"]
- *   sdocQueries.search(request)                ["sdoc", "project", projectId, "search", request]
+ *   sdocQueries.search(projectId, request)     ["sdoc", "project", projectId, "search", request]
  */
 export const sdocQueries = {
   all: () => ["sdoc"] as const,
@@ -113,12 +114,14 @@ export const sdocQueries = {
   // the document search: project-wide, with highlights. Its queryFn seeds the caches of the found sdocs, annotators, tags
   // and folders. Used by the search page and the sdoc filter table.
   searchScope: (projectId: number) => [...sdocQueries.projectScope(projectId), "search"] as const,
-  search: (request: SdocSearchRequest) =>
+  search: (projectId: number, request: SdocSearchRequest) =>
     infiniteQueryOptions({
-      queryKey: [...sdocQueries.searchScope(request.projectId), request] as const,
+      queryKey: [...sdocQueries.searchScope(projectId), request] as const,
       queryFn: async ({ pageParam }) => {
-        const { projectId } = request;
-        const data = await SearchService.searchSdocs({ ...request, highlight: true, pageNumber: pageParam });
+        const data = await SearchService.searchSdocs({
+          projectId,
+          requestBody: { ...request, highlight: true, page_number: pageParam },
+        });
 
         Object.entries(data.sdocs).forEach(([sdocId, sdoc]) => {
           queryClient.setQueryData(sdocQueries.byId(projectId, parseInt(sdocId)).queryKey, sdoc);

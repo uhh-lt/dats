@@ -78,7 +78,6 @@ def reorder(
     *,
     db: DBSession,
     project_id: int,
-    entity_type: SearchEntityType,
     view_order: SearchViewReorder,
     authz_user: AuthzUser = Depends(),
     ws: WebsocketEmitter = Depends(),
@@ -87,7 +86,7 @@ def reorder(
         db=db,
         project_id=project_id,
         user_id=authz_user.user.id,
-        entity_type=entity_type,
+        entity_type=view_order.entity_type,
         ordered_view_ids=view_order.view_ids,
     )
     result = [search_view_read_from_orm(db_view) for db_view in db_views]

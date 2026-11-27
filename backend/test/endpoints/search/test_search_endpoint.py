@@ -3256,12 +3256,10 @@ def test_search_group_by_source_user_counts_copies_per_source_user(
 def _search_sdocs(client: TestClient, project_id: int, search_query: str):
     return client.post(
         _url("/search/source-documents", project_id),
-        params={
+        json={
             "search_query": search_query,
             "expert_mode": False,
             "highlight": False,
-        },
-        json={
             "filter": {"id": "root", "logic_operator": "and", "items": []},
             "sorts": [],
         },
@@ -3325,8 +3323,10 @@ def test_search_sdocs_by_a_tag_of_another_project_matches_nothing(
 
     response = client.post(
         _url("/search/source-documents", own["project"].id),
-        params={"search_query": "", "expert_mode": False, "highlight": False},
         json={
+            "search_query": "",
+            "expert_mode": False,
+            "highlight": False,
             "filter": _id_filter(SdocColumns.TAG_ID_LIST_RECURSIVE.value, tag.id),
             "sorts": [],
         },
@@ -3402,8 +3402,10 @@ def test_search_sdocs_by_a_metadata_of_another_project_answers_404(
 
     response = client.post(
         _url("/search/source-documents", own["project"].id),
-        params={"search_query": "", "expert_mode": False, "highlight": False},
         json={
+            "search_query": "",
+            "expert_mode": False,
+            "highlight": False,
             "filter": {
                 "id": "root",
                 "logic_operator": "and",

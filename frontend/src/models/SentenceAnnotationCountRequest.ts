@@ -2,13 +2,17 @@
 /* istanbul ignore file */
 /* tslint:disable */
 /* eslint-disable */
-export type Body_tag_count = {
+export type SentenceAnnotationCountRequest = {
+  /**
+   * The User whose SentenceAnnotations are counted
+   */
+  user_id: number;
   /**
    * The SourceDocuments to count in
    */
   sdoc_ids: Array<number>;
   /**
-   * The Tags to count; all Tags of the Project if null
+   * The Codes to count
    */
-  tag_ids?: Array<number> | null;
+  code_ids: Array<number>;
 };

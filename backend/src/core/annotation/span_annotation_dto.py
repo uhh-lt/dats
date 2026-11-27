@@ -47,6 +47,10 @@ class SpanAnnotationCreate(SpanAnnotationBaseDTO):
             "annotation comparison); records the provenance"
         ),
     )
+    user_id: int | None = Field(
+        default=None,
+        description="The user the annotation belongs to: the current user (default) or a virtual user of the project",
+    )
 
 
 # Properties for updating
@@ -164,3 +168,9 @@ class SpanAnnotationDeleted(SpanAnnotationBaseDTO):
     created: datetime = Field(description="Created timestamp of the SpanAnnotation")
     updated: datetime = Field(description="Updated timestamp of the SpanAnnotation")
     model_config = ConfigDict(from_attributes=True)
+
+
+class SpanAnnotationCountRequest(BaseModel):
+    user_id: int = Field(description="The User whose SpanAnnotations are counted")
+    sdoc_ids: list[int] = Field(description="The SourceDocuments to count in")
+    code_ids: list[int] = Field(description="The Codes to count")

@@ -4,7 +4,7 @@
 /* eslint-disable */
 import type { AgreementParams } from "@models/AgreementParams";
 import type { AgreementResult } from "@models/AgreementResult";
-import type { AgreementTextRange } from "@models/AgreementTextRange";
+import type { SegmentTextsRequest } from "@models/SegmentTextsRequest";
 import type { CancelablePromise } from "../core/CancelablePromise";
 import { OpenAPI } from "../core/OpenAPI";
 import { request as __request } from "../core/request";
@@ -77,7 +77,7 @@ export class AgreementService {
     requestBody,
   }: {
     projectId: number;
-    requestBody: Array<AgreementTextRange>;
+    requestBody: SegmentTextsRequest;
   }): CancelablePromise<Array<string>> {
     return __request(OpenAPI, {
       method: "POST",

@@ -134,7 +134,10 @@ Every resource of a project lives under `/projects/{project_id}/...` (#928); `sp
 - **Handler names**: the handler name is the method of the generated client; the main resource of a file uses `create`, `get_by_id`, `get_by_project`, `update_by_id`, `delete_by_id`, `create_bulk`, `update_bulk`, `delete_bulk`, `count` without the entity, a child resource in the same file keeps the entity (`create_run`, `update_cluster`), a request that does something is named like its path verb (`duplicate`, `refine`, `upload`) with the entity for a child resource (`refresh_run_scores`), and a request that returns data `<verb>_<result>` with the noun of its path (`compute_code_frequencies`, `search_memos`, `get_siblings`).
 - **Path parameters**: a path id is `{<entity>_id}` with the entity's snake_case name, the same in every route, or one of the abbreviations `sdoc`, `sdoc_metadata`, `cota`, and a nested child drops its parent's name (`{run_id}` below `/experiments/{experiment_id}`).
 - **Tags**: the first tag is the router prefix as a singular camelCase noun (`spanAnnotation`, `codeFrequency`), or the module name for the prefix `""` (`statistics`, `user`), and `mcp` is set on the router only.
-- **Request shape**: a create, an update and a computation take one body DTO, and no loose `Body()` lists or query parameters stand next to it.
+- **Request shape**: the input of a create, an update, an action or a computation beyond its path is one body DTO from the module's `*_dto.py` (a bare list only on a bulk route), never loose `Body()` fields or query parameters next to a body.
+- **Searches**: a `POST` search takes its filter, sorts and paging (`page_number`, `page_size`) in its body DTO (`QueryRequest`, `SourceDocumentSearchRequest`).
+- **Acting user**: a request acts as the logged-in user without a `user_id`, and a create that may act as a virtual user has an optional `user_id` field in its body DTO (`SpanAnnotationCreate`).
+- **Forms**: a file upload takes multipart form fields next to its files (`POST /doc-processing/upload`, `POST /jobs/import`), and `POST /authentication/login` keeps the OAuth2 password form.
 
 ## Examples
 

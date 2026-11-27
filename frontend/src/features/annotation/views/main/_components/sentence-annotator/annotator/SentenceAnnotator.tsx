@@ -120,7 +120,7 @@ export const SentenceAnnotator = memo(
       const pending = toPendingSentenceAnnotation(requestBody, visibleUserId, sdocData.project_id);
       setPendingAnnotations((prev) => [...prev, pending]);
       createMutation.mutate(
-        { projectId: sdocData.project_id, requestBody, userId: visibleUserId },
+        { projectId: sdocData.project_id, requestBody: { ...requestBody, user_id: visibleUserId } },
         {
           onSuccess,
           onSettled: () => {

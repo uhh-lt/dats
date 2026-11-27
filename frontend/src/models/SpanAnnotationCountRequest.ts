@@ -2,7 +2,11 @@
 /* istanbul ignore file */
 /* tslint:disable */
 /* eslint-disable */
-export type Body_spanAnnotation_count = {
+export type SpanAnnotationCountRequest = {
+  /**
+   * The User whose SpanAnnotations are counted
+   */
+  user_id: number;
   /**
    * The SourceDocuments to count in
    */

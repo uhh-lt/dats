@@ -113,3 +113,11 @@ class MemoRead(MemoReadBaseDTO):
     )
     # Not built from MemoORM: memo_utils combines MemoInDB with the attached object.
     model_config = ConfigDict(from_attributes=False)
+
+
+class MemoSuggestionRequest(BaseModel):
+    attached_object_type: AttachedObjectType = Field(
+        description="Type of the object the memo is about"
+    )
+    attached_object_id: int = Field(description="ID of the object the memo is about")
+    model: str = Field(description="The LLM that writes the suggestion")

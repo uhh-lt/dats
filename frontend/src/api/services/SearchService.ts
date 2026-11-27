@@ -2,7 +2,6 @@
 /* istanbul ignore file */
 /* tslint:disable */
 /* eslint-disable */
-import type { Body_search_search_sdocs } from "@models/Body_search_search_sdocs";
 import type { ColumnInfo_BBoxColumns_ } from "@models/ColumnInfo_BBoxColumns_";
 import type { ColumnInfo_MemoColumns_ } from "@models/ColumnInfo_MemoColumns_";
 import type { ColumnInfo_SdocColumns_ } from "@models/ColumnInfo_SdocColumns_";
@@ -22,6 +21,7 @@ import type { QueryRequest_BBoxColumns_ } from "@models/QueryRequest_BBoxColumns
 import type { QueryRequest_MemoColumns_ } from "@models/QueryRequest_MemoColumns_";
 import type { QueryRequest_SentAnnoColumns_ } from "@models/QueryRequest_SentAnnoColumns_";
 import type { QueryRequest_SpanColumns_ } from "@models/QueryRequest_SpanColumns_";
+import type { SourceDocumentSearchRequest } from "@models/SourceDocumentSearchRequest";
 import type { CancelablePromise } from "../core/CancelablePromise";
 import { OpenAPI } from "../core/OpenAPI";
 import { request as __request } from "../core/request";
@@ -58,42 +58,16 @@ export class SearchService {
    */
   public static searchSdocs({
     projectId,
-    searchQuery,
-    expertMode,
-    highlight,
     requestBody,
-    folderId,
-    pageNumber,
-    pageSize,
-    showFolders = true,
-    showChildFolders = false,
   }: {
     projectId: number;
-    searchQuery: string;
-    expertMode: boolean;
-    highlight: boolean;
-    requestBody: Body_search_search_sdocs;
-    folderId?: number | null;
-    pageNumber?: number | null;
-    pageSize?: number | null;
-    showFolders?: boolean;
-    showChildFolders?: boolean;
+    requestBody: SourceDocumentSearchRequest;
   }): CancelablePromise<PaginatedSDocHits> {
     return __request(OpenAPI, {
       method: "POST",
       url: "/projects/{project_id}/search/source-documents",
       path: {
         project_id: projectId,
-      },
-      query: {
-        search_query: searchQuery,
-        expert_mode: expertMode,
-        highlight: highlight,
-        folder_id: folderId,
-        page_number: pageNumber,
-        page_size: pageSize,
-        show_folders: showFolders,
-        show_child_folders: showChildFolders,
       },
       body: requestBody,
       mediaType: "application/json",

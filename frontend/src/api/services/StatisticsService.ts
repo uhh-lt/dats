@@ -2,8 +2,10 @@
 /* istanbul ignore file */
 /* tslint:disable */
 /* eslint-disable */
+import type { CodeStatisticsRequest } from "@models/CodeStatisticsRequest";
 import type { SpanEntityStat } from "@models/SpanEntityStat";
 import type { TagStat } from "@models/TagStat";
+import type { TagStatisticsRequest } from "@models/TagStatisticsRequest";
 import type { CancelablePromise } from "../core/CancelablePromise";
 import { OpenAPI } from "../core/OpenAPI";
 import { request as __request } from "../core/request";
@@ -15,27 +17,16 @@ export class StatisticsService {
    */
   public static computeCodeStatistics({
     projectId,
-    codeId,
     requestBody,
-    sortByGlobal = false,
-    topK = 20,
   }: {
     projectId: number;
-    codeId: number;
-    requestBody: Array<number>;
-    sortByGlobal?: boolean;
-    topK?: number;
+    requestBody: CodeStatisticsRequest;
   }): CancelablePromise<Array<SpanEntityStat>> {
     return __request(OpenAPI, {
       method: "POST",
       url: "/projects/{project_id}/code-statistics",
       path: {
         project_id: projectId,
-      },
-      query: {
-        code_id: codeId,
-        sort_by_global: sortByGlobal,
-        top_k: topK,
       },
       body: requestBody,
       mediaType: "application/json",
@@ -56,23 +47,15 @@ export class StatisticsService {
   public static computeTagStatistics({
     projectId,
     requestBody,
-    sortByGlobal = false,
-    topK = 20,
   }: {
     projectId: number;
-    requestBody: Array<number>;
-    sortByGlobal?: boolean;
-    topK?: number;
+    requestBody: TagStatisticsRequest;
   }): CancelablePromise<Array<TagStat>> {
     return __request(OpenAPI, {
       method: "POST",
       url: "/projects/{project_id}/tag-statistics",
       path: {
         project_id: projectId,
-      },
-      query: {
-        sort_by_global: sortByGlobal,
-        top_k: topK,
       },
       body: requestBody,
       mediaType: "application/json",

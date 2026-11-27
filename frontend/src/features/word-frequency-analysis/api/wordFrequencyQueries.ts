@@ -1,9 +1,7 @@
 import { WordFrequencyService } from "@api/services/WordFrequencyService";
 import { tableInfoQueries, toColumnInfos } from "@core/filter";
+import type { WordFrequencySearchRequest } from "@models/WordFrequencySearchRequest";
 import { infiniteQueryOptions, queryOptions } from "@tanstack/react-query";
-
-/** The arguments of the word frequency search, as the backend takes them (the page is added by the query). */
-type WordFrequencySearchRequest = Omit<Parameters<typeof WordFrequencyService.computeWordFrequencies>[0], "page">;
 
 /**
  * Query factory for the word frequency analysis.
@@ -11,7 +9,7 @@ type WordFrequencySearchRequest = Omit<Parameters<typeof WordFrequencyService.co
  *   wordFrequencyQueries.all()                    ["wordFrequency"]
  *   wordFrequencyQueries.projectScope(projectId)  ["wordFrequency", "project", projectId]
  *   wordFrequencyQueries.tableInfo(projectId)     ["tableInfo", "project", projectId, "wordFrequency"]
- *   wordFrequencyQueries.search(request)          ["wordFrequency", "project", projectId, "search", request]
+ *   wordFrequencyQueries.search(projectId, req)   ["wordFrequency", "project", projectId, "search", req]
  */
 export const wordFrequencyQueries = {
   all: () => ["wordFrequency"] as const,
@@ -27,10 +25,12 @@ export const wordFrequencyQueries = {
     }),
 
   searchScope: (projectId: number) => [...wordFrequencyQueries.projectScope(projectId), "search"] as const,
-  search: (request: WordFrequencySearchRequest) =>
+  // the word frequencies; takes the backend request without the page, which the queryFn adds
+  search: (projectId: number, request: Omit<WordFrequencySearchRequest, "page_number">) =>
     infiniteQueryOptions({
-      queryKey: [...wordFrequencyQueries.searchScope(request.projectId), request] as const,
-      queryFn: ({ pageParam }) => WordFrequencyService.computeWordFrequencies({ ...request, page: pageParam }),
+      queryKey: [...wordFrequencyQueries.searchScope(projectId), request] as const,
+      queryFn: ({ pageParam }) =>
+        WordFrequencyService.computeWordFrequencies({ projectId, requestBody: { ...request, page_number: pageParam } }),
       initialPageParam: 0,
       getNextPageParam: (_lastGroup, groups) => groups.length,
       staleTime: 1000 * 60 * 5,

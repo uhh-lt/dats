@@ -2,13 +2,17 @@
 /* istanbul ignore file */
 /* tslint:disable */
 /* eslint-disable */
-export type Body_sentenceAnnotation_count = {
+export type KeywordStatisticsRequest = {
   /**
    * The SourceDocuments to count in
    */
   sdoc_ids: Array<number>;
   /**
-   * The Codes to count
+   * Sort by the count in the whole Project
    */
-  code_ids: Array<number>;
+  sort_by_global?: boolean;
+  /**
+   * Number of keywords to return
+   */
+  top_k?: number;
 };

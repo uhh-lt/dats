@@ -2,11 +2,11 @@
 /* istanbul ignore file */
 /* tslint:disable */
 /* eslint-disable */
-import type { Body_tag_count } from "@models/Body_tag_count";
-import type { Body_tag_update_sdoc_tags_bulk } from "@models/Body_tag_update_sdoc_tags_bulk";
 import type { SdocTagLinks } from "@models/SdocTagLinks";
 import type { SdocTagLinksResult } from "@models/SdocTagLinksResult";
 import type { SourceDocumentTagMultiLink } from "@models/SourceDocumentTagMultiLink";
+import type { SourceDocumentTagMultiLinkRequest } from "@models/SourceDocumentTagMultiLinkRequest";
+import type { TagCountRequest } from "@models/TagCountRequest";
 import type { TagCreate } from "@models/TagCreate";
 import type { TagRead } from "@models/TagRead";
 import type { TagUpdate } from "@models/TagUpdate";
@@ -113,7 +113,7 @@ export class TagService {
     requestBody,
   }: {
     projectId: number;
-    requestBody: Body_tag_update_sdoc_tags_bulk;
+    requestBody: SourceDocumentTagMultiLinkRequest;
   }): CancelablePromise<SdocTagLinksResult> {
     return __request(OpenAPI, {
       method: "PATCH",
@@ -333,7 +333,7 @@ export class TagService {
     requestBody,
   }: {
     projectId: number;
-    requestBody: Body_tag_count;
+    requestBody: TagCountRequest;
   }): CancelablePromise<Record<string, number>> {
     return __request(OpenAPI, {
       method: "POST",

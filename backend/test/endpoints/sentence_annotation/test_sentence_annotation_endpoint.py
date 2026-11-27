@@ -667,8 +667,7 @@ def test_count_annotations(
 
     resp = client.post(
         _route(project.id) + "/count",
-        params={"user_id": test_user.id},
-        json={"sdoc_ids": [sdoc.id], "code_ids": [code.id]},
+        json={"user_id": test_user.id, "sdoc_ids": [sdoc.id], "code_ids": [code.id]},
     )
 
     assert resp.status_code == 200, resp.text
@@ -681,8 +680,7 @@ def test_count_annotation_if_not_exists(
     """Documents and codes that do not exist match nothing."""
     resp = client.post(
         _route(test_project.id) + "/count",
-        params={"user_id": test_user.id},
-        json={"sdoc_ids": [2000], "code_ids": [2000]},
+        json={"user_id": test_user.id, "sdoc_ids": [2000], "code_ids": [2000]},
     )
 
     assert resp.status_code == 200, resp.text
@@ -699,8 +697,11 @@ def test_count_annotations_of_another_project_match_nothing(
 
     resp = client.post(
         _route(own["project"].id) + "/count",
-        params={"user_id": own["adoc"].user_id},
-        json={"sdoc_ids": [foreign["sdoc"].id], "code_ids": [foreign["code"].id]},
+        json={
+            "user_id": own["adoc"].user_id,
+            "sdoc_ids": [foreign["sdoc"].id],
+            "code_ids": [foreign["code"].id],
+        },
     )
 
     assert resp.status_code == 200, resp.text
@@ -986,13 +987,17 @@ def test_create_sentence_annotation_as_virtual_user(
 
     response = client.put(
         _route(virtual_user_project["project"].id),
-        params={"user_id": run2.id},
-        json=SentenceAnnotationCreate(
-            sdoc_id=virtual_user_project["sdoc"].id,
-            code_id=virtual_user_project["code"].id,
-            sentence_id_start=1,
-            sentence_id_end=1,
-        ).model_dump(),
+        json={
+            "user_id": run2.id,
+            **(
+                SentenceAnnotationCreate(
+                    sdoc_id=virtual_user_project["sdoc"].id,
+                    code_id=virtual_user_project["code"].id,
+                    sentence_id_start=1,
+                    sentence_id_end=1,
+                ).model_dump()
+            ),
+        },
     )
 
     assert response.status_code == 200, response.text

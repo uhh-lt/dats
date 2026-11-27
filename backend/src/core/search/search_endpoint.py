@@ -27,6 +27,7 @@ from core.search.search_dto import (
     PaginatedSDocHits,
     QueryRequest,
     SentenceAnnotationRow,
+    SourceDocumentSearchRequest,
     SpanAnnotationRow,
 )
 from core.search.sent_anno_search.sent_anno_search import (
@@ -42,9 +43,7 @@ from core.search.span_anno_search.span_anno_search import (
 )
 from core.search.span_anno_search.span_anno_search_columns import SpanColumns
 from systems.search_system.column_info import ColumnInfo
-from systems.search_system.filtering import Filter
 from systems.search_system.grouping import GroupPage, GroupQueryRequest
-from systems.search_system.sorting import Sort
 
 router = project_router("/search", tags=["search", "mcp"])
 
@@ -71,30 +70,21 @@ def search_sdocs(
     *,
     db: DBSession,
     project_id: int,
-    search_query: str,
-    expert_mode: bool,
-    filter: Filter[SdocColumns],
-    sorts: list[Sort[SdocColumns]],
-    highlight: bool,
-    folder_id: int | None = None,
-    page_number: int | None = None,
-    page_size: int | None = None,
-    show_folders: bool = True,
-    show_child_folders: bool = False,
+    request: SourceDocumentSearchRequest,
 ) -> PaginatedSDocHits:
     return find_sdocs(
         db=db,
-        search_query=search_query,
-        expert_mode=expert_mode,
-        highlight=highlight,
+        search_query=request.search_query,
+        expert_mode=request.expert_mode,
+        highlight=request.highlight,
         project_id=project_id,
-        folder_id=folder_id,
-        filter=filter,
-        sorts=sorts,
-        page_number=page_number,
-        page_size=page_size,
-        show_folders=show_folders,
-        show_child_folders=show_child_folders,
+        folder_id=request.folder_id,
+        filter=request.filter,
+        sorts=request.sorts,
+        page_number=request.page_number,
+        page_size=request.page_size,
+        show_folders=request.show_folders,
+        show_child_folders=request.show_child_folders,
     )
 
 

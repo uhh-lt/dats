@@ -4,7 +4,7 @@ import { PerspectivesService } from "@api/services/PerspectivesService";
 import { RagService } from "@api/services/RagService";
 import { MyFilter } from "@core/filter";
 import { AspectRead } from "@models/AspectRead";
-import { Body_perspectives_compute_visualization } from "@models/Body_perspectives_compute_visualization";
+import { VisualizationRequest } from "@models/VisualizationRequest";
 import { ClusterRead } from "@models/ClusterRead";
 import { PerspectivesJobRead } from "@models/PerspectivesJobRead";
 import { PerspectivesJobStart } from "@models/PerspectivesJobStart";
@@ -119,21 +119,17 @@ const useLabelDocs = (projectId: number, aspectId: number) => {
       PerspectivesService.acceptLabels({
         projectId,
         aspectId,
-        searchQuery,
         requestBody: {
+          search_query: searchQuery,
           sdoc_ids: sdocIds,
-          filter: filter as Body_perspectives_compute_visualization["filter"],
+          filter: filter as VisualizationRequest["filter"],
           sorts: [],
         },
       }),
     onSuccess: (data) => {
       queryClient.setQueryData(
-        perspectivesQueries.visualization(
-          projectId,
-          aspectId,
-          searchQuery,
-          filter as Body_perspectives_compute_visualization["filter"],
-        ).queryKey,
+        perspectivesQueries.visualization(projectId, aspectId, searchQuery, filter as VisualizationRequest["filter"])
+          .queryKey,
         data,
       );
     },
@@ -152,21 +148,17 @@ const useUnlabelDocs = (projectId: number, aspectId: number) => {
       PerspectivesService.revertLabels({
         projectId,
         aspectId,
-        searchQuery,
         requestBody: {
+          search_query: searchQuery,
           sdoc_ids: sdocIds,
-          filter: filter as Body_perspectives_compute_visualization["filter"],
+          filter: filter as VisualizationRequest["filter"],
           sorts: [],
         },
       }),
     onSuccess: (data) => {
       queryClient.setQueryData(
-        perspectivesQueries.visualization(
-          projectId,
-          aspectId,
-          searchQuery,
-          filter as Body_perspectives_compute_visualization["filter"],
-        ).queryKey,
+        perspectivesQueries.visualization(projectId, aspectId, searchQuery, filter as VisualizationRequest["filter"])
+          .queryKey,
         data,
       );
     },

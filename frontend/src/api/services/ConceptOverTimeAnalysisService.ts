@@ -2,11 +2,12 @@
 /* istanbul ignore file */
 /* tslint:disable */
 /* eslint-disable */
+import type { AnnotateSentencesRequest } from "@models/AnnotateSentencesRequest";
 import type { ConceptOverTimeAnalysisCreate } from "@models/ConceptOverTimeAnalysisCreate";
 import type { ConceptOverTimeAnalysisRead } from "@models/ConceptOverTimeAnalysisRead";
 import type { ConceptOverTimeAnalysisUpdate } from "@models/ConceptOverTimeAnalysisUpdate";
 import type { COTARefinementHyperparameters } from "@models/COTARefinementHyperparameters";
-import type { COTASentenceID } from "@models/COTASentenceID";
+import type { RemoveSentencesRequest } from "@models/RemoveSentencesRequest";
 import type { CancelablePromise } from "../core/CancelablePromise";
 import { OpenAPI } from "../core/OpenAPI";
 import { request as __request } from "../core/request";
@@ -195,12 +196,10 @@ export class ConceptOverTimeAnalysisService {
     projectId,
     cotaId,
     requestBody,
-    conceptId,
   }: {
     projectId: number;
     cotaId: number;
-    requestBody: Array<COTASentenceID>;
-    conceptId?: string | null;
+    requestBody: AnnotateSentencesRequest;
   }): CancelablePromise<ConceptOverTimeAnalysisRead> {
     return __request(OpenAPI, {
       method: "PATCH",
@@ -208,9 +207,6 @@ export class ConceptOverTimeAnalysisService {
       path: {
         project_id: projectId,
         cota_id: cotaId,
-      },
-      query: {
-        concept_id: conceptId,
       },
       body: requestBody,
       mediaType: "application/json",
@@ -235,7 +231,7 @@ export class ConceptOverTimeAnalysisService {
   }: {
     projectId: number;
     cotaId: number;
-    requestBody: Array<COTASentenceID>;
+    requestBody: RemoveSentencesRequest;
   }): CancelablePromise<ConceptOverTimeAnalysisRead> {
     return __request(OpenAPI, {
       method: "PATCH",

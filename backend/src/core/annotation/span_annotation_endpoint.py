@@ -1,10 +1,11 @@
-from fastapi import Body, Depends, Query
+from fastapi import Depends
 
 from common.dats_event import DATSEvent
 from common.dependencies import DBSession
 from common.project_router import project_router
 from core.annotation.span_annotation_crud import crud_span_anno
 from core.annotation.span_annotation_dto import (
+    SpanAnnotationCountRequest,
     SpanAnnotationCreate,
     SpanAnnotationDeleted,
     SpanAnnotationRead,
@@ -32,17 +33,13 @@ def create(
     db: DBSession,
     project_id: int,
     span: SpanAnnotationCreate,
-    user_id: int | None = Query(
-        default=None,
-        description="The current user (default) or a virtual user of the project",
-    ),
     authz_user: AuthzUser = Depends(),
     ws: WebsocketEmitter = Depends(),
 ) -> SpanAnnotationRead:
-    annotation_user_id = authz_user.assert_can_annotate_as(user_id, project_id)
+    authz_user.assert_can_annotate_as(span.user_id, project_id)
 
     result = SpanAnnotationService().create(
-        db=db, project_id=project_id, user_id=annotation_user_id, create_dto=span
+        db=db, project_id=project_id, user_id=authz_user.user.id, create_dto=span
     )
     ws.emit_to_project(DATSEvent.SPAN_ANNOTATION_CREATED, result, project_id=project_id)
     return result
@@ -58,17 +55,14 @@ def create_bulk(
     db: DBSession,
     project_id: int,
     spans: list[SpanAnnotationCreate],
-    user_id: int | None = Query(
-        default=None,
-        description="The current user (default) or a virtual user of the project",
-    ),
     authz_user: AuthzUser = Depends(),
     ws: WebsocketEmitter = Depends(),
 ) -> list[SpanAnnotationRead]:
-    annotation_user_id = authz_user.assert_can_annotate_as(user_id, project_id)
+    for user_id in dict.fromkeys(dto.user_id for dto in spans):
+        authz_user.assert_can_annotate_as(user_id, project_id)
 
     results = SpanAnnotationService().create_multi(
-        db=db, project_id=project_id, user_id=annotation_user_id, create_dtos=spans
+        db=db, project_id=project_id, user_id=authz_user.user.id, create_dtos=spans
     )
     if results:
         ws.emit_to_project(
@@ -298,14 +292,12 @@ def count(
     *,
     db: DBSession,
     project_id: int,
-    user_id: int,
-    sdoc_ids: list[int] = Body(description="The SourceDocuments to count in"),
-    code_ids: list[int] = Body(description="The Codes to count"),
+    request: SpanAnnotationCountRequest,
 ) -> dict[int, int]:
     return crud_span_anno.count_by_codes_and_sdocs_and_user(
         db=db,
         project_id=project_id,
-        code_ids=code_ids,
-        sdoc_ids=sdoc_ids,
-        user_id=user_id,
+        code_ids=request.code_ids,
+        sdoc_ids=request.sdoc_ids,
+        user_id=request.user_id,
     )

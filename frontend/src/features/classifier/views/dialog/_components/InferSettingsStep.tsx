@@ -81,15 +81,13 @@ export function InferenceSettingsStep() {
       case ClassifierModel.SENTENCE:
         countSentenceAnnotations({
           projectId,
-          userId: countUserId,
-          requestBody: { sdoc_ids: sdocIds, code_ids: classIds },
+          requestBody: { user_id: countUserId, sdoc_ids: sdocIds, code_ids: classIds },
         });
         break;
       case ClassifierModel.SPAN:
         countSpanAnnotations({
           projectId,
-          userId: countUserId,
-          requestBody: { sdoc_ids: sdocIds, code_ids: classIds },
+          requestBody: { user_id: countUserId, sdoc_ids: sdocIds, code_ids: classIds },
         });
         break;
     }

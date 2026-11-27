@@ -56,15 +56,15 @@ export function AnalysisAssistant() {
 
     ragChat.mutate(
       {
-        model: model,
-        sessionId: sessionId,
         projectId,
         requestBody: {
           query: newUserMessage.message,
           sdoc_ids: selectedSdocIds,
+          top_k: selectedSdocIds.length, // Adjust as needed
+          threshold: 0.5,
+          model: model,
+          session_id: sessionId,
         },
-        threshold: 0.5,
-        topK: selectedSdocIds.length, // Adjust as needed
       },
       {
         onSuccess: (response) => {

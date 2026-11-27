@@ -50,7 +50,8 @@ class DATSAPI:
             "accept": "application/json",
         }
         r = requests.post(
-            f"{self.BASE_PATH}authentication/refresh-access?refresh_token={self.refresh_token}",
+            f"{self.BASE_PATH}authentication/refresh-access",
+            json={"refresh_token": self.refresh_token},
             headers=headers,
         )
         r.raise_for_status()
@@ -164,10 +165,12 @@ class DATSAPI:
         # get all sdoc ids
         r = requests.post(
             self.BASE_PATH
-            + f"projects/{proj_id}/search/source-documents"
-            + "?search_query=%20&expert_mode=false&highlight=false",
+            + f"projects/{proj_id}/search/source-documents",
             data=json.dumps(
                 {
+                    "search_query": " ",
+                    "expert_mode": False,
+                    "highlight": False,
                     "filter": {
                         "id": "asdf",
                         "items": [
@@ -221,10 +224,12 @@ class DATSAPI:
         # get all sdoc ids
         r = requests.post(
             self.BASE_PATH
-            + f"projects/{proj_id}/search/source-documents"
-            + "?search_query=%20&expert_mode=false&highlight=false",
+            + f"projects/{proj_id}/search/source-documents",
             data=json.dumps(
                 {
+                    "search_query": " ",
+                    "expert_mode": False,
+                    "highlight": False,
                     "filter": {"id": "asdf", "items": [], "logic_operator": "or"},
                     "sorts": [],
                 }
@@ -242,10 +247,12 @@ class DATSAPI:
         # get all sdoc ids
         r = requests.post(
             self.BASE_PATH
-            + f"projects/{proj_id}/search/source-documents"
-            + "?search_query=%20&expert_mode=false&highlight=false",
+            + f"projects/{proj_id}/search/source-documents",
             data=json.dumps(
                 {
+                    "search_query": " ",
+                    "expert_mode": False,
+                    "highlight": False,
                     "filter": {
                         "id": "asdf",
                         "items": [

@@ -31,9 +31,7 @@ export const similaritySearchQueries = {
       queryFn: () =>
         SimilaritySearchService.findSimilarImages({
           projectId,
-          threshold,
-          topK,
-          requestBody: { query: searchQuery, filter },
+          requestBody: { query: searchQuery, top_k: topK, threshold, filter },
         }),
       staleTime: 1000 * 60 * 5,
     }),
@@ -45,9 +43,7 @@ export const similaritySearchQueries = {
       queryFn: () =>
         SimilaritySearchService.findSimilarSentences({
           projectId,
-          threshold,
-          topK,
-          requestBody: { filter, query: searchQuery },
+          requestBody: { query: searchQuery, top_k: topK, threshold, filter },
         }),
       staleTime: 1000 * 60 * 5,
     }),

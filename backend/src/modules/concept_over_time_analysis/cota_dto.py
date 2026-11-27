@@ -244,3 +244,18 @@ class COTARefinementJobRead(JobRead[COTARefinementJobInput, None]):
     job_type: Literal["cota_refinement"] = Field(
         description="Type of the job", json_schema_extra={"enum": ["cota_refinement"]}
     )
+
+
+class AnnotateSentencesRequest(BaseModel):
+    cota_sentence_ids: list[COTASentenceID] = Field(
+        description="The sentences to annotate"
+    )
+    concept_id: str | None = Field(
+        default=None, description="The concept of the sentences; none if null"
+    )
+
+
+class RemoveSentencesRequest(BaseModel):
+    cota_sentence_ids: list[COTASentenceID] = Field(
+        description="The sentences to remove"
+    )

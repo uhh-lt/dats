@@ -2,10 +2,10 @@
 /* istanbul ignore file */
 /* tslint:disable */
 /* eslint-disable */
-import type { Body_wordFrequency_compute_word_frequencies } from "@models/Body_wordFrequency_compute_word_frequencies";
-import type { Body_wordFrequency_export } from "@models/Body_wordFrequency_export";
 import type { ColumnInfo_WordFrequencyColumns_ } from "@models/ColumnInfo_WordFrequencyColumns_";
+import type { WordFrequencyExportRequest } from "@models/WordFrequencyExportRequest";
 import type { WordFrequencyResult } from "@models/WordFrequencyResult";
+import type { WordFrequencySearchRequest } from "@models/WordFrequencySearchRequest";
 import type { CancelablePromise } from "../core/CancelablePromise";
 import { OpenAPI } from "../core/OpenAPI";
 import { request as __request } from "../core/request";
@@ -42,24 +42,16 @@ export class WordFrequencyService {
    */
   public static computeWordFrequencies({
     projectId,
-    page,
-    pageSize,
     requestBody,
   }: {
     projectId: number;
-    page: number;
-    pageSize: number;
-    requestBody: Body_wordFrequency_compute_word_frequencies;
+    requestBody: WordFrequencySearchRequest;
   }): CancelablePromise<WordFrequencyResult> {
     return __request(OpenAPI, {
       method: "POST",
       url: "/projects/{project_id}/word-frequencies",
       path: {
         project_id: projectId,
-      },
-      query: {
-        page: page,
-        page_size: pageSize,
       },
       body: requestBody,
       mediaType: "application/json",
@@ -82,7 +74,7 @@ export class WordFrequencyService {
     requestBody,
   }: {
     projectId: number;
-    requestBody: Body_wordFrequency_export;
+    requestBody: WordFrequencyExportRequest;
   }): CancelablePromise<string> {
     return __request(OpenAPI, {
       method: "POST",

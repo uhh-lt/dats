@@ -2,9 +2,8 @@
 /* istanbul ignore file */
 /* tslint:disable */
 /* eslint-disable */
-import type { Body_similaritySearch_find_similar_images } from "@models/Body_similaritySearch_find_similar_images";
-import type { Body_similaritySearch_find_similar_sentences } from "@models/Body_similaritySearch_find_similar_sentences";
 import type { SimSearchImageHit } from "@models/SimSearchImageHit";
+import type { SimSearchRequest } from "@models/SimSearchRequest";
 import type { SimSearchSentenceHit } from "@models/SimSearchSentenceHit";
 import type { CancelablePromise } from "../core/CancelablePromise";
 import { OpenAPI } from "../core/OpenAPI";
@@ -17,24 +16,16 @@ export class SimilaritySearchService {
    */
   public static findSimilarSentences({
     projectId,
-    topK,
-    threshold,
     requestBody,
   }: {
     projectId: number;
-    topK: number;
-    threshold: number;
-    requestBody: Body_similaritySearch_find_similar_sentences;
+    requestBody: SimSearchRequest;
   }): CancelablePromise<Array<SimSearchSentenceHit>> {
     return __request(OpenAPI, {
       method: "POST",
       url: "/projects/{project_id}/similarity-search/sentences",
       path: {
         project_id: projectId,
-      },
-      query: {
-        top_k: topK,
-        threshold: threshold,
       },
       body: requestBody,
       mediaType: "application/json",
@@ -54,24 +45,16 @@ export class SimilaritySearchService {
    */
   public static findSimilarImages({
     projectId,
-    topK,
-    threshold,
     requestBody,
   }: {
     projectId: number;
-    topK: number;
-    threshold: number;
-    requestBody: Body_similaritySearch_find_similar_images;
+    requestBody: SimSearchRequest;
   }): CancelablePromise<Array<SimSearchImageHit>> {
     return __request(OpenAPI, {
       method: "POST",
       url: "/projects/{project_id}/similarity-search/images",
       path: {
         project_id: projectId,
-      },
-      query: {
-        top_k: topK,
-        threshold: threshold,
       },
       body: requestBody,
       mediaType: "application/json",

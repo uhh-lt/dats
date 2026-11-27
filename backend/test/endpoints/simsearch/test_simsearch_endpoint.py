@@ -40,8 +40,7 @@ def test_similarity_search_is_rejected_when_semantic_search_is_disabled(
     sentences and images alike."""
     response = client.post(
         f"/projects/{featureless_project['project'].id}{path}",
-        params={"top_k": 10, "threshold": 0.5},
-        json={"query": "alpha", "filter": EMPTY_FILTER},
+        json={"top_k": 10, "threshold": 0.5, "query": "alpha", "filter": EMPTY_FILTER},
     )
 
     assert_feature_disabled(response, "semantic_search")
@@ -67,8 +66,12 @@ def test_similarity_search_rejects_a_list_query(
     `query` of the body, not for a missing URL parameter."""
     response = client.post(
         f"/projects/{test_project.id}{path}",
-        params={"top_k": 10, "threshold": 0.5},
-        json={"query": ["alpha", "beta"], "filter": EMPTY_FILTER},
+        json={
+            "top_k": 10,
+            "threshold": 0.5,
+            "query": ["alpha", "beta"],
+            "filter": EMPTY_FILTER,
+        },
     )
 
     assert response.status_code == 422, response.text
@@ -104,8 +107,7 @@ def clip_calls(monkeypatch: pytest.MonkeyPatch) -> dict[str, list[object]]:
 def _search(client: TestClient, path: str, project_id: int, query: str | int):
     return client.post(
         f"/projects/{project_id}{path}",
-        params={"top_k": 10, "threshold": 0.75},
-        json={"query": query, "filter": EMPTY_FILTER},
+        json={"top_k": 10, "threshold": 0.75, "query": query, "filter": EMPTY_FILTER},
     )
 
 
@@ -224,8 +226,9 @@ def test_image_search_filtered_by_a_tag_of_another_project_finds_nothing(
 
     response = client.post(
         f"/projects/{p['project'].id}/similarity-search/images",
-        params={"top_k": 10, "threshold": 0.75},
         json={
+            "top_k": 10,
+            "threshold": 0.75,
             "query": "red",
             "filter": {
                 "id": "root",

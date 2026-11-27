@@ -694,7 +694,7 @@ def test_count_span_annotations(
 
     payload = {"sdoc_ids": [sdoc.id], "code_ids": [code.id]}
     resp = client.post(
-        f"{_url(project.id)}/count", params={"user_id": test_user.id}, json=payload
+        f"{_url(project.id)}/count", json={"user_id": test_user.id, **(payload)}
     )
 
     assert resp.status_code == 200, resp.text
@@ -712,8 +712,7 @@ def test_count_annotation_if_not_exists(
 
     resp = client.post(
         f"{_url(test_project.id)}/count",
-        params={"user_id": not_existing_id},
-        json=payload,
+        json={"user_id": not_existing_id, **(payload)},
     )
 
     assert resp.status_code == 200, resp.text
@@ -1161,8 +1160,10 @@ def test_create_span_annotation_as_virtual_user(
 
     response = client.put(
         _url(virtual_user_project["project"].id),
-        params={"user_id": run2.id},
-        json=_virtual_user_span_create(virtual_user_project, "gamma.").model_dump(),
+        json={
+            "user_id": run2.id,
+            **(_virtual_user_span_create(virtual_user_project, "gamma.").model_dump()),
+        },
     )
 
     assert response.status_code == 200, response.text
@@ -1189,8 +1190,10 @@ def test_create_span_annotation_as_current_user(
 
     response = client.put(
         _url(virtual_user_project["project"].id),
-        params={"user_id": user.id} if params is None else params,
-        json=_virtual_user_span_create(virtual_user_project, "zeta.").model_dump(),
+        json={
+            **({"user_id": user.id} if params is None else params),
+            **(_virtual_user_span_create(virtual_user_project, "zeta.").model_dump()),
+        },
     )
 
     assert response.status_code == 200, response.text
@@ -1217,8 +1220,10 @@ def test_create_span_annotation_as_other_user_or_outsider_virtual_user_is_forbid
 
     response = client.put(
         _url(virtual_user_project["project"].id),
-        params={"user_id": user.id},
-        json=_virtual_user_span_create(virtual_user_project, "gamma.").model_dump(),
+        json={
+            "user_id": user.id,
+            **(_virtual_user_span_create(virtual_user_project, "gamma.").model_dump()),
+        },
     )
 
     assert response.status_code == 403, response.text
@@ -1405,9 +1410,11 @@ def test_create_span_annotations_bulk_as_virtual_user(
 
     response = client.put(
         f"{_url(virtual_user_project['project'].id)}/bulk",
-        params={"user_id": run2.id},
         json=[
-            _virtual_user_span_create(virtual_user_project, text).model_dump()
+            {
+                **_virtual_user_span_create(virtual_user_project, text).model_dump(),
+                "user_id": run2.id,
+            }
             for text in ("beta", "epsilon")
         ],
     )

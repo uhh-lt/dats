@@ -1,12 +1,12 @@
 from sqlalchemy import select
 from sqlalchemy.orm import Session
 
-from core.auth.api_key_dto import ApiKeyCreate
+from core.auth.api_key_dto import ApiKeyCreateIntern
 from core.auth.api_key_orm import ApiKeyORM
 from repos.db.crud_base import SQLCRUDBase, UpdateNotAllowed
 
 
-class CRUDApiKey(SQLCRUDBase[ApiKeyORM, ApiKeyCreate, UpdateNotAllowed]):
+class CRUDApiKey(SQLCRUDBase[ApiKeyORM, ApiKeyCreateIntern, UpdateNotAllowed]):
     ### CREATE OPERATIONS ###
     # Inherited from SQLCRUDBase
 

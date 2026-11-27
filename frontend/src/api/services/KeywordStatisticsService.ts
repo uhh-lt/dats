@@ -3,6 +3,7 @@
 /* tslint:disable */
 /* eslint-disable */
 import type { KeywordStat } from "@models/KeywordStat";
+import type { KeywordStatisticsRequest } from "@models/KeywordStatisticsRequest";
 import type { CancelablePromise } from "../core/CancelablePromise";
 import { OpenAPI } from "../core/OpenAPI";
 import { request as __request } from "../core/request";
@@ -15,23 +16,15 @@ export class KeywordStatisticsService {
   public static computeKeywordStatistics({
     projectId,
     requestBody,
-    sortByGlobal = false,
-    topK = 20,
   }: {
     projectId: number;
-    requestBody: Array<number>;
-    sortByGlobal?: boolean;
-    topK?: number;
+    requestBody: KeywordStatisticsRequest;
   }): CancelablePromise<Array<KeywordStat>> {
     return __request(OpenAPI, {
       method: "POST",
       url: "/projects/{project_id}/keyword-statistics",
       path: {
         project_id: projectId,
-      },
-      query: {
-        sort_by_global: sortByGlobal,
-        top_k: topK,
       },
       body: requestBody,
       mediaType: "application/json",

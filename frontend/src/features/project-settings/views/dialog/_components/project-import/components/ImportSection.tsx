@@ -64,9 +64,9 @@ export function ImportSection({ projectId }: { projectId: number }) {
     // Start the import job
     startImportMutation(
       {
-        importJobType: importType,
         projectId,
         formData: {
+          import_job_type: importType,
           // @ts-expect-error: ignore this error until we switch to new codegen heyapi.dev
           uploaded_file: file,
         },

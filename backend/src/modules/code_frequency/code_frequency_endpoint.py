@@ -1,7 +1,11 @@
 from common.dependencies import DBSession
-from common.doc_type_enum import DocType
 from common.project_router import project_router
-from modules.code_frequency.code_frequency_dto import CodeFrequency, CodeOccurrence
+from modules.code_frequency.code_frequency_dto import (
+    CodeFrequency,
+    CodeFrequencyRequest,
+    CodeOccurrence,
+    CodeOccurrenceRequest,
+)
 from modules.code_frequency.code_frequency_service import CodeFrequencyService
 
 router = project_router("/code-frequencies", tags=["codeFrequency"])
@@ -19,17 +23,15 @@ def compute_code_frequencies(
     *,
     db: DBSession,
     project_id: int,
-    code_ids: list[int],
-    user_ids: list[int],
-    doctypes: list[DocType],
+    request: CodeFrequencyRequest,
 ) -> list[CodeFrequency]:
 
     return CodeFrequencyService().compute_code_frequencies(
         db=db,
         project_id=project_id,
-        code_ids=code_ids,
-        user_ids=user_ids,
-        doctypes=doctypes,
+        code_ids=request.code_ids,
+        user_ids=request.user_ids,
+        doctypes=request.doctypes,
     )
 
 
@@ -42,17 +44,14 @@ def compute_code_occurrences(
     *,
     db: DBSession,
     project_id: int,
-    user_ids: list[int],
-    code_id: int,
-    return_children: bool,
-    doctypes: list[DocType],
+    request: CodeOccurrenceRequest,
 ) -> list[CodeOccurrence]:
 
     return CodeFrequencyService().compute_code_occurrences(
         db=db,
         project_id=project_id,
-        user_ids=user_ids,
-        code_id=code_id,
-        doctypes=doctypes,
-        return_children=return_children,
+        user_ids=request.user_ids,
+        code_id=request.code_id,
+        doctypes=request.doctypes,
+        return_children=request.return_children,
     )

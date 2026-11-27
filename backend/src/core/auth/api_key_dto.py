@@ -2,8 +2,15 @@ from datetime import datetime
 
 from pydantic import BaseModel, ConfigDict, Field
 
+from core.auth.auth_enum import ExpiryDuration
+
 
 class ApiKeyCreate(BaseModel):
+    name: str = Field(description="Name of the ApiKey")
+    expires_in: ExpiryDuration = Field(description="How long the ApiKey is valid")
+
+
+class ApiKeyCreateIntern(BaseModel):
     name: str = Field(description="Name of the ApiKey")
     prefix: str = Field(description="Public prefix of the ApiKey to identify it")
     hashed_key: str = Field(description="Hash of the full ApiKey")

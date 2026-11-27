@@ -46,11 +46,9 @@ def test_count_existing_assistant_annotations_separates_task_and_virtual_user(
     annotator = llm_assistant_project[annotator_key]
     response = client.post(
         _count_url(llm_assistant_project["project"].id),
-        params={
+        json={
             "task_type": task_type.value,
             "virtual_user_id": annotator.id,
-        },
-        json={
             "sdoc_ids": [llm_assistant_project["target_sdoc"].id],
             "code_ids": [code.id],
         },
@@ -78,11 +76,9 @@ def test_count_existing_assistant_annotations_returns_empty_for_other_tasks(
     """Non-annotation task types return an empty count mapping."""
     response = client.post(
         _count_url(llm_assistant_project["project"].id),
-        params={
+        json={
             "task_type": task_type.value,
             "virtual_user_id": llm_assistant_project["run_a"].id,
-        },
-        json={
             "sdoc_ids": [llm_assistant_project["target_sdoc"].id],
             "code_ids": [llm_assistant_project["person_code"].id],
         },
@@ -98,11 +94,9 @@ def test_count_existing_assistant_annotations_includes_explicit_zero_counts(
     """Every requested code is returned even when it has no matching annotations."""
     response = client.post(
         _count_url(llm_assistant_project["project"].id),
-        params={
+        json={
             "task_type": TaskType.ANNOTATION.value,
             "virtual_user_id": llm_assistant_project["run_a"].id,
-        },
-        json={
             "sdoc_ids": [
                 llm_assistant_project["target_sdoc"].id,
                 llm_assistant_project["no_match_sdoc"].id,
@@ -150,11 +144,7 @@ def test_count_existing_assistant_annotations_rejects_malformed_id_lists(
     body.update(body_update)
     response = client.post(
         _count_url(llm_assistant_project["project"].id),
-        params={
-            "task_type": TaskType.ANNOTATION.value,
-            "virtual_user_id": 1,
-        },
-        json=body,
+        json={"task_type": TaskType.ANNOTATION.value, "virtual_user_id": 1, **body},
     )
     assert response.status_code == 422, response.text
     assert expected_fragment in response.text
@@ -168,11 +158,9 @@ def test_count_existing_assistant_annotations_rejects_a_non_member(
     of (HTTP 403)."""
     response = client.post(
         _count_url(llm_assistant_project["outsider_project"].id),
-        params={
+        json={
             "task_type": TaskType.ANNOTATION.value,
             "virtual_user_id": llm_assistant_project["outsider_run"].id,
-        },
-        json={
             "sdoc_ids": [llm_assistant_project["outsider_sdoc"].id],
             "code_ids": [llm_assistant_project["outsider_code"].id],
         },
@@ -206,11 +194,9 @@ def test_count_existing_assistant_annotations_of_an_outsider_project_counts_zero
     code = llm_assistant_project[code_key]
     response = client.post(
         _count_url(llm_assistant_project["project"].id),
-        params={
+        json={
             "task_type": TaskType.ANNOTATION.value,
             "virtual_user_id": llm_assistant_project[annotator_key].id,
-        },
-        json={
             "sdoc_ids": [llm_assistant_project[sdoc_key].id],
             "code_ids": [code.id],
         },

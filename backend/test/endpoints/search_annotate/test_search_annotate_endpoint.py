@@ -16,7 +16,7 @@ def test_auto_annotate_works_in_a_project_without_features(
     sdoc = featureless_project["sdoc"]
     response = client.post(
         f"/projects/{featureless_project['project'].id}/search-annotate/candidates",
-        params={"query": "cat"},
+        json={"query": "cat"},
     )
 
     assert response.status_code == 200, response.text
@@ -33,7 +33,7 @@ def test_auto_annotate_finds_nothing_in_another_project(
     project of the user: searching the (empty) test project finds nothing."""
     response = client.post(
         f"/projects/{test_project.id}/search-annotate/candidates",
-        params={"query": "cat"},
+        json={"query": "cat"},
     )
 
     assert response.status_code == 200, response.text

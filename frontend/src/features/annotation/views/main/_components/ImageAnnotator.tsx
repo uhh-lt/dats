@@ -244,7 +244,7 @@ function ImageAnnotatorWithHeight({ sdocData, height }: ImageAnnotatorProps & { 
     const pending = toPendingBboxAnnotation(requestBody, visibleUserId, sdocData.project_id);
     setPendingAnnotations((prev) => [...prev, pending]);
     createMutation.mutate(
-      { projectId: sdocData.project_id, requestBody, userId: visibleUserId },
+      { projectId: sdocData.project_id, requestBody: { ...requestBody, user_id: visibleUserId } },
       {
         onSuccess,
         // remove the pending preview once the real annotation is in the cache (or the request failed)

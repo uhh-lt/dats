@@ -5,7 +5,7 @@
 import type { ExperimentCreate } from "@models/ExperimentCreate";
 import type { ExperimentRead } from "@models/ExperimentRead";
 import type { ExperimentRunCreate } from "@models/ExperimentRunCreate";
-import type { ExperimentRunLogFormat } from "@models/ExperimentRunLogFormat";
+import type { ExperimentRunLogExportRequest } from "@models/ExperimentRunLogExportRequest";
 import type { ExperimentUpdate } from "@models/ExperimentUpdate";
 import type { CancelablePromise } from "../core/CancelablePromise";
 import { OpenAPI } from "../core/OpenAPI";
@@ -280,12 +280,12 @@ export class ExperimentService {
     projectId,
     experimentId,
     runId,
-    exportFormat,
+    requestBody,
   }: {
     projectId: number;
     experimentId: number;
     runId: number;
-    exportFormat: ExperimentRunLogFormat;
+    requestBody: ExperimentRunLogExportRequest;
   }): CancelablePromise<string> {
     return __request(OpenAPI, {
       method: "POST",
@@ -295,9 +295,8 @@ export class ExperimentService {
         experiment_id: experimentId,
         run_id: runId,
       },
-      query: {
-        export_format: exportFormat,
-      },
+      body: requestBody,
+      mediaType: "application/json",
       errors: {
         400: `The request breaks a rule of the domain`,
         403: `The user is no member of the project, or the feature is disabled`,

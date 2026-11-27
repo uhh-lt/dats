@@ -8,9 +8,9 @@ from modules.experiment.experiment_crud import crud_experiment
 from modules.experiment.experiment_dto import (
     ExperimentCreate,
     ExperimentRead,
+    ExperimentRunLogExportRequest,
     ExperimentUpdate,
 )
-from modules.experiment.experiment_enum import ExperimentRunLogFormat
 from modules.experiment.experiment_run_dto import ExperimentRunCreate
 from modules.experiment.experiment_service import ExperimentService
 from systems.websocket_system.websocket_dependency import WebsocketEmitter
@@ -255,12 +255,12 @@ def export_run_log(
     project_id: int,
     experiment_id: int,
     run_id: int,
-    export_format: ExperimentRunLogFormat,
+    request: ExperimentRunLogExportRequest,
 ) -> str:
     return exs.export_run_log(
         db=db,
         project_id=project_id,
         experiment_id=experiment_id,
         run_id=run_id,
-        export_format=export_format,
+        export_format=request.export_format,
     )

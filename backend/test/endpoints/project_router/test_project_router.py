@@ -7,6 +7,7 @@ import re
 from typing import Any, Callable
 
 import pytest
+from fastapi import FastAPI
 from fastapi.routing import APIRoute, RouteContext, iter_route_contexts
 from fastapi.testclient import TestClient
 from starlette.routing import Mount, Route, WebSocketRoute
@@ -140,13 +141,16 @@ BODIES: dict[str, Callable[[TenantRows], Any]] = {
         lambda rows: {"name": "renamed"}
     ),
     "PATCH /projects/{project_id}/concept-over-time-analyses/{cota_id}/annotate-sentences": (
-        lambda rows: []
+        lambda rows: {"cota_sentence_ids": []}
     ),
     "PATCH /projects/{project_id}/concept-over-time-analyses/{cota_id}/remove-sentences": (
-        lambda rows: []
+        lambda rows: {"cota_sentence_ids": []}
     ),
     "POST /projects/{project_id}/concept-over-time-analyses/{cota_id}/refine": (
         lambda rows: {}
+    ),
+    "POST /projects/{project_id}/experiments/{experiment_id}/runs/{run_id}/export-log": (
+        lambda rows: {"export_format": "json"}
     ),
     "PATCH /projects/{project_id}/experiments/{experiment_id}": (
         lambda rows: {"name": "renamed"}
@@ -166,13 +170,21 @@ BODIES: dict[str, Callable[[TenantRows], Any]] = {
         lambda rows: {"name": "renamed"}
     ),
     "POST /projects/{project_id}/perspectives/aspects/{aspect_id}/visualization": (
-        lambda rows: {"filter": _NO_FILTER, "sorts": []}
+        lambda rows: {"search_query": "", "filter": _NO_FILTER}
     ),
     "PATCH /projects/{project_id}/perspectives/aspects/{aspect_id}/accept-labels": (
-        lambda rows: {"sdoc_ids": [rows["sdoc"].id], "filter": _NO_FILTER, "sorts": []}
+        lambda rows: {
+            "sdoc_ids": [rows["sdoc"].id],
+            "search_query": "",
+            "filter": _NO_FILTER,
+        }
     ),
     "PATCH /projects/{project_id}/perspectives/aspects/{aspect_id}/revert-labels": (
-        lambda rows: {"sdoc_ids": [rows["sdoc"].id], "filter": _NO_FILTER, "sorts": []}
+        lambda rows: {
+            "sdoc_ids": [rows["sdoc"].id],
+            "search_query": "",
+            "filter": _NO_FILTER,
+        }
     ),
     "PUT /projects/{project_id}/prompts/{prompt_id}/versions": lambda rows: {
         "text": "<document:whole> <codes> <output-format:inline>",
@@ -200,20 +212,8 @@ BODIES: dict[str, Callable[[TenantRows], Any]] = {
 
 # the required query parameters of the routes with a path id, by "<METHOD> <path>"
 QUERIES: dict[str, dict[str, str]] = {
-    "POST /projects/{project_id}/experiments/{experiment_id}/runs/{run_id}/export-log": {
-        "export_format": "json"
-    },
     "GET /projects/{project_id}/perspectives/aspects/{aspect_id}/clusters": {
         "sdoc_id": "0"
-    },
-    "POST /projects/{project_id}/perspectives/aspects/{aspect_id}/visualization": {
-        "search_query": ""
-    },
-    "PATCH /projects/{project_id}/perspectives/aspects/{aspect_id}/accept-labels": {
-        "search_query": ""
-    },
-    "PATCH /projects/{project_id}/perspectives/aspects/{aspect_id}/revert-labels": {
-        "search_query": ""
     },
 }
 
@@ -639,3 +639,50 @@ def test_search_filter_by_a_code_of_another_project_matches_nothing(
 
     assert search(own["code"].id) == [own["span"].id]
     assert search(foreign["code"].id) == []
+
+
+# ===========================================================================
+# ALL ROUTES: REQUEST SHAPES
+# ===========================================================================
+# The guide's "Request shape": the input of a create, an update, an action or a
+# computation is one body DTO (a bare list only on a bulk route), and query
+# parameters belong to GET reads only.
+
+# routes whose request shape is fixed from outside, by "<METHOD> <path>"
+REQUEST_SHAPE_EXCEPTIONS = {
+    # the OAuth2 password form
+    "POST /authentication/login",
+    # the tag recommendation routes wait for #976
+    "PATCH /projects/{project_id}/tag-recommendations/review",
+}
+
+
+def test_every_route_takes_one_body_dto_and_query_parameters_only_on_reads(
+    app: FastAPI,
+) -> None:
+    """No route besides a GET takes query parameters, no body is a set of loose
+    fields (a generated `Body_*` schema, except a multipart upload form), and a
+    bare list body is a bulk route."""
+    schema = app.openapi()
+    violations = []
+    for path, operations in schema["paths"].items():
+        for method, operation in operations.items():
+            route = f"{method.upper()} {path}"
+            if route in REQUEST_SHAPE_EXCEPTIONS:
+                continue
+            queries = [
+                p["name"] for p in operation.get("parameters", []) if p["in"] == "query"
+            ]
+            if queries and method != "get":
+                violations.append(f"{route}: query {queries}")
+            body = operation.get("requestBody")
+            if body is None:
+                continue
+            content_type, content = next(iter(body["content"].items()))
+            body_schema = content["schema"]
+            ref = body_schema.get("$ref", "").rsplit("/", 1)[-1]
+            if ref.startswith("Body_") and content_type != "multipart/form-data":
+                violations.append(f"{route}: loose body fields")
+            if body_schema.get("type") == "array" and "/bulk" not in path:
+                violations.append(f"{route}: bare list body")
+    assert violations == []

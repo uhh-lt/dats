@@ -115,8 +115,7 @@ export function SdocStatusTable({
   const handleRetry = useCallback(() => {
     retryDocProcessingJobs({
       projectId,
-      doctype: doctype,
-      requestBody: selectedRows,
+      requestBody: { doctype, sdoc_ids: selectedRows },
     });
   }, [doctype, projectId, retryDocProcessingJobs, selectedRows]);
 
@@ -126,8 +125,8 @@ export function SdocStatusTable({
     (step: string) => {
       recomputeDocProcessingJobs({
         projectId,
-        processingStep: step,
         requestBody: {
+          processing_step: step,
           sdoc_ids: selectedRows,
           settings: settings,
         },

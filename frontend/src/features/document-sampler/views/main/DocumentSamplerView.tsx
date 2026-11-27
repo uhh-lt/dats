@@ -47,9 +47,11 @@ export function DocumentSamplerView() {
   const onAggregate = useCallback(() => {
     aggregateSdocsByTags({
       projectId,
-      n: fixedSamplingValue,
-      frac: relativeSamplingValue,
-      requestBody: Object.values(aggregationGroups),
+      requestBody: {
+        tag_groups: Object.values(aggregationGroups),
+        n: fixedSamplingValue,
+        frac: relativeSamplingValue,
+      },
     });
   }, [aggregateSdocsByTags, aggregationGroups, fixedSamplingValue, projectId, relativeSamplingValue]);
 

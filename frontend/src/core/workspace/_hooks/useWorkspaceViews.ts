@@ -66,7 +66,7 @@ export function useWorkspaceViews<TColumns extends string, TRow extends { id: nu
 
   const handleReorderViews = useCallback(
     (viewIds: number[]) => {
-      reorderViewOrder({ projectId, entityType: config.entityType, requestBody: { view_ids: viewIds } });
+      reorderViewOrder({ projectId, requestBody: { entity_type: config.entityType, view_ids: viewIds } });
     },
     [projectId, config.entityType, reorderViewOrder],
   );

@@ -1,7 +1,10 @@
 from common.dependencies import DBSession
 from common.project_router import project_router
 from modules.search_annotate.search_annotate import search_and_auto_annotate
-from modules.search_annotate.search_annotate_dto import PaginatedSpanAnnotationHits
+from modules.search_annotate.search_annotate_dto import (
+    CandidateRequest,
+    PaginatedSpanAnnotationHits,
+)
 
 router = project_router("/search-annotate", tags=["searchAnnotate"])
 
@@ -15,10 +18,10 @@ def compute_candidates(
     *,
     db: DBSession,
     project_id: int,
-    query: str,
+    request: CandidateRequest,
 ) -> PaginatedSpanAnnotationHits:
     return search_and_auto_annotate(
         db=db,
         project_id=project_id,
-        query=query,
+        query=request.query,
     )

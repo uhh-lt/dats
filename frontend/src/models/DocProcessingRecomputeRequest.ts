@@ -3,7 +3,17 @@
 /* tslint:disable */
 /* eslint-disable */
 import type { ProcessingSettings } from "./ProcessingSettings";
-export type Body_docProcessing_recompute = {
+export type DocProcessingRecomputeRequest = {
+  /**
+   * The pipeline step to recompute
+   */
+  processing_step: string;
+  /**
+   * The SourceDocuments to recompute
+   */
   sdoc_ids: Array<number>;
+  /**
+   * Processing settings
+   */
   settings: ProcessingSettings;
 };

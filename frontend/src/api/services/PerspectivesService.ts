@@ -5,13 +5,12 @@
 import type { AspectCreate } from "@models/AspectCreate";
 import type { AspectRead } from "@models/AspectRead";
 import type { AspectUpdate } from "@models/AspectUpdate";
-import type { Body_perspectives_accept_labels } from "@models/Body_perspectives_accept_labels";
-import type { Body_perspectives_compute_visualization } from "@models/Body_perspectives_compute_visualization";
-import type { Body_perspectives_revert_labels } from "@models/Body_perspectives_revert_labels";
 import type { ClusterRead } from "@models/ClusterRead";
 import type { ClusterUpdate } from "@models/ClusterUpdate";
+import type { LabelDocumentsRequest } from "@models/LabelDocumentsRequest";
 import type { PerspectivesClusterSimilarities } from "@models/PerspectivesClusterSimilarities";
 import type { PerspectivesVisualization } from "@models/PerspectivesVisualization";
+import type { VisualizationRequest } from "@models/VisualizationRequest";
 import type { CancelablePromise } from "../core/CancelablePromise";
 import { OpenAPI } from "../core/OpenAPI";
 import { request as __request } from "../core/request";
@@ -289,13 +288,11 @@ export class PerspectivesService {
   public static computeVisualization({
     projectId,
     aspectId,
-    searchQuery,
     requestBody,
   }: {
     projectId: number;
     aspectId: number;
-    searchQuery: string;
-    requestBody: Body_perspectives_compute_visualization;
+    requestBody: VisualizationRequest;
   }): CancelablePromise<PerspectivesVisualization> {
     return __request(OpenAPI, {
       method: "POST",
@@ -303,9 +300,6 @@ export class PerspectivesService {
       path: {
         project_id: projectId,
         aspect_id: aspectId,
-      },
-      query: {
-        search_query: searchQuery,
       },
       body: requestBody,
       mediaType: "application/json",
@@ -326,13 +320,11 @@ export class PerspectivesService {
   public static acceptLabels({
     projectId,
     aspectId,
-    searchQuery,
     requestBody,
   }: {
     projectId: number;
     aspectId: number;
-    searchQuery: string;
-    requestBody: Body_perspectives_accept_labels;
+    requestBody: LabelDocumentsRequest;
   }): CancelablePromise<PerspectivesVisualization> {
     return __request(OpenAPI, {
       method: "PATCH",
@@ -340,9 +332,6 @@ export class PerspectivesService {
       path: {
         project_id: projectId,
         aspect_id: aspectId,
-      },
-      query: {
-        search_query: searchQuery,
       },
       body: requestBody,
       mediaType: "application/json",
@@ -363,13 +352,11 @@ export class PerspectivesService {
   public static revertLabels({
     projectId,
     aspectId,
-    searchQuery,
     requestBody,
   }: {
     projectId: number;
     aspectId: number;
-    searchQuery: string;
-    requestBody: Body_perspectives_revert_labels;
+    requestBody: LabelDocumentsRequest;
   }): CancelablePromise<PerspectivesVisualization> {
     return __request(OpenAPI, {
       method: "PATCH",
@@ -377,9 +364,6 @@ export class PerspectivesService {
       path: {
         project_id: projectId,
         aspect_id: aspectId,
-      },
-      query: {
-        search_query: searchQuery,
       },
       body: requestBody,
       mediaType: "application/json",

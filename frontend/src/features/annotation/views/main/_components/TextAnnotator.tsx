@@ -242,7 +242,7 @@ export function TextAnnotator({ sdocData }: TextAnnotatorProps) {
     };
     setPendingAnnotations((prev) => [...prev, { ...pending, code_id: codeId }]);
     createMutation.mutate(
-      { projectId: sdocData.project_id, requestBody, userId: visibleUserId },
+      { projectId: sdocData.project_id, requestBody: { ...requestBody, user_id: visibleUserId } },
       {
         onSuccess,
         // remove the pending preview once the real annotation is in the cache (or the request failed)

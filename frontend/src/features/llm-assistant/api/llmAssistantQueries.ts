@@ -44,9 +44,12 @@ export const llmAssistantQueries = {
           : () =>
               LlmAssistantService.computeExistingAnnotationCounts({
                 projectId,
-                taskType,
-                virtualUserId,
-                requestBody: { sdoc_ids: sdocIds, code_ids: codeIds },
+                requestBody: {
+                  task_type: taskType,
+                  virtual_user_id: virtualUserId,
+                  sdoc_ids: sdocIds,
+                  code_ids: codeIds,
+                },
               }),
     }),
 

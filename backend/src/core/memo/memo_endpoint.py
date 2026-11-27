@@ -8,6 +8,7 @@ from core.memo.memo_crud import crud_memo
 from core.memo.memo_dto import (
     MemoCreate,
     MemoRead,
+    MemoSuggestionRequest,
     MemoUpdate,
     MemoUpdateBulk,
 )
@@ -237,16 +238,14 @@ def compute_suggestions(
     *,
     db: DBSession,
     project_id: int,
-    attached_object_type: AttachedObjectType,
-    attached_object_id: int,
-    model: str,
+    request: MemoSuggestionRequest,
 ) -> str:
     attached_object = MemoService().read_attached_object(
         db=db,
         project_id=project_id,
-        attached_object_type=attached_object_type,
-        attached_object_id=attached_object_id,
+        attached_object_type=request.attached_object_type,
+        attached_object_id=request.attached_object_id,
     )
     return MemoGenerationService().generate_memo_suggestion(
-        db=db, obj=attached_object, model=model
+        db=db, obj=attached_object, model=request.model
     )

@@ -4,10 +4,21 @@
 /* eslint-disable */
 import type { Filter_SdocColumns__Input } from "./Filter_SdocColumns__Input";
 import type { Sort_SdocColumns_ } from "./Sort_SdocColumns_";
-export type Body_perspectives_compute_visualization = {
+export type LabelDocumentsRequest = {
   /**
-   * The filter of the Concept
+   * Full-text query that marks the matching documents
+   */
+  search_query: string;
+  /**
+   * Column filter tree
    */
   filter: Filter_SdocColumns__Input;
-  sorts: Array<Sort_SdocColumns_>;
+  /**
+   * Ordered sort expressions
+   */
+  sorts?: Array<Sort_SdocColumns_>;
+  /**
+   * The SourceDocuments whose labels change
+   */
+  sdoc_ids: Array<number>;
 };
