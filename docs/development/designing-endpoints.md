@@ -4,7 +4,7 @@ This page explains how the REST API of DATS is shaped, so that a new endpoint lo
 
 The same rules, as one-sentence bullets for coding agents, live in `.github/instructions/backend-endpoint.instructions.md` (section "REST Design"). If this page and that file ever disagree, fix the disagreement.
 
-Unless a route starts with `/users`, `/authentication`, `/info` or `/projects` itself, every route on this page lives below `/projects/{project_id}`: the project is the tenant, and every row of a project is identified by `(project_id, id)` (see ADR 0013).
+Unless a route starts with `/users`, `/authentication`, `/info`, `/heartbeat` or `/projects` itself, every route on this page lives below `/projects/{project_id}`: the project is the tenant, and every row of a project is identified by `(project_id, id)` (see ADR 0013).
 
 A path is read from left to right: method, start, item, end. Then come the input, the output, the special places and the names in the code.
 
@@ -114,15 +114,16 @@ These eight are what a link may offer; no operation is mandatory, and a link off
 
 ### 3.1 GET
 
-**Everything in the query: filters, sorting, paging. No `/by-…` paths.**
+**Everything in the query: filters, sorting, paging. A filter may be required where the list makes no sense without it. No `/by-…` paths.**
 
 | Example                               | Case                      |
 | ------------------------------------- | ------------------------- |
 | `GET /tags?sdoc_id=`                  | filter by a related thing |
 | `GET /memos?recent=true&limit=`       | filter and limit          |
 | `GET /source-documents/count?status=` | filter on a noun sub-path |
+| `GET /span-annotations?user_id=`      | a required filter         |
 
-The filters are optional query parameters of the collection, never one route per filter combination (`GET /source-documents?filename=`, not `GET /source-documents/by-filename`).
+The filters are query parameters of the collection, never one route per filter combination (`GET /source-documents?filename=`, not `GET /source-documents/by-filename`).
 
 ### 3.2 Everything else
 
@@ -170,20 +171,21 @@ The body DTO lives in the module's `*_dto.py`; there are no loose `Body()` field
 | 409                                                   | a foreign key or unique constraint is violated                          |
 | 422                                                   | the request is malformed                                                |
 
-An id of another project therefore answers 404 in the path, 409 as a reference in the body of a write (the composite foreign key rejects it), and matches nothing as a filter. Endpoint code raises the domain exceptions of the module's `*_exceptions.py`, never `ValueError`, `Exception` or `assert`. A list comes in a defined order: a bulk route in the order of its request, a read in the order of its CRUD's `ORDER BY`.
+An id of another project therefore answers 404 in the path, 409 as a reference in the body of a write (the composite foreign key rejects it), and matches nothing as a filter. Endpoint code raises the domain exceptions of the module's `*_exceptions.py`, never `ValueError`, `Exception` or `assert`. A list comes in a defined, complete order: a read in the order of its CRUD's `ORDER BY`, ending with the row's key.
 
 ## 5. Special places
 
 ### 5.1 Jobs
 
-**Started and read under `/jobs/<job-type>`.**
+**A job type is started and read under `/jobs/<job-type>`. An action, a verb on one item or below a namespace, may also start a job.**
 
-| Example                                             | Case                                     |
-| --------------------------------------------------- | ---------------------------------------- |
-| `POST /jobs/perspectives`                           | start, whole input in the body           |
-| `GET /jobs/perspectives/{job_id}`                   | read one job                             |
-| `POST /jobs/classifier/{job_id}/abort`              | action on a job                          |
-| `POST /concept-over-time-analyses/{cota_id}/refine` | a job on one item: a verb below the item |
+| Example                                             | Case                                       |
+| --------------------------------------------------- | ------------------------------------------ |
+| `POST /jobs/perspectives`                           | start, whole input in the body             |
+| `GET /jobs/perspectives/{job_id}`                   | read one job                               |
+| `POST /jobs/classifier/{job_id}/abort`              | action on a job                            |
+| `POST /concept-over-time-analyses/{cota_id}/refine` | a verb on one item that starts a job       |
+| `POST /doc-processing/upload`                       | a verb below a namespace that starts a job |
 
 ### 5.2 me
 
@@ -233,7 +235,7 @@ The handler name becomes the method of the generated frontend client and, with t
 | `/jobs/…` → `jobs`                       | all job routes share one tag      |
 | `/projects/{project_id}` → `projects`    | the project itself                |
 
-The tag names the service of the generated frontend client (`SpanAnnotationsService`) and starts the operation ids and MCP tool names (`spanAnnotations-create`). The router sets it, and no route sets a tag of its own; the tag `mcp` follows on the routers whose routes the MCP server offers as tools. A test in `test_project_router.py` checks every tag against its path.
+The tag names the service of the generated frontend client (`SpanAnnotationsService`) and starts the operation ids and MCP tool names (operation id `spanAnnotations-create`, tool `spanAnnotations_create`). The router sets it, and no route sets a tag of its own; the tag `mcp` follows on the routers whose routes the MCP server offers as tools. A test in `test_project_router.py` checks every tag against its path.
 
 ## Adding a new endpoint
 
@@ -249,7 +251,7 @@ The tag names the service of the generated frontend client (`SpanAnnotationsServ
 ## Kept exceptions
 
 - **Tag recommendations**: the tag recommendation routes (`PATCH /tag-recommendations/review`, `GET /jobs/tag-recommendation/{job_id}/recommendations`) keep their shape until issue #976.
-- **Login**: `POST /authentication/login` keeps the OAuth2 password form.
+- **Session actions**: `POST /authentication/login` keeps the OAuth2 password form, and `POST /authentication/logout` and `/refresh-access` are session actions next to it.
 - **OIDC callback**: `GET /authentication/oidc/callback` is the redirect URI registered at the identity provider.
 - **Two routers**: `project_endpoint.py` has a second router for `PUT /projects`, which creates a project outside every project and so cannot sit on the project router that checks the membership.
 - **Root redirect**: `GET /` (a browser redirect to the docs) has no path segment and is hidden from the schema; it sits on the router of `info_endpoint.py`, which therefore has no prefix.

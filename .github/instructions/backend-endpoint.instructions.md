@@ -6,7 +6,7 @@ paths:
 
 # Endpoint Pattern
 
-Endpoint modules define the REST API surface of the backend. Each file owns exactly one router, whose routes share their first path segment, and groups its routes into labeled sections. Consistency matters because the frontend API client is generated from these routes, and the websocket sync protocol (which keeps all connected clients up to date) is driven entirely by conventions in these files.
+Endpoint modules define the REST API surface of the backend and group their routes into labeled sections. Consistency matters because the frontend API client is generated from these routes, and the websocket sync protocol (which keeps all connected clients up to date) is driven entirely by conventions in these files.
 
 ## File Structure
 
@@ -71,18 +71,18 @@ Every resource of a project lives under `/projects/{project_id}/...` (#928); `sp
 - **Routes outside projects**: a resource outside every project gets its own file with a plain `APIRouter(prefix=...)` (`me_endpoint.py` for `/users/me`, `heartbeat_endpoint.py`); see "Kept Exceptions" for `project_endpoint.py` and `info_endpoint.py`.
 - **Project from the path only**: every route takes `project_id: int`; request and create DTOs carry no `project_id`.
 - **Paths**: every path follows "Path" under "REST Design".
-- **Path ids**: read every id of the path within the project (`crud_x.read(db=db, project_id=project_id, id=...)`), so an id of another project answers 404.
+- **Path ids**: read every id of the path within the project (`crud_x.read(db=db, project_id=project_id, id=...)`).
 - **Body ids**: a reference in the body of a write (`code_id`, `sdoc_id`) is left to the composite foreign key, so an id of another project answers 409; an id that no foreign key holds (an id list, a JSON field) is read within the project by the route or service, so it answers 404.
 - **Query ids**: a filter id of another project matches nothing.
 - **Emit to the path's project**: `ws.emit_to_project(event, result, project_id=project_id)`, also for batch events.
 
 ### Mutation & Sync
 
-- **Inject the emitter**: Every mutation route takes `ws: WebsocketEmitter = Depends()`.
+- **Inject the emitter**: Every mutation route takes `ws: WebsocketEmitter = Depends()`, except one whose change has no DATS event: `PATCH /memos/{memo_id}/mark-recent` (the recent list is private to the user) and `PATCH /perspectives/aspects/{aspect_id}/accept-labels` and `/revert-labels` (the frontend refreshes the map itself).
 - **Emit after mutating**: Call `ws.emit_to_project(DATSEvent.<ENTITY>_<CREATED|UPDATED|DELETED>, result, project_id=...)` after the crud/service call. Use `ws.emit_to_user(...)` instead for user-scoped entities (e.g. search views, API keys).
 - **Return the mutated object**: Every mutation (and every sync event) returns the mutated object as its read DTO — the emitted payload _is_ the returned value. Convert ORM objects with `XRead.model_validate(db_obj)`.
 - **Deletes return the pre-delete DTO**: Snapshot `XRead.model_validate(db_obj)` and `project_id` _before_ calling delete, then emit and return the snapshot.
-- **Bulk mutations**: Emit a single `DATSEvent.<ENTITY>_..._BATCH` event with the list of results, guarded by `if results:`. Emit them with `ws.emit_to_project(event, results, project_id=project_id)`, the project of the path. Return the results in the order of the request.
+- **Bulk mutations**: Emit a single `DATSEvent.<ENTITY>_..._BATCH` event with the list of results, guarded by `if results:`.
 
 ### Function Naming
 
@@ -90,15 +90,15 @@ Every resource of a project lives under `/projects/{project_id}/...` (#928); `sp
 
 ### Endpoint Anatomy
 
-- **Decorator**: Always set `response_model` and `summary`; the path uses `{resource_id}` path params for single-entity routes.
-- **Signature**: Keyword-only parameters (`*` first); `db: DBSession` (commits before the response and the websocket events); `authz_user: AuthzUser = Depends()` only where the route needs the current user (`authz_user.user`, `assert_can_annotate_as`); mutations add `ws`.
+- **Decorator**: Always set `response_model` (`None` for a route that answers without a body) and `summary`.
+- **Signature**: Keyword-only parameters (`*` first); `db: DBSession` (commits before the response and the websocket events); `authz_user: AuthzUser = Depends()` only where the route needs the current user (`authz_user.user`, `assert_can_annotate_as`).
 - **Thin body**: Delegate to `crud_*` / service functions; no business logic in the route. Return type annotation matches `response_model`.
 
 ### Feature Gating
 
 - **Project router**: a project router of a feature gates every route (`project_router(..., feature=WORD_FREQUENCY)`, with the object `register_feature` returned, imported from the module's `*_feature.py` and named after the feature).
 - **Generated job routes**: jobs with generated endpoints (`/projects/{project_id}/jobs/<job-type>`) are gated by their `validate_input` hook, not by a dependency.
-- **Job routes**: a hand-written route that reads or controls a job lives under `/projects/{project_id}/jobs/<job-type>` and reads the job with `JobService().read_project_job(...)` (404 for a job of another project); a job that a module route starts generates its reads with `EndpointGeneration.READ`.
+- **Job routes**: a hand-written route that reads or controls a job reads it with `JobService().read_project_job(...)` (404 for a job of another project); a job that a module route starts generates its reads with `EndpointGeneration.READ`.
 - **Enabled, not ready**: gating checks only that the feature is enabled; never reject a request because its data is still being computed.
 
 ### Imports
@@ -118,13 +118,13 @@ Every resource of a project lives under `/projects/{project_id}/...` (#928); `sp
 - **Start**: a plural kebab-case noun, the thing itself if it carries the module's name (`/codes`, `/code-frequencies`), else the module namespace plus the thing (`/perspectives/aspects`, `/statistics/codes`, `/llm-assistant/existing-annotation-counts`); one router per endpoint file, all routes of a router share their first path segment, and the router sets the tag (`me_endpoint.py` for `/users/me`, `members_endpoint.py` for `/members`).
 - **Item**: one thing is `/{<entity>_id}` (`/codes/{code_id}`), a child with exactly one owner is nested one level below it and answers 404 for a child of another parent (`/experiments/{experiment_id}/runs/{run_id}`), and a thing that refers to several others stays flat and is filtered by them in the query (`GET /span-annotations?sdoc_id=&code_id=&user_id=`), never deeper than one nested level.
 - **End**: nothing for a plain create, read, update or delete (`PATCH /codes/{code_id}`); a noun if the request returns data, plural when the answer holds several results, which includes a list (`GET /source-documents/{sdoc_id}/siblings`), a page of results (`POST /search/memos`) and a map with one result per key (`POST /tags/counts`), and singular when it is one thing, one number (`GET /source-documents/count`) or one object (`POST /perspectives/aspects/{aspect_id}/visualization`); a verb if it does something to what stands before it (`PUT /whiteboards/{whiteboard_id}/duplicate`, `PATCH /search-views/reorder`, `POST /doc-processing/upload`); a sub-path of the collection is declared before `/{<entity>_id}`.
-- **Bulk**: `/bulk` with the method of the single route and a list body, answering in the order of the request (`PUT /span-annotations/bulk`, `PATCH /codes/bulk`, `DELETE /memos/bulk`), and an action on many is `/bulk/<verb>` or `/bulk/<others>/<verb>` (`PATCH /tags/bulk/source-documents/replace`).
+- **Bulk**: `/bulk` with the method of the single route and a list body, answering in the order of the request (`PUT /span-annotations/bulk`, `PATCH /codes/bulk`, `DELETE /memos/bulk`), and an action on many is `/bulk/<others>/<verb>` (`PATCH /tags/bulk/source-documents/replace`).
 - **Links**: a link between two things lives under the thing that groups (a span group groups span annotations, a tag groups documents), and the other side reads it with a filter (`GET /span-groups?user_id=&span_annotation_id=`, `GET /tags?sdoc_id=`).
 - **Link operations**: a link offers only the operations that have a caller, from these eight: add one (`PUT /span-groups/{span_group_id}/span-annotations/{span_annotation_id}`), remove one (`DELETE /span-groups/{span_group_id}/span-annotations/{span_annotation_id}`), list the members of a group (`GET /span-groups/{span_group_id}/span-annotations`), list from the other side (`GET /tags?sdoc_id=`), add every tag to every document (`PUT /tags/bulk/source-documents`), remove every tag from every document (`DELETE /tags/bulk/source-documents`), the same additions and removals on every document (`PATCH /tags/bulk/source-documents`) and replace the tags of each document (`PATCH /tags/bulk/source-documents/replace`).
 
 ### Input
 
-- **GET**: everything in the query: filters, sorting and paging (`GET /tags?sdoc_id=`, `GET /memos?recent=true&limit=`, `GET /source-documents/count?status=`), as optional filters on the collection, never one route per filter combination or a `/by-<field>` path.
+- **GET**: everything in the query: filters, sorting and paging (`GET /tags?sdoc_id=`, `GET /memos?recent=true&limit=`, `GET /source-documents/count?status=`), as filters on the collection, optional unless the list makes no sense without them (`GET /span-annotations?user_id=`, `GET /source-documents?filename=`), never one route per filter combination or a `/by-<field>` path.
 - **Everything else**: one body DTO from the module's `*_dto.py` and no query parameters, a bare list only on a bulk route: a create (`PUT /codes` with `CodeCreate`), a computation (`POST /code-frequencies/occurrences` with `CodeOccurrenceRequest`), a read whose input needs a body (`POST /tags/counts` with document ids), a search with its filter, sorts and paging (`POST /search/source-documents` with `page_number`, `page_size`).
 - **Acting user**: a request acts as the logged-in user without a `user_id` (`PUT /codes`), and `user_id` is only a filter (`GET /span-annotations?user_id=`) or an optional body field where a virtual user may act (`PUT /span-annotations`).
 - **Files**: an upload takes multipart form fields next to its files (`POST /doc-processing/upload`, `POST /jobs/import`).
@@ -132,12 +132,12 @@ Every resource of a project lives under `/projects/{project_id}/...` (#928); `sp
 ### Output
 
 - **Status codes**: every route answers 200 with a body (`DELETE /codes/{code_id}` returns the deleted code); 400 for a broken rule of the domain, 403 for a non-member or a disabled feature, 404 for an id in the path or one the route reads that is not in the project, 409 for a violated foreign key or unique constraint, 422 for a malformed request (`project_router` documents 400 to 409 once).
-- **Order**: a list comes in a defined order: a bulk route in the order of its request, a read in the order of its CRUD's `ORDER BY`.
+- **Order**: a list comes in a defined, complete order: a read in the order of its CRUD's `ORDER BY` (a bulk route: see "Bulk").
 - **Errors in endpoints**: endpoint code raises domain exceptions from `*_exceptions.py`, never `ValueError`, `Exception` or `assert`.
 
 ### Special Places
 
-- **Jobs**: a job starts at `POST /jobs/<job-type>` with its whole input in the body, or at `POST /<resources>/{<entity>_id}/<verb>` when it works on one resource, is read at `GET /jobs/<job-type>/{job_id}` and controlled at `POST /jobs/<job-type>/{job_id}/abort`.
+- **Jobs**: a job type is started and read under `/jobs/<job-type>` (`POST /jobs/perspectives` with its whole input in the body, `GET /jobs/perspectives/{job_id}`, `POST /jobs/classifier/{job_id}/abort`); an action, a verb on one item or below a namespace, may also start a job (`POST /concept-over-time-analyses/{cota_id}/refine`, `POST /doc-processing/upload`).
 - **me**: everything personal lives below `/users/me` (`GET /users/me`, `PUT /users/me/api-keys`, `GET /users/me/projects`), and no route takes another user's id outside a project.
 
 ### Names in the Code
@@ -148,7 +148,7 @@ Every resource of a project lives under `/projects/{project_id}/...` (#928); `sp
 
 ### Kept Exceptions
 
-- **Exceptions**: the tag recommendation routes and their two endpoint files wait for #976, `project_endpoint.py` has a second router for `PUT /projects` (a create outside every project, without the membership check of the project router), `info_endpoint.py` has no prefix as it also serves `GET /` (a browser redirect to the docs, hidden from the schema), `POST /authentication/login` keeps the OAuth2 password form, `GET /authentication/oidc/callback` keeps the redirect URI registered at the identity provider, and `PUT /members` takes the email of the invited user in its body instead of a user id in the path.
+- **Exceptions**: the tag recommendation routes and their two endpoint files wait for #976, `project_endpoint.py` has a second router for `PUT /projects` (a create outside every project, without the membership check of the project router), `info_endpoint.py` has no prefix as it also serves `GET /` (a browser redirect to the docs, hidden from the schema), `POST /authentication/login` keeps the OAuth2 password form, `POST /authentication/logout` and `/refresh-access` are session actions next to the login, `GET /authentication/oidc/callback` keeps the redirect URI registered at the identity provider, and `PUT /members` takes the email of the invited user in its body instead of a user id in the path.
 
 ## Examples
 

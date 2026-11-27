@@ -77,6 +77,7 @@ class FooRead(FooBaseDTO):
 
 - **Input**: `<Feature>JobInput(JobInputBase)` (inherits `project_id`). Put type-specific options in `<Variant>Params(BaseModel)` classes, each with a required `<feature>_job_type: Literal[<Feature>JobType.X] = Field(description=...)` tag (no default, callers always send it). The input holds them as a union field with `Field(..., discriminator="<feature>_job_type")`. Every other discriminator tag is required as well.
 - **Output**: `<Feature>JobOutput(JobOutputBase)`. Like the input, it may be a discriminated union of per-variant `...Output`/`...Result` models.
+- **Start**: the body of a job start is `<Feature>JobStart`, the input without `project_id`; the generated job routes build it from the input (`job_endpoint.py`), a hand-written start route declares it (`PerspectivesJobStart`).
 - **Read** (only when the module exposes a typed job read): `<Feature>JobRead(JobRead[<Feature>JobInput, <Feature>JobOutput])` (all current ones pass `None` as output type) that narrows `job_type: Literal["<type>"] = Field(description="Type of the job", json_schema_extra={"enum": ["<type>"]})`.
 
 ### Request/Response and Storage DTOs

@@ -104,13 +104,14 @@ No operation is mandatory: a link offers only the operations that have a caller.
 
 ### 3.1 GET
 
-**Everything in the query: filters, sorting, paging. No `/by-…` paths.**
+**Everything in the query: filters, sorting, paging. A filter may be required where the list makes no sense without it. No `/by-…` paths.**
 
 | Example                               | Case                      |
 | ------------------------------------- | ------------------------- |
 | `GET /tags?sdoc_id=`                  | filter by a related thing |
 | `GET /memos?recent=true&limit=`       | filter and limit          |
 | `GET /source-documents/count?status=` | filter on a noun sub-path |
+| `GET /span-annotations?user_id=`      | a required filter         |
 
 ### 3.2 Everything else
 
@@ -159,13 +160,15 @@ No operation is mandatory: a link offers only the operations that have a caller.
 
 ### 5.1 Jobs
 
-**Started and read under `/jobs/<job-type>`.**
+**A job type is started and read under `/jobs/<job-type>`. An action, a verb on one item or below a namespace, may also start a job.**
 
-| Example                                | Case                           |
-| -------------------------------------- | ------------------------------ |
-| `POST /jobs/perspectives`              | start, whole input in the body |
-| `GET /jobs/perspectives/{job_id}`      | read one job                   |
-| `POST /jobs/classifier/{job_id}/abort` | action on a job                |
+| Example                                             | Case                                       |
+| --------------------------------------------------- | ------------------------------------------ |
+| `POST /jobs/perspectives`                           | start, whole input in the body             |
+| `GET /jobs/perspectives/{job_id}`                   | read one job                               |
+| `POST /jobs/classifier/{job_id}/abort`              | action on a job                            |
+| `POST /concept-over-time-analyses/{cota_id}/refine` | a verb on one item that starts a job       |
+| `POST /doc-processing/upload`                       | a verb below a namespace that starts a job |
 
 ### 5.2 me
 
@@ -217,5 +220,5 @@ No operation is mandatory: a link offers only the operations that have a caller.
 - The tag recommendation routes (#976), also their two endpoint files.
 - `project_endpoint.py` has two routers: `PUT /projects` creates a project outside every project, so it sits next to the project router, which checks the membership.
 - `GET /` (a browser redirect to the docs) has no path segment and is hidden from the schema; it sits on the router of `info_endpoint.py`, which therefore has no prefix.
-- `POST /authentication/login` keeps the OAuth2 form, and the OIDC callback keeps its path.
+- `POST /authentication/login` keeps the OAuth2 form, `POST /authentication/logout` and `/refresh-access` are session actions next to it, and the OIDC callback keeps its path.
 - `PUT /members` takes the email of the invited user in its body, so it cannot be `/members/{user_id}`.
