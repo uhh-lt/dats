@@ -23,7 +23,7 @@ A path is read from left to right: method, start, item, end. Then come input, ou
 
 ### 2.1 Start
 
-**A plural kebab-case noun. It is the thing itself if it carries the module's name, else the module namespace plus the thing. One router per module.**
+**A plural kebab-case noun. It is the thing itself if it carries the module's name, else the module namespace plus the thing. One router per endpoint file; all routes of a router share their first path segment, and the router sets the tag.**
 
 | Example                                                               | Case                                                         |
 | --------------------------------------------------------------------- | ------------------------------------------------------------ |
@@ -201,7 +201,7 @@ No operation is mandatory: a link offers only the operations that have a caller.
 
 ### 6.3 Tags
 
-**The first segment of the path in camelCase.**
+**The first segment of the path in camelCase, set by the router.**
 
 | Example                                  | Case                              |
 | ---------------------------------------- | --------------------------------- |
@@ -213,6 +213,8 @@ No operation is mandatory: a link offers only the operations that have a caller.
 
 ## Kept exceptions
 
-- The tag recommendation routes (#976).
+- The tag recommendation routes (#976), also their two endpoint files.
+- `project_endpoint.py` has two routers: `PUT /projects` creates a project outside every project, so it sits next to the project router, which checks the membership.
+- `GET /` (a browser redirect to the docs) has no path segment and is hidden from the schema; it sits on the router of `info_endpoint.py`, which therefore has no prefix.
 - `POST /authentication/login` keeps the OAuth2 form, and the OIDC callback keeps its path.
 - `PUT /members` takes the email of the invited user in its body, so it cannot be `/members/{user_id}`.

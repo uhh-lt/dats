@@ -87,7 +87,7 @@ Each test function:
 
 1. Has a **speaking name** that states exactly what is tested, e.g. `test_memo_search_title_column_supports_string_filter_operators`.
 2. Has a **short docstring**: what is tested, plus any non-obvious detail. Longer rationale belongs here, not in comments.
-3. **Tests one endpoint at a time** and lives in the test file of that endpoint module, also when it tests a feature that spans several endpoints (the annotation provenance tests live in the span, sentence, bbox, code, user and search test files).
+3. **Tests one endpoint at a time** and lives in the test file of that endpoint module, also when it tests a feature that spans several endpoints (the annotation provenance tests live in the span, sentence, bbox, code, virtual user and search test files).
 4. Follows this shape:
    - Extract what you need from the fixture (ids, dates, ...).
    - Build the request, **using the real DTOs** where possible (e.g. `QueryRequest[MemoColumns](...)`).

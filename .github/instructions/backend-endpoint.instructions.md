@@ -6,7 +6,7 @@ paths:
 
 # Endpoint Pattern
 
-Endpoint modules define the REST API surface of the backend. Each file owns exactly one router for one resource or module and groups its routes into labeled sections. Consistency matters because the frontend API client is generated from these routes, and the websocket sync protocol (which keeps all connected clients up to date) is driven entirely by conventions in these files.
+Endpoint modules define the REST API surface of the backend. Each file owns exactly one router, whose routes share their first path segment, and groups its routes into labeled sections. Consistency matters because the frontend API client is generated from these routes, and the websocket sync protocol (which keeps all connected clients up to date) is driven entirely by conventions in these files.
 
 ## File Structure
 
@@ -68,7 +68,7 @@ router = project_router("/examples", tags=["examples"], feature=EXAMPLE)
 Every resource of a project lives under `/projects/{project_id}/...` (#928); `span_annotation_endpoint.py` is the example.
 
 - **Router**: `router = project_router("/<resources>", tags=[...], feature=<FEATURE>)` (`common/project_router.py`) checks the membership and, for a feature module, the feature for every route; omit `feature` in core.
-- **Routes outside projects**: a resource outside every project gets its own file with a plain `APIRouter(prefix=...)` (`me_endpoint.py` for `/users/me`, `info_endpoint.py`); the one exception is `project_endpoint.py`, whose `PUT /projects` (create) sits on a second router next to the project router.
+- **Routes outside projects**: a resource outside every project gets its own file with a plain `APIRouter(prefix=...)` (`me_endpoint.py` for `/users/me`, `heartbeat_endpoint.py`); see "Kept Exceptions" for `project_endpoint.py` and `info_endpoint.py`.
 - **Project from the path only**: every route takes `project_id: int`; request and create DTOs carry no `project_id`.
 - **Paths**: every path follows "Path" under "REST Design".
 - **Path ids**: read every id of the path within the project (`crud_x.read(db=db, project_id=project_id, id=...)`), so an id of another project answers 404.
@@ -115,7 +115,7 @@ Every resource of a project lives under `/projects/{project_id}/...` (#928); `sp
 
 ### Path
 
-- **Start**: a plural kebab-case noun, the thing itself if it carries the module's name (`/codes`, `/code-frequencies`), else the module namespace plus the thing (`/perspectives/aspects`, `/statistics/codes`, `/llm-assistant/existing-annotation-counts`), with one endpoint file and one router per module.
+- **Start**: a plural kebab-case noun, the thing itself if it carries the module's name (`/codes`, `/code-frequencies`), else the module namespace plus the thing (`/perspectives/aspects`, `/statistics/codes`, `/llm-assistant/existing-annotation-counts`); one router per endpoint file, all routes of a router share their first path segment, and the router sets the tag (`me_endpoint.py` for `/users/me`, `members_endpoint.py` for `/members`).
 - **Item**: one thing is `/{<entity>_id}` (`/codes/{code_id}`), a child with exactly one owner is nested one level below it and answers 404 for a child of another parent (`/experiments/{experiment_id}/runs/{run_id}`), and a thing that refers to several others stays flat and is filtered by them in the query (`GET /span-annotations?sdoc_id=&code_id=&user_id=`), never deeper than one nested level.
 - **End**: nothing for a plain create, read, update or delete (`PATCH /codes/{code_id}`); a noun if the request returns data, plural when the answer holds several results, which includes a list (`GET /source-documents/{sdoc_id}/siblings`), a page of results (`POST /search/memos`) and a map with one result per key (`POST /tags/counts`), and singular when it is one thing, one number (`GET /source-documents/count`) or one object (`POST /perspectives/aspects/{aspect_id}/visualization`); a verb if it does something to what stands before it (`PUT /whiteboards/{whiteboard_id}/duplicate`, `PATCH /search-views/reorder`, `POST /doc-processing/upload`); a sub-path of the collection is declared before `/{<entity>_id}`.
 - **Bulk**: `/bulk` with the method of the single route and a list body, answering in the order of the request (`PUT /span-annotations/bulk`, `PATCH /codes/bulk`, `DELETE /memos/bulk`), and an action on many is `/bulk/<verb>` or `/bulk/<others>/<verb>` (`PATCH /tags/bulk/source-documents/replace`).
@@ -144,11 +144,11 @@ Every resource of a project lives under `/projects/{project_id}/...` (#928); `sp
 
 - **Handler names**: the handler name is the method of the generated client; the main thing of a file uses `create`, `get_by_id`, `get_by_project`, `update_by_id`, `delete_by_id`, `create_bulk`, `update_bulk`, `delete_bulk`, `count` without the entity, a child in the same file keeps its entity (`create_run`, `update_cluster`, `add_span_annotation`), an action is named like its path verb (`duplicate`, `reorder`), and a computation is a verb plus the noun of its path (`compute_code_frequencies`, `search_memos`, `get_siblings`).
 - **Path parameters**: `{<entity>_id}` with the entity's snake_case name, the same in every route (`{search_view_id}`), or one of the abbreviations `sdoc`, `sdoc_metadata`, `cota`, and a nested child drops its parent's name (`{run_id}` below `/experiments/{experiment_id}`).
-- **Tags**: the first tag is the first path segment after `/projects/{project_id}` in camelCase, plural kept (`/span-annotations` → `spanAnnotations`, `/code-frequencies` → `codeFrequencies`, `/perspectives/aspects` → `perspectives`, `/jobs/…` → `jobs`, the project itself → `projects`), set on the router or, where the routes of a router start differently, on each route (`/members` and `/virtual-users`, `/heartbeat` and `/info`), followed by `mcp` for the routes of the MCP server.
+- **Tags**: the first tag is the first path segment after `/projects/{project_id}` in camelCase, plural kept (`/span-annotations` → `spanAnnotations`, `/code-frequencies` → `codeFrequencies`, `/perspectives/aspects` → `perspectives`, `/jobs/…` → `jobs`, the project itself → `projects`), set by the router and never by a route, followed by `mcp` on the routers whose routes the MCP server offers.
 
 ### Kept Exceptions
 
-- **Exceptions**: the tag recommendation routes wait for #976, `POST /authentication/login` keeps the OAuth2 password form, `GET /authentication/oidc/callback` keeps the redirect URI registered at the identity provider, and `PUT /members` takes the email of the invited user in its body instead of a user id in the path.
+- **Exceptions**: the tag recommendation routes and their two endpoint files wait for #976, `project_endpoint.py` has a second router for `PUT /projects` (a create outside every project, without the membership check of the project router), `info_endpoint.py` has no prefix as it also serves `GET /` (a browser redirect to the docs, hidden from the schema), `POST /authentication/login` keeps the OAuth2 password form, `GET /authentication/oidc/callback` keeps the redirect URI registered at the identity provider, and `PUT /members` takes the email of the invited user in its body instead of a user id in the path.
 
 ## Examples
 

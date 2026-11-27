@@ -27,7 +27,7 @@ Many public APIs use `POST` for every write; DATS picks the method by the effect
 
 ### 2.1 Start
 
-**A plural kebab-case noun. It is the thing itself if it carries the module's name, else the module namespace plus the thing. One router per module.**
+**A plural kebab-case noun. It is the thing itself if it carries the module's name, else the module namespace plus the thing. One router per endpoint file; all routes of a router share their first path segment, and the router sets the tag.**
 
 | Example                                                               | Case                                                         |
 | --------------------------------------------------------------------- | ------------------------------------------------------------ |
@@ -36,7 +36,7 @@ Many public APIs use `POST` for every write; DATS picks the method by the effect
 | `/perspectives/aspects`, `/perspectives/aspects/{aspect_id}/clusters` | module with several things: namespace plus thing             |
 | `/statistics/codes`, `/llm-assistant/existing-annotation-counts`      | thing does not carry the module's name: namespace plus thing |
 
-Every route belongs to exactly one module, and a module has one endpoint file (`*_endpoint.py`) with one router. The router of a project module comes from `project_router(...)`, which checks the membership (and the module's feature) for every route.
+For example, `core/user` has `me_endpoint.py` (`/users/me`), `members_endpoint.py` (`/members`) and `virtual_users_endpoint.py` (`/virtual-users`). The router of a project route comes from `project_router(...)`, which checks the membership (and the module's feature) for every route.
 
 ### 2.2 Item
 
@@ -221,7 +221,7 @@ The handler name becomes the method of the generated frontend client and, with t
 
 ### 6.3 Tags
 
-**The first segment of the path in camelCase.**
+**The first segment of the path in camelCase, set by the router.**
 
 | Example                                  | Case                              |
 | ---------------------------------------- | --------------------------------- |
@@ -232,11 +232,11 @@ The handler name becomes the method of the generated frontend client and, with t
 | `/jobs/…` → `jobs`                       | all job routes share one tag      |
 | `/projects/{project_id}` → `projects`    | the project itself                |
 
-The tag names the service of the generated frontend client (`SpanAnnotationsService`) and starts the operation ids and MCP tool names (`spanAnnotations-create`). It is set on the router; where the routes of one router start differently, each route sets its own (`/members` and `/virtual-users` of the user router, `/heartbeat` and `/info`). The tag `mcp` follows on the routes that the MCP server offers as tools. A test in `test_project_router.py` checks every tag against its path.
+The tag names the service of the generated frontend client (`SpanAnnotationsService`) and starts the operation ids and MCP tool names (`spanAnnotations-create`). The router sets it, and no route sets a tag of its own; the tag `mcp` follows on the routers whose routes the MCP server offers as tools. A test in `test_project_router.py` checks every tag against its path.
 
 ## Adding a new endpoint
 
-1. Find the module the route belongs to and its one endpoint file; add a module only for a new capability.
+1. Find the module the route belongs to and the endpoint file of the route's first path segment; add a module only for a new capability.
 2. Choose the method by the effect, and `GET` or `POST` for a read by its input.
 3. Build the path from left to right: the start (thing or namespace plus thing), the item (nested or flat), the end (nothing, a noun in the right number, or a verb).
 4. Put the whole input into one body DTO in the module's `*_dto.py`, unless the route is a `GET`.
@@ -250,4 +250,6 @@ The tag names the service of the generated frontend client (`SpanAnnotationsServ
 - **Tag recommendations**: the tag recommendation routes (`PATCH /tag-recommendations/review`, `GET /jobs/tag-recommendation/{job_id}/recommendations`) keep their shape until issue #976.
 - **Login**: `POST /authentication/login` keeps the OAuth2 password form.
 - **OIDC callback**: `GET /authentication/oidc/callback` is the redirect URI registered at the identity provider.
+- **Two routers**: `project_endpoint.py` has a second router for `PUT /projects`, which creates a project outside every project and so cannot sit on the project router that checks the membership.
+- **Root redirect**: `GET /` (a browser redirect to the docs) has no path segment and is hidden from the schema; it sits on the router of `info_endpoint.py`, which therefore has no prefix.
 - **Members**: `PUT /members` takes the email of the invited user in its body, so it cannot be `/members/{user_id}`; `GET /members` and `DELETE /members/{user_id}` follow the rules.
