@@ -6,7 +6,7 @@ import type { COTAConcept } from "./COTAConcept";
 import type { COTASentence } from "./COTASentence";
 import type { COTATimelineSettings } from "./COTATimelineSettings";
 import type { COTATrainingSettings } from "./COTATrainingSettings";
-export type COTARead = {
+export type ConceptOverTimeAnalysisRead = {
   /**
    * Name of the ConceptOverTimeAnalysis
    */

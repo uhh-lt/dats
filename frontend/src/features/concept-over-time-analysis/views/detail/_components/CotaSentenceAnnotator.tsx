@@ -1,6 +1,6 @@
 import { SdocRenderer } from "@core/source-document";
 import { COTAConcept } from "@models/COTAConcept";
-import { COTARead } from "@models/COTARead";
+import { ConceptOverTimeAnalysisRead } from "@models/ConceptOverTimeAnalysisRead";
 import { COTASentenceID } from "@models/COTASentenceID";
 import { DateGroupBy } from "@models/DateGroupBy";
 import BorderColorIcon from "@mui/icons-material/BorderColor";
@@ -29,7 +29,7 @@ import { CotaHooks } from "../../../api/cotaHooks";
 import { CotaActions } from "../../../store/cotaSlice";
 
 interface CotaSentenceAnnotatorProps {
-  cota: COTARead;
+  cota: ConceptOverTimeAnalysisRead;
 }
 
 export function CotaSentenceAnnotator2({ cota }: CotaSentenceAnnotatorProps) {
@@ -80,7 +80,7 @@ interface COTASentenceRow {
 }
 
 interface SimilarSentencesTableProps {
-  cota: COTARead;
+  cota: ConceptOverTimeAnalysisRead;
   concept: COTAConcept | null | undefined;
 }
 

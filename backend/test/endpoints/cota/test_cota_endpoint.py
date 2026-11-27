@@ -4,8 +4,8 @@ from fastapi.testclient import TestClient
 from composite_keys_test_utils import TwoTenants
 from feature_test_utils import assert_feature_disabled, feature_named
 from modules.concept_over_time_analysis.cota_dto import (
-    COTACreate,
-    COTARead,
+    ConceptOverTimeAnalysisCreate,
+    ConceptOverTimeAnalysisRead,
     COTARefinementHyperparameters,
 )
 from pipeline_test_utils import artefact_named
@@ -64,7 +64,10 @@ def test_cota_of_another_project_is_not_found(
 
     assert response.status_code == 404, response.text
     response = client.get(_url(other_project["project"].id, f"/{other_cota.id}"))
-    assert COTARead.model_validate(response.json()).name == "Embedded COTA"
+    assert (
+        ConceptOverTimeAnalysisRead.model_validate(response.json()).name
+        == "Embedded COTA"
+    )
 
 
 def test_get_cotas_lists_the_analyses_of_the_project(
@@ -74,7 +77,7 @@ def test_get_cotas_lists_the_analyses_of_the_project(
     response = client.get(_url(project_with_cota["project"].id))
 
     assert response.status_code == 200, response.text
-    assert [COTARead.model_validate(c) for c in response.json()] == [
+    assert [ConceptOverTimeAnalysisRead.model_validate(c) for c in response.json()] == [
         project_with_cota["cota"]
     ]
 
@@ -107,7 +110,9 @@ def test_update_cota_rejects_empty_or_null_update(
     assert response.status_code == 422, response.text
     response = client.get(_url(project_id, f"/{cota.id}"))
     assert response.status_code == 200, response.text
-    assert COTARead.model_validate(response.json()).name == "Test COTA"
+    assert (
+        ConceptOverTimeAnalysisRead.model_validate(response.json()).name == "Test COTA"
+    )
 
 
 def test_update_cota_name(client: TestClient, project_with_cota) -> None:
@@ -120,7 +125,10 @@ def test_update_cota_name(client: TestClient, project_with_cota) -> None:
     )
 
     assert response.status_code == 200, response.text
-    assert COTARead.model_validate(response.json()).name == "Renamed COTA"
+    assert (
+        ConceptOverTimeAnalysisRead.model_validate(response.json()).name
+        == "Renamed COTA"
+    )
 
 
 @pytest.mark.parametrize(
@@ -148,7 +156,9 @@ def test_update_cota_with_date_metadata_of_another_project_is_not_found(
 
     assert response.status_code == status_code, response.text
     response = client.get(url)
-    stored = COTARead.model_validate(response.json()).timeline_settings
+    stored = ConceptOverTimeAnalysisRead.model_validate(
+        response.json()
+    ).timeline_settings
     assert (stored.date_metadata_id == metadata.id) == (tenant == "own")
 
 
@@ -184,14 +194,18 @@ def test_sentence_of_another_project_is_not_found(
 
     response = change(foreign["sdoc"].id)
     assert response.status_code == 404, response.text
-    search_space = COTARead.model_validate(client.get(url).json()).search_space
+    search_space = ConceptOverTimeAnalysisRead.model_validate(
+        client.get(url).json()
+    ).search_space
     assert [(s.sdoc_id, s.concept_annotation) for s in search_space] == [
         (own["sdoc"].id, None)
     ]
 
     response = change(own["sdoc"].id)
     assert response.status_code == 200, response.text
-    search_space = COTARead.model_validate(response.json()).search_space
+    search_space = ConceptOverTimeAnalysisRead.model_validate(
+        response.json()
+    ).search_space
     assert [(s.sdoc_id, s.concept_annotation) for s in search_space] == (
         [(own["sdoc"].id, "c1")] if path == "/annotate-sentences" else []
     )
@@ -224,7 +238,7 @@ def test_cota_routes_are_rejected_when_concepts_over_time_is_disabled(
 ):
     p = featureless_project_with_cota
     bodies = {
-        "PUT ": COTACreate(name="New COTA").model_dump(),
+        "PUT ": ConceptOverTimeAnalysisCreate(name="New COTA").model_dump(),
         "POST /{cota_id}/refine": COTARefinementHyperparameters().model_dump(),
     }
 

@@ -7,7 +7,7 @@ from loguru import logger
 from sqlalchemy.orm import Session
 
 from modules.concept_over_time_analysis.cota_crud import crud_cota
-from modules.concept_over_time_analysis.cota_dto import COTARead
+from modules.concept_over_time_analysis.cota_dto import ConceptOverTimeAnalysisRead
 from modules.concept_over_time_analysis.cota_orm import ConceptOverTimeAnalysisORM
 from modules.eximport.cota.cota_export_schema import (
     COTAExportCollection,
@@ -130,7 +130,7 @@ def __generate_export_df_for_cota(
 
     cota_export_items = []
     for cota in cota_analyses:
-        cota_dto = COTARead.model_validate(cota)
+        cota_dto = ConceptOverTimeAnalysisRead.model_validate(cota)
 
         # Transform concepts for export
         transformed_concepts = [

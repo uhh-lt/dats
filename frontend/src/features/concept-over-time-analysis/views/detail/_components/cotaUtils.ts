@@ -1,8 +1,8 @@
-import { COTARead } from "@models/COTARead";
+import { ConceptOverTimeAnalysisRead } from "@models/ConceptOverTimeAnalysisRead";
 
 export const MIN_ANNOTATIONS_PER_CONCEPT = 5;
 
-export const conceptsWithUnsufficientAnnotations = (cota: COTARead) => {
+export const conceptsWithUnsufficientAnnotations = (cota: ConceptOverTimeAnalysisRead) => {
   const conceptId2ConceptName = cota.concepts.reduce(
     (acc, concept) => {
       acc[concept.id] = concept.name;
@@ -21,16 +21,16 @@ export const conceptsWithUnsufficientAnnotations = (cota: COTARead) => {
   return result;
 };
 
-export const hasEnoughAnnotations = (cota: COTARead) => {
+export const hasEnoughAnnotations = (cota: ConceptOverTimeAnalysisRead) => {
   const annotations = countAnnotations(cota);
   return Object.values(annotations).every((count) => count >= MIN_ANNOTATIONS_PER_CONCEPT);
 };
 
-export const hasEnoughConcepts = (cota: COTARead) => {
+export const hasEnoughConcepts = (cota: ConceptOverTimeAnalysisRead) => {
   return cota.concepts.length >= 2;
 };
 
-export const countAnnotations = (cota: COTARead) => {
+export const countAnnotations = (cota: ConceptOverTimeAnalysisRead) => {
   // returns a map of concept ids to the number of sentences that were annotated with that concept
 
   const result = cota.concepts.reduce(
@@ -50,22 +50,22 @@ export const countAnnotations = (cota: COTARead) => {
   return result;
 };
 
-export const hasConceptsWithDescription = (cota: COTARead) => {
+export const hasConceptsWithDescription = (cota: ConceptOverTimeAnalysisRead) => {
   if (cota.concepts.length === 0) return false;
   return cota.concepts.every((concept) => concept.description.trim().length > 0);
 };
 
-export const canAddNewConcept = (cota: COTARead) => {
+export const canAddNewConcept = (cota: ConceptOverTimeAnalysisRead) => {
   // we can only add concepts if the search space is empty
   return cota.search_space.length === 0;
 };
 
-export const canDeleteConcept = (cota: COTARead) => {
+export const canDeleteConcept = (cota: ConceptOverTimeAnalysisRead) => {
   // we can only delete concepts if the search space is empty
   return cota.search_space.length === 0;
 };
 
-export const canEditConceptDescription = (cota: COTARead) => {
+export const canEditConceptDescription = (cota: ConceptOverTimeAnalysisRead) => {
   // we can only edit concepts if the search space is empty
   return cota.search_space.length === 0;
 };

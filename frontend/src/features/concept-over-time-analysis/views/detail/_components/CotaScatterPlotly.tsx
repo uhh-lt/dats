@@ -1,6 +1,6 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { COTAConcept } from "@models/COTAConcept";
-import { COTARead } from "@models/COTARead";
+import { ConceptOverTimeAnalysisRead } from "@models/ConceptOverTimeAnalysisRead";
 import { COTASentence } from "@models/COTASentence";
 import CircleIcon from "@mui/icons-material/Circle";
 import {
@@ -26,7 +26,7 @@ import { CotaActions } from "../../../store/cotaSlice";
 import { CotaPlotToggleButton } from "./CotaPlotToggleButton";
 
 interface CotaScatterPlotlyProps {
-  cota: COTARead;
+  cota: ConceptOverTimeAnalysisRead;
 }
 
 export function CotaScatterPlotly({ cota }: CotaScatterPlotlyProps) {

@@ -2,11 +2,11 @@
 /* istanbul ignore file */
 /* tslint:disable */
 /* eslint-disable */
-import type { COTACreate } from "@models/COTACreate";
-import type { COTARead } from "@models/COTARead";
+import type { ConceptOverTimeAnalysisCreate } from "@models/ConceptOverTimeAnalysisCreate";
+import type { ConceptOverTimeAnalysisRead } from "@models/ConceptOverTimeAnalysisRead";
+import type { ConceptOverTimeAnalysisUpdate } from "@models/ConceptOverTimeAnalysisUpdate";
 import type { COTARefinementHyperparameters } from "@models/COTARefinementHyperparameters";
 import type { COTASentenceID } from "@models/COTASentenceID";
-import type { COTAUpdate } from "@models/COTAUpdate";
 import type { CancelablePromise } from "../core/CancelablePromise";
 import { OpenAPI } from "../core/OpenAPI";
 import { request as __request } from "../core/request";
@@ -14,7 +14,7 @@ export class ConceptOverTimeAnalysisService {
   /**
    * Creates an ConceptOverTimeAnalysis
    * Creates an ConceptOverTimeAnalysis
-   * @returns COTARead Successful Response
+   * @returns ConceptOverTimeAnalysisRead Successful Response
    * @throws ApiError
    */
   public static create({
@@ -22,8 +22,8 @@ export class ConceptOverTimeAnalysisService {
     requestBody,
   }: {
     projectId: number;
-    requestBody: COTACreate;
-  }): CancelablePromise<COTARead> {
+    requestBody: ConceptOverTimeAnalysisCreate;
+  }): CancelablePromise<ConceptOverTimeAnalysisRead> {
     return __request(OpenAPI, {
       method: "PUT",
       url: "/projects/{project_id}/concept-over-time-analyses",
@@ -44,10 +44,14 @@ export class ConceptOverTimeAnalysisService {
   /**
    * Returns COTAs of the Project
    * Returns the COTAs of the Project
-   * @returns COTARead Successful Response
+   * @returns ConceptOverTimeAnalysisRead Successful Response
    * @throws ApiError
    */
-  public static getByProject({ projectId }: { projectId: number }): CancelablePromise<Array<COTARead>> {
+  public static getByProject({
+    projectId,
+  }: {
+    projectId: number;
+  }): CancelablePromise<Array<ConceptOverTimeAnalysisRead>> {
     return __request(OpenAPI, {
       method: "GET",
       url: "/projects/{project_id}/concept-over-time-analyses",
@@ -65,7 +69,7 @@ export class ConceptOverTimeAnalysisService {
   }
   /**
    * Duplicates the ConceptOverTimeAnalysis with the given ID if it exists
-   * @returns COTARead Successful Response
+   * @returns ConceptOverTimeAnalysisRead Successful Response
    * @throws ApiError
    */
   public static duplicateById({
@@ -74,7 +78,7 @@ export class ConceptOverTimeAnalysisService {
   }: {
     projectId: number;
     cotaId: number;
-  }): CancelablePromise<COTARead> {
+  }): CancelablePromise<ConceptOverTimeAnalysisRead> {
     return __request(OpenAPI, {
       method: "PUT",
       url: "/projects/{project_id}/concept-over-time-analyses/{cota_id}/duplicate",
@@ -94,10 +98,16 @@ export class ConceptOverTimeAnalysisService {
   /**
    * Returns the ConceptOverTimeAnalysis
    * Returns the ConceptOverTimeAnalysis with the given ID if it exists
-   * @returns COTARead Successful Response
+   * @returns ConceptOverTimeAnalysisRead Successful Response
    * @throws ApiError
    */
-  public static getById({ projectId, cotaId }: { projectId: number; cotaId: number }): CancelablePromise<COTARead> {
+  public static getById({
+    projectId,
+    cotaId,
+  }: {
+    projectId: number;
+    cotaId: number;
+  }): CancelablePromise<ConceptOverTimeAnalysisRead> {
     return __request(OpenAPI, {
       method: "GET",
       url: "/projects/{project_id}/concept-over-time-analyses/{cota_id}",
@@ -117,7 +127,7 @@ export class ConceptOverTimeAnalysisService {
   /**
    * Updates the ConceptOverTimeAnalysis
    * Updates the ConceptOverTimeAnalysis with the given ID if it exists
-   * @returns COTARead Successful Response
+   * @returns ConceptOverTimeAnalysisRead Successful Response
    * @throws ApiError
    */
   public static updateById({
@@ -127,8 +137,8 @@ export class ConceptOverTimeAnalysisService {
   }: {
     projectId: number;
     cotaId: number;
-    requestBody: COTAUpdate;
-  }): CancelablePromise<COTARead> {
+    requestBody: ConceptOverTimeAnalysisUpdate;
+  }): CancelablePromise<ConceptOverTimeAnalysisRead> {
     return __request(OpenAPI, {
       method: "PATCH",
       url: "/projects/{project_id}/concept-over-time-analyses/{cota_id}",
@@ -150,10 +160,16 @@ export class ConceptOverTimeAnalysisService {
   /**
    * Removes the ConceptOverTimeAnalysis
    * Removes the ConceptOverTimeAnalysis with the given ID if it exists
-   * @returns COTARead Successful Response
+   * @returns ConceptOverTimeAnalysisRead Successful Response
    * @throws ApiError
    */
-  public static deleteById({ projectId, cotaId }: { projectId: number; cotaId: number }): CancelablePromise<COTARead> {
+  public static deleteById({
+    projectId,
+    cotaId,
+  }: {
+    projectId: number;
+    cotaId: number;
+  }): CancelablePromise<ConceptOverTimeAnalysisRead> {
     return __request(OpenAPI, {
       method: "DELETE",
       url: "/projects/{project_id}/concept-over-time-analyses/{cota_id}",
@@ -172,7 +188,7 @@ export class ConceptOverTimeAnalysisService {
   }
   /**
    * Annotate (multiple) COTASentences
-   * @returns COTARead Successful Response
+   * @returns ConceptOverTimeAnalysisRead Successful Response
    * @throws ApiError
    */
   public static annotateSentences({
@@ -185,7 +201,7 @@ export class ConceptOverTimeAnalysisService {
     cotaId: number;
     requestBody: Array<COTASentenceID>;
     conceptId?: string | null;
-  }): CancelablePromise<COTARead> {
+  }): CancelablePromise<ConceptOverTimeAnalysisRead> {
     return __request(OpenAPI, {
       method: "PATCH",
       url: "/projects/{project_id}/concept-over-time-analyses/{cota_id}/annotate-sentences",
@@ -209,7 +225,7 @@ export class ConceptOverTimeAnalysisService {
   }
   /**
    * Remove (multiple) COTASentences from the search space
-   * @returns COTARead Successful Response
+   * @returns ConceptOverTimeAnalysisRead Successful Response
    * @throws ApiError
    */
   public static removeSentences({
@@ -220,7 +236,7 @@ export class ConceptOverTimeAnalysisService {
     projectId: number;
     cotaId: number;
     requestBody: Array<COTASentenceID>;
-  }): CancelablePromise<COTARead> {
+  }): CancelablePromise<ConceptOverTimeAnalysisRead> {
     return __request(OpenAPI, {
       method: "PATCH",
       url: "/projects/{project_id}/concept-over-time-analyses/{cota_id}/remove-sentences",
@@ -242,10 +258,16 @@ export class ConceptOverTimeAnalysisService {
   /**
    * Resets the ConceptOverTimeAnalysis
    * Resets the ConceptOverTimeAnalysis deleting model, embeddings, refinement jobs and resetting the search space
-   * @returns COTARead Successful Response
+   * @returns ConceptOverTimeAnalysisRead Successful Response
    * @throws ApiError
    */
-  public static reset({ projectId, cotaId }: { projectId: number; cotaId: number }): CancelablePromise<COTARead> {
+  public static reset({
+    projectId,
+    cotaId,
+  }: {
+    projectId: number;
+    cotaId: number;
+  }): CancelablePromise<ConceptOverTimeAnalysisRead> {
     return __request(OpenAPI, {
       method: "PATCH",
       url: "/projects/{project_id}/concept-over-time-analyses/{cota_id}/reset",
@@ -265,7 +287,7 @@ export class ConceptOverTimeAnalysisService {
   /**
    * Refines the ConceptOverTimeAnalysis
    * Starts the refinement job of the ConceptOverTimeAnalysis with the given ID; read the job at /jobs/cota-refinement
-   * @returns COTARead Successful Response
+   * @returns ConceptOverTimeAnalysisRead Successful Response
    * @throws ApiError
    */
   public static refine({
@@ -276,7 +298,7 @@ export class ConceptOverTimeAnalysisService {
     projectId: number;
     cotaId: number;
     requestBody: COTARefinementHyperparameters;
-  }): CancelablePromise<COTARead> {
+  }): CancelablePromise<ConceptOverTimeAnalysisRead> {
     return __request(OpenAPI, {
       method: "POST",
       url: "/projects/{project_id}/concept-over-time-analyses/{cota_id}/refine",

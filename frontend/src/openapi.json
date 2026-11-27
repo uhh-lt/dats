@@ -1258,12 +1258,16 @@
         ],
         "requestBody": {
           "required": true,
-          "content": { "application/json": { "schema": { "$ref": "#/components/schemas/COTACreate" } } }
+          "content": {
+            "application/json": { "schema": { "$ref": "#/components/schemas/ConceptOverTimeAnalysisCreate" } }
+          }
         },
         "responses": {
           "200": {
             "description": "Successful Response",
-            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/COTARead" } } }
+            "content": {
+              "application/json": { "schema": { "$ref": "#/components/schemas/ConceptOverTimeAnalysisRead" } }
+            }
           },
           "400": { "description": "The request breaks a rule of the domain" },
           "403": { "description": "The user is no member of the project, or the feature is disabled" },
@@ -1296,7 +1300,7 @@
               "application/json": {
                 "schema": {
                   "type": "array",
-                  "items": { "$ref": "#/components/schemas/COTARead" },
+                  "items": { "$ref": "#/components/schemas/ConceptOverTimeAnalysisRead" },
                   "title": "Response Conceptovertimeanalysis-Get By Project"
                 }
               }
@@ -1331,7 +1335,9 @@
         "responses": {
           "200": {
             "description": "Successful Response",
-            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/COTARead" } } }
+            "content": {
+              "application/json": { "schema": { "$ref": "#/components/schemas/ConceptOverTimeAnalysisRead" } }
+            }
           },
           "400": { "description": "The request breaks a rule of the domain" },
           "403": { "description": "The user is no member of the project, or the feature is disabled" },
@@ -1363,7 +1369,9 @@
         "responses": {
           "200": {
             "description": "Successful Response",
-            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/COTARead" } } }
+            "content": {
+              "application/json": { "schema": { "$ref": "#/components/schemas/ConceptOverTimeAnalysisRead" } }
+            }
           },
           "400": { "description": "The request breaks a rule of the domain" },
           "403": { "description": "The user is no member of the project, or the feature is disabled" },
@@ -1392,12 +1400,16 @@
         ],
         "requestBody": {
           "required": true,
-          "content": { "application/json": { "schema": { "$ref": "#/components/schemas/COTAUpdate" } } }
+          "content": {
+            "application/json": { "schema": { "$ref": "#/components/schemas/ConceptOverTimeAnalysisUpdate" } }
+          }
         },
         "responses": {
           "200": {
             "description": "Successful Response",
-            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/COTARead" } } }
+            "content": {
+              "application/json": { "schema": { "$ref": "#/components/schemas/ConceptOverTimeAnalysisRead" } }
+            }
           },
           "400": { "description": "The request breaks a rule of the domain" },
           "403": { "description": "The user is no member of the project, or the feature is disabled" },
@@ -1427,7 +1439,9 @@
         "responses": {
           "200": {
             "description": "Successful Response",
-            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/COTARead" } } }
+            "content": {
+              "application/json": { "schema": { "$ref": "#/components/schemas/ConceptOverTimeAnalysisRead" } }
+            }
           },
           "400": { "description": "The request breaks a rule of the domain" },
           "403": { "description": "The user is no member of the project, or the feature is disabled" },
@@ -1476,7 +1490,9 @@
         "responses": {
           "200": {
             "description": "Successful Response",
-            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/COTARead" } } }
+            "content": {
+              "application/json": { "schema": { "$ref": "#/components/schemas/ConceptOverTimeAnalysisRead" } }
+            }
           },
           "400": { "description": "The request breaks a rule of the domain" },
           "403": { "description": "The user is no member of the project, or the feature is disabled" },
@@ -1519,7 +1535,9 @@
         "responses": {
           "200": {
             "description": "Successful Response",
-            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/COTARead" } } }
+            "content": {
+              "application/json": { "schema": { "$ref": "#/components/schemas/ConceptOverTimeAnalysisRead" } }
+            }
           },
           "400": { "description": "The request breaks a rule of the domain" },
           "403": { "description": "The user is no member of the project, or the feature is disabled" },
@@ -1551,7 +1569,9 @@
         "responses": {
           "200": {
             "description": "Successful Response",
-            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/COTARead" } } }
+            "content": {
+              "application/json": { "schema": { "$ref": "#/components/schemas/ConceptOverTimeAnalysisRead" } }
+            }
           },
           "400": { "description": "The request breaks a rule of the domain" },
           "403": { "description": "The user is no member of the project, or the feature is disabled" },
@@ -1589,7 +1609,9 @@
         "responses": {
           "200": {
             "description": "Successful Response",
-            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/COTARead" } } }
+            "content": {
+              "application/json": { "schema": { "$ref": "#/components/schemas/ConceptOverTimeAnalysisRead" } }
+            }
           },
           "400": { "description": "The request breaks a rule of the domain" },
           "403": { "description": "The user is no member of the project, or the feature is disabled" },
@@ -3620,7 +3642,7 @@
       },
       "post": {
         "tags": ["job"],
-        "summary": "Starts the PerspectivesJob of the Aspect for the given Parameters. If a job is already running, this will raise an error.",
+        "summary": "Starts the PerspectivesJob of the Aspect for the given Parameters. If a job of the Aspect is still running, this answers 400.",
         "operationId": "start_perspectives_job",
         "security": [{ "OAuth2PasswordBearer": [] }],
         "parameters": [
@@ -12463,76 +12485,6 @@
         "required": ["id", "name", "description", "color", "visible"],
         "title": "COTAConcept"
       },
-      "COTACreate": {
-        "properties": {
-          "name": { "type": "string", "title": "Name", "description": "Name of the ConceptOverTimeAnalysis" }
-        },
-        "type": "object",
-        "required": ["name"],
-        "title": "COTACreate"
-      },
-      "COTARead": {
-        "properties": {
-          "name": { "type": "string", "title": "Name", "description": "Name of the ConceptOverTimeAnalysis" },
-          "id": { "type": "integer", "title": "Id", "description": "ID of the ConceptOverTimeAnalysis" },
-          "project_id": {
-            "type": "integer",
-            "title": "Project Id",
-            "description": "Project the ConceptOverTimeAnalysis belongs to"
-          },
-          "last_refinement_job_id": {
-            "anyOf": [{ "type": "string" }, { "type": "null" }],
-            "title": "Last Refinement Job Id",
-            "description": "ID of the last refinement job for the ConceptOverTimeAnalysis"
-          },
-          "timeline_settings": {
-            "$ref": "#/components/schemas/COTATimelineSettings",
-            "description": "Timeline Analysis Settings of the ConceptOverTimeAnalysis."
-          },
-          "training_settings": {
-            "$ref": "#/components/schemas/COTATrainingSettings",
-            "description": "Timeline Training Settings of the ConceptOverTimeAnalysis."
-          },
-          "concepts": {
-            "items": { "$ref": "#/components/schemas/COTAConcept" },
-            "type": "array",
-            "title": "Concepts",
-            "description": "List of Concepts that are part of the ConceptOverTimeAnalysis"
-          },
-          "search_space": {
-            "items": { "$ref": "#/components/schemas/COTASentence" },
-            "type": "array",
-            "title": "Search Space",
-            "description": "List of Sentences that form the search space of the ConceptOverTimeAnalysis"
-          },
-          "created": {
-            "type": "string",
-            "format": "date-time",
-            "title": "Created",
-            "description": "Created timestamp of the ConceptOverTimeAnalysis"
-          },
-          "updated": {
-            "type": "string",
-            "format": "date-time",
-            "title": "Updated",
-            "description": "Updated timestamp of the ConceptOverTimeAnalysis"
-          }
-        },
-        "type": "object",
-        "required": [
-          "name",
-          "id",
-          "project_id",
-          "last_refinement_job_id",
-          "timeline_settings",
-          "training_settings",
-          "concepts",
-          "search_space",
-          "created",
-          "updated"
-        ],
-        "title": "COTARead"
-      },
       "COTARefinementHyperparameters": {
         "properties": {
           "cem_training_epochs": {
@@ -12740,30 +12692,6 @@
         },
         "type": "object",
         "title": "COTATrainingSettings"
-      },
-      "COTAUpdate": {
-        "properties": {
-          "name": {
-            "anyOf": [{ "type": "string" }, { "type": "null" }],
-            "title": "Name",
-            "description": "Name of the ConceptOverTimeAnalysis"
-          },
-          "timeline_settings": {
-            "anyOf": [{ "$ref": "#/components/schemas/COTATimelineSettings" }, { "type": "null" }],
-            "description": "Timeline Settings of the ConceptOverTimeAnalysis."
-          },
-          "training_settings": {
-            "anyOf": [{ "$ref": "#/components/schemas/COTATrainingSettings" }, { "type": "null" }],
-            "description": "Training Settings of the ConceptOverTimeAnalysis."
-          },
-          "concepts": {
-            "anyOf": [{ "items": { "$ref": "#/components/schemas/COTAConcept" }, "type": "array" }, { "type": "null" }],
-            "title": "Concepts",
-            "description": "List of Concepts that are part of the ConceptOverTimeAnalysis"
-          }
-        },
-        "type": "object",
-        "title": "COTAUpdate"
       },
       "ChangeClusterParams": {
         "properties": {
@@ -14286,10 +14214,104 @@
         "required": ["label", "column", "sortable", "groupable", "operator", "value"],
         "title": "ColumnInfo[WordFrequencyColumns]"
       },
+      "ConceptOverTimeAnalysisCreate": {
+        "properties": {
+          "name": { "type": "string", "title": "Name", "description": "Name of the ConceptOverTimeAnalysis" }
+        },
+        "type": "object",
+        "required": ["name"],
+        "title": "ConceptOverTimeAnalysisCreate"
+      },
+      "ConceptOverTimeAnalysisRead": {
+        "properties": {
+          "name": { "type": "string", "title": "Name", "description": "Name of the ConceptOverTimeAnalysis" },
+          "id": { "type": "integer", "title": "Id", "description": "ID of the ConceptOverTimeAnalysis" },
+          "project_id": {
+            "type": "integer",
+            "title": "Project Id",
+            "description": "Project the ConceptOverTimeAnalysis belongs to"
+          },
+          "last_refinement_job_id": {
+            "anyOf": [{ "type": "string" }, { "type": "null" }],
+            "title": "Last Refinement Job Id",
+            "description": "ID of the last refinement job for the ConceptOverTimeAnalysis"
+          },
+          "timeline_settings": {
+            "$ref": "#/components/schemas/COTATimelineSettings",
+            "description": "Timeline Analysis Settings of the ConceptOverTimeAnalysis."
+          },
+          "training_settings": {
+            "$ref": "#/components/schemas/COTATrainingSettings",
+            "description": "Timeline Training Settings of the ConceptOverTimeAnalysis."
+          },
+          "concepts": {
+            "items": { "$ref": "#/components/schemas/COTAConcept" },
+            "type": "array",
+            "title": "Concepts",
+            "description": "List of Concepts that are part of the ConceptOverTimeAnalysis"
+          },
+          "search_space": {
+            "items": { "$ref": "#/components/schemas/COTASentence" },
+            "type": "array",
+            "title": "Search Space",
+            "description": "List of Sentences that form the search space of the ConceptOverTimeAnalysis"
+          },
+          "created": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Created",
+            "description": "Created timestamp of the ConceptOverTimeAnalysis"
+          },
+          "updated": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Updated",
+            "description": "Updated timestamp of the ConceptOverTimeAnalysis"
+          }
+        },
+        "type": "object",
+        "required": [
+          "name",
+          "id",
+          "project_id",
+          "last_refinement_job_id",
+          "timeline_settings",
+          "training_settings",
+          "concepts",
+          "search_space",
+          "created",
+          "updated"
+        ],
+        "title": "ConceptOverTimeAnalysisRead"
+      },
+      "ConceptOverTimeAnalysisUpdate": {
+        "properties": {
+          "name": {
+            "anyOf": [{ "type": "string" }, { "type": "null" }],
+            "title": "Name",
+            "description": "Name of the ConceptOverTimeAnalysis"
+          },
+          "timeline_settings": {
+            "anyOf": [{ "$ref": "#/components/schemas/COTATimelineSettings" }, { "type": "null" }],
+            "description": "Timeline Settings of the ConceptOverTimeAnalysis."
+          },
+          "training_settings": {
+            "anyOf": [{ "$ref": "#/components/schemas/COTATrainingSettings" }, { "type": "null" }],
+            "description": "Training Settings of the ConceptOverTimeAnalysis."
+          },
+          "concepts": {
+            "anyOf": [{ "items": { "$ref": "#/components/schemas/COTAConcept" }, "type": "array" }, { "type": "null" }],
+            "title": "Concepts",
+            "description": "List of Concepts that are part of the ConceptOverTimeAnalysis"
+          }
+        },
+        "type": "object",
+        "title": "ConceptOverTimeAnalysisUpdate"
+      },
       "CotaCreatedEvent": {
         "properties": {
           "type": { "type": "string", "const": "COTA_CREATED", "title": "Type", "default": "COTA_CREATED" },
-          "payload": { "$ref": "#/components/schemas/COTARead" }
+          "payload": { "$ref": "#/components/schemas/ConceptOverTimeAnalysisRead" }
         },
         "type": "object",
         "required": ["payload"],
@@ -14298,7 +14320,7 @@
       "CotaDeletedEvent": {
         "properties": {
           "type": { "type": "string", "const": "COTA_DELETED", "title": "Type", "default": "COTA_DELETED" },
-          "payload": { "$ref": "#/components/schemas/COTARead" }
+          "payload": { "$ref": "#/components/schemas/ConceptOverTimeAnalysisRead" }
         },
         "type": "object",
         "required": ["payload"],
@@ -14307,7 +14329,7 @@
       "CotaUpdatedEvent": {
         "properties": {
           "type": { "type": "string", "const": "COTA_UPDATED", "title": "Type", "default": "COTA_UPDATED" },
-          "payload": { "$ref": "#/components/schemas/COTARead" }
+          "payload": { "$ref": "#/components/schemas/ConceptOverTimeAnalysisRead" }
         },
         "type": "object",
         "required": ["payload"],
@@ -18633,6 +18655,11 @@
             "description": "The metadata fields of <metadata_fields>"
           },
           "id": { "type": "integer", "title": "Id", "description": "ID of the prompt version" },
+          "project_id": {
+            "type": "integer",
+            "title": "Project Id",
+            "description": "ID of the project of the prompt version"
+          },
           "prompt_id": {
             "type": "integer",
             "title": "Prompt Id",
@@ -18656,7 +18683,7 @@
           }
         },
         "type": "object",
-        "required": ["text", "id", "prompt_id", "version", "user_id", "created"],
+        "required": ["text", "id", "project_id", "prompt_id", "version", "user_id", "created"],
         "title": "PromptVersionRead"
       },
       "QueryRequest_BBoxColumns_": {

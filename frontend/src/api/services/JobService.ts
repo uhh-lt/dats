@@ -714,7 +714,7 @@ export class JobService {
     });
   }
   /**
-   * Starts the PerspectivesJob of the Aspect for the given Parameters. If a job is already running, this will raise an error.
+   * Starts the PerspectivesJob of the Aspect for the given Parameters. If a job of the Aspect is still running, this answers 400.
    * @returns PerspectivesJobRead Successful Response
    * @throws ApiError
    */

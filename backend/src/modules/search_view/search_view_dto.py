@@ -21,7 +21,7 @@ from systems.search_system.sorting import Sort
 T = TypeVar("T", bound=AbstractColumns)
 
 
-class SearchViewBase(BaseModel, Generic[T]):
+class SearchViewBaseDTO(BaseModel, Generic[T]):
     """Shared, entity-agnostic view spec, parameterized over the column enum `T`.
 
     Concrete per-entity subclasses fix `T` and add a `Literal[...]` `entity_type`
@@ -67,7 +67,7 @@ class SearchViewBase(BaseModel, Generic[T]):
         return [] if value is None else value
 
     @model_validator(mode="after")
-    def validate_group_by(self) -> "SearchViewBase[T]":
+    def validate_group_by(self) -> "SearchViewBaseDTO[T]":
         if self.group_by is None:
             return self
         field = self.group_by.field
@@ -81,7 +81,7 @@ class SearchViewBase(BaseModel, Generic[T]):
         return self
 
     @model_validator(mode="after")
-    def validate_board_group(self) -> "SearchViewBase[T]":
+    def validate_board_group(self) -> "SearchViewBaseDTO[T]":
         if self.layout == SearchViewLayout.BOARD and self.group_by is None:
             raise ValueError("Board views require a group")
         return self
@@ -90,28 +90,28 @@ class SearchViewBase(BaseModel, Generic[T]):
 # --- Per-entity concrete bases (fix the column enum + discriminator) ---
 
 
-class MemoSearchViewBase(SearchViewBase[MemoColumns]):
+class MemoSearchViewBaseDTO(SearchViewBaseDTO[MemoColumns]):
     entity_type: Literal[SearchEntityType.MEMO] = Field(
         description="Searchable entity the SearchView is for",
         default=SearchEntityType.MEMO,
     )
 
 
-class SpanSearchViewBase(SearchViewBase[SpanColumns]):
+class SpanSearchViewBaseDTO(SearchViewBaseDTO[SpanColumns]):
     entity_type: Literal[SearchEntityType.SPAN_ANNOTATION] = Field(
         description="Searchable entity the SearchView is for",
         default=SearchEntityType.SPAN_ANNOTATION,
     )
 
 
-class SentenceSearchViewBase(SearchViewBase[SentAnnoColumns]):
+class SentenceSearchViewBaseDTO(SearchViewBaseDTO[SentAnnoColumns]):
     entity_type: Literal[SearchEntityType.SENTENCE_ANNOTATION] = Field(
         description="Searchable entity the SearchView is for",
         default=SearchEntityType.SENTENCE_ANNOTATION,
     )
 
 
-class BBoxSearchViewBase(SearchViewBase[BBoxColumns]):
+class BBoxSearchViewBaseDTO(SearchViewBaseDTO[BBoxColumns]):
     entity_type: Literal[SearchEntityType.BBOX_ANNOTATION] = Field(
         description="Searchable entity the SearchView is for",
         default=SearchEntityType.BBOX_ANNOTATION,
@@ -121,19 +121,19 @@ class BBoxSearchViewBase(SearchViewBase[BBoxColumns]):
 # --- Create ---
 
 
-class MemoSearchViewCreate(MemoSearchViewBase):
+class MemoSearchViewCreate(MemoSearchViewBaseDTO):
     pass
 
 
-class SpanSearchViewCreate(SpanSearchViewBase):
+class SpanSearchViewCreate(SpanSearchViewBaseDTO):
     pass
 
 
-class SentenceSearchViewCreate(SentenceSearchViewBase):
+class SentenceSearchViewCreate(SentenceSearchViewBaseDTO):
     pass
 
 
-class BBoxSearchViewCreate(BBoxSearchViewBase):
+class BBoxSearchViewCreate(BBoxSearchViewBaseDTO):
     pass
 
 
@@ -168,7 +168,7 @@ class SearchViewCreateIntern(BaseModel):
 # --- Read ---
 
 
-class MemoSearchViewRead(MemoSearchViewBase):
+class MemoSearchViewRead(MemoSearchViewBaseDTO):
     id: int = Field(description="ID of the SearchView")
     project_id: int = Field(description="Project the SearchView belongs to")
     user_id: int = Field(description="User the SearchView belongs to")
@@ -178,7 +178,7 @@ class MemoSearchViewRead(MemoSearchViewBase):
     model_config = ConfigDict(from_attributes=True)
 
 
-class SpanSearchViewRead(SpanSearchViewBase):
+class SpanSearchViewRead(SpanSearchViewBaseDTO):
     id: int = Field(description="ID of the SearchView")
     project_id: int = Field(description="Project the SearchView belongs to")
     user_id: int = Field(description="User the SearchView belongs to")
@@ -188,7 +188,7 @@ class SpanSearchViewRead(SpanSearchViewBase):
     model_config = ConfigDict(from_attributes=True)
 
 
-class SentenceSearchViewRead(SentenceSearchViewBase):
+class SentenceSearchViewRead(SentenceSearchViewBaseDTO):
     id: int = Field(description="ID of the SearchView")
     project_id: int = Field(description="Project the SearchView belongs to")
     user_id: int = Field(description="User the SearchView belongs to")
@@ -198,7 +198,7 @@ class SentenceSearchViewRead(SentenceSearchViewBase):
     model_config = ConfigDict(from_attributes=True)
 
 
-class BBoxSearchViewRead(BBoxSearchViewBase):
+class BBoxSearchViewRead(BBoxSearchViewBaseDTO):
     id: int = Field(description="ID of the SearchView")
     project_id: int = Field(description="Project the SearchView belongs to")
     user_id: int = Field(description="User the SearchView belongs to")

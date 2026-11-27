@@ -1,10 +1,10 @@
 import { JobService } from "@api/services/JobService";
 import { createJobQueries } from "@core/job";
 import { ConceptOverTimeAnalysisService } from "@api/services/ConceptOverTimeAnalysisService";
-import type { COTARead } from "@models/COTARead";
+import type { ConceptOverTimeAnalysisRead } from "@models/ConceptOverTimeAnalysisRead";
 import { queryOptions } from "@tanstack/react-query";
 
-export type CotaMap = Record<number, COTARead>;
+export type CotaMap = Record<number, ConceptOverTimeAnalysisRead>;
 
 /**
  * Query factory for concept-over-time analyses (COTA).

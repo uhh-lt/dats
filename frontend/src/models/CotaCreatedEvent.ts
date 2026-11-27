@@ -2,8 +2,8 @@
 /* istanbul ignore file */
 /* tslint:disable */
 /* eslint-disable */
-import type { COTARead } from "./COTARead";
+import type { ConceptOverTimeAnalysisRead } from "./ConceptOverTimeAnalysisRead";
 export type CotaCreatedEvent = {
   type?: string;
-  payload: COTARead;
+  payload: ConceptOverTimeAnalysisRead;
 };

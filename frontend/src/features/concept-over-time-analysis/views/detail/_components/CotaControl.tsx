@@ -1,6 +1,6 @@
 import { useLiveJob } from "@core/job";
 import { useOpenConfirmationDialog } from "@core/notification";
-import { COTARead } from "@models/COTARead";
+import { ConceptOverTimeAnalysisRead } from "@models/ConceptOverTimeAnalysisRead";
 import { COTATrainingSettings } from "@models/COTATrainingSettings";
 import FastForwardIcon from "@mui/icons-material/FastForward";
 import InfoIcon from "@mui/icons-material/Info";
@@ -35,7 +35,7 @@ import {
 } from "./cotaUtils";
 
 interface CotaControlProps {
-  cota: COTARead;
+  cota: ConceptOverTimeAnalysisRead;
 }
 
 export function CotaControl({ cota }: CotaControlProps) {

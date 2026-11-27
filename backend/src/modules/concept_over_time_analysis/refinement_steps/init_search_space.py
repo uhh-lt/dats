@@ -12,7 +12,7 @@ from core.doc.source_document_data_orm import SourceDocumentDataORM
 from core.doc.source_document_orm import SourceDocumentORM
 from core.metadata.source_document_metadata_orm import SourceDocumentMetadataORM
 from modules.concept_over_time_analysis.cota_dto import (
-    COTARead,
+    ConceptOverTimeAnalysisRead,
     COTASentence,
 )
 from repos.ray.dto.clip import ClipTextEmbeddingInput
@@ -22,7 +22,9 @@ from repos.vector.weaviate_repo import WeaviateRepo
 BATCH_SIZE = conf.postgres.batch_size
 
 
-def init_search_space(db: Session, cota: COTARead) -> list[COTASentence]:
+def init_search_space(
+    db: Session, cota: ConceptOverTimeAnalysisRead
+) -> list[COTASentence]:
     # the search space is not empty, we dont need to do anything
     if len(cota.search_space) > 0:
         return cota.search_space
@@ -46,7 +48,9 @@ def init_search_space(db: Session, cota: COTARead) -> list[COTASentence]:
     return search_space
 
 
-def __build_search_space(db: Session, cota: COTARead) -> list[COTASentence]:
+def __build_search_space(
+    db: Session, cota: ConceptOverTimeAnalysisRead
+) -> list[COTASentence]:
     search_space_dict: dict[str, COTASentence] = (
         dict()
     )  # we use a dict here to prevent duplicates in the search space

@@ -194,6 +194,7 @@ class PromptVersionCreateIntern(PromptContent):
 # Properties for reading (as in ORM)
 class PromptVersionRead(PromptContent):
     id: int = Field(description="ID of the prompt version")
+    project_id: int = Field(description="ID of the project of the prompt version")
     prompt_id: int = Field(description="ID of the prompt the version belongs to")
     version: int = Field(
         description="Number of the version within its prompt (1, 2, 3, ...)"

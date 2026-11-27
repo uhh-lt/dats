@@ -38,6 +38,10 @@ export type PromptVersionRead = {
    */
   id: number;
   /**
+   * ID of the project of the prompt version
+   */
+  project_id: number;
+  /**
    * ID of the prompt the version belongs to
    */
   prompt_id: number;

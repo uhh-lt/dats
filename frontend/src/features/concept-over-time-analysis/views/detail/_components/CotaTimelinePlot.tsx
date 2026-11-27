@@ -1,6 +1,6 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { ExportChartButton } from "@components/export-chart-buttons";
-import { COTARead } from "@models/COTARead";
+import { ConceptOverTimeAnalysisRead } from "@models/ConceptOverTimeAnalysisRead";
 import { DateGroupBy } from "@models/DateGroupBy";
 import { Card, CardContent, CardHeader, Typography } from "@mui/material";
 import { useAppDispatch, useAppSelector } from "@store/storeHooks";
@@ -22,7 +22,7 @@ import { CotaActions } from "../../../store/cotaSlice";
 import { CotaPlotToggleButton } from "./CotaPlotToggleButton";
 
 interface CotaTimelinePlotProps {
-  cota: COTARead;
+  cota: ConceptOverTimeAnalysisRead;
 }
 
 export function CotaTimelinePlot({ cota }: CotaTimelinePlotProps) {

@@ -9,7 +9,7 @@ class WordLevelTranscription(BaseModel):
     end_ms: int = Field(description="End of the word in the audio in milliseconds")
 
 
-class SourceDocumentDataBase(BaseModel):
+class SourceDocumentDataBaseDTO(BaseModel):
     id: int = Field(description="ID of the SourceDocument")
     content: str = Field(description="text content of the SourceDocument")
     raw_html: str = Field(
@@ -90,5 +90,5 @@ class SourceDocumentDataUpdate(BaseModel, UpdateDTOBase):
 
 
 # Properties for creation
-class SourceDocumentDataCreate(SourceDocumentDataBase):
+class SourceDocumentDataCreate(SourceDocumentDataBaseDTO):
     pass
