@@ -133,7 +133,11 @@ class CRUDProjectMetadata(
         skip: int | None = None,
         limit: int | None = None,
     ) -> list[ProjectMetadataORM]:
-        query = db.query(self.model).filter(self.model.project_id == project_id)
+        query = (
+            db.query(self.model)
+            .filter(self.model.project_id == project_id)
+            .order_by(self.model.id)
+        )
         if skip is not None:
             query = query.offset(skip)
         if limit is not None:

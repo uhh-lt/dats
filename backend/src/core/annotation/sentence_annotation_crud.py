@@ -143,7 +143,7 @@ class CRUDSentenceAnnotation(
             query = query.where(self.model.code_id == code_id)
         if exclude_disabled_codes:
             query = query.join(self.model.code).where(CodeORM.enabled == True)  # noqa: E712
-        return query.all()
+        return query.order_by(self.model.id).all()
 
     def read_by_user_sdocs_codes(
         self,

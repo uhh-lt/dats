@@ -145,6 +145,7 @@ class CRUDSourceDocumentMetadata(
                     ProjectMetadataORM.key.in_(batch_keys),
                     SourceDocumentMetadataORM.source_document_id == sdoc_id,
                 )
+                .order_by(SourceDocumentMetadataORM.id)
             )
             results.extend((r[0], r[1]) for r in query.all())
         return results
@@ -158,6 +159,7 @@ class CRUDSourceDocumentMetadata(
                 self.model.project_id == project_id,
                 self.model.source_document_id == sdoc_id,
             )
+            .order_by(self.model.id)
             .all()
         )
         return db_objs
