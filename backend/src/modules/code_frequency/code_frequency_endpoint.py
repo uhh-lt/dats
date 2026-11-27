@@ -4,7 +4,7 @@ from common.project_router import project_router
 from modules.code_frequency.code_frequency_dto import CodeFrequency, CodeOccurrence
 from modules.code_frequency.code_frequency_service import CodeFrequencyService
 
-router = project_router("/code-frequencies", tags=["code_frequency"])
+router = project_router("/code-frequencies", tags=["codeFrequency"])
 
 
 # --- other operations
@@ -15,7 +15,7 @@ router = project_router("/code-frequencies", tags=["code_frequency"])
     response_model=list[CodeFrequency],
     summary="Returns all SourceDocument IDs that match the query parameters.",
 )
-def code_frequencies(
+def compute_code_frequencies(
     *,
     db: DBSession,
     project_id: int,
@@ -38,7 +38,7 @@ def code_frequencies(
     response_model=list[CodeOccurrence],
     summary="Returns all SourceDocument IDs that match the query parameters.",
 )
-def code_occurrences(
+def compute_code_occurrences(
     *,
     db: DBSession,
     project_id: int,

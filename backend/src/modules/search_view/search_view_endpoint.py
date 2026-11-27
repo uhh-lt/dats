@@ -102,7 +102,7 @@ def reorder(
     response_model=SearchViewReadUnion,
     summary="Updates a personal search view",
 )
-def update(
+def update_by_id(
     *,
     db: DBSession,
     project_id: int,
@@ -129,7 +129,7 @@ def update(
     response_model=SearchViewReadUnion,
     summary="Deletes a personal search view",
 )
-def delete(
+def delete_by_id(
     *,
     db: DBSession,
     project_id: int,

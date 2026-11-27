@@ -3,7 +3,7 @@ from common.project_router import project_router
 from modules.document_sampler.document_sampler_dto import SampledSdocsResults
 from modules.document_sampler.document_sampler_service import DocumentSamplerService
 
-router = project_router("/document-samples", tags=["document_sampler"])
+router = project_router("/document-samples", tags=["documentSample"])
 
 
 # --- other operations

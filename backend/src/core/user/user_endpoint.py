@@ -64,7 +64,7 @@ def get_by_project(*, project_id: int, db: DBSession) -> list[UserRead]:
     response_model=UserRead,
     summary="Updates the virtual user with the given ID of the Project",
 )
-def update_by_id(
+def update_virtual_user(
     *,
     project_id: int,
     virtual_user_id: int,
@@ -126,7 +126,7 @@ def associate_user_to_project(
         "deleted here (HTTP 409); delete its run in the Experiment Studio."
     ),
 )
-def delete_by_id(
+def delete_virtual_user(
     *,
     project_id: int,
     virtual_user_id: int,

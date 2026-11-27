@@ -22,7 +22,7 @@ router = project_router("/features", tags=["feature", "mcp"])
     response_model=list[ProjectFeatureRead],
     summary="Returns the state of every Feature in the Project: enabled, status, ready and document counts",
 )
-def get_project_features(
+def get_by_project(
     *,
     db: DBSession,
     project_id: int,
@@ -38,7 +38,7 @@ def get_project_features(
     response_model=list[str],
     summary="Enables the disabled Feature in the Project and computes its data for all documents. Returns the enabled Features",
 )
-def enable_feature(
+def enable(
     *,
     db: DBSession,
     project_id: int,
@@ -61,7 +61,7 @@ def enable_feature(
     response_model=list[str],
     summary="Completes the partly available Feature: computes its data for the documents that lack it. Returns the enabled Features",
 )
-def complete_feature(
+def complete(
     *,
     db: DBSession,
     project_id: int,
@@ -82,7 +82,7 @@ def complete_feature(
     response_model=list[str],
     summary="Disables the partly or fully available Feature in the Project; its data is kept. Returns the enabled Features",
 )
-def disable_feature(
+def disable(
     *,
     db: DBSession,
     project_id: int,

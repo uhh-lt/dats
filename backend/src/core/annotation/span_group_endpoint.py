@@ -26,7 +26,7 @@ router = project_router("/span-groups", tags=["spanGroup"])
     response_model=SpanGroupRead,
     summary="Creates a new SpanGroup and returns it with the generated ID.",
 )
-def create_span_group(
+def create(
     *,
     db: DBSession,
     project_id: int,
@@ -52,7 +52,7 @@ def create_span_group(
         "only those in the SourceDocument"
     ),
 )
-def get_span_groups(
+def get_by_project(
     *,
     db: DBSession,
     project_id: int,

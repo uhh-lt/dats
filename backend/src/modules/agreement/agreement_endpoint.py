@@ -48,7 +48,7 @@ def export_agreement_counts(
     response_model=list[str],
     summary="Returns the texts of segments (character ranges of documents), in the order of the request.",
 )
-def get_segment_texts(
+def compute_segment_texts(
     *,
     db: DBSession,
     project_id: int,

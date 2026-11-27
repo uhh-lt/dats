@@ -27,7 +27,7 @@ router = project_router("/span-annotations", tags=["spanAnnotation", "mcp"])
     response_model=SpanAnnotationRead,
     summary="Creates a SpanAnnotation",
 )
-def create_span_annotation(
+def create(
     *,
     db: DBSession,
     project_id: int,
@@ -53,7 +53,7 @@ def create_span_annotation(
     response_model=list[SpanAnnotationRead],
     summary="Creates SpanAnnotations in Bulk",
 )
-def create_span_annotations_bulk(
+def create_bulk(
     *,
     db: DBSession,
     project_id: int,
@@ -109,7 +109,7 @@ def add_to_span_group(
         "SourceDocument or with the Code"
     ),
 )
-def get_span_annotations(
+def get_by_project(
     *,
     db: DBSession,
     project_id: int,
@@ -161,7 +161,7 @@ def get_span_groups(
     response_model=list[SpanAnnotationRead],
     summary="Updates SpanAnnotations in Bulk",
 )
-def update_span_annotations_bulk(
+def update_bulk(
     *,
     db: DBSession,
     project_id: int,
@@ -206,7 +206,7 @@ def update_by_id(
     response_model=list[SpanAnnotationDeleted],
     summary="Deletes all SpanAnnotations with the given IDs.",
 )
-def delete_span_annotations_bulk(
+def delete_bulk(
     *,
     db: DBSession,
     project_id: int,
@@ -294,7 +294,7 @@ def remove_from_span_group(
         "SourceDocuments (by sdoc_ids)"
     ),
 )
-def count_annotations(
+def count(
     *,
     db: DBSession,
     project_id: int,

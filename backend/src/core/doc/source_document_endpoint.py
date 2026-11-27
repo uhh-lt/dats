@@ -26,7 +26,7 @@ router = project_router("/source-documents", tags=["sourceDocument", "mcp"])
     response_model=int,
     summary="Returns the number of SourceDocuments of the Project, optionally only those with the given status or with a value for the given date metadata",
 )
-def count_sdocs(
+def count(
     *,
     db: DBSession,
     project_id: int,
@@ -186,7 +186,7 @@ def update_by_id(
     response_model=list[SourceDocumentRead],
     summary="Removes all SourceDocuments with the given IDs if they exist",
 )
-def delete_sdocs_bulk(
+def delete_bulk(
     *,
     db: DBSession,
     project_id: int,

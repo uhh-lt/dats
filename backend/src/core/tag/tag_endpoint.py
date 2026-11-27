@@ -43,7 +43,7 @@ def _read_sdoc_tag_links(
     response_model=TagRead,
     summary="Creates a new Tag and returns it with the generated ID.",
 )
-def create_tag(
+def create(
     *,
     db: DBSession,
     project_id: int,
@@ -141,7 +141,7 @@ def get_sdoc_ids_by_tag_id(
     response_model=list[TagRead],
     summary="Updates the Tags with the given IDs.",
 )
-def update_tags_bulk(
+def update_bulk(
     *,
     db: DBSession,
     project_id: int,
@@ -202,7 +202,7 @@ def update_sdoc_tags_bulk(
         "resulting tags per document"
     ),
 )
-def set_sdoc_tags_bulk(
+def replace_sdoc_tags_bulk(
     *,
     db: DBSession,
     project_id: int,
@@ -297,7 +297,7 @@ def delete_by_id(
         "or all Tags of the Project"
     ),
 )
-def count_tags(
+def count(
     *,
     db: DBSession,
     project_id: int,

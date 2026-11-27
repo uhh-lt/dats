@@ -14,7 +14,9 @@ from core.metadata.source_document_metadata_service import (
 )
 from systems.websocket_system.websocket_dependency import WebsocketEmitter
 
-router = project_router("/source-document-metadata", tags=["sdocMetadata", "mcp"])
+router = project_router(
+    "/source-document-metadata", tags=["sourceDocumentMetadata", "mcp"]
+)
 
 
 # --- read operations

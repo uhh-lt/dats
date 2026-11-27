@@ -30,7 +30,7 @@ router = project_router("/memos", tags=["memo", "mcp"])
     response_model=MemoRead,
     summary="Creates a Memo attached to the given object and returns it.",
 )
-def create_memo(
+def create(
     *,
     db: DBSession,
     project_id: int,
@@ -102,7 +102,7 @@ def get_by_id(
     response_model=list[MemoRead],
     summary="Updates the Memos with the given IDs.",
 )
-def update_memos_bulk(
+def update_bulk(
     *,
     db: DBSession,
     project_id: int,
@@ -189,7 +189,7 @@ def mark_recent(
     response_model=list[MemoRead],
     summary="Deletes the Memos with the given IDs.",
 )
-def delete_memos_bulk(
+def delete_bulk(
     *,
     db: DBSession,
     project_id: int,
@@ -233,7 +233,7 @@ def delete_by_id(
     response_model=str,
     summary="Generates a 1–2 sentence memo suggestion using LLM based on the attached object",
 )
-def generate_memo_suggestion(
+def suggest(
     *,
     db: DBSession,
     project_id: int,

@@ -7,7 +7,7 @@ from modules.keyword_statistics.keyword_statistics_service import (
 )
 
 router = project_router(
-    "/keyword-statistics", tags=["keyword_statistics"], feature=KEYWORD_STATISTICS
+    "/keyword-statistics", tags=["keywordStatistics"], feature=KEYWORD_STATISTICS
 )
 
 

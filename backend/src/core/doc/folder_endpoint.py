@@ -21,7 +21,7 @@ router = project_router("/folders", tags=["folder", "mcp"])
     response_model=FolderRead,
     summary="Creates a new Folder and returns it with the generated ID.",
 )
-def create_folder(
+def create(
     *,
     db: DBSession,
     project_id: int,
@@ -100,7 +100,7 @@ def get_sdoc_ids_in_folder_by_doctype(
     response_model=list[FolderRead],
     summary="Updates the Folders with the given IDs.",
 )
-def update_folders_bulk(
+def update_bulk(
     *,
     db: DBSession,
     project_id: int,

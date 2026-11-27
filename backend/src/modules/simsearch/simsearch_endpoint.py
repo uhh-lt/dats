@@ -11,7 +11,7 @@ from modules.simsearch.simsearch_service import SimSearchService
 from systems.search_system.filtering import Filter
 
 router = project_router(
-    "/similarity-search", tags=["simsearch"], feature=SEMANTIC_SEARCH
+    "/similarity-search", tags=["similaritySearch"], feature=SEMANTIC_SEARCH
 )
 
 

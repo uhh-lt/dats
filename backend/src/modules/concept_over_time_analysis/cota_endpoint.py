@@ -134,7 +134,7 @@ def update_by_id(
     response_model=COTARead,
     summary="Annotate (multiple) COTASentences",
 )
-def annotate_cota_sentence(
+def annotate_sentences(
     *,
     db: DBSession,
     project_id: int,
@@ -159,7 +159,7 @@ def annotate_cota_sentence(
     response_model=COTARead,
     summary="Remove (multiple) COTASentences from the search space",
 )
-def remove_cota_sentence(
+def remove_sentences(
     *,
     db: DBSession,
     project_id: int,
@@ -183,7 +183,7 @@ def remove_cota_sentence(
     summary="Resets the ConceptOverTimeAnalysis",
     description="Resets the ConceptOverTimeAnalysis deleting model, embeddings, refinement jobs and resetting the search space",
 )
-def reset_cota(
+def reset(
     *,
     db: DBSession,
     project_id: int,
@@ -226,7 +226,7 @@ def delete_by_id(
     summary="Refines the ConceptOverTimeAnalysis",
     description="Starts the refinement job of the ConceptOverTimeAnalysis with the given ID; read the job at /jobs/cota-refinement",
 )
-def refine_cota(
+def refine(
     *,
     db: DBSession,
     project_id: int,

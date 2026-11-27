@@ -15,7 +15,7 @@ from modules.annoscaling.annoscaling_service import AnnoScalingService
 from systems.websocket_system.websocket_dependency import WebsocketEmitter
 
 router = project_router(
-    "/annotation-scaling", tags=["annoscaling"], feature=ANNOTATION_SCALING
+    "/annotation-scaling", tags=["annotationScaling"], feature=ANNOTATION_SCALING
 )
 
 ass: AnnoScalingService = AnnoScalingService()

@@ -82,7 +82,7 @@ def create_version(
     response_model=list[PromptExample],
     summary="Turns span or sentence annotations into few-shot examples for a prompt",
 )
-def create_examples(
+def build_examples(
     *,
     db: DBSession,
     project_id: int,

@@ -18,7 +18,7 @@ router = project_router("/codes", tags=["code", "mcp"])
     response_model=CodeRead,
     summary="Creates a new Code and returns it with the generated ID.",
 )
-def create_code(
+def create(
     *,
     db: DBSession,
     project_id: int,
@@ -71,7 +71,7 @@ def get_by_id(
     response_model=list[CodeRead],
     summary="Updates the Codes with the given IDs.",
 )
-def update_codes_bulk(
+def update_bulk(
     *,
     db: DBSession,
     project_id: int,

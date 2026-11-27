@@ -61,7 +61,7 @@ js = JobService()
     response_model=AspectRead,
     summary="Creates a new Aspect",
 )
-def create_aspect(
+def create(
     *,
     db: DBSession,
     project_id: int,
@@ -103,7 +103,7 @@ def create_aspect(
     response_model=list[AspectRead],
     summary="Returns all Aspects of the Project",
 )
-def get_all_aspects(
+def get_by_project(
     *,
     db: DBSession,
     project_id: int,
@@ -170,7 +170,7 @@ def get_docaspect_by_id(
     response_model=list[ClusterRead],
     summary="Returns the clusters for the given SourceDocument (sdoc_id) in the specified Aspect (aspect_id).",
 )
-def get_clusters_for_sdoc(
+def get_clusters(
     *,
     db: DBSession,
     project_id: int,
@@ -192,7 +192,7 @@ def get_clusters_for_sdoc(
     response_model=AspectRead,
     summary="Updates the Aspect with the given ID.",
 )
-def update_aspect_by_id(
+def update_by_id(
     *,
     db: DBSession,
     project_id: int,
@@ -216,7 +216,7 @@ def update_aspect_by_id(
     response_model=ClusterRead,
     summary="Updates the Cluster's name and description.",
 )
-def update_cluster_details(
+def update_cluster(
     *,
     db: DBSession,
     project_id: int,
@@ -250,7 +250,7 @@ def update_cluster_details(
     response_model=AspectRead,
     summary="Removes the Aspect with the given ID.",
 )
-def remove_aspect_by_id(
+def delete_by_id(
     *,
     db: DBSession,
     weaviate: WeaviateClient = Depends(get_weaviate_client),
@@ -415,7 +415,7 @@ def visualize_documents(
     response_model=PerspectivesVisualization,
     summary="Accept the label of the provided SourceDocuments (by ID) and return the updated visualization.",
 )
-def accept_label(
+def accept_labels(
     *,
     db: DBSession,
     project_id: int,
@@ -450,7 +450,7 @@ def accept_label(
     response_model=PerspectivesVisualization,
     summary="Reverts the label of the provided SourceDocuments (by ID) and return the updated visualization.",
 )
-def revert_label(
+def revert_labels(
     *,
     db: DBSession,
     project_id: int,

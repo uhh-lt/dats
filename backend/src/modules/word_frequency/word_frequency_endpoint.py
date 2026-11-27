@@ -9,7 +9,7 @@ from systems.search_system.filtering import Filter
 from systems.search_system.sorting import Sort
 
 router = project_router(
-    "/word-frequencies", tags=["word_frequency"], feature=WORD_FREQUENCY
+    "/word-frequencies", tags=["wordFrequency"], feature=WORD_FREQUENCY
 )
 
 
