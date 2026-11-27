@@ -591,3 +591,8 @@ Tests: the folders of every touched module, `test/crud` and `test/unit`: 1913 pa
 - `POST /authentication/sync-session` raises `ValueError` (500) for a token without expiry; `backend/test_old` still lists `POST /authentication/register`.
 - The variant `GET /source-documents/count?date_metadata_id=` of the twin test uses the string metadata of the tenant rows (no date metadata there), so both projects count 0.
 - GitGuardian on #984 flags the test password of the member tests (section 16).
+
+## 18. Two leftovers of section 17
+
+- **The date count of the twin test**: the tenant rows have the date metadata "date\_<p>" with a value for the document, so `GET /source-documents/count?date_metadata_id=` counts one document in each project and a leak would count two. The other entries of the last round were measured: the clusters of the document, the span groups of the span annotation and the recent memos answer rows in both projects. Three CRUD reads of the CRUD twin test answer empty or 0 in both projects, older than these PRs: `CRUDDocumentAspect.read_data_by_doctype_with_no_aspect` and `CRUDFolder.read_empty_sdoc_folders` (the rows have no document without an aspect and no empty folder) and `CRUDSearchView.read_last_position` (the maximum position is the same in an identical twin). They stay; a row of each kind would change the tenant rows of every two-project test.
+- **`POST /authentication/sync-session`**: a token without an expiry answers 403 (`TokenWithoutExpiryError`, like every token that cannot be validated), not 500; tested with a token our secret signs without `exp`.

@@ -556,7 +556,10 @@ def test_document_filter_id_of_another_project_matches_nothing(
 
     response = client.get(url, params={"sdoc_id": own["sdoc"].id})
     assert response.status_code == 200, response.text
-    assert [meta["id"] for meta in response.json()] == [own["sdoc_metadata"].id]
+    assert [meta["id"] for meta in response.json()] == [
+        own["sdoc_metadata"].id,
+        own["date_sdoc_metadata"].id,
+    ]
 
     response = client.get(url, params={"sdoc_id": foreign["sdoc"].id})
     assert response.status_code == 200, response.text

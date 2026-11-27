@@ -25,7 +25,7 @@ from common.dependencies import (
     reusable_oauth2_scheme,
 )
 from config import conf
-from core.auth.auth_exceptions import credentials_exception
+from core.auth.auth_exceptions import TokenWithoutExpiryError, credentials_exception
 from core.auth.auth_service import AuthService
 from core.auth.authz_user import AuthzUser
 from core.auth.oauth_service import OAuthService
@@ -294,7 +294,7 @@ def sync_session(
     payload = decode_jwt(token=token)
     expire: str | None = payload.get("exp")
     if expire is None:
-        raise ValueError("Expiration time not found in token payload")
+        raise TokenWithoutExpiryError()
 
     response.set_cookie(
         AUTHORIZATION,

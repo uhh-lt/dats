@@ -249,7 +249,7 @@ VARIANTS: dict[str, tuple[str, Callable[[TenantRows], dict[str, Any]]]] = {
     ),
     "GET /projects/{project_id}/source-documents/count?date_metadata_id=": (
         "GET /projects/{project_id}/source-documents/count",
-        lambda rows: {"params": {"date_metadata_id": rows["project_metadata"].id}},
+        lambda rows: {"params": {"date_metadata_id": rows["date_metadata"].id}},
     ),
 }
 
