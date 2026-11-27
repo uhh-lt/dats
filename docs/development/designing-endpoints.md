@@ -55,22 +55,22 @@ A nested child of another parent answers 404. Links between two things have thei
 
 ### 2.3 End
 
-**Nothing for plain create, read, update, delete. A noun if the request returns data, plural for a list and singular for one thing. A verb if it does something.**
+**Nothing for plain create, read, update, delete. A noun if the request returns data: plural when the answer holds several results, which includes a list, a page of results and a map with one result per key; singular when it is one thing. A verb if it does something.**
 
 | Example                                                | Case                                                 |
 | ------------------------------------------------------ | ---------------------------------------------------- |
 | `PATCH /codes/{code_id}`                               | plain update: no extra segment                       |
-| `GET /source-documents/{sdoc_id}/data`                 | returns one thing: singular noun                     |
-| `GET /source-documents/{sdoc_id}/siblings`             | returns a list: plural noun                          |
-| `GET /source-documents/count`                          | returns one number of the collection: singular noun  |
-| `POST /tags/counts`                                    | returns one count per tag: plural noun               |
-| `POST /memos/suggestion`                               | computes one thing: singular noun                    |
-| `POST /perspectives/aspects/{aspect_id}/visualization` | computes one thing of one item: singular noun        |
+| `GET /source-documents/{sdoc_id}/siblings`             | a list: plural noun                                  |
+| `POST /search/memos`                                   | a page of results: plural noun                       |
+| `POST /tags/counts`                                    | a map with one result per key (per tag): plural noun |
+| `GET /source-documents/count`                          | one number: singular noun                            |
+| `POST /perspectives/aspects/{aspect_id}/visualization` | one object: singular noun                            |
+| `POST /memos/suggestion`                               | one text: singular noun                              |
 | `PUT /whiteboards/{whiteboard_id}/duplicate`           | does something to one item: verb                     |
 | `PATCH /search-views/reorder`                          | does something to the collection: verb               |
 | `POST /doc-processing/upload`                          | does something in a module: verb below the namespace |
 
-A page (`POST /search/memos`) or a map of several results (`POST /tags/counts`) counts as a list. A noun or verb sub-path of the collection is declared before `/{<entity>_id}`, so FastAPI does not read it as an id.
+A noun or verb sub-path of the collection is declared before `/{<entity>_id}`, so FastAPI does not read it as an id.
 
 ### 2.4 Bulk
 
