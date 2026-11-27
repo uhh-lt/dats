@@ -1,6 +1,6 @@
 from typing import Literal
 
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, model_validator
 
 from modules.eximport.export_enum import ExportJobType
 from systems.job_system.job_dto import JobInputBase, JobOutputBase
@@ -88,6 +88,28 @@ class ExportJobInput(JobInputBase):
         description="Specific parameters for the export job w.r.t it's type",
         discriminator="export_job_type",
     )
+
+    @model_validator(mode="after")
+    def check_parameters_match_the_type(self) -> "ExportJobInput":
+        """A SELECTED_* export takes the parameters of its type, an ALL_* export none,
+        so the job never fails in the worker on a mismatch."""
+        parameters_type = (
+            self.specific_export_job_parameters.export_job_type
+            if self.specific_export_job_parameters is not None
+            else None
+        )
+        expected_type = (
+            self.export_job_type
+            if self.export_job_type.value.startswith("SELECTED_")
+            else None
+        )
+        if parameters_type != expected_type:
+            raise ValueError(
+                f"The export job type {self.export_job_type.value} takes "
+                f"{'the parameters of its type' if expected_type else 'no parameters'}, "
+                f"got {parameters_type.value if parameters_type else 'none'}."
+            )
+        return self
 
 
 # Properties shared across all DTOs

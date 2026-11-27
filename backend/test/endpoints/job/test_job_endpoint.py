@@ -115,6 +115,52 @@ def test_every_generated_job_start_body_has_no_project(client: TestClient):
         assert "project_id" not in model.model_fields, path
 
 
+@pytest.mark.parametrize(
+    "body",
+    [
+        # the parameters of another selected type
+        pytest.param(
+            {
+                "export_job_type": "SELECTED_MEMOS",
+                "specific_export_job_parameters": {
+                    "export_job_type": "SELECTED_SDOCS",
+                    "sdoc_ids": [1],
+                },
+            },
+            id="other-parameters",
+        ),
+        # a selected export without its parameters
+        pytest.param(
+            {
+                "export_job_type": "SELECTED_SDOCS",
+                "specific_export_job_parameters": None,
+            },
+            id="selected-without-parameters",
+        ),
+        # an export of all data with the parameters of a selected export
+        pytest.param(
+            {
+                "export_job_type": "ALL_SDOCS",
+                "specific_export_job_parameters": {
+                    "export_job_type": "SELECTED_SDOCS",
+                    "sdoc_ids": [1],
+                },
+            },
+            id="all-with-parameters",
+        ),
+    ],
+)
+def test_start_export_job_rejects_parameters_of_another_type(
+    client: TestClient, test_project: ProjectORM, body: dict
+):
+    """An export whose parameters do not fit its type answers 422 at the start,
+    instead of failing in the worker."""
+    response = client.post(f"/projects/{test_project.id}/jobs/export", json=body)
+
+    assert response.status_code == 422, response.text
+    assert "takes" in response.text
+
+
 def test_start_job_of_a_non_member_is_forbidden(
     non_member_client: TestClient, test_project: ProjectORM
 ):
