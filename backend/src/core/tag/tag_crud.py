@@ -63,6 +63,7 @@ class CRUDTag(ProjectCRUDBase[TagORM, TagCreate, TagUpdate]):
             db_objs.extend(
                 db.query(TagORM)
                 .filter(TagORM.name.in_(batch_names), TagORM.project_id == project_id)
+                .order_by(TagORM.id)
                 .all()
             )
         return db_objs
