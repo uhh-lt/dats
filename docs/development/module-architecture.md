@@ -92,7 +92,7 @@ The keyword statistics (`backend/src/modules/keyword_statistics/`) are a small, 
 
    ```python
    router = project_router(
-       "/keyword-statistics", tags=["keyword_statistics"], feature=KEYWORD_STATISTICS
+       "/keyword-statistics", tags=["keywordStatistics"], feature=KEYWORD_STATISTICS
    )
    ```
 
