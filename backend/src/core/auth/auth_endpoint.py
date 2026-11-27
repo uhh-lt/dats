@@ -25,7 +25,7 @@ from common.dependencies import (
     reusable_oauth2_scheme,
 )
 from config import conf
-from core.auth.auth_exceptions import credentials_exception
+from core.auth.auth_exceptions import TokenWithoutExpiryError, credentials_exception
 from core.auth.auth_service import AuthService
 from core.auth.authz_user import AuthzUser
 from core.auth.oauth_service import OAuthService
@@ -51,7 +51,10 @@ oauth_service = OAuthService()
 router = APIRouter(prefix="/authentication", tags=["authentication"])
 
 
-@router.post(
+# --- create operations
+
+
+@router.put(
     "/register",
     response_model=UserRead,
     summary="Registers a new User and returns it with the generated ID.",
@@ -83,106 +86,12 @@ def register(
     return UserRead.model_validate(db_user)
 
 
-@router.post(
-    "/login",
-    response_model=UserAuthorizationHeaderData,
-    summary=(
-        "Returns the JWT access token for the provided user login data if the login was successful. "
-        "This is usually only called from an OAuth2 client!"
-    ),
-)
-def login(
-    *,
-    db: DBSession,
-    user_login_form_data: OAuth2PasswordRequestForm = Depends(),
-    response: Response,
-) -> UserAuthorizationHeaderData:
-    user_login = UserLogin(
-        username=user_login_form_data.username,
-        password=user_login_form_data.password,
-    )
-    user = AuthService().authenticate(db=db, user_login=user_login)
-    if not user:
-        raise credentials_exception
-
-    (access_token, access_token_expires) = generate_jwt(user)
-    refresh_token = crud_refresh_token.create(
-        db, create_dto=_new_refresh_token(user_id=user.id)
-    )
-
-    response.set_cookie(
-        AUTHORIZATION,
-        access_token,
-        expires=access_token_expires,
-        secure=True,
-        httponly=True,
-        samesite="strict",
-    )
-
-    return UserAuthorizationHeaderData(
-        access_token=access_token,
-        access_token_expires=access_token_expires,
-        token_type="bearer",
-        refresh_token=refresh_token.token,
-        refresh_token_expires=refresh_token.expires_at,
-    )
-
-
-@router.post(
-    "/logout",
-    summary="Revokes the refresh token associated with the given session.",
-)
-def logout(
-    *,
-    db: DBSession,
-    dto: RefreshAccessTokenData = Depends(),
-    response: Response,
-) -> None:
-    token = crud_refresh_token.read_and_verify(db, token_str=dto.refresh_token)
-    crud_refresh_token.revoke(db, token=token)
-    response.delete_cookie(AUTHORIZATION, secure=True, httponly=True, samesite="strict")
-
-
-@router.post(
-    "/refresh-access",
-    summary="Uses the given refresh token to obtain a new access token.",
-)
-def refresh_access(
-    *,
-    db: DBSession,
-    dto: RefreshAccessTokenData = Depends(),
-    response: Response,
-) -> UserAuthorizationHeaderData:
-    token = crud_refresh_token.read_and_verify(db, token_str=dto.refresh_token)
-    crud_refresh_token.revoke(db, token=token)
-    # Remove very old refresh tokens to prevent our database from filling up
-    crud_refresh_token.delete_old_refresh_tokens(db, user_id=token.user_id)
-
-    (access_token, access_token_expires) = generate_jwt(token.user)
-    new_token = crud_refresh_token.create(
-        db, create_dto=_new_refresh_token(user_id=token.user.id)
-    )
-
-    response.set_cookie(
-        AUTHORIZATION,
-        access_token,
-        expires=access_token_expires,
-        secure=True,
-        httponly=True,
-        samesite="strict",
-    )
-
-    return UserAuthorizationHeaderData(
-        access_token=access_token,
-        access_token_expires=access_token_expires,
-        refresh_token=new_token.token,
-        token_type="bearer",
-        refresh_token_expires=new_token.expires_at,
-    )
+# --- read operations
 
 
 @router.get(
     "/content",
+    response_model=None,
     summary="Returns success if the user can access the content",
 )
 def auth_content(
@@ -199,7 +108,11 @@ def auth_content(
     authz.assert_in_project(project_id)
 
 
-@router.get("/oidc/login")
+@router.get(
+    "/oidc/login",
+    response_model=None,
+    summary="Redirects to the login page of the OIDC provider",
+)
 async def oidc_login(request: Request, provider: str, redirect_uri: str) -> Response:
     try:
         return await oauth_service.login(
@@ -209,7 +122,11 @@ async def oidc_login(request: Request, provider: str, redirect_uri: str) -> Resp
         raise HTTPException(status_code=400, detail=str(e))
 
 
-@router.get("/oidc/callback")
+@router.get(
+    "/oidc/callback",
+    response_model=None,
+    summary="Logs the user in after the OIDC provider redirected back",
+)
 async def oidc_callback(
     request: Request,
     provider: str,
@@ -261,7 +178,114 @@ async def oidc_callback(
     return HTMLResponse(content=html_content, media_type="text/html")
 
 
-@router.post("/sync-session")
+# --- other operations
+
+
+@router.post(
+    "/login",
+    response_model=UserAuthorizationHeaderData,
+    summary=(
+        "Returns the JWT access token for the provided user login data if the login was successful. "
+        "This is usually only called from an OAuth2 client!"
+    ),
+)
+def login(
+    *,
+    db: DBSession,
+    user_login_form_data: OAuth2PasswordRequestForm = Depends(),
+    response: Response,
+) -> UserAuthorizationHeaderData:
+    user_login = UserLogin(
+        username=user_login_form_data.username,
+        password=user_login_form_data.password,
+    )
+    user = AuthService().authenticate(db=db, user_login=user_login)
+    if not user:
+        raise credentials_exception
+
+    (access_token, access_token_expires) = generate_jwt(user)
+    refresh_token = crud_refresh_token.create(
+        db, create_dto=_new_refresh_token(user_id=user.id)
+    )
+
+    response.set_cookie(
+        AUTHORIZATION,
+        access_token,
+        expires=access_token_expires,
+        secure=True,
+        httponly=True,
+        samesite="strict",
+    )
+
+    return UserAuthorizationHeaderData(
+        access_token=access_token,
+        access_token_expires=access_token_expires,
+        token_type="bearer",
+        refresh_token=refresh_token.token,
+        refresh_token_expires=refresh_token.expires_at,
+    )
+
+
+@router.post(
+    "/logout",
+    response_model=None,
+    summary="Revokes the refresh token associated with the given session.",
+)
+def logout(
+    *,
+    db: DBSession,
+    dto: RefreshAccessTokenData,
+    response: Response,
+) -> None:
+    token = crud_refresh_token.read_and_verify(db, token_str=dto.refresh_token)
+    crud_refresh_token.revoke(db, token=token)
+    response.delete_cookie(AUTHORIZATION, secure=True, httponly=True, samesite="strict")
+
+
+@router.post(
+    "/refresh-access",
+    response_model=UserAuthorizationHeaderData,
+    summary="Uses the given refresh token to obtain a new access token.",
+)
+def refresh_access(
+    *,
+    db: DBSession,
+    dto: RefreshAccessTokenData,
+    response: Response,
+) -> UserAuthorizationHeaderData:
+    token = crud_refresh_token.read_and_verify(db, token_str=dto.refresh_token)
+    crud_refresh_token.revoke(db, token=token)
+    # Remove very old refresh tokens to prevent our database from filling up
+    crud_refresh_token.delete_old_refresh_tokens(db, user_id=token.user_id)
+
+    (access_token, access_token_expires) = generate_jwt(token.user)
+    new_token = crud_refresh_token.create(
+        db, create_dto=_new_refresh_token(user_id=token.user.id)
+    )
+
+    response.set_cookie(
+        AUTHORIZATION,
+        access_token,
+        expires=access_token_expires,
+        secure=True,
+        httponly=True,
+        samesite="strict",
+    )
+
+    return UserAuthorizationHeaderData(
+        access_token=access_token,
+        access_token_expires=access_token_expires,
+        refresh_token=new_token.token,
+        token_type="bearer",
+        refresh_token_expires=new_token.expires_at,
+    )
+
+
+@router.post(
+    "/sync-session",
+    response_model=None,
+    summary="Sets the access token of the request as the session cookie",
+)
 def sync_session(
     response: Response,
     current_user: UserORM = Depends(get_current_user),
@@ -270,7 +294,7 @@ def sync_session(
     payload = decode_jwt(token=token)
     expire: str | None = payload.get("exp")
     if expire is None:
-        raise ValueError("Expiration time not found in token payload")
+        raise TokenWithoutExpiryError()
 
     response.set_cookie(
         AUTHORIZATION,

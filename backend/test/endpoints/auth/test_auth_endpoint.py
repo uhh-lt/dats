@@ -1,6 +1,9 @@
+import jwt
 import pytest
 from fastapi.testclient import TestClient
 
+from config import conf
+from core.user.user_orm import UserORM
 from virtual_user_test_utils import VirtualUserProject
 
 # ===========================================================================
@@ -137,3 +140,27 @@ def test_content_auth_denies_request_without_original_uri(
     response = client.get("/authentication/content")
 
     assert response.status_code == 403, response.text
+
+
+# ===========================================================================
+# SYNC SESSION (POST /authentication/sync-session) TESTS
+# ===========================================================================
+
+
+def test_sync_session_with_a_token_without_expiry_is_forbidden(
+    client: TestClient, test_user: UserORM
+) -> None:
+    """An access token without an expiry cannot become a session cookie: 403
+    like every token that cannot be validated, not 500."""
+    token = jwt.encode(
+        {"sub": test_user.email, "type": "access_token"},
+        conf.auth.jwt.secret,
+        algorithm=conf.auth.jwt.algo,
+    )
+
+    response = client.post(
+        "/authentication/sync-session", headers={"Authorization": f"Bearer {token}"}
+    )
+
+    assert response.status_code == 403, response.text
+    assert "no expiry" in response.text

@@ -1,4 +1,4 @@
-import { FolderService } from "@api/services/FolderService";
+import { FoldersService } from "@api/services/FoldersService";
 import type { FolderRead } from "@models/FolderRead";
 import type { FolderType } from "@models/FolderType";
 import { queryOptions, skipToken } from "@tanstack/react-query";
@@ -27,7 +27,7 @@ export const folderQueries = {
         projectId === undefined
           ? skipToken
           : async () => {
-              const folders = await FolderService.getByProject({ projectId, folderType });
+              const folders = await FoldersService.getByProject({ projectId, folderType });
               return folders.reduce<FolderMap>((acc, folder) => {
                 acc[folder.id] = folder;
                 return acc;
@@ -45,7 +45,7 @@ export const folderQueries = {
       queryFn:
         !projectId || !sdocFolderId
           ? skipToken
-          : () => FolderService.getSdocIdsInFolderByDoctype({ projectId, folderId: sdocFolderId }),
+          : () => FoldersService.getSourceDocuments({ projectId, folderId: sdocFolderId }),
       staleTime: 1000 * 60 * 5,
     }),
 };

@@ -3,6 +3,7 @@ from fastapi import Depends
 from common.dats_event import DATSEvent
 from common.dependencies import DBSession
 from common.project_router import project_router
+from core.annotation.span_annotation_crud import crud_span_anno
 from core.annotation.span_annotation_dto import SpanAnnotationRead
 from core.annotation.span_group_crud import crud_span_group
 from core.annotation.span_group_dto import (
@@ -15,7 +16,7 @@ from core.annotation.span_group_service import SpanGroupService
 from core.auth.authz_user import AuthzUser
 from systems.websocket_system.websocket_dependency import WebsocketEmitter
 
-router = project_router("/span-groups", tags=["spanGroup"])
+router = project_router("/span-groups", tags=["spanGroups"])
 
 
 # --- create operations
@@ -41,6 +42,27 @@ def create(
     return result
 
 
+@router.put(
+    "/{span_group_id}/span-annotations/{span_annotation_id}",
+    response_model=SpanAnnotationRead,
+    summary="Adds the SpanAnnotation to the SpanGroup",
+)
+def add_span_annotation(
+    *,
+    db: DBSession,
+    project_id: int,
+    span_group_id: int,
+    span_annotation_id: int,
+    ws: WebsocketEmitter = Depends(),
+) -> SpanAnnotationRead:
+    db_obj = crud_span_anno.add_to_span_group(
+        db=db, project_id=project_id, span_id=span_annotation_id, group_id=span_group_id
+    )
+    result = SpanAnnotationRead.model_validate(db_obj)
+    ws.emit_to_project(DATSEvent.SPAN_ANNOTATION_UPDATED, result, project_id=project_id)
+    return result
+
+
 # --- read operations
 
 
@@ -49,7 +71,7 @@ def create(
     response_model=list[SpanGroupWithAnnotationsRead],
     summary=(
         "Returns the SpanGroups of the User with their SpanAnnotations, optionally "
-        "only those in the SourceDocument"
+        "only those in the SourceDocument or those that contain the SpanAnnotation"
     ),
 )
 def get_by_project(
@@ -58,9 +80,14 @@ def get_by_project(
     project_id: int,
     user_id: int,
     sdoc_id: int | None = None,
+    span_annotation_id: int | None = None,
 ) -> list[SpanGroupWithAnnotationsRead]:
     return SpanGroupService().read_with_annotations_by_user(
-        db=db, project_id=project_id, user_id=user_id, sdoc_id=sdoc_id
+        db=db,
+        project_id=project_id,
+        user_id=user_id,
+        sdoc_id=sdoc_id,
+        span_annotation_id=span_annotation_id,
     )
 
 
@@ -84,7 +111,7 @@ def get_by_id(
     response_model=list[SpanAnnotationRead],
     summary="Returns all SpanAnnotations in the SpanGroup with the given ID",
 )
-def get_annotations(
+def get_span_annotations(
     *,
     db: DBSession,
     project_id: int,
@@ -137,4 +164,25 @@ def delete_by_id(
     db_obj = crud_span_group.delete(db=db, project_id=project_id, id=span_group_id)
     result = SpanGroupRead.model_validate(db_obj)
     ws.emit_to_project(DATSEvent.SPAN_GROUP_DELETED, result, project_id=project_id)
+    return result
+
+
+@router.delete(
+    "/{span_group_id}/span-annotations/{span_annotation_id}",
+    response_model=SpanAnnotationRead,
+    summary="Removes the SpanAnnotation from the SpanGroup",
+)
+def remove_span_annotation(
+    *,
+    db: DBSession,
+    project_id: int,
+    span_group_id: int,
+    span_annotation_id: int,
+    ws: WebsocketEmitter = Depends(),
+) -> SpanAnnotationRead:
+    db_obj = crud_span_anno.remove_from_span_group(
+        db=db, project_id=project_id, span_id=span_annotation_id, group_id=span_group_id
+    )
+    result = SpanAnnotationRead.model_validate(db_obj)
+    ws.emit_to_project(DATSEvent.SPAN_ANNOTATION_UPDATED, result, project_id=project_id)
     return result

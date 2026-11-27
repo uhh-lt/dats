@@ -3,6 +3,7 @@
 /* tslint:disable */
 /* eslint-disable */
 import type { Body_authentication_login } from "@models/Body_authentication_login";
+import type { RefreshAccessTokenData } from "@models/RefreshAccessTokenData";
 import type { UserAuthorizationHeaderData } from "@models/UserAuthorizationHeaderData";
 import type { UserCreate } from "@models/UserCreate";
 import type { UserRead } from "@models/UserRead";
@@ -17,10 +18,68 @@ export class AuthenticationService {
    */
   public static register({ requestBody }: { requestBody: UserCreate }): CancelablePromise<UserRead> {
     return __request(OpenAPI, {
-      method: "POST",
+      method: "PUT",
       url: "/authentication/register",
       body: requestBody,
       mediaType: "application/json",
+      errors: {
+        422: `Validation Error`,
+      },
+    });
+  }
+  /**
+   * Returns success if the user can access the content
+   * @returns any Successful Response
+   * @throws ApiError
+   */
+  public static authContent({ xOriginalUri }: { xOriginalUri?: string | null }): CancelablePromise<any> {
+    return __request(OpenAPI, {
+      method: "GET",
+      url: "/authentication/content",
+      headers: {
+        "x-original-uri": xOriginalUri,
+      },
+      errors: {
+        422: `Validation Error`,
+      },
+    });
+  }
+  /**
+   * Redirects to the login page of the OIDC provider
+   * @returns any Successful Response
+   * @throws ApiError
+   */
+  public static oidcLogin({
+    provider,
+    redirectUri,
+  }: {
+    provider: string;
+    redirectUri: string;
+  }): CancelablePromise<any> {
+    return __request(OpenAPI, {
+      method: "GET",
+      url: "/authentication/oidc/login",
+      query: {
+        provider: provider,
+        redirect_uri: redirectUri,
+      },
+      errors: {
+        422: `Validation Error`,
+      },
+    });
+  }
+  /**
+   * Logs the user in after the OIDC provider redirected back
+   * @returns any Successful Response
+   * @throws ApiError
+   */
+  public static oidcCallback({ provider }: { provider: string }): CancelablePromise<any> {
+    return __request(OpenAPI, {
+      method: "GET",
+      url: "/authentication/oidc/callback",
+      query: {
+        provider: provider,
+      },
       errors: {
         422: `Validation Error`,
       },
@@ -51,13 +110,12 @@ export class AuthenticationService {
    * @returns any Successful Response
    * @throws ApiError
    */
-  public static logout({ refreshToken }: { refreshToken: string }): CancelablePromise<any> {
+  public static logout({ requestBody }: { requestBody: RefreshAccessTokenData }): CancelablePromise<any> {
     return __request(OpenAPI, {
       method: "POST",
       url: "/authentication/logout",
-      query: {
-        refresh_token: refreshToken,
-      },
+      body: requestBody,
+      mediaType: "application/json",
       errors: {
         422: `Validation Error`,
       },
@@ -69,81 +127,22 @@ export class AuthenticationService {
    * @throws ApiError
    */
   public static refreshAccess({
-    refreshToken,
+    requestBody,
   }: {
-    refreshToken: string;
+    requestBody: RefreshAccessTokenData;
   }): CancelablePromise<UserAuthorizationHeaderData> {
     return __request(OpenAPI, {
       method: "POST",
       url: "/authentication/refresh-access",
-      query: {
-        refresh_token: refreshToken,
-      },
+      body: requestBody,
+      mediaType: "application/json",
       errors: {
         422: `Validation Error`,
       },
     });
   }
   /**
-   * Returns success if the user can access the content
-   * @returns any Successful Response
-   * @throws ApiError
-   */
-  public static authContent({ xOriginalUri }: { xOriginalUri?: string | null }): CancelablePromise<any> {
-    return __request(OpenAPI, {
-      method: "GET",
-      url: "/authentication/content",
-      headers: {
-        "x-original-uri": xOriginalUri,
-      },
-      errors: {
-        422: `Validation Error`,
-      },
-    });
-  }
-  /**
-   * Oidc Login
-   * @returns any Successful Response
-   * @throws ApiError
-   */
-  public static oidcLogin({
-    provider,
-    redirectUri,
-  }: {
-    provider: string;
-    redirectUri: string;
-  }): CancelablePromise<any> {
-    return __request(OpenAPI, {
-      method: "GET",
-      url: "/authentication/oidc/login",
-      query: {
-        provider: provider,
-        redirect_uri: redirectUri,
-      },
-      errors: {
-        422: `Validation Error`,
-      },
-    });
-  }
-  /**
-   * Oidc Callback
-   * @returns any Successful Response
-   * @throws ApiError
-   */
-  public static oidcCallback({ provider }: { provider: string }): CancelablePromise<any> {
-    return __request(OpenAPI, {
-      method: "GET",
-      url: "/authentication/oidc/callback",
-      query: {
-        provider: provider,
-      },
-      errors: {
-        422: `Validation Error`,
-      },
-    });
-  }
-  /**
-   * Sync Session
+   * Sets the access token of the request as the session cookie
    * @returns any Successful Response
    * @throws ApiError
    */

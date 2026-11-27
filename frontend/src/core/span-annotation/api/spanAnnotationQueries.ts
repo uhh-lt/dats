@@ -1,4 +1,4 @@
-import { SpanAnnotationService } from "@api/services/SpanAnnotationService";
+import { SpanAnnotationsService } from "@api/services/SpanAnnotationsService";
 import { SearchService } from "@api/services/SearchService";
 import { tableInfoQueries, toColumnInfos } from "@core/filter";
 import type { QueryRequest_SpanColumns_ } from "@models/QueryRequest_SpanColumns_";
@@ -34,7 +34,7 @@ export const spanAnnotationQueries = {
       queryFn:
         !projectId || !spanId
           ? skipToken
-          : () => SpanAnnotationService.getById({ projectId, spanAnnotationId: spanId }),
+          : () => SpanAnnotationsService.getById({ projectId, spanAnnotationId: spanId }),
       staleTime: 1000 * 60 * 5,
     }),
 
@@ -54,7 +54,7 @@ export const spanAnnotationQueries = {
       queryFn:
         !projectId || !codeId || !userId
           ? skipToken
-          : () => SpanAnnotationService.getByProject({ projectId, userId, codeId }),
+          : () => SpanAnnotationsService.getByProject({ projectId, userId, codeId }),
     }),
 
   // all span annotations of one user in one sdoc
@@ -73,13 +73,13 @@ export const spanAnnotationQueries = {
       queryFn:
         !projectId || !sdocId || !userId
           ? skipToken
-          : () => SpanAnnotationService.getByProject({ projectId, userId, sdocId }),
+          : () => SpanAnnotationsService.getByProject({ projectId, userId, sdocId }),
     }),
   // the column infos of the span annotation filter table
   tableInfo: (projectId: number) =>
     queryOptions({
       queryKey: tableInfoQueries.byDomain("span", projectId),
-      queryFn: async () => toColumnInfos(await SearchService.searchSpanAnnotationInfo({ projectId })),
+      queryFn: async () => toColumnInfos(await SearchService.getSpanAnnotationColumns({ projectId })),
       staleTime: Infinity,
     }),
 

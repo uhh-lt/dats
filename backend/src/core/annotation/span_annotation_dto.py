@@ -47,6 +47,10 @@ class SpanAnnotationCreate(SpanAnnotationBaseDTO):
             "annotation comparison); records the provenance"
         ),
     )
+    user_id: int | None = Field(
+        default=None,
+        description="The user the annotation belongs to: the current user (default) or a virtual user of the project",
+    )
 
 
 # Properties for updating

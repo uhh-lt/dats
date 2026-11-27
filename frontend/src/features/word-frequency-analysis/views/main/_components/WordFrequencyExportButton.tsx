@@ -26,7 +26,6 @@ export function WordFrequencyExportButton({ filter }: WordFrequencyExportButtonP
         projectId,
         requestBody: {
           filter: filter,
-          sorts: [],
         },
       },
       {

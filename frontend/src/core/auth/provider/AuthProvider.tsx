@@ -127,7 +127,7 @@ export const AuthProvider = ({ children }: AuthContextProps) => {
     clearLocalAuthData(true);
 
     if (refreshTokenToRevoke !== undefined) {
-      logoutMutation({ refreshToken: refreshTokenToRevoke });
+      logoutMutation({ requestBody: { refresh_token: refreshTokenToRevoke } });
     }
   }, [refreshToken, clearLocalAuthData, logoutMutation]);
 
@@ -153,7 +153,7 @@ export const AuthProvider = ({ children }: AuthContextProps) => {
     const refreshBefore = 60 * 1000;
     const msToWait = Math.max(accessTokenExpires.getTime() - Date.now() - refreshBefore, 0);
     const handle = setTimeout(() => {
-      refreshAccessTokenMutation({ refreshToken });
+      refreshAccessTokenMutation({ requestBody: { refresh_token: refreshToken } });
     }, msToWait);
 
     return () => clearTimeout(handle);

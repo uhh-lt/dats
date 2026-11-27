@@ -250,7 +250,7 @@ def test_get_sentence_annotations_filter_of_another_project_matches_nothing(
 
 
 # ===========================================================================
-# GET PER SENTENCE (GET /projects/{project_id}/sentence-annotations/per-sentence) TESTS
+# GET SENTENCE MAP (GET /projects/{project_id}/sentence-annotations/sentence-map) TESTS
 # ===========================================================================
 
 
@@ -265,7 +265,7 @@ def test_get_by_sdoc_and_user(
     sa = project_with_sentence_annotation["sentence_annotation"]
 
     resp = client.get(
-        _route(project.id) + "/per-sentence",
+        _route(project.id) + "/sentence-map",
         params={"user_id": test_user.id, "sdoc_id": sdoc.id},
     )
 
@@ -289,7 +289,7 @@ def test_get_by_sdoc_and_user_both_ids_not_exist(
 ):
     """A document that does not exist is not found."""
     resp = client.get(
-        _route(test_project.id) + "/per-sentence",
+        _route(test_project.id) + "/sentence-map",
         params={"user_id": 99999, "sdoc_id": 99999},
     )
 
@@ -305,7 +305,7 @@ def test_get_by_sentence_of_sdoc_of_another_project_is_not_found(
     foreign = tenants["foreign"]
 
     resp = client.get(
-        _route(own["project"].id) + "/per-sentence",
+        _route(own["project"].id) + "/sentence-map",
         params={"user_id": own["adoc"].user_id, "sdoc_id": foreign["sdoc"].id},
     )
 
@@ -651,7 +651,7 @@ def test_delete_bulk_by_id_if_not_exists(
 
 
 # ===========================================================================
-# COUNT SENTENCE ANNOTATIONS (POST /projects/{project_id}/sentence-annotations/count) TESTS
+# COUNT SENTENCE ANNOTATIONS (POST /projects/{project_id}/sentence-annotations/counts) TESTS
 # ===========================================================================
 
 
@@ -666,9 +666,8 @@ def test_count_annotations(
     annotations = project_with_multiple_sentence_annotations["sentence_annotations"]
 
     resp = client.post(
-        _route(project.id) + "/count",
-        params={"user_id": test_user.id},
-        json={"sdoc_ids": [sdoc.id], "code_ids": [code.id]},
+        _route(project.id) + "/counts",
+        json={"user_id": test_user.id, "sdoc_ids": [sdoc.id], "code_ids": [code.id]},
     )
 
     assert resp.status_code == 200, resp.text
@@ -680,9 +679,8 @@ def test_count_annotation_if_not_exists(
 ):
     """Documents and codes that do not exist match nothing."""
     resp = client.post(
-        _route(test_project.id) + "/count",
-        params={"user_id": test_user.id},
-        json={"sdoc_ids": [2000], "code_ids": [2000]},
+        _route(test_project.id) + "/counts",
+        json={"user_id": test_user.id, "sdoc_ids": [2000], "code_ids": [2000]},
     )
 
     assert resp.status_code == 200, resp.text
@@ -698,9 +696,12 @@ def test_count_annotations_of_another_project_match_nothing(
     foreign = tenants["foreign"]
 
     resp = client.post(
-        _route(own["project"].id) + "/count",
-        params={"user_id": own["adoc"].user_id},
-        json={"sdoc_ids": [foreign["sdoc"].id], "code_ids": [foreign["code"].id]},
+        _route(own["project"].id) + "/counts",
+        json={
+            "user_id": own["adoc"].user_id,
+            "sdoc_ids": [foreign["sdoc"].id],
+            "code_ids": [foreign["code"].id],
+        },
     )
 
     assert resp.status_code == 200, resp.text
@@ -986,13 +987,17 @@ def test_create_sentence_annotation_as_virtual_user(
 
     response = client.put(
         _route(virtual_user_project["project"].id),
-        params={"user_id": run2.id},
-        json=SentenceAnnotationCreate(
-            sdoc_id=virtual_user_project["sdoc"].id,
-            code_id=virtual_user_project["code"].id,
-            sentence_id_start=1,
-            sentence_id_end=1,
-        ).model_dump(),
+        json={
+            **(
+                SentenceAnnotationCreate(
+                    sdoc_id=virtual_user_project["sdoc"].id,
+                    code_id=virtual_user_project["code"].id,
+                    sentence_id_start=1,
+                    sentence_id_end=1,
+                ).model_dump()
+            ),
+            "user_id": run2.id,
+        },
     )
 
     assert response.status_code == 200, response.text

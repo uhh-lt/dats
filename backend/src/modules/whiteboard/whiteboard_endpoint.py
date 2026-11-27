@@ -15,7 +15,7 @@ from modules.whiteboard.whiteboard_dto import (
 from modules.whiteboard.whiteboard_service import WhiteboardService
 from systems.websocket_system.websocket_dependency import WebsocketEmitter
 
-router = project_router("/whiteboards", tags=["whiteboard"])
+router = project_router("/whiteboards", tags=["whiteboards"])
 
 
 # --- create operations
@@ -101,7 +101,7 @@ def get_by_id(
     response_model=WhiteboardData,
     summary="Returns the data of the objects on the Whiteboard with the given ID",
 )
-def get_data_by_id(
+def get_data(
     *,
     db: DBSession,
     project_id: int,

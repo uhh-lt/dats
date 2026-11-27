@@ -1016,7 +1016,7 @@ def _export(
 ) -> Path:
     response = client.post(
         _url(project_id, f"/{experiment_id}/runs/{run_id}/export-log"),
-        params={"export_format": export_format},
+        json={"export_format": export_format},
     )
     assert response.status_code == 200, response.text
     filename = Path(response.json()).name
@@ -1140,12 +1140,12 @@ def test_export_run_log_rejects_unknown_formats_and_runs(
     experiment_id = p["experiment_with_run"].id
     response = client.post(
         _url(p["project"].id, f"/{experiment_id}/runs/{p['run'].id}/export-log"),
-        params={"export_format": "xml"},
+        json={"export_format": "xml"},
     )
     assert response.status_code == 422, response.text
     response = client.post(
         _url(p["project"].id, f"/{experiment_id}/runs/999999/export-log"),
-        params={"export_format": "json"},
+        json={"export_format": "json"},
     )
     assert response.status_code == 404, response.text
 
@@ -1158,6 +1158,6 @@ def test_export_run_log_rejects_a_run_of_another_experiment(
     p = experiment_project
     response = client.post(
         _url(p["project"].id, f"/{p['experiment'].id}/runs/{p['run'].id}/export-log"),
-        params={"export_format": "json"},
+        json={"export_format": "json"},
     )
     assert response.status_code == 404, response.text

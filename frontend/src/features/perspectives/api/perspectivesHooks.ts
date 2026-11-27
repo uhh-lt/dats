@@ -1,10 +1,10 @@
 import { queryClient } from "@api/queryClient";
-import { JobService } from "@api/services/JobService";
+import { JobsService } from "@api/services/JobsService";
 import { PerspectivesService } from "@api/services/PerspectivesService";
 import { RagService } from "@api/services/RagService";
 import { MyFilter } from "@core/filter";
 import { AspectRead } from "@models/AspectRead";
-import { Body_perspectives_compute_visualization } from "@models/Body_perspectives_compute_visualization";
+import { VisualizationRequest } from "@models/VisualizationRequest";
 import { ClusterRead } from "@models/ClusterRead";
 import { PerspectivesJobRead } from "@models/PerspectivesJobRead";
 import { PerspectivesJobStart } from "@models/PerspectivesJobStart";
@@ -73,7 +73,8 @@ const useStartPerspectivesJob = () =>
       projectId: number;
       aspectId: number;
       requestBody: PerspectivesJobStart["parameters"];
-    }) => JobService.startPerspectivesJob({ projectId, requestBody: { aspect_id: aspectId, parameters: requestBody } }),
+    }) =>
+      JobsService.startPerspectivesJob({ projectId, requestBody: { aspect_id: aspectId, parameters: requestBody } }),
     meta: {
       datsEvent: "JOB_UPDATED",
       successMessage: (data: PerspectivesJobRead) => `Started TM Job as a new background task (ID: ${data.job_id})`,
@@ -93,7 +94,7 @@ const useUpdateClusterDetails = () =>
 const useRAGChat = () =>
   useMutation({
     mutationKey: [...perspectivesQueries.all(), "rAGChat"],
-    mutationFn: RagService.computeAnswers,
+    mutationFn: RagService.computeAnswer,
   });
 
 const useGetDocVisualization = (aspectId: number) => {
@@ -119,21 +120,17 @@ const useLabelDocs = (projectId: number, aspectId: number) => {
       PerspectivesService.acceptLabels({
         projectId,
         aspectId,
-        searchQuery,
         requestBody: {
+          search_query: searchQuery,
           sdoc_ids: sdocIds,
-          filter: filter as Body_perspectives_compute_visualization["filter"],
+          filter: filter as VisualizationRequest["filter"],
           sorts: [],
         },
       }),
     onSuccess: (data) => {
       queryClient.setQueryData(
-        perspectivesQueries.visualization(
-          projectId,
-          aspectId,
-          searchQuery,
-          filter as Body_perspectives_compute_visualization["filter"],
-        ).queryKey,
+        perspectivesQueries.visualization(projectId, aspectId, searchQuery, filter as VisualizationRequest["filter"])
+          .queryKey,
         data,
       );
     },
@@ -152,21 +149,17 @@ const useUnlabelDocs = (projectId: number, aspectId: number) => {
       PerspectivesService.revertLabels({
         projectId,
         aspectId,
-        searchQuery,
         requestBody: {
+          search_query: searchQuery,
           sdoc_ids: sdocIds,
-          filter: filter as Body_perspectives_compute_visualization["filter"],
+          filter: filter as VisualizationRequest["filter"],
           sorts: [],
         },
       }),
     onSuccess: (data) => {
       queryClient.setQueryData(
-        perspectivesQueries.visualization(
-          projectId,
-          aspectId,
-          searchQuery,
-          filter as Body_perspectives_compute_visualization["filter"],
-        ).queryKey,
+        perspectivesQueries.visualization(projectId, aspectId, searchQuery, filter as VisualizationRequest["filter"])
+          .queryKey,
         data,
       );
     },

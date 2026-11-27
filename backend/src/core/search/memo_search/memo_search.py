@@ -69,7 +69,7 @@ def find_memos(
         build_memo_subquery(db, project_id=project_id, user_id=user_id)
     )
     subquery = builder.build_subquery()
-    builder.init_query(db.query(subquery.c.id))
+    builder.init_query(db.query(subquery.c.id), row_key=[subquery.c.id])
     query = builder.build_query()
 
     # full-text search on title/content
@@ -130,7 +130,7 @@ def find_memo_groups(
         build_memo_subquery(db, project_id=project_id, user_id=user_id)
     )
     subquery = builder.build_subquery()
-    builder.init_query(db.query(subquery.c.id))
+    builder.init_query(db.query(subquery.c.id), row_key=[subquery.c.id])
     query = builder.build_query()
 
     # full-text search on title/content

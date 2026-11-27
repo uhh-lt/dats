@@ -1,4 +1,4 @@
-import { CodeService } from "@api/services/CodeService";
+import { CodesService } from "@api/services/CodesService";
 import { CodeRead } from "@models/CodeRead";
 import { useAppSelector } from "@store/storeHooks";
 import { useMutation, useQuery } from "@tanstack/react-query";
@@ -37,7 +37,7 @@ const useGetEnabledCodes = () => useGetAllCodesMap({ select: selectEnabledCodes 
 const useCreateCode = () => {
   return useMutation({
     mutationKey: [...codeQueries.all(), "createCode"],
-    mutationFn: CodeService.create,
+    mutationFn: CodesService.create,
     meta: {
       datsEvent: "CODE_CREATED",
       successMessage: (data: CodeRead) => `Created code ${data.name}`,
@@ -48,7 +48,7 @@ const useCreateCode = () => {
 const useUpdateCode = () =>
   useMutation({
     mutationKey: [...codeQueries.all(), "updateCode"],
-    mutationFn: CodeService.updateById,
+    mutationFn: CodesService.updateById,
     meta: {
       datsEvent: "CODE_UPDATED",
       successMessage: (data: CodeRead) => `Updated code ${data.name}`,
@@ -58,7 +58,7 @@ const useUpdateCode = () =>
 const useUpdateBulkCode = () =>
   useMutation({
     mutationKey: [...codeQueries.all(), "updateBulkCode"],
-    mutationFn: CodeService.updateBulk,
+    mutationFn: CodesService.updateBulk,
     meta: {
       datsEvent: "CODE_UPDATED_BATCH",
       successMessage: (codes: CodeRead[]) => `Updated ${codes.length} code(s)`,
@@ -70,7 +70,7 @@ const useUpdateBulkCode = () =>
 const useDeleteCode = () => {
   return useMutation({
     mutationKey: [...codeQueries.all(), "deleteCode"],
-    mutationFn: CodeService.deleteById,
+    mutationFn: CodesService.deleteById,
     meta: {
       datsEvent: "CODE_DELETED",
       successMessage: (data: CodeRead) => `Deleted code ${data.name}`,

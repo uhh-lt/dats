@@ -139,7 +139,8 @@ def apply_grouping(query, group_by: GroupConfig, subquery_dict):
     select `(group_key, group_label, total_results[, target_id, target_type])`,
     grouped by key/label (and targets when present). Groups with a missing key
     (`NONE_GROUP_KEY`) are sorted last; date groups are ordered newest-first, all
-    others alphabetically by label.
+    others alphabetically by label; the grouped columns break the ties, so the
+    order is complete.
 
     Raises ColumnNotGroupableError if the column does not support grouping.
     """
@@ -173,5 +174,5 @@ def apply_grouping(query, group_by: GroupConfig, subquery_dict):
     missing_group = case((exprs.key == NONE_GROUP_KEY, 1), else_=0)
     if group_by.date_granularity is not None:
         # date groups: newest bucket first
-        return query.order_by(missing_group.asc(), exprs.key.desc())
-    return query.order_by(missing_group.asc(), exprs.label.asc())
+        return query.order_by(missing_group.asc(), exprs.key.desc(), *grouped_columns)
+    return query.order_by(missing_group.asc(), exprs.label.asc(), *grouped_columns)

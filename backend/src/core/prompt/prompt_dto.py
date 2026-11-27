@@ -146,7 +146,7 @@ PromptExample = Annotated[
 ]
 
 
-class PromptExamplesCreate(BaseModel):
+class PromptExamplesRequest(BaseModel):
     """Selects annotations to turn into few-shot examples."""
 
     kind: PromptExampleKind = Field(description="The kind of the annotations")

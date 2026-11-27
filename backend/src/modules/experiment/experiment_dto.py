@@ -5,6 +5,7 @@ from pydantic import BaseModel, ConfigDict, Field, model_validator
 
 from core.prompt.prompt_enum import TaskType
 from core.user.user_dto import UserRead
+from modules.experiment.experiment_enum import ExperimentRunLogFormat
 from modules.experiment.experiment_run_dto import ExperimentRunRead
 from modules.llm_assistant.llm_assistant_job_dto import ANNOTATING_TASK_TYPES
 from repos.db.dto_base import UpdateDTOBase
@@ -109,3 +110,7 @@ class ExperimentRunCreated(BaseModel):
     experiment: ExperimentRead = Field(description="The experiment with the new run")
     run: ExperimentRunRead = Field(description="The new run")
     virtual_user: UserRead = Field(description="The new virtual user of the run")
+
+
+class ExperimentRunLogExportRequest(BaseModel):
+    export_format: ExperimentRunLogFormat = Field(description="The file format")

@@ -24,10 +24,10 @@ export const Route = createFileRoute("/_auth/project/$projectId/analysis/word-fr
   validateSearch: zodValidator(wordFrequencySearchSchema),
   loaderDeps: ({ search }) => search,
   context: ({ params, deps }) => ({
-    wordFrequencySearchOptions: wordFrequencyQueries.search({
-      projectId: params.projectId,
-      requestBody: { filter: deps[FILTER_PARAM], sorts: toSorts<WordFrequencyColumns>(deps.sortingModel) },
-      pageSize: deps.fetchSize,
+    wordFrequencySearchOptions: wordFrequencyQueries.search(params.projectId, {
+      filter: deps[FILTER_PARAM],
+      sorts: toSorts<WordFrequencyColumns>(deps.sortingModel),
+      page_size: deps.fetchSize,
     }),
   }),
   loader: async ({ context, params, route }) => {

@@ -50,7 +50,7 @@ class DATSAPI:
                 return
             r = requests.post(
                 self.base_url + "authentication/refresh-access",
-                params={"refresh_token": self.refresh_token},
+                json={"refresh_token": self.refresh_token},
                 timeout=TIMEOUT_SECONDS,
             )
             if r.ok:

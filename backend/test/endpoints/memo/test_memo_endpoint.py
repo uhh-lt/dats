@@ -385,6 +385,32 @@ def test_get_memos_by_attached_object_id_without_type_is_rejected(
     assert response.status_code == 400, response.text
 
 
+def test_get_memos_are_ordered_by_id_and_limit_cuts_that_order(
+    client: TestClient, memo_project: MemoProjectState
+):
+    """The memo list is ordered by id, and `limit` keeps its first memos."""
+    project_id = memo_project["project"].id
+
+    response = client.get(_url(project_id))
+    limited = client.get(_url(project_id), params={"limit": 2})
+
+    assert response.status_code == 200, response.text
+    assert limited.status_code == 200, limited.text
+    ids = [MemoRead.model_validate(m).id for m in response.json()]
+    assert ids == sorted(ids)
+    assert [MemoRead.model_validate(m).id for m in limited.json()] == ids[:2]
+
+
+@pytest.mark.parametrize("limit", [0, -1])
+def test_get_memos_rejects_a_limit_below_one(
+    client: TestClient, memo_project: MemoProjectState, limit: int
+):
+    """`limit` must be at least 1 (422)."""
+    response = client.get(_url(memo_project["project"].id), params={"limit": limit})
+
+    assert response.status_code == 422, response.text
+
+
 def test_get_memos_marks_requesting_user_favorites(
     client: TestClient, memo_project: MemoProjectState
 ):
@@ -1025,7 +1051,7 @@ def test_delete_memos_bulk_with_a_memo_not_in_the_project_deletes_nothing(
 
 
 # ===========================================================================
-# MEMO SUGGESTIONS (POST /projects/{project_id}/memos/suggestions) TESTS
+# MEMO SUGGESTIONS (POST /projects/{project_id}/memos/suggestion) TESTS
 # ===========================================================================
 
 
@@ -1057,8 +1083,8 @@ def test_suggest_memo_for_an_object_not_in_the_project_is_not_found(
     """The object of a suggestion is read within the path's project before the
     LLM is asked, so an object that does not exist there answers 404."""
     response = client.post(
-        _url(memo_project["project"].id, "/suggestions"),
-        params={
+        _url(memo_project["project"].id, "/suggestion"),
+        json={
             "attached_object_type": object_type.value,
             "attached_object_id": object_id_of(memo_project),
             "model": "unused",

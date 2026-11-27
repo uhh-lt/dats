@@ -1,4 +1,4 @@
-from fastapi import Depends
+from fastapi import Depends, Query
 
 from common.dats_event import DATSEvent
 from common.dependencies import DBSession
@@ -8,6 +8,7 @@ from core.memo.memo_crud import crud_memo
 from core.memo.memo_dto import (
     MemoCreate,
     MemoRead,
+    MemoSuggestionRequest,
     MemoUpdate,
     MemoUpdateBulk,
 )
@@ -19,7 +20,7 @@ from core.memo.memo_utils import (
 )
 from systems.websocket_system.websocket_dependency import WebsocketEmitter
 
-router = project_router("/memos", tags=["memo", "mcp"])
+router = project_router("/memos", tags=["memos", "mcp"])
 
 
 # --- create operations
@@ -61,7 +62,7 @@ def get_by_project(
     attached_object_id: int | None = None,
     user_id: int | None = None,
     recent: bool = False,
-    limit: int | None = None,
+    limit: int | None = Query(default=None, ge=1),
     authz_user: AuthzUser = Depends(),
 ) -> list[MemoRead]:
     return MemoService().read_by_project(
@@ -229,24 +230,22 @@ def delete_by_id(
 
 
 @router.post(
-    "/suggestions",
+    "/suggestion",
     response_model=str,
     summary="Generates a 1–2 sentence memo suggestion using LLM based on the attached object",
 )
-def compute_suggestions(
+def compute_suggestion(
     *,
     db: DBSession,
     project_id: int,
-    attached_object_type: AttachedObjectType,
-    attached_object_id: int,
-    model: str,
+    request: MemoSuggestionRequest,
 ) -> str:
     attached_object = MemoService().read_attached_object(
         db=db,
         project_id=project_id,
-        attached_object_type=attached_object_type,
-        attached_object_id=attached_object_id,
+        attached_object_type=request.attached_object_type,
+        attached_object_id=request.attached_object_id,
     )
     return MemoGenerationService().generate_memo_suggestion(
-        db=db, obj=attached_object, model=model
+        db=db, obj=attached_object, model=request.model
     )

@@ -56,6 +56,11 @@ class SentenceAnnotationCreate(SentenceAnnotationBaseDTO):
             )
         return self
 
+    user_id: int | None = Field(
+        default=None,
+        description="The user the annotation belongs to: the current user (default) or a virtual user of the project",
+    )
+
 
 # Properties for updating
 class SentenceAnnotationUpdate(BaseModel, UpdateDTOBase):

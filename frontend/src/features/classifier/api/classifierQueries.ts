@@ -1,6 +1,6 @@
-import { JobService } from "@api/services/JobService";
+import { JobsService } from "@api/services/JobsService";
 import { createJobQueries } from "@core/job";
-import { ClassifierService } from "@api/services/ClassifierService";
+import { ClassifiersService } from "@api/services/ClassifiersService";
 import type { ClassifierDatasetStatisticsRequest } from "@models/ClassifierDatasetStatisticsRequest";
 import type { ClassifierModel } from "@models/ClassifierModel";
 import type { ClassifierRead } from "@models/ClassifierRead";
@@ -37,7 +37,7 @@ export const classifierQueries = {
     queryOptions({
       queryKey: classifierQueries.projectScope(projectId),
       queryFn: async () => {
-        const classifiers = await ClassifierService.getByProject({ projectId });
+        const classifiers = await ClassifiersService.getByProject({ projectId });
         return classifiers.reduce<ClassifierMap>((acc, classifier) => {
           acc[classifier.id] = classifier;
           return acc;
@@ -50,7 +50,7 @@ export const classifierQueries = {
   info: (projectId: number | undefined) =>
     queryOptions({
       queryKey: classifierQueries.infoScope(projectId),
-      queryFn: projectId === undefined ? skipToken : () => ClassifierService.getInfo({ projectId }),
+      queryFn: projectId === undefined ? skipToken : () => ClassifiersService.getInfo({ projectId }),
       // Classifier settings come from backend configuration and do not change at
       // runtime, so one response can be reused for the lifetime of the frontend.
       staleTime: Infinity,
@@ -91,18 +91,18 @@ export const classifierQueries = {
           merge_children_into_parent: mergeChildren,
         };
 
-        return ClassifierService.computeDatasetStatistics({ projectId, requestBody: request });
+        return ClassifiersService.computeDatasetStatistics({ projectId, requestBody: request });
       },
     }),
 
   // the refinement / background job of this domain
   job: createJobQueries(
     "classifier",
-    (job) => JobService.getClassifierJobById(job),
-    (projectId) => JobService.getClassifierJobsByProject({ projectId }),
+    (job) => JobsService.getClassifierJobById(job),
+    (projectId) => JobsService.getClassifierJobsByProject({ projectId }),
     {
-      abort: (job) => JobService.abortClassifierJob(job),
-      retry: (job) => JobService.retryClassifierJob(job),
+      abort: (job) => JobsService.abortClassifierJob(job),
+      retry: (job) => JobsService.retryClassifierJob(job),
     },
   ),
 };

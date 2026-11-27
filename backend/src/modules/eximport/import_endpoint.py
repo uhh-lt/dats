@@ -1,16 +1,17 @@
 from typing import TypedDict
 
-from fastapi import Depends, UploadFile
+from fastapi import Depends, Form, UploadFile
 
 from common.project_router import project_router
 from core.auth.authz_user import AuthzUser
 from modules.eximport.import_enum import ImportJobType
+from modules.eximport.import_exceptions import ImportFileInvalidError
 from modules.eximport.import_job_dto import ImportJobInput, ImportJobRead
-from modules.eximport.import_service import ImportJobPreparationError, ImportService
+from modules.eximport.import_service import ImportService
 from repos.filesystem.temporary_file_crud import crud_temporary_file
 from systems.job_system.job_service import JobService
 
-router = project_router("/jobs/import", tags=["job"])
+router = project_router("/jobs/import", tags=["jobs"])
 
 ims: ImportService = ImportService()
 js: JobService = JobService()
@@ -76,7 +77,7 @@ import_job_file_formats: dict[ImportJobType, FileFormat] = {
 def start_import_job(
     *,
     project_id: int,
-    import_job_type: ImportJobType,
+    import_job_type: ImportJobType = Form(description="The type of the import job"),
     uploaded_file: UploadFile,
     authz_user: AuthzUser = Depends(),
 ) -> ImportJobRead:
@@ -84,26 +85,22 @@ def start_import_job(
 
     # Based on the import job type, check the file type and contents
     if uploaded_file.content_type not in file_format["mime_types"]:
-        raise ImportJobPreparationError(
-            cause=Exception(
-                f"Invalid file type for import job {import_job_type}. Expected one of {file_format['mime_types']}, but got {uploaded_file.content_type}"
-            )
+        raise ImportFileInvalidError(
+            f"invalid file type for import job {import_job_type}, expected one of "
+            f"{file_format['mime_types']}, got {uploaded_file.content_type}"
         )
 
     # Check the file suffix
     if uploaded_file.filename and not uploaded_file.filename.endswith(
         file_format["suffix"]
     ):
-        raise ImportJobPreparationError(
-            cause=Exception(
-                f"Invalid file suffix for import job {import_job_type}. Expected {file_format['suffix']}, but got {uploaded_file.filename}"
-            )
+        raise ImportFileInvalidError(
+            f"invalid file suffix for import job {import_job_type}, expected "
+            f"{file_format['suffix']}, got {uploaded_file.filename}"
         )
 
     if uploaded_file.filename is None:
-        raise ImportJobPreparationError(
-            cause=Exception("Uploaded file has no filename")
-        )
+        raise ImportFileInvalidError("the uploaded file has no filename")
 
     # Stage the uploaded file in a temporary folder, the import job deletes it
     suffix = uploaded_file.filename.split(".")[-1]

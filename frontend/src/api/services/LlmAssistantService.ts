@@ -2,8 +2,7 @@
 /* istanbul ignore file */
 /* tslint:disable */
 /* eslint-disable */
-import type { Body_llmAssistant_compute_existing_annotation_counts } from "@models/Body_llmAssistant_compute_existing_annotation_counts";
-import type { TaskType } from "@models/TaskType";
+import type { ExistingAnnotationCountsRequest } from "@models/ExistingAnnotationCountsRequest";
 import type { CancelablePromise } from "../core/CancelablePromise";
 import { OpenAPI } from "../core/OpenAPI";
 import { request as __request } from "../core/request";
@@ -15,24 +14,16 @@ export class LlmAssistantService {
    */
   public static computeExistingAnnotationCounts({
     projectId,
-    taskType,
-    virtualUserId,
     requestBody,
   }: {
     projectId: number;
-    taskType: TaskType;
-    virtualUserId: number;
-    requestBody: Body_llmAssistant_compute_existing_annotation_counts;
+    requestBody: ExistingAnnotationCountsRequest;
   }): CancelablePromise<Record<string, number>> {
     return __request(OpenAPI, {
       method: "POST",
       url: "/projects/{project_id}/llm-assistant/existing-annotation-counts",
       path: {
         project_id: projectId,
-      },
-      query: {
-        task_type: taskType,
-        virtual_user_id: virtualUserId,
       },
       body: requestBody,
       mediaType: "application/json",

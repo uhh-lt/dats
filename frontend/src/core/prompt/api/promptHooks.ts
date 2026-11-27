@@ -1,4 +1,4 @@
-import { PromptService } from "@api/services/PromptService";
+import { PromptsService } from "@api/services/PromptsService";
 import type { PromptRead } from "@models/PromptRead";
 import type { TaskType } from "@models/TaskType";
 import { useMutation, useQuery } from "@tanstack/react-query";
@@ -56,7 +56,7 @@ const useGetPromptVersion = ({ projectId, versionId }: UseGetPromptVersionParams
 const useCreatePrompt = () =>
   useMutation({
     mutationKey: [...promptQueries.all(), "createPrompt"],
-    mutationFn: PromptService.create,
+    mutationFn: PromptsService.create,
     meta: {
       datsEvent: "PROMPT_CREATED",
       successMessage: (prompt: PromptRead) => `Created prompt ${prompt.name}`,
@@ -66,7 +66,7 @@ const useCreatePrompt = () =>
 const useCreatePromptVersion = () =>
   useMutation({
     mutationKey: [...promptQueries.all(), "createPromptVersion"],
-    mutationFn: PromptService.createVersion,
+    mutationFn: PromptsService.createVersion,
     meta: {
       datsEvent: "PROMPT_UPDATED",
       successMessage: (prompt: PromptRead) => `Saved version ${prompt.versions.length} of prompt ${prompt.name}`,
@@ -76,7 +76,7 @@ const useCreatePromptVersion = () =>
 const useUpdatePrompt = () =>
   useMutation({
     mutationKey: [...promptQueries.all(), "updatePrompt"],
-    mutationFn: PromptService.updateById,
+    mutationFn: PromptsService.updateById,
     meta: {
       datsEvent: "PROMPT_UPDATED",
       successMessage: (prompt: PromptRead) => `Updated prompt ${prompt.name}`,
@@ -87,7 +87,7 @@ const useUpdatePrompt = () =>
 const useCreatePromptExamples = () =>
   useMutation({
     mutationKey: [...promptQueries.all(), "createPromptExamples"],
-    mutationFn: PromptService.computeExamples,
+    mutationFn: PromptsService.computeExamples,
   });
 
 export const PromptHooks = {

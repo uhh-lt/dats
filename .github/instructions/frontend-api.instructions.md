@@ -13,7 +13,7 @@ All server state goes through Tanstack Query. Every domain defines its queries o
 
 ```ts
 // <domain>/api/<domain>Queries.ts — plain object, no React
-import { TagService } from "@api/services/TagService";
+import { TagsService } from "@api/services/TagsService";
 import { queryOptions, skipToken } from "@tanstack/react-query";
 
 // 1. Optional: exported map / request types of the leaves (`export type TagMap = Record<number, TagRead>`)
@@ -36,7 +36,7 @@ export const tagQueries = {
   byProject: (projectId: number | undefined) =>
     queryOptions({
       queryKey: tagQueries.projectScope(projectId),
-      queryFn: projectId === undefined ? skipToken : () => TagService.getByProject({ projectId }),
+      queryFn: projectId === undefined ? skipToken : () => TagsService.getByProject({ projectId }),
       staleTime: 1000 * 60 * 5,
     }),
   idsBySdocScope: (projectId: number | null | undefined) => [...tagQueries.projectScope(projectId), "sdoc"] as const,
@@ -66,7 +66,7 @@ const useGetTag = (tagId: number | null | undefined) => {
 const useCreateTag = () =>
   useMutation({
     mutationKey: [...tagQueries.all(), "createTag"],
-    mutationFn: TagService.create,
+    mutationFn: TagsService.create,
     meta: { datsEvent: "TAG_CREATED", successMessage: (tag: TagRead) => `Created tag ${tag.name}` },
   });
 
@@ -113,7 +113,7 @@ export const TagHooks = { useGetTag, useCreateTag };
 
 - **Key** (lint): `mutationKey: [...xQueries.all(), "<hookName without use>"]` (`useCreateTag` → `"createTag"`). Optimistic mutations start with `...xQueries.optimisticMutationScope()`, job starts are `[...xQueries.job.all(), "start"]`. Every `useMutation` has a `mutationKey` (lint).
 - **Names**: `use<Verb><Entity>` (`useCreateCode`, `useDeleteBulkSpanAnnotation`, `useStartClassifierJob`).
-- **mutationFn**: pass the service method directly when its argument fits (`mutationFn: TagService.create`); otherwise a single arrow that maps the variables. No `async`/`await` wrapper.
+- **mutationFn**: pass the service method directly when its argument fits (`mutationFn: TagsService.create`); otherwise a single arrow that maps the variables. No `async`/`await` wrapper.
 - **Cache updates**: tag the mutation with `meta.datsEvent`; the cache-sync code (`api/cache-sync`) writes the result into all caches. `meta.successMessage` / `meta.errorMessage` show the notification. A hook writes or invalidates a cache itself only for data without a DATS event (user-private data, results of this user's request) and says why in a comment (`MemoHooks.useRecordRecentMemo`, `PerspectivesHooks.useLabelDocs`).
 - **Optimistic updates**: `onMutate` cancels and snapshots the affected typed key, `onError` calls `rollbackOptimisticUpdate(queryClient, key, previous, xQueries.optimisticMutationScope())` from `@utils/optimisticUtils`.
 - **Callbacks**: logic that always belongs to the mutation goes in `useMutation`; caller-specific UI reactions go in the `mutate(variables, { onSuccess })` call. Callers use `mutate`; `mutateAsync` only when the result must be awaited in sequence (`useMemoPersistence` save queue). When the caller must decide what happens with the result, the hook takes `onSuccess`/`onError` as options (`AuthHooks.useLogin`).

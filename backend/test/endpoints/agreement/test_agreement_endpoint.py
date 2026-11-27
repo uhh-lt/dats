@@ -9,6 +9,7 @@ from modules.agreement.agreement_dto import (
     AgreementParams,
     AgreementResult,
     AgreementTextRange,
+    SegmentTextsRequest,
 )
 from modules.agreement.agreement_enum import AgreementAnnotationType, AgreementScoring
 from repos.filesystem.filesystem_repo import FilesystemRepo
@@ -825,7 +826,7 @@ def test_export_agreement_counts_rejects_annotator_outside_the_project(
 def _post(client: TestClient, project_id: int, ranges: list[AgreementTextRange]):
     return client.post(
         f"/projects/{project_id}/agreements/segment-texts",
-        json=[text_range.model_dump(mode="json") for text_range in ranges],
+        json=SegmentTextsRequest(ranges=ranges).model_dump(mode="json"),
     )
 
 

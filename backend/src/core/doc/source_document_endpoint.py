@@ -15,7 +15,7 @@ from core.doc.source_document_dto import (
 from core.doc.source_document_service import SourceDocumentService
 from systems.websocket_system.websocket_dependency import WebsocketEmitter
 
-router = project_router("/source-documents", tags=["sourceDocument", "mcp"])
+router = project_router("/source-documents", tags=["sourceDocuments", "mcp"])
 
 
 # --- read operations
@@ -88,7 +88,7 @@ def get_by_id(
     response_model=SourceDocumentDataRead,
     summary="Returns the SourceDocumentData of the SourceDocument with the given ID if it exists",
 )
-def get_by_id_with_data(
+def get_data(
     *,
     db: DBSession,
     project_id: int,
@@ -152,8 +152,10 @@ def get_annotators(
     project_id: int,
     sdoc_id: int,
 ) -> list[int]:
-    sdoc = crud_sdoc.read(db=db, project_id=project_id, id=sdoc_id)
-    return [adoc.user_id for adoc in sdoc.annotation_documents]
+    crud_sdoc.exists(db=db, project_id=project_id, id=sdoc_id, raise_error=True)
+    return crud_sdoc.read_annotators(db=db, project_id=project_id, sdoc_ids=[sdoc_id])[
+        sdoc_id
+    ]
 
 
 # --- update operations

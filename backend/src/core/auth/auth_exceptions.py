@@ -15,6 +15,15 @@ class ForbiddenError(Exception):
         super().__init__("User is not authorized")
 
 
+@exception_handler(status.HTTP_403_FORBIDDEN)
+class TokenWithoutExpiryError(Exception):
+    """Raised when an access token carries no expiry, so no session can follow
+    it."""
+
+    def __init__(self) -> None:
+        super().__init__("The access token has no expiry")
+
+
 @exception_handler(status.HTTP_400_BAD_REQUEST)
 class InvalidError(Exception):
     def __init__(self, note=None):

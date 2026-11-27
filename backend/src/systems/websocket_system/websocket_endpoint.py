@@ -8,7 +8,7 @@ from common.dependencies import resolve_user
 from repos.db.sql_repo import SQLRepo
 from systems.websocket_system.websocket_service import WebsocketService
 
-router = APIRouter(tags=["websocket"])
+router = APIRouter(tags=["ws"])
 
 websocket_service = WebsocketService()
 

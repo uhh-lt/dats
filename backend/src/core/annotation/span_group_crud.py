@@ -31,15 +31,18 @@ class CRUDSpanGroup(
         project_id: int,
         user_id: int,
         sdoc_id: int | None = None,
+        span_annotation_id: int | None = None,
     ) -> list[SpanGroupORM]:
         """
         Read the span groups of a user in the project, optionally only those in a
-        document.
+        document or those that contain a span annotation.
 
         Args:
             project_id: The project of the span groups.
             user_id: The user the span groups belong to.
             sdoc_id: Only the span groups in this document.
+            span_annotation_id: Only the span groups that contain this span
+                annotation.
 
         Returns:
             The matching span groups, ordered by id.
@@ -55,6 +58,16 @@ class CRUDSpanGroup(
         )
         if sdoc_id is not None:
             query = query.where(AnnotationDocumentORM.source_document_id == sdoc_id)
+        if span_annotation_id is not None:
+            query = query.where(
+                self.model.id.in_(
+                    select(SpanAnnotationSpanGroupLinkTable.span_group_id).where(
+                        SpanAnnotationSpanGroupLinkTable.project_id == project_id,
+                        SpanAnnotationSpanGroupLinkTable.span_annotation_id
+                        == span_annotation_id,
+                    )
+                )
+            )
         return query.order_by(self.model.id).all()
 
     def read_by_name(

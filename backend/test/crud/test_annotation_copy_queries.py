@@ -4,8 +4,9 @@ from sqlalchemy.orm import Session
 
 from core.annotation.span_annotation_dto import SpanAnnotationCreate
 from core.annotation.span_annotation_service import SpanAnnotationService
+from sql_test_utils import count_queries
 
-from .conftest import SdocWithMemosAndSpanGroup, count_queries
+from .conftest import SdocWithMemosAndSpanGroup
 
 
 def _copy_spans(

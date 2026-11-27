@@ -6,8 +6,9 @@ from core.memo.memo_crud import crud_memo
 from core.memo.memo_dto import MemoRead, MemoUpdateBulk
 from core.memo.memo_service import MemoService
 from core.memo.memo_utils import get_memo_read_dtos_from_orms
+from sql_test_utils import count_queries
 
-from .conftest import SdocWithMemosAndSpanGroup, count_queries
+from .conftest import SdocWithMemosAndSpanGroup
 
 # The memos, their object handles and the favorites of the user. Resolving the
 # attached object and the favorite per memo needed at least two queries per memo,

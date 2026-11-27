@@ -41,7 +41,7 @@ After the first login, a "What's new in DATS" dialog blocks every click. Close i
 A fresh worktree has an empty database. Keep test data minimal and only in this worktree's database (`just worktree-down` deletes it). Seeding through the API is much faster and more precise than clicking:
 
 - Log in: `POST /authentication/login` with form fields `username` (email) and `password` returns an `access_token`; send it as `Authorization: Bearer <token>`.
-- A second annotator: `POST /authentication/register`, then `PUT /projects/{project_id}/members` (body `{"email": ...}`) to add the user to the project, then log in as that user.
+- A second annotator: `PUT /authentication/register`, then `PUT /projects/{project_id}/members` (body `{"email": ...}`) to add the user to the project, then log in as that user.
 - Codes: `PUT /projects/{project_id}/codes` (`name`, `color`, `description`, `parent_id`, `is_system: false`, `enabled: true`). New projects contain the system codes of their enabled features (with all features about 135, e.g. `PERSON`, `ORG`), so give test codes distinct names.
 - Documents: create a small project and upload two or three short plain-text documents through the UI (write them to a temporary folder outside the repo first and use `browser_file_upload`). Run `just dev worker` so they get preprocessed. Sentence splitting and other ML steps use the shared hosted services; wait until the documents' sentences exist (`GET /projects/{project_id}/source-documents/{sdoc_id}/data` returns `tokens`, `token_character_offsets` and sentences).
 - Span annotations: `PUT /projects/{project_id}/span-annotations` with `sdoc_id`, `code_id`, `begin` / `end` (character offsets) and `begin_token` / `end_token` (from `token_character_offsets`) and `span_text`.

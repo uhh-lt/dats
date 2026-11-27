@@ -84,7 +84,8 @@ def find_sentence_annotations(
         .join(subquery, SentenceAnnotationORM.id == subquery.c.id)
         .filter(SentenceAnnotationORM.project_id == project_id)
         .filter(SourceDocumentORM.project_id == project_id)
-        .filter(CodeORM.enabled == True)  # noqa: E712
+        .filter(CodeORM.enabled == True),  # noqa: E712
+        row_key=[SentenceAnnotationORM.id],
     )._join_query(
         SentenceAnnotationORM.annotation_document,
     )._join_query(
@@ -164,7 +165,8 @@ def find_sentence_annotation_groups(
         .join(subquery, SentenceAnnotationORM.id == subquery.c.id)
         .filter(SentenceAnnotationORM.project_id == project_id)
         .filter(SourceDocumentORM.project_id == project_id)
-        .filter(CodeORM.enabled == True)  # noqa: E712
+        .filter(CodeORM.enabled == True),  # noqa: E712
+        row_key=[SentenceAnnotationORM.id],
     )._join_query(
         SentenceAnnotationORM.annotation_document,
     )._join_query(

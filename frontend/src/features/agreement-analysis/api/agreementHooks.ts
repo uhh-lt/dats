@@ -1,11 +1,11 @@
-import { AgreementService } from "@api/services/AgreementService";
+import { AgreementsService } from "@api/services/AgreementsService";
 import { useMutation } from "@tanstack/react-query";
 import { agreementQueries } from "./agreementQueries";
 
 const useExportAgreementCounts = () =>
   useMutation({
     mutationKey: [...agreementQueries.all(), "exportAgreementCounts"],
-    mutationFn: AgreementService.export,
+    mutationFn: AgreementsService.export,
     meta: {
       errorMessage: "Failed to export the agreement counts",
     },
@@ -15,7 +15,7 @@ const useExportAgreementCounts = () =>
 const useGetSegmentTexts = () =>
   useMutation({
     mutationKey: [...agreementQueries.all(), "getSegmentTexts"],
-    mutationFn: AgreementService.computeSegmentTexts,
+    mutationFn: AgreementsService.computeSegmentTexts,
     meta: {
       errorMessage: "Failed to read the texts of the segments",
     },

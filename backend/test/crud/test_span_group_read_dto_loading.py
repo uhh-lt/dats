@@ -3,8 +3,9 @@
 from sqlalchemy.orm import Session
 
 from core.annotation.span_group_service import SpanGroupService
+from sql_test_utils import count_queries
 
-from .conftest import SdocWithMemosAndSpanGroup, count_queries
+from .conftest import SdocWithMemosAndSpanGroup
 
 # The span groups and their annotation documents, the span ids of the groups, and
 # the spans with their eager-loaded relationships. Building the spans through the

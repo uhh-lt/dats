@@ -1,4 +1,5 @@
-import { UserService } from "@api/services/UserService";
+import { MembersService } from "@api/services/MembersService";
+import { UsersService } from "@api/services/UsersService";
 import { queryOptions, skipToken } from "@tanstack/react-query";
 
 /**
@@ -17,7 +18,7 @@ export const userQueries = {
   me: (accessToken: string | undefined) =>
     queryOptions({
       queryKey: [...userQueries.meScope(), accessToken] as const,
-      queryFn: UserService.getMe,
+      queryFn: UsersService.getMe,
       retry: false,
     }),
 
@@ -28,7 +29,7 @@ export const userQueries = {
   byProject: (projectId: number | undefined) =>
     queryOptions({
       queryKey: userQueries.projectScope(projectId),
-      queryFn: projectId === undefined ? skipToken : () => UserService.getByProject({ projectId }),
+      queryFn: projectId === undefined ? skipToken : () => MembersService.getByProject({ projectId }),
       staleTime: 1000 * 60 * 5,
     }),
 };

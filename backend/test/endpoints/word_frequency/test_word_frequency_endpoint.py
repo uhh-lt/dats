@@ -5,7 +5,7 @@ from feature_test_utils import FeaturelessProject, assert_feature_disabled
 EMPTY_FILTER = {"id": "root", "logic_operator": "and", "items": []}
 
 # ===========================================================================
-# WORD FREQUENCY INFO (/projects/{project_id}/word-frequencies/info) TESTS
+# WORD FREQUENCY INFO (/projects/{project_id}/word-frequencies/columns) TESTS
 # ===========================================================================
 
 
@@ -13,7 +13,7 @@ def test_info_is_rejected_when_word_frequency_is_disabled(
     client: TestClient, featureless_project: FeaturelessProject
 ):
     response = client.get(
-        f"/projects/{featureless_project['project'].id}/word-frequencies/info"
+        f"/projects/{featureless_project['project'].id}/word-frequencies/columns"
     )
 
     assert_feature_disabled(response, "word_frequency")
@@ -29,8 +29,7 @@ def test_analysis_is_rejected_when_word_frequency_is_disabled(
 ):
     response = client.post(
         f"/projects/{featureless_project['project'].id}/word-frequencies",
-        params={"page": 0, "page_size": 10},
-        json={"filter": EMPTY_FILTER, "sorts": []},
+        json={"page_number": 0, "page_size": 10, "filter": EMPTY_FILTER, "sorts": []},
     )
 
     assert_feature_disabled(response, "word_frequency")
@@ -41,7 +40,7 @@ def test_export_is_rejected_when_word_frequency_is_disabled(
 ):
     response = client.post(
         f"/projects/{featureless_project['project'].id}/word-frequencies/export",
-        json={"filter": EMPTY_FILTER, "sorts": []},
+        json={"filter": EMPTY_FILTER},
     )
 
     assert_feature_disabled(response, "word_frequency")

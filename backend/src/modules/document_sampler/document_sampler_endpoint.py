@@ -1,9 +1,12 @@
 from common.dependencies import DBSession
 from common.project_router import project_router
-from modules.document_sampler.document_sampler_dto import SampledSdocsResults
+from modules.document_sampler.document_sampler_dto import (
+    DocumentSampleRequest,
+    SampledSdocsResults,
+)
 from modules.document_sampler.document_sampler_service import DocumentSamplerService
 
-router = project_router("/document-samples", tags=["documentSample"])
+router = project_router("/document-samples", tags=["documentSamples"])
 
 
 # --- other operations
@@ -18,10 +21,12 @@ def compute_document_samples(
     *,
     db: DBSession,
     project_id: int,
-    tag_groups: list[list[int]],
-    n: int,
-    frac: float,
+    request: DocumentSampleRequest,
 ) -> list[SampledSdocsResults]:
     return DocumentSamplerService().sample_sdocs_by_tags(
-        db=db, project_id=project_id, tag_ids=tag_groups, n=n, frac=frac
+        db=db,
+        project_id=project_id,
+        tag_ids=request.tag_groups,
+        n=request.n,
+        frac=request.frac,
     )

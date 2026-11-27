@@ -1,9 +1,7 @@
 import { DocProcessingService } from "@api/services/DocProcessingService";
 import { DocType } from "@models/DocType";
+import type { SdocHealthSearchRequest } from "@models/SdocHealthSearchRequest";
 import { infiniteQueryOptions, queryOptions } from "@tanstack/react-query";
-
-/** The arguments of the health search, as the backend takes them (the page is added by the query). */
-type SdocHealthSearchRequest = Omit<Parameters<typeof DocProcessingService.searchStatuses>[0], "page">;
 
 /**
  * Query factory for the sdoc health view.
@@ -11,7 +9,7 @@ type SdocHealthSearchRequest = Omit<Parameters<typeof DocProcessingService.searc
  *   healthQueries.all()                        ["health"]
  *   healthQueries.projectScope(projectId)      ["health", "project", projectId]
  *   healthQueries.columns(projectId, doctype)  ["health", "project", projectId, "columns", doctype]
- *   healthQueries.search(request)              ["health", "project", projectId, "search", request]
+ *   healthQueries.search(projectId, request)   ["health", "project", projectId, "search", request]
  */
 export const healthQueries = {
   all: () => ["health"] as const,
@@ -27,10 +25,12 @@ export const healthQueries = {
     }),
 
   searchScope: (projectId: number) => [...healthQueries.projectScope(projectId), "search"] as const,
-  search: (request: SdocHealthSearchRequest) =>
+  // the health search; takes the backend request without the page, which the queryFn adds
+  search: (projectId: number, request: Omit<SdocHealthSearchRequest, "page_number">) =>
     infiniteQueryOptions({
-      queryKey: [...healthQueries.searchScope(request.projectId), request] as const,
-      queryFn: ({ pageParam }) => DocProcessingService.searchStatuses({ ...request, page: pageParam }),
+      queryKey: [...healthQueries.searchScope(projectId), request] as const,
+      queryFn: ({ pageParam }) =>
+        DocProcessingService.searchStatuses({ projectId, requestBody: { ...request, page_number: pageParam } }),
       initialPageParam: 0,
       getNextPageParam: (_lastGroup, groups) => groups.length,
       staleTime: 1000 * 60 * 5,

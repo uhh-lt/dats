@@ -1,24 +1,16 @@
-from collections.abc import Callable, Iterator
-from contextlib import contextmanager
-from datetime import datetime
-from typing import Any, TypedDict
+from typing import TypedDict
 from uuid import uuid4
 
 import pytest
-from sqlalchemy import event
 from sqlalchemy.orm import Session
 
 from common.doc_type_enum import DocType
 from common.meta_type_enum import MetaType
 from composite_keys_test_utils import (
-    TenantRows,
-    TwinProjects,
     TwoTenants,
-    create_tenant_rows,
-    create_twin,
-    create_twin_projects,
     create_two_tenants,
 )
+from core.annotation.annotation_document_crud import crud_adoc
 from core.annotation.span_annotation_dto import SpanAnnotationCreate
 from core.annotation.span_annotation_service import SpanAnnotationService
 from core.annotation.span_group_crud import crud_span_group
@@ -36,31 +28,17 @@ from core.memo.memo_dto import MemoCreateIntern
 from core.memo.memo_enum import AttachedObjectType
 from core.metadata.project_metadata_orm import ProjectMetadataORM
 from core.metadata.source_document_metadata_orm import SourceDocumentMetadataORM
+from core.project.project_crud import crud_project
 from core.project.project_orm import ProjectORM
 from core.tag.tag_crud import crud_tag
 from core.tag.tag_dto import TagCreate
 from core.tag.tag_orm import TagORM
+from core.user.user_crud import crud_user
+from core.user.user_dto import UserCreate
+from core.user.user_orm import UserORM
 from dats_test_utils import create_text_document
 from feature_test_utils import create_project_with_features
-from modules.timeline_analysis.timeline_analysis_enum import TimelineAnalysisType
 from pipeline_test_utils import set_step_status
-
-
-@contextmanager
-def count_queries(db: Session) -> Iterator[Callable[[], int]]:
-    """Count the SQL statements the session executes inside the block."""
-    count = 0
-
-    def on_execute(*args: object, **kwargs: object) -> None:
-        nonlocal count
-        count += 1
-
-    engine = db.get_bind()
-    event.listen(engine, "before_cursor_execute", on_execute)
-    try:
-        yield lambda: count
-    finally:
-        event.remove(engine, "before_cursor_execute", on_execute)
 
 
 class ProjectWithTags(TypedDict):
@@ -410,91 +388,51 @@ def tenants(db_session: Session, test_user, test_project) -> TwoTenants:
     return create_two_tenants(db_session, user=test_user, project=test_project)
 
 
-@pytest.fixture(scope="function")
-def twin_projects(db_session: Session, test_user, test_project) -> TwinProjects:
-    """Two projects that hold the same ids in every project-owned table (see
-    TwinProjects)."""
-    return create_twin_projects(db_session, user=test_user, project=test_project)
-
-
-# the timeline concept of a type, over all of its rows
-def _timeline_concept(timeline_analysis_type: TimelineAnalysisType) -> dict[str, Any]:
-    return {
-        "timeline_analysis_type": timeline_analysis_type.value,
-        "id": timeline_analysis_type.value,
-        "name": timeline_analysis_type.value,
-        "description": "",
-        "color": "#000000",
-        "visible": True,
-        "ta_specific_filter": {
-            "timeline_analysis_type": timeline_analysis_type.value,
-            "filter": {"id": "root", "logic_operator": "and", "items": []},
-        },
-        "filter_hash": 0,
-        "results": [],
-    }
-
-
-class LoneProject(TypedDict):
-    """The rows of `create_tenant_rows` (see TenantRows) in the test project
-    (`project`, `rows`) and its date metadata (`date_metadata`), alone with their
-    ids until `create_twin()` creates "Twin Project" with the same features and a
-    copy of every row of the test project with the same id (`copy_project_rows`),
-    and returns it."""
-
-    project: ProjectORM
-    rows: TenantRows
-    date_metadata: ProjectMetadataORM
-    create_twin: Callable[[], ProjectORM]
+class TenantsWithFormerMember(TypedDict):
+    tenants: TwoTenants
+    former_member: UserORM
+    outsider: UserORM
 
 
 @pytest.fixture(scope="function")
-def lone_project(db_session: Session, test_user, test_project) -> LoneProject:
+def tenants_with_former_member(
+    db_session: Session, tenants: TwoTenants
+) -> TenantsWithFormerMember:
     """
-    This fixture sets up the test project with one row of every project-owned
-    table (see TenantRows), and no other project until `create_twin()`. In
-    addition to the rows of TenantRows:
+    The two projects of `tenants`, plus two users:
 
-    - the date metadata "date" (text documents), whose value for "doc_<p>.txt"
-      is 2024-01-01
-    - "Timeline <p>" uses "date" and has one concept per timeline analysis type
-      (document, sentence, span and bbox annotations), each without filter and
-      without results
+    - `former_member` ("former@dats.org"): was a member of the own project, has
+      an annotation document of "doc_<p>.txt" there and was removed from the
+      project, which keeps the annotation document.
+    - `outsider` ("outsider@dats.org"): has no rows in either project.
     """
-    rows = create_tenant_rows(db_session, project=test_project, user=test_user)
-    p = test_project.id
-    date_metadata = ProjectMetadataORM(
-        key="date",
-        metatype=MetaType.DATE,
-        read_only=False,
-        doctype=DocType.text,
-        description="",
-        project_id=p,
-    )
-    db_session.add(date_metadata)
-    db_session.flush()
-    db_session.add(
-        SourceDocumentMetadataORM(
-            date_value=datetime(2024, 1, 1),
-            project_id=p,
-            project_metadata_id=date_metadata.id,
-            source_document_id=rows["sdoc"].id,
+    own = tenants["own"]
+    former_member, outsider = (
+        crud_user.create(
+            db=db_session,
+            create_dto=UserCreate(
+                email=email, first_name=name, last_name="User", password="unused"
+            ),
         )
+        for email, name in [
+            ("former@dats.org", "Former"),
+            ("outsider@dats.org", "Outsider"),
+        ]
     )
-    rows["timeline_analysis"].settings = {"date_metadata_id": date_metadata.id}
-    rows["timeline_analysis"].concepts = [
-        _timeline_concept(t) for t in TimelineAnalysisType
-    ]
+    crud_project.associate_user(
+        db=db_session, project_id=own["project"].id, user_id=former_member.id
+    )
+    crud_adoc.exists_or_create(
+        db=db_session,
+        project_id=own["project"].id,
+        user_id=former_member.id,
+        sdoc_id=own["sdoc"].id,
+    )
+    crud_project.dissociate_user(
+        db=db_session, project_id=own["project"].id, user_id=former_member.id
+    )
     db_session.commit()
-
-    return {
-        "project": test_project,
-        "rows": rows,
-        "date_metadata": date_metadata,
-        "create_twin": lambda: create_twin(
-            db_session, user=test_user, project=test_project
-        ),
-    }
+    return {"tenants": tenants, "former_member": former_member, "outsider": outsider}
 
 
 class ProjectWithNotes(TypedDict):

@@ -322,6 +322,9 @@ SearchViewUpdateUnion = (
 
 
 class SearchViewReorder(BaseModel):
+    entity_type: SearchEntityType = Field(
+        description="The entity type whose SearchViews are reordered"
+    )
     view_ids: list[int] = Field(
         description="IDs of the user's SearchViews in their new order"
     )

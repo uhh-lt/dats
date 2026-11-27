@@ -1,7 +1,10 @@
 from fastapi.testclient import TestClient
 
 from composite_keys_test_utils import TwoTenants
-from modules.document_sampler.document_sampler_dto import SampledSdocsResults
+from modules.document_sampler.document_sampler_dto import (
+    DocumentSampleRequest,
+    SampledSdocsResults,
+)
 
 # ===========================================================================
 # SAMPLE BY TAGS (/projects/{project_id}/document-samples) TESTS
@@ -13,8 +16,9 @@ def _sample(
 ) -> list[SampledSdocsResults]:
     response = client.post(
         f"/projects/{project_id}/document-samples",
-        params={"n": 1, "frac": 1.0},
-        json=tag_groups,
+        json=DocumentSampleRequest(tag_groups=tag_groups, n=1, frac=1.0).model_dump(
+            mode="json"
+        ),
     )
     assert response.status_code == 200, response.text
     return [SampledSdocsResults.model_validate(result) for result in response.json()]

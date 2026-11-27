@@ -21,3 +21,11 @@ class AnnotationDocumentCreate(AnnotationDocumentBaseDTO):
 # Properties for updating
 class AnnotationDocumentUpdate(BaseModel, UpdateDTOBase):
     updated: datetime = Field(description="Updated timestamp of the AnnotationDocument")
+
+
+# Counts the annotations of a user per code in documents (span and sentence
+# annotations alike)
+class AnnotationCountRequest(BaseModel):
+    user_id: int = Field(description="The User whose annotations are counted")
+    sdoc_ids: list[int] = Field(description="The SourceDocuments to count in")
+    code_ids: list[int] = Field(description="The Codes to count")

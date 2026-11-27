@@ -15,7 +15,7 @@ from modules.timeline_analysis.timeline_analysis_dto import (
 from modules.timeline_analysis.timeline_analysis_service import TimelineAnalysisService
 from systems.websocket_system.websocket_dependency import WebsocketEmitter
 
-router = project_router("/timeline-analyses", tags=["timelineAnalysis"])
+router = project_router("/timeline-analyses", tags=["timelineAnalyses"])
 
 
 # --- create operations

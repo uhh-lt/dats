@@ -46,19 +46,36 @@ class TagRead(TagBaseDTO):
     model_config = ConfigDict(from_attributes=True)
 
 
-# To link multiple SourceDocuments with multiple Tags
-class SourceDocumentTagMultiLink(BaseModel):
+# Adds or removes every Tag to or from every SourceDocument
+class SourceDocumentTagLinkRequest(BaseModel):
     source_document_ids: list[int] = Field(description="List of IDs of SourceDocuments")
     tag_ids: list[int] = Field(description="List of IDs of Tags")
 
 
-# The desired tag IDs per SourceDocument (set operation input)
-class SdocTagLinks(BaseModel):
+# The complete tag IDs per SourceDocument (replace operation input)
+class SourceDocumentTagReplaceRequest(BaseModel):
     links: dict[int, list[int]] = Field(
         description="Map of sdoc_id to its complete list of tag IDs"
     )
 
 
 # The resulting tag IDs per SourceDocument of a project after a link/unlink/set operation
-class SdocTagLinksResult(SdocTagLinks):
+class SourceDocumentTagLinksResult(BaseModel):
+    links: dict[int, list[int]] = Field(
+        description="Map of sdoc_id to its complete list of tag IDs"
+    )
     project_id: int = Field(description="ID of the Project of the SourceDocuments")
+
+
+# Links and unlinks Tags of multiple SourceDocuments at once
+class SourceDocumentTagChangeRequest(BaseModel):
+    source_document_ids: list[int] = Field(description="The SourceDocuments to change")
+    link_tag_ids: list[int] = Field(description="The Tags to link")
+    unlink_tag_ids: list[int] = Field(description="The Tags to unlink")
+
+
+class TagCountRequest(BaseModel):
+    sdoc_ids: list[int] = Field(description="The SourceDocuments to count in")
+    tag_ids: list[int] | None = Field(
+        default=None, description="The Tags to count; all Tags of the Project if null"
+    )

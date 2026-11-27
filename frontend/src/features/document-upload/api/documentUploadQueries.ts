@@ -1,5 +1,5 @@
 import { createJobQueries } from "@core/job";
-import { JobService } from "@api/services/JobService";
+import { JobsService } from "@api/services/JobsService";
 
 /**
  * Query factory for the document upload (crawler jobs of a project).
@@ -15,11 +15,11 @@ export const documentUploadQueries = {
   // the background job of this domain
   job: createJobQueries(
     "documentUpload",
-    (job) => JobService.getCrawlerJobById(job),
-    (projectId) => JobService.getCrawlerJobsByProject({ projectId }),
+    (job) => JobsService.getCrawlerJobById(job),
+    (projectId) => JobsService.getCrawlerJobsByProject({ projectId }),
     {
-      abort: (job) => JobService.abortCrawlerJob(job),
-      retry: (job) => JobService.retryCrawlerJob(job),
+      abort: (job) => JobsService.abortCrawlerJob(job),
+      retry: (job) => JobsService.retryCrawlerJob(job),
     },
   ),
 };

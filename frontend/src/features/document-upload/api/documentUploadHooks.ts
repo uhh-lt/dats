@@ -1,6 +1,6 @@
 import { queryClient } from "@api/queryClient";
 import { DocProcessingService } from "@api/services/DocProcessingService";
-import { JobService } from "@api/services/JobService";
+import { JobsService } from "@api/services/JobsService";
 import { projectQueries } from "@core/project";
 import { sdocQueries } from "@core/source-document";
 import { CrawlerJobRead } from "@models/CrawlerJobRead";
@@ -32,7 +32,7 @@ const usePollProcessingSimpleSdocStatus = (projectId: number) => {
 const useStartCrawlerJob = () =>
   useMutation({
     mutationKey: [...documentUploadQueries.job.all(), "start"],
-    mutationFn: JobService.startCrawlerJob,
+    mutationFn: JobsService.startCrawlerJob,
     meta: {
       datsEvent: "JOB_UPDATED",
       successMessage: (data: CrawlerJobRead) => `Started Crawler Job as a new background task (ID: ${data.job_id})`,

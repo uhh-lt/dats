@@ -1,5 +1,7 @@
 import { AuthenticationService } from "@api/services/AuthenticationService";
-import { UserService } from "@api/services/UserService";
+import { MembersService } from "@api/services/MembersService";
+import { UsersService } from "@api/services/UsersService";
+import { VirtualUsersService } from "@api/services/VirtualUsersService";
 import { ProjectUserLinks } from "@models/ProjectUserLinks";
 import { UserRead } from "@models/UserRead";
 import { useAppSelector } from "@store/storeHooks";
@@ -30,7 +32,7 @@ const selectVirtualUsers = (data: UserRead[]) => data.filter((user) => user.is_v
 const useUpdateMe = () =>
   useMutation({
     mutationKey: [...userQueries.all(), "updateMe"],
-    mutationFn: UserService.updateMe,
+    mutationFn: UsersService.updateMe,
     meta: {
       datsEvent: "USER_UPDATED",
       successMessage: (user: UserRead) => `Updated user ${user.first_name} ${user.last_name}`,
@@ -40,7 +42,7 @@ const useUpdateMe = () =>
 const useAddUserToProject = () =>
   useMutation({
     mutationKey: [...userQueries.all(), "addUserToProject"],
-    mutationFn: UserService.associateUserToProject,
+    mutationFn: MembersService.create,
     meta: {
       datsEvent: "PROJECT_USERS_LINKED",
       successMessage: (data: ProjectUserLinks) => `Added user to project (${data.users.length} members)`,
@@ -50,7 +52,7 @@ const useAddUserToProject = () =>
 const useRemoveUserFromProject = () =>
   useMutation({
     mutationKey: [...userQueries.all(), "removeUserFromProject"],
-    mutationFn: UserService.dissociateUserFromProject,
+    mutationFn: MembersService.deleteById,
     meta: {
       datsEvent: "PROJECT_USERS_LINKED",
       successMessage: (data: ProjectUserLinks) => `Removed user from project (${data.users.length} members)`,
@@ -60,7 +62,7 @@ const useRemoveUserFromProject = () =>
 const useCreateVirtualUser = () =>
   useMutation({
     mutationKey: [...userQueries.all(), "createVirtualUser"],
-    mutationFn: UserService.createVirtualUser,
+    mutationFn: VirtualUsersService.create,
     meta: {
       datsEvent: "USER_CREATED",
       successMessage: (user: UserRead) => `Created virtual user ${user.first_name}`,
@@ -72,7 +74,7 @@ const useCreateVirtualUser = () =>
 const useUpdateUser = () =>
   useMutation({
     mutationKey: [...userQueries.all(), "updateUser"],
-    mutationFn: UserService.updateVirtualUser,
+    mutationFn: VirtualUsersService.updateById,
     meta: {
       datsEvent: "USER_UPDATED",
       successMessage: (user: UserRead) => `Renamed virtual user to ${user.first_name}`,
@@ -83,7 +85,7 @@ const useUpdateUser = () =>
 const useDeleteUser = () =>
   useMutation({
     mutationKey: [...userQueries.all(), "deleteUser"],
-    mutationFn: UserService.deleteVirtualUser,
+    mutationFn: VirtualUsersService.deleteById,
     meta: {
       datsEvent: "USER_DELETED",
       successMessage: (user: UserRead) => `Deleted virtual user ${user.first_name} and its annotations`,

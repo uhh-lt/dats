@@ -10,13 +10,17 @@ from fastapi import (
 from common.dats_event import DATSEvent
 from common.dependencies import DBSession, get_current_user
 from core.auth.api_key_crud import crud_api_key
-from core.auth.api_key_dto import ApiKeyCreate, ApiKeyCreatedResponse, ApiKeyRead
-from core.auth.auth_enum import ExpiryDuration
+from core.auth.api_key_dto import (
+    ApiKeyCreate,
+    ApiKeyCreatedResponse,
+    ApiKeyCreateIntern,
+    ApiKeyRead,
+)
 from core.auth.security import generate_api_key, hash_api_key
 from core.user.user_orm import UserORM
 from systems.websocket_system.websocket_dependency import WebsocketEmitter
 
-router = APIRouter(prefix="/users/me/api-keys", tags=["apiKey"])
+router = APIRouter(prefix="/users/me/api-keys", tags=["users"])
 
 
 # --- create operations
@@ -27,11 +31,10 @@ router = APIRouter(prefix="/users/me/api-keys", tags=["apiKey"])
     response_model=ApiKeyCreatedResponse,
     summary="Generate a new API key with optional expiration.",
 )
-def create(
+def create_api_key(
     *,
     db: DBSession,
-    name: str,
-    expires_in: ExpiryDuration,
+    api_key: ApiKeyCreate,
     current_user: UserORM = Depends(get_current_user),
     ws: WebsocketEmitter = Depends(),
 ) -> ApiKeyCreatedResponse:
@@ -40,11 +43,11 @@ def create(
 
     db_key = crud_api_key.create(
         db=db,
-        create_dto=ApiKeyCreate(
-            name=name,
+        create_dto=ApiKeyCreateIntern(
+            name=api_key.name,
             prefix=f"{raw_api_key[:10]}...",
             hashed_key=hashed_key,
-            expires_at=expires_in.to_datetime(),
+            expires_at=api_key.expires_in.to_datetime(),
             created_at=datetime.now(UTC),
             user_id=current_user.id,
         ),
@@ -74,7 +77,7 @@ def create(
     response_model=list[ApiKeyRead],
     summary="List all active API keys for the current user.",
 )
-def get_by_user(
+def get_api_keys(
     *,
     db: DBSession,
     current_user: UserORM = Depends(get_current_user),
@@ -90,9 +93,10 @@ def get_by_user(
 
 @router.delete(
     "/{api_key_id}",
+    response_model=ApiKeyRead,
     summary="Revoke/Delete an API key.",
 )
-def delete_by_id(
+def delete_api_key(
     *,
     db: DBSession,
     api_key_id: int,

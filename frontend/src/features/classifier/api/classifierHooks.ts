@@ -1,5 +1,5 @@
-import { JobService } from "@api/services/JobService";
-import { ClassifierService } from "@api/services/ClassifierService";
+import { JobsService } from "@api/services/JobsService";
+import { ClassifiersService } from "@api/services/ClassifiersService";
 import { ClassifierJobRead } from "@models/ClassifierJobRead";
 import { ClassifierModel } from "@models/ClassifierModel";
 import { ClassifierRead } from "@models/ClassifierRead";
@@ -28,7 +28,7 @@ const useComputeDatasetStatistics = (params: ClassifierDatasetStatisticsParams) 
 const useStartClassifierJob = () =>
   useMutation({
     mutationKey: [...classifierQueries.job.all(), "start"],
-    mutationFn: JobService.startClassifierJob,
+    mutationFn: JobsService.startClassifierJob,
     meta: {
       datsEvent: "JOB_UPDATED",
       successMessage: (data: ClassifierJobRead) =>
@@ -39,7 +39,7 @@ const useStartClassifierJob = () =>
 const useUpdateClassifier = () =>
   useMutation({
     mutationKey: [...classifierQueries.all(), "updateClassifier"],
-    mutationFn: ClassifierService.updateById,
+    mutationFn: ClassifiersService.updateById,
     meta: {
       datsEvent: "CLASSIFIER_UPDATED",
       successMessage: (data: ClassifierRead) => `Updated classifier ${data.name}`,
@@ -49,7 +49,7 @@ const useUpdateClassifier = () =>
 const useDeleteClassifier = () =>
   useMutation({
     mutationKey: [...classifierQueries.all(), "deleteClassifier"],
-    mutationFn: ClassifierService.deleteById,
+    mutationFn: ClassifiersService.deleteById,
     meta: {
       datsEvent: "CLASSIFIER_DELETED",
       successMessage: (data: ClassifierRead) => `Deleted classifier ${data.name}`,

@@ -1,3 +1,4 @@
+from datetime import date
 from typing import TypedDict, TypeVar
 
 from sqlalchemy import case, delete, insert, literal, select
@@ -90,7 +91,7 @@ class TenantRows(TypedDict):
 
     - folders "Folder <p>" (sdoc folder) and "Child folder <p>" below it
     - document "doc_<p>.txt" in "Folder <p>" with its data row, the metadata
-      "key_<p>" (string value "value"), the word frequency "word" (count 1) and
+      "key_<p>" (string value "value") and of the date metadata "date_<p>" (2024-01-01), the word frequency "word" (count 1) and
       the step status "word_frequency" (finished); the document "bare_<p>.txt"
       in the same folder has none of these
     - codes "Code <p>" and "Child code <p>" below it, tags "Tag <p>" and
@@ -129,6 +130,8 @@ class TenantRows(TypedDict):
     sdoc_data: SourceDocumentDataORM
     project_metadata: ProjectMetadataORM
     sdoc_metadata: SourceDocumentMetadataORM
+    date_metadata: ProjectMetadataORM
+    date_sdoc_metadata: SourceDocumentMetadataORM
     word_frequency: WordFrequencyORM
     step_status: SourceDocumentStepStatusORM
     code: CodeORM
@@ -241,6 +244,26 @@ def create_tenant_rows(
             str_value="value",
             project_id=p,
             project_metadata_id=project_metadata.id,
+            source_document_id=sdoc.id,
+        ),
+    )
+    date_metadata = _add(
+        db,
+        ProjectMetadataORM(
+            key=f"date_{p}",
+            metatype=MetaType.DATE,
+            read_only=False,
+            doctype=DocType.text,
+            description="",
+            project_id=p,
+        ),
+    )
+    date_sdoc_metadata = _add(
+        db,
+        SourceDocumentMetadataORM(
+            date_value=date(2024, 1, 1),
+            project_id=p,
+            project_metadata_id=date_metadata.id,
             source_document_id=sdoc.id,
         ),
     )
@@ -531,6 +554,8 @@ def create_tenant_rows(
         "sdoc_data": sdoc_data,
         "project_metadata": project_metadata,
         "sdoc_metadata": sdoc_metadata,
+        "date_metadata": date_metadata,
+        "date_sdoc_metadata": date_sdoc_metadata,
         "word_frequency": word_frequency,
         "step_status": step_status,
         "code": code,

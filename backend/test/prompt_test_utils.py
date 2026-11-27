@@ -32,7 +32,7 @@ from core.prompt.prompt_dto import (
     PromptCode,
     PromptCreate,
     PromptExample,
-    PromptExamplesCreate,
+    PromptExamplesRequest,
     PromptMetadataField,
     PromptRead,
     PromptTag,
@@ -285,7 +285,7 @@ def create_prompt_project(
         return service.create_prompt_examples(
             db=db_session,
             project_id=test_project.id,
-            create_dto=PromptExamplesCreate(kind=kind, annotation_ids=annotation_ids),
+            create_dto=PromptExamplesRequest(kind=kind, annotation_ids=annotation_ids),
         )
 
     [alice_example] = examples(PromptExampleKind.SPAN, [alice_annotation.id])

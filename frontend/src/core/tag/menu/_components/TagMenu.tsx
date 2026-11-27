@@ -132,7 +132,7 @@ function TagMenuContent({
     updateTagsMutation({
       projectId,
       requestBody: {
-        sdoc_ids: sdocIds,
+        source_document_ids: sdocIds,
         link_tag_ids: checkedEntries
           .filter(([, state]) => state === CheckboxState.CHECKED)
           .map(([tagId]) => Number(tagId)),

@@ -6,9 +6,11 @@ from common.project_router import project_router
 from common.sdoc_status_enum import SDocStatus
 from core.doc.source_document_crud import crud_sdoc
 from core.doc_processing.doc_processing_dto import (
+    DocProcessingRecomputeRequest,
+    DocProcessingRetryRequest,
     SdocHealthColumn,
     SdocHealthResult,
-    SdocHealthSort,
+    SdocHealthSearchRequest,
     SourceDocumentStatusSimple,
 )
 from core.doc_processing.doc_processing_service import DocProcessingService
@@ -36,30 +38,6 @@ def get_columns(
     return DocProcessingService().read_health_columns(doctype=doctype)
 
 
-@router.post(
-    "/statuses",
-    response_model=SdocHealthResult,
-    summary="Get all SourceDocumentStatusDetailed for the Project with the given ID by status",
-)
-def search_statuses(
-    *,
-    db: DBSession,
-    project_id: int,
-    doctype: DocType,
-    sorts: list[SdocHealthSort],
-    page: int,
-    page_size: int,
-) -> SdocHealthResult:
-    return DocProcessingService().search_sdoc_health(
-        db=db,
-        project_id=project_id,
-        doctype=doctype,
-        sorts=sorts,
-        page=page,
-        page_size=page_size,
-    )
-
-
 @router.get(
     "/statuses",
     response_model=list[SourceDocumentStatusSimple],
@@ -83,7 +61,28 @@ def get_statuses(
     ]
 
 
-# --- job operations
+# --- other operations
+
+
+@router.post(
+    "/statuses",
+    response_model=SdocHealthResult,
+    summary="Get all SourceDocumentStatusDetailed for the Project with the given ID by status",
+)
+def search_statuses(
+    *,
+    db: DBSession,
+    project_id: int,
+    request: SdocHealthSearchRequest,
+) -> SdocHealthResult:
+    return DocProcessingService().search_sdoc_health(
+        db=db,
+        project_id=project_id,
+        doctype=request.doctype,
+        sorts=request.sorts,
+        page=request.page_number,
+        page_size=request.page_size,
+    )
 
 
 @router.post(
@@ -124,13 +123,12 @@ def upload(
 def retry(
     *,
     project_id: int,
-    doctype: DocType,
-    sdoc_ids: list[int],
+    request: DocProcessingRetryRequest,
 ) -> str:
     return DocProcessingService().retry_jobs(
         project_id=project_id,
-        doctype=doctype,
-        sdoc_ids=sdoc_ids,
+        doctype=request.doctype,
+        sdoc_ids=request.sdoc_ids,
     )
 
 
@@ -143,15 +141,13 @@ def recompute(
     *,
     db: DBSession,
     project_id: int,
-    processing_step: str,
-    sdoc_ids: list[int],
-    settings: ProcessingSettings,
+    request: DocProcessingRecomputeRequest,
 ) -> int:
     jobs = DocProcessingService().recompute_processing_step(
         db=db,
         project_id=project_id,
-        sdoc_ids=sdoc_ids,
-        processing_step=processing_step,
-        settings=settings,
+        sdoc_ids=request.sdoc_ids,
+        processing_step=request.processing_step,
+        settings=request.settings,
     )
     return len(jobs)

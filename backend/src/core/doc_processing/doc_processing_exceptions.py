@@ -66,3 +66,20 @@ class NoValidDocumentInArchiveError(Exception):
 class UploadWithoutFilenameError(Exception):
     def __init__(self) -> None:
         super().__init__("Uploaded file has no filename!")
+
+
+@exception_handler(status.HTTP_400_BAD_REQUEST)
+class UnknownSortColumnError(Exception):
+    """Raised when a sort names neither a step nor a column of the document."""
+
+    def __init__(self, column: str) -> None:
+        super().__init__(f"Cannot sort by {column}: it is no step and no column.")
+
+
+@exception_handler(status.HTTP_400_BAD_REQUEST)
+class SourceDocumentSelectionError(Exception):
+    """Raised when a retry or recompute gets no documents or documents of several
+    doctypes."""
+
+    def __init__(self, reason: str) -> None:
+        super().__init__(f"Invalid document selection: {reason}")

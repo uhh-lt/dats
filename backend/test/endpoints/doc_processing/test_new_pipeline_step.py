@@ -96,8 +96,7 @@ def test_a_step_declared_once_is_planned_run_shown_exported_and_imported(
     # shown by the health view
     response = client.post(
         f"/projects/{p['project'].id}/doc-processing/statuses",
-        params={"doctype": DocType.text.value, "page": 0, "page_size": 10},
-        json=[],
+        json={"doctype": DocType.text.value, "page_number": 0, "page_size": 10},
     )
     assert response.status_code == 200, response.text
     rows = SdocHealthResult.model_validate(response.json()).data

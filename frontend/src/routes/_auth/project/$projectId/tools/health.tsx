@@ -23,11 +23,10 @@ export const Route = createFileRoute("/_auth/project/$projectId/tools/health")({
   loaderDeps: ({ search }) => search,
   context: ({ params, deps }) => ({
     healthColumnsOptions: healthQueries.columns(params.projectId, deps.doctype),
-    healthSearchOptions: healthQueries.search({
-      projectId: params.projectId,
+    healthSearchOptions: healthQueries.search(params.projectId, {
       doctype: deps.doctype,
-      requestBody: toSorts(deps.sortingModel),
-      pageSize: deps.fetchSize,
+      sorts: toSorts(deps.sortingModel),
+      page_size: deps.fetchSize,
     }),
   }),
   loader: async ({ context }) => {

@@ -20,6 +20,7 @@ from modules.annoscaling.annoscaling_dto import (
     AnnoscalingResult,
     AnnoscalingSentenceHit,
 )
+from modules.annoscaling.annoscaling_exceptions import SentenceIndexOutOfRangeError
 from repos.vector.weaviate_repo import WeaviateRepo
 
 Hit = TypeVar("Hit")
@@ -50,6 +51,8 @@ class AnnoScalingService(metaclass=SingletonMeta):
 
         for sdoc_id, sent in accept:
             sdoc = sdocs[sdoc_id]
+            if not 0 <= sent < len(sdoc.sentence_starts):
+                raise SentenceIndexOutOfRangeError(sdoc_id=sdoc_id, sentence=sent)
             begin_char = sdoc.sentence_starts[sent]
             end_char = sdoc.sentence_ends[sent]
             span_anno = SpanAnnotationCreate(
@@ -66,6 +69,8 @@ class AnnoScalingService(metaclass=SingletonMeta):
 
         for sdoc_id, sent in reject:
             sdoc = sdocs[sdoc_id]
+            if not 0 <= sent < len(sdoc.sentence_starts):
+                raise SentenceIndexOutOfRangeError(sdoc_id=sdoc_id, sentence=sent)
             begin_char = sdoc.sentence_starts[sent]
             end_char = sdoc.sentence_ends[sent]
             span_anno = SpanAnnotationCreate(
@@ -254,6 +259,7 @@ class AnnoScalingService(metaclass=SingletonMeta):
                 AnnotationDocumentORM.user_id.in_(user_ids),
                 SpanAnnotationORM.code_id == code_id,
             )
+            .order_by(SpanAnnotationORM.id)
         )
         res = query.all()
         return [(r[0], r[1], r[2]) for r in res]

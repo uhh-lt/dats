@@ -113,6 +113,29 @@ def test_confirm_suggestions_with_a_code_of_another_project_is_a_conflict(
     assert response.status_code == 409, response.text
 
 
+def test_confirm_suggestions_with_a_sentence_the_document_lacks_is_rejected(
+    client: TestClient, annotated_scaling_project: AnnotatedScalingProject
+):
+    """A sentence index beyond the sentences of the document answers 400, not
+    500."""
+    p = annotated_scaling_project
+    dto = AnnoscalingConfirmSuggest(
+        code_id=p["reject"].id,
+        reject_code_id=p["reject"].id,
+        accept=[SdocSentencePair(sdoc_id=p["project"]["text"].id, sentence=999)],
+        reject=[],
+    )
+
+    response = client.put(
+        f"/projects/{p['project']['project'].id}"
+        "/annotation-scaling/suggestions/confirm",
+        json=dto.model_dump(),
+    )
+
+    assert response.status_code == 400, response.text
+    assert "no sentence 999" in response.text
+
+
 # ===========================================================================
 # FEATURE DECLARATION (annoscaling_feature.py)
 # ===========================================================================

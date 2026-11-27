@@ -1,4 +1,4 @@
-import { BboxAnnotationService } from "@api/services/BboxAnnotationService";
+import { BboxAnnotationsService } from "@api/services/BboxAnnotationsService";
 import { SearchService } from "@api/services/SearchService";
 import { tableInfoQueries, toColumnInfos } from "@core/filter";
 import type { QueryRequest_BBoxColumns_ } from "@models/QueryRequest_BBoxColumns_";
@@ -33,7 +33,7 @@ export const bboxAnnotationQueries = {
       queryFn:
         !projectId || !bboxId
           ? skipToken
-          : () => BboxAnnotationService.getById({ projectId, bboxAnnotationId: bboxId }),
+          : () => BboxAnnotationsService.getById({ projectId, bboxAnnotationId: bboxId }),
       staleTime: 1000 * 60 * 5,
     }),
 
@@ -52,7 +52,7 @@ export const bboxAnnotationQueries = {
       queryFn:
         !projectId || !codeId || !userId
           ? skipToken
-          : () => BboxAnnotationService.getByProject({ projectId, userId, codeId }),
+          : () => BboxAnnotationsService.getByProject({ projectId, userId, codeId }),
     }),
 
   bySdocScope: (projectId: number | null | undefined) =>
@@ -67,13 +67,13 @@ export const bboxAnnotationQueries = {
       queryFn:
         !projectId || !sdocId || !userId
           ? skipToken
-          : () => BboxAnnotationService.getByProject({ projectId, userId, sdocId }),
+          : () => BboxAnnotationsService.getByProject({ projectId, userId, sdocId }),
     }),
   // the column infos of the bbox annotation filter table
   tableInfo: (projectId: number) =>
     queryOptions({
       queryKey: tableInfoQueries.byDomain("bbox", projectId),
-      queryFn: async () => toColumnInfos(await SearchService.searchBboxAnnotationInfo({ projectId })),
+      queryFn: async () => toColumnInfos(await SearchService.getBboxAnnotationColumns({ projectId })),
       staleTime: Infinity,
     }),
 

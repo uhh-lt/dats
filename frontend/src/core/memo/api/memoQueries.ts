@@ -1,4 +1,4 @@
-import { MemoService } from "@api/services/MemoService";
+import { MemosService } from "@api/services/MemosService";
 import { SearchService } from "@api/services/SearchService";
 import { tableInfoQueries, toColumnInfos } from "@core/filter";
 import type { AttachedObjectType } from "@models/AttachedObjectType";
@@ -31,7 +31,7 @@ export const memoQueries = {
   byId: (projectId: number | null | undefined, memoId: number | null | undefined) =>
     queryOptions({
       queryKey: [...memoQueries.byIdScope(projectId), memoId] as const,
-      queryFn: !projectId || !memoId ? skipToken : () => MemoService.getById({ projectId, memoId }),
+      queryFn: !projectId || !memoId ? skipToken : () => MemosService.getById({ projectId, memoId }),
       staleTime: 1000 * 60 * 5,
     }),
 
@@ -49,7 +49,7 @@ export const memoQueries = {
         !projectId || !attachedObjId
           ? skipToken
           : () =>
-              MemoService.getByProject({
+              MemosService.getByProject({
                 projectId,
                 attachedObjectType: attachedObjType,
                 attachedObjectId: attachedObjId,
@@ -57,12 +57,12 @@ export const memoQueries = {
       retry: false,
     }),
 
-  // recently opened memos of a project
+  // the ten most recently opened memos of a project
   recentScope: (projectId: number | null | undefined) => [...memoQueries.projectScope(projectId), "recent"] as const,
   recent: (projectId: number | null | undefined) =>
     queryOptions({
       queryKey: memoQueries.recentScope(projectId),
-      queryFn: !projectId ? skipToken : () => MemoService.getByProject({ projectId, recent: true }),
+      queryFn: !projectId ? skipToken : () => MemosService.getByProject({ projectId, recent: true, limit: 10 }),
     }),
 
   // search results (flat) and search results grouped by a column
@@ -89,7 +89,7 @@ export const memoQueries = {
   tableInfo: (projectId: number) =>
     queryOptions({
       queryKey: tableInfoQueries.byDomain("memoFilter", projectId),
-      queryFn: async () => toColumnInfos(await SearchService.searchMemoInfo({ projectId })),
+      queryFn: async () => toColumnInfos(await SearchService.getMemoColumns({ projectId })),
       staleTime: Infinity,
     }),
 };

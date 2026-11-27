@@ -3,11 +3,11 @@ from common.project_router import project_router
 from modules.agreement.agreement_dto import (
     AgreementParams,
     AgreementResult,
-    AgreementTextRange,
+    SegmentTextsRequest,
 )
 from modules.agreement.agreement_service import AgreementService
 
-router = project_router("/agreements", tags=["agreement"])
+router = project_router("/agreements", tags=["agreements"])
 
 
 # --- other operations
@@ -52,8 +52,8 @@ def compute_segment_texts(
     *,
     db: DBSession,
     project_id: int,
-    ranges: list[AgreementTextRange],
+    request: SegmentTextsRequest,
 ) -> list[str]:
     return AgreementService().read_segment_texts(
-        db=db, project_id=project_id, ranges=ranges
+        db=db, project_id=project_id, ranges=request.ranges
     )

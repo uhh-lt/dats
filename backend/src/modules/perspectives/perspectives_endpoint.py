@@ -40,9 +40,11 @@ from modules.perspectives.perspectives_job_dto import (
     PerspectivesJobInput,
 )
 from modules.perspectives.perspectives_vis_dto import (
+    LabelDocumentsRequest,
     PerspectivesClusterSimilarities,
     PerspectivesDoc,
     PerspectivesVisualization,
+    VisualizationRequest,
 )
 from repos.filesystem.file_crud_base import FileCRUDBase
 from systems.job_system.job_service import JobService
@@ -156,7 +158,7 @@ def get_map_thumbnail_url(
     response_model=str,
     summary="Returns the Document Aspect Content for the given IDs.",
 )
-def get_docaspect_by_id(
+def get_source_document(
     *,
     db: DBSession,
     project_id: int,
@@ -185,6 +187,54 @@ def get_clusters(
         db=db, project_id=project_id, aspect_id=aspect_id, sdoc_id=sdoc_id
     )
     return [ClusterRead.model_validate(dc) for dc in document_clusters]
+
+
+@router.get(
+    "/aspects/{aspect_id}/cluster-similarities",
+    response_model=PerspectivesClusterSimilarities,
+    summary="Returns data for visualizing the cluster similarities of the given aspect.",
+)
+def get_cluster_similarities(
+    *,
+    db: DBSession,
+    weaviate: WeaviateClient = Depends(get_weaviate_client),
+    project_id: int,
+    aspect_id: int,
+) -> PerspectivesClusterSimilarities:
+    # Fetch the clusters for the given Aspect
+    aspect = crud_aspect.read(db=db, project_id=project_id, id=aspect_id)
+    clusters = aspect.clusters
+    clusters.sort(key=lambda c: c.id)
+
+    if len(clusters) == 0:
+        return PerspectivesClusterSimilarities(
+            aspect_id=aspect_id,
+            clusters=[],
+            similarities=[],
+        )
+
+    # Fetch the cluster embeddings
+    cluster_embeddings = crud_cluster_embedding.read_by_ids(
+        client=weaviate,
+        project_id=project_id,
+        ids=[
+            ClusterObjectIdentifier(
+                aspect_id=aspect_id,
+                cluster_id=cluster.id,
+            )
+            for cluster in clusters
+        ],
+    )
+
+    # Compute similarities
+    t_arr = np.array(cluster_embeddings)
+    similarities = np.dot(t_arr, t_arr.T).tolist()
+
+    return PerspectivesClusterSimilarities(
+        aspect_id=aspect_id,
+        clusters=[ClusterRead.model_validate(t) for t in clusters],
+        similarities=similarities,
+    )
 
 
 # --- update operations
@@ -245,6 +295,70 @@ def update_cluster(
     return result
 
 
+@router.patch(
+    "/aspects/{aspect_id}/accept-labels",
+    response_model=PerspectivesVisualization,
+    summary="Accept the label of the provided SourceDocuments (by ID) and return the updated visualization.",
+)
+def accept_labels(
+    *,
+    db: DBSession,
+    project_id: int,
+    aspect_id: int,
+    request: LabelDocumentsRequest,
+) -> PerspectivesVisualization:
+    crud_aspect.exists(db=db, project_id=project_id, id=aspect_id, raise_error=True)
+    crud_document_cluster.set_labels(
+        db=db,
+        project_id=project_id,
+        aspect_id=aspect_id,
+        sdoc_ids=request.sdoc_ids,
+        is_accepted=True,
+    )
+
+    result = _build_document_visualization(
+        db=db,
+        project_id=project_id,
+        aspect_id=aspect_id,
+        search_query=request.search_query,
+        filter=request.filter,
+        sorts=request.sorts,
+    )
+    return result
+
+
+@router.patch(
+    "/aspects/{aspect_id}/revert-labels",
+    response_model=PerspectivesVisualization,
+    summary="Reverts the label of the provided SourceDocuments (by ID) and return the updated visualization.",
+)
+def revert_labels(
+    *,
+    db: DBSession,
+    project_id: int,
+    aspect_id: int,
+    request: LabelDocumentsRequest,
+) -> PerspectivesVisualization:
+    crud_aspect.exists(db=db, project_id=project_id, id=aspect_id, raise_error=True)
+    crud_document_cluster.set_labels(
+        db=db,
+        project_id=project_id,
+        aspect_id=aspect_id,
+        sdoc_ids=request.sdoc_ids,
+        is_accepted=False,
+    )
+
+    result = _build_document_visualization(
+        db=db,
+        project_id=project_id,
+        aspect_id=aspect_id,
+        search_query=request.search_query,
+        filter=request.filter,
+        sorts=request.sorts,
+    )
+    return result
+
+
 # --- delete operations
 
 
@@ -275,9 +389,6 @@ def delete_by_id(
     return result
 
 
-# --- other operations
-
-
 def _build_document_visualization(
     *,
     db: Session,
@@ -290,7 +401,7 @@ def _build_document_visualization(
     """Build the document visualization for the given aspect."""
     # Fetch data for visualization
     aspect = crud_aspect.read(db=db, project_id=project_id, id=aspect_id)
-    document_aspects = aspect.document_aspects
+    document_aspects = sorted(aspect.document_aspects, key=lambda da: da.sdoc_id)
 
     # If a job is in progress, return early with empty visualization
     if aspect.most_recent_job_id:
@@ -347,7 +458,7 @@ def _build_document_visualization(
                     sdoc_id=doc.sdoc_id,
                     cluster_id=dc.cluster_id,
                     is_accepted=dc.is_accepted,
-                    in_searchresult=sdoc_id_in_search_result.get(doc.sdoc_id, False),
+                    in_search_result=sdoc_id_in_search_result.get(doc.sdoc_id, False),
                     is_outlier=cluster_id2cluster[dc.cluster_id].is_outlier,
                     x=doc.x,
                     y=doc.y,
@@ -367,7 +478,7 @@ def _build_document_visualization(
                     sdoc_id=doc.sdoc_id,
                     cluster_id=dc.cluster_id,
                     is_accepted=dc.is_accepted,
-                    in_searchresult=True,
+                    in_search_result=True,
                     is_outlier=cluster_id2cluster[dc.cluster_id].is_outlier,
                     x=doc.x,
                     y=doc.y,
@@ -395,6 +506,9 @@ def _build_document_visualization(
     )
 
 
+# --- other operations
+
+
 @router.post(
     "/aspects/{aspect_id}/visualization",
     response_model=PerspectivesVisualization,
@@ -405,133 +519,13 @@ def compute_visualization(
     db: DBSession,
     project_id: int,
     aspect_id: int,
-    search_query: str,
-    filter: Filter[SdocColumns],
-    sorts: list[Sort[SdocColumns]],
+    request: VisualizationRequest,
 ) -> PerspectivesVisualization:
     return _build_document_visualization(
         db=db,
         project_id=project_id,
         aspect_id=aspect_id,
-        search_query=search_query,
-        filter=filter,
-        sorts=sorts,
-    )
-
-
-@router.patch(
-    "/aspects/{aspect_id}/accept-labels",
-    response_model=PerspectivesVisualization,
-    summary="Accept the label of the provided SourceDocuments (by ID) and return the updated visualization.",
-)
-def accept_labels(
-    *,
-    db: DBSession,
-    project_id: int,
-    aspect_id: int,
-    sdoc_ids: list[int],
-    search_query: str,
-    filter: Filter[SdocColumns],
-    sorts: list[Sort[SdocColumns]],
-) -> PerspectivesVisualization:
-    crud_aspect.exists(db=db, project_id=project_id, id=aspect_id, raise_error=True)
-    crud_document_cluster.set_labels(
-        db=db,
-        project_id=project_id,
-        aspect_id=aspect_id,
-        sdoc_ids=sdoc_ids,
-        is_accepted=True,
-    )
-
-    result = _build_document_visualization(
-        db=db,
-        project_id=project_id,
-        aspect_id=aspect_id,
-        search_query=search_query,
-        filter=filter,
-        sorts=sorts,
-    )
-    return result
-
-
-@router.patch(
-    "/aspects/{aspect_id}/revert-labels",
-    response_model=PerspectivesVisualization,
-    summary="Reverts the label of the provided SourceDocuments (by ID) and return the updated visualization.",
-)
-def revert_labels(
-    *,
-    db: DBSession,
-    project_id: int,
-    aspect_id: int,
-    sdoc_ids: list[int],
-    search_query: str,
-    filter: Filter[SdocColumns],
-    sorts: list[Sort[SdocColumns]],
-) -> PerspectivesVisualization:
-    crud_aspect.exists(db=db, project_id=project_id, id=aspect_id, raise_error=True)
-    crud_document_cluster.set_labels(
-        db=db,
-        project_id=project_id,
-        aspect_id=aspect_id,
-        sdoc_ids=sdoc_ids,
-        is_accepted=False,
-    )
-
-    result = _build_document_visualization(
-        db=db,
-        project_id=project_id,
-        aspect_id=aspect_id,
-        search_query=search_query,
-        filter=filter,
-        sorts=sorts,
-    )
-    return result
-
-
-@router.get(
-    "/aspects/{aspect_id}/cluster-similarities",
-    response_model=PerspectivesClusterSimilarities,
-    summary="Returns data for visualizing the cluster similarities of the given aspect.",
-)
-def get_cluster_similarities(
-    *,
-    db: DBSession,
-    weaviate: WeaviateClient = Depends(get_weaviate_client),
-    project_id: int,
-    aspect_id: int,
-) -> PerspectivesClusterSimilarities:
-    # Fetch the clusters for the given Aspect
-    aspect = crud_aspect.read(db=db, project_id=project_id, id=aspect_id)
-    clusters = aspect.clusters
-    clusters.sort(key=lambda c: c.id)
-
-    if len(clusters) == 0:
-        return PerspectivesClusterSimilarities(
-            aspect_id=aspect_id,
-            clusters=[],
-            similarities=[],
-        )
-
-    # Fetch the cluster embeddings
-    cluster_embeddings = crud_cluster_embedding.read_by_ids(
-        client=weaviate,
-        project_id=project_id,
-        ids=[
-            ClusterObjectIdentifier(
-                aspect_id=aspect_id,
-                cluster_id=cluster.id,
-            )
-            for cluster in clusters
-        ],
-    )
-
-    # Compute similarities
-    t_arr = np.array(cluster_embeddings)
-    similarities = np.dot(t_arr, t_arr.T).tolist()
-
-    return PerspectivesClusterSimilarities(
-        aspect_id=aspect_id,
-        clusters=[ClusterRead.model_validate(t) for t in clusters],
-        similarities=similarities,
+        search_query=request.search_query,
+        filter=request.filter,
+        sorts=request.sorts,
     )

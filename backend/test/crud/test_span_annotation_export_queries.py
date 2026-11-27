@@ -9,8 +9,9 @@ from sqlalchemy.orm import Session
 from modules.eximport.span_annotations.export_span_annotations import (
     export_selected_span_annotations,
 )
+from sql_test_utils import count_queries
 
-from .conftest import SdocWithSpanAnnotations, count_queries
+from .conftest import SdocWithSpanAnnotations
 
 
 def _export(db: Session, out_dir: Path, project_id: int, span_ids: list[int]) -> int:

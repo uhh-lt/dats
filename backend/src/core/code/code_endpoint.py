@@ -7,7 +7,7 @@ from core.code.code_crud import crud_code
 from core.code.code_dto import CodeCreate, CodeRead, CodeUpdate, CodeUpdateBulk
 from systems.websocket_system.websocket_dependency import WebsocketEmitter
 
-router = project_router("/codes", tags=["code", "mcp"])
+router = project_router("/codes", tags=["codes", "mcp"])
 
 
 # --- create operations

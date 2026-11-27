@@ -27,7 +27,7 @@ router = project_router(
     response_model=list[SourceDocumentMetadataRead],
     summary="Returns the SourceDocumentMetadata of the SourceDocument, optionally only the one with the given key",
 )
-def get_by_sdoc(
+def get_by_project(
     *,
     db: DBSession,
     project_id: int,

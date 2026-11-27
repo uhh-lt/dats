@@ -89,16 +89,13 @@ class CRUDUser(SQLCRUDBase[UserORM, UserCreate, UserUpdate]):
             ids: The ids to read.
 
         Returns:
-            The users, in the order of `ids`; raises NoSuchElementError for an id
-            that is no user of the project.
+            The users, in the order of `ids`; an id that is no user of the project
+            (anymore) is skipped.
         """
         users = {
             user.id: user for user in self.read_by_project(db, project_id=project_id)
         }
-        for id in ids:
-            if id not in users:
-                raise NoSuchElementError(self.model, project_id=project_id, id=id)
-        return [users[id] for id in ids]
+        return [users[id] for id in ids if id in users]
 
     def read_by_project_and_emails(
         self, db: Session, *, project_id: int, emails: list[str]

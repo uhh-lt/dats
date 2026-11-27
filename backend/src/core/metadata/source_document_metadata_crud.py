@@ -2,6 +2,7 @@ from sqlalchemy.orm import Session
 
 from common.doc_type_enum import DocType
 from common.meta_type_enum import MetaType
+from core.metadata.metadata_exceptions import MetadataValueTypeError
 from core.metadata.project_metadata_dto import ProjectMetadataRead
 from core.metadata.project_metadata_orm import ProjectMetadataORM
 from core.metadata.source_document_metadata_dto import (
@@ -63,7 +64,7 @@ class CRUDSourceDocumentMetadata(
                 continue
             metatype = ProjectMetadataRead.model_validate(project_metadata).metatype
             if not is_correct_type(metatype, create_dto):
-                raise ValueError(f"provided value has the wrong type (need {metatype})")
+                raise MetadataValueTypeError(metatype=metatype)
 
         return super().create_multi(
             db=db, project_id=project_id, create_dtos=create_dtos
@@ -182,7 +183,7 @@ class CRUDSourceDocumentMetadata(
                 db_obj.project_metadata
             ).metatype
             if not is_correct_type(metatype, update_dto):
-                raise ValueError(f"provided value has the wrong type (need {metatype})")
+                raise MetadataValueTypeError(metatype=metatype)
         return super().update_multi(
             db=db, project_id=project_id, ids=ids, update_dtos=update_dtos
         )

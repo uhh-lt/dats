@@ -659,7 +659,15 @@ class SpanClassificationModelService(TextClassificationModelService):
                     )
                 )
 
-        problematic_sdocs.sort(key=lambda p: p.labeled_percentage)
+        # weakest first, then by document and counts
+        problematic_sdocs.sort(
+            key=lambda p: (
+                p.labeled_percentage,
+                p.sdoc_id,
+                p.labeled_units,
+                p.total_units,
+            )
+        )
 
         signal_percentage = labeled_units / total_units if total_units > 0 else 0.0
         weak_threshold = conf.classifier.weak_signal_threshold

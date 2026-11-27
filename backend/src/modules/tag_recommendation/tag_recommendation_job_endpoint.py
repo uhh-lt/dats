@@ -12,7 +12,7 @@ from systems.job_system.job_service import JobService
 
 router = project_router(
     "/jobs/tag-recommendation",
-    tags=["TagRecommendation"],
+    tags=["jobs"],
     feature=TAG_RECOMMENDATION,
 )
 

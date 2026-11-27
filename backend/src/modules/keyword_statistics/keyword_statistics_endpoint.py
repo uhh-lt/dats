@@ -1,6 +1,9 @@
 from common.dependencies import DBSession
 from common.project_router import project_router
-from modules.keyword_statistics.keyword_statistics_dto import KeywordStat
+from modules.keyword_statistics.keyword_statistics_dto import (
+    KeywordStat,
+    KeywordStatisticsRequest,
+)
 from modules.keyword_statistics.keyword_statistics_feature import KEYWORD_STATISTICS
 from modules.keyword_statistics.keyword_statistics_service import (
     KeywordStatisticsService,
@@ -24,18 +27,19 @@ def compute_keyword_statistics(
     db: DBSession,
     project_id: int,
     # keyword stat params
-    sort_by_global: bool = False,
-    top_k: int = 20,
+    request: KeywordStatisticsRequest,
     # filter params
-    sdoc_ids: list[int],
 ) -> list[KeywordStat]:
-    if len(sdoc_ids) == 0:
+    if len(request.sdoc_ids) == 0:
         return []
 
     # compute keyword stats
     keyword_stats = KeywordStatisticsService().compute_keyword_statistics(
-        db=db, project_id=project_id, sdoc_ids=set(sdoc_ids), top_k=top_k
+        db=db,
+        project_id=project_id,
+        sdoc_ids=set(request.sdoc_ids),
+        top_k=request.top_k,
     )
-    if sort_by_global:
+    if request.sort_by_global:
         keyword_stats.sort(key=lambda x: x.global_count, reverse=True)
     return keyword_stats

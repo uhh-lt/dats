@@ -15,7 +15,7 @@ from repos.ray.ray_repo import RayRepo
 from systems.feature_system.feature_registry import feature_registry
 
 # ===========================================================================
-# RAG ANSWERS (/projects/{project_id}/rag/answers) TESTS
+# RAG ANSWERS (/projects/{project_id}/rag/answer) TESTS
 # ===========================================================================
 
 
@@ -24,13 +24,14 @@ def test_rag_session_is_rejected_when_rag_chat_is_disabled(
 ):
     """A project without RAG chat answers 403 before any LLM call."""
     response = client.post(
-        f"/projects/{featureless_project['project'].id}/rag/answers",
-        params={
+        f"/projects/{featureless_project['project'].id}/rag/answer",
+        json={
             "top_k": 10,
             "threshold": 0.5,
             "model": "default",
+            "query": "alpha",
+            "sdoc_ids": None,
         },
-        json={"query": "alpha", "sdoc_ids": None},
     )
 
     assert_feature_disabled(response, "rag_chat")
@@ -40,13 +41,14 @@ def test_rag_session_rejects_a_list_query(client: TestClient, test_project):
     """`test_project` enables RAG chat; a list of texts is no query (one text), so the body validation rejects it: 422 for the `query`
     of the body, before any LLM call."""
     response = client.post(
-        f"/projects/{test_project.id}/rag/answers",
-        params={
+        f"/projects/{test_project.id}/rag/answer",
+        json={
             "top_k": 10,
             "threshold": 0.5,
             "model": "default",
+            "query": ["alpha", "beta"],
+            "sdoc_ids": [],
         },
-        json={"query": ["alpha", "beta"], "sdoc_ids": []},
     )
 
     assert response.status_code == 422, response.text
@@ -102,13 +104,14 @@ def test_rag_session_answers_from_the_nearest_sentences_without_semantic_search(
     ids = [] if sdoc_ids == "all" else [p["text"].id + 1000]
 
     response = client.post(
-        f"/projects/{p['project'].id}/rag/answers",
-        params={
+        f"/projects/{p['project'].id}/rag/answer",
+        json={
             "top_k": 10,
             "threshold": 0.75,
             "model": "default",
+            "query": "a greeting",
+            "sdoc_ids": ids,
         },
-        json={"query": "a greeting", "sdoc_ids": ids},
     )
 
     assert response.status_code == 200, response.text
@@ -131,9 +134,11 @@ def test_rag_session_retrieves_nothing_of_a_document_of_another_project(
     p = sentence_embedding_project
 
     response = client.post(
-        f"/projects/{p['project'].id}/rag/answers",
-        params={"top_k": 10, "threshold": 0.75, "model": "default"},
+        f"/projects/{p['project'].id}/rag/answer",
         json={
+            "top_k": 10,
+            "threshold": 0.75,
+            "model": "default",
             "query": "a greeting",
             "sdoc_ids": [foreign_sentence_embedding_project["text"].id],
         },
@@ -164,14 +169,15 @@ def test_rag_session_of_another_project_answers_404(
     """The session of `test_user` in `test_project` is unknown in "RAG Only",
     another project of the same user: 404."""
     response = client.post(
-        f"/projects/{sentence_embedding_project['project'].id}/rag/answers",
-        params={
+        f"/projects/{sentence_embedding_project['project'].id}/rag/answer",
+        json={
             "top_k": 10,
             "threshold": 0.75,
             "model": "default",
             "session_id": chat_session_id,
+            "query": "a greeting",
+            "sdoc_ids": [],
         },
-        json={"query": "a greeting", "sdoc_ids": []},
     )
 
     assert response.status_code == 404, response.text
@@ -186,14 +192,15 @@ def test_rag_session_of_another_user_answers_404(
     """The session of `test_user` is unknown to another member of the same
     project: 404."""
     response = other_member_client.post(
-        f"/projects/{test_project.id}/rag/answers",
-        params={
+        f"/projects/{test_project.id}/rag/answer",
+        json={
             "top_k": 10,
             "threshold": 0.75,
             "model": "default",
             "session_id": chat_session_id,
+            "query": "a greeting",
+            "sdoc_ids": [],
         },
-        json={"query": "a greeting", "sdoc_ids": []},
     )
 
     assert response.status_code == 404, response.text

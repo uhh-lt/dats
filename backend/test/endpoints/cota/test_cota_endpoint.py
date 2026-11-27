@@ -51,8 +51,8 @@ def test_cota_of_another_project_is_not_found(
     other_project, other_cota = embedded_cota
     bodies = {
         "PATCH ": {"name": "renamed"},
-        "PATCH /annotate-sentences": [],
-        "PATCH /remove-sentences": [],
+        "PATCH /annotate-sentences": {"cota_sentence_ids": []},
+        "PATCH /remove-sentences": {"cota_sentence_ids": []},
         "POST /refine": COTARefinementHyperparameters().model_dump(mode="json"),
     }
 
@@ -188,8 +188,10 @@ def test_sentence_of_another_project_is_not_found(
     def change(sdoc_id: int):
         return client.patch(
             f"{url}{path}",
-            params=params,
-            json=[{"sdoc_id": sdoc_id, "sentence_id": 0}],
+            json={
+                "cota_sentence_ids": [{"sdoc_id": sdoc_id, "sentence_id": 0}],
+                **(params or {}),
+            },
         )
 
     response = change(foreign["sdoc"].id)

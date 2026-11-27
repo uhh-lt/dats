@@ -1,14 +1,17 @@
-from fastapi import Body, Depends
+from fastapi import Depends
 from sqlalchemy.orm import Session
 
 from common.dats_event import DATSEvent
 from common.dependencies import DBSession
 from common.project_router import project_router
+from core.doc.source_document_crud import crud_sdoc
 from core.tag.tag_crud import crud_tag
 from core.tag.tag_dto import (
-    SdocTagLinks,
-    SdocTagLinksResult,
-    SourceDocumentTagMultiLink,
+    SourceDocumentTagChangeRequest,
+    SourceDocumentTagLinkRequest,
+    SourceDocumentTagLinksResult,
+    SourceDocumentTagReplaceRequest,
+    TagCountRequest,
     TagCreate,
     TagRead,
     TagUpdate,
@@ -16,18 +19,18 @@ from core.tag.tag_dto import (
 )
 from systems.websocket_system.websocket_dependency import WebsocketEmitter
 
-router = project_router("/tags", tags=["tag", "mcp"])
+router = project_router("/tags", tags=["tags", "mcp"])
 
 
 def _read_sdoc_tag_links(
     db: Session, *, project_id: int, sdoc_ids: list[int]
-) -> SdocTagLinksResult:
+) -> SourceDocumentTagLinksResult:
     """The tag ids of every given document, an empty list for a document without
     tags (or of another project)."""
     tags = crud_tag.read_tags_for_documents(
         db=db, project_id=project_id, sdoc_ids=sdoc_ids
     )
-    return SdocTagLinksResult(
+    return SourceDocumentTagLinksResult(
         project_id=project_id,
         links={
             sdoc_id: [tag.id for tag in tags.get(sdoc_id, [])] for sdoc_id in sdoc_ids
@@ -58,19 +61,19 @@ def create(
 
 @router.put(
     "/bulk/source-documents",
-    response_model=SdocTagLinksResult,
+    response_model=SourceDocumentTagLinksResult,
     summary=(
         "Links the Tags with the SourceDocuments and returns the resulting tags per "
         "document"
     ),
 )
-def link_tags_bulk(
+def add_source_documents_bulk(
     *,
     db: DBSession,
     project_id: int,
-    multi_link: SourceDocumentTagMultiLink,
+    multi_link: SourceDocumentTagLinkRequest,
     ws: WebsocketEmitter = Depends(),
-) -> SdocTagLinksResult:
+) -> SourceDocumentTagLinksResult:
     crud_tag.link_multi(
         db=db,
         project_id=project_id,
@@ -123,14 +126,19 @@ def get_by_id(
     response_model=list[int],
     summary="Returns the IDs of the SourceDocuments linked with the Tag.",
 )
-def get_sdoc_ids_by_tag_id(
+def get_source_documents(
     *,
     db: DBSession,
     project_id: int,
     tag_id: int,
 ) -> list[int]:
-    db_obj = crud_tag.read(db=db, project_id=project_id, id=tag_id)
-    return [sdoc.id for sdoc in db_obj.source_documents]
+    crud_tag.exists(db=db, project_id=project_id, id=tag_id, raise_error=True)
+    return [
+        sdoc.id
+        for sdoc in crud_sdoc.read_by_tags(
+            db=db, project_id=project_id, tag_ids=[tag_id]
+        )
+    ]
 
 
 # --- update operations
@@ -167,28 +175,34 @@ def update_bulk(
 
 @router.patch(
     "/bulk/source-documents",
-    response_model=SdocTagLinksResult,
+    response_model=SourceDocumentTagLinksResult,
     summary=(
         "Links and unlinks Tags of the SourceDocuments and returns the resulting tags "
         "per document"
     ),
 )
-def update_sdoc_tags_bulk(
+def update_source_documents_bulk(
     *,
     db: DBSession,
     project_id: int,
-    sdoc_ids: list[int] = Body(description="The SourceDocuments to change"),
-    link_tag_ids: list[int] = Body(description="The Tags to link"),
-    unlink_tag_ids: list[int] = Body(description="The Tags to unlink"),
+    links: SourceDocumentTagChangeRequest,
     ws: WebsocketEmitter = Depends(),
-) -> SdocTagLinksResult:
+) -> SourceDocumentTagLinksResult:
     crud_tag.link_multi(
-        db=db, project_id=project_id, sdoc_ids=sdoc_ids, tag_ids=link_tag_ids
+        db=db,
+        project_id=project_id,
+        sdoc_ids=links.source_document_ids,
+        tag_ids=links.link_tag_ids,
     )
     crud_tag.unlink_multi(
-        db=db, project_id=project_id, sdoc_ids=sdoc_ids, tag_ids=unlink_tag_ids
+        db=db,
+        project_id=project_id,
+        sdoc_ids=links.source_document_ids,
+        tag_ids=links.unlink_tag_ids,
     )
-    result = _read_sdoc_tag_links(db, project_id=project_id, sdoc_ids=sdoc_ids)
+    result = _read_sdoc_tag_links(
+        db, project_id=project_id, sdoc_ids=links.source_document_ids
+    )
     if result.links:
         ws.emit_to_project(DATSEvent.SDOC_TAGS_LINKED, result, project_id=project_id)
     return result
@@ -196,19 +210,19 @@ def update_sdoc_tags_bulk(
 
 @router.patch(
     "/bulk/source-documents/replace",
-    response_model=SdocTagLinksResult,
+    response_model=SourceDocumentTagLinksResult,
     summary=(
         "Sets the Tags of each SourceDocument to the given Tags and returns the "
         "resulting tags per document"
     ),
 )
-def replace_sdoc_tags_bulk(
+def replace_source_documents_bulk(
     *,
     db: DBSession,
     project_id: int,
-    links: SdocTagLinks,
+    links: SourceDocumentTagReplaceRequest,
     ws: WebsocketEmitter = Depends(),
-) -> SdocTagLinksResult:
+) -> SourceDocumentTagLinksResult:
     crud_tag.set_tags_multi(db=db, project_id=project_id, links=links.links)
     result = _read_sdoc_tag_links(db, project_id=project_id, sdoc_ids=list(links.links))
     if result.links:
@@ -240,19 +254,19 @@ def update_by_id(
 
 @router.delete(
     "/bulk/source-documents",
-    response_model=SdocTagLinksResult,
+    response_model=SourceDocumentTagLinksResult,
     summary=(
         "Unlinks the Tags from the SourceDocuments and returns the resulting tags per "
         "document"
     ),
 )
-def unlink_tags_bulk(
+def remove_source_documents_bulk(
     *,
     db: DBSession,
     project_id: int,
-    multi_link: SourceDocumentTagMultiLink,
+    multi_link: SourceDocumentTagLinkRequest,
     ws: WebsocketEmitter = Depends(),
-) -> SdocTagLinksResult:
+) -> SourceDocumentTagLinksResult:
     crud_tag.unlink_multi(
         db=db,
         project_id=project_id,
@@ -290,7 +304,7 @@ def delete_by_id(
 
 
 @router.post(
-    "/count",
+    "/counts",
     response_model=dict[int, int],
     summary=(
         "Counts per Tag how many of the SourceDocuments carry it, for the given Tags "
@@ -301,11 +315,11 @@ def count(
     *,
     db: DBSession,
     project_id: int,
-    sdoc_ids: list[int] = Body(description="The SourceDocuments to count in"),
-    tag_ids: list[int] | None = Body(
-        default=None, description="The Tags to count; all Tags of the Project if null"
-    ),
+    request: TagCountRequest,
 ) -> dict[int, int]:
     return crud_tag.count_by_sdocs(
-        db=db, project_id=project_id, sdoc_ids=sdoc_ids, tag_ids=tag_ids
+        db=db,
+        project_id=project_id,
+        sdoc_ids=request.sdoc_ids,
+        tag_ids=request.tag_ids,
     )

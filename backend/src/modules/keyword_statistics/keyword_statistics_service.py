@@ -72,8 +72,7 @@ class KeywordStatisticsService(metaclass=SingletonMeta):
         keywords = [
             keyword for keyword_list in keywords_list for keyword in keyword_list
         ]
-        # count the keywords
-        if top_k is None:
-            return dict(Counter(keywords))
-        else:
-            return dict(Counter(keywords).most_common(top_k))
+        # count the keywords, most frequent first, ties by keyword (which also
+        # decides the tied keywords that make the top k)
+        counts = sorted(Counter(keywords).items(), key=lambda kv: (-kv[1], kv[0]))
+        return dict(counts if top_k is None else counts[:top_k])

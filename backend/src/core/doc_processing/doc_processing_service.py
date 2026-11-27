@@ -20,7 +20,9 @@ from core.doc_processing.doc_processing_dto import (
 from core.doc_processing.doc_processing_exceptions import (
     NoFilesProcessedError,
     SourceDocumentFilenameExistsError,
+    SourceDocumentSelectionError,
     StepNotPlannedError,
+    UnknownSortColumnError,
     UnsupportedMimeTypeError,
     UploadWithoutFilenameError,
 )
@@ -177,7 +179,8 @@ class DocProcessingService(metaclass=SingletonMeta):
             if s.column in steps:
                 order_by.append((s.column, s.direction))
                 continue
-            assert hasattr(SourceDocumentORM, s.column), f"Invalid column: {s.column}"
+            if s.column not in SourceDocumentORM.__table__.columns:
+                raise UnknownSortColumnError(column=s.column)
             order_by.append((getattr(SourceDocumentORM, s.column), s.direction))
         offset = limit = None
         if page is not None and page_size is not None:
@@ -241,6 +244,7 @@ class DocProcessingService(metaclass=SingletonMeta):
 
         return results
 
+    # check_services: allow method-signature (reads the failed jobs from Redis, no SQL)
     def retry_jobs(
         self,
         *,
@@ -298,13 +302,16 @@ class DocProcessingService(metaclass=SingletonMeta):
         # Validate inputs
         # 1. read the documents within the project (raises NoSuchElementError)
         sdocs = crud_sdoc.read_by_ids(db=db, project_id=project_id, ids=sdoc_ids)
+        if not sdocs:
+            raise SourceDocumentSelectionError("no documents given")
 
         # 2. check that sdocs all have the same doctype
         doctype = sdocs[0].doctype
         for sdoc in sdocs:
             if sdoc.doctype != doctype:
-                raise ValueError(
-                    f"SDOC '{sdoc.id}' has doctype '{sdoc.doctype}' which is different from doctype '{doctype}' of SDOC '{sdocs[0].id}'"
+                raise SourceDocumentSelectionError(
+                    f"document {sdoc.id} has doctype {sdoc.doctype}, document "
+                    f"{sdocs[0].id} has {doctype}"
                 )
 
         # 3. check that processing_step is valid for the doctype

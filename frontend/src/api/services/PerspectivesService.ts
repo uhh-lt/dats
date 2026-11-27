@@ -5,13 +5,12 @@
 import type { AspectCreate } from "@models/AspectCreate";
 import type { AspectRead } from "@models/AspectRead";
 import type { AspectUpdate } from "@models/AspectUpdate";
-import type { Body_perspectives_accept_labels } from "@models/Body_perspectives_accept_labels";
-import type { Body_perspectives_compute_visualization } from "@models/Body_perspectives_compute_visualization";
-import type { Body_perspectives_revert_labels } from "@models/Body_perspectives_revert_labels";
 import type { ClusterRead } from "@models/ClusterRead";
 import type { ClusterUpdate } from "@models/ClusterUpdate";
+import type { LabelDocumentsRequest } from "@models/LabelDocumentsRequest";
 import type { PerspectivesClusterSimilarities } from "@models/PerspectivesClusterSimilarities";
 import type { PerspectivesVisualization } from "@models/PerspectivesVisualization";
+import type { VisualizationRequest } from "@models/VisualizationRequest";
 import type { CancelablePromise } from "../core/CancelablePromise";
 import { OpenAPI } from "../core/OpenAPI";
 import { request as __request } from "../core/request";
@@ -187,7 +186,7 @@ export class PerspectivesService {
    * @returns string Successful Response
    * @throws ApiError
    */
-  public static getDocaspectById({
+  public static getSourceDocument({
     projectId,
     aspectId,
     sdocId,
@@ -247,6 +246,34 @@ export class PerspectivesService {
     });
   }
   /**
+   * Returns data for visualizing the cluster similarities of the given aspect.
+   * @returns PerspectivesClusterSimilarities Successful Response
+   * @throws ApiError
+   */
+  public static getClusterSimilarities({
+    projectId,
+    aspectId,
+  }: {
+    projectId: number;
+    aspectId: number;
+  }): CancelablePromise<PerspectivesClusterSimilarities> {
+    return __request(OpenAPI, {
+      method: "GET",
+      url: "/projects/{project_id}/perspectives/aspects/{aspect_id}/cluster-similarities",
+      path: {
+        project_id: projectId,
+        aspect_id: aspectId,
+      },
+      errors: {
+        400: `The request breaks a rule of the domain`,
+        403: `The user is no member of the project, or the feature is disabled`,
+        404: `A path id, or an id the route reads, is not in the project`,
+        409: `A body id violates a foreign key, or a value a unique constraint`,
+        422: `Validation Error`,
+      },
+    });
+  }
+  /**
    * Updates the Cluster's name and description.
    * @returns ClusterRead Successful Response
    * @throws ApiError
@@ -282,43 +309,6 @@ export class PerspectivesService {
     });
   }
   /**
-   * Returns data for visualizing the documents of the given aspect.
-   * @returns PerspectivesVisualization Successful Response
-   * @throws ApiError
-   */
-  public static computeVisualization({
-    projectId,
-    aspectId,
-    searchQuery,
-    requestBody,
-  }: {
-    projectId: number;
-    aspectId: number;
-    searchQuery: string;
-    requestBody: Body_perspectives_compute_visualization;
-  }): CancelablePromise<PerspectivesVisualization> {
-    return __request(OpenAPI, {
-      method: "POST",
-      url: "/projects/{project_id}/perspectives/aspects/{aspect_id}/visualization",
-      path: {
-        project_id: projectId,
-        aspect_id: aspectId,
-      },
-      query: {
-        search_query: searchQuery,
-      },
-      body: requestBody,
-      mediaType: "application/json",
-      errors: {
-        400: `The request breaks a rule of the domain`,
-        403: `The user is no member of the project, or the feature is disabled`,
-        404: `A path id, or an id the route reads, is not in the project`,
-        409: `A body id violates a foreign key, or a value a unique constraint`,
-        422: `Validation Error`,
-      },
-    });
-  }
-  /**
    * Accept the label of the provided SourceDocuments (by ID) and return the updated visualization.
    * @returns PerspectivesVisualization Successful Response
    * @throws ApiError
@@ -326,13 +316,11 @@ export class PerspectivesService {
   public static acceptLabels({
     projectId,
     aspectId,
-    searchQuery,
     requestBody,
   }: {
     projectId: number;
     aspectId: number;
-    searchQuery: string;
-    requestBody: Body_perspectives_accept_labels;
+    requestBody: LabelDocumentsRequest;
   }): CancelablePromise<PerspectivesVisualization> {
     return __request(OpenAPI, {
       method: "PATCH",
@@ -340,9 +328,6 @@ export class PerspectivesService {
       path: {
         project_id: projectId,
         aspect_id: aspectId,
-      },
-      query: {
-        search_query: searchQuery,
       },
       body: requestBody,
       mediaType: "application/json",
@@ -363,13 +348,11 @@ export class PerspectivesService {
   public static revertLabels({
     projectId,
     aspectId,
-    searchQuery,
     requestBody,
   }: {
     projectId: number;
     aspectId: number;
-    searchQuery: string;
-    requestBody: Body_perspectives_revert_labels;
+    requestBody: LabelDocumentsRequest;
   }): CancelablePromise<PerspectivesVisualization> {
     return __request(OpenAPI, {
       method: "PATCH",
@@ -377,9 +360,6 @@ export class PerspectivesService {
       path: {
         project_id: projectId,
         aspect_id: aspectId,
-      },
-      query: {
-        search_query: searchQuery,
       },
       body: requestBody,
       mediaType: "application/json",
@@ -393,24 +373,28 @@ export class PerspectivesService {
     });
   }
   /**
-   * Returns data for visualizing the cluster similarities of the given aspect.
-   * @returns PerspectivesClusterSimilarities Successful Response
+   * Returns data for visualizing the documents of the given aspect.
+   * @returns PerspectivesVisualization Successful Response
    * @throws ApiError
    */
-  public static getClusterSimilarities({
+  public static computeVisualization({
     projectId,
     aspectId,
+    requestBody,
   }: {
     projectId: number;
     aspectId: number;
-  }): CancelablePromise<PerspectivesClusterSimilarities> {
+    requestBody: VisualizationRequest;
+  }): CancelablePromise<PerspectivesVisualization> {
     return __request(OpenAPI, {
-      method: "GET",
-      url: "/projects/{project_id}/perspectives/aspects/{aspect_id}/cluster-similarities",
+      method: "POST",
+      url: "/projects/{project_id}/perspectives/aspects/{aspect_id}/visualization",
       path: {
         project_id: projectId,
         aspect_id: aspectId,
       },
+      body: requestBody,
+      mediaType: "application/json",
       errors: {
         400: `The request breaks a rule of the domain`,
         403: `The user is no member of the project, or the feature is disabled`,

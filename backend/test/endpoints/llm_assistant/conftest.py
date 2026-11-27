@@ -27,7 +27,7 @@ from core.prompt.prompt_dto import (
     PromptCode,
     PromptCreate,
     PromptExample,
-    PromptExamplesCreate,
+    PromptExamplesRequest,
     PromptMetadataField,
     PromptRead,
     PromptTag,
@@ -490,7 +490,7 @@ def job_prompt_project(
         return service.create_prompt_examples(
             db=db_session,
             project_id=project_id,
-            create_dto=PromptExamplesCreate(kind=kind, annotation_ids=annotation_ids),
+            create_dto=PromptExamplesRequest(kind=kind, annotation_ids=annotation_ids),
         )
 
     def prompt(

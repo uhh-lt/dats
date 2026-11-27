@@ -27,8 +27,12 @@ Rules (the rule id is printed with every violation):
                         endpoint emits after the service call.
     no-exception-class  No exception classes; they live in <module>_exceptions.py.
     method-signature    Every public method of a *Service class is keyword-only, with
-                        `db` first and `project_id` second where it takes them
-                        (`self, *, db, project_id, ...`).
+                        `db` first and `project_id` second (`self, *, db,
+                        project_id, ...`), also when it takes `project_id` only;
+                        a job handler `handle_<x>_job` takes `db, [job,] payload`
+                        first; a static method keeps its first parameter. An
+                        exception needs `# check_services: allow method-signature
+                        (<reason>)` directly above it.
 
 Documented variations (VARIATIONS below) skip the shape rules that do not apply:
 
@@ -136,7 +140,10 @@ def has_singleton_meta(cls: ast.ClassDef) -> bool:
     )
 
 
-def check_signatures(cls: ast.ClassDef, p: str) -> list[Violation]:
+ALLOW_RE = re.compile(r"#\s*check_services:\s*allow\s+([\w-]+)")
+
+
+def check_signatures(cls: ast.ClassDef, p: str, lines: list[str]) -> list[Violation]:
     """method-signature: `self, *, db, project_id, ...` for every public method."""
     violations: list[Violation] = []
     for fn in cls.body:
@@ -144,10 +151,25 @@ def check_signatures(cls: ast.ClassDef, p: str) -> list[Violation]:
             continue
         if fn.name.startswith("_"):
             continue
+        def_line = fn.decorator_list[0].lineno if fn.decorator_list else fn.lineno
+        if "method-signature" in ALLOW_RE.findall(lines[def_line - 2]):
+            continue
         args = fn.args
-        positional = [a.arg for a in args.posonlyargs + args.args][1:]
+        static = any(name_of(d) == "staticmethod" for d in fn.decorator_list)
+        positional = [a.arg for a in args.posonlyargs + args.args][0 if static else 1 :]
         keywords = [a.arg for a in args.kwonlyargs]
-        expected = [n for n in ("db", "project_id") if n in keywords]
+        if fn.name.startswith("handle_") and fn.name.endswith("_job"):
+            # a job handler takes the project from its payload
+            expected = (
+                ["db", "job", "payload"] if "job" in keywords else ["db", "payload"]
+            )
+        else:
+            # a method with project_id touches the project's rows, so db comes first
+            expected = [
+                n
+                for n in ("db", "project_id")
+                if n in keywords or "project_id" in keywords
+            ]
         if positional or args.vararg:
             message = f"Positional parameters {positional} (make them keyword-only)."
         elif keywords[: len(expected)] != expected:
@@ -334,7 +356,7 @@ def check_source(path: Path, source: str) -> list[Violation]:
     if kind != SYSTEMS:
         for node in tree.body:
             if isinstance(node, ast.ClassDef) and node.name.endswith("Service"):
-                violations.extend(check_signatures(node, p))
+                violations.extend(check_signatures(node, p, source.splitlines()))
 
     if kind in (PER_JOB, STRATEGY):
         return violations

@@ -1,8 +1,9 @@
-from fastapi import Body, Depends, Query
+from fastapi import Depends
 
 from common.dats_event import DATSEvent
 from common.dependencies import DBSession
 from common.project_router import project_router
+from core.annotation.annotation_document_dto import AnnotationCountRequest
 from core.annotation.sentence_annotation_crud import crud_sentence_anno
 from core.annotation.sentence_annotation_dto import (
     SentenceAnnotationCreate,
@@ -15,7 +16,7 @@ from core.annotation.sentence_annotation_service import SentenceAnnotationServic
 from core.auth.authz_user import AuthzUser
 from systems.websocket_system.websocket_dependency import WebsocketEmitter
 
-router = project_router("/sentence-annotations", tags=["sentenceAnnotation", "mcp"])
+router = project_router("/sentence-annotations", tags=["sentenceAnnotations", "mcp"])
 
 
 # --- create operations
@@ -31,19 +32,15 @@ def create(
     db: DBSession,
     project_id: int,
     sentence_annotation: SentenceAnnotationCreate,
-    user_id: int | None = Query(
-        default=None,
-        description="The current user (default) or a virtual user of the project",
-    ),
     authz_user: AuthzUser = Depends(),
     ws: WebsocketEmitter = Depends(),
 ) -> SentenceAnnotationRead:
-    annotation_user_id = authz_user.assert_can_annotate_as(user_id, project_id)
+    authz_user.assert_can_annotate_as(sentence_annotation.user_id, project_id)
 
     result = SentenceAnnotationService().create(
         db=db,
         project_id=project_id,
-        user_id=annotation_user_id,
+        user_id=authz_user.user.id,
         create_dto=sentence_annotation,
     )
     ws.emit_to_project(
@@ -62,19 +59,16 @@ def create_bulk(
     db: DBSession,
     project_id: int,
     sentence_annotations: list[SentenceAnnotationCreate],
-    user_id: int | None = Query(
-        default=None,
-        description="The current user (default) or a virtual user of the project",
-    ),
     authz_user: AuthzUser = Depends(),
     ws: WebsocketEmitter = Depends(),
 ) -> list[SentenceAnnotationRead]:
-    annotation_user_id = authz_user.assert_can_annotate_as(user_id, project_id)
+    for user_id in dict.fromkeys(dto.user_id for dto in sentence_annotations):
+        authz_user.assert_can_annotate_as(user_id, project_id)
 
     results = SentenceAnnotationService().create_multi(
         db=db,
         project_id=project_id,
-        user_id=annotation_user_id,
+        user_id=authz_user.user.id,
         create_dtos=sentence_annotations,
     )
     if results:
@@ -110,14 +104,14 @@ def get_by_project(
 
 
 @router.get(
-    "/per-sentence",
+    "/sentence-map",
     response_model=SentenceAnnotatorResult,
     summary=(
         "Returns the SentenceAnnotations of the User in the SourceDocument, grouped "
         "by sentence"
     ),
 )
-def get_per_sentence(
+def get_sentence_map(
     *,
     db: DBSession,
     project_id: int,
@@ -246,7 +240,7 @@ def delete_by_id(
 
 
 @router.post(
-    "/count",
+    "/counts",
     response_model=dict[int, int],
     summary=(
         "Counts the SentenceAnnotations of the User per Code (by code_ids) in the "
@@ -257,14 +251,12 @@ def count(
     *,
     db: DBSession,
     project_id: int,
-    user_id: int,
-    sdoc_ids: list[int] = Body(description="The SourceDocuments to count in"),
-    code_ids: list[int] = Body(description="The Codes to count"),
+    request: AnnotationCountRequest,
 ) -> dict[int, int]:
     return crud_sentence_anno.count_by_codes_and_sdocs_and_user(
         db=db,
         project_id=project_id,
-        code_ids=code_ids,
-        sdoc_ids=sdoc_ids,
-        user_id=user_id,
+        code_ids=request.code_ids,
+        sdoc_ids=request.sdoc_ids,
+        user_id=request.user_id,
     )

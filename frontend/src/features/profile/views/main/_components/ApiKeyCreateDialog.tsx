@@ -62,7 +62,7 @@ export function ApiKeyCreateDialog() {
   const handleApiKeyCreation = useCallback<SubmitHandler<ApiKeyCreateFormValues>>(
     (data) => {
       createApiKeyMutation(
-        { name: data.name, expiresIn: data.expiresIn },
+        { requestBody: { name: data.name, expires_in: data.expiresIn } },
         {
           onSuccess: (createdKey) => {
             setCreatedKey(createdKey);

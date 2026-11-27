@@ -113,6 +113,7 @@ A CRUD with no custom methods is just `class CRUDAspect(ProjectCRUDBase[...]):` 
   - filters that cannot be split into separate queries, such as `notin_(...)` and `.any(... .in_(...))` (see `crud_sdoc.read_all_without_tags`, `crud_sdoc.read_by_tags`).
 - Return early on empty input (`if not ids: return []` / `return 0` / `return {}`).
 - Bulk deletes use `delete(Model).where(...)` via `db.execute`, `assert isinstance(result, CursorResult)` and sum `result.rowcount` (see `SQLCRUDBase.delete_multi`).
+- **Defined order**: a read that returns several rows has a defined, complete order: it sorts by its sort columns and then by the row's key (`.order_by(self.model.id)`), also for grouped and aggregated rows (`array_agg(... ORDER BY ...)` via `aggregate_ids`), and a batch method returns the order of its input (below).
 - **Input order**: every batch method returns its results in the order of its input (`create_dtos`, `ids`). Queries with `IN`, `RETURNING` or `ON CONFLICT` return rows in any order, so map them back to the input explicitly (see `SQLCRUDBase.read_by_ids`).
 - `read_by_ids`-style methods raise `NoSuchElementError` for missing ids and repeat duplicate ids in the result. `update_multi` rejects duplicate ids with `DuplicateIdsError` (`common/common_exceptions.py`, HTTP 400); `delete_multi` ignores duplicate and missing ids and returns the number of deleted rows.
 - `delete_multi` returns a count, not the deleted objects. Callers that need them (e.g. for websocket events) read them with `read_by_ids` before deleting.

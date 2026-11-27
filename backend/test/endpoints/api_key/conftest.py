@@ -5,7 +5,7 @@ import pytest
 from dateutil.relativedelta import relativedelta
 
 from core.auth.api_key_crud import crud_api_key
-from core.auth.api_key_dto import ApiKeyCreate
+from core.auth.api_key_dto import ApiKeyCreateIntern
 from core.auth.api_key_orm import ApiKeyORM
 from core.auth.security import hash_api_key
 from core.user.user_crud import crud_user
@@ -48,7 +48,7 @@ def api_key_project(db_session, test_user) -> ApiKeyProjectState:
 
     user_key_expiring = crud_api_key.create(
         db=db_session,
-        create_dto=ApiKeyCreate(
+        create_dto=ApiKeyCreateIntern(
             name="Expiring Key",
             prefix="dats_expire...",
             hashed_key=hash_api_key("dats_expire_raw"),
@@ -59,7 +59,7 @@ def api_key_project(db_session, test_user) -> ApiKeyProjectState:
     )
     user_key_never = crud_api_key.create(
         db=db_session,
-        create_dto=ApiKeyCreate(
+        create_dto=ApiKeyCreateIntern(
             name="Never Key",
             prefix="dats_never...",
             hashed_key=hash_api_key("dats_never_raw"),
@@ -80,7 +80,7 @@ def api_key_project(db_session, test_user) -> ApiKeyProjectState:
     )
     other_user_key = crud_api_key.create(
         db=db_session,
-        create_dto=ApiKeyCreate(
+        create_dto=ApiKeyCreateIntern(
             name="Other User Key",
             prefix="dats_other...",
             hashed_key=hash_api_key("dats_other_raw"),

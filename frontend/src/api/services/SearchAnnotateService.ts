@@ -2,6 +2,7 @@
 /* istanbul ignore file */
 /* tslint:disable */
 /* eslint-disable */
+import type { CandidateRequest } from "@models/CandidateRequest";
 import type { PaginatedSpanAnnotationHits } from "@models/PaginatedSpanAnnotationHits";
 import type { CancelablePromise } from "../core/CancelablePromise";
 import { OpenAPI } from "../core/OpenAPI";
@@ -14,10 +15,10 @@ export class SearchAnnotateService {
    */
   public static computeCandidates({
     projectId,
-    query,
+    requestBody,
   }: {
     projectId: number;
-    query: string;
+    requestBody: CandidateRequest;
   }): CancelablePromise<PaginatedSpanAnnotationHits> {
     return __request(OpenAPI, {
       method: "POST",
@@ -25,9 +26,8 @@ export class SearchAnnotateService {
       path: {
         project_id: projectId,
       },
-      query: {
-        query: query,
-      },
+      body: requestBody,
+      mediaType: "application/json",
       errors: {
         400: `The request breaks a rule of the domain`,
         403: `The user is no member of the project, or the feature is disabled`,

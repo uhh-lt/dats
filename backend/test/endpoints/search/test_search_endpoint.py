@@ -89,9 +89,9 @@ SPAN_URL = "/search/span-annotations"
 SENT_URL = "/search/sentence-annotations"
 BBOX_URL = "/search/bbox-annotations"
 
-SPAN_INFO_URL = "/search/span-annotations/info"
-SENT_INFO_URL = "/search/sentence-annotations/info"
-BBOX_INFO_URL = "/search/bbox-annotations/info"
+SPAN_INFO_URL = "/search/span-annotations/columns"
+SENT_INFO_URL = "/search/sentence-annotations/columns"
+BBOX_INFO_URL = "/search/bbox-annotations/columns"
 
 SPAN_GROUPS_URL = "/search/span-annotations/groups"
 SENT_GROUPS_URL = "/search/sentence-annotations/groups"
@@ -148,7 +148,7 @@ def _on_sdoc_one_indices(entity: str) -> set[int]:
 
 
 # ===========================================================================
-# SEARCH MEMO INFO (/search/memos/info) TESTS
+# SEARCH MEMO INFO (/search/memos/columns) TESTS
 # ===========================================================================
 
 
@@ -156,7 +156,7 @@ def test_memo_info_marks_all_columns_except_content_groupable(
     client: TestClient, search_project
 ):
     """Memo info exposes every MemoColumns member; all but CONTENT are groupable."""
-    response = client.get(_url("/search/memos/info", search_project["project"].id))
+    response = client.get(_url("/search/memos/columns", search_project["project"].id))
     assert response.status_code == 200, response.text
     infos = [ColumnInfo[MemoColumns].model_validate(x) for x in response.json()]
     groupable = {info.column for info in infos if info.groupable}
@@ -1107,6 +1107,35 @@ def test_memo_search_paginates_rows_without_overlap(client: TestClient, search_p
     assert len(page1.items) == 2
     # No overlap between pages.
     assert {m.id for m in page0.items}.isdisjoint({m.id for m in page1.items})
+
+
+@pytest.mark.parametrize("direction", [SortDirection.ASC, SortDirection.DESC])
+def test_memo_search_pages_every_row_once_when_the_sort_values_tie(
+    client: TestClient, search_project, direction: SortDirection
+):
+    """Sorted by the author, four memos tie on `user` and three on
+    `other_user`; the memo id breaks the ties, so pages of two return each of
+    the seven memos exactly once, in the same order as one page of all."""
+
+    def _ids(page_number: int, page_size: int) -> list[int]:
+        request = QueryRequest[MemoColumns](
+            search_query="",
+            filter=empty_filter(),
+            sorts=[Sort[MemoColumns](column=MemoColumns.USER_ID, direction=direction)],
+            page_number=page_number,
+            page_size=page_size,
+        )
+        response = client.post(
+            _url("/search/memos", search_project["project"].id),
+            json=request.model_dump(mode="json"),
+        )
+        assert response.status_code == 200, response.text
+        return [m.id for m in Page[MemoRead].model_validate(response.json()).items]
+
+    paged = [memo_id for page in range(4) for memo_id in _ids(page, 2)]
+
+    assert paged == _ids(0, 20)
+    assert sorted(paged) == sorted(m.id for m in search_project["memos"])
 
 
 # --- D. drill-down (group_by + group_key) ------------------------------------------
@@ -3256,12 +3285,10 @@ def test_search_group_by_source_user_counts_copies_per_source_user(
 def _search_sdocs(client: TestClient, project_id: int, search_query: str):
     return client.post(
         _url("/search/source-documents", project_id),
-        params={
+        json={
             "search_query": search_query,
             "expert_mode": False,
             "highlight": False,
-        },
-        json={
             "filter": {"id": "root", "logic_operator": "and", "items": []},
             "sorts": [],
         },
@@ -3325,8 +3352,10 @@ def test_search_sdocs_by_a_tag_of_another_project_matches_nothing(
 
     response = client.post(
         _url("/search/source-documents", own["project"].id),
-        params={"search_query": "", "expert_mode": False, "highlight": False},
         json={
+            "search_query": "",
+            "expert_mode": False,
+            "highlight": False,
             "filter": _id_filter(SdocColumns.TAG_ID_LIST_RECURSIVE.value, tag.id),
             "sorts": [],
         },
@@ -3402,8 +3431,10 @@ def test_search_sdocs_by_a_metadata_of_another_project_answers_404(
 
     response = client.post(
         _url("/search/source-documents", own["project"].id),
-        params={"search_query": "", "expert_mode": False, "highlight": False},
         json={
+            "search_query": "",
+            "expert_mode": False,
+            "highlight": False,
             "filter": {
                 "id": "root",
                 "logic_operator": "and",

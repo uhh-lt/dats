@@ -8,16 +8,19 @@ from repos.llm_repo import LLMRepo
 from systems.feature_system.feature_dto import FeatureRead
 from systems.feature_system.feature_service import FeatureService
 
-router = APIRouter(tags=["general"])
+# the instance information; no prefix, as the router also serves the root `/`
+router = APIRouter(tags=["info"])
 
 
-@router.get("/heartbeat")
-def heartbeat():
-    return True
+# --- read operations
 
 
-@router.get("/info", response_model=InstanceInfo)
-def info():
+@router.get(
+    "/info",
+    response_model=InstanceInfo,
+    summary="Returns the information of the DATS instance",
+)
+def get_info():
     return InstanceInfo(
         is_oidc_enabled=len(conf.auth.oidc) > 0
         and any(x.enabled for x in conf.auth.oidc),
@@ -33,7 +36,7 @@ def info():
     response_model=list[str],
     summary="Get all available LLM models from the LLM Provider",
 )
-def get_available_models() -> list[str]:
+def get_llms() -> list[str]:
     return LLMRepo().get_available_llms()
 
 
@@ -47,7 +50,7 @@ def get_features() -> list[FeatureRead]:
     return FeatureService().read_all()
 
 
-# Allow to view docs without being logged in (?)
-@router.get("/", summary="Redirection to /docs")
+# a browser redirect to the docs, no API route: hidden from the schema
+@router.get("/", include_in_schema=False)
 def root_to_docs():
     return RedirectResponse("/docs")

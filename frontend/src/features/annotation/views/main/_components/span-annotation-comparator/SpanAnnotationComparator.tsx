@@ -189,8 +189,8 @@ export const SpanAnnotationComparison = memo(({ sdocData, ...props }: SpanAnnota
           span_text: annotation.text,
           // records the provenance of the copy
           source_annotation_id: annotation.id,
+          user_id: editableUserId,
         },
-        userId: editableUserId,
       });
     },
     [createMutation, editableUserId, sdocData.project_id],
@@ -226,9 +226,10 @@ export const SpanAnnotationComparison = memo(({ sdocData, ...props }: SpanAnnota
       end_token: anno.end_token,
       span_text: anno.text,
       source_annotation_id: anno.id,
+      user_id: editableUserId,
     }));
 
-    createBulkMutation.mutate({ projectId: sdocData.project_id, requestBody: toCreate, userId: editableUserId });
+    createBulkMutation.mutate({ projectId: sdocData.project_id, requestBody: toCreate });
   };
 
   const handleRevertAll = () => {
@@ -434,7 +435,7 @@ export const SpanAnnotationComparison = memo(({ sdocData, ...props }: SpanAnnota
     };
     setPendingAnnotations((prev) => [...prev, { ...pending, code_id: codeId }]);
     createMutation.mutate(
-      { projectId: sdocData.project_id, requestBody, userId: editableUserId },
+      { projectId: sdocData.project_id, requestBody: { ...requestBody, user_id: editableUserId } },
       {
         onSuccess,
         // remove the pending preview once the real annotation is in the cache (or the request failed)

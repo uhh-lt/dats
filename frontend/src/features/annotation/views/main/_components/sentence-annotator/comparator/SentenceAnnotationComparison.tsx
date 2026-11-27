@@ -33,12 +33,13 @@ const isSentenceAnnotation = (annotation: Annotation): annotation is SentenceAnn
 };
 
 // copying the other user's annotation records it as the source (provenance)
-const toCopyCreate = (annotation: SentenceAnnotationRead): SentenceAnnotationCreate => ({
+const toCopyCreate = (annotation: SentenceAnnotationRead, userId: number | undefined): SentenceAnnotationCreate => ({
   code_id: annotation.code_id,
   sdoc_id: annotation.sdoc_id,
   sentence_id_start: annotation.sentence_id_start,
   sentence_id_end: annotation.sentence_id_end,
   source_annotation_id: annotation.id,
+  user_id: userId,
 });
 
 export const SentenceAnnotationComparison = memo(
@@ -143,7 +144,7 @@ export const SentenceAnnotationComparison = memo(
       const pending = toPendingSentenceAnnotation(requestBody, editableUserId, sdocData.project_id);
       setPendingAnnotations((prev) => [...prev, pending]);
       createMutation.mutate(
-        { projectId: sdocData.project_id, requestBody, userId: editableUserId },
+        { projectId: sdocData.project_id, requestBody: { ...requestBody, user_id: editableUserId } },
         {
           onSuccess,
           onSettled: () => {
@@ -248,8 +249,7 @@ export const SentenceAnnotationComparison = memo(
 
       createBulkMutation.mutate({
         projectId: sdocData.project_id,
-        userId: editableUserId,
-        requestBody: newAnnotations.map(toCopyCreate),
+        requestBody: newAnnotations.map((annotation) => toCopyCreate(annotation, editableUserId)),
       });
     };
 
@@ -294,8 +294,7 @@ export const SentenceAnnotationComparison = memo(
     const handleApplyAnnotation = (annotation: SentenceAnnotationRead) => {
       createMutation.mutate({
         projectId: sdocData.project_id,
-        userId: editableUserId,
-        requestBody: toCopyCreate(annotation),
+        requestBody: toCopyCreate(annotation, editableUserId),
       });
     };
 

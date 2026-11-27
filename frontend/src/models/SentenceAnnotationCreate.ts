@@ -23,4 +23,8 @@ export type SentenceAnnotationCreate = {
    * SentenceAnnotation this one is copied from (e.g. accepted in the annotation comparison); records the provenance
    */
   source_annotation_id?: number | null;
+  /**
+   * The user the annotation belongs to: the current user (default) or a virtual user of the project
+   */
+  user_id?: number | null;
 };

@@ -9,8 +9,11 @@ from config import conf
 from core.doc.source_document_crud import crud_sdoc
 from core.doc.source_document_file_crud import crud_sdoc_file
 from core.doc_processing.doc_processing_dto import (
+    DocProcessingRecomputeRequest,
+    DocProcessingRetryRequest,
     SdocHealthColumn,
     SdocHealthResult,
+    SdocHealthSearchRequest,
     SdocHealthSort,
     SdocInitJobInput,
 )
@@ -439,17 +442,39 @@ def test_search_statuses_sorts_by_the_status_of_a_step_or_a_column(
     counts all text documents."""
     response = client.post(
         f"/projects/{feature_project['project'].id}/doc-processing/statuses",
-        params={"doctype": DocType.text.value, "page": 0, "page_size": page_size},
-        json=[
-            SdocHealthSort(column=column, direction=direction).model_dump()
-            for column, direction in sorts
-        ],
+        json=SdocHealthSearchRequest(
+            doctype=DocType.text,
+            sorts=[
+                SdocHealthSort(column=column, direction=direction)
+                for column, direction in sorts
+            ],
+            page_number=0,
+            page_size=page_size,
+        ).model_dump(mode="json"),
     )
 
     assert response.status_code == 200, response.text
     result = SdocHealthResult.model_validate(response.json())
     assert [row.name for row in result.data] == expected
     assert result.total_results == 2
+
+
+def test_search_statuses_by_an_unknown_column_is_rejected(
+    client: TestClient, feature_project: FeatureProject
+):
+    """A sort column that is neither a step nor a column of the document
+    answers 400."""
+    response = client.post(
+        f"/projects/{feature_project['project'].id}/doc-processing/statuses",
+        json=SdocHealthSearchRequest(
+            doctype=DocType.text,
+            sorts=[SdocHealthSort(column="__class__", direction=SortDirection.ASC)],
+            page_number=0,
+            page_size=10,
+        ).model_dump(mode="json"),
+    )
+
+    assert response.status_code == 400, response.text
 
 
 def test_search_statuses_ignores_the_row_of_an_unregistered_step(
@@ -460,8 +485,9 @@ def test_search_statuses_ignores_the_row_of_an_unregistered_step(
     usual."""
     response = client.post(
         f"/projects/{removed_step_project['project'].id}/doc-processing/statuses",
-        params={"doctype": DocType.text.value, "page": 0, "page_size": 10},
-        json=[],
+        json=SdocHealthSearchRequest(
+            doctype=DocType.text, page_number=0, page_size=10
+        ).model_dump(mode="json"),
     )
 
     assert response.status_code == 200, response.text
@@ -551,8 +577,9 @@ def test_retry_requeues_a_failed_step_job_which_runs(
 
     response = client.post(
         f"/projects/{p['project'].id}/doc-processing/retry",
-        params={"doctype": DocType.text.value},
-        json=[sdoc_id],
+        json=DocProcessingRetryRequest(
+            doctype=DocType.text, sdoc_ids=[sdoc_id]
+        ).model_dump(mode="json"),
     )
 
     assert response.status_code == 200, response.text
@@ -582,8 +609,9 @@ def test_retry_of_a_document_of_another_project_retries_nothing(
 
     response = client.post(
         f"/projects/{test_project.id}/doc-processing/retry",
-        params={"doctype": DocType.text.value},
-        json=[sdoc_id],
+        json=DocProcessingRetryRequest(
+            doctype=DocType.text, sdoc_ids=[sdoc_id]
+        ).model_dump(mode="json"),
     )
 
     assert response.status_code == 200, response.text
@@ -601,8 +629,9 @@ def test_retry_of_a_document_of_another_project_retries_nothing(
 def _recompute(client: TestClient, project_id: int, step: str, sdoc_ids: list[int]):
     return client.post(
         f"/projects/{project_id}/doc-processing/recompute",
-        params={"processing_step": step},
-        json={"sdoc_ids": sdoc_ids, "settings": SETTINGS.model_dump(mode="json")},
+        json=DocProcessingRecomputeRequest(
+            processing_step=step, sdoc_ids=sdoc_ids, settings=SETTINGS
+        ).model_dump(mode="json"),
     )
 
 
@@ -636,6 +665,20 @@ def test_recompute_of_a_document_of_another_project_is_not_found(
     response = _recompute(client, test_project.id, "language_detection", [sdoc_id])
 
     assert response.status_code == 404, response.text
+    assert started_steps(held_jobs) == {}
+
+
+def test_recompute_without_documents_is_rejected(
+    client: TestClient,
+    recompute_project: RecomputeProject,
+    held_jobs: HeldJobs,
+):
+    """An empty document list answers 400 and starts nothing."""
+    response = _recompute(
+        client, recompute_project["project"].id, "language_detection", []
+    )
+
+    assert response.status_code == 400, response.text
     assert started_steps(held_jobs) == {}
 
 

@@ -1,8 +1,9 @@
-from fastapi import Body, Depends, Query
+from fastapi import Depends
 
 from common.dats_event import DATSEvent
 from common.dependencies import DBSession
 from common.project_router import project_router
+from core.annotation.annotation_document_dto import AnnotationCountRequest
 from core.annotation.span_annotation_crud import crud_span_anno
 from core.annotation.span_annotation_dto import (
     SpanAnnotationCreate,
@@ -12,11 +13,10 @@ from core.annotation.span_annotation_dto import (
     SpanAnnotationUpdateBulk,
 )
 from core.annotation.span_annotation_service import SpanAnnotationService
-from core.annotation.span_group_dto import SpanGroupRead
 from core.auth.authz_user import AuthzUser
 from systems.websocket_system.websocket_dependency import WebsocketEmitter
 
-router = project_router("/span-annotations", tags=["spanAnnotation", "mcp"])
+router = project_router("/span-annotations", tags=["spanAnnotations", "mcp"])
 
 
 # --- create operations
@@ -32,17 +32,13 @@ def create(
     db: DBSession,
     project_id: int,
     span: SpanAnnotationCreate,
-    user_id: int | None = Query(
-        default=None,
-        description="The current user (default) or a virtual user of the project",
-    ),
     authz_user: AuthzUser = Depends(),
     ws: WebsocketEmitter = Depends(),
 ) -> SpanAnnotationRead:
-    annotation_user_id = authz_user.assert_can_annotate_as(user_id, project_id)
+    authz_user.assert_can_annotate_as(span.user_id, project_id)
 
     result = SpanAnnotationService().create(
-        db=db, project_id=project_id, user_id=annotation_user_id, create_dto=span
+        db=db, project_id=project_id, user_id=authz_user.user.id, create_dto=span
     )
     ws.emit_to_project(DATSEvent.SPAN_ANNOTATION_CREATED, result, project_id=project_id)
     return result
@@ -58,44 +54,20 @@ def create_bulk(
     db: DBSession,
     project_id: int,
     spans: list[SpanAnnotationCreate],
-    user_id: int | None = Query(
-        default=None,
-        description="The current user (default) or a virtual user of the project",
-    ),
     authz_user: AuthzUser = Depends(),
     ws: WebsocketEmitter = Depends(),
 ) -> list[SpanAnnotationRead]:
-    annotation_user_id = authz_user.assert_can_annotate_as(user_id, project_id)
+    for user_id in dict.fromkeys(dto.user_id for dto in spans):
+        authz_user.assert_can_annotate_as(user_id, project_id)
 
     results = SpanAnnotationService().create_multi(
-        db=db, project_id=project_id, user_id=annotation_user_id, create_dtos=spans
+        db=db, project_id=project_id, user_id=authz_user.user.id, create_dtos=spans
     )
     if results:
         ws.emit_to_project(
             DATSEvent.SPAN_ANNOTATION_CREATED_BATCH, results, project_id=project_id
         )
     return results
-
-
-@router.put(
-    "/{span_annotation_id}/span-groups/{span_group_id}",
-    response_model=SpanAnnotationRead,
-    summary="Adds the SpanAnnotation to the SpanGroup",
-)
-def add_to_span_group(
-    *,
-    db: DBSession,
-    project_id: int,
-    span_annotation_id: int,
-    span_group_id: int,
-    ws: WebsocketEmitter = Depends(),
-) -> SpanAnnotationRead:
-    db_obj = crud_span_anno.add_to_span_group(
-        db=db, project_id=project_id, span_id=span_annotation_id, group_id=span_group_id
-    )
-    result = SpanAnnotationRead.model_validate(db_obj)
-    ws.emit_to_project(DATSEvent.SPAN_ANNOTATION_UPDATED, result, project_id=project_id)
-    return result
 
 
 # --- read operations
@@ -136,21 +108,6 @@ def get_by_id(
 ) -> SpanAnnotationRead:
     db_obj = crud_span_anno.read(db=db, project_id=project_id, id=span_annotation_id)
     return SpanAnnotationRead.model_validate(db_obj)
-
-
-@router.get(
-    "/{span_annotation_id}/span-groups",
-    response_model=list[SpanGroupRead],
-    summary="Returns all SpanGroups that contain the SpanAnnotation.",
-)
-def get_span_groups(
-    *,
-    db: DBSession,
-    project_id: int,
-    span_annotation_id: int,
-) -> list[SpanGroupRead]:
-    db_obj = crud_span_anno.read(db=db, project_id=project_id, id=span_annotation_id)
-    return [SpanGroupRead.model_validate(group) for group in db_obj.span_groups]
 
 
 # --- update operations
@@ -242,52 +199,11 @@ def delete_by_id(
     return result
 
 
-@router.delete(
-    "/{span_annotation_id}/span-groups",
-    response_model=SpanAnnotationRead,
-    summary="Removes the SpanAnnotation from all SpanGroups",
-)
-def remove_from_all_span_groups(
-    *,
-    db: DBSession,
-    project_id: int,
-    span_annotation_id: int,
-    ws: WebsocketEmitter = Depends(),
-) -> SpanAnnotationRead:
-    db_obj = crud_span_anno.remove_from_all_span_groups(
-        db=db, project_id=project_id, span_id=span_annotation_id
-    )
-    result = SpanAnnotationRead.model_validate(db_obj)
-    ws.emit_to_project(DATSEvent.SPAN_ANNOTATION_UPDATED, result, project_id=project_id)
-    return result
-
-
-@router.delete(
-    "/{span_annotation_id}/span-groups/{span_group_id}",
-    response_model=SpanAnnotationRead,
-    summary="Removes the SpanAnnotation from the SpanGroup",
-)
-def remove_from_span_group(
-    *,
-    db: DBSession,
-    project_id: int,
-    span_annotation_id: int,
-    span_group_id: int,
-    ws: WebsocketEmitter = Depends(),
-) -> SpanAnnotationRead:
-    db_obj = crud_span_anno.remove_from_span_group(
-        db=db, project_id=project_id, span_id=span_annotation_id, group_id=span_group_id
-    )
-    result = SpanAnnotationRead.model_validate(db_obj)
-    ws.emit_to_project(DATSEvent.SPAN_ANNOTATION_UPDATED, result, project_id=project_id)
-    return result
-
-
 # --- other operations
 
 
 @router.post(
-    "/count",
+    "/counts",
     response_model=dict[int, int],
     summary=(
         "Counts the SpanAnnotations of the User per Code (by code_ids) in the "
@@ -298,14 +214,12 @@ def count(
     *,
     db: DBSession,
     project_id: int,
-    user_id: int,
-    sdoc_ids: list[int] = Body(description="The SourceDocuments to count in"),
-    code_ids: list[int] = Body(description="The Codes to count"),
+    request: AnnotationCountRequest,
 ) -> dict[int, int]:
     return crud_span_anno.count_by_codes_and_sdocs_and_user(
         db=db,
         project_id=project_id,
-        code_ids=code_ids,
-        sdoc_ids=sdoc_ids,
-        user_id=user_id,
+        code_ids=request.code_ids,
+        sdoc_ids=request.sdoc_ids,
+        user_id=request.user_id,
     )

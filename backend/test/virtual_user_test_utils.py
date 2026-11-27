@@ -15,7 +15,7 @@ from core.annotation.span_annotation_dto import SpanAnnotationCreate
 from core.annotation.span_annotation_orm import SpanAnnotationORM
 from core.annotation.span_annotation_service import SpanAnnotationService
 from core.auth.api_key_crud import crud_api_key
-from core.auth.api_key_dto import ApiKeyCreate
+from core.auth.api_key_dto import ApiKeyCreateIntern
 from core.auth.security import generate_api_key, hash_api_key
 from core.code.code_crud import crud_code
 from core.code.code_dto import CodeCreate
@@ -173,7 +173,7 @@ def create_virtual_user_project(
         api_key = generate_api_key()
         crud_api_key.create(
             db=db_session,
-            create_dto=ApiKeyCreate(
+            create_dto=ApiKeyCreateIntern(
                 name="key",
                 prefix=api_key[:12],
                 hashed_key=hash_api_key(api_key),

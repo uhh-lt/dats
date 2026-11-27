@@ -11,7 +11,7 @@ from systems.job_system.job_dto import JobInputBase, JobRead
 from systems.job_system.job_service import JobService
 from systems.job_system.job_system_enum import EndpointGeneration
 
-router = project_router("/jobs", tags=["job"])
+router = project_router("/jobs", tags=["jobs"])
 
 
 job_service = JobService()

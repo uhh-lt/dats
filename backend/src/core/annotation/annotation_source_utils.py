@@ -2,6 +2,8 @@ from typing import Any, Protocol, Sequence, TypeVar
 
 from sqlalchemy.orm import Session
 
+from core.annotation.annotation_document_crud import crud_adoc
+from core.annotation.annotation_document_orm import AnnotationDocumentORM
 from core.annotation.annotation_exceptions import AnnotationSourceError
 from core.annotation.bbox_annotation_orm import BBoxAnnotationORM
 from core.annotation.sentence_annotation_orm import SentenceAnnotationORM
@@ -24,8 +26,44 @@ class AnnotationCopyCreate(Protocol):
     @property
     def source_annotation_id(self) -> int | None: ...
 
+    @property
+    def user_id(self) -> int | None: ...
+
 
 AnnotationCreate = TypeVar("AnnotationCreate", bound=AnnotationCopyCreate)
+
+
+def read_annotation_documents(
+    db: Session,
+    *,
+    project_id: int,
+    user_id: int,
+    create_dtos: Sequence[AnnotationCopyCreate],
+) -> dict[tuple[int, int], AnnotationDocumentORM]:
+    """
+    Find or create the annotation document of every user and source document of
+    the new annotations, one query per user.
+
+    Args:
+        project_id: The project of the new annotations.
+        user_id: The user of the annotations whose `user_id` is not set.
+        create_dtos: The annotations to create.
+
+    Returns:
+        The annotation documents by (user id, source document id).
+    """
+    sdoc_ids_by_user: dict[int, list[int]] = {}
+    for create_dto in create_dtos:
+        sdoc_ids = sdoc_ids_by_user.setdefault(create_dto.user_id or user_id, [])
+        if create_dto.sdoc_id not in sdoc_ids:
+            sdoc_ids.append(create_dto.sdoc_id)
+    return {
+        (adoc_user_id, sdoc_id): adoc
+        for adoc_user_id, sdoc_ids in sdoc_ids_by_user.items()
+        for sdoc_id, adoc in crud_adoc.exists_or_create_multi(
+            db=db, project_id=project_id, user_id=adoc_user_id, sdoc_ids=sdoc_ids
+        ).items()
+    }
 
 
 def read_annotation_sources(

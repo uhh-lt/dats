@@ -1,15 +1,16 @@
 import { queryClient } from "@api/queryClient";
 import { SearchService } from "@api/services/SearchService";
-import { SourceDocumentService } from "@api/services/SourceDocumentService";
-import { TagService } from "@api/services/TagService";
+import { SourceDocumentsService } from "@api/services/SourceDocumentsService";
+import { TagsService } from "@api/services/TagsService";
 import { tableInfoQueries, toColumnInfos } from "@core/filter";
 import { folderQueries } from "@core/folder";
 import { tagQueries } from "@core/tag";
 import { FolderType } from "@models/FolderType";
+import type { SourceDocumentSearchRequest } from "@models/SourceDocumentSearchRequest";
 import { infiniteQueryOptions, queryOptions, skipToken } from "@tanstack/react-query";
 
-/** The arguments of the document search, as the backend takes them (the page and the highlighting are added by the query). */
-type SdocSearchRequest = Omit<Parameters<typeof SearchService.searchSdocs>[0], "pageNumber" | "highlight">;
+/** The document search request, as the backend takes it (the page and the highlighting are added by the query). */
+type SdocSearchRequest = Omit<SourceDocumentSearchRequest, "page_number" | "highlight">;
 
 /**
  * Query factory for source documents (sdocs).
@@ -24,7 +25,7 @@ type SdocSearchRequest = Omit<Parameters<typeof SearchService.searchSdocs>[0], "
  *   sdocQueries.idsByTag(projectId, tagId)     ["sdoc", "project", projectId, "idsByTag", tagId]
  *   sdocQueries.annotators(projectId, sdocId)  ["sdoc", "project", projectId, "annotators", sdocId]
  *   sdocQueries.tableInfo(projectId)           ["tableInfo", "project", projectId, "sdoc"]
- *   sdocQueries.search(request)                ["sdoc", "project", projectId, "search", request]
+ *   sdocQueries.search(projectId, request)     ["sdoc", "project", projectId, "search", request]
  */
 export const sdocQueries = {
   all: () => ["sdoc"] as const,
@@ -36,7 +37,7 @@ export const sdocQueries = {
   byId: (projectId: number, sdocId: number) =>
     queryOptions({
       queryKey: [...sdocQueries.byIdScope(projectId), sdocId] as const,
-      queryFn: () => SourceDocumentService.getById({ projectId, sdocId }),
+      queryFn: () => SourceDocumentsService.getById({ projectId, sdocId }),
       staleTime: Infinity,
     }),
 
@@ -45,7 +46,7 @@ export const sdocQueries = {
   data: (projectId: number, sdocId: number) =>
     queryOptions({
       queryKey: [...sdocQueries.dataScope(projectId), sdocId] as const,
-      queryFn: () => SourceDocumentService.getByIdWithData({ projectId, sdocId }),
+      queryFn: () => SourceDocumentsService.getData({ projectId, sdocId }),
       staleTime: Infinity,
     }),
 
@@ -57,7 +58,7 @@ export const sdocQueries = {
       queryFn: !filename
         ? skipToken
         : () =>
-            SourceDocumentService.getByProject({ projectId, filename, onlyFinished: true }).then((sdocs) => {
+            SourceDocumentsService.getByProject({ projectId, filename, onlyFinished: true }).then((sdocs) => {
               if (sdocs.length === 0) throw new Error(`No document with the filename ${filename}`);
               return sdocs[0].id;
             }),
@@ -70,7 +71,7 @@ export const sdocQueries = {
   sameFolder: (projectId: number | null | undefined, sdocId: number | null | undefined) =>
     queryOptions({
       queryKey: [...sdocQueries.sameFolderScope(projectId), sdocId] as const,
-      queryFn: !projectId || !sdocId ? skipToken : () => SourceDocumentService.getSiblings({ projectId, sdocId }),
+      queryFn: !projectId || !sdocId ? skipToken : () => SourceDocumentsService.getSiblings({ projectId, sdocId }),
       staleTime: Infinity,
     }),
 
@@ -80,7 +81,7 @@ export const sdocQueries = {
   urls: (projectId: number | null | undefined, sdocId: number | null | undefined) =>
     queryOptions({
       queryKey: [...sdocQueries.urlsScope(projectId), sdocId] as const,
-      queryFn: !projectId || !sdocId ? skipToken : () => SourceDocumentService.getUrls({ projectId, sdocId }),
+      queryFn: !projectId || !sdocId ? skipToken : () => SourceDocumentsService.getUrls({ projectId, sdocId }),
     }),
 
   // ids of the sdocs that carry a tag
@@ -89,7 +90,7 @@ export const sdocQueries = {
   idsByTag: (projectId: number | null | undefined, tagId: number | null | undefined) =>
     queryOptions({
       queryKey: [...sdocQueries.idsByTagScope(projectId), tagId] as const,
-      queryFn: !projectId || !tagId ? skipToken : () => TagService.getSdocIdsByTagId({ projectId, tagId }),
+      queryFn: !projectId || !tagId ? skipToken : () => TagsService.getSourceDocuments({ projectId, tagId }),
     }),
 
   // user ids that annotated the sdoc
@@ -98,7 +99,7 @@ export const sdocQueries = {
   annotators: (projectId: number | null | undefined, sdocId: number | null | undefined) =>
     queryOptions({
       queryKey: [...sdocQueries.annotatorsScope(projectId), sdocId] as const,
-      queryFn: !projectId || !sdocId ? skipToken : () => SourceDocumentService.getAnnotators({ projectId, sdocId }),
+      queryFn: !projectId || !sdocId ? skipToken : () => SourceDocumentsService.getAnnotators({ projectId, sdocId }),
       staleTime: 1000 * 60 * 5,
     }),
 
@@ -106,19 +107,21 @@ export const sdocQueries = {
   tableInfo: (projectId: number) =>
     queryOptions({
       queryKey: tableInfoQueries.byDomain("sdoc", projectId),
-      queryFn: async () => toColumnInfos(await SearchService.searchSdocInfo({ projectId })),
+      queryFn: async () => toColumnInfos(await SearchService.getSourceDocumentColumns({ projectId })),
       staleTime: Infinity,
     }),
 
   // the document search: project-wide, with highlights. Its queryFn seeds the caches of the found sdocs, annotators, tags
   // and folders. Used by the search page and the sdoc filter table.
   searchScope: (projectId: number) => [...sdocQueries.projectScope(projectId), "search"] as const,
-  search: (request: SdocSearchRequest) =>
+  search: (projectId: number, request: SdocSearchRequest) =>
     infiniteQueryOptions({
-      queryKey: [...sdocQueries.searchScope(request.projectId), request] as const,
+      queryKey: [...sdocQueries.searchScope(projectId), request] as const,
       queryFn: async ({ pageParam }) => {
-        const { projectId } = request;
-        const data = await SearchService.searchSdocs({ ...request, highlight: true, pageNumber: pageParam });
+        const data = await SearchService.searchSourceDocuments({
+          projectId,
+          requestBody: { ...request, highlight: true, page_number: pageParam },
+        });
 
         Object.entries(data.sdocs).forEach(([sdocId, sdoc]) => {
           queryClient.setQueryData(sdocQueries.byId(projectId, parseInt(sdocId)).queryKey, sdoc);

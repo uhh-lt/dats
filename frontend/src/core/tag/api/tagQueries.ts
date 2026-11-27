@@ -1,4 +1,4 @@
-import { TagService } from "@api/services/TagService";
+import { TagsService } from "@api/services/TagsService";
 import { queryOptions, skipToken } from "@tanstack/react-query";
 
 /**
@@ -19,7 +19,7 @@ export const tagQueries = {
   byProject: (projectId: number | undefined) =>
     queryOptions({
       queryKey: tagQueries.projectScope(projectId),
-      queryFn: projectId === undefined ? skipToken : () => TagService.getByProject({ projectId }),
+      queryFn: projectId === undefined ? skipToken : () => TagsService.getByProject({ projectId }),
       staleTime: 1000 * 60 * 5,
     }),
 
@@ -32,7 +32,7 @@ export const tagQueries = {
         !projectId || !sdocId
           ? skipToken
           : async () => {
-              const tags = await TagService.getByProject({ projectId, sdocId });
+              const tags = await TagsService.getByProject({ projectId, sdocId });
               return tags.map((tag) => tag.id);
             },
       staleTime: 1000 * 60 * 5,
@@ -44,7 +44,7 @@ export const tagQueries = {
     queryOptions({
       queryKey: [...tagQueries.sdocCountScope(projectId), sdocIds] as const,
       queryFn: async () => {
-        const stringRecord = await TagService.count({ projectId, requestBody: { sdoc_ids: sdocIds } });
+        const stringRecord = await TagsService.count({ projectId, requestBody: { sdoc_ids: sdocIds } });
         return new Map(Object.entries(stringRecord).map(([key, val]) => [parseInt(key, 10), val]));
       },
     }),

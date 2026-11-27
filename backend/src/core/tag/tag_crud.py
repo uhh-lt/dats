@@ -5,6 +5,7 @@ from sqlalchemy.dialects.postgresql import insert
 from sqlalchemy.orm import Session
 
 from core.tag.tag_dto import TagCreate, TagUpdate
+from core.tag.tag_exceptions import TagOwnParentError
 from core.tag.tag_orm import SourceDocumentTagLinkTable, TagORM
 from repos.db.crud_base import BATCH_SIZE
 from repos.db.project_crud_base import ProjectCRUDBase
@@ -77,7 +78,8 @@ class CRUDTag(ProjectCRUDBase[TagORM, TagCreate, TagUpdate]):
             sdoc_ids: The documents.
 
         Returns:
-            The tags per document id; documents without tags have no entry.
+            The tags per document id, ordered by tag id; documents without tags
+            have no entry.
         """
         if not sdoc_ids:
             return {}
@@ -97,6 +99,7 @@ class CRUDTag(ProjectCRUDBase[TagORM, TagCreate, TagUpdate]):
                     SourceDocumentTagLinkTable.project_id == project_id,
                     SourceDocumentTagLinkTable.source_document_id.in_(batch_ids),
                 )
+                .order_by(SourceDocumentTagLinkTable.source_document_id, TagORM.id)
             )
             for sdoc_id, tag_obj in db.execute(stmt).all():
                 result[sdoc_id].append(tag_obj)
@@ -116,7 +119,7 @@ class CRUDTag(ProjectCRUDBase[TagORM, TagCreate, TagUpdate]):
         # check that no parent tag is being set to the tag itself
         for id, update_dto in zip(ids, update_dtos):
             if update_dto.parent_id == id:
-                raise ValueError("A tag cannot be its own parent")
+                raise TagOwnParentError(tag_id=id)
 
         return super().update_multi(
             db=db, project_id=project_id, ids=ids, update_dtos=update_dtos

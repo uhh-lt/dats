@@ -1,5 +1,4 @@
-import { JobService } from "@api/services/JobService";
-import { TagRecommendationService } from "@api/services/TagRecommendationService";
+import { JobsService } from "@api/services/JobsService";
 import { createJobQueries } from "@core/job";
 import { queryOptions, skipToken } from "@tanstack/react-query";
 
@@ -22,8 +21,8 @@ export const tagRecommendationQueries = {
   // the tag recommendation jobs
   job: createJobQueries(
     "tagRecommendation",
-    (job) => JobService.getTagRecommendationJobById(job),
-    (projectId) => JobService.getTagRecommendationJobsByProject({ projectId }),
+    (job) => JobsService.getTagRecommendationJobById(job),
+    (projectId) => JobsService.getTagRecommendationJobsByProject({ projectId }),
   ),
 
   // the recommendations of one job
@@ -31,9 +30,7 @@ export const tagRecommendationQueries = {
   byJob: (projectId: number, jobId: string | null | undefined) =>
     queryOptions({
       queryKey: [...tagRecommendationQueries.byJobScope(projectId), jobId] as const,
-      queryFn: !jobId
-        ? skipToken
-        : () => TagRecommendationService.getAllTagrecommendationsFromJob({ projectId, jobId }),
+      queryFn: !jobId ? skipToken : () => JobsService.getAllTagrecommendationsFromJob({ projectId, jobId }),
       staleTime: 1000 * 60 * 5,
     }),
 };

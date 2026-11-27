@@ -1,4 +1,4 @@
-import { GeneralService } from "@api/services/GeneralService";
+import { InfoService } from "@api/services/InfoService";
 import { queryOptions } from "@tanstack/react-query";
 
 /**
@@ -15,14 +15,14 @@ export const generalQueries = {
   availableModels: () =>
     queryOptions({
       queryKey: [...generalQueries.all(), "availableModels"] as const,
-      queryFn: () => GeneralService.getAvailableModels(),
+      queryFn: () => InfoService.getLlms(),
     }),
 
   // the configuration of the instance (is OIDC enabled, Sentry/Glitchtip DSN, ...)
   instanceInfo: () =>
     queryOptions({
       queryKey: [...generalQueries.all(), "instanceInfo"] as const,
-      queryFn: () => GeneralService.info(),
+      queryFn: () => InfoService.getInfo(),
       staleTime: Infinity,
     }),
 };

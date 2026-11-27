@@ -119,13 +119,13 @@ const SdocFilterTable = <TToolbarProps extends FilterTableToolbarProps<Hierarchi
 
   // table data
   const { data, fetchNextPage, isError, isFetching, isLoading } = useInfiniteQuery(
-    sdocQueries.search({
-      projectId,
-      searchQuery: searchQuery || "",
-      requestBody: { filter, sorts: toSorts<SdocColumns>(sortingModel) },
-      pageSize: fetchSize,
-      expertMode: false,
-      showFolders: false,
+    sdocQueries.search(projectId, {
+      search_query: searchQuery || "",
+      filter,
+      sorts: toSorts<SdocColumns>(sortingModel),
+      page_size: fetchSize,
+      expert_mode: false,
+      show_folders: false,
     }),
   );
 

@@ -1,5 +1,5 @@
 import { DocProcessingService } from "@api/services/DocProcessingService";
-import { Body_docProcessing_recompute } from "@models/Body_docProcessing_recompute";
+import { DocProcessingRecomputeRequest } from "@models/DocProcessingRecomputeRequest";
 import { queryClient } from "@api/queryClient";
 import { projectQueries } from "@core/project";
 import { useMutation } from "@tanstack/react-query";
@@ -25,11 +25,8 @@ const useRecomputeDocProcessingJobs = () =>
     onSuccess: (_data, { projectId }) =>
       queryClient.invalidateQueries({ queryKey: projectQueries.features(projectId).queryKey }),
     meta: {
-      successMessage: (
-        data: number,
-        variables: { processingStep: string; requestBody: Body_docProcessing_recompute },
-      ) =>
-        `Successfully started '${variables.processingStep}' recompute job for ${variables.requestBody.sdoc_ids.length} / ${data} documents!`,
+      successMessage: (data: number, variables: { requestBody: DocProcessingRecomputeRequest }) =>
+        `Successfully started '${variables.requestBody.processing_step}' recompute job for ${variables.requestBody.sdoc_ids.length} / ${data} documents!`,
     },
   });
 

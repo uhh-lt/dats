@@ -7,8 +7,9 @@ from sqlalchemy.orm import Session
 from core.memo.memo_dto import MemoCreateIntern, MemoRead
 from core.memo.memo_enum import AttachedObjectType
 from core.memo.memo_service import MemoService
+from sql_test_utils import count_queries
 
-from .conftest import SdocWithSpanAnnotations, count_queries
+from .conftest import SdocWithSpanAnnotations
 
 
 def _create_memos(

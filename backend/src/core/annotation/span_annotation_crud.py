@@ -364,20 +364,6 @@ class CRUDSpanAnnotation(
 
     ### OTHER OPERATIONS ###
 
-    def remove_from_all_span_groups(
-        self, db: Session, *, project_id: int, span_id: int
-    ) -> SpanAnnotationORM:
-        db_obj = self.read(db=db, project_id=project_id, id=span_id)
-        db.execute(
-            delete(SpanAnnotationSpanGroupLinkTable).where(
-                SpanAnnotationSpanGroupLinkTable.project_id == project_id,
-                SpanAnnotationSpanGroupLinkTable.span_annotation_id == span_id,
-            )
-        )
-        db.flush()
-        db.refresh(db_obj)
-        return db_obj
-
     def add_to_span_group(
         self, db: Session, *, project_id: int, span_id: int, group_id: int
     ) -> SpanAnnotationORM:

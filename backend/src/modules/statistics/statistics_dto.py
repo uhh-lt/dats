@@ -25,3 +25,20 @@ class TagStat(BaseModel):
     global_count: int = Field(
         description="Number of occurrences of the document tag in all documents"
     )
+
+
+class CodeStatisticsRequest(BaseModel):
+    code_id: int = Field(description="The Code whose span texts are counted")
+    sdoc_ids: list[int] = Field(description="The SourceDocuments to count in")
+    sort_by_global: bool = Field(
+        default=False, description="Sort by the count in the whole Project"
+    )
+    top_k: int = Field(default=20, description="Number of span texts to return")
+
+
+class TagStatisticsRequest(BaseModel):
+    sdoc_ids: list[int] = Field(description="The SourceDocuments to count in")
+    sort_by_global: bool = Field(
+        default=False, description="Sort by the count in the whole Project"
+    )
+    top_k: int = Field(default=20, description="Number of Tags to return")

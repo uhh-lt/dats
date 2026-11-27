@@ -1,5 +1,5 @@
 import { queryClient } from "@api/queryClient";
-import { SentenceAnnotationService } from "@api/services/SentenceAnnotationService";
+import { SentenceAnnotationsService } from "@api/services/SentenceAnnotationsService";
 import { SentenceAnnotationRead } from "@models/SentenceAnnotationRead";
 import { SentenceAnnotationUpdate } from "@models/SentenceAnnotationUpdate";
 import { useMutation } from "@tanstack/react-query";
@@ -13,7 +13,7 @@ import { sentenceAnnotationQueries } from "./sentenceAnnotationQueries";
 const useCreateSentenceAnnotation = () =>
   useMutation({
     mutationKey: [...sentenceAnnotationQueries.all(), "createSentenceAnnotation"],
-    mutationFn: SentenceAnnotationService.create,
+    mutationFn: SentenceAnnotationsService.create,
     meta: {
       datsEvent: "SENTENCE_ANNOTATION_CREATED",
       successMessage: (data: SentenceAnnotationRead) => `Created Sentence Annotation ${data.id}`,
@@ -23,7 +23,7 @@ const useCreateSentenceAnnotation = () =>
 const useCreateBulkSentenceAnnotation = () =>
   useMutation({
     mutationKey: [...sentenceAnnotationQueries.all(), "createBulkSentenceAnnotation"],
-    mutationFn: SentenceAnnotationService.createBulk,
+    mutationFn: SentenceAnnotationsService.createBulk,
     meta: {
       datsEvent: "SENTENCE_ANNOTATION_CREATED_BATCH",
       successMessage: (data: SentenceAnnotationRead[]) => `Created ${data.length} Sentence Annotations`,
@@ -38,7 +38,7 @@ const useUpdateSentenceAnnotation = () =>
       sentenceAnnoToUpdate: SentenceAnnotationRead | number;
       update: SentenceAnnotationUpdate;
     }) =>
-      SentenceAnnotationService.updateById({
+      SentenceAnnotationsService.updateById({
         projectId: variables.projectId,
         sentenceAnnotationId:
           typeof variables.sentenceAnnoToUpdate === "number"
@@ -129,7 +129,7 @@ const useUpdateSentenceAnnotation = () =>
 const useUpdateBulkSentenceAnno = () =>
   useMutation({
     mutationKey: [...sentenceAnnotationQueries.all(), "updateBulkSentenceAnno"],
-    mutationFn: SentenceAnnotationService.updateBulk,
+    mutationFn: SentenceAnnotationsService.updateBulk,
     meta: {
       datsEvent: "SENTENCE_ANNOTATION_UPDATED_BATCH",
       successMessage: (data: SentenceAnnotationRead[]) => `Updated ${data.length} Sentence Annotations`,
@@ -140,7 +140,7 @@ const useDeleteSentenceAnnotation = () =>
   useMutation({
     mutationKey: [...sentenceAnnotationQueries.optimisticMutationScope(), "deleteSentenceAnnotation"],
     mutationFn: (variables: { projectId: number; sentAnnoToDelete: SentenceAnnotationRead | number }) =>
-      SentenceAnnotationService.deleteById({
+      SentenceAnnotationsService.deleteById({
         projectId: variables.projectId,
         sentenceAnnotationId:
           typeof variables.sentAnnoToDelete === "number" ? variables.sentAnnoToDelete : variables.sentAnnoToDelete.id,
@@ -188,7 +188,7 @@ const useDeleteSentenceAnnotation = () =>
 const useDeleteBulkSentenceAnnotation = () =>
   useMutation({
     mutationKey: [...sentenceAnnotationQueries.all(), "deleteBulkSentenceAnnotation"],
-    mutationFn: SentenceAnnotationService.deleteBulk,
+    mutationFn: SentenceAnnotationsService.deleteBulk,
     meta: {
       datsEvent: "SENTENCE_ANNOTATION_DELETED_BATCH",
       successMessage: (data: SentenceAnnotationRead[]) => `Deleted ${data.length} Sentence Annotations`,
@@ -199,7 +199,7 @@ const useDeleteBulkSentenceAnnotationSingleSdoc = () =>
   useMutation({
     mutationKey: [...sentenceAnnotationQueries.optimisticMutationScope(), "deleteBulkSentenceAnnotationSingleSdoc"],
     mutationFn: (variables: { projectId: number; sentAnnosToDelete: SentenceAnnotationRead[] }) =>
-      SentenceAnnotationService.deleteBulk({
+      SentenceAnnotationsService.deleteBulk({
         projectId: variables.projectId,
         requestBody: variables.sentAnnosToDelete.map((anno) => anno.id),
       }),
@@ -261,7 +261,7 @@ const useDeleteBulkSentenceAnnotationSingleSdoc = () =>
 const useCountBySdocsAndUser = () =>
   useMutation({
     mutationKey: [...sentenceAnnotationQueries.all(), "countBySdocsAndUser"],
-    mutationFn: SentenceAnnotationService.count,
+    mutationFn: SentenceAnnotationsService.count,
   });
 
 export const SentenceAnnotationHooks = {

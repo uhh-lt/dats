@@ -1,4 +1,4 @@
-import { JobService } from "@api/services/JobService";
+import { JobsService } from "@api/services/JobsService";
 import { createJobQueries } from "@core/job";
 import { LlmAssistantService } from "@api/services/LlmAssistantService";
 import { TaskType } from "@models/TaskType";
@@ -44,20 +44,23 @@ export const llmAssistantQueries = {
           : () =>
               LlmAssistantService.computeExistingAnnotationCounts({
                 projectId,
-                taskType,
-                virtualUserId,
-                requestBody: { sdoc_ids: sdocIds, code_ids: codeIds },
+                requestBody: {
+                  task_type: taskType,
+                  virtual_user_id: virtualUserId,
+                  sdoc_ids: sdocIds,
+                  code_ids: codeIds,
+                },
               }),
     }),
 
   // the background job of the LLM assistant
   job: createJobQueries(
     "llmAssistant",
-    (job) => JobService.getLlmAssistantJobById(job),
-    (projectId) => JobService.getLlmAssistantJobsByProject({ projectId }),
+    (job) => JobsService.getLlmAssistantJobById(job),
+    (projectId) => JobsService.getLlmAssistantJobsByProject({ projectId }),
     {
-      abort: (job) => JobService.abortLlmAssistantJob(job),
-      retry: (job) => JobService.retryLlmAssistantJob(job),
+      abort: (job) => JobsService.abortLlmAssistantJob(job),
+      retry: (job) => JobsService.retryLlmAssistantJob(job),
     },
   ),
 };

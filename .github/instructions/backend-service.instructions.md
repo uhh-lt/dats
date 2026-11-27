@@ -66,7 +66,7 @@ class ExampleService(metaclass=SingletonMeta):
 - **No module functions**: Even stateless services are classes (`StatisticsService`); helpers become private methods. Module-level code is limited to constants, private helper types (`TypedDict` / `NamedTuple`) and `_private` functions.
 - **No service for plain CRUD**: Endpoints that only call CRUD methods use the `crud_*` singletons directly; create a service only for logic beyond one CRUD call.
 - **CRUDs are imported, not wrapped**: Use the `crud_*` module singletons directly (`crud_cota.read(db=db, project_id=project_id, id=...)`). Do not put them on the service.
-- **Signature**: Public methods take `self, *, db: Session, project_id: int, ...` (keyword-only, `db` first, `project_id` second); a job handler takes the project from its payload (`self, *, db: Session, [job: Job,] payload: <X>JobInput`).
+- **Signature**: Public methods take `self, *, db: Session, project_id: int, ...` (keyword-only, `db` first, `project_id` second); a job handler takes the project from its payload (`self, *, db: Session, [job: Job,] payload: <X>JobInput`). A documented exception says why with `# check_services: allow method-signature (<reason>)` directly above it (`ArtefactService.plan_core_steps`).
 
 ### Database Session and Transactions
 

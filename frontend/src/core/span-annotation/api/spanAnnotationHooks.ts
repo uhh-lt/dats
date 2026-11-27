@@ -1,5 +1,5 @@
 import { queryClient } from "@api/queryClient";
-import { SpanAnnotationService } from "@api/services/SpanAnnotationService";
+import { SpanAnnotationsService } from "@api/services/SpanAnnotationsService";
 import { SpanAnnotationDeleted } from "@models/SpanAnnotationDeleted";
 import { SpanAnnotationRead } from "@models/SpanAnnotationRead";
 import { SpanAnnotationUpdate } from "@models/SpanAnnotationUpdate";
@@ -13,7 +13,7 @@ import { spanAnnotationQueries } from "./spanAnnotationQueries";
 const useCreateBulkAnnotations = () =>
   useMutation({
     mutationKey: [...spanAnnotationQueries.all(), "createBulkAnnotations"],
-    mutationFn: SpanAnnotationService.createBulk,
+    mutationFn: SpanAnnotationsService.createBulk,
     meta: {
       datsEvent: "SPAN_ANNOTATION_CREATED_BATCH",
       successMessage: (data: SpanAnnotationRead[]) => `Created ${data.length} Span Annotations`,
@@ -23,7 +23,7 @@ const useCreateBulkAnnotations = () =>
 const useCreateSpanAnnotation = () =>
   useMutation({
     mutationKey: [...spanAnnotationQueries.all(), "createSpanAnnotation"],
-    mutationFn: SpanAnnotationService.create,
+    mutationFn: SpanAnnotationsService.create,
     meta: {
       datsEvent: "SPAN_ANNOTATION_CREATED",
       successMessage: (data: SpanAnnotationRead) => `Created Span Annotation ${data.id}`,
@@ -38,7 +38,7 @@ const useUpdateSpanAnnotation = () =>
       spanAnnotationToUpdate: SpanAnnotationRead | number;
       requestBody: SpanAnnotationUpdate;
     }) =>
-      SpanAnnotationService.updateById({
+      SpanAnnotationsService.updateById({
         projectId: variables.projectId,
         spanAnnotationId:
           typeof variables.spanAnnotationToUpdate === "number"
@@ -94,7 +94,7 @@ const useUpdateSpanAnnotation = () =>
 const useUpdateBulkSpan = () =>
   useMutation({
     mutationKey: [...spanAnnotationQueries.all(), "updateBulkSpan"],
-    mutationFn: SpanAnnotationService.updateBulk,
+    mutationFn: SpanAnnotationsService.updateBulk,
     meta: {
       datsEvent: "SPAN_ANNOTATION_UPDATED_BATCH",
       successMessage: (data: SpanAnnotationRead[]) => `Updated ${data.length} Span Annotations`,
@@ -105,7 +105,7 @@ const useDeleteSpanAnnotation = () =>
   useMutation({
     mutationKey: [...spanAnnotationQueries.optimisticMutationScope(), "deleteSpanAnnotation"],
     mutationFn: (variables: { projectId: number; spanAnnotationToDelete: SpanAnnotationRead | number }) =>
-      SpanAnnotationService.deleteById({
+      SpanAnnotationsService.deleteById({
         projectId: variables.projectId,
         spanAnnotationId:
           typeof variables.spanAnnotationToDelete === "number"
@@ -145,7 +145,7 @@ const useDeleteSpanAnnotation = () =>
 const useDeleteBulkSpanAnnotation = () =>
   useMutation({
     mutationKey: [...spanAnnotationQueries.all(), "deleteBulkSpanAnnotation"],
-    mutationFn: SpanAnnotationService.deleteBulk,
+    mutationFn: SpanAnnotationsService.deleteBulk,
     meta: {
       datsEvent: "SPAN_ANNOTATION_DELETED_BATCH",
       successMessage: (data: SpanAnnotationDeleted[]) => `Deleted ${data.length} Span Annotations`,
@@ -155,7 +155,7 @@ const useDeleteBulkSpanAnnotation = () =>
 const useCountBySdocsAndUser = () =>
   useMutation({
     mutationKey: [...spanAnnotationQueries.all(), "countBySdocsAndUser"],
-    mutationFn: SpanAnnotationService.count,
+    mutationFn: SpanAnnotationsService.count,
   });
 
 export const SpanAnnotationHooks = {

@@ -6,6 +6,7 @@ from pydantic import BaseModel, Field, model_validator
 from core.code.code_dto import CodeRead
 from core.doc.folder_dto import FolderRead
 from core.doc.source_document_dto import SourceDocumentRead
+from core.search.sdoc_search.sdoc_search_columns import SdocColumns
 from repos.elastic.elastic_dto_base import ElasticSearchHit
 from systems.search_system.abstract_column import AbstractColumns
 from systems.search_system.filtering import Filter
@@ -57,9 +58,7 @@ class QueryRequest(BaseModel, Generic[T]):
         "Both must be set or both omitted.",
     )
     page_number: int = Field(default=0, ge=0, description="Zero-based page index")
-    page_size: int = Field(
-        default=20, ge=1, le=200, description="Number of rows per page"
-    )
+    page_size: int = Field(default=20, ge=1, description="Number of rows per page")
 
     @model_validator(mode="after")
     def validate_drill_down_fields(self) -> "QueryRequest[T]":
@@ -173,4 +172,37 @@ class PaginatedSDocHits(BaseModel):
 
     total_results: int = Field(
         description="The total number of hits. Used for pagination."
+    )
+
+
+class SourceDocumentSearchRequest(BaseModel):
+    """Request of the document search: full-text query, filter, sorting, folders
+    and paging in one body."""
+
+    search_query: str = Field(default="", description="Full-text query")
+    expert_mode: bool = Field(
+        default=False, description="Whether the query uses the expert syntax"
+    )
+    highlight: bool = Field(
+        default=False, description="Whether to return highlights of the query"
+    )
+    filter: Filter[SdocColumns] = Field(description="Column filter tree")
+    sorts: list[Sort[SdocColumns]] = Field(
+        default=[],
+        description="Ordered sort expressions; empty means the default sort",
+    )
+    folder_id: int | None = Field(
+        default=None, description="Only the documents of this folder"
+    )
+    show_folders: bool = Field(
+        default=True, description="Whether to group the documents by folder"
+    )
+    show_child_folders: bool = Field(
+        default=False, description="Whether to show the child folders"
+    )
+    page_number: int | None = Field(
+        default=None, ge=0, description="Zero-based page index; all hits if null"
+    )
+    page_size: int | None = Field(
+        default=None, ge=1, description="Number of hits per page; all hits if null"
     )

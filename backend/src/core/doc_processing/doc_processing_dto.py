@@ -5,7 +5,7 @@ from pydantic import BaseModel, Field
 from common.doc_type_enum import DocType
 from common.sdoc_status_enum import SDocStatus
 from core.doc.source_document_dto import SourceDocumentBaseDTO
-from systems.artefact_system.artefact_dto import ProcessingJobInput
+from systems.artefact_system.artefact_dto import ProcessingJobInput, ProcessingSettings
 from systems.artefact_system.source_document_status_rules import document_status
 from systems.job_system.job_dto import JobOutputBase
 from systems.search_system.sorting import SortDirection
@@ -111,3 +111,25 @@ class SdocHealthResult(BaseModel):
 class SdocHealthSort(BaseModel):
     column: str = Field(description="SourceDocument column to sort by")
     direction: SortDirection = Field(description="Direction of the sort")
+
+
+class SdocHealthSearchRequest(BaseModel):
+    doctype: DocType = Field(
+        description="The document type whose statuses are searched"
+    )
+    sorts: list[SdocHealthSort] = Field(
+        default=[], description="Ordered sort expressions"
+    )
+    page_number: int = Field(default=0, ge=0, description="Zero-based page index")
+    page_size: int = Field(default=20, ge=1, description="Number of rows per page")
+
+
+class DocProcessingRetryRequest(BaseModel):
+    doctype: DocType = Field(description="The document type of the SourceDocuments")
+    sdoc_ids: list[int] = Field(description="The SourceDocuments to retry")
+
+
+class DocProcessingRecomputeRequest(BaseModel):
+    processing_step: str = Field(description="The pipeline step to recompute")
+    sdoc_ids: list[int] = Field(description="The SourceDocuments to recompute")
+    settings: ProcessingSettings = Field(description="Processing settings")

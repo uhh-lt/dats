@@ -228,8 +228,11 @@ def test_enable_finishes_documents_it_does_not_resolve_without_output(
 def _recompute(client: TestClient, project_id: int, sdoc_id: int) -> None:
     response = client.post(
         f"/projects/{project_id}/doc-processing/recompute",
-        params={"processing_step": STEP},
-        json={"sdoc_ids": [sdoc_id], "settings": SETTINGS.model_dump(mode="json")},
+        json={
+            "processing_step": STEP,
+            "sdoc_ids": [sdoc_id],
+            "settings": SETTINGS.model_dump(mode="json"),
+        },
     )
     assert response.status_code == 200, response.text
 

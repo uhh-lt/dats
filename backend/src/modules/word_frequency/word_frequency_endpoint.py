@@ -1,15 +1,17 @@
 from common.dependencies import DBSession
 from common.project_router import project_router
 from modules.word_frequency.word_frequency_columns import WordFrequencyColumns
-from modules.word_frequency.word_frequency_dto import WordFrequencyResult
+from modules.word_frequency.word_frequency_dto import (
+    WordFrequencyExportRequest,
+    WordFrequencyResult,
+    WordFrequencySearchRequest,
+)
 from modules.word_frequency.word_frequency_feature import WORD_FREQUENCY
 from modules.word_frequency.word_frequency_service import WordFrequencyService
 from systems.search_system.column_info import ColumnInfo
-from systems.search_system.filtering import Filter
-from systems.search_system.sorting import Sort
 
 router = project_router(
-    "/word-frequencies", tags=["wordFrequency"], feature=WORD_FREQUENCY
+    "/word-frequencies", tags=["wordFrequencies"], feature=WORD_FREQUENCY
 )
 
 
@@ -17,11 +19,11 @@ router = project_router(
 
 
 @router.get(
-    "/info",
+    "/columns",
     response_model=list[ColumnInfo[WordFrequencyColumns]],
     summary="Returns WordFrequency Info.",
 )
-def get_info(
+def get_columns(
     *,
     db: DBSession,
     project_id: int,
@@ -45,19 +47,16 @@ def compute_word_frequencies(
     *,
     db: DBSession,
     project_id: int,
-    filter: Filter[WordFrequencyColumns],
-    page: int,
-    page_size: int,
-    sorts: list[Sort[WordFrequencyColumns]],
+    request: WordFrequencySearchRequest,
 ) -> WordFrequencyResult:
 
     return WordFrequencyService().word_frequency(
         db=db,
         project_id=project_id,
-        filter=filter,
-        page=page,
-        page_size=page_size,
-        sorts=sorts,
+        filter=request.filter,
+        page=request.page_number,
+        page_size=request.page_size,
+        sorts=request.sorts,
     )
 
 
@@ -70,12 +69,11 @@ def export(
     *,
     db: DBSession,
     project_id: int,
-    filter: Filter[WordFrequencyColumns],
-    sorts: list[Sort[WordFrequencyColumns]],
+    request: WordFrequencyExportRequest,
 ) -> str:
 
     return WordFrequencyService().word_frequency_export(
         db=db,
         project_id=project_id,
-        filter=filter,
+        filter=request.filter,
     )

@@ -27,6 +27,7 @@ from core.search.search_dto import (
     PaginatedSDocHits,
     QueryRequest,
     SentenceAnnotationRow,
+    SourceDocumentSearchRequest,
     SpanAnnotationRow,
 )
 from core.search.sent_anno_search.sent_anno_search import (
@@ -42,19 +43,20 @@ from core.search.span_anno_search.span_anno_search import (
 )
 from core.search.span_anno_search.span_anno_search_columns import SpanColumns
 from systems.search_system.column_info import ColumnInfo
-from systems.search_system.filtering import Filter
 from systems.search_system.grouping import GroupPage, GroupQueryRequest
-from systems.search_system.sorting import Sort
 
 router = project_router("/search", tags=["search", "mcp"])
 
 
+# --- read operations
+
+
 @router.get(
-    "/source-documents/info",
+    "/source-documents/columns",
     response_model=list[ColumnInfo[SdocColumns]],
     summary="Returns Search Info.",
 )
-def search_sdoc_info(
+def get_source_document_columns(
     *,
     db: DBSession,
     project_id: int,
@@ -62,49 +64,91 @@ def search_sdoc_info(
     return find_sdocs_info(db=db, project_id=project_id)
 
 
+@router.get(
+    "/memos/columns",
+    response_model=list[ColumnInfo[MemoColumns]],
+    summary="Returns Memo Table Info.",
+)
+def get_memo_columns(*, project_id: int) -> list[ColumnInfo[MemoColumns]]:
+    return find_memo_info(project_id=project_id)
+
+
+@router.get(
+    "/span-annotations/columns",
+    response_model=list[ColumnInfo[SpanColumns]],
+    summary="Returns SpanAnnotationSearch Info.",
+)
+def get_span_annotation_columns(
+    *,
+    db: DBSession,
+    project_id: int,
+) -> list[ColumnInfo[SpanColumns]]:
+    return find_span_annotations_info(
+        db=db,
+        project_id=project_id,
+    )
+
+
+@router.get(
+    "/sentence-annotations/columns",
+    response_model=list[ColumnInfo[SentAnnoColumns]],
+    summary="Returns SentenceAnnotationSearch Info.",
+)
+def get_sentence_annotation_columns(
+    *,
+    db: DBSession,
+    project_id: int,
+) -> list[ColumnInfo[SentAnnoColumns]]:
+    return find_sentence_annotations_info(
+        db=db,
+        project_id=project_id,
+    )
+
+
+@router.get(
+    "/bbox-annotations/columns",
+    response_model=list[ColumnInfo[BBoxColumns]],
+    summary="Returns BBoxAnnotationSearch Info.",
+)
+def get_bbox_annotation_columns(
+    *,
+    db: DBSession,
+    project_id: int,
+) -> list[ColumnInfo[BBoxColumns]]:
+    return find_bbox_annotations_info(
+        db=db,
+        project_id=project_id,
+    )
+
+
+# --- other operations
+
+
 @router.post(
     "/source-documents",
     response_model=PaginatedSDocHits,
     summary="Returns all SourceDocument Ids and their scores and (optional) hightlights that match the query parameters.",
 )
-def search_sdocs(
+def search_source_documents(
     *,
     db: DBSession,
     project_id: int,
-    search_query: str,
-    expert_mode: bool,
-    filter: Filter[SdocColumns],
-    sorts: list[Sort[SdocColumns]],
-    highlight: bool,
-    folder_id: int | None = None,
-    page_number: int | None = None,
-    page_size: int | None = None,
-    show_folders: bool = True,
-    show_child_folders: bool = False,
+    request: SourceDocumentSearchRequest,
 ) -> PaginatedSDocHits:
     return find_sdocs(
         db=db,
-        search_query=search_query,
-        expert_mode=expert_mode,
-        highlight=highlight,
+        search_query=request.search_query,
+        expert_mode=request.expert_mode,
+        highlight=request.highlight,
         project_id=project_id,
-        folder_id=folder_id,
-        filter=filter,
-        sorts=sorts,
-        page_number=page_number,
-        page_size=page_size,
-        show_folders=show_folders,
-        show_child_folders=show_child_folders,
+        folder_id=request.folder_id,
+        filter=request.filter,
+        sorts=request.sorts,
+        page_number=request.page_number,
+        page_size=request.page_size,
+        show_folders=request.show_folders,
+        show_child_folders=request.show_child_folders,
     )
-
-
-@router.get(
-    "/memos/info",
-    response_model=list[ColumnInfo[MemoColumns]],
-    summary="Returns Memo Table Info.",
-)
-def search_memo_info(*, project_id: int) -> list[ColumnInfo[MemoColumns]]:
-    return find_memo_info(project_id=project_id)
 
 
 @router.post(
@@ -138,22 +182,6 @@ def search_memo_groups(
 ) -> GroupPage:
     return find_memo_groups(
         db=db, project_id=project_id, request=request, user_id=authz_user.user.id
-    )
-
-
-@router.get(
-    "/span-annotations/info",
-    response_model=list[ColumnInfo[SpanColumns]],
-    summary="Returns SpanAnnotationSearch Info.",
-)
-def search_span_annotation_info(
-    *,
-    db: DBSession,
-    project_id: int,
-) -> list[ColumnInfo[SpanColumns]]:
-    return find_span_annotations_info(
-        db=db,
-        project_id=project_id,
     )
 
 
@@ -191,22 +219,6 @@ def search_span_annotation_groups(
     )
 
 
-@router.get(
-    "/sentence-annotations/info",
-    response_model=list[ColumnInfo[SentAnnoColumns]],
-    summary="Returns SentenceAnnotationSearch Info.",
-)
-def search_sentence_annotation_info(
-    *,
-    db: DBSession,
-    project_id: int,
-) -> list[ColumnInfo[SentAnnoColumns]]:
-    return find_sentence_annotations_info(
-        db=db,
-        project_id=project_id,
-    )
-
-
 @router.post(
     "/sentence-annotations",
     response_model=Page[SentenceAnnotationRow],
@@ -238,22 +250,6 @@ def search_sentence_annotation_groups(
 ) -> GroupPage:
     return find_sentence_annotation_groups(
         db=db, project_id=project_id, request=request, user_id=authz_user.user.id
-    )
-
-
-@router.get(
-    "/bbox-annotations/info",
-    response_model=list[ColumnInfo[BBoxColumns]],
-    summary="Returns BBoxAnnotationSearch Info.",
-)
-def search_bbox_annotation_info(
-    *,
-    db: DBSession,
-    project_id: int,
-) -> list[ColumnInfo[BBoxColumns]]:
-    return find_bbox_annotations_info(
-        db=db,
-        project_id=project_id,
     )
 
 

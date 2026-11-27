@@ -14,7 +14,7 @@ from core.user.user_orm import UserORM
 from systems.websocket_system.websocket_dependency import WebsocketEmitter
 
 # creating a project, outside every project; the one endpoint file with two routers
-router = APIRouter(dependencies=[Depends(get_current_user)], tags=["project", "mcp"])
+router = APIRouter(dependencies=[Depends(get_current_user)], tags=["projects", "mcp"])
 # the project itself
 project = project_router("", tags=[])
 router.include_router(project)
