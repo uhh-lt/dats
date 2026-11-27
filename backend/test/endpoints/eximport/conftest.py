@@ -858,7 +858,7 @@ def sdoc_eximport_projects(
         filename="report.txt",
         sentences=["Alpha beta alpha.", "Gamma delta."],
     )
-    crud_tag.link_multiple_tags(
+    crud_tag.link_multi(
         db=db_session,
         project_id=test_project.id,
         sdoc_ids=[sdoc.id],

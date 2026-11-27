@@ -98,7 +98,7 @@ def handle_coreference_resolution_job(
     # 2. replace the mentions and their groups, so a document that is no longer
     # a German text keeps none of an earlier run
     with sqlr.transaction() as db:
-        mention = crud_code.read_by_name_and_project(
+        mention = crud_code.read_by_name(
             db=db, code_name="MENTION", project_id=payload.project_id
         )
         assert mention is not None, (

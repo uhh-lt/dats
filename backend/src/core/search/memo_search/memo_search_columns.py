@@ -431,13 +431,11 @@ class MemoColumns(str, AbstractColumns):
             case AttachedObjectType.source_document:
                 found = crud_sdoc.read_by_name(db, name=name, project_id=project_id)
             case AttachedObjectType.code:
-                found = crud_code.read_by_name_and_project(
+                found = crud_code.read_by_name(
                     db, code_name=name, project_id=project_id
                 )
             case AttachedObjectType.tag:
-                found = crud_tag.read_by_name_and_project(
-                    db, name=name, project_id=project_id
-                )
+                found = crud_tag.read_by_name(db, name=name, project_id=project_id)
             case AttachedObjectType.project:
                 # a memo is attached to its own project only
                 project = crud_project.read(db=db, id=project_id)

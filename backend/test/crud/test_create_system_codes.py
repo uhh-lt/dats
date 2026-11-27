@@ -14,9 +14,7 @@ from core.project.project_orm import ProjectORM
 
 def _parent_name(db: Session, project_id: int, name: str) -> str | None:
     """The name of the parent of the code of this name in the project."""
-    code = crud_code.read_by_name_and_project(
-        db=db, code_name=name, project_id=project_id
-    )
+    code = crud_code.read_by_name(db=db, code_name=name, project_id=project_id)
     assert code is not None, name
     if code.parent_id is None:
         return None

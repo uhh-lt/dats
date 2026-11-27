@@ -171,7 +171,7 @@ def test_enable_creates_the_mention_code_and_disable_keeps_it(
 
     def mention() -> CodeORM | None:
         db_session.expire_all()
-        return crud_code.read_by_name_and_project(
+        return crud_code.read_by_name(
             db=db_session, code_name="MENTION", project_id=codeless_project.id
         )
 

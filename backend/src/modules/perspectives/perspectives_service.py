@@ -1324,7 +1324,7 @@ class PerspectivesService:
         )
         modified_clusters.add(new_cluster.id)
         # assign the new cluster to the source documents
-        crud_document_cluster.set_labels2(
+        crud_document_cluster.set_cluster(
             db=db,
             project_id=project_id,
             aspect_id=aspect_id,
@@ -1658,7 +1658,7 @@ class PerspectivesService:
         )
         modified_clusters.add(cluster_id)
         # assign the cluster to the source documents
-        crud_document_cluster.set_labels2(
+        crud_document_cluster.set_cluster(
             db=db,
             project_id=project_id,
             aspect_id=aspect_id,

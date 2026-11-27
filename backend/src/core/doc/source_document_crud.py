@@ -123,7 +123,7 @@ class CRUDSourceDocument(
         return query.all()
 
     def read_by_name(
-        self, db: Session, *, name: str, project_id: int
+        self, db: Session, *, project_id: int, name: str
     ) -> SourceDocumentORM | None:
         return (
             db.query(self.model)

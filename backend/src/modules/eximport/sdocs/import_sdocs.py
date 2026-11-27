@@ -182,7 +182,7 @@ def import_sdocs_to_proj(
     for sdoc in sdoc_collection.source_documents:
         sdoc_folder_names.add(sdoc.folder_name)
     for sdoc_folder_name in sdoc_folder_names:
-        existing_folder = crud_folder.read_by_name_and_project(
+        existing_folder = crud_folder.read_by_name(
             db=db, folder_name=sdoc_folder_name, project_id=project_id
         )
         if (
@@ -223,7 +223,7 @@ def import_sdocs_to_proj(
     filename_to_id_map = {}
     for sdoc_export in sdoc_collection.source_documents:
         # 1.1 Create the sdoc folder (if it does not already exist)
-        sdoc_folder = crud_folder.read_by_name_and_project(
+        sdoc_folder = crud_folder.read_by_name(
             db=db, folder_name=sdoc_export.folder_name, project_id=project_id
         )
         if sdoc_folder is None:
@@ -291,7 +291,7 @@ def import_sdocs_to_proj(
         # 4. Link the source documents with the attached data (tags, metadata)
         # Tags
         tag_ids = [existing_tags[tag_name].id for tag_name in sdoc_export.tags]
-        crud_tag.link_multiple_tags(
+        crud_tag.link_multi(
             db=db, project_id=project_id, sdoc_ids=[created_sdoc.id], tag_ids=tag_ids
         )
 

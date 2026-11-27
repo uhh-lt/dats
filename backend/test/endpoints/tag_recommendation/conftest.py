@@ -288,13 +288,13 @@ def tag_recommendation_job_project(
         )
         for key in embeddings
     }
-    crud_tag.link_multiple_tags(
+    crud_tag.link_multi(
         db=db_session,
         project_id=test_project.id,
         sdoc_ids=[sdocs["sports_tagged"].id],
         tag_ids=[tags["sports"].id],
     )
-    crud_tag.link_multiple_tags(
+    crud_tag.link_multi(
         db=db_session,
         project_id=test_project.id,
         sdoc_ids=[sdocs["politics_tagged"].id],

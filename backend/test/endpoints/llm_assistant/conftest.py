@@ -173,7 +173,7 @@ def llm_assistant_project(
         sentences=["No selected category applies here."],
     )
 
-    person_code = crud_code.read_by_name_and_project(
+    person_code = crud_code.read_by_name(
         db=db_session,
         code_name="PERSON",
         project_id=test_project.id,
@@ -204,7 +204,7 @@ def llm_assistant_project(
             description="Documents without a named person.",
         ),
     )
-    crud_tag.link_multiple_tags(
+    crud_tag.link_multi(
         db=db_session,
         project_id=test_project.id,
         sdoc_ids=[target_sdoc.id],

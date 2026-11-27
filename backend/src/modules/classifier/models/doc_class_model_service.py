@@ -849,7 +849,7 @@ class DocClassificationModelService(TextClassificationModelService):
 
         # 6.2 store the evaluation in the db
         labelid2tagid = {v: k for k, v in tagid2labelid.items()}
-        classifier_db_obj = crud_classifier.add_evaluation(
+        classifier_db_obj = crud_classifier.create_evaluation(
             db=db,
             project_id=classifier.project_id,
             create_dto=ClassifierEvaluationCreate(
@@ -988,7 +988,7 @@ class DocClassificationModelService(TextClassificationModelService):
         # 5. Store the evaluation in the DB
         job.update(current_step=5)
         labelid2tagid = {v: k for k, v in tagid2labelid.items()}
-        classifier_db_obj = crud_classifier.add_evaluation(
+        classifier_db_obj = crud_classifier.create_evaluation(
             db=db,
             project_id=classifier.project_id,
             create_dto=ClassifierEvaluationCreate(
@@ -1066,7 +1066,7 @@ class DocClassificationModelService(TextClassificationModelService):
 
         # Delete existing annotations (if requested by the user)
         if parameters.delete_existing_work:
-            crud_tag.unlink_multiple_tags(
+            crud_tag.unlink_multi(
                 db=db,
                 project_id=classifier.project_id,
                 sdoc_ids=parameters.sdoc_ids,
@@ -1167,7 +1167,7 @@ class DocClassificationModelService(TextClassificationModelService):
             sdoc_ids2tag_ids[sdoc_id].update({tag.id for tag in tags})
 
         # write updated state to db
-        crud_tag.set_tags_batch(
+        crud_tag.set_tags_multi(
             db=db,
             project_id=classifier.project_id,
             links={

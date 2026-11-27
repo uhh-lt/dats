@@ -243,7 +243,7 @@ def test_tag_link_to_a_document_of_another_project_fails(
 
     _assert_foreign_key_violation(
         db_session,
-        lambda: crud_tag.link_multiple_tags(
+        lambda: crud_tag.link_multi(
             db=db_session,
             project_id=own["project"].id,
             sdoc_ids=[own["sdoc"].id],
@@ -306,14 +306,14 @@ def test_span_annotation_joins_no_span_group_of_another_project(
 def test_span_group_links_no_span_annotation_of_another_project(
     db_session: Session, tenants: TwoTenants
 ):
-    """link_groups_spans_batch writes the links in the project it is given, so the
+    """link_spans_multi writes the links in the project it is given, so the
     composite foreign key of the link rejects a span annotation of another
     project."""
     own, foreign = tenants["own"], tenants["foreign"]
 
     _assert_foreign_key_violation(
         db_session,
-        lambda: crud_span_group.link_groups_spans_batch(
+        lambda: crud_span_group.link_spans_multi(
             db=db_session,
             project_id=own["project"].id,
             links={own["span_group"].id: [foreign["span"].id]},

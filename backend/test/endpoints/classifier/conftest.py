@@ -265,7 +265,7 @@ def _link_subset_tags(
     for i, sdoc_id in enumerate(sdoc_ids):
         subsets[("train", "eval", "test")[i % 3]].append(sdoc_id)
     for name, ids in subsets.items():
-        crud_tag.link_multiple_tags(
+        crud_tag.link_multi(
             db=db_session,
             project_id=tags[name].project_id,
             sdoc_ids=ids,
@@ -587,7 +587,7 @@ def document_statistics_dataset(db_session, test_project) -> DocDataset:
         ],
     )
     for sdoc, category in zip(sdocs, NEWS20_CATEGORIES):
-        crud_tag.link_multiple_tags(
+        crud_tag.link_multi(
             db=db_session,
             project_id=test_project.id,
             sdoc_ids=[sdoc.id],
@@ -669,7 +669,7 @@ def news20_doc_dataset(db_session, test_project) -> DocDataset:
     for sdoc, category in zip(sdocs, doc_categories):
         category2sdoc_ids[category].append(sdoc.id)
     for category, ids in category2sdoc_ids.items():
-        crud_tag.link_multiple_tags(
+        crud_tag.link_multi(
             db=db_session,
             project_id=test_project.id,
             sdoc_ids=ids,

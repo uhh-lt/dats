@@ -246,7 +246,7 @@ def sdoc_with_memos_and_span_group(
         user_id=user_id,
         create_dto=SpanGroupCreate(name="crud-group", sdoc_id=sdoc_id),
     )
-    crud_span_group.link_groups_spans_batch(
+    crud_span_group.link_spans_multi(
         db=db_session, project_id=test_project.id, links={span_group.id: span_ids}
     )
 

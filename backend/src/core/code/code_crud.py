@@ -37,9 +37,7 @@ class CRUDCode(ProjectCRUDBase[CodeORM, CodeCreate, CodeUpdate]):
         def ensure(
             name: str, description: str, enabled: bool, parent_id: int | None
         ) -> int:
-            existing = self.read_by_name_and_project(
-                db, code_name=name, project_id=project_id
-            )
+            existing = self.read_by_name(db, code_name=name, project_id=project_id)
             if existing is None:
                 db_code = self.create(
                     db=db,
@@ -126,8 +124,8 @@ class CRUDCode(ProjectCRUDBase[CodeORM, CodeCreate, CodeUpdate]):
             .all()
         )
 
-    def read_by_name_and_project(
-        self, db: Session, *, code_name: str, project_id: int
+    def read_by_name(
+        self, db: Session, *, project_id: int, code_name: str
     ) -> CodeORM | None:
         return (
             db.query(self.model)

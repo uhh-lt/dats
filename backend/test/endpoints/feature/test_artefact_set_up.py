@@ -39,9 +39,7 @@ def _codes(db: Session, project_id: int) -> dict[str, bool]:
     db.expire_all()
     result = {}
     for name in CODE_NAMES:
-        code = crud_code.read_by_name_and_project(
-            db=db, code_name=name, project_id=project_id
-        )
+        code = crud_code.read_by_name(db=db, code_name=name, project_id=project_id)
         if code is not None:
             result[name] = code.is_system
     db.commit()

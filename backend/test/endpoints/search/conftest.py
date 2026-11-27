@@ -365,13 +365,13 @@ def search_project(
             parent_id=tag.id,
         ),
     )
-    crud_tag.link_multiple_tags(
+    crud_tag.link_multi(
         db=seed_db_session,
         project_id=project.id,
         sdoc_ids=[sdoc_one.id],
         tag_ids=[tag.id],
     )
-    crud_tag.link_multiple_tags(
+    crud_tag.link_multi(
         db=seed_db_session,
         project_id=project.id,
         sdoc_ids=[sdoc_two.id],

@@ -67,8 +67,8 @@ class CRUDFolder(ProjectCRUDBase[FolderORM, FolderCreate, FolderUpdate]):
             .all()
         )
 
-    def read_by_name_and_project(
-        self, db: Session, *, folder_name: str, project_id: int
+    def read_by_name(
+        self, db: Session, *, project_id: int, folder_name: str
     ) -> FolderORM | None:
         return (
             db.query(self.model)

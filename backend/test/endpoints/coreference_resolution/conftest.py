@@ -164,7 +164,7 @@ def coref_project(db_session: Session, test_user: UserORM) -> CorefProject:
         project_id=project.id,
         artefacts=frozenset({artefact_named("coreferences")}),
     )
-    mention = crud_code.read_by_name_and_project(
+    mention = crud_code.read_by_name(
         db=db_session, code_name="MENTION", project_id=project.id
     )
     assert mention is not None

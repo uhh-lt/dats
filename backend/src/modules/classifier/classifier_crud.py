@@ -20,7 +20,29 @@ class CRUDClassifier(
     ProjectCRUDBase[ClassifierORM, ClassifierCreate, ClassifierUpdate]
 ):
     ### CREATE OPERATIONS ###
-    # Inherited from ProjectCRUDBase
+
+    def create_evaluation(
+        self, db: Session, *, project_id: int, create_dto: ClassifierEvaluationCreate
+    ) -> ClassifierORM:
+        """
+        Create an evaluation of a classifier of the project.
+
+        Args:
+            project_id: The project of the classifier.
+            create_dto: The evaluation.
+
+        Returns:
+            The classifier with its evaluations.
+        """
+        classifier = self.read(
+            db=db, project_id=project_id, id=create_dto.classifier_id
+        )
+        db.add(
+            ClassifierEvaluationORM(**create_dto.model_dump(), project_id=project_id)
+        )
+        db.flush()
+        db.refresh(classifier)
+        return classifier
 
     ### READ OPERATIONS ###
 
@@ -42,19 +64,6 @@ class CRUDClassifier(
         )
 
     ### OTHER OPERATIONS ###
-
-    def add_evaluation(
-        self, db: Session, *, project_id: int, create_dto: ClassifierEvaluationCreate
-    ) -> ClassifierORM:
-        classifier = self.read(
-            db=db, project_id=project_id, id=create_dto.classifier_id
-        )
-        db.add(
-            ClassifierEvaluationORM(**create_dto.model_dump(), project_id=project_id)
-        )
-        db.flush()
-        db.refresh(classifier)
-        return classifier
 
     def link_codes(
         self, db: Session, *, project_id: int, id: int, code_ids: list[int]

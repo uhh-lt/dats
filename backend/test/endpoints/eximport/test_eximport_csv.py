@@ -51,10 +51,10 @@ def test_codes_named_like_missing_values_survive_export_import_round_trip(
     )
     db_session.commit()
 
-    na_code = crud_code.read_by_name_and_project(
+    na_code = crud_code.read_by_name(
         db=db_session, code_name="NA", project_id=target_project.id
     )
-    null_code = crud_code.read_by_name_and_project(
+    null_code = crud_code.read_by_name(
         db=db_session, code_name="null", project_id=target_project.id
     )
     assert na_code is not None
@@ -64,16 +64,14 @@ def test_codes_named_like_missing_values_survive_export_import_round_trip(
 
 
 def _read_code_description(db: Session, project_id: int) -> str | None:
-    code = crud_code.read_by_name_and_project(
+    code = crud_code.read_by_name(
         db=db, code_name="Undescribed code", project_id=project_id
     )
     return code.description if code is not None else None
 
 
 def _read_tag_description(db: Session, project_id: int) -> str | None:
-    tag = crud_tag.read_by_name_and_project(
-        db=db, name="Undescribed tag", project_id=project_id
-    )
+    tag = crud_tag.read_by_name(db=db, name="Undescribed tag", project_id=project_id)
     return tag.description if tag is not None else None
 
 

@@ -208,7 +208,7 @@ def create_prompt_project(
         name="Example document",
         sentences=EXAMPLE_SENTENCES,
     )
-    person_code = crud_code.read_by_name_and_project(
+    person_code = crud_code.read_by_name(
         db=db_session, code_name="PERSON", project_id=test_project.id
     )
     assert person_code is not None, "The default PERSON system code is missing"
@@ -531,7 +531,7 @@ def create_prompt_eximport_projects(
         )
         .id,
     )
-    target_person_code = crud_code.read_by_name_and_project(
+    target_person_code = crud_code.read_by_name(
         db=db_session, code_name="PERSON", project_id=target.id
     )
     assert target_person_code is not None, "The default PERSON system code is missing"

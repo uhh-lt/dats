@@ -145,7 +145,7 @@ class TagImporter:
         )
 
         # Check if tag already exists
-        existing_tag = crud_tag.read_by_name_and_project(
+        existing_tag = crud_tag.read_by_name(
             db=self.db, name=tag.tag_name, project_id=self.project_id
         )
 

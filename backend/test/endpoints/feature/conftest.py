@@ -372,7 +372,7 @@ def hooked_feature() -> Generator[HookedFeature, None, None]:
     calls: list[tuple[int, frozenset[str]]] = []
 
     def _set_up(db: Session, project_id: int) -> None:
-        code = crud_code.read_by_name_and_project(
+        code = crud_code.read_by_name(
             db=db, code_name=CODED_TREE.name, project_id=project_id
         )
         weaviate = WeaviateRepo().get_client()
@@ -529,7 +529,7 @@ def code_import_projects(db_session, test_user: UserORM) -> CodeImportProjects:
         persons.id,
         dict.fromkeys([*minimal_text_steps(), "named_entity_recognition"], 1),
     )
-    person = crud_code.read_by_name_and_project(
+    person = crud_code.read_by_name(
         db=db_session, code_name="PERSON", project_id=entity_spans.id
     )
     assert person is not None

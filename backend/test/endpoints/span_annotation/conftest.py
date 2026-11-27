@@ -278,7 +278,7 @@ def project_with_span_annotations_and_linked_group(
     )
 
     # Link the span annotation to the group
-    crud_span_group.link_groups_spans_batch(
+    crud_span_group.link_spans_multi(
         db=db_session,
         project_id=project.id,
         links={span_group.id: [span_annotation.id]},
