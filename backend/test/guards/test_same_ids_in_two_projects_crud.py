@@ -41,7 +41,7 @@ from systems.search_system.filtering import Filter
 from systems.search_system.sorting import SortDirection
 from utils.import_utils import import_by_suffix
 
-from .conftest import LoneProject
+from .conftest import LoneProjectWithTimeline
 
 # the global tables; a relationship onto or from them matches one column only
 GLOBAL_MAPPERS = {
@@ -219,7 +219,7 @@ def _answers(db: Session, reads: dict[str, Read], project_id: int) -> dict[str, 
 
 def _assert_same_answers(
     db: Session,
-    lone: LoneProject,
+    lone: LoneProjectWithTimeline,
     reads: dict[str, Read],
     not_copied: frozenset[str] = frozenset(),
 ):
@@ -353,16 +353,18 @@ def _crud_reads(db: Session, rows: TenantRows) -> dict[str, Read]:
 
 
 def test_every_crud_read_answers_the_same_after_a_project_with_the_same_ids_exists(
-    db_session: Session, lone_project: LoneProject
+    db_session: Session, lone_project_with_timeline: LoneProjectWithTimeline
 ):
     """Every CRUD read of the project answers the same before and after the twin
     exists, and the twin answers the same with its own project id, apart from the
     reads of the users (members and virtual users), which the twin does not copy."""
-    reads = _crud_reads(db_session, lone_project["rows"])
+    reads = _crud_reads(db_session, lone_project_with_timeline["rows"])
     users = frozenset(name for name in reads if name.startswith("CRUDUser."))
     assert len(reads) >= 150
 
-    _assert_same_answers(db_session, lone_project, reads, not_copied=users)
+    _assert_same_answers(
+        db_session, lone_project_with_timeline, reads, not_copied=users
+    )
 
 
 # --- B. service queries ---------------------------------------------------------
@@ -380,7 +382,7 @@ def _ids_filter(column: str, value: int) -> dict[str, Any]:
     }
 
 
-def _service_reads(lone: LoneProject) -> dict[str, Read]:
+def _service_reads(lone: LoneProjectWithTimeline) -> dict[str, Read]:
     rows = lone["rows"]
     user_id = rows["adoc"].user_id
     code_id, tag_id = rows["code"].id, rows["tag"].id
@@ -483,8 +485,12 @@ def _service_reads(lone: LoneProject) -> dict[str, Read]:
 
 
 def test_every_service_query_answers_the_same_after_a_project_with_the_same_ids_exists(
-    db_session: Session, lone_project: LoneProject
+    db_session: Session, lone_project_with_timeline: LoneProjectWithTimeline
 ):
     """Every service query of the project answers the same before and after the
     twin exists, and the twin answers the same with its own project id."""
-    _assert_same_answers(db_session, lone_project, _service_reads(lone_project))
+    _assert_same_answers(
+        db_session,
+        lone_project_with_timeline,
+        _service_reads(lone_project_with_timeline),
+    )

@@ -9,8 +9,9 @@ from core.metadata.source_document_metadata_dto import (
 from core.metadata.source_document_metadata_service import (
     SourceDocumentMetadataService,
 )
+from sql_test_utils import count_queries
 
-from .conftest import ProjectWithNotes, count_queries
+from .conftest import ProjectWithNotes
 
 
 def _update_notes(db: Session, project_id: int, note_ids: list[int]) -> int:

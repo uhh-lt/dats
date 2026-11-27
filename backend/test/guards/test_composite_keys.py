@@ -1,3 +1,8 @@
+"""The composite keys of the schema: every reference between project-owned rows
+names the project, so the database rejects a row that points into another project
+and a read by id stays in its project. A failure names a table, relationship or
+CRUD method that lets a row of another project through."""
+
 from collections.abc import Callable, Iterator
 from contextlib import contextmanager
 
@@ -17,8 +22,7 @@ from core.tag.tag_crud import crud_tag
 from modules.classifier.classifier_crud import crud_classifier
 from repos.db.orm_base import ORMBase
 from repos.db.sql_exceptions import NoSuchElementError
-
-from .conftest import count_queries
+from sql_test_utils import count_queries
 
 # (row, relationship, target): every relationship over a composite foreign key,
 # named by the keys of TenantRows; a target never holds a row with the same unique

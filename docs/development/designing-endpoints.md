@@ -137,7 +137,7 @@ The filters are query parameters of the collection, never one route per filter c
 | `POST /search/source-documents` with filter, sorts, `page_number`, `page_size` | search with a filter tree: all in the body |
 | `PATCH /codes/bulk` with a list                                                | bulk: the body is the list                 |
 
-The body DTO lives in the module's `*_dto.py`; there are no loose `Body()` fields. A bare list body is only allowed on a bulk route. A read whose input fits into a URL is a `GET` (3.1). A test in `backend/test/endpoints/project_router/test_project_router.py` reads the OpenAPI schema and fails when a route breaks this rule.
+The body DTO lives in the module's `*_dto.py`; there are no loose `Body()` fields. A bare list body is only allowed on a bulk route. A read whose input fits into a URL is a `GET` (3.1). A test in `backend/test/guards/test_rest_rules.py` reads the OpenAPI schema and fails when a route breaks this rule.
 
 ### 3.3 Acting user
 
@@ -235,7 +235,7 @@ The handler name becomes the method of the generated frontend client and, with t
 | `/jobs/…` → `jobs`                       | all job routes share one tag      |
 | `/projects/{project_id}` → `projects`    | the project itself                |
 
-The tag names the service of the generated frontend client (`SpanAnnotationsService`) and starts the operation ids and MCP tool names (operation id `spanAnnotations-create`, tool `spanAnnotations_create`). The router sets it, and no route sets a tag of its own; the tag `mcp` follows on the routers whose routes the MCP server offers as tools. A test in `test_project_router.py` checks every tag against its path.
+The tag names the service of the generated frontend client (`SpanAnnotationsService`) and starts the operation ids and MCP tool names (operation id `spanAnnotations-create`, tool `spanAnnotations_create`). The router sets it, and no route sets a tag of its own; the tag `mcp` follows on the routers whose routes the MCP server offers as tools. A test in `backend/test/guards/test_rest_rules.py` checks every tag against its path.
 
 ## Adding a new endpoint
 
@@ -245,7 +245,7 @@ The tag names the service of the generated frontend client (`SpanAnnotationsServ
 4. Put the whole input into one body DTO in the module's `*_dto.py`, unless the route is a `GET`.
 5. Name the handler after the rules above; it becomes the client method.
 6. Read every path id within the project, and let the composite foreign keys reject body references of another project.
-7. Add the tests: the endpoint test file of the module, and the two-project tables of `backend/test/endpoints/project_router/` (see `backend-tests.instructions.md`).
+7. Add the tests: the endpoint test file of the module, and the tables of the guard tests in `backend/test/guards/` (see `backend-tests.instructions.md`).
 8. Regenerate the frontend client with `just update-api` and adapt the callers.
 
 ## Kept exceptions

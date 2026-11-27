@@ -12,6 +12,6 @@ The project is the tenant (#927, #928). A row of a project-owned table is identi
 
 What it costs: every relationship spells out its join; every hand-written join and every custom read carries the project; the key of the reference-keyed tables grows by one column. What it buys: tenant isolation is structural instead of a convention, explicit-id imports and per-project numbering need no change of the query layer, and many-to-one loads are answered from the identity map again (with the id-only joins of #941 they cost one SELECT per row).
 
-`test/crud/test_same_ids_in_two_projects.py` copies every row of a project into a twin project with the same ids and checks that no relationship and no CRUD read crosses projects; `test/crud/test_composite_keys.py` checks the joins, the identity map and the assignments.
+`test/guards/test_same_ids_in_two_projects_crud.py` copies every row of a project into a twin project with the same ids and checks that no relationship and no CRUD read crosses projects; `test/guards/test_composite_keys.py` checks the joins, the identity map and the assignments.
 
 We rejected a unique index on `id` alone (it would keep the old convention alive and block per-project ids), relationships that join on the id only (#941: correct only while ids are globally unique, and no identity-map lookups), and relationships that write `project_id` (`foreign_keys=[project_id, code_id]`: an assignment of an object of another project would move the row there instead of failing).

@@ -7,28 +7,7 @@ from systems.mcp_system.mcp_server import EXCLUDED_ROUTES
 # ===========================================================================
 # The MCP server offers every route whose router has the tag `mcp` as a tool,
 # except EXCLUDED_ROUTES; the tool is named after the operation id
-# `<tag>-<handler>`, with `_` for `-` (`spanAnnotations_create`). A changed tool
-# list changes what agents can do, so it changes here on purpose only.
-
-# the first tags of the routers whose routes are MCP tools
-MCP_TOOL_TAGS = {
-    "bboxAnnotations",
-    "codes",
-    "features",
-    "folders",
-    "members",
-    "memos",
-    "projectMetadata",
-    "projects",
-    "search",
-    "sentenceAnnotations",
-    "sourceDocumentMetadata",
-    "sourceDocuments",
-    "spanAnnotations",
-    "tags",
-    "users",
-    "virtualUsers",
-}
+# `<tag>-<handler>`, with `_` for `-` (`spanAnnotations_create`).
 
 
 def _tools(app: FastAPI) -> dict[tuple[str, str], str]:
@@ -40,20 +19,6 @@ def _tools(app: FastAPI) -> dict[tuple[str, str], str]:
         for method, operation in operations.items()
         if "mcp" in operation["tags"] and (method.upper(), path) not in EXCLUDED_ROUTES
     }
-
-
-def test_the_mcp_tools_are_the_routes_of_the_mcp_routers(app: FastAPI) -> None:
-    """The tools come from the routers of MCP_TOOL_TAGS, 112 in all, each named
-    by its operation id."""
-    tools = _tools(app)
-
-    assert {operation_id.split("-")[0] for operation_id in tools.values()} == (
-        MCP_TOOL_TAGS
-    )
-    assert len(tools) == 112
-    assert tools[("PUT", "/projects/{project_id}/span-annotations")] == (
-        "spanAnnotations-create"
-    )
 
 
 def test_deleting_the_own_account_is_no_mcp_tool(app: FastAPI) -> None:

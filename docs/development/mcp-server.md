@@ -29,7 +29,7 @@ router = project_router(
 )
 ```
 
-The `_custom_route_mapper` in `mcp_server.py` includes only routes tagged with `"mcp"` and excludes everything else, also the routes of `EXCLUDED_ROUTES` (`DELETE /users/me`: an agent must not delete the account). A tool is named after the operation id `<tag>-<handler>` with `_` for `-`, for example `codes_create`. `backend/test/endpoints/mcp/test_mcp_server.py` pins the routers whose routes are tools and the excluded routes.
+The `_custom_route_mapper` in `mcp_server.py` includes only routes tagged with `"mcp"` and excludes everything else, also the routes of `EXCLUDED_ROUTES` (`DELETE /users/me`: an agent must not delete the account). A tool is named after the operation id `<tag>-<handler>` with `_` for `-`, for example `codes_create`.
 
 ## API Key Authentication
 

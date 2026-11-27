@@ -14,7 +14,12 @@ from composite_keys_test_utils import TenantRows
 from repos.filesystem.filesystem_repo import FilesystemRepo
 
 from .conftest import LoneProject
-from .test_project_router import PATH_IDS, QUERIES, _path_params, _project_routes
+from .test_project_isolation_of_routes import (
+    PATH_IDS,
+    QUERIES,
+    _path_params,
+    _project_routes,
+)
 
 # the routes of what the twin does not copy: the project itself (title, timestamps)
 # and its members (global users)

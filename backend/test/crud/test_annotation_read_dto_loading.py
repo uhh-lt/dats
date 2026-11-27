@@ -8,8 +8,9 @@ from core.annotation.span_annotation_dto import (
     SpanAnnotationUpdateBulk,
 )
 from core.annotation.span_annotation_service import SpanAnnotationService
+from sql_test_utils import count_queries
 
-from .conftest import SdocWithSpanAnnotations, count_queries
+from .conftest import SdocWithSpanAnnotations
 
 # One query for the annotations plus one per eager-loaded relationship. Lazy loading
 # needed about four queries per annotation, i.e. over 100 for the 30 fixture spans.

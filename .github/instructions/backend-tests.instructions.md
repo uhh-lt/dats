@@ -132,12 +132,14 @@ Because the fixture data is deterministic, every one of these cases has a known 
 
 ## Two Projects
 
+The guard tests, which check a rule over all routes, CRUD reads or tables, live in `backend/test/guards/` (see its README).
+
 - `another project` / `foreign` name the second project of a two-project fixture, whose rows the user can also reach (the user is a member of both), `outsider` names a user who is no member of the project, and the two-project fixture is called `tenants` (built with `composite_keys_test_utils.create_two_tenants`).
-- A new path parameter goes into `PATH_IDS` of [test_project_router.py](backend/test/endpoints/project_router/test_project_router.py), a route with a path id and a body into `BODIES`, a route with a path id and a required query parameter into `QUERIES`, and a route outside `/projects/{project_id}` into `ROUTES_OUTSIDE_PROJECTS`.
+- A new path parameter goes into `PATH_IDS` of [test_project_isolation_of_routes.py](backend/test/guards/test_project_isolation_of_routes.py), a route with a path id and a body into `BODIES`, a route with a path id and a required query parameter into `QUERIES`, and a route outside `/projects/{project_id}` into `ROUTES_OUTSIDE_PROJECTS`.
 - A route that cannot answer 2xx with own ids goes into `OWN_ID_EXCEPTIONS` with its status and the reason.
-- Every POST read and every GET with a required query parameter goes into `ARGUMENTS` of [test_same_ids_in_two_projects.py](backend/test/endpoints/project_router/test_same_ids_in_two_projects.py).
-- A new job type with generated endpoints gets a valid input in `JOB_INPUTS` of [endpoints/project_router/conftest.py](backend/test/endpoints/project_router/conftest.py).
-- A new project-owned table gets a row in `TenantRows` ([composite_keys_test_utils.py](backend/test/composite_keys_test_utils.py)), and a new parameter name of a CRUD read gets a value in `PARAMETERS` of the CRUD twin test ([test_same_ids_in_two_projects.py](backend/test/crud/test_same_ids_in_two_projects.py)).
+- Every POST read and every GET with a required query parameter goes into `ARGUMENTS` of [test_same_ids_in_two_projects_routes.py](backend/test/guards/test_same_ids_in_two_projects_routes.py).
+- A new job type with generated endpoints gets a valid input in `JOB_INPUTS` of [guards/conftest.py](backend/test/guards/conftest.py).
+- A new project-owned table gets a row in `TenantRows` ([composite_keys_test_utils.py](backend/test/composite_keys_test_utils.py)), and a new parameter name of a CRUD read gets a value in `PARAMETERS` of the CRUD twin test ([test_same_ids_in_two_projects_crud.py](backend/test/guards/test_same_ids_in_two_projects_crud.py)).
 
 ## Test File Organization
 
