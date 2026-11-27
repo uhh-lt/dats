@@ -859,7 +859,7 @@ def test_job_start_rejects_users_that_are_no_virtual_user_of_the_project(
         json=payload.model_dump(mode="json", exclude={"project_id"}),
     )
 
-    assert response.status_code in (400, 404), response.text
+    assert response.status_code == 404, response.text
     list_response = client.get(_job_url(base["project"].id))
     assert list_response.status_code == 200, list_response.text
     assert list_response.json() == []

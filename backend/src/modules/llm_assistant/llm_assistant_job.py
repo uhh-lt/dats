@@ -1,6 +1,5 @@
 from sqlalchemy.orm import Session
 
-from core.auth.auth_exceptions import InvalidError
 from core.doc.source_document_crud import crud_sdoc
 from core.prompt.prompt_service import PromptService
 from core.user.user_crud import crud_user
@@ -33,13 +32,8 @@ def validate_llm_assistant_retry(db: Session, payload: LLMAssistantJobInput) -> 
     since the job started do not block its retry: the job reads the documents within
     its project and gives the missing ones an error result."""
     user_id = payload.virtual_user_id
-    if (
-        user_id is not None
-        and crud_user.read(db=db, id=user_id).project_id != payload.project_id
-    ):
-        raise InvalidError(
-            f"User {user_id} is not a virtual user of project {payload.project_id}"
-        )
+    if user_id is not None:
+        crud_user.read_virtual_user(db=db, project_id=payload.project_id, id=user_id)
 
 
 def _build_strategy(db: Session, payload: LLMAssistantJobInput) -> LLMAssistantStrategy:
