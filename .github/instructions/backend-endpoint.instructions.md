@@ -111,6 +111,8 @@ Every resource of a project lives under `/projects/{project_id}/...` (#928); `sp
 
 ## REST Design
 
+`docs/development/designing-endpoints.md` explains these rules for human developers with examples.
+
 - **Methods**: `GET` reads, `PUT` creates, `PATCH` changes stored state, `DELETE` deletes and `POST` computes without storing or starts a job; an action takes the method of its effect (`PATCH /memos/{memo_id}/mark-recent`, `PUT /whiteboards/{whiteboard_id}/duplicate`).
 - **GET or POST for a read**: a read whose input fits into a URL (scalars that filter, sort or page) is a `GET` (see "Read variants"), and a read whose input needs a body (id lists, filter trees) is a `POST` with one body DTO, a computation like every other (`POST /tags/count`, `POST /code-frequencies`).
 - **Naming**: two questions decide every path, the prefix and the last segment.
