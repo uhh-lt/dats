@@ -4,7 +4,7 @@ from composite_keys_test_utils import TwoTenants, create_two_tenants
 
 
 @pytest.fixture(scope="function")
-def two_tenants(db_session, test_user, test_project) -> TwoTenants:
+def tenants(db_session, test_user, test_project) -> TwoTenants:
     """
     This fixture sets up two projects with one row of every project-owned table
     each (see `composite_keys_test_utils.TenantRows` for the full inventory):

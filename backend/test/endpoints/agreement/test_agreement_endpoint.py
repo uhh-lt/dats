@@ -574,10 +574,10 @@ def test_compute_agreement_deduplicates_requested_ids(
 # Documents, codes and both annotators must belong to the project.
 
 
-def test_compute_agreement_rejects_document_of_other_project(
+def test_compute_agreement_rejects_document_of_an_outsider_project(
     client: TestClient, agreement_project: AgreementProject
 ) -> None:
-    """A document of another project does not exist in the project (404)."""
+    """A document of an outsider project does not exist in the project (404)."""
     p = agreement_project
     other_sdoc_id = p["other_sdoc"].id
     params = _params(p, SPAN_WORDS).model_copy(
@@ -590,10 +590,10 @@ def test_compute_agreement_rejects_document_of_other_project(
     assert response.status_code == 404, response.text
 
 
-def test_compute_agreement_rejects_code_of_other_project(
+def test_compute_agreement_rejects_code_of_an_outsider_project(
     client: TestClient, agreement_project: AgreementProject
 ) -> None:
-    """A code of another project does not exist in the project (404)."""
+    """A code of an outsider project does not exist in the project (404)."""
     p = agreement_project
     other_code_id = p["other_code"].id
     params = _params(p, SPAN_WORDS).model_copy(
@@ -672,10 +672,10 @@ def test_compute_agreement_rejects_unknown_annotator_like_an_outsider(
 def test_compute_agreement_rejects_project_of_other_users(
     client: TestClient, agreement_project: AgreementProject
 ) -> None:
-    """The test user is no member of the other project (403)."""
+    """The test user is no member of the outsider project (403)."""
     p = agreement_project
     response = client.post(
-        f"/projects/{p['other_project'].id}/agreements",
+        f"/projects/{p['outsider_project'].id}/agreements",
         json=_params(p, SPAN_WORDS).model_dump(mode="json"),
     )
     assert response.status_code == 403, response.text
@@ -792,10 +792,10 @@ def test_export_agreement_counts_reads_no_document_data(
 def test_export_agreement_counts_rejects_project_of_other_users(
     client: TestClient, agreement_project: AgreementProject
 ) -> None:
-    """The test user is no member of the other project (403)."""
+    """The test user is no member of the outsider project (403)."""
     p = agreement_project
     response = client.post(
-        f"/projects/{p['other_project'].id}/agreements/export",
+        f"/projects/{p['outsider_project'].id}/agreements/export",
         json=_export_params(p).model_dump(mode="json"),
     )
     assert response.status_code == 403, response.text
@@ -868,8 +868,8 @@ def test_segment_texts_of_no_ranges_are_empty(
 @pytest.mark.parametrize(
     "sdoc_key,expected_status",
     [
-        # A document of another project does not exist in the project.
-        pytest.param("other_sdoc", 404, id="document-of-other-project"),
+        # A document of an outsider project does not exist in the project.
+        pytest.param("other_sdoc", 404, id="document-of-an-outsider-project"),
         # A document ID that does not exist is not found.
         pytest.param(None, 404, id="unknown-document"),
     ],
@@ -897,12 +897,12 @@ def test_segment_texts_reject_documents_outside_the_project(
 def test_segment_texts_reject_project_of_other_users(
     client: TestClient, agreement_project: AgreementProject
 ) -> None:
-    """The test user is no member of the other project (403)."""
+    """The test user is no member of the outsider project (403)."""
     p = agreement_project
 
     response = _post(
         client,
-        p["other_project"].id,
+        p["outsider_project"].id,
         [AgreementTextRange(sdoc_id=p["other_sdoc"].id, begin=0, end=3)],
     )
 

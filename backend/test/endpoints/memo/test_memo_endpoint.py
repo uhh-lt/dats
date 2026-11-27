@@ -126,12 +126,12 @@ def test_create_memo_on_an_object_of_another_project_is_a_conflict(
     object_type: AttachedObjectType,
 ):
     """The attached object is a body id of the write: an object of the fixture
-    project created through `other_project` (where `user` is a member) is rejected
+    project created through `another_project` (where `user` is a member) is rejected
     by the composite foreign key of its object handle (409)."""
     attached_object = memo_project[ATTACHABLE[object_type]]
 
     response = client.put(
-        _url(memo_project["other_project"].id),
+        _url(memo_project["another_project"].id),
         json=_create_payload("Should fail", object_type, attached_object.id),
     )
 
@@ -159,7 +159,7 @@ def test_create_memo_on_another_project_is_not_found(
         json=_create_payload(
             "Should fail",
             AttachedObjectType.project,
-            memo_project["other_project"].id,
+            memo_project["another_project"].id,
         ),
     )
     assert response.status_code == 404, response.text
@@ -169,12 +169,12 @@ def test_create_memo_in_a_non_member_project_is_forbidden(
     client: TestClient, memo_project: MemoProjectState
 ):
     """Creating a memo in a project the user is no member of is forbidden (403)."""
-    foreign_project = memo_project["foreign_project"]
+    outsider_project = memo_project["outsider_project"]
 
     response = client.put(
-        _url(foreign_project.id),
+        _url(outsider_project.id),
         json=_create_payload(
-            "Should fail", AttachedObjectType.project, foreign_project.id
+            "Should fail", AttachedObjectType.project, outsider_project.id
         ),
     )
 
@@ -251,10 +251,10 @@ def test_get_memo_by_id_not_existing(
 def test_get_memo_of_another_project_is_not_found(
     client: TestClient, memo_project: MemoProjectState
 ):
-    """The memo of `other_project` does not exist in the fixture project (404),
+    """The memo of `another_project` does not exist in the fixture project (404),
     although `user` is a member of both."""
     response = client.get(
-        _url(memo_project["project"].id, f"/{memo_project['other_project_memo'].id}")
+        _url(memo_project["project"].id, f"/{memo_project['foreign_memo'].id}")
     )
     assert response.status_code == 404, response.text
 
@@ -317,7 +317,7 @@ def test_get_memos_by_attached_object_returns_all_object_memos(
 @pytest.mark.parametrize(
     "params_of,expected_titles",
     [
-        # No filter: every memo of the project, none of `other_project`.
+        # No filter: every memo of the project, none of `another_project`.
         pytest.param(lambda state: {}, ALL_MEMO_TITLES, id="no-filter"),
         # The type alone: the memos of every object of that type.
         pytest.param(
@@ -350,11 +350,11 @@ def test_get_memos_by_attached_object_returns_all_object_memos(
             set(),
             id="nonexistent-object",
         ),
-        # The code of `other_project` is a filter id of another project: no match.
+        # The code of `another_project` is a filter id of another project: no match.
         pytest.param(
             lambda state: {
                 "attached_object_type": AttachedObjectType.code.value,
-                "attached_object_id": state["other_project_code"].id,
+                "attached_object_id": state["foreign_code"].id,
             },
             set(),
             id="object-of-another-project",
@@ -416,7 +416,7 @@ def test_get_memos_of_a_non_member_project_is_forbidden(
     client: TestClient, memo_project: MemoProjectState
 ):
     """Listing the memos of a project the user is no member of is forbidden (403)."""
-    response = client.get(_url(memo_project["foreign_project"].id))
+    response = client.get(_url(memo_project["outsider_project"].id))
     assert response.status_code == 403, response.text
 
 
@@ -514,10 +514,8 @@ def test_update_memo_with_null_required_field_is_rejected(
     [
         # A memo id that does not exist at all.
         pytest.param(lambda state: 99999, id="nonexistent"),
-        # The memo of `other_project`, where `user` is a member, too.
-        pytest.param(
-            lambda state: state["other_project_memo"].id, id="of-another-project"
-        ),
+        # The memo of `another_project`, where `user` is a member, too.
+        pytest.param(lambda state: state["foreign_memo"].id, id="of-another-project"),
     ],
 )
 def test_update_memo_not_in_the_project_is_not_found(
@@ -531,7 +529,7 @@ def test_update_memo_not_in_the_project_is_not_found(
     assert client.patch(url, json={"is_favorite": True}).status_code == 404
 
 
-def test_update_memo_of_other_project_member(
+def test_update_memo_of_another_member(
     client: TestClient, memo_project: MemoProjectState
 ):
     """A project member may update another member's memo (project membership is
@@ -720,7 +718,7 @@ def test_update_memos_bulk_rejects_entry_without_updatable_field(
 def test_update_memos_bulk_with_a_memo_of_another_project_is_not_found(
     client: TestClient, memo_project: MemoProjectState, entry: dict
 ):
-    """A memo of `other_project` in the bulk update is not found in the fixture
+    """A memo of `another_project` in the bulk update is not found in the fixture
     project (404), and the request changes nothing."""
     project_id = memo_project["project"].id
     memo_a = memo_project["code_memo_a"]
@@ -729,7 +727,7 @@ def test_update_memos_bulk_with_a_memo_of_another_project_is_not_found(
         _url(project_id, "/bulk"),
         json=[
             {"memo_id": memo_a.id, "title": "Renamed A"},
-            {"memo_id": memo_project["other_project_memo"].id, **entry},
+            {"memo_id": memo_project["foreign_memo"].id, **entry},
         ],
     )
 
@@ -778,10 +776,8 @@ def test_record_recent_memo_returns_the_memo(
     [
         # A memo id that does not exist at all.
         pytest.param(lambda state: 99999, id="nonexistent"),
-        # The memo of `other_project`, where `user` is a member, too.
-        pytest.param(
-            lambda state: state["other_project_memo"].id, id="of-another-project"
-        ),
+        # The memo of `another_project`, where `user` is a member, too.
+        pytest.param(lambda state: state["foreign_memo"].id, id="of-another-project"),
     ],
 )
 def test_record_recent_memo_not_in_the_project_is_not_found(
@@ -868,8 +864,8 @@ def test_get_recent_memos_only_returns_memos_from_given_project(
     """Recents are scoped to the requested project, not across projects."""
     _record_recent(client, memo_project["project"].id, memo_project["code_memo_a"].id)
 
-    # `other_project` is a real project `user` belongs to, but has no recents.
-    assert _get_recent_ids(client, memo_project["other_project"].id) == []
+    # `another_project` is a real project `user` belongs to, but has no recents.
+    assert _get_recent_ids(client, memo_project["another_project"].id) == []
 
 
 def test_get_recent_memos_non_member_project_returns_403(
@@ -878,7 +874,7 @@ def test_get_recent_memos_non_member_project_returns_403(
     """A project the requesting user is not a member of (including a nonexistent
     one) yields 403."""
     response = client.get(
-        _url(memo_project["foreign_project"].id), params={"recent": True}
+        _url(memo_project["outsider_project"].id), params={"recent": True}
     )
     assert response.status_code == 403, response.text
 
@@ -910,10 +906,8 @@ def test_delete_memo(client: TestClient, memo_project: MemoProjectState):
     [
         # A memo id that does not exist at all.
         pytest.param(lambda state: 99999, id="nonexistent"),
-        # The memo of `other_project`, where `user` is a member, too.
-        pytest.param(
-            lambda state: state["other_project_memo"].id, id="of-another-project"
-        ),
+        # The memo of `another_project`, where `user` is a member, too.
+        pytest.param(lambda state: state["foreign_memo"].id, id="of-another-project"),
     ],
 )
 def test_delete_memo_not_in_the_project_is_not_found(
@@ -926,7 +920,7 @@ def test_delete_memo_not_in_the_project_is_not_found(
     assert response.status_code == 404, response.text
 
 
-def test_delete_memo_of_other_project_member(
+def test_delete_memo_of_another_member(
     client: TestClient, memo_project: MemoProjectState
 ):
     """A project member may delete another member's memo (project membership is
@@ -984,7 +978,7 @@ def test_delete_memos_bulk_keeps_input_order(
 def test_delete_memos_bulk_includes_other_members_memo(
     client: TestClient, memo_project: MemoProjectState
 ):
-    """Bulk delete may include another project member's memo (no owner check)."""
+    """Bulk delete may include another member's memo (no owner check)."""
     own = memo_project["code_memo_a"]
     others = memo_project["code_memo_other"]
 
@@ -1002,10 +996,8 @@ def test_delete_memos_bulk_includes_other_members_memo(
     [
         # A memo id that does not exist at all.
         pytest.param(lambda state: 999999, id="nonexistent"),
-        # The memo of `other_project`, where `user` is a member, too.
-        pytest.param(
-            lambda state: state["other_project_memo"].id, id="of-another-project"
-        ),
+        # The memo of `another_project`, where `user` is a member, too.
+        pytest.param(lambda state: state["foreign_memo"].id, id="of-another-project"),
     ],
 )
 def test_delete_memos_bulk_with_a_memo_not_in_the_project_deletes_nothing(
@@ -1013,7 +1005,7 @@ def test_delete_memos_bulk_with_a_memo_not_in_the_project_deletes_nothing(
 ):
     """All-or-nothing: a memo that does not exist in the path's project rejects
     the whole request (404) and deletes nothing, also not the memo of
-    `other_project`."""
+    `another_project`."""
     project_id = memo_project["project"].id
     memo_a = memo_project["code_memo_a"]
 
@@ -1023,10 +1015,10 @@ def test_delete_memos_bulk_with_a_memo_not_in_the_project_deletes_nothing(
 
     assert response.status_code == 404, response.text
     assert client.get(_url(project_id, f"/{memo_a.id}")).status_code == 200
-    other_project_memo = memo_project["other_project_memo"]
+    foreign_memo = memo_project["foreign_memo"]
     assert (
         client.get(
-            _url(memo_project["other_project"].id, f"/{other_project_memo.id}")
+            _url(memo_project["another_project"].id, f"/{foreign_memo.id}")
         ).status_code
         == 200
     )
@@ -1042,16 +1034,16 @@ def test_delete_memos_bulk_with_a_memo_not_in_the_project_deletes_nothing(
     [
         # A code that does not exist at all.
         pytest.param(AttachedObjectType.code, lambda state: 99999, id="nonexistent"),
-        # The code of `other_project`, where `user` is a member, too.
+        # The code of `another_project`, where `user` is a member, too.
         pytest.param(
             AttachedObjectType.code,
-            lambda state: state["other_project_code"].id,
+            lambda state: state["foreign_code"].id,
             id="code-of-another-project",
         ),
         # Another project than the path's.
         pytest.param(
             AttachedObjectType.project,
-            lambda state: state["other_project"].id,
+            lambda state: state["another_project"].id,
             id="another-project",
         ),
     ],

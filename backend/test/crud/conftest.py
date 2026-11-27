@@ -405,7 +405,7 @@ def step_status_project(db_session, test_project, test_user) -> StepStatusProjec
 
 
 @pytest.fixture(scope="function")
-def two_tenants(db_session: Session, test_user, test_project) -> TwoTenants:
+def tenants(db_session: Session, test_user, test_project) -> TwoTenants:
     """The rows of every project-owned table in two projects (see TwoTenants)."""
     return create_two_tenants(db_session, user=test_user, project=test_project)
 

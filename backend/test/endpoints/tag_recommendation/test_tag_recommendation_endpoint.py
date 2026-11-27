@@ -21,7 +21,7 @@ from modules.tag_recommendation.tag_recommendation_orm import (
 from systems.job_system.job_system_enum import JobStatus
 
 from .conftest import (
-    FOREIGN_ML_JOB_ID,
+    OUTSIDER_ML_JOB_ID,
     OWN_ML_JOB_ID,
     TagRecommendationJobProject,
     TagRecommendationProject,
@@ -87,18 +87,18 @@ def test_review_recommendations_rejects_non_member_and_changes_nothing(
     ) == set(ids)
 
 
-def test_review_recommendations_rejects_mixed_own_and_foreign_ids(
+def test_review_recommendations_rejects_mixed_own_and_outsider_ids(
     client: TestClient,
     outsider_client: TestClient,
     tag_recommendation_project: TagRecommendationProject,
 ):
-    """A recommendation of a foreign project is not found in the project of the
+    """A recommendation of an outsider project is not found in the project of the
     path; the whole request is rejected and nothing changes."""
     p = tag_recommendation_project
     own_ids = [p["recommendation_a"].id]
-    foreign_id = p["foreign_recommendation"].id
+    outsider_id = p["outsider_recommendation"].id
 
-    response = client.patch(_review_url(p["project"].id), json=[*own_ids, foreign_id])
+    response = client.patch(_review_url(p["project"].id), json=[*own_ids, outsider_id])
 
     assert response.status_code == 404, response.text
     assert _unreviewed_recommendation_ids(
@@ -109,15 +109,15 @@ def test_review_recommendations_rejects_mixed_own_and_foreign_ids(
     }
     assert _unreviewed_recommendation_ids(
         outsider_client,
-        tag_recommendation_project["foreign_project"].id,
-        FOREIGN_ML_JOB_ID,
-    ) == {foreign_id}
+        tag_recommendation_project["outsider_project"].id,
+        OUTSIDER_ML_JOB_ID,
+    ) == {outsider_id}
 
 
 def test_review_recommendations_rejects_unknown_id(
     client: TestClient, tag_recommendation_project: TagRecommendationProject
 ):
-    """An id that does not exist is not found, like a foreign one."""
+    """An id that does not exist is not found, like one of an outsider project."""
     response = client.patch(
         _review_url(tag_recommendation_project["project"].id), json=[999_999]
     )

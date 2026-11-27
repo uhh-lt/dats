@@ -111,11 +111,11 @@ class MemoProjectState(TypedDict):
       - `user` favorited `code_memo_a`.
       - `other_user` favorited `code_memo_a` AND `code_memo_b`.
     - Two extra projects used to exercise project scoping and authorization:
-      - `other_project` "Other Test Project": `user` IS a member. It holds the
-        code `other_project_code` "Other Project Code" with the memo
-        `other_project_memo` "Other Project Memo" by `user` (not favorited, no
+      - `another_project` "Other Test Project": `user` IS a member. It holds the
+        code `foreign_code` "Other Project Code" with the memo
+        `foreign_memo` "Other Project Memo" by `user` (not favorited, no
         recents).
-      - `foreign_project` "Foreign Project": `user` is NOT a member (owned by
+      - `outsider_project` "Foreign Project": `user` is NOT a member (owned by
         `other_user`); empty.
 
     Non-obvious derived behavior (documented so tests don't re-derive it):
@@ -125,9 +125,9 @@ class MemoProjectState(TypedDict):
       `is_favorite=True` only for `code_memo_a` — even though `other_user` also
       favorited `code_memo_b`. Favorites are per-user, never global.
     - Every route lives under /projects/{project_id}/memos: a project `user`
-      is not a member of (`foreign_project`) yields 403. A memo id in the path
+      is not a member of (`outsider_project`) yields 403. A memo id in the path
       or in a bulk body that does not exist in the path's project (a
-      nonexistent id, or `other_project_memo` read within the fixture project)
+      nonexistent id, or `foreign_memo` read within the fixture project)
       yields 404. The attached object of a create is left to the composite
       foreign key of its object handle: an object that does not exist in the
       path's project yields 409, except a project, which must be the path's
@@ -138,10 +138,10 @@ class MemoProjectState(TypedDict):
     project: ProjectORM
     user: UserORM
     other_user: UserORM
-    other_project: ProjectORM
-    other_project_code: CodeORM
-    other_project_memo: MemoORM
-    foreign_project: ProjectORM
+    another_project: ProjectORM
+    foreign_code: CodeORM
+    foreign_memo: MemoORM
+    outsider_project: ProjectORM
     code: CodeORM
     tag: TagORM
     sdoc: SourceDocumentORM
@@ -324,13 +324,13 @@ def memo_project(
             db=db_session, project_id=project.id, memo_id=memo.id, user_id=user.id
         )
 
-    # Two extra projects for scoping/authorization tests: `other_project` has
-    # `user` as a member and a code with a memo; `foreign_project` does not and
+    # Two extra projects for scoping/authorization tests: `another_project` has
+    # `user` as a member and a code with a memo; `outsider_project` does not and
     # is empty.
-    other_project = _create_project(db_session, test_user, "Other Test Project")
-    other_project_code = crud_code.create(
+    another_project = _create_project(db_session, test_user, "Other Test Project")
+    foreign_code = crud_code.create(
         db=db_session,
-        project_id=other_project.id,
+        project_id=another_project.id,
         create_dto=CodeCreate(
             name="Other Project Code",
             color="#00ff00",
@@ -340,24 +340,24 @@ def memo_project(
             is_system=False,
         ),
     )
-    other_project_memo = _create_memo(
+    foreign_memo = _create_memo(
         db_session,
-        project=other_project,
+        project=another_project,
         user=test_user,
         title="Other Project Memo",
         content="Content of Other Project Memo",
-        attached_object_id=other_project_code.id,
+        attached_object_id=foreign_code.id,
         attached_object_type=AttachedObjectType.code,
     )
-    foreign_project = _create_project(db_session, other_user, "Foreign Project")
+    outsider_project = _create_project(db_session, other_user, "Foreign Project")
 
     db_session.commit()
     for obj in (
         project,
-        other_project,
-        other_project_code,
-        other_project_memo,
-        foreign_project,
+        another_project,
+        foreign_code,
+        foreign_memo,
+        outsider_project,
         code,
         tag,
         sdoc,
@@ -380,10 +380,10 @@ def memo_project(
         "project": project,
         "user": test_user,
         "other_user": other_user,
-        "other_project": other_project,
-        "other_project_code": other_project_code,
-        "other_project_memo": other_project_memo,
-        "foreign_project": foreign_project,
+        "another_project": another_project,
+        "foreign_code": foreign_code,
+        "foreign_memo": foreign_memo,
+        "outsider_project": outsider_project,
         "code": code,
         "tag": tag,
         "sdoc": sdoc,

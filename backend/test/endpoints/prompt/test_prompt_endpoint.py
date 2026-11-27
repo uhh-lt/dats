@@ -433,16 +433,16 @@ def _selection(project: PromptProject, key: str) -> dict[str, object]:
             return {"examples": [alice]}
         case "sentence-example":
             return {"examples": [project["sentence_example"]]}
-        case "foreign-code":
-            return {"codes": [prompt_code(project["foreign_code"])]}
-        case "foreign-tag":
-            tag = project["foreign_tag"]
+        case "outsider-code":
+            return {"codes": [prompt_code(project["outsider_code"])]}
+        case "outsider-tag":
+            tag = project["outsider_tag"]
             return {"tags": [PromptTag(tag_id=tag.id, name=tag.name, description="")]}
-        case "foreign-example":
-            foreign_span = alice.spans[0].model_copy(
-                update={"code_id": project["foreign_code"].id}
+        case "outsider-example":
+            outsider_span = alice.spans[0].model_copy(
+                update={"code_id": project["outsider_code"].id}
             )
-            return {"examples": [alice.model_copy(update={"spans": [foreign_span]})]}
+            return {"examples": [alice.model_copy(update={"spans": [outsider_span]})]}
         case _:
             return {}
 
@@ -575,25 +575,25 @@ def _selection(project: PromptProject, key: str) -> dict[str, object]:
         pytest.param(
             TaskType.ANNOTATION,
             SPAN_V1_PROMPT,
-            "foreign-code",
+            "outsider-code",
             "which do not belong to project",
-            id="foreign-code",
+            id="outsider-code",
         ),
         # Tags must belong to the prompt's project.
         pytest.param(
             TaskType.TAGGING,
             TAGGING_PROMPT,
-            "foreign-tag",
+            "outsider-tag",
             "which do not belong to project",
-            id="foreign-tag",
+            id="outsider-tag",
         ),
         # The spans of examples must show codes of the prompt's project.
         pytest.param(
             TaskType.ANNOTATION,
             SPAN_V2_PROMPT,
-            "foreign-example",
+            "outsider-example",
             "which do not belong to project",
-            id="foreign-example-code",
+            id="outsider-example-code",
         ),
     ],
 )
@@ -639,14 +639,14 @@ def test_create_prompt_rejects_a_duplicate_name(
     assert response.status_code == 409, response.text
 
 
-def test_create_prompt_rejects_foreign_project(
+def test_create_prompt_rejects_an_outsider_project(
     client: TestClient,
     prompt_project: PromptProject,
 ) -> None:
     """Creating requires membership in the path's project (HTTP 403)."""
     response = _put_prompt(
         client,
-        prompt_project["foreign_project"].id,
+        prompt_project["outsider_project"].id,
         PromptCreate(
             name="New prompt",
             task_type=TaskType.ANNOTATION,
@@ -837,12 +837,12 @@ def test_get_by_project_lists_the_project_prompts_by_name(
     ]
 
 
-def test_get_by_project_rejects_foreign_project(
+def test_get_by_project_rejects_an_outsider_project(
     client: TestClient,
     prompt_project: PromptProject,
 ) -> None:
     """Listing requires membership in the path's project (HTTP 403)."""
-    response = client.get(_prompts_url(prompt_project["foreign_project"].id))
+    response = client.get(_prompts_url(prompt_project["outsider_project"].id))
     assert response.status_code == 403, response.text
 
 
@@ -1164,24 +1164,24 @@ def test_create_sentence_examples_copy_the_text_of_the_annotated_sentences(
 # --- C. invalid requests ------------------------------------------------------------
 
 
-def test_create_examples_rejects_annotations_of_another_project(
+def test_create_examples_rejects_annotations_of_an_outsider_project(
     client: TestClient,
     prompt_project: PromptProject,
 ) -> None:
     """Examples are created from the project's own annotations only: an annotation
-    of another project does not exist in the project (HTTP 404)."""
+    of an outsider project does not exist in the project (HTTP 404)."""
     project = prompt_project
     response = _post_examples(
         client,
         project,
         PromptExampleKind.SPAN,
-        [project["foreign_span_annotation"].id],
+        [project["outsider_span_annotation"].id],
     )
     assert response.status_code == 404, response.text
     assert "There exists no SpanAnnotation" in response.text
 
 
-def test_create_examples_rejects_foreign_project(
+def test_create_examples_rejects_an_outsider_project(
     client: TestClient,
     prompt_project: PromptProject,
 ) -> None:
@@ -1191,8 +1191,8 @@ def test_create_examples_rejects_foreign_project(
         client,
         project,
         PromptExampleKind.SPAN,
-        [project["foreign_span_annotation"].id],
-        project_key="foreign_project",
+        [project["outsider_span_annotation"].id],
+        project_key="outsider_project",
     )
     assert response.status_code == 403, response.text
 
@@ -1887,12 +1887,12 @@ def test_preview_rejects_a_message_index_out_of_range(
     assert "has 3 message(s)" in response.text
 
 
-def test_preview_rejects_a_document_of_another_project(
+def test_preview_rejects_a_document_of_an_outsider_project(
     client: TestClient,
     prompt_project: PromptProject,
 ) -> None:
-    """A document of another project is not found in the request's project (HTTP
-    404)."""
+    """A document of an outsider project is not found in the request's project
+    (HTTP 404)."""
     project = prompt_project
     draft = _draft(
         TaskType.ANNOTATION,
@@ -1900,19 +1900,19 @@ def test_preview_rejects_a_document_of_another_project(
         codes=[prompt_code(project["claim_code"])],
     )
     response = _post_preview(
-        client, project, _request(draft=draft, sdoc_id=project["foreign_sdoc"].id)
+        client, project, _request(draft=draft, sdoc_id=project["outsider_sdoc"].id)
     )
     assert response.status_code == 404, response.text
 
 
-def test_preview_of_a_version_of_another_project_is_not_found(
+def test_preview_of_a_version_of_an_outsider_project_is_not_found(
     client: TestClient,
     prompt_project: PromptProject,
 ) -> None:
-    """A version of another project is not found in the path's project (HTTP
+    """A version of an outsider project is not found in the path's project (HTTP
     404)."""
     project = prompt_project
-    version_id = project["foreign_prompt"].versions[0].id
+    version_id = project["outsider_prompt"].versions[0].id
     response = _post_preview(client, project, _request(version_id=version_id))
     assert response.status_code == 404, response.text
 
@@ -1948,15 +1948,15 @@ def test_preview_rejects_an_invalid_draft(
     assert "must contain exactly one document block" in response.text
 
 
-def test_preview_rejects_foreign_project(
+def test_preview_rejects_an_outsider_project(
     client: TestClient,
     prompt_project: PromptProject,
 ) -> None:
     """Previewing requires membership in the path's project (HTTP 403)."""
     project = prompt_project
     response = client.post(
-        _prompts_url(project["foreign_project"].id, "/preview"),
-        json=_request(version_id=project["foreign_prompt"].versions[0].id).model_dump(
+        _prompts_url(project["outsider_project"].id, "/preview"),
+        json=_request(version_id=project["outsider_prompt"].versions[0].id).model_dump(
             mode="json"
         ),
     )

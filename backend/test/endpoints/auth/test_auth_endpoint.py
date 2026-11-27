@@ -86,7 +86,7 @@ def test_content_auth_rejects_virtual_user_api_key(
         ),
         # a file of a project the user is no member of
         pytest.param(
-            "/content/projects/{other}/sdocs/1/a.txt", 403, id="foreign-project"
+            "/content/projects/{other}/sdocs/1/a.txt", 403, id="outsider-project"
         ),
         # files outside `projects/` are never served
         pytest.param("/content/temporary_files/1/a.zip", 403, id="temporary-file"),
@@ -119,7 +119,7 @@ def test_content_auth_serves_only_own_project_files(
     `/content/projects/<id>/` of a project of the user."""
     uri = uri_template.format(
         own=virtual_user_project["project"].id,
-        other=virtual_user_project["other_project"].id,
+        other=virtual_user_project["outsider_project"].id,
     )
     client.cookies.set("Authorization", virtual_user_project["user_api_key"])
 

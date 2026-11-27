@@ -320,7 +320,7 @@ def virtual_user_project(
 
 
 @pytest.fixture(scope="function")
-def two_tenants(db_session, test_user, test_project) -> TwoTenants:
+def tenants(db_session, test_user, test_project) -> TwoTenants:
     """The rows of every project-owned table in the test project and in "Foreign
     Project" (composite_keys_test_utils.TwoTenants and TenantRows list them)."""
     return create_two_tenants(db_session, user=test_user, project=test_project)

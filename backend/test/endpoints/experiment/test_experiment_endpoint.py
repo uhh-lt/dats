@@ -183,19 +183,19 @@ def test_create_experiment_requires_every_document_annotated_by_the_gold_annotat
 @pytest.mark.parametrize(
     "field,key,status,message",
     [
-        # A document of another project.
+        # A document of an outsider project.
         pytest.param(
-            "sdoc_ids", "foreign_sdoc", 404, "no SourceDocument", id="foreign-sdoc"
+            "sdoc_ids", "outsider_sdoc", 404, "no SourceDocument", id="outsider-sdoc"
         ),
-        # A code of another project.
-        pytest.param("code_ids", "foreign_code", 404, "no Code", id="foreign-code"),
+        # A code of an outsider project.
+        pytest.param("code_ids", "outsider_code", 404, "no Code", id="outsider-code"),
         # A user who is no annotator of the project.
         pytest.param(
             "gold_user_id", "outsider", 400, "no annotator", id="outsider-gold"
         ),
     ],
 )
-def test_create_experiment_rejects_objects_of_other_projects(
+def test_create_experiment_rejects_objects_of_an_outsider_project(
     client: TestClient,
     experiment_project: ExperimentProject,
     field: str,
@@ -204,8 +204,9 @@ def test_create_experiment_rejects_objects_of_other_projects(
     message: str,
 ) -> None:
     """Documents and codes are read within the path's project (404 for one of
-    another project: the experiment stores them as id lists, which no foreign key
-    checks); the gold annotator must be an annotator of the project (400)."""
+    an outsider project: the experiment stores them as id lists, which no
+    foreign key checks); the gold annotator must be an annotator of the project
+    (400)."""
     p = experiment_project
     object_id = p[key].id  # type: ignore[literal-required]
     value = object_id if field == "gold_user_id" else [object_id]
@@ -248,7 +249,7 @@ def test_create_experiment_rejects_a_duplicate_name(
     assert response.status_code == 409, response.text
 
 
-def test_create_experiment_rejects_a_foreign_project(
+def test_create_experiment_rejects_an_outsider_project(
     client: TestClient, experiment_project: ExperimentProject
 ) -> None:
     """Experiments can only be created in the user's projects: the user is no
@@ -256,11 +257,13 @@ def test_create_experiment_rejects_a_foreign_project(
     p = experiment_project
     dto = _create_dto(
         p,
-        sdoc_ids=[p["foreign_sdoc"].id],
-        code_ids=[p["foreign_code"].id],
+        sdoc_ids=[p["outsider_sdoc"].id],
+        code_ids=[p["outsider_code"].id],
         gold_user_id=p["outsider"].id,
     )
-    response = client.put(_url(p["other_project"].id), json=dto.model_dump(mode="json"))
+    response = client.put(
+        _url(p["outsider_project"].id), json=dto.model_dump(mode="json")
+    )
     assert response.status_code == 403, response.text
 
 
@@ -387,11 +390,11 @@ def test_create_run_rejects_ineligible_prompt_versions(
     assert _get_experiment(client, p["project"].id, p["experiment"].id).runs == []
 
 
-def test_create_run_rejects_nonexistent_prompt_versions_and_foreign_experiments(
+def test_create_run_rejects_nonexistent_prompt_versions_and_outsider_experiments(
     client: TestClient, experiment_project: ExperimentProject
 ) -> None:
-    """An unknown prompt version and an experiment of another project are not
-    found (HTTP 404)."""
+    """An unknown prompt version and an experiment of an outsider project are
+    not found (HTTP 404)."""
     p = experiment_project
     unknown_version = ExperimentRunCreate(
         name="Unknown",
@@ -404,24 +407,24 @@ def test_create_run_rejects_nonexistent_prompt_versions_and_foreign_experiments(
     )
     assert response.status_code == 404, response.text
 
-    foreign = ExperimentRunCreate(
+    outsider_run = ExperimentRunCreate(
         name="Foreign",
         prompt_version_id=p["span_prompt"].versions[0].id,
         model="m",
     )
     response = client.put(
-        _url(p["project"].id, f"/{p['foreign_experiment'].id}/runs"),
-        json=foreign.model_dump(mode="json"),
+        _url(p["project"].id, f"/{p['outsider_experiment'].id}/runs"),
+        json=outsider_run.model_dump(mode="json"),
     )
     assert response.status_code == 404, response.text
 
 
-def test_create_run_with_a_prompt_version_of_another_project_is_not_found(
+def test_create_run_with_a_prompt_version_of_an_outsider_project_is_not_found(
     client: TestClient,
     experiment_project: ExperimentProject,
-    foreign_prompt_version_id: int,
+    outsider_prompt_version_id: int,
 ) -> None:
-    """A prompt version of another project is read within the experiment's
+    """A prompt version of an outsider project is read within the experiment's
     project, so it is not found (HTTP 404) and no run is created."""
     p = experiment_project
     project_id = p["project"].id
@@ -429,7 +432,7 @@ def test_create_run_with_a_prompt_version_of_another_project_is_not_found(
     runs_before = _get_experiment(client, project_id, experiment_id).runs
     dto = ExperimentRunCreate(
         name="Foreign version",
-        prompt_version_id=foreign_prompt_version_id,
+        prompt_version_id=outsider_prompt_version_id,
         model=INVALID_MODEL,
     )
 
@@ -515,15 +518,15 @@ def test_get_by_project_lists_all_experiments_with_their_runs_newest_first(
     assert experiments[1].runs == []
 
 
-def test_get_experiment_rejects_foreign_and_unknown_experiments(
+def test_get_experiment_rejects_outsider_and_unknown_experiments(
     client: TestClient, experiment_project: ExperimentProject
 ) -> None:
-    """Experiments of other projects and unknown experiments are not found; the
-    list of a project of which the user is no member is forbidden."""
+    """Experiments of an outsider project and unknown experiments are not found;
+    the list of a project of which the user is no member is forbidden."""
     p = experiment_project
-    response = client.get(_url(p["project"].id, f"/{p['foreign_experiment'].id}"))
+    response = client.get(_url(p["project"].id, f"/{p['outsider_experiment'].id}"))
     assert response.status_code == 404, response.text
-    response = client.get(_url(p["other_project"].id))
+    response = client.get(_url(p["outsider_project"].id))
     assert response.status_code == 403, response.text
     response = client.get(_url(p["project"].id, "/999999"))
     assert response.status_code == 404, response.text
@@ -627,15 +630,15 @@ def test_update_experiment_rejects_every_field_but_the_name(
     assert unchanged.gold_user_id == experiment.gold_user_id
 
 
-def test_update_experiment_rejects_empty_and_foreign_updates(
+def test_update_experiment_rejects_empty_and_outsider_updates(
     client: TestClient, experiment_project: ExperimentProject
 ) -> None:
-    """An empty update is 422, an experiment of another project 404."""
+    """An empty update is 422, an experiment of an outsider project 404."""
     p = experiment_project
     response = client.patch(_url(p["project"].id, f"/{p['experiment'].id}"), json={})
     assert response.status_code == 422, response.text
     response = client.patch(
-        _url(p["project"].id, f"/{p['foreign_experiment'].id}"), json={"name": "x"}
+        _url(p["project"].id, f"/{p['outsider_experiment'].id}"), json={"name": "x"}
     )
     assert response.status_code == 404, response.text
 
@@ -812,17 +815,17 @@ def test_refresh_all_run_scores_is_refused_without_a_gold_annotator(
     "experiment_id_key",
     [
         # an experiment of a project the user is no member of
-        pytest.param("foreign_experiment", id="foreign"),
+        pytest.param("outsider_experiment", id="outsider"),
         # an experiment that does not exist
         pytest.param(None, id="unknown"),
     ],
 )
-def test_refresh_all_run_scores_rejects_foreign_and_unknown_experiments(
+def test_refresh_all_run_scores_rejects_outsider_and_unknown_experiments(
     client: TestClient,
     experiment_project: ExperimentProject,
     experiment_id_key: str | None,
 ) -> None:
-    """Experiments of other projects and unknown experiments are not found."""
+    """Experiments of an outsider project and unknown experiments are not found."""
     experiment_id = (
         999999
         if experiment_id_key is None
@@ -902,12 +905,12 @@ def test_delete_experiment_without_a_gold_annotator_deletes_its_run_users(
     assert _virtual_user_names(client, p["project"].id) == {"HumanGold-Baseline"}
 
 
-def test_delete_experiment_rejects_foreign_experiments(
+def test_delete_experiment_rejects_outsider_experiments(
     client: TestClient, experiment_project: ExperimentProject
 ) -> None:
-    """Experiments of other projects cannot be deleted."""
+    """Experiments of an outsider project cannot be deleted."""
     p = experiment_project
-    response = client.delete(_url(p["project"].id, f"/{p['foreign_experiment'].id}"))
+    response = client.delete(_url(p["project"].id, f"/{p['outsider_experiment'].id}"))
     assert response.status_code == 404, response.text
 
 

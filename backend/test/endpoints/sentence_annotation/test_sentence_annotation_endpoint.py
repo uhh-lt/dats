@@ -72,25 +72,25 @@ def test_add_sentence_annotation_attached_not_existing(
     "code_tenant,sdoc_tenant",
     [
         # the code belongs to the other project, the document to the path's
-        pytest.param("foreign", "own", id="code-of-other-project"),
+        pytest.param("foreign", "own", id="code-of-another-project"),
         # the document belongs to the other project, the code to the path's
-        pytest.param("own", "foreign", id="sdoc-of-other-project"),
+        pytest.param("own", "foreign", id="sdoc-of-another-project"),
     ],
 )
-def test_create_sentence_annotation_with_id_of_other_project_is_a_conflict(
+def test_create_sentence_annotation_with_id_of_another_project_is_a_conflict(
     client: TestClient,
-    two_tenants: TwoTenants,
+    tenants: TwoTenants,
     code_tenant: Literal["own", "foreign"],
     sdoc_tenant: Literal["own", "foreign"],
 ):
     """A code or document of another project of the user in the create body is
     rejected by the composite foreign keys (409), and nothing is created."""
-    own = two_tenants["own"]
+    own = tenants["own"]
     payload = SentenceAnnotationCreate(
         sentence_id_start=0,
         sentence_id_end=0,
-        code_id=two_tenants[code_tenant]["code"].id,
-        sdoc_id=two_tenants[sdoc_tenant]["sdoc"].id,
+        code_id=tenants[code_tenant]["code"].id,
+        sdoc_id=tenants[sdoc_tenant]["sdoc"].id,
     )
 
     resp = client.put(_route(own["project"].id), json=payload.model_dump())
@@ -113,7 +113,7 @@ def test_create_sentence_annotation_in_project_of_others_is_forbidden(
     )
 
     resp = client.put(
-        _route(virtual_user_project["other_project"].id), json=payload.model_dump()
+        _route(virtual_user_project["outsider_project"].id), json=payload.model_dump()
     )
 
     assert resp.status_code == 403, resp.text
@@ -226,18 +226,18 @@ def test_get_by_user_code_if_not_exists(
     "filter_key",
     [
         # the document filter names the other project's document
-        pytest.param("sdoc_id", id="sdoc-of-other-project"),
+        pytest.param("sdoc_id", id="sdoc-of-another-project"),
         # the code filter names the other project's code
-        pytest.param("code_id", id="code-of-other-project"),
+        pytest.param("code_id", id="code-of-another-project"),
     ],
 )
-def test_get_sentence_annotations_filter_of_other_project_matches_nothing(
-    client: TestClient, two_tenants: TwoTenants, filter_key: str
+def test_get_sentence_annotations_filter_of_another_project_matches_nothing(
+    client: TestClient, tenants: TwoTenants, filter_key: str
 ):
     """A filter id of another project matches no annotation of the path's project,
     although the user annotated it in the other project."""
-    own = two_tenants["own"]
-    foreign = two_tenants["foreign"]
+    own = tenants["own"]
+    foreign = tenants["foreign"]
     value = foreign["sdoc"].id if filter_key == "sdoc_id" else foreign["code"].id
 
     resp = client.get(
@@ -296,13 +296,13 @@ def test_get_by_sdoc_and_user_both_ids_not_exist(
     assert resp.status_code == 404, resp.text
 
 
-def test_get_by_sentence_of_sdoc_of_other_project_is_not_found(
-    client: TestClient, two_tenants: TwoTenants
+def test_get_by_sentence_of_sdoc_of_another_project_is_not_found(
+    client: TestClient, tenants: TwoTenants
 ):
     """A document of another project of the user is not found in the path's
     project."""
-    own = two_tenants["own"]
-    foreign = two_tenants["foreign"]
+    own = tenants["own"]
+    foreign = tenants["foreign"]
 
     resp = client.get(
         _route(own["project"].id) + "/per-sentence",
@@ -357,13 +357,13 @@ def test_get_sentence_annotation_by_id_if_not_exists(
         pytest.param("DELETE", None, id="delete"),
     ],
 )
-def test_sentence_annotation_id_of_other_project_is_not_found(
-    client: TestClient, two_tenants: TwoTenants, method: str, body: dict | None
+def test_sentence_annotation_id_of_another_project_is_not_found(
+    client: TestClient, tenants: TwoTenants, method: str, body: dict | None
 ):
     """An annotation of another project of the user is not found under the path's
     project, and stays unchanged in its own project."""
-    own = two_tenants["own"]
-    foreign = two_tenants["foreign"]
+    own = tenants["own"]
+    foreign = tenants["foreign"]
     foreign_sentence = foreign["sentence"]
 
     resp = client.request(
@@ -689,13 +689,13 @@ def test_count_annotation_if_not_exists(
     assert resp.json() == {}
 
 
-def test_count_annotations_of_other_project_match_nothing(
-    client: TestClient, two_tenants: TwoTenants
+def test_count_annotations_of_another_project_match_nothing(
+    client: TestClient, tenants: TwoTenants
 ):
     """The document and code of another project match nothing in the path's
     project, although the user annotated them there."""
-    own = two_tenants["own"]
-    foreign = two_tenants["foreign"]
+    own = tenants["own"]
+    foreign = tenants["foreign"]
 
     resp = client.post(
         _route(own["project"].id) + "/count",
@@ -939,7 +939,7 @@ def test_create_copy_of_source_on_other_document_is_rejected(
         # the source was deleted (e.g. after the comparison was opened)
         pytest.param(None, id="nonexistent"),
         # the source belongs to another project of the same user
-        pytest.param("other_project_source_id", id="other-project"),
+        pytest.param("other_project_source_id", id="another-project"),
     ],
 )
 def test_create_copy_of_source_outside_the_project_is_not_found(

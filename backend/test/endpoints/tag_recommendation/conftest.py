@@ -34,7 +34,7 @@ from modules.tag_recommendation.tag_recommendation_orm import (
 from repos.vector.weaviate_repo import WeaviateRepo
 
 OWN_ML_JOB_ID = "own-tag-recommendation-job"
-FOREIGN_ML_JOB_ID = "foreign-tag-recommendation-job"
+OUTSIDER_ML_JOB_ID = "foreign-tag-recommendation-job"
 FEATURELESS_ML_JOB_ID = "featureless-tag-recommendation-job"
 
 
@@ -49,10 +49,10 @@ class TagRecommendationProject(TypedDict):
       `recommendation_a` predicts `tag_a` with score 0.9, `recommendation_b`
       predicts `tag_b` with score 0.4.
     - `outsider` "Outside User" (outsider@dats.org) is not a member of `project`.
-      `foreign_project` "Foreign Project" belongs to the outsider only; it has
-      its own document "Test Document", the tag `foreign_tag` "Foreign Tag", the
-      tag recommendation job `FOREIGN_ML_JOB_ID` (stored, not run) and its
-      unreviewed recommendation `foreign_recommendation` (predicts `foreign_tag`
+      `outsider_project` "Foreign Project" belongs to the outsider only; it has
+      its own document "Test Document", the tag `outsider_tag` "Foreign Tag", the
+      tag recommendation job `OUTSIDER_ML_JOB_ID` (stored, not run) and its
+      unreviewed recommendation `outsider_recommendation` (predicts `outsider_tag`
       with score 0.7).
 
     Derived behavior:
@@ -68,9 +68,9 @@ class TagRecommendationProject(TypedDict):
     recommendation_a: TagRecommendationLinkORM
     recommendation_b: TagRecommendationLinkORM
     outsider: UserORM
-    foreign_project: ProjectORM
-    foreign_tag: TagORM
-    foreign_recommendation: TagRecommendationLinkORM
+    outsider_project: ProjectORM
+    outsider_tag: TagORM
+    outsider_recommendation: TagRecommendationLinkORM
 
 
 def _create_tag(db: Session, project_id: int, name: str) -> TagORM:
@@ -125,7 +125,7 @@ def tag_recommendation_project(
         ),
     )
     db_session.commit()
-    foreign_project = crud_project.read(
+    outsider_project = crud_project.read(
         db=db_session,
         id=ProjectService()
         .create_project(
@@ -137,20 +137,20 @@ def tag_recommendation_project(
         )
         .id,
     )
-    foreign_sdoc = dats_test_utils.create_project_with_sdoc(
-        db_session, foreign_project
+    outsider_sdoc = dats_test_utils.create_project_with_sdoc(
+        db_session, outsider_project
     )["source_document"]
-    foreign_tag = _create_tag(db_session, foreign_project.id, "Foreign Tag")
+    outsider_tag = _create_tag(db_session, outsider_project.id, "Foreign Tag")
     store_job(
         "tag_recommendation",
-        TagRecommendationJobInput(project_id=foreign_project.id),
-        job_id=FOREIGN_ML_JOB_ID,
+        TagRecommendationJobInput(project_id=outsider_project.id),
+        job_id=OUTSIDER_ML_JOB_ID,
     )
-    foreign_recommendation = _create_recommendation(
+    outsider_recommendation = _create_recommendation(
         db_session,
-        ml_job_id=FOREIGN_ML_JOB_ID,
-        sdoc_id=foreign_sdoc.id,
-        tag=foreign_tag,
+        ml_job_id=OUTSIDER_ML_JOB_ID,
+        sdoc_id=outsider_sdoc.id,
+        tag=outsider_tag,
         score=0.7,
     )
     db_session.commit()
@@ -162,9 +162,9 @@ def tag_recommendation_project(
         "recommendation_a": recommendation_a,
         "recommendation_b": recommendation_b,
         "outsider": outsider,
-        "foreign_project": foreign_project,
-        "foreign_tag": foreign_tag,
-        "foreign_recommendation": foreign_recommendation,
+        "outsider_project": outsider_project,
+        "outsider_tag": outsider_tag,
+        "outsider_recommendation": outsider_recommendation,
     }
 
 

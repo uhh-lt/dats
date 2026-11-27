@@ -218,7 +218,7 @@ def system_only_project(
 
 
 @pytest.fixture(scope="function")
-def two_tenants(db_session, test_user, test_project) -> TwoTenants:
+def tenants(db_session, test_user, test_project) -> TwoTenants:
     """The rows of every project-owned table in the test project and in "Foreign
     Project" (composite_keys_test_utils.TwoTenants and TenantRows list them): in
     each, the document "doc_<p>.txt" is linked to "Tag <p>", which has the child
