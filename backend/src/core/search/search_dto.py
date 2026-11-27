@@ -58,9 +58,7 @@ class QueryRequest(BaseModel, Generic[T]):
         "Both must be set or both omitted.",
     )
     page_number: int = Field(default=0, ge=0, description="Zero-based page index")
-    page_size: int = Field(
-        default=20, ge=1, le=200, description="Number of rows per page"
-    )
+    page_size: int = Field(default=20, ge=1, description="Number of rows per page")
 
     @model_validator(mode="after")
     def validate_drill_down_fields(self) -> "QueryRequest[T]":

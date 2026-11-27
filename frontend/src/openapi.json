@@ -18343,7 +18343,6 @@
           },
           "page_size": {
             "type": "integer",
-            "maximum": 200,
             "minimum": 1,
             "title": "Page Size",
             "description": "Number of rows per page",
@@ -18388,7 +18387,6 @@
           },
           "page_size": {
             "type": "integer",
-            "maximum": 200,
             "minimum": 1,
             "title": "Page Size",
             "description": "Number of rows per page",
@@ -18436,7 +18434,6 @@
           },
           "page_size": {
             "type": "integer",
-            "maximum": 200,
             "minimum": 1,
             "title": "Page Size",
             "description": "Number of rows per page",
@@ -18481,7 +18478,6 @@
           },
           "page_size": {
             "type": "integer",
-            "maximum": 200,
             "minimum": 1,
             "title": "Page Size",
             "description": "Number of rows per page",
