@@ -4,6 +4,7 @@ what the first one answered, with its own project id. A route that matched a row
 its id alone, or read the rows of all projects, would mix in the rows of the other
 project."""
 
+import json
 from typing import Any, Callable
 
 from fastapi.testclient import TestClient
@@ -247,14 +248,19 @@ def _in_project(value: Any, source_id: int, target_id: int) -> Any:
 
 
 def _content(response: Response) -> Any:
-    """The JSON body of the response, or its text if it has none; the text of the
-    file instead of its path for an export (the path holds a new uuid each time)."""
+    """The JSON body of the response, or its text if it has none; the content of
+    the file instead of its path for an export (the path holds a new uuid each
+    time), parsed if it is JSON so that its project ids compare like a body's."""
     try:
         content = response.json()
     except ValueError:
         return response.text
     if isinstance(content, str) and "/exports/" in content:
-        return (FilesystemRepo().root_dir / content).read_text()
+        text = (FilesystemRepo().root_dir / content).read_text()
+        try:
+            return json.loads(text)
+        except ValueError:
+            return text
     return content
 
 
