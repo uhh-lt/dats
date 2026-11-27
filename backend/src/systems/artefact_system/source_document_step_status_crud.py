@@ -253,7 +253,7 @@ class CRUDSourceDocumentStepStatus(
         Returns:
             Per doctype and combination of step statuses that a document of the
             project has: the doctype, the step statuses and the number of
-            documents.
+            documents, ordered by the doctype and the status masks.
         """
         # per document, one bit mask of its steps per status (cheaper than
         # aggregating the statuses themselves), then count the masks
@@ -293,6 +293,7 @@ class CRUDSourceDocumentStepStatus(
             .outerjoin(per_sdoc, per_sdoc.c.sdoc_id == sdoc.id)
             .where(sdoc.project_id == project_id)
             .group_by(sdoc.doctype, *columns)
+            .order_by(sdoc.doctype, *columns)
         ).all()
         db.execute(select(func.set_config("jit", jit, True)))
         return [

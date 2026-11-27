@@ -32,7 +32,7 @@ class StatisticsService(metaclass=SingletonMeta):
                 SourceDocumentTagLinkTable.source_document_id.in_(list(sdoc_ids)),
             )
             .group_by(TagORM.project_id, TagORM.id)
-            .order_by(count.desc())
+            .order_by(count.desc(), TagORM.id)
             .limit(top_k)
         )
         filtered_res = query.all()
@@ -89,7 +89,7 @@ class StatisticsService(metaclass=SingletonMeta):
                 SpanAnnotationORM.code_id == code_id,
                 AnnotationDocumentORM.source_document_id.in_(list(sdoc_ids)),
             )
-            .order_by(count.desc())
+            .order_by(count.desc(), SpanTextORM.id)
             .limit(top_k)
         )
 
