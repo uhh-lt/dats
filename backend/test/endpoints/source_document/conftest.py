@@ -4,6 +4,7 @@ import pytest
 
 from common.doc_type_enum import DocType
 from common.meta_type_enum import MetaType
+from common.sdoc_status_enum import SDocStatus
 from core.annotation.sentence_annotation_crud import crud_sentence_anno
 from core.annotation.sentence_annotation_dto import SentenceAnnotationCreate
 from core.annotation.sentence_annotation_orm import SentenceAnnotationORM
@@ -44,6 +45,7 @@ from dats_test_utils import (
     create_text_document,
 )
 from feature_test_utils import create_project_with_features
+from pipeline_test_utils import set_step_status
 
 
 class ProjectWithSdocsInSameFolder(TypedDict):
@@ -259,6 +261,23 @@ def foreign_project_with_sdoc(db_session, test_user) -> ProjectWithSdoc:
     db_session.commit()
     project = crud_project.read(db=db_session, id=project_read.id)
     return create_project_with_sdoc(db_session, project)
+
+
+@pytest.fixture(scope="function")
+def project_with_unfinished_sdoc(db_session, test_project) -> ProjectWithSdoc:
+    """
+    This fixture sets up `project_with_sdoc` (the text document
+    "test_document.txt" with its data in `test_project`) whose step
+    "html_extraction" is still processing, so the document is not finished.
+    """
+    project_with_sdoc = create_project_with_sdoc(db_session, test_project)
+    set_step_status(
+        db_session,
+        project_with_sdoc["source_document"].id,
+        {"html_extraction": SDocStatus.processing},
+    )
+    db_session.commit()
+    return project_with_sdoc
 
 
 class ProjectWithDateMetadata(TypedDict):

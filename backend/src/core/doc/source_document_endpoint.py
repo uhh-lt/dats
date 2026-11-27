@@ -68,9 +68,9 @@ def get_by_id(
     db: DBSession,
     project_id: int,
     sdoc_id: int,
-    only_if_finished: bool = True,
+    only_if_finished: bool = False,
 ) -> SourceDocumentRead:
-    if not only_if_finished:
+    if only_if_finished:
         crud_sdoc.read_status(
             db=db,
             project_id=project_id,
@@ -93,9 +93,9 @@ def get_by_id_with_data(
     db: DBSession,
     project_id: int,
     sdoc_id: int,
-    only_if_finished: bool = True,
+    only_if_finished: bool = False,
 ) -> SourceDocumentDataRead:
-    if not only_if_finished:
+    if only_if_finished:
         crud_sdoc.read_status(
             db=db,
             project_id=project_id,
