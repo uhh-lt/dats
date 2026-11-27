@@ -13,7 +13,7 @@ A prompt is the complete instruction to the LLM for one task (span annotation, s
 
 A prompt has its own copy of the name and description of every selected code, tag and metadata field (key and description). Users edit the copy in the prompt builder to try a definition without changing the project; it is saved with the next version like any other change. A prompt cannot introduce new codes, tags or metadata fields: every copy keeps the id of an existing one.
 
-Pull and push need no endpoint of their own. The prompt builder pulls by copying the project's definitions from its cache into the draft, and pushes through the bulk updates of the codes, tags and metadata fields (`PATCH /projects/{project_id}/codes/bulk`, `/tags/bulk`, `/project-metadata/bulk`). The chosen side simply wins: there is no merge and no stored base.
+Pull and push need no endpoint of their own. The prompt builder pulls by copying the project's definitions from its cache into the draft, and pushes through the bulk updates of the codes, tags and metadata fields (`PATCH /projects/{project_id}/codes/bulk`, `PATCH /projects/{project_id}/tags/bulk`, `PATCH /projects/{project_id}/project-metadata/bulk`). The chosen side simply wins: there is no merge and no stored base.
 
 ## Blocks and validation
 

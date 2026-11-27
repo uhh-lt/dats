@@ -35,7 +35,7 @@ class ExampleService(metaclass=SingletonMeta):
         cls.js = JobService()
         return super(ExampleService, cls).__new__(cls)
 
-    # 4. Public methods: db session passed in as first argument after self
+    # 4. Public methods: keyword-only, db first, then project_id
     def reset(self, *, db: Session, project_id: int, example_id: int) -> ExampleRead:
         db_obj = crud_example.read(db=db, project_id=project_id, id=example_id)  # raises NoSuchElementError
         ...
@@ -43,7 +43,7 @@ class ExampleService(metaclass=SingletonMeta):
 
     # 5. Job handlers: called from the *_job.py handler, report progress on the job
     def handle_example_job(
-        self, db: Session, job: Job, payload: ExampleJobInput
+        self, *, db: Session, job: Job, payload: ExampleJobInput
     ) -> ExampleJobOutput:
         job.update(current_step=0, status_message="Started ExampleJob!")
         match payload.task_type:
@@ -66,6 +66,7 @@ class ExampleService(metaclass=SingletonMeta):
 - **No module functions**: Even stateless services are classes (`StatisticsService`); helpers become private methods. Module-level code is limited to constants, private helper types (`TypedDict` / `NamedTuple`) and `_private` functions.
 - **No service for plain CRUD**: Endpoints that only call CRUD methods use the `crud_*` singletons directly; create a service only for logic beyond one CRUD call.
 - **CRUDs are imported, not wrapped**: Use the `crud_*` module singletons directly (`crud_cota.read(db=db, project_id=project_id, id=...)`). Do not put them on the service.
+- **Signature**: Public methods take `self, *, db: Session, project_id: int, ...` (keyword-only, `db` first, `project_id` second); a job handler takes the project from its payload (`self, *, db: Session, [job: Job,] payload: <X>JobInput`).
 
 ### Database Session and Transactions
 
@@ -73,7 +74,7 @@ class ExampleService(metaclass=SingletonMeta):
 - **The exceptions**: `ArtefactService.handle_artefact_computation_job` opens its own transactions, one commit per batch, so no lock is held longer than a batch, and `ArtefactService.plan_core_steps` commits its planning before it starts the steps; this is no general permission.
 - **No commits**: Services never call `db.commit()`, `db.rollback()` or `db.add()`. Writes go through CRUD methods, which only flush; the session owner (`SQLRepo.transaction()`, used by the `DBSession` dependency and job handlers) commits or rolls back.
 - **Direct queries only for reads**: `db.query(...)` / `db.execute(select(...))` inside a service is allowed only for read/aggregate queries that no CRUD provides (statistics, health tables, timeline analysis). Look for a CRUD read first; a query that other code could use too (an entity by a field, by project, with its relations) becomes a read method on the entity's CRUD.
-- **Keyword arguments**: Call CRUDs and other services with keyword arguments (`db=db, id=..., create_dto=...`). Multi-step methods number their steps in comments (`# 1) create the project`).
+- **Keyword arguments**: Call CRUDs and other services with keyword arguments (`db=db, project_id=project_id, id=..., create_dto=...`). Multi-step methods number their steps in comments (`# 1) create the project`).
 - **Other stores via clients**: Get Weaviate/Elasticsearch clients from the repo (`client = self.weaviate.get_client()`) and pass them to the embedding/elastic CRUDs.
 
 ### Errors
@@ -87,7 +88,7 @@ class ExampleService(metaclass=SingletonMeta):
 ### Jobs and Events
 
 - **Starting jobs**: Start background work with `self.js.start_job("<x>", <X>JobInput(...))` (the job type string of its `@register_job`) and return the `Job` (or `list[Job]`) to the caller.
-- **Running jobs**: Job-side entry points (when a job delegates all its work) are named `handle_<x>_job(self, db, [job,] payload)` and return the job's `<X>JobOutput`. Report progress with `job.update(current_step=..., status_message=...)`; dispatch on the payload's enum with `match` or a dispatch table from `__new__`.
+- **Running jobs**: Job-side entry points (when a job delegates all its work) are named `handle_<x>_job` and return the job's `<X>JobOutput`. Report progress with `job.update(current_step=..., status_message=...)`; dispatch on the payload's enum with `match` or a dispatch table from `__new__`.
 - **No websocket events**: Services do not emit `DATSEvent`s or call the `WebsocketService`; the endpoint emits after the service call returns.
 
 ### Return Types

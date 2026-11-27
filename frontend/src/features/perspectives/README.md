@@ -26,18 +26,19 @@ The feature follows the frontend conventions (`.github/instructions/frontend-*.i
 
 All queries are defined once in `perspectivesQueries` (root key `"perspectives"`):
 
-| Leaf                                           | Data                                                       |
-| ---------------------------------------------- | ---------------------------------------------------------- |
-| `aspectsByProject(projectId)`                  | all perspectives (aspects) of a project, as a map by id    |
-| `docAspect(aspectId, sdocId)`                  | the LLM-generated content of one document in a perspective |
-| `visualization(aspectId, searchQuery, filter)` | the map data: coordinates, clusters, document assignments  |
-| `clusterSimilarities(aspectId)`                | the similarity matrix between the clusters                 |
-| `clustersBySdoc(aspectId, sdocId)`             | the clusters of one document                               |
-| `job.byId(jobId)`                              | a perspectives background job                              |
+| Leaf                                                      | Data                                                       |
+| --------------------------------------------------------- | ---------------------------------------------------------- |
+| `aspectsByProject(projectId)`                             | all perspectives (aspects) of a project, as a map by id    |
+| `docAspect(projectId, aspectId, sdocId)`                  | the LLM-generated content of one document in a perspective |
+| `visualization(projectId, aspectId, searchQuery, filter)` | the map data: coordinates, clusters, document assignments  |
+| `clusterSimilarities(projectId, aspectId)`                | the similarity matrix between the clusters                 |
+| `clustersBySdoc(projectId, aspectId, sdocId)`             | the clusters of one document                               |
+| `mapThumbnailUrl(projectId, aspectId)`                    | the URL of the map thumbnail of a perspective              |
+| `job.byId(projectId, jobId)`                              | a perspectives background job                              |
 
-`PerspectivesHooks` holds the hooks that add something on top of the factory: `useGetAspect`, `useGetDocVisualization`, the mutations `useCreateAspect`, `useUpdateAspect`, `useDeleteAspect`, `useStartPerspectivesJob`, `useUpdateClusterDetails`, `useLabelDocs`, `useUnlabelDocs`, and `useRAGChat`.
+`PerspectivesHooks` holds the hooks that add something on top of the factory: `useGetAspect`, `useGetDocVisualization`, `useGetMapThumbnailURL`, the mutations `useCreateAspect`, `useDeleteAspect`, `useStartPerspectivesJob`, `useUpdateClusterDetails`, `useLabelDocs`, `useUnlabelDocs`, and `useRAGChat`.
 
-The routes under `routes/_auth/project/$projectId/perspectives/` load `aspectsByProject` in their `context`/`loader`; the views read it with `useSuspenseQuery` from the route context. The `$aspectId` routes throw `notFound()` for an unknown aspect. Running jobs are followed with `useLiveJob(perspectivesQueries.job.byId(jobId))`.
+The routes under `routes/_auth/project/$projectId/perspectives/` load `aspectsByProject` in their `context`/`loader`; the views read it with `useSuspenseQuery` from the route context. The `$aspectId` routes throw `notFound()` for an unknown aspect. Running jobs are followed with `useLiveJob(perspectivesQueries.job.byId(projectId, jobId))`.
 
 ## State Management
 

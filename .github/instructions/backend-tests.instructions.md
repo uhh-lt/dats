@@ -92,7 +92,7 @@ Each test function:
    - Extract what you need from the fixture (ids, dates, ...).
    - Build the request, **using the real DTOs** where possible (e.g. `QueryRequest[MemoColumns](...)`).
    - Send the request via `client`.
-   - Parse the response, **into the response DTO** where possible (e.g. `Page[MemoRow].model_validate(response.json())`).
+   - Parse the response, **into the response DTO** where possible (e.g. `Page[MemoRead].model_validate(response.json())`).
    - Assert. Assertions **may call other endpoints** to confirm the endpoint under test did the right thing.
 5. Asserts status codes with the response body for context: `assert response.status_code == 200, response.text`.
 
@@ -126,9 +126,18 @@ Aim to cover the full input space of an endpoint, not just the happy path:
 - **Boundary conditions**: empty results, pagination across pages, single vs. multiple matches.
 - **Invalid input**: wrong-typed values, malformed values, operator/column mismatches, missing or contradictory parameters. Assert the expected error status (400/422/500/...) and match on the error message.
 - **Edge cases**: nonexistent ids or keys, deprecated values, empty fixtures states (e.g. no favorites).
-- **Other projects**: every module tests, with a two-project fixture (`composite_keys_test_utils.create_two_tenants`) and the own id as control, that an id of another project in a body field of a write is rejected (409) and in a query filter matches nothing.
+- **Other projects**: every module tests, with a two-project fixture (`composite_keys_test_utils.create_two_tenants`) and the own id as control, that an id of another project is rejected with 409 where a foreign key holds it, with 404 where the route reads it (an id list, a JSON field, a parent id in the path), and matches nothing in a query filter.
 
 Because the fixture data is deterministic, every one of these cases has a known expected result — assert exact results, not just status codes.
+
+## Two Projects
+
+- `another project` / `foreign` name the second project of a two-project fixture, whose rows the user can also reach (the user is a member of both), `outsider` names a user who is no member of the project, and the two-project fixture is called `tenants` (built with `composite_keys_test_utils.create_two_tenants`).
+- A new path parameter goes into `PATH_IDS` of [test_project_router.py](backend/test/endpoints/project_router/test_project_router.py), a route with a path id and a body into `BODIES`, a route with a path id and a required query parameter into `QUERIES`, and a route outside `/projects/{project_id}` into `ROUTES_OUTSIDE_PROJECTS`.
+- A route that cannot answer 2xx with own ids goes into `OWN_ID_EXCEPTIONS` with its status and the reason.
+- Every POST read and every GET with a required query parameter goes into `ARGUMENTS` of [test_same_ids_in_two_projects.py](backend/test/endpoints/project_router/test_same_ids_in_two_projects.py).
+- A new job type with generated endpoints gets a valid input in `JOB_INPUTS` of [endpoints/project_router/conftest.py](backend/test/endpoints/project_router/conftest.py).
+- A new project-owned table gets a row in `TenantRows` ([composite_keys_test_utils.py](backend/test/composite_keys_test_utils.py)), and a new parameter name of a CRUD read gets a value in `PARAMETERS` of the CRUD twin test ([test_same_ids_in_two_projects.py](backend/test/crud/test_same_ids_in_two_projects.py)).
 
 ## Test File Organization
 

@@ -303,9 +303,9 @@ most complete consumer of the engine:
   favorite flag. Every column except `CONTENT` is groupable (`is_groupable()`).
 - [`memo_search.py`](../../core/search/memo_search/memo_search.py)
   - `find_memos` — the builder filters/sorts/paginates to a page of memo **ids**,
-    then re-runs the projection restricted to those ids to build rich `MemoSummary`
+    then re-runs the projection restricted to those ids to build rich `MemoRead`
     rows (labels included) in the correct order. Returns the unified
-    `Page[MemoSummary]`.
+    `Page[MemoRead]`.
   - `find_memo_groups` — the builder's grouping branch returns aggregate rows
     `(group_key, group_label, total_results, target_id, target_type)` directly,
     mapped to the shared `GroupSummary` / `GroupPage`.

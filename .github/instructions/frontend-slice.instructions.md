@@ -34,12 +34,15 @@ import { persistReducer } from "redux-persist";
 // 2. state type: interface XState, extends TableState / FilterState when it composes them
 interface SentenceSearchState extends TableState {
   // project state:
+  projectId: number | undefined; // the project of the ids below (they are persisted, see ProjectActions.changeProject)
   selectedDocumentId: number | undefined;
 }
 
 // 3. typed initial state
 const initialState: SentenceSearchState = {
   ...initialTableState,
+  // project state:
+  projectId: undefined,
   selectedDocumentId: undefined,
 };
 
@@ -54,8 +57,11 @@ const sentenceSearchSlice = createSlice({
     onToggleSelectedDocumentIdChange: (state, action: PayloadAction<number | undefined>) => { ... },
   },
   extraReducers: (builder) => {
-    builder.addCase(ProjectActions.changeProject, (state) => {
+    builder.addCase(ProjectActions.changeProject, (state, action) => {
+      // the persisted ids may belong to another project (another tab saved them), so compare, not only on a switch
+      if (state.projectId === action.payload) return;
       console.log("Project changed! Resetting 'sentenceSearch' state.");
+      state.projectId = action.payload;
       state.selectedDocumentId = initialState.selectedDocumentId;
       resetProjectTableState(state);
     });
@@ -95,7 +101,7 @@ export const sentenceSearchReducer = {
 - A slice is persisted by wrapping its reducer in the reducer map: `persistReducer({ key: xSlice.name, storage: persistStorage }, xSlice.reducer)` with `persistStorage` from [persistStorage.ts](../../frontend/src/store/persistStorage.ts). `store.ts` does not mark or group persisted slices.
 - Persist only what a user expects to find again after a reload: preferences, open tabs, shortcuts, expanded trees, table models, selections of the search views. Never persist dialog or notification state, job ids/results or server data.
 - Transient fields of a persisted slice go in `blacklist` with a comment (`blacklist: ["hoveredCodeId"]` in `annotationsSlice`).
-- A persisted slice with ids of the current project stores that `projectId` and resets on `changeProject` only when it differs, since another tab may have saved its ids (`annotationsSlice`).
+- A persisted slice with ids of the current project stores that `projectId` and resets on `changeProject` only when it differs, since another tab may have saved its ids (`annotationsSlice`, `documentSearchSlice`, `imageSearchSlice`, `sentenceSearchSlice`).
 - The `project` slice is not persisted: the URL sets it after every load, so every persisted slice checks the project of its ids.
 
 ### Reducers

@@ -18,10 +18,10 @@ from typing import TYPE_CHECKING
 from sqlalchemy import (
     DateTime,
     ForeignKey,
+    ForeignKeyConstraint,
     Integer,
     PrimaryKeyConstraint,
     String,
-    UniqueConstraint,
     func,
 )
 from sqlalchemy.orm import Mapped, mapped_column, relationship
@@ -61,10 +61,7 @@ class WhiteboardORM(ORMBase):
     )
 
     # 3d. Table-level constraints
-    __table_args__ = (
-        PrimaryKeyConstraint("project_id", "id", name="whiteboard_pkey"),
-        UniqueConstraint("project_id", "title", name="UC_<...>_unique_per_project"),
-    )
+    __table_args__ = (PrimaryKeyConstraint("project_id", "id", name="whiteboard_pkey"),)
 
     # 3e. Derived @property values (memo_ids, sdoc_id, user_id, ...)
 

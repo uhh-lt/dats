@@ -31,31 +31,35 @@ class CRUDCode(ProjectCRUDBase[CodeORM, CodeCreate, CodeUpdate]):
     def create_system_codes(self, db: Session, *, project_id: int, codes: list[SystemCode]) -> list[CodeORM]: ...
 
     ### READ OPERATIONS ###
-    def read_by_name(self, db: Session, *, project_id: int, code_name: str) -> list[CodeORM]:
+    def read_by_name(self, db: Session, *, project_id: int, code_name: str) -> CodeORM | None:
         """
-        Read the codes of the project with the given name.
+        Read the code of the project with the given name.
 
         Args:
-            project_id: The project of the codes.
-            code_name: The name of the codes.
+            project_id: The project of the code.
+            code_name: The name of the code.
 
         Returns:
-            The matching codes.
+            The code, or None if the project has no code with this name.
         """
         return (
             db.query(self.model)
             .filter(self.model.project_id == project_id, self.model.name == code_name)
-            .all()
+            .first()
         )
 
+    def read_with_children(self, db: Session, *, project_id: int, code_id: int) -> list[CodeORM]: ...
+
     ### UPDATE OPERATIONS ###
-    def update_with_children(self, db: Session, *, project_id: int, code_id: int, update_dto: CodeUpdate) -> CodeORM: ...
+    def update_multi(self, db: Session, *, project_id: int, ids: list[int], update_dtos: list[CodeUpdate]) -> list[CodeORM]:
+        codes = super().update_multi(db=db, project_id=project_id, ids=ids, update_dtos=update_dtos)
+        ...
 
     ### DELETE OPERATIONS ###
-    def delete_by_sdoc(self, db: Session, *, project_id: int, sdoc_id: int) -> list[int]: ...
+    # Inherited from ProjectCRUDBase
 
     ### OTHER OPERATIONS ###
-    def exists_by_name(self, db: Session, *, project_id: int, code_name: str) -> bool: ...
+    # Inherited from ProjectCRUDBase
 
 
 # 4. The singleton: crud_<name> = CRUD<Entity>(<Entity>ORM)
@@ -73,7 +77,7 @@ A CRUD with no custom methods is just `class CRUDAspect(ProjectCRUDBase[...]):` 
 - **Generic parameters**: `ProjectCRUDBase[<Entity>ORM, <Create DTO>, <Update DTO>]` (`SQLCRUDBase` outside projects), plus the key type for a composite primary key (see Variations). Use the `...CreateIntern` / `...UpdateIntern` DTO when the ORM needs fields the API DTO lacks; the service builds it (e.g. `SpanAnnotationService` looks up the annotation document, `SearchViewService` serializes the view). If the entity is never updated, use `UpdateNotAllowed` from `crud_base`.
 - **Exactly the generic DTOs**: the generic parameters are the CRUD's contract. Overrides of `create` / `create_multi` / `update` / `update_multi` take exactly `create_dto: <Create>` / `create_dtos: list[<Create>]` / `id` + `update_dto: <Update>` / `ids` + `update_dtos: list[<Update>]`, never API DTOs or extra parameters (`user_id`, `codes`). Related rows are linked by their own methods (`crud_classifier.link_codes`).
 - **Sections**: group methods under `### CREATE OPERATIONS ###`, `### READ OPERATIONS ###`, `### UPDATE OPERATIONS ###`, `### DELETE OPERATIONS ###`, `### OTHER OPERATIONS ###`, in that order. Omit empty sections, or keep the header with a `# Inherited from <Base>` comment.
-- **Verbs**: public method names start with `create`, `read`, `update` or `delete` (their own sections), or with one of the OTHER verbs: `exists`, `search`, `count`, `link`, `unlink`, `set`, `add`, `remove`, `duplicate`, `merge`, `reorder`, `associate`, `dissociate`, `revoke`, `favorite`, `unfavorite`. `add`/`remove` are for association rows only (`add_to_span_group`, `remove_from_span_group`). `get_` and `find_` are forbidden. The list is closed, so reuse an existing verb. Add a new one only when none fits: to `OTHER_VERBS` in `backend/lint/check_crud.py` (with a comment) and to this list. Use `_multi` for list variants and `_by_<field>[_and_<field>]` for lookups (`read_by_hashed_key`, `delete_by_adoc`, `exists_favorite`). Upserts are updates (`crud_memo.update_recent`).
+- **Verbs**: public method names start with `create`, `read`, `update` or `delete` (their own sections), or with one of the OTHER verbs: `exists`, `search`, `count`, `link`, `unlink`, `set`, `add`, `remove`, `duplicate`, `merge`, `reorder`, `associate`, `dissociate`, `revoke`, `favorite`, `unfavorite`. `add`/`remove` are for association rows only (`add_to_span_group`, `remove_from_span_group`). `get_` and `find_` are forbidden. The list is closed, so reuse an existing verb. Add a new one only when none fits: to `OTHER_VERBS` in `backend/lint/check_crud.py` (with a comment) and to this list. Use `_multi` for list variants and `_by_<field>[_and_<field>]` for lookups (`read_by_hashed_key`, `delete_by_adoc`, `read_by_sdoc_and_key`). Upserts are updates (`crud_memo.update_recent`).
 - **CRUDs vs. handlers**: CRUDs use `read_*`, while endpoint handlers use `get_*` (see `backend-endpoint.instructions.md`).
 - **Private helpers** (`_name`) are exempt from the verb, order and section rules, but still need a return annotation.
 - **Base methods**: `create`, `create_multi`, `read`, `read_by_ids`, `exists`, `update`, `update_multi`, `delete`, `delete_multi`. Override them instead of adding near-duplicates. (This is SQL-specific: Embedding and Elastic CRUDs must not override their bases.)

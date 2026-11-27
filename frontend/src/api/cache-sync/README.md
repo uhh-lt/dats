@@ -47,24 +47,24 @@ The meta is typed via `DATSEventMeta` in
 [mutationMeta.ts](../../plugins/tanstack/mutationMeta.ts) (a `Register`
 module augmentation), so `datsEvent` only accepts valid event names.
 
-**Keep an explicit `onSuccess`** (calling `handleDATSEvent` or the cache
-helpers directly) when the reaction can't be expressed as a single static
-event tag:
-
-- The payload differs from the event DTO (e.g. `useCreateApiKey` strips the
-  plaintext key before caching).
-- The cache target depends on the request `variables`, not just the response
-  (e.g. `useDeleteDocuments`).
-- RPC-style mutations (search, chat, exports) that don't map to an entity event.
+No hook calls `handleDATSEvent` itself. What the cache must not hold is
+removed in the brain (`API_KEY_CREATED` strips the plaintext key of
+`useCreateApiKey`), and a batch delete returns the deleted DTOs, so its event
+carries every id it needs (`SDOC_DELETED_BATCH` of `useDeleteDocuments`).
+RPC-style mutations (search, chat, exports) map to no entity event and have no
+tag.
 
 **Job-start mutations** return the new job and are tagged with
 `datsEvent: "JOB_UPDATED"`, like the websocket job updates.
 
-**User-private bookkeeping stays in the hook.** A mutation that only changes
-data no other client sees refreshes that cache in its own `onSuccess`, e.g.
-`useRecordRecentMemo` (the user's recent memos) or `useConfirmSuggestions`
-(the user's annoscaling suggestions, next to its `datsEvent` tag for the
-created annotations).
+**Changes without an event stay in the hook.** A mutation whose change sends
+no DATS event refreshes that cache in its own `onSuccess` and says why in a
+comment: data no other client sees, e.g. `useRecordRecentMemo` (the user's
+recent memos) or `useConfirmSuggestions` (the user's annoscaling suggestions,
+next to its `datsEvent` tag for the created annotations), and server-side
+effects that send no event, e.g. the feature actions of `FeatureHooks` (the
+project's features and system codes) or `useUpdateExperiment` (the renamed
+virtual users of its runs).
 
 **Optimistic updates stay in the hooks.** `onMutate` / `onError` rollback for
 annotations and search views is untouched — the brain only handles the
@@ -91,19 +91,22 @@ exposes them as OpenAPI webhooks. `just update-api` regenerates
 - `DATSEventMap` — event name → payload DTO type.
 - `DATSEvent` — the discriminated union the brain switches over.
 
-The brain's `switch` has an exhaustive `never` check, so **adding an event on
-the backend produces a compile error in the brain until a case is added** —
-the type system forces the cache reaction to be defined.
+The `default` case of the brain's `switch` assigns the event to `never`, so
+**an event type without a case is a compile error in the brain** — adding an
+event on the backend forces the cache reaction to be defined.
 
 ## Cache-write helpers
 
 Per-event logic builds on shared primitives in [\_utils/](_utils):
 
 - [cacheWriterUtils.ts](_utils/cacheWriterUtils.ts) — generic `upsertMapItem`
-  / `removeMapItem` / `upsertListItem` / `setSingle` / `sweepPrefix` for the
-  `Record<id, T>` maps, arrays, and single-entity caches.
-- [jobCacheUtils.ts](_utils/jobCacheUtils.ts) — `writeJobUpdate`: the
-  per-job-type switch + finished-job derived-data invalidations.
+  / `removeMapItem` (`Record<id, T>` maps), `appendListItem` /
+  `replaceListItem` / `removeListItem` (arrays), `setSingle` / `removeSingle`
+  (single-entity caches) and `sweepPrefix` (every cache under a key prefix).
+- [jobCacheUtils.ts](_utils/jobCacheUtils.ts) — `handleJobUpdate`: writes a
+  `JOB_UPDATED` into the job's single-job cache and its project's job list,
+  plus the finished-job derived-data invalidations; `invalidateAllJobs` for the
+  websocket reconnect.
 - [memoCacheUtils.ts](_utils/memoCacheUtils.ts),
   [sentenceAnnoCacheUtils.ts](_utils/sentenceAnnoCacheUtils.ts),
   [sdocMetadataCacheUtils.ts](_utils/sdocMetadataCacheUtils.ts) — entity-specific
@@ -115,8 +118,8 @@ Per-event logic builds on shared primitives in [\_utils/](_utils):
    caches are invalidated, never written.
 2. **No entity cache writes outside the brain.** If you find a `setQueryData` reacting
    to an entity change elsewhere, it belongs here.
-3. **Prefer the meta tag** over an explicit `onSuccess` whenever the response
-   payload matches the event DTO.
+3. **Use the meta tag** for every change that has a DATS event; an explicit
+   `onSuccess` only refreshes what no event covers.
 4. **DB cascades need explicit invalidation.** The frontend can't observe a
    backend cascade (e.g. deleting a code deletes its annotations), so the
    brain invalidates the affected derived caches for that event.
@@ -134,5 +137,4 @@ Per-event logic builds on shared primitives in [\_utils/](_utils):
 2. Run `just update-api` — regenerates `datsEvents.ts`.
 3. Add a `case` in [brain.ts](brain.ts) (the compiler forces this) — write the
    entity caches, invalidate the derived ones.
-4. Tag the mutation with `meta.datsEvent` (or an explicit `handleDATSEvent`
-   call if the payload differs).
+4. Tag the mutation with `meta.datsEvent`.
