@@ -1,6 +1,5 @@
 import { queryClient } from "@api/queryClient";
 import { MemoService } from "@api/services/MemoService";
-import { AttachedObjectType } from "@models/AttachedObjectType";
 import { MemoRead } from "@models/MemoRead";
 import { useAppSelector } from "@store/storeHooks";
 import { useMutation, useQuery } from "@tanstack/react-query";
@@ -74,17 +73,6 @@ const useRecordRecentMemo = () =>
     },
   });
 
-const useGetObjectMemos = (
-  projectId: number,
-  attachedObjType: AttachedObjectType,
-  attachedObjId: number | null | undefined,
-  options?: { enabled?: boolean },
-) =>
-  useQuery({
-    ...memoQueries.byAttachedObject(projectId, attachedObjType, attachedObjId),
-    enabled: options?.enabled ?? true,
-  });
-
 export const MemoHooks = {
   useGetMemo,
   useCreateMemo,
@@ -93,5 +81,4 @@ export const MemoHooks = {
   useDeleteMemo,
   useDeleteMemos,
   useRecordRecentMemo,
-  useGetObjectMemos,
 };

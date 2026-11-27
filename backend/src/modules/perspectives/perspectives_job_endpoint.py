@@ -5,6 +5,7 @@ from common.dependencies import DBSession
 from common.project_router import project_router
 from modules.perspectives.aspect_crud import crud_aspect
 from modules.perspectives.aspect_dto import AspectRead, AspectUpdateIntern
+from modules.perspectives.perspectives_exceptions import PerspectivesJobRunningError
 from modules.perspectives.perspectives_job_dto import (
     PerspectivesJobInput,
     PerspectivesJobRead,
@@ -26,7 +27,7 @@ js = JobService()
 @router.post(
     "",
     response_model=PerspectivesJobRead,
-    summary="Starts the PerspectivesJob of the Aspect for the given Parameters. If a job is already running, this will raise an error.",
+    summary="Starts the PerspectivesJob of the Aspect for the given Parameters. If a job of the Aspect is still running, this answers 400.",
 )
 def start_perspectives_job(
     *,
@@ -45,9 +46,7 @@ def start_perspectives_job(
             most_recent_job
             and JobStatus(most_recent_job.get_status()) in RUNNING_JOB_STATUS
         ):
-            raise Exception(
-                f"PerspectivesJob {most_recent_job.get_id()} is still running. Please wait until it is finished."
-            )
+            raise PerspectivesJobRunningError(job_id=most_recent_job.get_id())
 
     # No job running, so we can start a new one
     job = js.start_job(

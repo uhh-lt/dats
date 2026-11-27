@@ -7,6 +7,7 @@ from common.project_router import project_router
 from core.doc.folder_crud import crud_folder
 from core.doc.folder_dto import FolderCreate, FolderRead, FolderUpdate, FolderUpdateBulk
 from core.doc.folder_enum import FolderType
+from core.doc.folder_exceptions import FolderNotSdocFolderError
 from core.doc.folder_service import FolderService
 from systems.websocket_system.websocket_dependency import WebsocketEmitter
 
@@ -85,7 +86,7 @@ def get_sdoc_ids_in_folder_by_doctype(
 ) -> dict[DocType, list[int]]:
     folder = crud_folder.read(db=db, project_id=project_id, id=folder_id)
     if folder.folder_type != FolderType.SDOC_FOLDER:
-        raise ValueError("Folder is not an SDOC folder")
+        raise FolderNotSdocFolderError(folder_id=folder_id)
     result: dict[DocType, list[int]] = {dt: [] for dt in DocType}
     for sdoc in folder.source_documents:
         result[DocType(sdoc.doctype)].append(sdoc.id)

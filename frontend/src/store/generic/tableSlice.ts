@@ -81,6 +81,7 @@ export const resetProjectTableState = (state: Draft<TableState>) => {
   state.sortingModel = initialTableState.sortingModel;
   state.columnVisibilityModel = initialTableState.columnVisibilityModel;
   state.columnSizingModel = initialTableState.columnSizingModel;
+  state.expandedModel = initialTableState.expandedModel;
   state.fetchSize = initialTableState.fetchSize;
 };
 

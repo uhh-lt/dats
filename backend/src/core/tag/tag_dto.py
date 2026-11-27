@@ -46,12 +46,6 @@ class TagRead(TagBaseDTO):
     model_config = ConfigDict(from_attributes=True)
 
 
-# To link a SourceDocument with a Tag
-class SourceDocumentTagLink(BaseModel):
-    source_document_id: int = Field(description="ID of the SourceDocument")
-    tag_id: int = Field(description="ID of the Tag")
-
-
 # To link multiple SourceDocuments with multiple Tags
 class SourceDocumentTagMultiLink(BaseModel):
     source_document_ids: list[int] = Field(description="List of IDs of SourceDocuments")

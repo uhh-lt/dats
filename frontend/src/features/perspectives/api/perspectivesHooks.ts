@@ -52,16 +52,6 @@ const useCreateAspect = () =>
     },
   });
 
-const useUpdateAspect = () =>
-  useMutation({
-    mutationKey: [...perspectivesQueries.all(), "updateAspect"],
-    mutationFn: PerspectivesService.updateById,
-    meta: {
-      datsEvent: "ASPECT_UPDATED",
-      successMessage: (data: AspectRead) => `Updated aspect ${data.name}`,
-    },
-  });
-
 const useDeleteAspect = () =>
   useMutation({
     mutationKey: [...perspectivesQueries.all(), "deleteAspect"],
@@ -190,7 +180,6 @@ export const PerspectivesHooks = {
   useGetMapThumbnailURL,
   useGetAspect,
   useCreateAspect,
-  useUpdateAspect,
   useDeleteAspect,
   useStartPerspectivesJob,
   useUpdateClusterDetails,

@@ -121,16 +121,6 @@ class ClassifierData(BaseModel):
     )
 
 
-class ClassifierDataset(ClassifierData):
-    class_id: int = Field(description="ID of the class (tag or code)")
-    num_examples: int = Field(
-        description="Number of examples for the class (tag or code)"
-    )
-    data_ids: list[int] = Field(
-        description="List of example IDs for the class (tag or code)"
-    )
-
-
 # ----- DATASET STATISTICS DTOS -----
 
 

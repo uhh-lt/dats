@@ -28,6 +28,9 @@ from modules.perspectives.cluster_embedding_dto import ClusterObjectIdentifier
 from modules.perspectives.document_aspect_crud import crud_document_aspect
 from modules.perspectives.document_cluster_crud import crud_document_cluster
 from modules.perspectives.perspectives_enum import PerspectivesJobType
+from modules.perspectives.perspectives_exceptions import (
+    PerspectivesDataIncompleteError,
+)
 from modules.perspectives.perspectives_file_crud import (
     MAP_THUMBNAIL_FILENAME,
     crud_perspectives_plot_file,
@@ -309,9 +312,11 @@ def _build_document_visualization(
     )
     sdoc_id2dc = {dc.sdoc_id: dc for dc in document_clusters}
     cluster_id2cluster = {c.id: c for c in clusters}
-    assert len(document_aspects) == len(document_clusters), (
-        "The number of DocumentAspects and DocumentClusters must match for visualization."
-    )
+    if len(document_aspects) != len(document_clusters):
+        raise PerspectivesDataIncompleteError(
+            aspect_id=aspect_id,
+            reason="the documents and their clusters differ in number",
+        )
 
     # Search documents
     sdoc_id_in_search_result: dict[int, bool]
@@ -332,9 +337,11 @@ def _build_document_visualization(
         docs: list[PerspectivesDoc] = []
         for doc in document_aspects:
             dc = sdoc_id2dc[doc.sdoc_id]
-            assert doc.x is not None and doc.y is not None, (
-                f"Document {doc.sdoc_id} has no coordinates"
-            )
+            if doc.x is None or doc.y is None:
+                raise PerspectivesDataIncompleteError(
+                    aspect_id=aspect_id,
+                    reason=f"document {doc.sdoc_id} has no coordinates",
+                )
             docs.append(
                 PerspectivesDoc(
                     sdoc_id=doc.sdoc_id,
@@ -350,9 +357,11 @@ def _build_document_visualization(
         docs = []
         for doc in document_aspects:
             dc = sdoc_id2dc[doc.sdoc_id]
-            assert doc.x is not None and doc.y is not None, (
-                f"Document {doc.sdoc_id} has no coordinates"
-            )
+            if doc.x is None or doc.y is None:
+                raise PerspectivesDataIncompleteError(
+                    aspect_id=aspect_id,
+                    reason=f"document {doc.sdoc_id} has no coordinates",
+                )
             docs.append(
                 PerspectivesDoc(
                     sdoc_id=doc.sdoc_id,
