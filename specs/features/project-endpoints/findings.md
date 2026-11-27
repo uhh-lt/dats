@@ -401,3 +401,81 @@ The folders of every touched module, `test/unit` and `test/crud`: 1938 passed, 4
 | 13.5 | `logout` and `refresh-access` take the refresh token in the body: a token in a query string ends up in access logs.                                                                                                                                                                                                                                                                                                    |
 | 13.6 | The API key create DTO is the request (`name`, `expires_in`), the CRUD DTO with the hash became `ApiKeyCreateIntern`, as the DTO instruction's CreateIntern rule says.                                                                                                                                                                                                                                                 |
 | 13.7 | Request DTOs are named `<Result or action>Request` (DTO instruction: `...Request` for inputs); `SourceDocumentTagMultiLinkRequest` because an `...Update` name requires `UpdateDTOBase`.                                                                                                                                                                                                                               |
+
+## 14. The owner's final rules (`rest-endpoint-rules.md`)
+
+### The rules
+
+The owner reworked the rule set into `rest-endpoint-rules.md` (status final): method, path (start, item, end, bulk, links), input, output, special places and names in the code, each with one rule sentence and example routes. The REST Design section of the endpoint instruction and `docs/development/designing-endpoints.md` follow its grouping; the former bullets "Parts", "Plain CRUD", "Noun number", "Read variants", "Collections", "One router per module" and "Searches" went into start, item, end and input, and the sub-rule "a module with several things that carry its name has the prefix `""`" is gone.
+
+### Routes renamed (state of section 13 → now)
+
+| Old route                                                                                                        | New route                                                                          |
+| ---------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------- |
+| `POST /code-statistics`                                                                                          | `POST /statistics/codes`                                                           |
+| `POST /tag-statistics`                                                                                           | `POST /statistics/tags`                                                            |
+| `POST /memos/suggestions` (one string)                                                                           | `POST /memos/suggestion`                                                           |
+| `POST /rag/answers` (one answer)                                                                                 | `POST /rag/answer`                                                                 |
+| `POST /tags/count`, `/span-annotations/count`, `/sentence-annotations/count` (one count per id)                  | `POST /tags/counts`, `/span-annotations/counts`, `/sentence-annotations/counts`    |
+| `GET /search/{source-documents,memos,span-annotations,sentence-annotations,bbox-annotations}/info` (column list) | `GET /search/.../columns`                                                          |
+| `GET /word-frequencies/info` (column list)                                                                       | `GET /word-frequencies/columns`                                                    |
+| `PUT`, `DELETE /span-annotations/{span_annotation_id}/span-groups/{span_group_id}`                               | `PUT`, `DELETE /span-groups/{span_group_id}/span-annotations/{span_annotation_id}` |
+| `GET /span-annotations/{span_annotation_id}/span-groups`                                                         | `GET /span-groups?user_id=&span_annotation_id=`                                    |
+| `DELETE /span-annotations/{span_annotation_id}/span-groups` (remove from all groups)                             | removed                                                                            |
+| `GET /` (redirect to `/docs`)                                                                                    | hidden from the schema                                                             |
+
+Handlers renamed with them: `compute_answer`, `compute_suggestion`, `get_columns`, `search_<x>_columns`, and the span group links `add_span_annotation`, `remove_span_annotation`. The other data-returning routes already had the number of their result.
+
+### Tags renamed (state of section 13 → now)
+
+| Old tag                               | New tag                                                                                                            |
+| ------------------------------------- | ------------------------------------------------------------------------------------------------------------------ |
+| `agreement`                           | `agreements`                                                                                                       |
+| `apiKey`, `user` (`/users/me`)        | `users`                                                                                                            |
+| `user` (`/members`, `/virtual-users`) | `members`, `virtualUsers`                                                                                          |
+| `bboxAnnotation`                      | `bboxAnnotations`                                                                                                  |
+| `classifier`                          | `classifiers`                                                                                                      |
+| `code`                                | `codes`                                                                                                            |
+| `codeFrequency`                       | `codeFrequencies`                                                                                                  |
+| `conceptOverTimeAnalysis`             | `conceptOverTimeAnalyses`                                                                                          |
+| `documentSample`                      | `documentSamples`                                                                                                  |
+| `experiment`                          | `experiments`                                                                                                      |
+| `feature`                             | `features`                                                                                                         |
+| `folder`                              | `folders`                                                                                                          |
+| `general`                             | `info` (`/info`, `/info/llms`, `/info/features`), `heartbeat`                                                      |
+| `job`                                 | `jobs`                                                                                                             |
+| `TagRecommendation`                   | `tagRecommendations` (`/tag-recommendations/review`), `jobs` (`/jobs/tag-recommendation/{job_id}/recommendations`) |
+| `memo`                                | `memos`                                                                                                            |
+| `project`                             | `projects`                                                                                                         |
+| `prompt`                              | `prompts`                                                                                                          |
+| `searchView`                          | `searchViews`                                                                                                      |
+| `sentenceAnnotation`                  | `sentenceAnnotations`                                                                                              |
+| `sourceDocument`                      | `sourceDocuments`                                                                                                  |
+| `spanAnnotation`                      | `spanAnnotations`                                                                                                  |
+| `spanGroup`                           | `spanGroups`                                                                                                       |
+| `tag`                                 | `tags`                                                                                                             |
+| `timelineAnalysis`                    | `timelineAnalyses`                                                                                                 |
+| `whiteboard`                          | `whiteboards`                                                                                                      |
+| `wordFrequency`                       | `wordFrequencies`                                                                                                  |
+
+Unchanged: `annotationScaling`, `authentication`, `docProcessing`, `keywordStatistics`, `llmAssistant`, `perspectives`, `projectMetadata`, `rag`, `search`, `searchAnnotate`, `similaritySearch`, `sourceDocumentMetadata`, `statistics`.
+
+What derives from the tag: the generated frontend services (`SpanAnnotationService` → `SpanAnnotationsService`; `UserService` → `UsersService`, `MembersService`, `VirtualUsersService`; `ApiKeyService` → `UsersService`; `GeneralService` → `InfoService`, `HeartbeatService`; `TagRecommendationService` → `TagRecommendationsService`, `JobsService`), the operation ids (`<tag>-<handler>`, `bootstrap._generate_unique_id`), and with them the MCP tool names (`spanAnnotation-create` → `spanAnnotations-create`) and the generated body models (`Body_job_start_import_job` → `Body_jobs_start_import_job`). The upgrade guide lists the tags against `main`.
+
+### How it is checked
+
+`test_every_route_has_the_tag_of_its_first_path_segment` (`test_project_router.py`) compares the first tag of every operation in `app.openapi()` with the camelCase first path segment after `/projects/{project_id}` (`projects` for the project itself). The request-shape test stays green. Every example route of the instruction, the docs page and the rules file exists in `openapi.json` (except the placeholders and the "do not" examples).
+
+### Decided by the session
+
+| #    | Decision                                                                                                                                                                                                                                                                                                                                                                                                                                                     |
+| ---- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| 14.1 | A page or a map of several results counts as a list, so the three `POST .../count` routes, which answer one count per tag or code, became `/counts`; `GET /source-documents/count` (one number) stays singular. The rules file's example `POST /tags/count` became `POST /tags/counts`.                                                                                                                                                                      |
+| 14.2 | The `/info` routes that return a list of column infos became `/columns`, the name `GET /doc-processing/columns` already uses; `GET /classifiers/info` returns one `ClassifierInfo` and stays.                                                                                                                                                                                                                                                                |
+| 14.3 | A noun that names several things inside one response object stays plural: `/source-documents/{sdoc_id}/urls`, `/classifiers/dataset-statistics`, `/perspectives/aspects/{aspect_id}/cluster-similarities`. A start segment is plural by the start rule also when it computes one object (`POST /agreements`, `POST /word-frequencies`). `GET /sentence-annotations/per-sentence` and the job type segments (`/jobs/classifier`) were not part of this check. |
+| 14.4 | `GET /span-groups` keeps its required `user_id`, like `GET /span-annotations`, and gains the optional `span_annotation_id`; the rules file's example became `GET /span-groups?user_id=&span_annotation_id=`. It answers the groups with their span annotations (`SpanGroupWithAnnotationsRead`), where the old route answered the groups alone.                                                                                                              |
+| 14.5 | `DELETE /span-annotations/{span_annotation_id}/span-groups` had no caller (frontend, tools, backend), so it is removed with its CRUD method `remove_from_all_span_groups`. The moved add and remove routes have no frontend caller either and were moved as the owner said. They were MCP tools under the `mcp` router of the span annotations; the span group router has no `mcp` tag, so they are no MCP tools anymore.                                    |
+| 14.6 | The member, virtual-user and info routes start with different segments but stay on one router each (one router per module): these routers have no tags of their own, and each route sets `["members", "mcp"]`, `["virtualUsers", "mcp"]`, `["info"]` or `["heartbeat"]`. `GET /` (the browser redirect to `/docs`) has no segment, so it is hidden from the schema and has an explicit operation id, as the id generator needs a tag.                        |
+| 14.7 | The API key handlers became `create_api_key`, `get_api_keys`, `delete_api_key`: they share the `users` service with the `/users/me` routes, where `UsersService.create` would read as creating a user (the child-keeps-its-entity rule).                                                                                                                                                                                                                     |
+| 14.8 | The statistics handlers keep `compute_code_statistics` and `compute_tag_statistics`: the noun of a namespace path is the namespace plus the thing.                                                                                                                                                                                                                                                                                                           |
+| 14.9 | The upgrade guide compares with `main`: the statistics rows went away, as `/statistics/codes` and `/statistics/tags` are the moved paths again, and the tag table maps the tags of `main` to the new ones.                                                                                                                                                                                                                                                   |

@@ -1,6 +1,6 @@
-# REST endpoint rules (draft for discussion)
+# REST endpoint rules
 
-Status: draft, 2026-11-27. The owner iterates on this file; the final version goes into `.github/instructions/backend-endpoint.instructions.md` and `docs/development/designing-endpoints.md`.
+Status: final, 2026-11-27. Implemented in #984; `.github/instructions/backend-endpoint.instructions.md` and `docs/development/designing-endpoints.md` follow this file.
 
 Routes are shown without the `/projects/{project_id}` prefix. They use the names of the final state (statistics below `/statistics`, singular for one thing).
 
@@ -25,12 +25,12 @@ A path is read from left to right: method, start, item, end. Then come input, ou
 
 **A plural kebab-case noun. It is the thing itself if it carries the module's name, else the module namespace plus the thing. One router per module.**
 
-| Example                                                          | Case                                                         |
-| ---------------------------------------------------------------- | ------------------------------------------------------------ |
-| `/codes`                                                         | stored thing, carries the module's name                      |
-| `/code-frequencies`                                              | computed thing, carries the module's name                    |
-| `/perspectives/aspects`, `/perspectives/clusters`                | module with several things: namespace plus thing             |
-| `/statistics/codes`, `/llm-assistant/existing-annotation-counts` | thing does not carry the module's name: namespace plus thing |
+| Example                                                               | Case                                                         |
+| --------------------------------------------------------------------- | ------------------------------------------------------------ |
+| `/codes`                                                              | stored thing, carries the module's name                      |
+| `/code-frequencies`                                                   | computed thing, carries the module's name                    |
+| `/perspectives/aspects`, `/perspectives/aspects/{aspect_id}/clusters` | module with several things: namespace plus thing             |
+| `/statistics/codes`, `/llm-assistant/existing-annotation-counts`      | thing does not carry the module's name: namespace plus thing |
 
 ### 2.2 Item
 
@@ -57,6 +57,7 @@ Links between two things have their own rule: see 2.5.
 | `GET /source-documents/{sdoc_id}/data`                 | returns one thing: singular noun                     |
 | `GET /source-documents/{sdoc_id}/siblings`             | returns a list: plural noun                          |
 | `GET /source-documents/count`                          | returns one number of the collection: singular noun  |
+| `POST /tags/counts`                                    | returns one count per tag: plural noun               |
 | `POST /memos/suggestion`                               | computes one thing: singular noun                    |
 | `POST /perspectives/aspects/{aspect_id}/visualization` | computes one thing of one item: singular noun        |
 | `PUT /whiteboards/{whiteboard_id}/duplicate`           | does something to one item: verb                     |
@@ -85,7 +86,7 @@ One link at a time:
 | `PUT /span-groups/{span_group_id}/span-annotations/{span_annotation_id}`    | add one                     |
 | `DELETE /span-groups/{span_group_id}/span-annotations/{span_annotation_id}` | remove one                  |
 | `GET /span-groups/{span_group_id}/span-annotations`                         | list the members of a group |
-| `GET /span-groups?span_annotation_id=`, `GET /tags?sdoc_id=`                | list from the other side    |
+| `GET /span-groups?user_id=&span_annotation_id=`, `GET /tags?sdoc_id=`       | list from the other side    |
 
 Many links at a time, with `bulk` in the place of the group's id:
 
@@ -96,7 +97,7 @@ Many links at a time, with `bulk` in the place of the group's id:
 | `PATCH /tags/bulk/source-documents`         | document ids, tags to add, tags to remove | change many: the same additions and removals on every document |
 | `PATCH /tags/bulk/source-documents/replace` | per document its complete list of tag ids | replace: each document ends with exactly the given tags        |
 
-Open: which of these operations every link must have (see O2).
+No operation is mandatory: a link offers only the operations that have a caller. The span groups have no bulk routes, and the tags have no single add or remove.
 
 ## 3. Input
 
@@ -118,7 +119,7 @@ Open: which of these operations every link must have (see O2).
 | ------------------------------------------------------------------------------ | ------------------------------------------ |
 | `PUT /codes` with `CodeCreate`                                                 | create                                     |
 | `POST /code-frequencies/occurrences` with `CodeOccurrenceRequest`              | computation                                |
-| `POST /tags/count` with a list of document ids                                 | read with an id list: body, so `POST`      |
+| `POST /tags/counts` with a list of document ids                                | read with an id list: body, so `POST`      |
 | `POST /search/source-documents` with filter, sorts, `page_number`, `page_size` | search with a filter tree: all in the body |
 | `PATCH /codes/bulk` with a list                                                | bulk: the body is the list                 |
 
@@ -159,11 +160,11 @@ Open: which of these operations every link must have (see O2).
 
 **Started and read under `/jobs/<job-type>`.**
 
-| Example                                  | Case                           |
-| ---------------------------------------- | ------------------------------ |
-| `POST /jobs/perspectives`                | start, whole input in the body |
-| `GET /jobs/perspectives/{job_id}`        | read one job                   |
-| `POST /jobs/perspectives/{job_id}/abort` | action on a job                |
+| Example                                | Case                           |
+| -------------------------------------- | ------------------------------ |
+| `POST /jobs/perspectives`              | start, whole input in the body |
+| `GET /jobs/perspectives/{job_id}`      | read one job                   |
+| `POST /jobs/classifier/{job_id}/abort` | action on a job                |
 
 ### 5.2 me
 
@@ -214,23 +215,4 @@ Open: which of these operations every link must have (see O2).
 
 - The tag recommendation routes (#976).
 - `POST /authentication/login` keeps the OAuth2 form, and the OIDC callback keeps its path.
-
-## Open points
-
-### O1 Prompt versions
-
-Only `PUT /prompts/{prompt_id}/versions` exists (it saves the next version). There is no `GET …/versions` and no `…/versions/{version_id}`: `GET /prompts/{prompt_id}` returns the prompt with all its versions, and the unused single read was removed. By the rules, `GET /prompts/{prompt_id}/versions` would list the versions and `/versions/{version_id}` would be one version.
-
-### O2 Links: which operations are mandatory
-
-The rule and the shapes are decided (2.5). Open is how strict it is. The links today:
-
-| Link                           | Today                                                                                                        | To follow 2.5                                                                              |
-| ------------------------------ | ------------------------------------------------------------------------------------------------------------ | ------------------------------------------------------------------------------------------ |
-| Span annotation and span group | single add and remove under `/span-annotations/{span_annotation_id}/span-groups/…`, reads on both sides      | move to `/span-groups/{span_group_id}/span-annotations/…`, the other side becomes a filter |
-| Tag and document               | bulk only (all four are called by the frontend), `GET /tags/{tag_id}/source-documents`, `GET /tags?sdoc_id=` | single add and remove are missing                                                          |
-| User and project               | `PUT /members` (email in the body), `DELETE /members/{user_id}`, `GET /members`                              | the add takes an email, not an id, so it cannot be `/members/{user_id}`                    |
-
-### O3 Tags (decided)
-
-The tag is the first path segment in camelCase (6.3). The rename of the tags, the generated client services (`SpanAnnotationService` becomes `SpanAnnotationsService`) and their imports is mechanical and part of the final session.
+- `PUT /members` takes the email of the invited user in its body, so it cannot be `/members/{user_id}`.
