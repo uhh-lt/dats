@@ -382,6 +382,14 @@ The input of a create, an update, an action or a computation beyond its path is 
 
 `test_every_route_takes_one_body_dto_and_query_parameters_only_on_reads` (`test_project_router.py`) reads `app.openapi()`: no query parameter outside a `GET`, no generated `Body_*` schema outside a multipart form, no bare list body outside a bulk route, except the two routes above. Run over `openapi.json` before the change: 38 of 264 operations broke it (plus 2 bare lists); after: 0.
 
+### Browser check
+
+Demo user, the project of section 12 (three text documents, codes, span annotations, a tag): the document search page (`POST /search/source-documents` with the body), code, tag and keyword statistics, code frequencies and occurrences, the similarity search from the annotator's sentence menu (`POST /similarity-search/sentences`), API key create, and a codes CSV import from the project settings (`POST /jobs/import` with the form field; the old query style answers 422). Not clicked: the annotation create (the text annotator ignores the automated mouse selection; the endpoint tests cover it, also as a virtual user), the health retry and recompute, the perspectives map, RAG, the COTA sentence actions, the experiment log export, the document sampler, the word frequency export.
+
+### Tests
+
+The folders of every touched module, `test/unit` and `test/crud`: 1938 passed, 4 failed. The four virtual-user create tests sent `user_id` before the dumped create DTO, whose new `user_id: null` overwrote it; the tests put the user after the DTO now (span and sentence annotation folders: 129 passed). `just lint backend`, `just typecheck backend`, `just lint frontend`, `just typecheck frontend`: pass.
+
 ### Decided by the session
 
 | #    | Decision                                                                                                                                                                                                                                                                                                                                                                                                               |

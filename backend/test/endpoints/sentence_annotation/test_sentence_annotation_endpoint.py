@@ -988,7 +988,6 @@ def test_create_sentence_annotation_as_virtual_user(
     response = client.put(
         _route(virtual_user_project["project"].id),
         json={
-            "user_id": run2.id,
             **(
                 SentenceAnnotationCreate(
                     sdoc_id=virtual_user_project["sdoc"].id,
@@ -997,6 +996,7 @@ def test_create_sentence_annotation_as_virtual_user(
                     sentence_id_end=1,
                 ).model_dump()
             ),
+            "user_id": run2.id,
         },
     )
 

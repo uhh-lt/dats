@@ -1161,8 +1161,8 @@ def test_create_span_annotation_as_virtual_user(
     response = client.put(
         _url(virtual_user_project["project"].id),
         json={
-            "user_id": run2.id,
             **(_virtual_user_span_create(virtual_user_project, "gamma.").model_dump()),
+            "user_id": run2.id,
         },
     )
 
@@ -1191,8 +1191,8 @@ def test_create_span_annotation_as_current_user(
     response = client.put(
         _url(virtual_user_project["project"].id),
         json={
-            **({"user_id": user.id} if params is None else params),
             **(_virtual_user_span_create(virtual_user_project, "zeta.").model_dump()),
+            **({"user_id": user.id} if params is None else params),
         },
     )
 
@@ -1221,8 +1221,8 @@ def test_create_span_annotation_as_other_user_or_outsider_virtual_user_is_forbid
     response = client.put(
         _url(virtual_user_project["project"].id),
         json={
-            "user_id": user.id,
             **(_virtual_user_span_create(virtual_user_project, "gamma.").model_dump()),
+            "user_id": user.id,
         },
     )
 
