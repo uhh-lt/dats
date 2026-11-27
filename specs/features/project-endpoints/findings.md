@@ -140,11 +140,11 @@ Approved by the owner on 2026-11-26; 2.6, 2.8, 2.9 and 2.11 were changed afterwa
 
 ## 3. Routes and code without a caller
 
-| #   | Finding                                                                                                                  | Source       | Checked                                                                                                                      |
-| --- | ------------------------------------------------------------------------------------------------------------------------ | ------------ | ---------------------------------------------------------------------------------------------------------------------------- |
-| 3.1 | The frontend never calls the search-and-annotate route.                                                                  | #954 comment | Open: only the generated client refers to it.                                                                                |
-| 3.2 | `GET …/jobs/cota-refinement` and `GET …/jobs/perspectives` (project job lists) are generated but unused by the frontend. | #948         | Open.                                                                                                                        |
-| 3.3 | `GET …/rag/chat-session` was reported as unused.                                                                         | #952         | Wrong: the perspectives analysis assistant uses the chat session. Dropped as a finding, kept here so it is not raised again. |
+| #   | Finding                                                                                                                  | Source       | Checked                                                                                                                                                                                 |
+| --- | ------------------------------------------------------------------------------------------------------------------------ | ------------ | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| 3.1 | The frontend never calls the search-and-annotate route.                                                                  | #954 comment | Open: only the generated client refers to it.                                                                                                                                           |
+| 3.2 | `GET …/jobs/cota-refinement` and `GET …/jobs/perspectives` (project job lists) are generated but unused by the frontend. | #948         | Open.                                                                                                                                                                                   |
+| 3.3 | `GET …/rag/chat-session` was reported as unused.                                                                         | #952         | Right (corrected by `review-3.md` A7): the perspectives analysis assistant uses `POST …/rag/session`; nothing called `GET …/rag/chat-session`. Deleted in the third review fixes (E11). |
 
 ## 4. Behaviour changes of the API (all intended, listed for the release notes)
 
@@ -159,7 +159,7 @@ Approved by the owner on 2026-11-26; 2.6, 2.8, 2.9 and 2.11 were changed afterwa
 - Removing a user who is no member answers 404 (was 500).
 - `/user/all`, `/user/by_id`, the old span group per-document routes and the per-user tag count route are gone.
 - The four search `*_info` routes are `GET` now.
-- In the generated client all job methods live on `JobService`.
+- In the generated client all job methods live on `JobService`. (Corrected by `review-3.md` A7: `startPerspectivesJob` and `startImportJob` were on `PerspectivesService` and `ImportService` because their routers had other tags; since the third review fixes every route under `/jobs` has the tag `job`, so the statement holds now.)
 - The MCP search tools keep their names but take `project_id` as a path argument.
 
 ## 5. Bugs fixed inside the stack (for the record)
@@ -218,3 +218,40 @@ Decision of the owner (2026-11-26): ids are unique per project and will not stay
 | 10.4 | COTA answered 500 for an unknown sentence and did not check its date metadata; the similarity search searched all documents when its filter matched none.                                                    | Fixed (R4).                   |
 | 10.5 | Old clients that send `project_id` in a job start body are not rejected.                                                                                                                                     | Fixed (D5): 422.              |
 | 10.6 | A helper sub-agent of the fixing session stopped without committing; its work was taken over.                                                                                                                | Process note, no code effect. |
+
+## 11. Third review fixes (`review-3.md`, one PR on top of #973)
+
+### What changed
+
+- Routes follow the REST guide now written in `.github/instructions/backend-endpoint.instructions.md` (E2 to E14): owned children nested and checked against the parent (experiment runs, aspect clusters), actions by effect and as verbs, computation routers named after the result, read variants as query parameters or noun sub-paths, the perspectives job input in the body, `job` tag for every `/jobs` route, one 204 replaced by 200 with the memo, the typos, `DELETE /users/me` out of the MCP tools. 34 routes moved (path or method), the perspectives job start and two body fields changed, 5 routes were removed (3 unused, 2 merged into existing reads); 264 operations are left. The table of moved routes is in `docs/admin/index.md` (upgrade guide) and in the PR.
+- Handler names (E10) and tags (C-rule-14): the generated client method and the MCP tool name change for 50 routes that kept their path, besides the moved ones.
+- "To fix before the merge" 2 to 8: the guide, `expandedModel` reset, the dead code, the instructions and READMEs of D-docs, the `project_router` tables in the tests instruction, the twin test gaps of A4 (seven POST reads added to `ARGUMENTS`, a test that every GET with a required query is in `ARGUMENTS`), the 500s of the perspectives job, the folder route and the three asserts.
+- "Can wait" 1, 2, 4, 6 and the two user checks of A5: CRUD method names, DTO names (`ConceptOverTimeAnalysis*`, `*BaseDTO`, `ClassifierBaseDTO`), `project_id` in `ExperimentRunRead` and `PromptVersionRead` (`WordFrequencyRead` was deleted with its route), one vocabulary in the two-project tests, rule 5 of ADR 0013, `crud_user.read_virtual_user` in the classifier and LLM assistant job validation (a user that is no virtual user of the project answers 404, was 400).
+
+### Decided by the session
+
+| #     | Decision                                                                                                                                                                                                                                                                                                                                                                                                                                                  |
+| ----- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| 11.1  | The `/doc-processing` routes keep their paths. C3 (medium) moves them into `/search/source-document-statuses` and `/source-documents/upload`, but that splits one module over two foreign routers (against E2, one router per module) and makes `search_endpoint.py` and `source_document_endpoint.py` import DTOs of another folder (against the endpoint import rule). Their return values (`int`, `str`) stay, as C-rule-9 does not require job reads. |
+| 11.2  | Kept because C3 gives confidence "low" and no rule demands the change: `POST /search-annotate/auto-annotate`, `POST /llm-assistant/count-existing-annotations`, `POST /rag/session`, `GET /doc-processing/status`.                                                                                                                                                                                                                                        |
+| 11.3  | Nested children keep the short path parameter of the owner's wording (`/experiments/{experiment_id}/runs/{run_id}`), and the run create body loses `experiment_id` (the parent comes from the path only).                                                                                                                                                                                                                                                 |
+| 11.4  | `GET /source-documents?filename=` requires the filename, like `GET /source-document-metadata?sdoc_id=`; a list of all documents of a project would be unbounded.                                                                                                                                                                                                                                                                                          |
+| 11.5  | `GET /source-document-metadata/date-count` became `GET /source-documents/count?date_metadata_id=` (one number); the frontend asks the count twice (with and without the date metadata). `GET /sentence-annotations/by-sentence` became `/per-sentence` (another shape), not a grouping in the frontend.                                                                                                                                                   |
+| 11.6  | `GET /memos/recent` became `GET /memos?recent=true&limit=`, implemented as a filter of the one memo read, so `recent` combines with the other filters.                                                                                                                                                                                                                                                                                                    |
+| 11.7  | `DELETE /users/me` is excluded from the MCP tools by a list of excluded routes in `mcp_server.py`, so `mcp` stays on the router only; the `mcp` tag of `GET …/features` moved onto the feature router, so enable, complete and disable are MCP tools now.                                                                                                                                                                                                 |
+| 11.8  | The incomplete map of an aspect (the three asserts) answers 409 (`PerspectivesDataIncompleteError`), the state conflicts with the request; a running perspectives job answers 400.                                                                                                                                                                                                                                                                        |
+| 11.9  | `PATCH …/memos/{memo_id}/mark-recent`, accept and revert labels emit no event: the recent list is private to the user, and the labels have no event type (the frontend refreshes the map itself), as before.                                                                                                                                                                                                                                              |
+| 11.10 | The service instruction states one signature (`self, *, db, project_id, ...`); 76 public service methods still take `db` positionally and were not migrated.                                                                                                                                                                                                                                                                                              |
+
+### Found in passing
+
+- `crud_tag.read_by_names` had no `ORDER BY`, so the CRUD twin test failed now and then; fixed (id order).
+- The perspectives view logs a React warning "Cannot update a component while rendering a different component" (`PerspectiveView`); not investigated.
+- In the dev frontend a full page load briefly redirects to the login page and then restores the session.
+
+### Not done
+
+- "Can wait" 3 (request shapes, #977), 5 (frontend `projectId` from Redux and hook names), 7, 8, and the migration of the service signatures (11.10).
+- The tag recommendation routes and files (#976).
+- D-tests-3: the timeline analysis still stores a `date_metadata_id` of another project with 200, while COTA answers 404.
+- `PerspectivesDoc.in_searchresult` (typo of D-dto-5) and the two `CreateIntern` inheritance styles of D-dto-1.
