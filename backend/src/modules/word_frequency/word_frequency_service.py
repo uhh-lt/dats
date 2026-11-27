@@ -75,7 +75,8 @@ class WordFrequencyService(metaclass=SingletonMeta):
         builder.init_query(
             db.query(global_word_count_agg, global_sdoc_count_agg)
             .join(subquery, WordFrequencyORM.sdoc_id == subquery.c.id)
-            .filter(WordFrequencyORM.project_id == project_id)
+            .filter(WordFrequencyORM.project_id == project_id),
+            row_key=[],  # the totals: one row
         ).build_query()
         result_rows, total_results = builder.execute_query(
             page_number=None, page_size=None
@@ -129,7 +130,8 @@ class WordFrequencyService(metaclass=SingletonMeta):
             )
             .join(subquery, WordFrequencyORM.sdoc_id == subquery.c.id)
             .filter(WordFrequencyORM.project_id == project_id)
-            .group_by(WordFrequencyORM.word)
+            .group_by(WordFrequencyORM.word),
+            row_key=[WordFrequencyORM.word],
         ).build_query()
         result_rows, total_results = builder.execute_query(
             page_number=page, page_size=page_size

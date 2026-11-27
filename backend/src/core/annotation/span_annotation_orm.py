@@ -159,7 +159,8 @@ class SpanAnnotationORM(ORMBase):
 
     @property
     def group_ids(self):
-        return [group.id for group in self.span_groups]
+        # sorted here, as the relationship has no order (it loads in jobs too)
+        return sorted(group.id for group in self.span_groups)
 
     @property
     def memo_ids(self) -> list[int]:

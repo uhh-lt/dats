@@ -91,6 +91,7 @@ class SearchBuilder:
         self.selected_columns: list[str] = []
         self.subquery: Query | Subquery | None = None
         self.query: Query | None = None
+        self.row_key: list[_ColumnExpressionArgument[Any]] = []
 
         affected_columns = get_columns_affected_by_filter(self.filter)
         affected_columns.update(get_columns_affected_by_sorts(self.sorts))
@@ -243,12 +244,23 @@ class SearchBuilder:
         self.subquery = self.subquery.subquery()
         return self.subquery
 
-    def init_query(self, query: Query) -> "SearchBuilder":
-        """Provide the outer query over the built subquery (step 3)."""
+    def init_query(
+        self, query: Query, *, row_key: list[_ColumnExpressionArgument[Any]]
+    ) -> "SearchBuilder":
+        """Provide the outer query over the built subquery (step 3).
+
+        Args:
+            query: The outer query.
+            row_key: The columns that identify one row of the query (its id, or
+                its group expressions); every search ends its order with them, so
+                paging returns every row exactly once. Empty only for a query of
+                one row.
+        """
         if self.query is not None:
             raise ValueError("Query was initialized already!")
 
         self.query = query
+        self.row_key = row_key
 
         return self
 
@@ -283,7 +295,8 @@ class SearchBuilder:
           sorted with missing-key groups last (date groups newest-first, others
           alphabetically by label).
         - Otherwise the given sorts are applied; with no sorts, the query falls back
-          to ordering by its first column descending.
+          to ordering by its first column descending. The row key of `init_query`
+          ends the order, so equal sort values never reorder rows between pages.
         - If both `page_number` and `page_size` are given, the query is paginated
           and `total_results` comes from the pagination count; otherwise all rows
           are returned and counted in Python.
@@ -334,6 +347,8 @@ class SearchBuilder:
         else:
             first_column = list(query.column_descriptions)[0]["name"]
             query = query.order_by(desc(first_column))
+        if not (self.group_by is not None and not is_drill_down):
+            query = query.order_by(*self.row_key)
 
         # with pagination
         if page_number is not None and page_size is not None:

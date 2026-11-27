@@ -4,6 +4,7 @@ from sqlalchemy.orm import Session
 from common.dats_event import DATSEvent
 from common.dependencies import DBSession
 from common.project_router import project_router
+from core.doc.source_document_crud import crud_sdoc
 from core.tag.tag_crud import crud_tag
 from core.tag.tag_dto import (
     SdocTagLinks,
@@ -131,8 +132,13 @@ def get_sdoc_ids_by_tag_id(
     project_id: int,
     tag_id: int,
 ) -> list[int]:
-    db_obj = crud_tag.read(db=db, project_id=project_id, id=tag_id)
-    return [sdoc.id for sdoc in db_obj.source_documents]
+    crud_tag.exists(db=db, project_id=project_id, id=tag_id, raise_error=True)
+    return [
+        sdoc.id
+        for sdoc in crud_sdoc.read_by_tags(
+            db=db, project_id=project_id, tag_ids=[tag_id]
+        )
+    ]
 
 
 # --- update operations

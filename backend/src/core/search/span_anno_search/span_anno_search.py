@@ -88,7 +88,8 @@ def find_span_annotations(
         .join(subquery, SpanAnnotationORM.id == subquery.c.id)
         .filter(SpanAnnotationORM.project_id == project_id)
         .filter(SourceDocumentORM.project_id == project_id)
-        .filter(CodeORM.enabled == True)  # noqa: E712
+        .filter(CodeORM.enabled == True),  # noqa: E712
+        row_key=[SpanAnnotationORM.id],
     )._join_query(
         SpanAnnotationORM.annotation_document,
     )._join_query(
@@ -173,7 +174,8 @@ def find_span_annotation_groups(
         .join(subquery, SpanAnnotationORM.id == subquery.c.id)
         .filter(SpanAnnotationORM.project_id == project_id)
         .filter(SourceDocumentORM.project_id == project_id)
-        .filter(CodeORM.enabled == True)  # noqa: E712
+        .filter(CodeORM.enabled == True),  # noqa: E712
+        row_key=[SpanAnnotationORM.id],
     )._join_query(
         SpanAnnotationORM.annotation_document,
     )._join_query(

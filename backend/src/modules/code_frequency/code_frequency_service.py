@@ -296,8 +296,13 @@ class CodeFrequencyService(metaclass=SingletonMeta):
             for x in res
         ]
 
-        # 3. return the result
-        return span_code_occurrences + bbox_code_occurrences + sent_code_occurrences
+        # 3. return the result by document and code; the sort is stable, so the
+        # occurrences of one document and code keep the order of their queries
+        # (spans, bboxes, sentences, each ordered by its group keys)
+        return sorted(
+            span_code_occurrences + bbox_code_occurrences + sent_code_occurrences,
+            key=lambda occurrence: (occurrence.sdoc.id, occurrence.code.id),
+        )
 
     def _find_code_children(
         self, db: Session, project_id: int, code_ids: list[int]

@@ -3,6 +3,7 @@ from fastapi import APIRouter, Depends
 from common.dats_event import DATSEvent
 from common.dependencies import DBSession, get_current_user
 from core.auth.authz_user import AuthzUser
+from core.project.project_crud import crud_project
 from core.project.project_dto import ProjectRead
 from core.user.user_crud import crud_user
 from core.user.user_dto import UserRead, UserUpdate
@@ -37,8 +38,10 @@ def get_user_projects(
     db: DBSession,
     authz_user: AuthzUser = Depends(),
 ) -> list[ProjectRead]:
-    db_obj = crud_user.read(db=db, id=authz_user.user.id)
-    return [ProjectRead.model_validate(proj) for proj in db_obj.projects]
+    return [
+        ProjectRead.model_validate(project)
+        for project in crud_project.read_by_user(db=db, user_id=authz_user.user.id)
+    ]
 
 
 # --- update operations

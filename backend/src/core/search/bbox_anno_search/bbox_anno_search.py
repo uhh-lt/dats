@@ -83,7 +83,8 @@ def find_bbox_annotations(
         )
         .join(subquery, BBoxAnnotationORM.id == subquery.c.id)
         .filter(BBoxAnnotationORM.project_id == project_id)
-        .filter(SourceDocumentORM.project_id == project_id)
+        .filter(SourceDocumentORM.project_id == project_id),
+        row_key=[BBoxAnnotationORM.id],
     )._join_query(
         BBoxAnnotationORM.annotation_document,
     )._join_query(
@@ -170,7 +171,8 @@ def find_bbox_annotation_groups(
         )
         .join(subquery, BBoxAnnotationORM.id == subquery.c.id)
         .filter(BBoxAnnotationORM.project_id == project_id)
-        .filter(SourceDocumentORM.project_id == project_id)
+        .filter(SourceDocumentORM.project_id == project_id),
+        row_key=[BBoxAnnotationORM.id],
     )._join_query(
         BBoxAnnotationORM.annotation_document,
     )._join_query(

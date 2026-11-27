@@ -152,8 +152,10 @@ def get_annotators(
     project_id: int,
     sdoc_id: int,
 ) -> list[int]:
-    sdoc = crud_sdoc.read(db=db, project_id=project_id, id=sdoc_id)
-    return [adoc.user_id for adoc in sdoc.annotation_documents]
+    crud_sdoc.exists(db=db, project_id=project_id, id=sdoc_id, raise_error=True)
+    return crud_sdoc.read_annotators(db=db, project_id=project_id, sdoc_ids=[sdoc_id])[
+        sdoc_id
+    ]
 
 
 # --- update operations

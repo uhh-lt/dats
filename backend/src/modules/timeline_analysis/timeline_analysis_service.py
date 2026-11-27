@@ -360,7 +360,8 @@ class TimelineAnalysisService(metaclass=SingletonMeta):
             )
             .join(subquery, SourceDocumentORM.id == subquery.c.id)
             .filter(SourceDocumentORM.project_id == project_id)
-            .group_by(*group_by.apply(column=subquery.c["date"]))  # type: ignore
+            .group_by(*group_by.apply(column=subquery.c["date"])),  # type: ignore
+            row_key=[*group_by.apply(column=subquery.c["date"])],  # type: ignore
         ).build_query()
 
         result_rows, _ = builder.execute_query(
@@ -433,7 +434,8 @@ class TimelineAnalysisService(metaclass=SingletonMeta):
                     )
                     .join(subquery, SentenceAnnotationORM.id == subquery.c.id)
                     .filter(SentenceAnnotationORM.project_id == project_id)
-                    .group_by(*group_by.apply(column=subquery.c["date"]))  # type: ignore
+                    .group_by(*group_by.apply(column=subquery.c["date"])),  # type: ignore
+                    row_key=[*group_by.apply(column=subquery.c["date"])],  # type: ignore
                 ).build_query()
 
                 result_rows, _ = builder.execute_query(
@@ -546,7 +548,8 @@ class TimelineAnalysisService(metaclass=SingletonMeta):
                     )
                     .join(subquery, SpanAnnotationORM.id == subquery.c.id)
                     .filter(SpanAnnotationORM.project_id == project_id)
-                    .group_by(*group_by.apply(column=subquery.c["date"]))  # type: ignore
+                    .group_by(*group_by.apply(column=subquery.c["date"])),  # type: ignore
+                    row_key=[*group_by.apply(column=subquery.c["date"])],  # type: ignore
                 ).build_query()
 
                 result_rows, _ = builder.execute_query(
@@ -695,7 +698,8 @@ class TimelineAnalysisService(metaclass=SingletonMeta):
             )
             .join(subquery, annotation_orm.id == subquery.c.id)
             .filter(annotation_orm.project_id == project_id)
-            .group_by(*group_by.apply(column=subquery.c["date"]))  # type: ignore
+            .group_by(*group_by.apply(column=subquery.c["date"])),  # type: ignore
+            row_key=[*group_by.apply(column=subquery.c["date"])],  # type: ignore
         ).build_query()
 
         result_rows, _ = builder.execute_query(
@@ -770,7 +774,8 @@ class TimelineAnalysisService(metaclass=SingletonMeta):
                 *group_by.apply(subquery.c["date"]),  # type: ignore
             )
             .filter(annotation_orm.project_id == project_id)
-            .group_by(*group_by.apply(column=subquery.c["date"]))  # type: ignore
+            .group_by(*group_by.apply(column=subquery.c["date"])),  # type: ignore
+            row_key=[*group_by.apply(column=subquery.c["date"])],  # type: ignore
         )._join_query(
             annotation_orm.annotation_document,
         )._join_query(

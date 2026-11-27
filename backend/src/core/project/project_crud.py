@@ -2,7 +2,7 @@ from sqlalchemy import text
 from sqlalchemy.orm import Session
 
 from core.project.project_dto import ProjectCreate, ProjectUpdate
-from core.project.project_orm import ProjectORM
+from core.project.project_orm import ProjectORM, ProjectUserLinkTable
 from core.user.user_crud import (
     crud_user,
 )
@@ -13,6 +13,26 @@ from repos.db.sql_exceptions import NoSuchElementError
 
 class CRUDProject(SQLCRUDBase[ProjectORM, ProjectCreate, ProjectUpdate]):
     ### READ OPERATIONS ###
+
+    def read_by_user(self, db: Session, *, user_id: int) -> list[ProjectORM]:
+        """
+        Read the projects the user is a member of.
+
+        Args:
+            user_id: The user.
+
+        Returns:
+            The projects, ordered by id.
+        """
+        return (
+            db.query(self.model)
+            .join(
+                ProjectUserLinkTable, ProjectUserLinkTable.project_id == self.model.id
+            )
+            .filter(ProjectUserLinkTable.user_id == user_id)
+            .order_by(self.model.id)
+            .all()
+        )
 
     def read_locked(self, db: Session, *, id: int, shared: bool = False) -> ProjectORM:
         """

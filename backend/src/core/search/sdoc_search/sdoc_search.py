@@ -116,7 +116,8 @@ def filter_sdoc_ids(
             SourceDocumentORM.id,
         )
         .join(subquery, SourceDocumentORM.id == subquery.c.id)
-        .filter(SourceDocumentORM.project_id == project_id)
+        .filter(SourceDocumentORM.project_id == project_id),
+        row_key=[SourceDocumentORM.id],
     ).build_query()
     result_rows, total_results = builder.execute_query(
         page_number=page_number,

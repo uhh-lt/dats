@@ -1109,6 +1109,35 @@ def test_memo_search_paginates_rows_without_overlap(client: TestClient, search_p
     assert {m.id for m in page0.items}.isdisjoint({m.id for m in page1.items})
 
 
+@pytest.mark.parametrize("direction", [SortDirection.ASC, SortDirection.DESC])
+def test_memo_search_pages_every_row_once_when_the_sort_values_tie(
+    client: TestClient, search_project, direction: SortDirection
+):
+    """Sorted by the author, four memos tie on `user` and three on
+    `other_user`; the memo id breaks the ties, so pages of two return each of
+    the seven memos exactly once, in the same order as one page of all."""
+
+    def _ids(page_number: int, page_size: int) -> list[int]:
+        request = QueryRequest[MemoColumns](
+            search_query="",
+            filter=empty_filter(),
+            sorts=[Sort[MemoColumns](column=MemoColumns.USER_ID, direction=direction)],
+            page_number=page_number,
+            page_size=page_size,
+        )
+        response = client.post(
+            _url("/search/memos", search_project["project"].id),
+            json=request.model_dump(mode="json"),
+        )
+        assert response.status_code == 200, response.text
+        return [m.id for m in Page[MemoRead].model_validate(response.json()).items]
+
+    paged = [memo_id for page in range(4) for memo_id in _ids(page, 2)]
+
+    assert paged == _ids(0, 20)
+    assert sorted(paged) == sorted(m.id for m in search_project["memos"])
+
+
 # --- D. drill-down (group_by + group_key) ------------------------------------------
 # A row query that sets BOTH group_by and group_key is restricted to the single
 # group identified by group_key (exprs.key == group_key). Setting only one of

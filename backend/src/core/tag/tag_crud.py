@@ -77,7 +77,8 @@ class CRUDTag(ProjectCRUDBase[TagORM, TagCreate, TagUpdate]):
             sdoc_ids: The documents.
 
         Returns:
-            The tags per document id; documents without tags have no entry.
+            The tags per document id, ordered by tag id; documents without tags
+            have no entry.
         """
         if not sdoc_ids:
             return {}
@@ -97,6 +98,7 @@ class CRUDTag(ProjectCRUDBase[TagORM, TagCreate, TagUpdate]):
                     SourceDocumentTagLinkTable.project_id == project_id,
                     SourceDocumentTagLinkTable.source_document_id.in_(batch_ids),
                 )
+                .order_by(SourceDocumentTagLinkTable.source_document_id, TagORM.id)
             )
             for sdoc_id, tag_obj in db.execute(stmt).all():
                 result[sdoc_id].append(tag_obj)

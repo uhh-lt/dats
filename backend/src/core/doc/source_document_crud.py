@@ -169,7 +169,7 @@ class CRUDSourceDocument(
         self, db: Session, *, project_id: int, tag_ids: list[int] | None
     ) -> list[SourceDocumentORM]:
         """The documents of the project that carry one of the tags, or any tag
-        if `tag_ids` is None."""
+        if `tag_ids` is None, ordered by id."""
         has_tag = (
             SourceDocumentORM.tags.any()
             if tag_ids is None
@@ -178,6 +178,7 @@ class CRUDSourceDocument(
         return (
             db.query(SourceDocumentORM)
             .filter(SourceDocumentORM.project_id == project_id, has_tag)
+            .order_by(SourceDocumentORM.id)
             .all()
         )
 
