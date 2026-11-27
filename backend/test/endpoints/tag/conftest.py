@@ -42,7 +42,7 @@ def project_with_sdoc_and_tag(db_session, project_with_sdoc) -> ProjectWithSdocA
     )
 
     # Link the tag to the source document
-    crud_tag.link_multiple_tags(
+    crud_tag.link_multi(
         db=db_session, project_id=project.id, sdoc_ids=[sdoc.id], tag_ids=[tag.id]
     )
 
@@ -83,7 +83,7 @@ def project_with_sdoc_and_multiple_tags(
     )
 
     # Link the second tag to the source document
-    crud_tag.link_multiple_tags(
+    crud_tag.link_multi(
         db=db_session, project_id=project.id, sdoc_ids=[sdoc.id], tag_ids=[tag2.id]
     )
 
@@ -161,7 +161,7 @@ def project_with_multiple_sdocs_and_multiple_tags(
     )
 
     # Link tags to source documents
-    crud_tag.set_tags_batch(
+    crud_tag.set_tags_multi(
         db=db_session,
         project_id=test_project.id,
         links={sdoc1.id: [tag1.id, tag2.id], sdoc2.id: [tag1.id]},
@@ -218,7 +218,7 @@ def system_only_project(
 
 
 @pytest.fixture(scope="function")
-def two_tenants(db_session, test_user, test_project) -> TwoTenants:
+def tenants(db_session, test_user, test_project) -> TwoTenants:
     """The rows of every project-owned table in the test project and in "Foreign
     Project" (composite_keys_test_utils.TwoTenants and TenantRows list them): in
     each, the document "doc_<p>.txt" is linked to "Tag <p>", which has the child

@@ -75,7 +75,7 @@ export class AuthenticationService {
   }): CancelablePromise<UserAuthorizationHeaderData> {
     return __request(OpenAPI, {
       method: "POST",
-      url: "/authentication/refresh_access",
+      url: "/authentication/refresh-access",
       query: {
         refresh_token: refreshToken,
       },

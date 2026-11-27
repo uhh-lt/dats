@@ -44,7 +44,7 @@ def create(
 
 
 @router.put(
-    "/runs",
+    "/{experiment_id}/runs",
     response_model=ExperimentRead,
     summary=(
         "Creates and starts a run of an experiment with a prompt version and a "
@@ -55,12 +55,17 @@ def create_run(
     *,
     db: DBSession,
     project_id: int,
+    experiment_id: int,
     run: ExperimentRunCreate,
     authz_user: AuthzUser = Depends(),
     ws: WebsocketEmitter = Depends(),
 ) -> ExperimentRead:
     result = exs.create_run(
-        db=db, project_id=project_id, create_dto=run, user_id=authz_user.user.id
+        db=db,
+        project_id=project_id,
+        experiment_id=experiment_id,
+        create_dto=run,
+        user_id=authz_user.user.id,
     )
     ws.emit_to_project(
         DATSEvent.USER_CREATED, result.virtual_user, project_id=project_id
@@ -107,7 +112,7 @@ def get_by_id(
 
 
 @router.patch(
-    "/runs/{run_id}/scores",
+    "/{experiment_id}/runs/{run_id}/refresh-scores",
     response_model=ExperimentRead,
     summary=(
         "Recomputes and stores the agreement of the run with the gold annotator. "
@@ -118,10 +123,13 @@ def refresh_run_scores(
     *,
     db: DBSession,
     project_id: int,
+    experiment_id: int,
     run_id: int,
     ws: WebsocketEmitter = Depends(),
 ) -> ExperimentRead:
-    result = exs.refresh_run_scores(db=db, project_id=project_id, run_id=run_id)
+    result = exs.refresh_run_scores(
+        db=db, project_id=project_id, experiment_id=experiment_id, run_id=run_id
+    )
     ws.emit_to_project(DATSEvent.EXPERIMENT_UPDATED, result, project_id=project_id)
     return result
 
@@ -154,7 +162,7 @@ def update_by_id(
 
 
 @router.patch(
-    "/{experiment_id}/scores",
+    "/{experiment_id}/refresh-scores",
     response_model=ExperimentRead,
     summary=(
         "Recomputes and stores the agreement of all finished runs of the experiment "
@@ -180,7 +188,7 @@ def refresh_all_run_scores(
 
 
 @router.delete(
-    "/runs/{run_id}",
+    "/{experiment_id}/runs/{run_id}",
     response_model=ExperimentRead,
     summary=(
         "Removes the run with its virtual user and its annotations. "
@@ -191,10 +199,13 @@ def delete_run(
     *,
     db: DBSession,
     project_id: int,
+    experiment_id: int,
     run_id: int,
     ws: WebsocketEmitter = Depends(),
 ) -> ExperimentRead:
-    result = exs.delete_run(db=db, project_id=project_id, run_id=run_id)
+    result = exs.delete_run(
+        db=db, project_id=project_id, experiment_id=experiment_id, run_id=run_id
+    )
     ws.emit_to_project(
         DATSEvent.USER_DELETED, result.virtual_user, project_id=project_id
     )
@@ -234,7 +245,7 @@ def delete_by_id(
 
 
 @router.post(
-    "/runs/{run_id}/export-log",
+    "/{experiment_id}/runs/{run_id}/export-log",
     response_model=str,
     summary="Exports the log of a run as JSON or CSV. Returns the URL of the file.",
 )
@@ -242,9 +253,14 @@ def export_run_log(
     *,
     db: DBSession,
     project_id: int,
+    experiment_id: int,
     run_id: int,
     export_format: ExperimentRunLogFormat,
 ) -> str:
     return exs.export_run_log(
-        db=db, project_id=project_id, run_id=run_id, export_format=export_format
+        db=db,
+        project_id=project_id,
+        experiment_id=experiment_id,
+        run_id=run_id,
+        export_format=export_format,
     )

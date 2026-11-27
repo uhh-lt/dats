@@ -1,5 +1,5 @@
 import { queryClient } from "@api/queryClient";
-import { DocprocessingService } from "@api/services/DocprocessingService";
+import { DocProcessingService } from "@api/services/DocProcessingService";
 import { JobService } from "@api/services/JobService";
 import { projectQueries } from "@core/project";
 import { sdocQueries } from "@core/source-document";
@@ -42,7 +42,7 @@ const useStartCrawlerJob = () =>
 const useUploadDocument = () =>
   useMutation({
     mutationKey: [...documentUploadQueries.all(), "uploadDocument"],
-    mutationFn: DocprocessingService.uploadFiles,
+    mutationFn: DocProcessingService.uploadFiles,
     meta: {
       successMessage: (data: number) =>
         `Successfully uploaded ${data} documents and started PreprocessingJob in the background!`,

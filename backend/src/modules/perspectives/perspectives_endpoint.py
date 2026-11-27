@@ -28,6 +28,9 @@ from modules.perspectives.cluster_embedding_dto import ClusterObjectIdentifier
 from modules.perspectives.document_aspect_crud import crud_document_aspect
 from modules.perspectives.document_cluster_crud import crud_document_cluster
 from modules.perspectives.perspectives_enum import PerspectivesJobType
+from modules.perspectives.perspectives_exceptions import (
+    PerspectivesDataIncompleteError,
+)
 from modules.perspectives.perspectives_file_crud import (
     MAP_THUMBNAIL_FILENAME,
     crud_perspectives_plot_file,
@@ -61,7 +64,7 @@ js = JobService()
     response_model=AspectRead,
     summary="Creates a new Aspect",
 )
-def create_aspect(
+def create(
     *,
     db: DBSession,
     project_id: int,
@@ -103,7 +106,7 @@ def create_aspect(
     response_model=list[AspectRead],
     summary="Returns all Aspects of the Project",
 )
-def get_all_aspects(
+def get_by_project(
     *,
     db: DBSession,
     project_id: int,
@@ -170,7 +173,7 @@ def get_docaspect_by_id(
     response_model=list[ClusterRead],
     summary="Returns the clusters for the given SourceDocument (sdoc_id) in the specified Aspect (aspect_id).",
 )
-def get_clusters_for_sdoc(
+def get_clusters(
     *,
     db: DBSession,
     project_id: int,
@@ -192,7 +195,7 @@ def get_clusters_for_sdoc(
     response_model=AspectRead,
     summary="Updates the Aspect with the given ID.",
 )
-def update_aspect_by_id(
+def update_by_id(
     *,
     db: DBSession,
     project_id: int,
@@ -212,18 +215,22 @@ def update_aspect_by_id(
 
 
 @router.patch(
-    "/clusters/{cluster_id}",
+    "/aspects/{aspect_id}/clusters/{cluster_id}",
     response_model=ClusterRead,
     summary="Updates the Cluster's name and description.",
 )
-def update_cluster_details(
+def update_cluster(
     *,
     db: DBSession,
     project_id: int,
+    aspect_id: int,
     cluster_id: int,
     cluster_update: ClusterUpdate,
     ws: WebsocketEmitter = Depends(),
 ) -> ClusterRead:
+    crud_cluster.read_by_aspect(
+        db=db, project_id=project_id, aspect_id=aspect_id, id=cluster_id
+    )
     update_dto = ClusterUpdateIntern(
         **cluster_update.model_dump(exclude_unset=True), is_user_edited=True
     )
@@ -246,7 +253,7 @@ def update_cluster_details(
     response_model=AspectRead,
     summary="Removes the Aspect with the given ID.",
 )
-def remove_aspect_by_id(
+def delete_by_id(
     *,
     db: DBSession,
     weaviate: WeaviateClient = Depends(get_weaviate_client),
@@ -305,9 +312,11 @@ def _build_document_visualization(
     )
     sdoc_id2dc = {dc.sdoc_id: dc for dc in document_clusters}
     cluster_id2cluster = {c.id: c for c in clusters}
-    assert len(document_aspects) == len(document_clusters), (
-        "The number of DocumentAspects and DocumentClusters must match for visualization."
-    )
+    if len(document_aspects) != len(document_clusters):
+        raise PerspectivesDataIncompleteError(
+            aspect_id=aspect_id,
+            reason="the documents and their clusters differ in number",
+        )
 
     # Search documents
     sdoc_id_in_search_result: dict[int, bool]
@@ -328,9 +337,11 @@ def _build_document_visualization(
         docs: list[PerspectivesDoc] = []
         for doc in document_aspects:
             dc = sdoc_id2dc[doc.sdoc_id]
-            assert doc.x is not None and doc.y is not None, (
-                f"Document {doc.sdoc_id} has no coordinates"
-            )
+            if doc.x is None or doc.y is None:
+                raise PerspectivesDataIncompleteError(
+                    aspect_id=aspect_id,
+                    reason=f"document {doc.sdoc_id} has no coordinates",
+                )
             docs.append(
                 PerspectivesDoc(
                     sdoc_id=doc.sdoc_id,
@@ -346,9 +357,11 @@ def _build_document_visualization(
         docs = []
         for doc in document_aspects:
             dc = sdoc_id2dc[doc.sdoc_id]
-            assert doc.x is not None and doc.y is not None, (
-                f"Document {doc.sdoc_id} has no coordinates"
-            )
+            if doc.x is None or doc.y is None:
+                raise PerspectivesDataIncompleteError(
+                    aspect_id=aspect_id,
+                    reason=f"document {doc.sdoc_id} has no coordinates",
+                )
             docs.append(
                 PerspectivesDoc(
                     sdoc_id=doc.sdoc_id,
@@ -406,12 +419,12 @@ def visualize_documents(
     )
 
 
-@router.post(
+@router.patch(
     "/aspects/{aspect_id}/accept-labels",
     response_model=PerspectivesVisualization,
     summary="Accept the label of the provided SourceDocuments (by ID) and return the updated visualization.",
 )
-def accept_label(
+def accept_labels(
     *,
     db: DBSession,
     project_id: int,
@@ -441,12 +454,12 @@ def accept_label(
     return result
 
 
-@router.post(
+@router.patch(
     "/aspects/{aspect_id}/revert-labels",
     response_model=PerspectivesVisualization,
     summary="Reverts the label of the provided SourceDocuments (by ID) and return the updated visualization.",
 )
-def revert_label(
+def revert_labels(
     *,
     db: DBSession,
     project_id: int,

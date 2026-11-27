@@ -957,7 +957,7 @@ class SpanClassificationModelService(TextClassificationModelService):
 
         # 6.2 store the evaluation in the db
         labelid2codeid = {v: k for k, v in codeid2labelid.items()}
-        classifier_db_obj = crud_classifier.add_evaluation(
+        classifier_db_obj = crud_classifier.create_evaluation(
             db=db,
             project_id=classifier.project_id,
             create_dto=ClassifierEvaluationCreate(
@@ -1109,7 +1109,7 @@ class SpanClassificationModelService(TextClassificationModelService):
         # 5. Store the evaluation in the DB
         job.update(current_step=5)
         labelid2codeid = {v: k for k, v in codeid2labelid.items()}
-        classifier_db_obj = crud_classifier.add_evaluation(
+        classifier_db_obj = crud_classifier.create_evaluation(
             db=db,
             project_id=classifier.project_id,
             create_dto=ClassifierEvaluationCreate(

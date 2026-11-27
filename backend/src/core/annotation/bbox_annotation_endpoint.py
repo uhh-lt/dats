@@ -25,7 +25,7 @@ router = project_router("/bbox-annotations", tags=["bboxAnnotation", "mcp"])
     response_model=BBoxAnnotationRead,
     summary="Creates a BBoxAnnotation",
 )
-def create_bbox_annotation(
+def create(
     *,
     db: DBSession,
     project_id: int,
@@ -57,7 +57,7 @@ def create_bbox_annotation(
         "SourceDocument or with the Code"
     ),
 )
-def get_bbox_annotations(
+def get_by_project(
     *,
     db: DBSession,
     project_id: int,
@@ -94,7 +94,7 @@ def get_by_id(
     response_model=list[BBoxAnnotationRead],
     summary="Updates BBoxAnnotations in Bulk",
 )
-def update_bbox_annotations_bulk(
+def update_bulk(
     *,
     db: DBSession,
     project_id: int,
@@ -139,7 +139,7 @@ def update_by_id(
     response_model=list[BBoxAnnotationRead],
     summary="Deletes all BBoxAnnotations with the given IDs.",
 )
-def delete_bbox_annotations_bulk(
+def delete_bulk(
     *,
     db: DBSession,
     project_id: int,

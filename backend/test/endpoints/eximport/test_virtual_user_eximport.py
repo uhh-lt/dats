@@ -73,14 +73,14 @@ def test_import_users_rejects_virtual_users_of_another_project(
     """A virtual user belongs to one project, so it cannot be imported into
     another project of the same DATS instance."""
     project = virtual_user_project["project"]
-    other_project = virtual_user_project["other_project"]
+    outsider_project = virtual_user_project["outsider_project"]
     path = export_all_users(
         db=db_session, out_dir=new_temporary_folder(), project_id=project.id
     )
 
     with pytest.raises(ImportUsersError, match="belongs to another project"):
         import_users_to_proj(
-            db=db_session, df=pd.read_csv(path), project_id=other_project.id
+            db=db_session, df=pd.read_csv(path), project_id=outsider_project.id
         )
 
 

@@ -110,8 +110,8 @@ def test_dissociate_user_from_project(
         pytest.param("run1", id="own-virtual-user"),
         # a human who is no member of the project
         pytest.param("other_user", id="human-non-member"),
-        # a virtual user of another project
-        pytest.param("other_run", id="foreign-virtual-user"),
+        # a virtual user of an outsider project
+        pytest.param("other_run", id="outsider-virtual-user"),
     ],
 )
 def test_dissociate_a_non_member_is_not_found(
@@ -159,10 +159,10 @@ def test_create_virtual_user_returns_a_virtual_user_of_the_project(
     ]
 
 
-def test_create_virtual_user_allows_a_name_of_another_project(
+def test_create_virtual_user_allows_a_name_of_an_outsider_project(
     client: TestClient, virtual_user_project: VirtualUserProject
 ):
-    """Names are unique per project only: another project's name is free."""
+    """Names are unique per project only: an outsider project's name is free."""
     project = virtual_user_project["project"]
     other_name = virtual_user_project["other_run"].first_name
 
@@ -197,14 +197,14 @@ def test_create_virtual_user_rejects_invalid_names(
     assert response.status_code == expected_status, response.text
 
 
-def test_create_virtual_user_in_foreign_project_is_forbidden(
+def test_create_virtual_user_in_an_outsider_project_is_forbidden(
     client: TestClient, virtual_user_project: VirtualUserProject
 ):
     """Only members can create virtual users in a project."""
-    other_project = virtual_user_project["other_project"]
+    outsider_project = virtual_user_project["outsider_project"]
 
     response = client.put(
-        f"/projects/{other_project.id}/virtual-users", json={"name": "Intruder"}
+        f"/projects/{outsider_project.id}/virtual-users", json={"name": "Intruder"}
     )
 
     assert response.status_code == 403, response.text
@@ -236,7 +236,7 @@ def test_get_users_by_project_lists_members_then_virtual_users(
 
 
 # ===========================================================================
-# UPDATE VIRTUAL USER (PATCH /projects/{project_id}/virtual-users/{user_id}) TESTS
+# UPDATE VIRTUAL USER (PATCH /projects/{project_id}/virtual-users/{virtual_user_id}) TESTS
 # ===========================================================================
 
 
@@ -294,11 +294,11 @@ def test_update_virtual_user_rejects_invalid_updates(
         # humans are no virtual users of any project
         pytest.param("user", id="human-self"),
         pytest.param("other_user", id="human-other"),
-        # a virtual user of another project
-        pytest.param("other_run", id="foreign-virtual-user"),
+        # a virtual user of an outsider project
+        pytest.param("other_run", id="outsider-virtual-user"),
     ],
 )
-def test_update_virtual_user_rejects_other_users_and_foreign_virtual_users(
+def test_update_virtual_user_rejects_other_users_and_outsider_virtual_users(
     client: TestClient,
     virtual_user_project: VirtualUserProject,
     user_key: str,
@@ -335,7 +335,7 @@ def test_associate_virtual_user_to_project_is_rejected(
 
 
 # ===========================================================================
-# DELETE VIRTUAL USER (DELETE /projects/{project_id}/virtual-users/{user_id}) TESTS
+# DELETE VIRTUAL USER (DELETE /projects/{project_id}/virtual-users/{virtual_user_id}) TESTS
 # ===========================================================================
 
 
@@ -398,11 +398,11 @@ def test_delete_virtual_user_keeps_provenance_of_copies(
         # humans are no virtual users of any project
         pytest.param("user", id="human-self"),
         pytest.param("other_user", id="human-other"),
-        # a virtual user of another project
-        pytest.param("other_run", id="foreign-virtual-user"),
+        # a virtual user of an outsider project
+        pytest.param("other_run", id="outsider-virtual-user"),
     ],
 )
-def test_delete_virtual_user_rejects_other_users_and_foreign_virtual_users(
+def test_delete_virtual_user_rejects_other_users_and_outsider_virtual_users(
     client: TestClient,
     db_session,
     virtual_user_project: VirtualUserProject,

@@ -7,9 +7,12 @@ from fastmcp.server.providers.openapi import MCPType
 from fastmcp.utilities.lifespan import combine_lifespans
 from fastmcp.utilities.openapi import HTTPRoute
 
+# routes of an `mcp` router that are no tool: an agent must not delete the account
+EXCLUDED_ROUTES = {("DELETE", "/users/me")}
+
 
 def _custom_route_mapper(route: HTTPRoute, mcp_type: MCPType) -> MCPType | None:
-    if "mcp" in route.tags:
+    if "mcp" in route.tags and (route.method, route.path) not in EXCLUDED_ROUTES:
         return MCPType.TOOL
     else:
         return MCPType.EXCLUDE

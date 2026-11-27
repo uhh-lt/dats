@@ -1,8 +1,8 @@
 from sqlalchemy.orm import Session
 
 from modules.concept_over_time_analysis.cota_dto import (
-    COTACreateIntern,
-    COTAUpdateIntern,
+    ConceptOverTimeAnalysisCreateIntern,
+    ConceptOverTimeAnalysisUpdateIntern,
 )
 from modules.concept_over_time_analysis.cota_orm import (
     ConceptOverTimeAnalysisORM,
@@ -11,7 +11,11 @@ from repos.db.project_crud_base import ProjectCRUDBase
 
 
 class CRUDConceptOverTimeAnalysis(
-    ProjectCRUDBase[ConceptOverTimeAnalysisORM, COTACreateIntern, COTAUpdateIntern]
+    ProjectCRUDBase[
+        ConceptOverTimeAnalysisORM,
+        ConceptOverTimeAnalysisCreateIntern,
+        ConceptOverTimeAnalysisUpdateIntern,
+    ]
 ):
     ### READ OPERATIONS ###
 
@@ -36,7 +40,7 @@ class CRUDConceptOverTimeAnalysis(
         return self.create(
             db=db,
             project_id=project_id,
-            create_dto=COTACreateIntern(
+            create_dto=ConceptOverTimeAnalysisCreateIntern(
                 name=db_obj.name + " (Copy)",
                 concepts=db_obj.concepts,
                 timeline_settings=db_obj.timeline_settings,

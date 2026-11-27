@@ -101,23 +101,6 @@ class CRUDSourceDocumentMetadata(
 
     ### READ OPERATIONS ###
 
-    def read_by_project(
-        self,
-        db: Session,
-        *,
-        project_id: int,
-        skip: int | None = None,
-        limit: int | None = None,
-    ) -> list[SourceDocumentMetadataORM]:
-        query = db.query(self.model).filter(self.model.project_id == project_id)
-        if skip is not None:
-            query = query.offset(skip)
-        if limit is not None:
-            query = query.limit(limit)
-
-        db_objs = query.all()
-        return db_objs
-
     def read_by_sdoc_and_key(
         self,
         db: Session,

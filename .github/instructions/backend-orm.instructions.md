@@ -18,10 +18,10 @@ from typing import TYPE_CHECKING
 from sqlalchemy import (
     DateTime,
     ForeignKey,
+    ForeignKeyConstraint,
     Integer,
     PrimaryKeyConstraint,
     String,
-    UniqueConstraint,
     func,
 )
 from sqlalchemy.orm import Mapped, mapped_column, relationship
@@ -61,10 +61,7 @@ class WhiteboardORM(ORMBase):
     )
 
     # 3d. Table-level constraints
-    __table_args__ = (
-        PrimaryKeyConstraint("project_id", "id", name="whiteboard_pkey"),
-        UniqueConstraint("project_id", "title", name="UC_<...>_unique_per_project"),
-    )
+    __table_args__ = (PrimaryKeyConstraint("project_id", "id", name="whiteboard_pkey"),)
 
     # 3e. Derived @property values (memo_ids, sdoc_id, user_id, ...)
 
@@ -131,7 +128,7 @@ class SourceDocumentTagLinkTable(ORMBase):
 - **`back_populates` both ways**: when the other side declares the inverse relationship, both sides name each other with `back_populates`. Never use `backref`.
 - **Parent side of one-to-many / one-to-one**: `cascade="all, delete-orphan", passive_deletes=True`. Together with `ondelete="CASCADE"`, the database does the deleting. Exceptions: `ClusterORM.child_clusters` (children survive via `SET NULL`) and the shared lookup `SpanTextORM.span_annotations` (only `passive_deletes=True`).
 - **One to one**: add `uselist=False` on the parent side (e.g. `object_handle`, `data`).
-- **Many to many**: `secondary=...` plus `back_populates` and `viewonly=True`; the CRUD writes the link rows by their id columns and `project_id` (`crud_tag.link_multiple_tags`).
+- **Many to many**: `secondary=...` plus `back_populates` and `viewonly=True`; the CRUD writes the link rows by their id columns and `project_id` (`crud_tag.link_multi`).
 - **Hierarchies** (code, tag, folder, cluster): `parent_id: Mapped[int | None]` has a composite self-FK; `parent` joins with `primaryjoin="and_(remote(<Self>ORM.project_id) == <Self>ORM.project_id, remote(<Self>ORM.id) == foreign(<Self>ORM.parent_id))"`, `children` with `primaryjoin="and_(remote(<Self>ORM.project_id) == <Self>ORM.project_id, remote(foreign(<Self>ORM.parent_id)) == <Self>ORM.id)"` and the parent-side cascade (`code_orm.py`).
 - **Ambiguous FKs**: the `foreign()` column of the `primaryjoin` also picks the FK when two connect the same tables (`SpanAnnotationORM.code` and `source_code_id`).
 - **Inverse side**: adding a relationship to an existing model also means adding the inverse relationship and the `TYPE_CHECKING` import in the target ORM file (e.g. a new project-scoped entity adds a list to `ProjectORM`).

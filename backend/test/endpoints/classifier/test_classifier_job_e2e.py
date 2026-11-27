@@ -1021,7 +1021,7 @@ def test_inference_job_requires_a_virtual_user(
 ):
     """Span and sentence inference only write into a virtual user of the
     project: without one the request is invalid (HTTP 422), with another user the
-    start returns HTTP 400; no job is enqueued."""
+    start returns HTTP 404; no job is enqueued."""
     payload = _inference_payload(
         test_project.id, model_type, 1, [], classifier_virtual_user.id
     ).model_dump(mode="json", exclude={"project_id"})
@@ -1032,8 +1032,8 @@ def test_inference_job_requires_a_virtual_user(
 
     payload["task_parameters"]["virtual_user_id"] = test_user.id
     response = client.post(_job_url(test_project.id), json=payload)
-    assert response.status_code == 400, response.text
-    assert "is not a virtual user of project" in response.text
+    assert response.status_code == 404, response.text
+    assert "There exists no User" in response.text
 
     list_response = client.get(_job_url(test_project.id))
     assert list_response.status_code == 200, list_response.text

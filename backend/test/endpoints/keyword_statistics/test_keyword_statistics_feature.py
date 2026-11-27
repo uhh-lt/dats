@@ -76,7 +76,7 @@ def test_enable_creates_the_keywords_key_and_its_set_up_is_safe_to_run_twice(
     sdoc_id = featureless_project["sdoc"].id
     assert _keyword_keys(db_session, project_id) == {}
 
-    response = client.post(
+    response = client.patch(
         f"/projects/{project_id}/features/{FEATURE}/enable",
         json=FeatureActivation(settings=SETTINGS).model_dump(mode="json"),
     )

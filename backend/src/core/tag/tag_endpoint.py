@@ -43,7 +43,7 @@ def _read_sdoc_tag_links(
     response_model=TagRead,
     summary="Creates a new Tag and returns it with the generated ID.",
 )
-def create_tag(
+def create(
     *,
     db: DBSession,
     project_id: int,
@@ -71,7 +71,7 @@ def link_tags_bulk(
     multi_link: SourceDocumentTagMultiLink,
     ws: WebsocketEmitter = Depends(),
 ) -> SdocTagLinksResult:
-    crud_tag.link_multiple_tags(
+    crud_tag.link_multi(
         db=db,
         project_id=project_id,
         sdoc_ids=multi_link.source_document_ids,
@@ -141,7 +141,7 @@ def get_sdoc_ids_by_tag_id(
     response_model=list[TagRead],
     summary="Updates the Tags with the given IDs.",
 )
-def update_tags_bulk(
+def update_bulk(
     *,
     db: DBSession,
     project_id: int,
@@ -182,10 +182,10 @@ def update_sdoc_tags_bulk(
     unlink_tag_ids: list[int] = Body(description="The Tags to unlink"),
     ws: WebsocketEmitter = Depends(),
 ) -> SdocTagLinksResult:
-    crud_tag.link_multiple_tags(
+    crud_tag.link_multi(
         db=db, project_id=project_id, sdoc_ids=sdoc_ids, tag_ids=link_tag_ids
     )
-    crud_tag.unlink_multiple_tags(
+    crud_tag.unlink_multi(
         db=db, project_id=project_id, sdoc_ids=sdoc_ids, tag_ids=unlink_tag_ids
     )
     result = _read_sdoc_tag_links(db, project_id=project_id, sdoc_ids=sdoc_ids)
@@ -195,21 +195,21 @@ def update_sdoc_tags_bulk(
 
 
 @router.patch(
-    "/bulk/source-documents/set",
+    "/bulk/source-documents/replace",
     response_model=SdocTagLinksResult,
     summary=(
         "Sets the Tags of each SourceDocument to the given Tags and returns the "
         "resulting tags per document"
     ),
 )
-def set_sdoc_tags_bulk(
+def replace_sdoc_tags_bulk(
     *,
     db: DBSession,
     project_id: int,
     links: SdocTagLinks,
     ws: WebsocketEmitter = Depends(),
 ) -> SdocTagLinksResult:
-    crud_tag.set_tags_batch(db=db, project_id=project_id, links=links.links)
+    crud_tag.set_tags_multi(db=db, project_id=project_id, links=links.links)
     result = _read_sdoc_tag_links(db, project_id=project_id, sdoc_ids=list(links.links))
     if result.links:
         ws.emit_to_project(DATSEvent.SDOC_TAGS_LINKED, result, project_id=project_id)
@@ -253,7 +253,7 @@ def unlink_tags_bulk(
     multi_link: SourceDocumentTagMultiLink,
     ws: WebsocketEmitter = Depends(),
 ) -> SdocTagLinksResult:
-    crud_tag.unlink_multiple_tags(
+    crud_tag.unlink_multi(
         db=db,
         project_id=project_id,
         sdoc_ids=multi_link.source_document_ids,
@@ -297,7 +297,7 @@ def delete_by_id(
         "or all Tags of the Project"
     ),
 )
-def count_tags(
+def count(
     *,
     db: DBSession,
     project_id: int,

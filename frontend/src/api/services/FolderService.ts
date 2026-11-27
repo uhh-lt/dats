@@ -16,7 +16,7 @@ export class FolderService {
    * @returns FolderRead Successful Response
    * @throws ApiError
    */
-  public static createFolder({
+  public static create({
     projectId,
     requestBody,
   }: {
@@ -32,6 +32,10 @@ export class FolderService {
       body: requestBody,
       mediaType: "application/json",
       errors: {
+        400: `The request breaks a rule of the domain`,
+        403: `The user is no member of the project, or the feature is disabled`,
+        404: `A path id, or an id the route reads, is not in the project`,
+        409: `A body id violates a foreign key, or a value a unique constraint`,
         422: `Validation Error`,
       },
     });
@@ -58,6 +62,10 @@ export class FolderService {
         folder_type: folderType,
       },
       errors: {
+        400: `The request breaks a rule of the domain`,
+        403: `The user is no member of the project, or the feature is disabled`,
+        404: `A path id, or an id the route reads, is not in the project`,
+        409: `A body id violates a foreign key, or a value a unique constraint`,
         422: `Validation Error`,
       },
     });
@@ -82,6 +90,10 @@ export class FolderService {
         folder_id: folderId,
       },
       errors: {
+        400: `The request breaks a rule of the domain`,
+        403: `The user is no member of the project, or the feature is disabled`,
+        404: `A path id, or an id the route reads, is not in the project`,
+        409: `A body id violates a foreign key, or a value a unique constraint`,
         422: `Validation Error`,
       },
     });
@@ -110,6 +122,10 @@ export class FolderService {
       body: requestBody,
       mediaType: "application/json",
       errors: {
+        400: `The request breaks a rule of the domain`,
+        403: `The user is no member of the project, or the feature is disabled`,
+        404: `A path id, or an id the route reads, is not in the project`,
+        409: `A body id violates a foreign key, or a value a unique constraint`,
         422: `Validation Error`,
       },
     });
@@ -134,6 +150,10 @@ export class FolderService {
         folder_id: folderId,
       },
       errors: {
+        400: `The request breaks a rule of the domain`,
+        403: `The user is no member of the project, or the feature is disabled`,
+        404: `A path id, or an id the route reads, is not in the project`,
+        409: `A body id violates a foreign key, or a value a unique constraint`,
         422: `Validation Error`,
       },
     });
@@ -158,6 +178,10 @@ export class FolderService {
         folder_id: folderId,
       },
       errors: {
+        400: `The request breaks a rule of the domain`,
+        403: `The user is no member of the project, or the feature is disabled`,
+        404: `A path id, or an id the route reads, is not in the project`,
+        409: `A body id violates a foreign key, or a value a unique constraint`,
         422: `Validation Error`,
       },
     });
@@ -167,7 +191,7 @@ export class FolderService {
    * @returns FolderRead Successful Response
    * @throws ApiError
    */
-  public static updateFoldersBulk({
+  public static updateBulk({
     projectId,
     requestBody,
   }: {
@@ -183,6 +207,10 @@ export class FolderService {
       body: requestBody,
       mediaType: "application/json",
       errors: {
+        400: `The request breaks a rule of the domain`,
+        403: `The user is no member of the project, or the feature is disabled`,
+        404: `A path id, or an id the route reads, is not in the project`,
+        409: `A body id violates a foreign key, or a value a unique constraint`,
         422: `Validation Error`,
       },
     });

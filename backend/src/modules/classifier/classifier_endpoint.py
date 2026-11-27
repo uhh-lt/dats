@@ -28,7 +28,7 @@ router = project_router("/classifiers", tags=["classifier"])
     response_model=ClassifierInfo,
     summary="Returns classifier models, thresholds, and training defaults",
 )
-def get_classifier_info(*, project_id: int) -> ClassifierInfo:
+def get_info(*, project_id: int) -> ClassifierInfo:
     return ClassifierInfo(
         weak_signal_threshold=conf.classifier.weak_signal_threshold,
         strong_signal_threshold=conf.classifier.strong_signal_threshold,

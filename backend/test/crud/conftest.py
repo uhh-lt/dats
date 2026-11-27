@@ -246,7 +246,7 @@ def sdoc_with_memos_and_span_group(
         user_id=user_id,
         create_dto=SpanGroupCreate(name="crud-group", sdoc_id=sdoc_id),
     )
-    crud_span_group.link_groups_spans_batch(
+    crud_span_group.link_spans_multi(
         db=db_session, project_id=test_project.id, links={span_group.id: span_ids}
     )
 
@@ -405,7 +405,7 @@ def step_status_project(db_session, test_project, test_user) -> StepStatusProjec
 
 
 @pytest.fixture(scope="function")
-def two_tenants(db_session: Session, test_user, test_project) -> TwoTenants:
+def tenants(db_session: Session, test_user, test_project) -> TwoTenants:
     """The rows of every project-owned table in two projects (see TwoTenants)."""
     return create_two_tenants(db_session, user=test_user, project=test_project)
 

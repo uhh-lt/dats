@@ -2,6 +2,6 @@
 /* istanbul ignore file */
 /* tslint:disable */
 /* eslint-disable */
-export type Body_import_start_import_job = {
+export type Body_job_start_import_job = {
   uploaded_file: string;
 };

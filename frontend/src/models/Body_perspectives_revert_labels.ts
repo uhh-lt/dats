@@ -4,7 +4,7 @@
 /* eslint-disable */
 import type { Filter_SdocColumns__Input } from "./Filter_SdocColumns__Input";
 import type { Sort_SdocColumns_ } from "./Sort_SdocColumns_";
-export type Body_perspectives_accept_label = {
+export type Body_perspectives_revert_labels = {
   sdoc_ids: Array<number>;
   /**
    * The filter of the Concept

@@ -144,13 +144,13 @@ def test_update_by_id_not_existing(client: TestClient, test_project):
 
 
 def test_update_by_id_rejects_a_parent_of_another_project(
-    client: TestClient, two_tenants: TwoTenants, test_project
+    client: TestClient, tenants: TwoTenants, test_project
 ):
     """A code cannot get the parent of another project, also when the user is a
     member of both: the composite foreign key rejects it (409) and the code keeps
     its parent."""
-    child_code = two_tenants["own"]["child_code"]
-    foreign_code = two_tenants["foreign"]["code"]
+    child_code = tenants["own"]["child_code"]
+    foreign_code = tenants["foreign"]["code"]
 
     response = client.patch(
         f"/projects/{test_project.id}/codes/{child_code.id}",
@@ -161,16 +161,16 @@ def test_update_by_id_rejects_a_parent_of_another_project(
     response = client.get(f"/projects/{test_project.id}/codes/{child_code.id}")
     assert response.status_code == 200, response.text
     assert CodeRead.model_validate(response.json()).parent_id == (
-        two_tenants["own"]["code"].id
+        tenants["own"]["code"].id
     )
 
 
 def test_create_code_rejects_a_parent_of_another_project(
-    client: TestClient, two_tenants: TwoTenants
+    client: TestClient, tenants: TwoTenants
 ):
     """A new code cannot get the parent of another project: the composite foreign
     key rejects the body reference (409)."""
-    own, foreign = two_tenants["own"], two_tenants["foreign"]
+    own, foreign = tenants["own"], tenants["foreign"]
     payload = CodeCreate(
         name="Foreign Parent",
         color="red",
@@ -186,11 +186,11 @@ def test_create_code_rejects_a_parent_of_another_project(
 
 
 def test_get_code_of_another_project_is_not_found(
-    client: TestClient, two_tenants: TwoTenants
+    client: TestClient, tenants: TwoTenants
 ):
     """A code of another project does not exist in the project of the path (404),
     also for a member of both projects."""
-    own, foreign = two_tenants["own"], two_tenants["foreign"]
+    own, foreign = tenants["own"], tenants["foreign"]
 
     response = client.get(f"/projects/{own['project'].id}/codes/{foreign['code'].id}")
 

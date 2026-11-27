@@ -11,7 +11,7 @@ const useCreateApiKey = () =>
   useMutation({
     mutationKey: [...apiKeyQueries.all(), "createApiKey"],
     mutationFn: ({ name, expiresIn }: { name: string; expiresIn: ExpiryDuration }) =>
-      ApiKeyService.createApiKey({ name, expiresIn }),
+      ApiKeyService.create({ name, expiresIn }),
     meta: {
       datsEvent: "API_KEY_CREATED",
       successMessage: (createdKey: ApiKeyCreatedResponse) => `Created API key ${createdKey.name}`,
@@ -21,7 +21,7 @@ const useCreateApiKey = () =>
 const useDeleteApiKey = () =>
   useMutation({
     mutationKey: [...apiKeyQueries.all(), "deleteApiKey"],
-    mutationFn: ApiKeyService.deleteApiKey,
+    mutationFn: ApiKeyService.deleteById,
     meta: {
       datsEvent: "API_KEY_DELETED",
       successMessage: (deletedKey: ApiKeyRead) => `Deleted API key ${deletedKey.name}`,

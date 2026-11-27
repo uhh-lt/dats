@@ -37,7 +37,7 @@ const useGetEnabledCodes = () => useGetAllCodesMap({ select: selectEnabledCodes 
 const useCreateCode = () => {
   return useMutation({
     mutationKey: [...codeQueries.all(), "createCode"],
-    mutationFn: CodeService.createCode,
+    mutationFn: CodeService.create,
     meta: {
       datsEvent: "CODE_CREATED",
       successMessage: (data: CodeRead) => `Created code ${data.name}`,
@@ -58,7 +58,7 @@ const useUpdateCode = () =>
 const useUpdateBulkCode = () =>
   useMutation({
     mutationKey: [...codeQueries.all(), "updateBulkCode"],
-    mutationFn: CodeService.updateCodesBulk,
+    mutationFn: CodeService.updateBulk,
     meta: {
       datsEvent: "CODE_UPDATED_BATCH",
       successMessage: (codes: CodeRead[]) => `Updated ${codes.length} code(s)`,

@@ -31,7 +31,6 @@ class ExperimentRunScores(BaseModel):
 
 # Properties shared across all DTOs
 class ExperimentRunBaseDTO(BaseModel):
-    experiment_id: int = Field(description="ID of the experiment of the run")
     name: str = Field(
         description=(
             "Name of the run, unique per experiment; the run writes into the "
@@ -54,6 +53,7 @@ class ExperimentRunCreate(ExperimentRunBaseDTO):
 
 
 class ExperimentRunCreateIntern(ExperimentRunCreate):
+    experiment_id: int = Field(description="ID of the experiment of the run")
     sdoc_ids: list[int] = Field(description="IDs of the documents the run runs on")
     virtual_user_id: int = Field(
         description="ID of the virtual user the run writes its annotations into"
@@ -87,6 +87,8 @@ class ExperimentRunUpdateIntern(BaseModel, UpdateDTOBase):
 # Properties for reading (as in ORM)
 class ExperimentRunRead(ExperimentRunBaseDTO):
     id: int = Field(description="ID of the run")
+    project_id: int = Field(description="ID of the project of the run")
+    experiment_id: int = Field(description="ID of the experiment of the run")
     sdoc_ids: list[int] = Field(description="IDs of the documents the run ran on")
     virtual_user_id: int = Field(
         description="ID of the virtual user the run writes its annotations into"

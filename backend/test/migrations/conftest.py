@@ -441,7 +441,7 @@ def person_boxes_database(
             result["system_person_box_ids"][project_id] = system_person
             result["user_person_box_ids"][project_id] = user_person
             result["system_cat_box_ids"][project_id] = system_cat
-        own_human_code = crud_code.read_by_name_and_project(
+        own_human_code = crud_code.read_by_name(
             db_session, code_name="HUMAN", project_id=result["own_human_project_id"]
         )
         assert own_human_code is not None

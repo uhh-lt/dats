@@ -13,7 +13,6 @@ import type { PromptRead } from "@models/PromptRead";
 import type { PromptTaskInfo } from "@models/PromptTaskInfo";
 import type { PromptUpdate } from "@models/PromptUpdate";
 import type { PromptVersionCreate } from "@models/PromptVersionCreate";
-import type { PromptVersionRead } from "@models/PromptVersionRead";
 import type { SentencePromptExample } from "@models/SentencePromptExample";
 import type { SpanPromptExample } from "@models/SpanPromptExample";
 import type { TaskType } from "@models/TaskType";
@@ -42,6 +41,10 @@ export class PromptService {
       body: requestBody,
       mediaType: "application/json",
       errors: {
+        400: `The request breaks a rule of the domain`,
+        403: `The user is no member of the project, or the feature is disabled`,
+        404: `A path id, or an id the route reads, is not in the project`,
+        409: `A body id violates a foreign key, or a value a unique constraint`,
         422: `Validation Error`,
       },
     });
@@ -59,6 +62,10 @@ export class PromptService {
         project_id: projectId,
       },
       errors: {
+        400: `The request breaks a rule of the domain`,
+        403: `The user is no member of the project, or the feature is disabled`,
+        404: `A path id, or an id the route reads, is not in the project`,
+        409: `A body id violates a foreign key, or a value a unique constraint`,
         422: `Validation Error`,
       },
     });
@@ -87,6 +94,10 @@ export class PromptService {
       body: requestBody,
       mediaType: "application/json",
       errors: {
+        400: `The request breaks a rule of the domain`,
+        403: `The user is no member of the project, or the feature is disabled`,
+        404: `A path id, or an id the route reads, is not in the project`,
+        409: `A body id violates a foreign key, or a value a unique constraint`,
         422: `Validation Error`,
       },
     });
@@ -96,7 +107,7 @@ export class PromptService {
    * @returns any Successful Response
    * @throws ApiError
    */
-  public static createExamples({
+  public static buildExamples({
     projectId,
     requestBody,
   }: {
@@ -105,13 +116,17 @@ export class PromptService {
   }): CancelablePromise<Array<SpanPromptExample | SentencePromptExample>> {
     return __request(OpenAPI, {
       method: "POST",
-      url: "/projects/{project_id}/prompts/examples",
+      url: "/projects/{project_id}/prompts/build-examples",
       path: {
         project_id: projectId,
       },
       body: requestBody,
       mediaType: "application/json",
       errors: {
+        400: `The request breaks a rule of the domain`,
+        403: `The user is no member of the project, or the feature is disabled`,
+        404: `A path id, or an id the route reads, is not in the project`,
+        409: `A body id violates a foreign key, or a value a unique constraint`,
         422: `Validation Error`,
       },
     });
@@ -137,6 +152,10 @@ export class PromptService {
       body: requestBody,
       mediaType: "application/json",
       errors: {
+        400: `The request breaks a rule of the domain`,
+        403: `The user is no member of the project, or the feature is disabled`,
+        404: `A path id, or an id the route reads, is not in the project`,
+        409: `A body id violates a foreign key, or a value a unique constraint`,
         422: `Validation Error`,
       },
     });
@@ -163,6 +182,10 @@ export class PromptService {
         task_type: taskType,
       },
       errors: {
+        400: `The request breaks a rule of the domain`,
+        403: `The user is no member of the project, or the feature is disabled`,
+        404: `A path id, or an id the route reads, is not in the project`,
+        409: `A body id violates a foreign key, or a value a unique constraint`,
         422: `Validation Error`,
       },
     });
@@ -192,30 +215,10 @@ export class PromptService {
         language: language,
       },
       errors: {
-        422: `Validation Error`,
-      },
-    });
-  }
-  /**
-   * Returns the prompt version with the given ID
-   * @returns PromptVersionRead Successful Response
-   * @throws ApiError
-   */
-  public static getVersionById({
-    projectId,
-    versionId,
-  }: {
-    projectId: number;
-    versionId: number;
-  }): CancelablePromise<PromptVersionRead> {
-    return __request(OpenAPI, {
-      method: "GET",
-      url: "/projects/{project_id}/prompts/versions/{version_id}",
-      path: {
-        project_id: projectId,
-        version_id: versionId,
-      },
-      errors: {
+        400: `The request breaks a rule of the domain`,
+        403: `The user is no member of the project, or the feature is disabled`,
+        404: `A path id, or an id the route reads, is not in the project`,
+        409: `A body id violates a foreign key, or a value a unique constraint`,
         422: `Validation Error`,
       },
     });
@@ -240,6 +243,10 @@ export class PromptService {
         prompt_id: promptId,
       },
       errors: {
+        400: `The request breaks a rule of the domain`,
+        403: `The user is no member of the project, or the feature is disabled`,
+        404: `A path id, or an id the route reads, is not in the project`,
+        409: `A body id violates a foreign key, or a value a unique constraint`,
         422: `Validation Error`,
       },
     });
@@ -268,6 +275,10 @@ export class PromptService {
       body: requestBody,
       mediaType: "application/json",
       errors: {
+        400: `The request breaks a rule of the domain`,
+        403: `The user is no member of the project, or the feature is disabled`,
+        404: `A path id, or an id the route reads, is not in the project`,
+        409: `A body id violates a foreign key, or a value a unique constraint`,
         422: `Validation Error`,
       },
     });

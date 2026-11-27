@@ -5,7 +5,6 @@ from common.dependencies import DBSession
 from common.project_router import project_router
 from core.metadata.source_document_metadata_crud import crud_sdoc_meta
 from core.metadata.source_document_metadata_dto import (
-    DateMetadataCountResult,
     SourceDocumentMetadataRead,
     SourceDocumentMetadataUpdate,
     SourceDocumentMetadataUpdateBulk,
@@ -15,7 +14,9 @@ from core.metadata.source_document_metadata_service import (
 )
 from systems.websocket_system.websocket_dependency import WebsocketEmitter
 
-router = project_router("/source-document-metadata", tags=["sdocMetadata", "mcp"])
+router = project_router(
+    "/source-document-metadata", tags=["sourceDocumentMetadata", "mcp"]
+)
 
 
 # --- read operations
@@ -45,22 +46,6 @@ def get_by_sdoc(
             )
         ]
     return [SourceDocumentMetadataRead.model_validate(meta) for meta in db_objs]
-
-
-@router.get(
-    "/date-count",
-    response_model=DateMetadataCountResult,
-    summary="Returns the number of SourceDocuments with a value for the date metadata and of all SourceDocuments of the Project.",
-)
-def count_sdocs_with_date_metadata(
-    *,
-    db: DBSession,
-    project_id: int,
-    date_metadata_id: int,
-) -> DateMetadataCountResult:
-    return SourceDocumentMetadataService().count_sdocs_with_date_metadata(
-        db=db, project_id=project_id, date_metadata_id=date_metadata_id
-    )
 
 
 @router.get(

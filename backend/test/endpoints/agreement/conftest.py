@@ -115,10 +115,10 @@ class AgreementProject(TypedDict):
     | ref_s01_misc | reference | MISC | 0 - 1     |
     | cmp_s0_misc  | compared  | MISC | 0         |
 
-    - `other_project` "Other Project" belongs to `third_user` only; the test user is
-      not a member. It has the document `other_sdoc` "Other Document" ("Not
-      shared.") and the code `other_code` "Foreign". The outsider is a member of
-      no project.
+    - `outsider_project` "Other Project" belongs to `third_user` only; the test
+      user is not a member. It has the document `other_sdoc` "Other Document"
+      ("Not shared.") and the code `other_code` "Foreign". The outsider is a
+      member of no project.
 
     Derived behavior (reference vs. compared, codes PER, LOC, ORG):
 
@@ -140,7 +140,7 @@ class AgreementProject(TypedDict):
     """
 
     project: ProjectORM
-    other_project: ProjectORM
+    outsider_project: ProjectORM
     other_sdoc: SourceDocumentORM
     other_code: CodeORM
     reference_user: UserORM
@@ -308,15 +308,15 @@ def agreement_project(db_session, test_project, test_user) -> AgreementProject:
         for name, (user, code, start, end) in sentence_specs.items()
     }
 
-    other_project_read = ProjectService().create_project(
+    outsider_project_read = ProjectService().create_project(
         db=db,
         create_dto=ProjectCreate(title="Other Project", description="Not shared"),
         creating_user_id=third_user.id,
     )
     other_sdoc = _create_sdoc(
-        db, other_project_read.id, "Other Document", "Not shared."
+        db, outsider_project_read.id, "Other Document", "Not shared."
     )
-    other_code = _create_code(db, other_project_read.id, "Foreign")
+    other_code = _create_code(db, outsider_project_read.id, "Foreign")
 
     db.commit()
     for obj in [
@@ -334,12 +334,12 @@ def agreement_project(db_session, test_project, test_user) -> AgreementProject:
         other_code,
     ]:
         db.refresh(obj)
-    other_project = db.get(ProjectORM, other_project_read.id)
-    assert other_project is not None
+    outsider_project = db.get(ProjectORM, outsider_project_read.id)
+    assert outsider_project is not None
 
     return {
         "project": project,
-        "other_project": other_project,
+        "outsider_project": outsider_project,
         "other_sdoc": other_sdoc,
         "other_code": other_code,
         "reference_user": test_user,

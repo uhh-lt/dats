@@ -178,7 +178,7 @@ def _run_a_annotations(
         NO_MATCH: base["no_match_sdoc"].id,
     }[document]
     response = client.get(
-        f"/projects/{base['project'].id}/sentence-annotations/by-sentence",
+        f"/projects/{base['project'].id}/sentence-annotations/per-sentence",
         params={"user_id": base["run_a"].id, "sdoc_id": sdoc_id},
     )
     assert response.status_code == 200, response.text

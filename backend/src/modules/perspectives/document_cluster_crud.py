@@ -171,7 +171,7 @@ class CRUDDocumentCluster(
 
         return total_updated_count
 
-    def set_labels2(
+    def set_cluster(
         self,
         db: Session,
         *,

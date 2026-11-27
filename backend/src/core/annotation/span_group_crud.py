@@ -125,7 +125,7 @@ class CRUDSpanGroup(
 
     ### OTHER OPERATIONS ###
 
-    def link_groups_spans_batch(
+    def link_spans_multi(
         self, db: Session, *, project_id: int, links: dict[int, list[int]]
     ) -> int:
         """

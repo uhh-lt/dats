@@ -8,7 +8,7 @@ from modules.tag_recommendation.tag_recommendation_orm import (
 
 from .conftest import (
     FEATURELESS_ML_JOB_ID,
-    FOREIGN_ML_JOB_ID,
+    OUTSIDER_ML_JOB_ID,
     OWN_ML_JOB_ID,
     TagRecommendationProject,
 )
@@ -41,12 +41,12 @@ def test_get_recommendations_groups_the_recommendations_of_the_job_by_document(
     assert [r.suggested_tag_ids for r in results] == [[p["tag_a"].id, p["tag_b"].id]]
 
 
-def test_get_recommendations_of_a_job_of_another_project_is_not_found(
+def test_get_recommendations_of_a_job_of_an_outsider_project_is_not_found(
     client: TestClient, tag_recommendation_project: TagRecommendationProject
 ):
-    """The job of the foreign project does not exist in the test user's project."""
+    """The job of the outsider project does not exist in the test user's project."""
     response = client.get(
-        _url(tag_recommendation_project["project"].id, FOREIGN_ML_JOB_ID)
+        _url(tag_recommendation_project["project"].id, OUTSIDER_ML_JOB_ID)
     )
 
     assert response.status_code == 404, response.text

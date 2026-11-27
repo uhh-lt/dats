@@ -38,9 +38,7 @@ class CRUDTag(ProjectCRUDBase[TagORM, TagCreate, TagUpdate]):
             ).filter(SourceDocumentTagLinkTable.source_document_id == sdoc_id)
         return query.order_by(self.model.id).all()
 
-    def read_by_name_and_project(
-        self, db: Session, *, name: str, project_id: int
-    ) -> TagORM | None:
+    def read_by_name(self, db: Session, *, project_id: int, name: str) -> TagORM | None:
         return (
             db.query(TagORM)
             .filter(TagORM.name == name, TagORM.project_id == project_id)
@@ -63,6 +61,7 @@ class CRUDTag(ProjectCRUDBase[TagORM, TagCreate, TagUpdate]):
             db_objs.extend(
                 db.query(TagORM)
                 .filter(TagORM.name.in_(batch_names), TagORM.project_id == project_id)
+                .order_by(TagORM.id)
                 .all()
             )
         return db_objs
@@ -172,7 +171,7 @@ class CRUDTag(ProjectCRUDBase[TagORM, TagCreate, TagUpdate]):
 
         return results
 
-    def link_multiple_tags(
+    def link_multi(
         self, db: Session, *, project_id: int, sdoc_ids: list[int], tag_ids: list[int]
     ) -> int:
         """
@@ -205,7 +204,7 @@ class CRUDTag(ProjectCRUDBase[TagORM, TagCreate, TagUpdate]):
 
         return len(new_rows)
 
-    def unlink_multiple_tags(
+    def unlink_multi(
         self, db: Session, *, project_id: int, sdoc_ids: list[int], tag_ids: list[int]
     ) -> int:
         """
@@ -237,7 +236,7 @@ class CRUDTag(ProjectCRUDBase[TagORM, TagCreate, TagUpdate]):
         db.flush()
         return total_deleted_count
 
-    def set_tags_batch(
+    def set_tags_multi(
         self, db: Session, *, project_id: int, links: dict[int, list[int]]
     ) -> int:
         """
@@ -256,13 +255,13 @@ class CRUDTag(ProjectCRUDBase[TagORM, TagCreate, TagUpdate]):
         modifications = 0
         for sdoc_id, tag_ids in links.items():
             current_tag_ids = {tag.id for tag in current.get(sdoc_id, [])}
-            modifications += self.unlink_multiple_tags(
+            modifications += self.unlink_multi(
                 db,
                 project_id=project_id,
                 sdoc_ids=[sdoc_id],
                 tag_ids=list(current_tag_ids - set(tag_ids)),
             )
-            modifications += self.link_multiple_tags(
+            modifications += self.link_multi(
                 db,
                 project_id=project_id,
                 sdoc_ids=[sdoc_id],

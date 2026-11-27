@@ -230,12 +230,6 @@ class PromptService(metaclass=SingletonMeta):
         db_objs = crud_prompt.read_by_project(db=db, project_id=project_id)
         return [PromptRead.model_validate(db_obj) for db_obj in db_objs]
 
-    def read_prompt_version(
-        self, *, db: Session, project_id: int, version_id: int
-    ) -> PromptVersionRead:
-        db_obj = crud_prompt_version.read(db=db, project_id=project_id, id=version_id)
-        return PromptVersionRead.model_validate(db_obj)
-
     def read_snapshot(
         self,
         *,

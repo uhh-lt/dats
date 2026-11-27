@@ -47,7 +47,7 @@ const useGetSdocFolder = (folderId: number | null | undefined) =>
 const useCreateFolder = () =>
   useMutation({
     mutationKey: [...folderQueries.all(), "createFolder"],
-    mutationFn: FolderService.createFolder,
+    mutationFn: FolderService.create,
     meta: {
       datsEvent: "FOLDER_CREATED",
       successMessage: (folder: FolderRead) => `Created folder ${folder.name}`,
@@ -67,7 +67,7 @@ const useUpdateFolder = () =>
 const useUpdateFoldersBulk = () =>
   useMutation({
     mutationKey: [...folderQueries.all(), "updateFoldersBulk"],
-    mutationFn: FolderService.updateFoldersBulk,
+    mutationFn: FolderService.updateBulk,
     meta: {
       datsEvent: "FOLDER_UPDATED_BATCH",
       successMessage: (data: FolderRead[]) => `Updated ${data.length} folder${data.length === 1 ? "" : "s"}!`,

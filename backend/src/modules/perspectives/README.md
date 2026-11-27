@@ -48,7 +48,7 @@ The data model is split between **PostgreSQL** (metadata, relational structure) 
 2.  **`DocumentAspectORM`** (`documentaspect` table)
     - **Purpose**: Represents a single document _within_ a specific Aspect. Since an Aspect can modify the document content (e.g. "Extract only sentiment"), we store this modified content separately from the original `SourceDocument`.
     - **Key Fields**:
-      - `sdoc_id`, `aspect_id`: Composite Primary Key.
+      - `project_id`, `sdoc_id`, `aspect_id`: Composite Primary Key.
       - `content`: The (potentially modified) text used for embedding.
       - `x`, `y`: 2D coordinates for the visualization.
     - **Relationships**:
@@ -70,6 +70,7 @@ The data model is split between **PostgreSQL** (metadata, relational structure) 
 4.  **`DocumentClusterORM`** (`documentcluster` table)
     - **Purpose**: The link between a document and a cluster.
     - **Key Fields**:
+      - `project_id`, `sdoc_id`, `cluster_id`: Composite Primary Key.
       - `is_accepted`: Used for **Active Learning**. Users can manually confirm a document belongs to a cluster.
     - **Relationships**:
       - **Links** `SourceDocument` and `Cluster`.
@@ -102,14 +103,14 @@ A wrapper around `SentenceTransformers` and `SetFit`.
 
 The API surface, under `/projects/{project_id}`. Key interactions:
 
-- **Jobs**: POST `/jobs/perspectives?aspect_id=` starts the pipeline (async).
-- **CRUD**: Standard Create/Read/Update/Delete for Aspects at `/perspectives/aspects`.
-- **Visualization**: POST `/perspectives/aspects/{aspect_id}/visualize` returns data for the frontend Scatterplot (docs, coords, cluster colors).
-- **Labeling**: POST `/perspectives/aspects/{aspect_id}/accept-labels` / `/revert-labels` for user feedback.
+- **Jobs**: POST `/projects/{project_id}/jobs/perspectives` with the body `{"aspect_id": ..., "parameters": {...}}` starts the pipeline (async).
+- **CRUD**: Standard Create/Read/Update/Delete for Aspects at `/projects/{project_id}/perspectives/aspects`, and PATCH `/projects/{project_id}/perspectives/aspects/{aspect_id}/clusters/{cluster_id}` for a cluster of an aspect.
+- **Visualization**: POST `/projects/{project_id}/perspectives/aspects/{aspect_id}/visualize` returns data for the frontend Scatterplot (docs, coords, cluster colors).
+- **Labeling**: PATCH `/projects/{project_id}/perspectives/aspects/{aspect_id}/accept-labels` / `/revert-labels` for user feedback.
 
 ## API & Frontend Interaction
 
-1.  **Creation**: Frontend calls `create_aspect` (PUT `/projects/{project_id}/perspectives/aspects`). This immediately triggers a background Job.
+1.  **Creation**: Frontend calls PUT `/projects/{project_id}/perspectives/aspects`. This immediately triggers a background Job.
 2.  **Monitoring**: Frontend polls `/projects/{project_id}/jobs/perspectives/{job_id}` to show a progress bar.
 3.  **Visualization**:
     - Call `/projects/{project_id}/perspectives/aspects/{aspect_id}/visualize` to get all points (x, y) and their cluster assignments.

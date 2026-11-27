@@ -17,7 +17,7 @@ from systems.artefact_system.source_document_step_status_crud import (
     crud_sdoc_step_status,
 )
 
-router = project_router("/doc-processing", tags=["docprocessing"])
+router = project_router("/doc-processing", tags=["docProcessing"])
 
 
 # --- read operations

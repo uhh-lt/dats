@@ -52,8 +52,8 @@ export function RunActions({ projectId, experiment, run, scoring, onDeleted }: R
   const { mutate: refreshScoresMutation, isPending: isRefreshing } = ExperimentHooks.useRefreshRunScores();
   const { mutate: exportLogMutation, isPending: isExporting } = ExperimentHooks.useExportRunLog();
   const handleRefresh = useCallback(
-    () => refreshScoresMutation({ projectId, runId: run.id }),
-    [projectId, refreshScoresMutation, run.id],
+    () => refreshScoresMutation({ projectId, experimentId: run.experiment_id, runId: run.id }),
+    [projectId, refreshScoresMutation, run.experiment_id, run.id],
   );
   const [logMenuAnchor, setLogMenuAnchor] = useState<HTMLElement | null>(null);
   const handleOpenLogMenu = useCallback((event: MouseEvent<HTMLElement>) => setLogMenuAnchor(event.currentTarget), []);
@@ -62,11 +62,11 @@ export function RunActions({ projectId, experiment, run, scoring, onDeleted }: R
     (exportFormat: ExperimentRunLogFormat) => {
       setLogMenuAnchor(null);
       exportLogMutation(
-        { projectId, runId: run.id, exportFormat },
+        { projectId, experimentId: run.experiment_id, runId: run.id, exportFormat },
         { onSuccess: (url) => downloadFile(encodeURI("/content/" + url)) },
       );
     },
-    [exportLogMutation, projectId, run.id],
+    [exportLogMutation, projectId, run.experiment_id, run.id],
   );
 
   // deletion
@@ -78,11 +78,11 @@ export function RunActions({ projectId, experiment, run, scoring, onDeleted }: R
         `Do you really want to delete run ${run.name}? Its virtual user is deleted with all its annotations. ` +
         "This action cannot be undone!",
       onAccept: () => {
-        deleteRunMutation({ projectId, runId: run.id });
+        deleteRunMutation({ projectId, experimentId: run.experiment_id, runId: run.id });
         onDeleted();
       },
     });
-  }, [deleteRunMutation, onDeleted, openConfirmationDialog, projectId, run.id, run.name]);
+  }, [deleteRunMutation, onDeleted, openConfirmationDialog, projectId, run.experiment_id, run.id, run.name]);
 
   // clicks on the actions must not expand the run
   const handleStopPropagation = useCallback((event: MouseEvent) => event.stopPropagation(), []);

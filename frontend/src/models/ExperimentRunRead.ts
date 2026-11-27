@@ -6,10 +6,6 @@ import type { ExperimentRunScores } from "./ExperimentRunScores";
 import type { JobStatus } from "./JobStatus";
 export type ExperimentRunRead = {
   /**
-   * ID of the experiment of the run
-   */
-  experiment_id: number;
-  /**
    * Name of the run, unique per experiment; the run writes into the virtual user <experiment name>-<run name>
    */
   name: string;
@@ -25,6 +21,14 @@ export type ExperimentRunRead = {
    * ID of the run
    */
   id: number;
+  /**
+   * ID of the project of the run
+   */
+  project_id: number;
+  /**
+   * ID of the experiment of the run
+   */
+  experiment_id: number;
   /**
    * IDs of the documents the run ran on
    */

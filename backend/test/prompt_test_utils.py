@@ -139,12 +139,12 @@ class PromptProject(TypedDict):
     bob_example: SpanPromptExample
     sentence_example: SentencePromptExample
     span_prompt: PromptRead
-    foreign_project: ProjectORM
-    foreign_sdoc: SourceDocumentORM
-    foreign_code: CodeORM
-    foreign_tag: TagORM
-    foreign_span_annotation: SpanAnnotationORM
-    foreign_prompt: PromptRead
+    outsider_project: ProjectORM
+    outsider_sdoc: SourceDocumentORM
+    outsider_code: CodeORM
+    outsider_tag: TagORM
+    outsider_span_annotation: SpanAnnotationORM
+    outsider_prompt: PromptRead
 
 
 def prompt_code(code: CodeORM) -> PromptCode:
@@ -208,7 +208,7 @@ def create_prompt_project(
         name="Example document",
         sentences=EXAMPLE_SENTENCES,
     )
-    person_code = crud_code.read_by_name_and_project(
+    person_code = crud_code.read_by_name(
         db=db_session, code_name="PERSON", project_id=test_project.id
     )
     assert person_code is not None, "The default PERSON system code is missing"
@@ -321,7 +321,7 @@ def create_prompt_project(
         ),
     )
 
-    foreign_project = crud_project.create(
+    outsider_project = crud_project.create(
         db=db_session,
         create_dto=ProjectCreate(
             title="Unauthorized project",
@@ -329,45 +329,45 @@ def create_prompt_project(
             enabled_features=[],
         ),
     )
-    foreign_sdoc = dats_test_utils.create_text_document(
+    outsider_sdoc = dats_test_utils.create_text_document(
         db_session,
-        project=foreign_project,
+        project=outsider_project,
         filename="foreign.txt",
         name="Foreign document",
         sentences=["Eve is foreign."],
         initialize_metadata=False,
     )
-    foreign_code = _create_code(
+    outsider_code = _create_code(
         db_session,
-        project_id=foreign_project.id,
+        project_id=outsider_project.id,
         name="FOREIGN",
         description="A foreign-project code.",
     )
-    foreign_tag = crud_tag.create(
+    outsider_tag = crud_tag.create(
         db=db_session,
-        project_id=foreign_project.id,
+        project_id=outsider_project.id,
         create_dto=TagCreate(
             name="Foreign tag",
             description="A foreign-project tag.",
         ),
     )
-    foreign_span_annotation = dats_test_utils.create_span_for_text(
+    outsider_span_annotation = dats_test_utils.create_span_for_text(
         db_session,
-        sdoc=foreign_sdoc,
+        sdoc=outsider_sdoc,
         text="Eve",
-        code_id=foreign_code.id,
+        code_id=outsider_code.id,
         user_id=test_user.id,
     )
-    foreign_prompt = service.create_prompt(
+    outsider_prompt = service.create_prompt(
         db=db_session,
         user_id=test_user.id,
-        project_id=foreign_project.id,
+        project_id=outsider_project.id,
         create_dto=PromptCreate(
             name="Foreign tagging",
             task_type=TaskType.ANNOTATION,
             language=PromptLanguage.EN,
             text=SPAN_V1_PROMPT,
-            codes=[prompt_code(foreign_code)],
+            codes=[prompt_code(outsider_code)],
         ),
     )
     db_session.commit()
@@ -391,12 +391,12 @@ def create_prompt_project(
         "bob_example": bob_example,
         "sentence_example": sentence_example,
         "span_prompt": span_prompt,
-        "foreign_project": foreign_project,
-        "foreign_sdoc": foreign_sdoc,
-        "foreign_code": foreign_code,
-        "foreign_tag": foreign_tag,
-        "foreign_span_annotation": foreign_span_annotation,
-        "foreign_prompt": foreign_prompt,
+        "outsider_project": outsider_project,
+        "outsider_sdoc": outsider_sdoc,
+        "outsider_code": outsider_code,
+        "outsider_tag": outsider_tag,
+        "outsider_span_annotation": outsider_span_annotation,
+        "outsider_prompt": outsider_prompt,
     }
 
 
@@ -531,7 +531,7 @@ def create_prompt_eximport_projects(
         )
         .id,
     )
-    target_person_code = crud_code.read_by_name_and_project(
+    target_person_code = crud_code.read_by_name(
         db=db_session, code_name="PERSON", project_id=target.id
     )
     assert target_person_code is not None, "The default PERSON system code is missing"

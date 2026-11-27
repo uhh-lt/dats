@@ -3,7 +3,7 @@
 /* tslint:disable */
 /* eslint-disable */
 import type { Filter_SdocColumns__Input } from "./Filter_SdocColumns__Input";
-export type Body_simsearch_find_similar_sentences = {
+export type Body_similaritySearch_find_similar_sentences = {
   query: string | number;
   /**
    * The filter of the Concept

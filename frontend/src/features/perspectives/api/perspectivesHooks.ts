@@ -1,4 +1,5 @@
 import { queryClient } from "@api/queryClient";
+import { JobService } from "@api/services/JobService";
 import { PerspectivesService } from "@api/services/PerspectivesService";
 import { RagService } from "@api/services/RagService";
 import { MyFilter } from "@core/filter";
@@ -6,6 +7,7 @@ import { AspectRead } from "@models/AspectRead";
 import { Body_perspectives_visualize_documents } from "@models/Body_perspectives_visualize_documents";
 import { ClusterRead } from "@models/ClusterRead";
 import { PerspectivesJobRead } from "@models/PerspectivesJobRead";
+import { PerspectivesJobStart } from "@models/PerspectivesJobStart";
 import { PerspectivesVisualization } from "@models/PerspectivesVisualization";
 import { SdocColumns } from "@models/SdocColumns";
 import { useAppSelector } from "@store/storeHooks";
@@ -43,27 +45,17 @@ const useGetMapThumbnailURL = (projectId: number, aspectId: number, enabled: boo
 const useCreateAspect = () =>
   useMutation({
     mutationKey: [...perspectivesQueries.all(), "createAspect"],
-    mutationFn: PerspectivesService.createAspect,
+    mutationFn: PerspectivesService.create,
     meta: {
       datsEvent: "ASPECT_CREATED",
       successMessage: (data: AspectRead) => `Created aspect ${data.name}`,
     },
   });
 
-const useUpdateAspect = () =>
-  useMutation({
-    mutationKey: [...perspectivesQueries.all(), "updateAspect"],
-    mutationFn: PerspectivesService.updateAspectById,
-    meta: {
-      datsEvent: "ASPECT_UPDATED",
-      successMessage: (data: AspectRead) => `Updated aspect ${data.name}`,
-    },
-  });
-
 const useDeleteAspect = () =>
   useMutation({
     mutationKey: [...perspectivesQueries.all(), "deleteAspect"],
-    mutationFn: PerspectivesService.removeAspectById,
+    mutationFn: PerspectivesService.deleteById,
     meta: {
       datsEvent: "ASPECT_DELETED",
       successMessage: (data: AspectRead) => `Deleted aspect ${data.name}`,
@@ -73,7 +65,15 @@ const useDeleteAspect = () =>
 const useStartPerspectivesJob = () =>
   useMutation({
     mutationKey: [...perspectivesQueries.job.all(), "start"],
-    mutationFn: PerspectivesService.startPerspectivesJob,
+    mutationFn: ({
+      projectId,
+      aspectId,
+      requestBody,
+    }: {
+      projectId: number;
+      aspectId: number;
+      requestBody: PerspectivesJobStart["parameters"];
+    }) => JobService.startPerspectivesJob({ projectId, requestBody: { aspect_id: aspectId, parameters: requestBody } }),
     meta: {
       datsEvent: "JOB_UPDATED",
       successMessage: (data: PerspectivesJobRead) => `Started TM Job as a new background task (ID: ${data.job_id})`,
@@ -83,7 +83,7 @@ const useStartPerspectivesJob = () =>
 const useUpdateClusterDetails = () =>
   useMutation({
     mutationKey: [...perspectivesQueries.all(), "updateClusterDetails"],
-    mutationFn: PerspectivesService.updateClusterDetails,
+    mutationFn: PerspectivesService.updateCluster,
     meta: {
       datsEvent: "CLUSTER_UPDATED",
       successMessage: (data: ClusterRead) => `Updated cluster ${data.name}`,
@@ -116,7 +116,7 @@ const useLabelDocs = (projectId: number, aspectId: number) => {
   return useMutation({
     mutationKey: [...perspectivesQueries.all(), "labelDocs"],
     mutationFn: (sdocIds: number[]) =>
-      PerspectivesService.acceptLabel({
+      PerspectivesService.acceptLabels({
         projectId,
         aspectId,
         searchQuery,
@@ -149,7 +149,7 @@ const useUnlabelDocs = (projectId: number, aspectId: number) => {
   return useMutation({
     mutationKey: [...perspectivesQueries.all(), "unlabelDocs"],
     mutationFn: (sdocIds: number[]) =>
-      PerspectivesService.revertLabel({
+      PerspectivesService.revertLabels({
         projectId,
         aspectId,
         searchQuery,
@@ -180,7 +180,6 @@ export const PerspectivesHooks = {
   useGetMapThumbnailURL,
   useGetAspect,
   useCreateAspect,
-  useUpdateAspect,
   useDeleteAspect,
   useStartPerspectivesJob,
   useUpdateClusterDetails,

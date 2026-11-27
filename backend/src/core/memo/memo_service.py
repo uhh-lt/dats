@@ -115,6 +115,8 @@ class MemoService(metaclass=SingletonMeta):
         attached_object_type: AttachedObjectType | None,
         attached_object_id: int | None,
         author_id: int | None,
+        recent: bool = False,
+        limit: int | None = None,
     ) -> list[MemoRead]:
         """
         The memos of a project, optionally filtered. A filter id of another project
@@ -126,6 +128,9 @@ class MemoService(metaclass=SingletonMeta):
             attached_object_type: Only memos attached to an object of this type.
             attached_object_id: Only memos attached to the object with this id.
             author_id: Only memos of this author.
+            recent: Only memos the requesting user opened, most recently opened
+                first.
+            limit: At most this many memos.
 
         Raises:
             InvalidError: If `attached_object_id` is given without its type.
@@ -138,6 +143,8 @@ class MemoService(metaclass=SingletonMeta):
             attached_object_type=attached_object_type,
             attached_object_id=attached_object_id,
             user_id=author_id,
+            opened_by_user_id=user_id if recent else None,
+            limit=limit,
         )
         return get_memo_read_dtos_from_orms(
             db=db, project_id=project_id, db_objs=db_objs, user_id=user_id

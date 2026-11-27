@@ -1,5 +1,5 @@
 import { COTAConcept } from "@models/COTAConcept";
-import { COTARead } from "@models/COTARead";
+import { ConceptOverTimeAnalysisRead } from "@models/ConceptOverTimeAnalysisRead";
 import AddIcon from "@mui/icons-material/Add";
 import InfoIcon from "@mui/icons-material/Info";
 import { ListItemButton, ListItemIcon, Tooltip } from "@mui/material";
@@ -17,7 +17,7 @@ import { CotaConceptListItem } from "./CotaConceptListItem";
 import { canAddNewConcept, canDeleteConcept, canEditConceptDescription } from "./cotaUtils";
 
 interface CotaConceptListProps {
-  cota: COTARead;
+  cota: ConceptOverTimeAnalysisRead;
 }
 
 export function CotaConceptList({ cota }: CotaConceptListProps) {

@@ -14,7 +14,7 @@ export const apiKeyQueries = {
   list: () =>
     queryOptions({
       queryKey: [...apiKeyQueries.all(), "list"] as const,
-      queryFn: () => ApiKeyService.listApiKeys(),
+      queryFn: () => ApiKeyService.getByUser(),
       staleTime: 1000 * 60 * 5,
     }),
 };

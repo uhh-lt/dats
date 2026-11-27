@@ -14,7 +14,7 @@ export class ProjectService {
    * @returns ProjectRead Successful Response
    * @throws ApiError
    */
-  public static getProject({ projectId }: { projectId: number }): CancelablePromise<ProjectRead> {
+  public static getById({ projectId }: { projectId: number }): CancelablePromise<ProjectRead> {
     return __request(OpenAPI, {
       method: "GET",
       url: "/projects/{project_id}",
@@ -22,6 +22,10 @@ export class ProjectService {
         project_id: projectId,
       },
       errors: {
+        400: `The request breaks a rule of the domain`,
+        403: `The user is no member of the project, or the feature is disabled`,
+        404: `A path id, or an id the route reads, is not in the project`,
+        409: `A body id violates a foreign key, or a value a unique constraint`,
         422: `Validation Error`,
       },
     });
@@ -31,7 +35,7 @@ export class ProjectService {
    * @returns ProjectRead Successful Response
    * @throws ApiError
    */
-  public static updateProject({
+  public static updateById({
     projectId,
     requestBody,
   }: {
@@ -47,6 +51,10 @@ export class ProjectService {
       body: requestBody,
       mediaType: "application/json",
       errors: {
+        400: `The request breaks a rule of the domain`,
+        403: `The user is no member of the project, or the feature is disabled`,
+        404: `A path id, or an id the route reads, is not in the project`,
+        409: `A body id violates a foreign key, or a value a unique constraint`,
         422: `Validation Error`,
       },
     });
@@ -56,7 +64,7 @@ export class ProjectService {
    * @returns ProjectRead Successful Response
    * @throws ApiError
    */
-  public static deleteProject({ projectId }: { projectId: number }): CancelablePromise<ProjectRead> {
+  public static deleteById({ projectId }: { projectId: number }): CancelablePromise<ProjectRead> {
     return __request(OpenAPI, {
       method: "DELETE",
       url: "/projects/{project_id}",
@@ -64,6 +72,10 @@ export class ProjectService {
         project_id: projectId,
       },
       errors: {
+        400: `The request breaks a rule of the domain`,
+        403: `The user is no member of the project, or the feature is disabled`,
+        404: `A path id, or an id the route reads, is not in the project`,
+        409: `A body id violates a foreign key, or a value a unique constraint`,
         422: `Validation Error`,
       },
     });
@@ -73,7 +85,7 @@ export class ProjectService {
    * @returns ProjectRead Successful Response
    * @throws ApiError
    */
-  public static createProject({ requestBody }: { requestBody: ProjectCreate }): CancelablePromise<ProjectRead> {
+  public static create({ requestBody }: { requestBody: ProjectCreate }): CancelablePromise<ProjectRead> {
     return __request(OpenAPI, {
       method: "PUT",
       url: "/projects",

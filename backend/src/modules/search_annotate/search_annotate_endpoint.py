@@ -3,7 +3,7 @@ from common.project_router import project_router
 from modules.search_annotate.search_annotate import search_and_auto_annotate
 from modules.search_annotate.search_annotate_dto import PaginatedSpanAnnotationHits
 
-router = project_router("/search-annotate", tags=["search_annotate"])
+router = project_router("/search-annotate", tags=["searchAnnotate"])
 
 
 @router.post(

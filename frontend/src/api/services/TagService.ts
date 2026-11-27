@@ -2,7 +2,7 @@
 /* istanbul ignore file */
 /* tslint:disable */
 /* eslint-disable */
-import type { Body_tag_count_tags } from "@models/Body_tag_count_tags";
+import type { Body_tag_count } from "@models/Body_tag_count";
 import type { Body_tag_update_sdoc_tags_bulk } from "@models/Body_tag_update_sdoc_tags_bulk";
 import type { SdocTagLinks } from "@models/SdocTagLinks";
 import type { SdocTagLinksResult } from "@models/SdocTagLinksResult";
@@ -20,7 +20,7 @@ export class TagService {
    * @returns TagRead Successful Response
    * @throws ApiError
    */
-  public static createTag({
+  public static create({
     projectId,
     requestBody,
   }: {
@@ -36,6 +36,10 @@ export class TagService {
       body: requestBody,
       mediaType: "application/json",
       errors: {
+        400: `The request breaks a rule of the domain`,
+        403: `The user is no member of the project, or the feature is disabled`,
+        404: `A path id, or an id the route reads, is not in the project`,
+        409: `A body id violates a foreign key, or a value a unique constraint`,
         422: `Validation Error`,
       },
     });
@@ -62,6 +66,10 @@ export class TagService {
         sdoc_id: sdocId,
       },
       errors: {
+        400: `The request breaks a rule of the domain`,
+        403: `The user is no member of the project, or the feature is disabled`,
+        404: `A path id, or an id the route reads, is not in the project`,
+        409: `A body id violates a foreign key, or a value a unique constraint`,
         422: `Validation Error`,
       },
     });
@@ -87,6 +95,10 @@ export class TagService {
       body: requestBody,
       mediaType: "application/json",
       errors: {
+        400: `The request breaks a rule of the domain`,
+        403: `The user is no member of the project, or the feature is disabled`,
+        404: `A path id, or an id the route reads, is not in the project`,
+        409: `A body id violates a foreign key, or a value a unique constraint`,
         422: `Validation Error`,
       },
     });
@@ -112,6 +124,10 @@ export class TagService {
       body: requestBody,
       mediaType: "application/json",
       errors: {
+        400: `The request breaks a rule of the domain`,
+        403: `The user is no member of the project, or the feature is disabled`,
+        404: `A path id, or an id the route reads, is not in the project`,
+        409: `A body id violates a foreign key, or a value a unique constraint`,
         422: `Validation Error`,
       },
     });
@@ -137,6 +153,10 @@ export class TagService {
       body: requestBody,
       mediaType: "application/json",
       errors: {
+        400: `The request breaks a rule of the domain`,
+        403: `The user is no member of the project, or the feature is disabled`,
+        404: `A path id, or an id the route reads, is not in the project`,
+        409: `A body id violates a foreign key, or a value a unique constraint`,
         422: `Validation Error`,
       },
     });
@@ -155,6 +175,10 @@ export class TagService {
         tag_id: tagId,
       },
       errors: {
+        400: `The request breaks a rule of the domain`,
+        403: `The user is no member of the project, or the feature is disabled`,
+        404: `A path id, or an id the route reads, is not in the project`,
+        409: `A body id violates a foreign key, or a value a unique constraint`,
         422: `Validation Error`,
       },
     });
@@ -183,6 +207,10 @@ export class TagService {
       body: requestBody,
       mediaType: "application/json",
       errors: {
+        400: `The request breaks a rule of the domain`,
+        403: `The user is no member of the project, or the feature is disabled`,
+        404: `A path id, or an id the route reads, is not in the project`,
+        409: `A body id violates a foreign key, or a value a unique constraint`,
         422: `Validation Error`,
       },
     });
@@ -201,6 +229,10 @@ export class TagService {
         tag_id: tagId,
       },
       errors: {
+        400: `The request breaks a rule of the domain`,
+        403: `The user is no member of the project, or the feature is disabled`,
+        404: `A path id, or an id the route reads, is not in the project`,
+        409: `A body id violates a foreign key, or a value a unique constraint`,
         422: `Validation Error`,
       },
     });
@@ -225,6 +257,10 @@ export class TagService {
         tag_id: tagId,
       },
       errors: {
+        400: `The request breaks a rule of the domain`,
+        403: `The user is no member of the project, or the feature is disabled`,
+        404: `A path id, or an id the route reads, is not in the project`,
+        409: `A body id violates a foreign key, or a value a unique constraint`,
         422: `Validation Error`,
       },
     });
@@ -234,7 +270,7 @@ export class TagService {
    * @returns TagRead Successful Response
    * @throws ApiError
    */
-  public static updateTagsBulk({
+  public static updateBulk({
     projectId,
     requestBody,
   }: {
@@ -250,6 +286,10 @@ export class TagService {
       body: requestBody,
       mediaType: "application/json",
       errors: {
+        400: `The request breaks a rule of the domain`,
+        403: `The user is no member of the project, or the feature is disabled`,
+        404: `A path id, or an id the route reads, is not in the project`,
+        409: `A body id violates a foreign key, or a value a unique constraint`,
         422: `Validation Error`,
       },
     });
@@ -259,7 +299,7 @@ export class TagService {
    * @returns SdocTagLinksResult Successful Response
    * @throws ApiError
    */
-  public static setSdocTagsBulk({
+  public static replaceSdocTagsBulk({
     projectId,
     requestBody,
   }: {
@@ -268,13 +308,17 @@ export class TagService {
   }): CancelablePromise<SdocTagLinksResult> {
     return __request(OpenAPI, {
       method: "PATCH",
-      url: "/projects/{project_id}/tags/bulk/source-documents/set",
+      url: "/projects/{project_id}/tags/bulk/source-documents/replace",
       path: {
         project_id: projectId,
       },
       body: requestBody,
       mediaType: "application/json",
       errors: {
+        400: `The request breaks a rule of the domain`,
+        403: `The user is no member of the project, or the feature is disabled`,
+        404: `A path id, or an id the route reads, is not in the project`,
+        409: `A body id violates a foreign key, or a value a unique constraint`,
         422: `Validation Error`,
       },
     });
@@ -284,12 +328,12 @@ export class TagService {
    * @returns number Successful Response
    * @throws ApiError
    */
-  public static countTags({
+  public static count({
     projectId,
     requestBody,
   }: {
     projectId: number;
-    requestBody: Body_tag_count_tags;
+    requestBody: Body_tag_count;
   }): CancelablePromise<Record<string, number>> {
     return __request(OpenAPI, {
       method: "POST",
@@ -300,6 +344,10 @@ export class TagService {
       body: requestBody,
       mediaType: "application/json",
       errors: {
+        400: `The request breaks a rule of the domain`,
+        403: `The user is no member of the project, or the feature is disabled`,
+        404: `A path id, or an id the route reads, is not in the project`,
+        409: `A body id violates a foreign key, or a value a unique constraint`,
         422: `Validation Error`,
       },
     });

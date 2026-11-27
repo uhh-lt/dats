@@ -64,8 +64,8 @@ export function RunStartDialog({ projectId, experiment, onRunStarted }: RunStart
       createRunMutation(
         {
           projectId,
+          experimentId: experiment.id,
           requestBody: {
-            experiment_id: experiment.id,
             name: runName,
             prompt_version_id: data.promptVersionId,
             model: data.model,

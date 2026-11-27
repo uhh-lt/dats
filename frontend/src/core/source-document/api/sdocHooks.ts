@@ -36,7 +36,7 @@ const useDeleteDocuments = () =>
   useMutation({
     mutationKey: [...sdocQueries.all(), "deleteDocuments"],
     mutationFn: ({ projectId, sdocIds }: { projectId: number; sdocIds: number[] }) =>
-      SourceDocumentService.deleteSdocsBulk({ projectId, requestBody: sdocIds }),
+      SourceDocumentService.deleteBulk({ projectId, requestBody: sdocIds }),
     meta: {
       datsEvent: "SDOC_DELETED_BATCH",
       successMessage: (_data: SourceDocumentRead[], variables: { projectId: number; sdocIds: number[] }) =>

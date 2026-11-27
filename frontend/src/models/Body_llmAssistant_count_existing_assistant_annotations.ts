@@ -2,13 +2,7 @@
 /* istanbul ignore file */
 /* tslint:disable */
 /* eslint-disable */
-export type Body_spanAnnotation_count_annotations = {
-  /**
-   * The SourceDocuments to count in
-   */
+export type Body_llmAssistant_count_existing_assistant_annotations = {
   sdoc_ids: Array<number>;
-  /**
-   * The Codes to count
-   */
   code_ids: Array<number>;
 };

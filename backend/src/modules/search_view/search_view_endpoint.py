@@ -70,7 +70,7 @@ def get_by_project(
 
 
 @router.patch(
-    "/order",
+    "/reorder",
     response_model=list[SearchViewReadUnion],
     summary="Reorders the current user's search views of an entity type in a project",
 )
@@ -98,23 +98,23 @@ def reorder(
 
 
 @router.patch(
-    "/{view_id}",
+    "/{search_view_id}",
     response_model=SearchViewReadUnion,
     summary="Updates a personal search view",
 )
-def update(
+def update_by_id(
     *,
     db: DBSession,
     project_id: int,
-    view_id: int,
+    search_view_id: int,
     view_update: SearchViewUpdateUnion,
     authz_user: AuthzUser = Depends(),
     ws: WebsocketEmitter = Depends(),
 ) -> SearchViewReadUnion:
-    view = crud_search_view.read(db=db, project_id=project_id, id=view_id)
+    view = crud_search_view.read(db=db, project_id=project_id, id=search_view_id)
     authz_user.assert_is_same_user(view.user_id)
     db_view = crud_search_view.update(
-        db=db, project_id=project_id, id=view_id, update_dto=view_update
+        db=db, project_id=project_id, id=search_view_id, update_dto=view_update
     )
     result = search_view_read_from_orm(db_view)
     ws.emit_to_user(DATSEvent.SEARCH_VIEW_UPDATED, result, user_id=result.user_id)
@@ -125,21 +125,21 @@ def update(
 
 
 @router.delete(
-    "/{view_id}",
+    "/{search_view_id}",
     response_model=SearchViewReadUnion,
     summary="Deletes a personal search view",
 )
-def delete(
+def delete_by_id(
     *,
     db: DBSession,
     project_id: int,
-    view_id: int,
+    search_view_id: int,
     authz_user: AuthzUser = Depends(),
     ws: WebsocketEmitter = Depends(),
 ) -> SearchViewReadUnion:
-    view = crud_search_view.read(db=db, project_id=project_id, id=view_id)
+    view = crud_search_view.read(db=db, project_id=project_id, id=search_view_id)
     authz_user.assert_is_same_user(view.user_id)
     result = search_view_read_from_orm(view)
-    crud_search_view.delete(db=db, project_id=project_id, id=view_id)
+    crud_search_view.delete(db=db, project_id=project_id, id=search_view_id)
     ws.emit_to_user(DATSEvent.SEARCH_VIEW_DELETED, result, user_id=result.user_id)
     return result

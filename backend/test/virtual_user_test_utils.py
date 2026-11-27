@@ -54,7 +54,7 @@ class VirtualUserProject(TypedDict):
       - API keys `user_api_key` of `user` and `run1_api_key` of `run1`. The API
         never issues keys to virtual users (they cannot log in); `run1_api_key`
         is written to the database directly to prove that it is rejected anyway.
-    - `other_project` ("Other Project") of `other_user` ("other@dats.org"), which
+    - `outsider_project` ("Other Project") of `other_user` ("other@dats.org"), which
       `user` is no member of:
       - virtual user `other_run` ("ExperimentB-Run1")
       - document `other_sdoc` ("other_doc.txt")
@@ -68,7 +68,7 @@ class VirtualUserProject(TypedDict):
     """
 
     project: ProjectORM
-    other_project: ProjectORM
+    outsider_project: ProjectORM
     user: UserORM
     other_user: UserORM
     run1: UserORM
@@ -140,7 +140,7 @@ def create_virtual_user_project(
         .id
     )
 
-    # 2) another project with its own virtual user
+    # 2) an outsider project with its own virtual user
     other_user = crud_user.create(
         db=db_session,
         create_dto=UserCreate(
@@ -150,18 +150,18 @@ def create_virtual_user_project(
             password="MyOtherPassword123",
         ),
     )
-    other_project_read = ProjectService().create_project(
+    outsider_project_read = ProjectService().create_project(
         db=db_session,
         create_dto=ProjectCreate(title="Other Project", description=""),
         creating_user_id=other_user.id,
     )
-    other_project = crud_project.read(db=db_session, id=other_project_read.id)
+    outsider_project = crud_project.read(db=db_session, id=outsider_project_read.id)
     other_run = crud_user.create_virtual_user(
-        db=db_session, project_id=other_project.id, name="ExperimentB-Run1"
+        db=db_session, project_id=outsider_project.id, name="ExperimentB-Run1"
     )
     other_sdoc = create_text_document(
         db_session,
-        project=other_project,
+        project=outsider_project,
         filename="other_doc.txt",
         name="other_doc",
         sentences=SENTENCES,
@@ -187,7 +187,7 @@ def create_virtual_user_project(
     db_session.commit()
     return {
         "project": project,
-        "other_project": other_project,
+        "outsider_project": outsider_project,
         "user": test_user,
         "other_user": other_user,
         "run1": crud_user.read(db=db_session, id=run1.id),

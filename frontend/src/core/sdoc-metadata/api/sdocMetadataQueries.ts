@@ -1,4 +1,5 @@
-import { SdocMetadataService } from "@api/services/SdocMetadataService";
+import { SourceDocumentMetadataService } from "@api/services/SourceDocumentMetadataService";
+import { SourceDocumentService } from "@api/services/SourceDocumentService";
 import type { SourceDocumentMetadataRead } from "@models/SourceDocumentMetadataRead";
 import { queryOptions, skipToken } from "@tanstack/react-query";
 
@@ -29,7 +30,7 @@ export const sdocMetadataQueries = {
         !projectId || !sdocId
           ? skipToken
           : async () => {
-              const metadata = await SdocMetadataService.getBySdoc({ projectId, sdocId });
+              const metadata = await SourceDocumentMetadataService.getBySdoc({ projectId, sdocId });
               return metadata.reduce<SdocMetadataMap>((acc, m) => {
                 acc[m.project_metadata_id] = m;
                 return acc;
@@ -50,7 +51,7 @@ export const sdocMetadataQueries = {
         !projectId || !sdocId
           ? skipToken
           : async () => {
-              const [metadata] = await SdocMetadataService.getBySdoc({ projectId, sdocId, key });
+              const [metadata] = await SourceDocumentMetadataService.getBySdoc({ projectId, sdocId, key });
               if (!metadata) throw new Error(`The document has no metadata "${key}"`);
               return metadata;
             },
@@ -62,6 +63,12 @@ export const sdocMetadataQueries = {
   sdocCountWithDate: (projectId: number, dateMetadataId: number) =>
     queryOptions({
       queryKey: [...sdocMetadataQueries.sdocCountWithDateScope(projectId), dateMetadataId] as const,
-      queryFn: () => SdocMetadataService.countSdocsWithDateMetadata({ projectId, dateMetadataId }),
+      queryFn: async () => {
+        const [sdocsWithDate, sdocsTotal] = await Promise.all([
+          SourceDocumentService.count({ projectId, dateMetadataId }),
+          SourceDocumentService.count({ projectId }),
+        ]);
+        return { sdocs_with_date: sdocsWithDate, sdocs_total: sdocsTotal };
+      },
     }),
 };

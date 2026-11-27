@@ -7,7 +7,7 @@ import pytest
 from sqlalchemy.orm import Session
 
 from feature_test_utils import SentenceEmbeddingProject
-from modules.concept_over_time_analysis.cota_dto import COTARead
+from modules.concept_over_time_analysis.cota_dto import ConceptOverTimeAnalysisRead
 from modules.concept_over_time_analysis.refinement_steps.init_search_space import (
     init_search_space,
 )
@@ -36,7 +36,7 @@ def clip_texts(monkeypatch: pytest.MonkeyPatch) -> list[str]:
 
 def test_search_space_holds_the_nearest_sentences_of_each_concept(
     db_session: Session,
-    embedded_cota: tuple[SentenceEmbeddingProject, COTARead],
+    embedded_cota: tuple[SentenceEmbeddingProject, ConceptOverTimeAnalysisRead],
     clip_texts: list[str],
 ):
     """Each concept description is embedded once; each concept finds the

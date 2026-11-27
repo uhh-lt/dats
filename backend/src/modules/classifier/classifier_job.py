@@ -1,6 +1,5 @@
 from sqlalchemy.orm import Session
 
-from core.auth.auth_exceptions import InvalidError
 from core.user.user_crud import crud_user
 from modules.classifier.classifier_dto import (
     ClassifierInferenceParams,
@@ -22,13 +21,8 @@ def validate_classifier_input(db: Session, payload: ClassifierJobInput) -> None:
     if not isinstance(parameters, ClassifierInferenceParams):
         return
     user_id = parameters.virtual_user_id
-    if (
-        user_id is not None
-        and crud_user.read(db=db, id=user_id).project_id != payload.project_id
-    ):
-        raise InvalidError(
-            f"User {user_id} is not a virtual user of project {payload.project_id}"
-        )
+    if user_id is not None:
+        crud_user.read_virtual_user(db=db, project_id=payload.project_id, id=user_id)
 
 
 @register_job(

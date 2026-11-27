@@ -7,14 +7,14 @@ from modules.agreement.agreement_dto import (
 )
 from modules.agreement.agreement_service import AgreementService
 
-router = project_router("/agreement", tags=["agreement"])
+router = project_router("/agreements", tags=["agreement"])
 
 
 # --- other operations
 
 
 @router.post(
-    "/compute",
+    "",
     response_model=AgreementResult,
     summary="Compare the annotations of two annotators: scores, confusion matrix and segments.",
 )
@@ -30,7 +30,7 @@ def compute_agreement(
 
 
 @router.post(
-    "/export-counts",
+    "/export",
     response_model=str,
     summary="Export the raw agreement counts (TP, FP, FN) per document and code as CSV.",
 )
@@ -48,7 +48,7 @@ def export_agreement_counts(
     response_model=list[str],
     summary="Returns the texts of segments (character ranges of documents), in the order of the request.",
 )
-def get_segment_texts(
+def compute_segment_texts(
     *,
     db: DBSession,
     project_id: int,

@@ -2,7 +2,7 @@
 /* istanbul ignore file */
 /* tslint:disable */
 /* eslint-disable */
-export type COTACreate = {
+export type ConceptOverTimeAnalysisCreate = {
   /**
    * Name of the ConceptOverTimeAnalysis
    */

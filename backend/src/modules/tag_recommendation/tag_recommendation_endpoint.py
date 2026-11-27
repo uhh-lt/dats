@@ -32,16 +32,16 @@ def update_recommendations(
     *,
     db: DBSession,
     project_id: int,
-    reviewd_recommendation_ids: list[int],
+    reviewed_recommendation_ids: list[int],
     ws: WebsocketEmitter = Depends(),
 ) -> list[TagRecommendationLinkRead]:
     modifications = crud_tag_recommendation_link.update_multi(
         db=db,
         project_id=project_id,
-        ids=reviewd_recommendation_ids,
+        ids=reviewed_recommendation_ids,
         update_dtos=[
             TagRecommendationLinkUpdate(is_reviewed=True)
-            for _ in reviewd_recommendation_ids
+            for _ in reviewed_recommendation_ids
         ],
     )
     results = [TagRecommendationLinkRead.model_validate(m) for m in modifications]

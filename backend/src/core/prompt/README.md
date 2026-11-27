@@ -7,13 +7,13 @@ A prompt is the complete instruction to the LLM for one task (span annotation, s
 - `PromptORM`: project, name (unique per project), task, language (`en` / `de`) and an archive flag. Archived prompts are not offered for new runs; runs that used them keep their versions. There is no delete.
 - `PromptVersionORM`: version number (1, 2, 3, ... per prompt), the prompt text, its selections and the author. Every save appends a version; versions are never changed, so runs that reference a version id can always be reproduced. Renaming or archiving does not create a version.
 - The selections are copies of project data (`prompt_dto.py`): `codes` (`PromptCode`: id, name, description), `tags`, `metadata_fields`, `examples` and the `settings` of the blocks (chunk size and overlap, context length, fuzzy threshold, request reasoning). Later changes in the project do not change a version.
-- Few-shot examples: a `SpanPromptExample` is the text of the sentences around a span annotation with all spans its annotator annotated in that text (annotations of the same text share one example); a `SentencePromptExample` is the text of a sentence annotation with its code. `POST /projects/{project_id}/prompts/examples` builds them from annotation ids.
+- Few-shot examples: a `SpanPromptExample` is the text of the sentences around a span annotation with all spans its annotator annotated in that text (annotations of the same text share one example); a `SentencePromptExample` is the text of a sentence annotation with its code. `POST /projects/{project_id}/prompts/build-examples` builds them from annotation ids.
 
 ## Local definitions, pull and push
 
 A prompt has its own copy of the name and description of every selected code, tag and metadata field (key and description). Users edit the copy in the prompt builder to try a definition without changing the project; it is saved with the next version like any other change. A prompt cannot introduce new codes, tags or metadata fields: every copy keeps the id of an existing one.
 
-Pull and push need no endpoint of their own. The prompt builder pulls by copying the project's definitions from its cache into the draft, and pushes through the bulk updates of the codes, tags and metadata fields (`PATCH /projects/{project_id}/codes/bulk`, `/tags/bulk`, `/project-metadata/bulk`). The chosen side simply wins: there is no merge and no stored base.
+Pull and push need no endpoint of their own. The prompt builder pulls by copying the project's definitions from its cache into the draft, and pushes through the bulk updates of the codes, tags and metadata fields (`PATCH /projects/{project_id}/codes/bulk`, `PATCH /projects/{project_id}/tags/bulk`, `PATCH /projects/{project_id}/project-metadata/bulk`). The chosen side simply wins: there is no merge and no stored base.
 
 ## Blocks and validation
 

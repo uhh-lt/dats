@@ -144,7 +144,7 @@ def quotation_project(db_session: Session, test_user: UserORM) -> QuotationProje
         user_id=SYSTEM_USER_ID,
         sdoc_id=documents["was_german"].id,
     )
-    direct = crud_code.read_by_name_and_project(
+    direct = crud_code.read_by_name(
         db=db_session, code_name="DIRECT", project_id=project.id
     )
     assert direct is not None

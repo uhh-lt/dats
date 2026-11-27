@@ -7,7 +7,7 @@ from modules.keyword_statistics.keyword_statistics_service import (
 )
 
 router = project_router(
-    "/keyword-statistics", tags=["keyword_statistics"], feature=KEYWORD_STATISTICS
+    "/keyword-statistics", tags=["keywordStatistics"], feature=KEYWORD_STATISTICS
 )
 
 
@@ -15,7 +15,7 @@ router = project_router(
 
 
 @router.post(
-    "/keywords",
+    "",
     response_model=list[KeywordStat],
     summary="Returns KeywordStats for the given SourceDocuments.",
 )

@@ -122,7 +122,7 @@ def import_memos_to_proj(
                     attached_to = sdoc.id
 
             case AttachedObjectType.tag:
-                tag = crud_tag.read_by_name_and_project(
+                tag = crud_tag.read_by_name(
                     db=db, project_id=project_id, name=memo.attached_to
                 )
                 if tag is None:
@@ -133,7 +133,7 @@ def import_memos_to_proj(
                     attached_to = tag.id
 
             case AttachedObjectType.code:
-                code = crud_code.read_by_name_and_project(
+                code = crud_code.read_by_name(
                     db=db, project_id=project_id, code_name=memo.attached_to
                 )
                 if code is None:

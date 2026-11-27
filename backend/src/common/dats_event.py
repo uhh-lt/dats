@@ -23,7 +23,7 @@ from core.prompt.prompt_dto import PromptRead
 from core.tag.tag_dto import SdocTagLinksResult, TagRead
 from core.user.user_dto import UserRead
 from modules.classifier.classifier_dto import ClassifierRead
-from modules.concept_over_time_analysis.cota_dto import COTARead
+from modules.concept_over_time_analysis.cota_dto import ConceptOverTimeAnalysisRead
 from modules.experiment.experiment_dto import ExperimentRead
 from modules.perspectives.aspect_dto import AspectRead
 from modules.perspectives.cluster_dto import ClusterRead
@@ -224,9 +224,9 @@ _DATS_EVENT_PAYLOADS: dict[DATSEvent, object] = {
     DATSEvent.TIMELINE_ANALYSIS_CREATED: TimelineAnalysisRead,
     DATSEvent.TIMELINE_ANALYSIS_UPDATED: TimelineAnalysisRead,
     DATSEvent.TIMELINE_ANALYSIS_DELETED: TimelineAnalysisRead,
-    DATSEvent.COTA_CREATED: COTARead,
-    DATSEvent.COTA_UPDATED: COTARead,
-    DATSEvent.COTA_DELETED: COTARead,
+    DATSEvent.COTA_CREATED: ConceptOverTimeAnalysisRead,
+    DATSEvent.COTA_UPDATED: ConceptOverTimeAnalysisRead,
+    DATSEvent.COTA_DELETED: ConceptOverTimeAnalysisRead,
     DATSEvent.ASPECT_CREATED: AspectRead,
     DATSEvent.ASPECT_UPDATED: AspectRead,
     DATSEvent.ASPECT_DELETED: AspectRead,

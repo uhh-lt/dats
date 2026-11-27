@@ -87,7 +87,7 @@ const useUpdatePrompt = () =>
 const useCreatePromptExamples = () =>
   useMutation({
     mutationKey: [...promptQueries.all(), "createPromptExamples"],
-    mutationFn: PromptService.createExamples,
+    mutationFn: PromptService.buildExamples,
   });
 
 export const PromptHooks = {

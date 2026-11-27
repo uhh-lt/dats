@@ -81,10 +81,11 @@ class ExperimentProject(TypedDict):
     - Virtual users without annotations whose names a run or a rename would need:
       `manual_user` "ExperimentA-Manual" (a run "Manual" of ExperimentA) and
       `manual_stage3_user` "Stage 3-Baseline" (ExperimentB renamed to "Stage 3").
-    - `other_project` "Other Project" of the user `outsider` (outsider@dats.org);
-      the test user is no member. It has the code `foreign_code` "Foreign", the
-      document `foreign_sdoc` "Foreign Document" with the span "Secret" (Foreign) of
-      `outsider`, and the experiment `foreign_experiment` "ForeignExperiment" on it.
+    - `outsider_project` "Other Project" of the user `outsider`
+      (outsider@dats.org); the test user is no member. It has the code
+      `outsider_code` "Foreign", the document `outsider_sdoc` "Foreign Document"
+      with the span "Secret" (Foreign) of `outsider`, and the experiment
+      `outsider_experiment` "ForeignExperiment" on it.
 
     Non-obvious derived behavior:
 
@@ -120,11 +121,11 @@ class ExperimentProject(TypedDict):
     manual_stage3_user: UserORM
     run_anna: SpanAnnotationORM
     run_met: SpanAnnotationORM
-    other_project: ProjectORM
+    outsider_project: ProjectORM
     outsider: UserORM
-    foreign_code: CodeORM
-    foreign_sdoc: SourceDocumentORM
-    foreign_experiment: ExperimentORM
+    outsider_code: CodeORM
+    outsider_sdoc: SourceDocumentORM
+    outsider_experiment: ExperimentORM
 
 
 def _create_code(db: Session, *, project_id: int, name: str) -> CodeORM:
@@ -374,7 +375,7 @@ def experiment_project(
     outsider = _create_member(
         db, first_name="Outsider", email="outsider@dats.org", project=None
     )
-    other_project = crud_project.read(
+    outsider_project = crud_project.read(
         db=db,
         id=ProjectService()
         .create_project(
@@ -384,27 +385,27 @@ def experiment_project(
         )
         .id,
     )
-    foreign_code = _create_code(db, project_id=other_project.id, name="Foreign")
-    foreign_sdoc = create_text_document(
+    outsider_code = _create_code(db, project_id=outsider_project.id, name="Foreign")
+    outsider_sdoc = create_text_document(
         db,
-        project=other_project,
+        project=outsider_project,
         filename="foreign.txt",
         name="Foreign Document",
         sentences=["Secret text."],
     )
     create_span_for_text(
         db,
-        sdoc=foreign_sdoc,
+        sdoc=outsider_sdoc,
         text="Secret",
-        code_id=foreign_code.id,
+        code_id=outsider_code.id,
         user_id=outsider.id,
     )
-    foreign_experiment = _create_experiment(
+    outsider_experiment = _create_experiment(
         db,
         name="ForeignExperiment",
-        project=other_project,
-        sdocs=[foreign_sdoc],
-        codes=[foreign_code],
+        project=outsider_project,
+        sdocs=[outsider_sdoc],
+        codes=[outsider_code],
         gold_user=outsider,
     )
 
@@ -434,11 +435,11 @@ def experiment_project(
         "manual_stage3_user": manual_stage3_user,
         "run_anna": run_anna,
         "run_met": run_met,
-        "other_project": other_project,
+        "outsider_project": outsider_project,
         "outsider": outsider,
-        "foreign_code": foreign_code,
-        "foreign_sdoc": foreign_sdoc,
-        "foreign_experiment": foreign_experiment,
+        "outsider_code": outsider_code,
+        "outsider_sdoc": outsider_sdoc,
+        "outsider_experiment": outsider_experiment,
     }
 
 
@@ -472,24 +473,24 @@ def gold_deleted_project(
 
 
 @pytest.fixture
-def foreign_prompt_version_id(
+def outsider_prompt_version_id(
     db_session: Session, test_user: UserORM, experiment_project: ExperimentProject
 ) -> int:
     """`experiment_project` plus the prompt "Foreign prompt" (span annotation,
-    English, the default inline prompt with the code `foreign_code` "Foreign") in
-    `other_project`, saved by the test user. Returns the id of its version 1, a
-    prompt version of another project than `experiment`."""
-    other_project = experiment_project["other_project"]
+    English, the default inline prompt with the code `outsider_code` "Foreign") in
+    `outsider_project`, saved by the test user. Returns the id of its version 1, a
+    prompt version of an outsider project, not of the project of `experiment`."""
+    outsider_project = experiment_project["outsider_project"]
     prompt = PromptService().create_prompt(
         db=db_session,
-        project_id=other_project.id,
+        project_id=outsider_project.id,
         user_id=test_user.id,
         create_dto=PromptCreate(
             name="Foreign prompt",
             task_type=TaskType.ANNOTATION,
             language=PromptLanguage.EN,
             text=DEFAULT_PROMPTS[OutputFormat.INLINE][PromptLanguage.EN],
-            codes=[_prompt_code(experiment_project["foreign_code"])],
+            codes=[_prompt_code(experiment_project["outsider_code"])],
         ),
     )
     db_session.commit()

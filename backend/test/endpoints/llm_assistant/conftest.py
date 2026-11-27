@@ -81,7 +81,7 @@ class LLMAssistantProject(TypedDict):
       span annotation of "Alice" and one FACT sentence annotation on the target
       (``run_a``: sentence 0, ``run_b``: sentence 1).
     - A separate, unauthorized project with one document, one ``FOREIGN`` code,
-      a virtual user ``foreign_run`` ("Foreign-Run") and one span
+      a virtual user ``outsider_run`` ("Foreign-Run") and one span
       annotation of it.
 
     Non-obvious derived behavior:
@@ -114,11 +114,11 @@ class LLMAssistantProject(TypedDict):
     run_b_span_annotation: SpanAnnotationORM
     run_a_sentence_annotation: SentenceAnnotationORM
     run_b_sentence_annotation: SentenceAnnotationORM
-    foreign_project: ProjectORM
-    foreign_sdoc: SourceDocumentORM
-    foreign_code: CodeORM
-    foreign_run: UserORM
-    foreign_span_annotation: SpanAnnotationORM
+    outsider_project: ProjectORM
+    outsider_sdoc: SourceDocumentORM
+    outsider_code: CodeORM
+    outsider_run: UserORM
+    outsider_span_annotation: SpanAnnotationORM
 
 
 def _create_metadata_field(
@@ -173,7 +173,7 @@ def llm_assistant_project(
         sentences=["No selected category applies here."],
     )
 
-    person_code = crud_code.read_by_name_and_project(
+    person_code = crud_code.read_by_name(
         db=db_session,
         code_name="PERSON",
         project_id=test_project.id,
@@ -204,7 +204,7 @@ def llm_assistant_project(
             description="Documents without a named person.",
         ),
     )
-    crud_tag.link_multiple_tags(
+    crud_tag.link_multi(
         db=db_session,
         project_id=test_project.id,
         sdoc_ids=[target_sdoc.id],
@@ -355,7 +355,7 @@ def llm_assistant_project(
         .id,
     )
 
-    foreign_project = crud_project.create(
+    outsider_project = crud_project.create(
         db=db_session,
         create_dto=ProjectCreate(
             title="Unauthorized project",
@@ -363,32 +363,32 @@ def llm_assistant_project(
             enabled_features=[],
         ),
     )
-    foreign_sdoc = dats_test_utils.create_text_document(
+    outsider_sdoc = dats_test_utils.create_text_document(
         db_session,
-        project=foreign_project,
+        project=outsider_project,
         filename="foreign.txt",
         name="Foreign document",
         sentences=["Eve is foreign."],
         initialize_metadata=False,
     )
-    foreign_code = crud_code.create(
+    outsider_code = crud_code.create(
         db=db_session,
-        project_id=foreign_project.id,
+        project_id=outsider_project.id,
         create_dto=CodeCreate(
             name="FOREIGN",
             description="A foreign-project code.",
             is_system=False,
         ),
     )
-    foreign_run = crud_user.create_virtual_user(
-        db=db_session, project_id=foreign_project.id, name="Foreign-Run"
+    outsider_run = crud_user.create_virtual_user(
+        db=db_session, project_id=outsider_project.id, name="Foreign-Run"
     )
-    foreign_span_annotation = dats_test_utils.create_span_for_text(
+    outsider_span_annotation = dats_test_utils.create_span_for_text(
         db_session,
-        sdoc=foreign_sdoc,
+        sdoc=outsider_sdoc,
         text="Eve",
-        code_id=foreign_code.id,
-        user_id=foreign_run.id,
+        code_id=outsider_code.id,
+        user_id=outsider_run.id,
     )
 
     db_session.commit()
@@ -401,9 +401,9 @@ def llm_assistant_project(
         fact_code,
         people_tag,
         other_tag,
-        foreign_project,
-        foreign_sdoc,
-        foreign_code,
+        outsider_project,
+        outsider_sdoc,
+        outsider_code,
     ]:
         db_session.refresh(item)
 
@@ -425,11 +425,11 @@ def llm_assistant_project(
         "run_b_span_annotation": run_b_span_annotation,
         "run_a_sentence_annotation": run_a_sentence_annotation,
         "run_b_sentence_annotation": run_b_sentence_annotation,
-        "foreign_project": foreign_project,
-        "foreign_sdoc": foreign_sdoc,
-        "foreign_code": foreign_code,
-        "foreign_run": crud_user.read(db=db_session, id=foreign_run.id),
-        "foreign_span_annotation": foreign_span_annotation,
+        "outsider_project": outsider_project,
+        "outsider_sdoc": outsider_sdoc,
+        "outsider_code": outsider_code,
+        "outsider_run": crud_user.read(db=db_session, id=outsider_run.id),
+        "outsider_span_annotation": outsider_span_annotation,
     }
 
 
@@ -470,7 +470,7 @@ class JobPromptProject(TypedDict):
     metadata_prompt: PromptRead
     sentence_prompt: PromptRead
     empty_tagging_version_id: int
-    foreign_prompt: PromptRead
+    outsider_prompt: PromptRead
 
 
 @pytest.fixture(scope="function")
@@ -555,12 +555,12 @@ def job_prompt_project(
         output_format=OutputFormat.SENTENCES,
         codes=[prompt_code(base["fact_code"])],
     )
-    foreign_prompt = prompt(
-        project_id=base["foreign_project"].id,
+    outsider_prompt = prompt(
+        project_id=base["outsider_project"].id,
         name="Foreign tagging",
         task_type=TaskType.ANNOTATION,
         output_format=OutputFormat.INLINE,
-        codes=[prompt_code(base["foreign_code"])],
+        codes=[prompt_code(base["outsider_code"])],
     )
     empty_tagging_prompt = next(
         default
@@ -579,5 +579,5 @@ def job_prompt_project(
         "metadata_prompt": metadata_prompt,
         "sentence_prompt": sentence_prompt,
         "empty_tagging_version_id": empty_tagging_prompt.versions[0].id,
-        "foreign_prompt": foreign_prompt,
+        "outsider_prompt": outsider_prompt,
     }

@@ -12,9 +12,7 @@ from core.doc.source_document_dto import (
     SourceDocumentUpdate,
     SourceDocumentUrls,
 )
-from core.doc.source_document_orm import SourceDocumentORM
 from core.doc.source_document_service import SourceDocumentService
-from repos.db.sql_exceptions import NoSuchElementError
 from systems.websocket_system.websocket_dependency import WebsocketEmitter
 
 router = project_router("/source-documents", tags=["sourceDocument", "mcp"])
@@ -26,39 +24,38 @@ router = project_router("/source-documents", tags=["sourceDocument", "mcp"])
 @router.get(
     "/count",
     response_model=int,
-    summary="Returns the number of SourceDocuments of the Project, optionally only those with the given status",
+    summary="Returns the number of SourceDocuments of the Project, optionally only those with the given status or with a value for the given date metadata",
 )
-def count_sdocs(
+def count(
     *,
     db: DBSession,
     project_id: int,
     status: SDocStatus | None = None,
+    date_metadata_id: int | None = None,
 ) -> int:
-    return crud_sdoc.count_by_project_and_status(
-        db=db, project_id=project_id, status=status
+    return crud_sdoc.count_by_project(
+        db=db, project_id=project_id, status=status, date_metadata_id=date_metadata_id
     )
 
 
 @router.get(
-    "/by-filename",
-    response_model=int,
-    summary="Returns the ID of the SourceDocument of the Project with the given filename",
+    "",
+    response_model=list[SourceDocumentRead],
+    summary="Returns the SourceDocument of the Project with the given filename: a list of one, or an empty list",
 )
-def resolve_filename(
+def get_by_project(
     *,
     db: DBSession,
     project_id: int,
     filename: str,
     only_finished: bool = True,
-) -> int:
+) -> list[SourceDocumentRead]:
     sdoc = crud_sdoc.read_by_filename(
         db=db, project_id=project_id, only_finished=only_finished, filename=filename
     )
     if sdoc is None:
-        raise NoSuchElementError(
-            SourceDocumentORM, project_id=project_id, filename=filename
-        )
-    return sdoc.id
+        return []
+    return [SourceDocumentRead.model_validate(sdoc)]
 
 
 @router.get(
@@ -189,7 +186,7 @@ def update_by_id(
     response_model=list[SourceDocumentRead],
     summary="Removes all SourceDocuments with the given IDs if they exist",
 )
-def delete_sdocs_bulk(
+def delete_bulk(
     *,
     db: DBSession,
     project_id: int,

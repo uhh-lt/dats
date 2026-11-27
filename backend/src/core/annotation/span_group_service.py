@@ -193,7 +193,7 @@ class SpanGroupService(metaclass=SingletonMeta):
         )
 
         # 3) link each group to its span annotations
-        crud_span_group.link_groups_spans_batch(
+        crud_span_group.link_spans_multi(
             db=db,
             project_id=project_id,
             links={

@@ -158,6 +158,18 @@ class PerspectivesJobInput(JobInputBase):
     )
 
 
+class PerspectivesJobStart(BaseModel):
+    """The body of a PerspectivesJob start: the aspect and the parameters."""
+
+    model_config = ConfigDict(extra="forbid")
+
+    aspect_id: int = Field(description="ID of the aspect the PerspectivesJob works on")
+    parameters: PerspectivesJobParamsNoCreate = Field(
+        description="Parameters for the PerspectivesJob. The type depends on the PerspectivesJobType.",
+        discriminator="perspectives_job_type",
+    )
+
+
 class PerspectivesJobRead(JobRead[PerspectivesJobInput, None]):
     job_type: Literal["perspectives"] = Field(
         description="Type of the job", json_schema_extra={"enum": ["perspectives"]}

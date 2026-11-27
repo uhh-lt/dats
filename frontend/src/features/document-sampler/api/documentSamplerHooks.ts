@@ -1,4 +1,4 @@
-import { DocumentSamplerService } from "@api/services/DocumentSamplerService";
+import { DocumentSampleService } from "@api/services/DocumentSampleService";
 import { SampledSdocsResults } from "@models/SampledSdocsResults";
 import { useMutation } from "@tanstack/react-query";
 
@@ -9,7 +9,7 @@ const documentSamplerKey = ["documentSampler"] as const;
 const useSampleSdocsByTags = ({ onSuccess }: { onSuccess: (data: SampledSdocsResults[]) => void }) =>
   useMutation({
     mutationKey: [...documentSamplerKey, "sampleSdocsByTags"],
-    mutationFn: DocumentSamplerService.sampleSdocsByTags,
+    mutationFn: DocumentSampleService.sampleSdocsByTags,
     onSuccess,
   });
 

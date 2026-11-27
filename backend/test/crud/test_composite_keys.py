@@ -100,7 +100,7 @@ def test_relationships_never_write_the_project_id():
 )
 def test_cross_project_assignment_fails(
     db_session: Session,
-    two_tenants: TwoTenants,
+    tenants: TwoTenants,
     row_key: str,
     relationship: str,
     target_key: str,
@@ -108,9 +108,9 @@ def test_cross_project_assignment_fails(
     """Assigning the object of another project to a relationship keeps the
     project of the row and writes only its id column, so the composite foreign key
     rejects the row."""
-    row = two_tenants["own"][row_key]
+    row = tenants["own"][row_key]
     project_id = row.project_id
-    target = two_tenants["foreign"][target_key]
+    target = tenants["foreign"][target_key]
 
     with _recorded_updates(db_session) as updates:
         _assert_foreign_key_violation(
@@ -122,11 +122,11 @@ def test_cross_project_assignment_fails(
 
 
 def test_own_project_assignment_writes_only_the_id_column(
-    db_session: Session, two_tenants: TwoTenants
+    db_session: Session, tenants: TwoTenants
 ):
     """Assigning another code of the own project to an annotation updates its
     code_id and nothing else."""
-    own = two_tenants["own"]
+    own = tenants["own"]
     span = own["span"]
 
     with _recorded_updates(db_session) as updates:
@@ -146,7 +146,7 @@ def test_own_project_assignment_writes_only_the_id_column(
 )
 def test_many_to_one_load_comes_from_the_identity_map(
     db_session: Session,
-    two_tenants: TwoTenants,
+    tenants: TwoTenants,
     row_key: str,
     relationship: str,
     target_key: str,
@@ -154,7 +154,7 @@ def test_many_to_one_load_comes_from_the_identity_map(
     """Accessing a many-to-one relationship whose target is already loaded in the
     session issues no query: the relationship joins on the whole primary key of the
     target, (project_id, id)."""
-    own_row = two_tenants["own"][row_key]
+    own_row = tenants["own"][row_key]
     mapper = inspect(type(own_row))
     target_key_of_row = _target_key(mapper.relationships[relationship])
     db_session.expire_all()
@@ -235,15 +235,15 @@ def _recorded_updates(db: Session) -> Iterator[list[str]]:
 
 
 def test_tag_link_to_a_document_of_another_project_fails(
-    db_session: Session, two_tenants: TwoTenants
+    db_session: Session, tenants: TwoTenants
 ):
     """The link belongs to the project of the document, so a tag of another
     project violates its foreign key."""
-    own, foreign = two_tenants["own"], two_tenants["foreign"]
+    own, foreign = tenants["own"], tenants["foreign"]
 
     _assert_foreign_key_violation(
         db_session,
-        lambda: crud_tag.link_multiple_tags(
+        lambda: crud_tag.link_multi(
             db=db_session,
             project_id=own["project"].id,
             sdoc_ids=[own["sdoc"].id],
@@ -261,10 +261,10 @@ def test_tag_link_to_a_document_of_another_project_fails(
     ],
 )
 def test_classifier_link_to_another_project_fails(
-    db_session: Session, two_tenants: TwoTenants, link: str
+    db_session: Session, tenants: TwoTenants, link: str
 ):
     """A classifier links only codes and tags of its own project."""
-    own, foreign = two_tenants["own"], two_tenants["foreign"]
+    own, foreign = tenants["own"], tenants["foreign"]
     classifier_id = own["classifier"].id
 
     _assert_foreign_key_violation(
@@ -288,11 +288,11 @@ def test_classifier_link_to_another_project_fails(
 
 
 def test_span_annotation_joins_no_span_group_of_another_project(
-    db_session: Session, two_tenants: TwoTenants
+    db_session: Session, tenants: TwoTenants
 ):
     """add_to_span_group reads the span group within the project of the span
     annotation, so a span group of another project is not found."""
-    own, foreign = two_tenants["own"], two_tenants["foreign"]
+    own, foreign = tenants["own"], tenants["foreign"]
 
     with pytest.raises(NoSuchElementError):
         crud_span_anno.add_to_span_group(
@@ -304,16 +304,16 @@ def test_span_annotation_joins_no_span_group_of_another_project(
 
 
 def test_span_group_links_no_span_annotation_of_another_project(
-    db_session: Session, two_tenants: TwoTenants
+    db_session: Session, tenants: TwoTenants
 ):
-    """link_groups_spans_batch writes the links in the project it is given, so the
+    """link_spans_multi writes the links in the project it is given, so the
     composite foreign key of the link rejects a span annotation of another
     project."""
-    own, foreign = two_tenants["own"], two_tenants["foreign"]
+    own, foreign = tenants["own"], tenants["foreign"]
 
     _assert_foreign_key_violation(
         db_session,
-        lambda: crud_span_group.link_groups_spans_batch(
+        lambda: crud_span_group.link_spans_multi(
             db=db_session,
             project_id=own["project"].id,
             links={own["span_group"].id: [foreign["span"].id]},
@@ -322,11 +322,11 @@ def test_span_group_links_no_span_annotation_of_another_project(
 
 
 def test_memo_attaches_to_no_object_of_another_project(
-    db_session: Session, two_tenants: TwoTenants, test_user
+    db_session: Session, tenants: TwoTenants, test_user
 ):
     """The object handle of a memo belongs to the project of the memo, so an
     object of another project violates the handle's foreign key."""
-    own, foreign = two_tenants["own"], two_tenants["foreign"]
+    own, foreign = tenants["own"], tenants["foreign"]
 
     _assert_foreign_key_violation(
         db_session,

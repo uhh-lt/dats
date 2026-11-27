@@ -121,16 +121,6 @@ class ClassifierData(BaseModel):
     )
 
 
-class ClassifierDataset(ClassifierData):
-    class_id: int = Field(description="ID of the class (tag or code)")
-    num_examples: int = Field(
-        description="Number of examples for the class (tag or code)"
-    )
-    data_ids: list[int] = Field(
-        description="List of example IDs for the class (tag or code)"
-    )
-
-
 # ----- DATASET STATISTICS DTOS -----
 
 
@@ -237,7 +227,8 @@ class ClassifierDatasetStatistics(BaseModel):
 # ----- CRUD DTOS -----
 
 
-class ClassifierCreate(BaseModel):
+# Properties shared across all DTOs
+class ClassifierBaseDTO(BaseModel):
     name: str = Field(description="Name of the classifier")
     base_model: str = Field(description="Name of the base model")
     type: ClassifierModel = Field(description="Type of the classifier")
@@ -248,6 +239,11 @@ class ClassifierCreate(BaseModel):
     train_params: dict[str, Any] = Field(description="Training parameters")
     train_loss: list[ClassifierLoss] = Field(description="Training loss per step")
     train_data_stats: list[ClassifierData] = Field(description="Training data stats")
+
+
+# Properties for creation
+class ClassifierCreate(ClassifierBaseDTO):
+    pass
 
 
 class ClassifierUpdate(BaseModel, UpdateDTOBase):
@@ -304,7 +300,7 @@ class ClassifierEvaluationRead(ClassifierEvaluationCreate):
     model_config = ConfigDict(from_attributes=True)
 
 
-class ClassifierRead(ClassifierCreate):
+class ClassifierRead(ClassifierBaseDTO):
     id: int = Field(description="ID of the Classifier")
     project_id: int = Field(description="ID of the project this classifier belongs to")
     created: datetime = Field(description="Creation timestamp of the classifier")

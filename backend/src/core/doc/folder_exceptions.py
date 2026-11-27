@@ -12,6 +12,14 @@ class FolderMoveToNonNormalFolderError(Exception):
 
 
 @exception_handler(status.HTTP_400_BAD_REQUEST)
+class FolderNotSdocFolderError(Exception):
+    """Raised when the documents of a folder are read that is no document folder."""
+
+    def __init__(self, folder_id: int) -> None:
+        super().__init__(f"Folder {folder_id} is no document folder!")
+
+
+@exception_handler(status.HTTP_400_BAD_REQUEST)
 class FolderMoveCycleError(Exception):
     """Raised when a folder is moved into itself or one of its descendants."""
 

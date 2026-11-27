@@ -14,18 +14,18 @@ from feature_test_utils import (
 )
 from modules.concept_over_time_analysis.cota_crud import crud_cota
 from modules.concept_over_time_analysis.cota_dto import (
+    ConceptOverTimeAnalysisCreateIntern,
+    ConceptOverTimeAnalysisRead,
+    ConceptOverTimeAnalysisUpdateIntern,
     COTAConcept,
-    COTACreateIntern,
-    COTARead,
     COTASentence,
-    COTAUpdateIntern,
 )
 from modules.concept_over_time_analysis.cota_service import COTAService
 
 
 class ProjectWithCota(TypedDict):
     project: ProjectORM
-    cota: COTARead
+    cota: ConceptOverTimeAnalysisRead
 
 
 @pytest.fixture(scope="function")
@@ -39,7 +39,7 @@ def project_with_cota(db_session, test_project) -> ProjectWithCota:
     cota = COTAService().create(
         db=db_session,
         project_id=test_project.id,
-        cota_create=COTACreateIntern(name="Test COTA"),
+        cota_create=ConceptOverTimeAnalysisCreateIntern(name="Test COTA"),
     )
     db_session.commit()
     db_session.refresh(test_project)
@@ -62,7 +62,7 @@ def featureless_project_with_cota(db_session, test_user: UserORM) -> ProjectWith
     cota = COTAService().create(
         db=db_session,
         project_id=project.id,
-        cota_create=COTACreateIntern(name="Featureless COTA"),
+        cota_create=ConceptOverTimeAnalysisCreateIntern(name="Featureless COTA"),
     )
     db_session.commit()
     return {"project": project, "cota": cota}
@@ -71,7 +71,7 @@ def featureless_project_with_cota(db_session, test_user: UserORM) -> ProjectWith
 @pytest.fixture(scope="function")
 def embedded_cota(
     db_session, test_user: UserORM
-) -> tuple[SentenceEmbeddingProject, COTARead]:
+) -> tuple[SentenceEmbeddingProject, ConceptOverTimeAnalysisRead]:
     """The project of `SentenceEmbeddingProject`, "COTA Only", which enables
     only concepts over time (not semantic search), and its
     ConceptOverTimeAnalysis "Embedded COTA" with default settings (search
@@ -84,7 +84,7 @@ def embedded_cota(
     cota = COTAService().create(
         db=db_session,
         project_id=project["project"].id,
-        cota_create=COTACreateIntern(name="Embedded COTA"),
+        cota_create=ConceptOverTimeAnalysisCreateIntern(name="Embedded COTA"),
     )
     db_session.commit()
     concepts = [
@@ -123,7 +123,9 @@ def tenants(db_session, test_user, test_project) -> TwoTenants:
             db=db_session,
             project_id=rows["project"].id,
             id=rows["cota"].id,
-            update_dto=COTAUpdateIntern(search_space=[jsonable_encoder(sentence)]),
+            update_dto=ConceptOverTimeAnalysisUpdateIntern(
+                search_space=[jsonable_encoder(sentence)]
+            ),
         )
     db_session.commit()
     return tenants

@@ -5,17 +5,18 @@ from common.dependencies import DBSession
 from common.project_router import project_router
 from modules.perspectives.aspect_crud import crud_aspect
 from modules.perspectives.aspect_dto import AspectRead, AspectUpdateIntern
+from modules.perspectives.perspectives_exceptions import PerspectivesJobRunningError
 from modules.perspectives.perspectives_job_dto import (
     PerspectivesJobInput,
-    PerspectivesJobParamsNoCreate,
     PerspectivesJobRead,
+    PerspectivesJobStart,
 )
 from systems.job_system.job_dto import RUNNING_JOB_STATUS
 from systems.job_system.job_service import JobService
 from systems.job_system.job_system_enum import JobStatus
 from systems.websocket_system.websocket_dependency import WebsocketEmitter
 
-router = project_router("/jobs/perspectives", tags=["perspectives"])
+router = project_router("/jobs/perspectives", tags=["job"])
 
 js = JobService()
 
@@ -26,16 +27,16 @@ js = JobService()
 @router.post(
     "",
     response_model=PerspectivesJobRead,
-    summary="Starts the PerspectivesJob of the Aspect (aspect_id) for the given Parameters. If a job is already running, this will raise an error.",
+    summary="Starts the PerspectivesJob of the Aspect for the given Parameters. If a job of the Aspect is still running, this answers 400.",
 )
 def start_perspectives_job(
     *,
     db: DBSession,
     project_id: int,
-    aspect_id: int,
-    perspectives_job_params: PerspectivesJobParamsNoCreate,
+    perspectives_job: PerspectivesJobStart,
     ws: WebsocketEmitter = Depends(),
 ) -> PerspectivesJobRead:
+    aspect_id = perspectives_job.aspect_id
     aspect = crud_aspect.read(db=db, project_id=project_id, id=aspect_id)
 
     # Check if there is a job running already for this aspect
@@ -45,9 +46,7 @@ def start_perspectives_job(
             most_recent_job
             and JobStatus(most_recent_job.get_status()) in RUNNING_JOB_STATUS
         ):
-            raise Exception(
-                f"PerspectivesJob {most_recent_job.get_id()} is still running. Please wait until it is finished."
-            )
+            raise PerspectivesJobRunningError(job_id=most_recent_job.get_id())
 
     # No job running, so we can start a new one
     job = js.start_job(
@@ -55,8 +54,8 @@ def start_perspectives_job(
         payload=PerspectivesJobInput(
             project_id=project_id,
             aspect_id=aspect_id,
-            perspectives_job_type=perspectives_job_params.perspectives_job_type,
-            parameters=perspectives_job_params,
+            perspectives_job_type=perspectives_job.parameters.perspectives_job_type,
+            parameters=perspectives_job.parameters,
         ),
     )
 

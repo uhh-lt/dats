@@ -12,7 +12,7 @@ import { bboxAnnotationQueries } from "./bboxAnnotationQueries";
 const useCreateBBoxAnnotation = () =>
   useMutation({
     mutationKey: [...bboxAnnotationQueries.all(), "createBBoxAnnotation"],
-    mutationFn: BboxAnnotationService.createBboxAnnotation,
+    mutationFn: BboxAnnotationService.create,
     meta: {
       datsEvent: "BBOX_ANNOTATION_CREATED",
       successMessage: (bbox: BBoxAnnotationRead) => `Created Bounding Box Annotation ${bbox.id}`,
@@ -80,7 +80,7 @@ const useUpdateBBoxAnnotation = () =>
 const useUpdateBulkBBoxAnnotation = () =>
   useMutation({
     mutationKey: [...bboxAnnotationQueries.all(), "updateBulkBBoxAnnotation"],
-    mutationFn: BboxAnnotationService.updateBboxAnnotationsBulk,
+    mutationFn: BboxAnnotationService.updateBulk,
     meta: {
       datsEvent: "BBOX_ANNOTATION_UPDATED_BATCH",
       successMessage: (data: BBoxAnnotationRead[]) => `Updated ${data.length} BBox Annotations`,
@@ -129,7 +129,7 @@ const useDeleteBBoxAnnotation = () =>
 const useDeleteBulkBBoxAnnotation = () =>
   useMutation({
     mutationKey: [...bboxAnnotationQueries.all(), "deleteBulkBBoxAnnotation"],
-    mutationFn: BboxAnnotationService.deleteBboxAnnotationsBulk,
+    mutationFn: BboxAnnotationService.deleteBulk,
     meta: {
       datsEvent: "BBOX_ANNOTATION_DELETED_BATCH",
       successMessage: (data: BBoxAnnotationRead[]) => `Deleted ${data.length} Bounding Box Annotations`,

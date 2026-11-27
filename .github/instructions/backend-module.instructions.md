@@ -29,10 +29,10 @@ What a developer of a module or a core artefact must do; the model is explained 
 
 ## Features
 
-- A capability is a feature only if it requires an on-demand artefact; declare it once in `<module>_feature.py` with `FEATURE = register_feature("<name>", title=..., description=..., area=FeatureArea.X, requires_artefacts={...}, default_enabled=...)`, requiring artefacts only, never another feature.
+- A capability is a feature only if it requires an on-demand artefact; declare it once in `<module>_feature.py` as a constant named after the feature (`<NAME> = register_feature("<name>", title=..., description=..., area=FeatureArea.X, requires_artefacts={...}, default_enabled=...)`, `WORD_FREQUENCY` in `word_frequency_feature.py`), requiring artefacts only, never another feature.
 - `default_enabled` decides whether a new project created without a feature list enables the feature.
 - An optional `register_feature(set_up=...)` hook `(db, project_id) -> None` must be safe to run twice, is not undone by Disable and never creates system codes.
-- Gate the routes of a feature with its project router (`project_router(..., feature=FEATURE)`, `word_frequency_endpoint.py`) and a job with generated endpoints in its `validate_input` hook (`duplicate_finder_job.py`).
+- Gate the routes of a feature with its project router (`project_router(..., feature=WORD_FREQUENCY)`, `word_frequency_endpoint.py`) and a job with generated endpoints in its `validate_input` hook (`duplicate_finder_job.py`).
 - A gate checks only that the feature is enabled, never that its artefacts are computed.
 
 ## Jobs

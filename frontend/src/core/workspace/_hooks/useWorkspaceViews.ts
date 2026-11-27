@@ -101,7 +101,7 @@ export function useWorkspaceViews<TColumns extends string, TRow extends { id: nu
       if (!activeView) return;
       updateView.mutate({
         projectId,
-        viewId: activeView.id,
+        searchViewId: activeView.id,
         requestBody,
       } as Parameters<typeof updateView.mutate>[0]);
     },
@@ -115,7 +115,7 @@ export function useWorkspaceViews<TColumns extends string, TRow extends { id: nu
       type: "DELETE",
       text: `Do you really want to delete the view "${view.name}"? This action cannot be undone!`,
       onAccept: () => {
-        deleteView.mutate({ projectId, viewId: view.id }, { onSuccess: () => setActiveViewId(undefined) });
+        deleteView.mutate({ projectId, searchViewId: view.id }, { onSuccess: () => setActiveViewId(undefined) });
       },
     });
   }, [activeView, deleteView, openConfirmationDialog, projectId]);
@@ -124,7 +124,7 @@ export function useWorkspaceViews<TColumns extends string, TRow extends { id: nu
     (name: string, onSuccess?: () => void) => {
       if (!activeView || name === activeView.name) return;
       updateView.mutate(
-        { projectId, viewId: activeView.id, requestBody: { name } } as Parameters<typeof updateView.mutate>[0],
+        { projectId, searchViewId: activeView.id, requestBody: { name } } as Parameters<typeof updateView.mutate>[0],
         { onSuccess },
       );
     },

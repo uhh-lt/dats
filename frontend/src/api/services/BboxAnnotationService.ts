@@ -15,7 +15,7 @@ export class BboxAnnotationService {
    * @returns BBoxAnnotationRead Successful Response
    * @throws ApiError
    */
-  public static createBboxAnnotation({
+  public static create({
     projectId,
     requestBody,
     userId,
@@ -39,6 +39,10 @@ export class BboxAnnotationService {
       body: requestBody,
       mediaType: "application/json",
       errors: {
+        400: `The request breaks a rule of the domain`,
+        403: `The user is no member of the project, or the feature is disabled`,
+        404: `A path id, or an id the route reads, is not in the project`,
+        409: `A body id violates a foreign key, or a value a unique constraint`,
         422: `Validation Error`,
       },
     });
@@ -48,7 +52,7 @@ export class BboxAnnotationService {
    * @returns BBoxAnnotationRead Successful Response
    * @throws ApiError
    */
-  public static getBboxAnnotations({
+  public static getByProject({
     projectId,
     userId,
     sdocId,
@@ -71,6 +75,10 @@ export class BboxAnnotationService {
         code_id: codeId,
       },
       errors: {
+        400: `The request breaks a rule of the domain`,
+        403: `The user is no member of the project, or the feature is disabled`,
+        404: `A path id, or an id the route reads, is not in the project`,
+        409: `A body id violates a foreign key, or a value a unique constraint`,
         422: `Validation Error`,
       },
     });
@@ -95,6 +103,10 @@ export class BboxAnnotationService {
         bbox_annotation_id: bboxAnnotationId,
       },
       errors: {
+        400: `The request breaks a rule of the domain`,
+        403: `The user is no member of the project, or the feature is disabled`,
+        404: `A path id, or an id the route reads, is not in the project`,
+        409: `A body id violates a foreign key, or a value a unique constraint`,
         422: `Validation Error`,
       },
     });
@@ -123,6 +135,10 @@ export class BboxAnnotationService {
       body: requestBody,
       mediaType: "application/json",
       errors: {
+        400: `The request breaks a rule of the domain`,
+        403: `The user is no member of the project, or the feature is disabled`,
+        404: `A path id, or an id the route reads, is not in the project`,
+        409: `A body id violates a foreign key, or a value a unique constraint`,
         422: `Validation Error`,
       },
     });
@@ -147,6 +163,10 @@ export class BboxAnnotationService {
         bbox_annotation_id: bboxAnnotationId,
       },
       errors: {
+        400: `The request breaks a rule of the domain`,
+        403: `The user is no member of the project, or the feature is disabled`,
+        404: `A path id, or an id the route reads, is not in the project`,
+        409: `A body id violates a foreign key, or a value a unique constraint`,
         422: `Validation Error`,
       },
     });
@@ -156,7 +176,7 @@ export class BboxAnnotationService {
    * @returns BBoxAnnotationRead Successful Response
    * @throws ApiError
    */
-  public static updateBboxAnnotationsBulk({
+  public static updateBulk({
     projectId,
     requestBody,
   }: {
@@ -172,6 +192,10 @@ export class BboxAnnotationService {
       body: requestBody,
       mediaType: "application/json",
       errors: {
+        400: `The request breaks a rule of the domain`,
+        403: `The user is no member of the project, or the feature is disabled`,
+        404: `A path id, or an id the route reads, is not in the project`,
+        409: `A body id violates a foreign key, or a value a unique constraint`,
         422: `Validation Error`,
       },
     });
@@ -181,7 +205,7 @@ export class BboxAnnotationService {
    * @returns BBoxAnnotationRead Successful Response
    * @throws ApiError
    */
-  public static deleteBboxAnnotationsBulk({
+  public static deleteBulk({
     projectId,
     requestBody,
   }: {
@@ -197,6 +221,10 @@ export class BboxAnnotationService {
       body: requestBody,
       mediaType: "application/json",
       errors: {
+        400: `The request breaks a rule of the domain`,
+        403: `The user is no member of the project, or the feature is disabled`,
+        404: `A path id, or an id the route reads, is not in the project`,
+        409: `A body id violates a foreign key, or a value a unique constraint`,
         422: `Validation Error`,
       },
     });

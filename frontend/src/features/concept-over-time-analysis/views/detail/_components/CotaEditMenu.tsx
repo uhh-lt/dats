@@ -1,5 +1,5 @@
 import { GenericPositionMenu, GenericPositionMenuHandle } from "@components/GenericPositionMenu";
-import { COTARead } from "@models/COTARead";
+import { ConceptOverTimeAnalysisRead } from "@models/ConceptOverTimeAnalysisRead";
 import CircleIcon from "@mui/icons-material/Circle";
 import ClearIcon from "@mui/icons-material/Clear";
 import DeleteIcon from "@mui/icons-material/Delete";
@@ -7,7 +7,7 @@ import { Divider, ListItemIcon, ListItemText, MenuItem } from "@mui/material";
 
 interface CotaEditMenuProps {
   ref: React.Ref<GenericPositionMenuHandle>;
-  cota: COTARead;
+  cota: ConceptOverTimeAnalysisRead;
   onAnnotateSentences: (conceptId: string | null) => void;
   onRemoveSentences: () => void;
 }

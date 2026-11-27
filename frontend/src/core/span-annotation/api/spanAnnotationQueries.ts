@@ -54,7 +54,7 @@ export const spanAnnotationQueries = {
       queryFn:
         !projectId || !codeId || !userId
           ? skipToken
-          : () => SpanAnnotationService.getSpanAnnotations({ projectId, userId, codeId }),
+          : () => SpanAnnotationService.getByProject({ projectId, userId, codeId }),
     }),
 
   // all span annotations of one user in one sdoc
@@ -73,7 +73,7 @@ export const spanAnnotationQueries = {
       queryFn:
         !projectId || !sdocId || !userId
           ? skipToken
-          : () => SpanAnnotationService.getSpanAnnotations({ projectId, userId, sdocId }),
+          : () => SpanAnnotationService.getByProject({ projectId, userId, sdocId }),
     }),
   // the column infos of the span annotation filter table
   tableInfo: (projectId: number) =>

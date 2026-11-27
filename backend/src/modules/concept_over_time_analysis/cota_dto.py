@@ -94,11 +94,11 @@ class ConceptOverTimeAnalysisBaseDTO(BaseModel):
     name: str = Field(description="Name of the ConceptOverTimeAnalysis")
 
 
-class COTACreate(ConceptOverTimeAnalysisBaseDTO):
+class ConceptOverTimeAnalysisCreate(ConceptOverTimeAnalysisBaseDTO):
     pass
 
 
-class COTACreateIntern(COTACreate):
+class ConceptOverTimeAnalysisCreateIntern(ConceptOverTimeAnalysisCreate):
     timeline_settings: dict[str, Any] | None = Field(
         description="Timeline Settings of the ConceptOverTimeAnalysis as JSON.",
         default=None,
@@ -115,7 +115,7 @@ class COTACreateIntern(COTACreate):
     )
 
 
-class COTAUpdate(BaseModel, UpdateDTOBase):
+class ConceptOverTimeAnalysisUpdate(BaseModel, UpdateDTOBase):
     # NOT NULL columns: omit to keep the value, an explicit null is rejected
     non_nullable_fields: ClassVar[frozenset[str]] = frozenset(
         {"name", "timeline_settings", "training_settings", "concepts"}
@@ -140,7 +140,7 @@ class COTAUpdate(BaseModel, UpdateDTOBase):
     # search_space is missing intentionally: we do not allow to update search space directly
 
 
-class COTAUpdateIntern(BaseModel, UpdateDTOBase):
+class ConceptOverTimeAnalysisUpdateIntern(BaseModel, UpdateDTOBase):
     last_refinement_job_id: str | None = Field(
         description="ID of the last refinement job for the ConceptOverTimeAnalysis",
         default=None,
@@ -172,7 +172,7 @@ class COTAUpdateIntern(BaseModel, UpdateDTOBase):
     )
 
 
-class COTARead(ConceptOverTimeAnalysisBaseDTO):
+class ConceptOverTimeAnalysisRead(ConceptOverTimeAnalysisBaseDTO):
     id: int = Field(description="ID of the ConceptOverTimeAnalysis")
     project_id: int = Field(
         description="Project the ConceptOverTimeAnalysis belongs to"
@@ -205,7 +205,7 @@ class COTARead(ConceptOverTimeAnalysisBaseDTO):
     model_config = ConfigDict(from_attributes=True)
 
     def __str__(self) -> str:
-        return f"COTARead(id={self.id}, name={self.name}, project_id={self.project_id}, timeline_settings={self.timeline_settings}, training_settings={self.training_settings}, concepts={self.concepts}, search_space={len(self.search_space)}, created={self.created}, updated={self.updated})"
+        return f"ConceptOverTimeAnalysisRead(id={self.id}, name={self.name}, project_id={self.project_id}, timeline_settings={self.timeline_settings}, training_settings={self.training_settings}, concepts={self.concepts}, search_space={len(self.search_space)}, created={self.created}, updated={self.updated})"
 
     def __repr__(self) -> str:
         return str(self)

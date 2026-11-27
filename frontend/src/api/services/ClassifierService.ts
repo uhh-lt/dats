@@ -16,7 +16,7 @@ export class ClassifierService {
    * @returns ClassifierInfo Successful Response
    * @throws ApiError
    */
-  public static getClassifierInfo({ projectId }: { projectId: number }): CancelablePromise<ClassifierInfo> {
+  public static getInfo({ projectId }: { projectId: number }): CancelablePromise<ClassifierInfo> {
     return __request(OpenAPI, {
       method: "GET",
       url: "/projects/{project_id}/classifiers/info",
@@ -24,6 +24,10 @@ export class ClassifierService {
         project_id: projectId,
       },
       errors: {
+        400: `The request breaks a rule of the domain`,
+        403: `The user is no member of the project, or the feature is disabled`,
+        404: `A path id, or an id the route reads, is not in the project`,
+        409: `A body id violates a foreign key, or a value a unique constraint`,
         422: `Validation Error`,
       },
     });
@@ -41,6 +45,10 @@ export class ClassifierService {
         project_id: projectId,
       },
       errors: {
+        400: `The request breaks a rule of the domain`,
+        403: `The user is no member of the project, or the feature is disabled`,
+        404: `A path id, or an id the route reads, is not in the project`,
+        409: `A body id violates a foreign key, or a value a unique constraint`,
         422: `Validation Error`,
       },
     });
@@ -69,6 +77,10 @@ export class ClassifierService {
       body: requestBody,
       mediaType: "application/json",
       errors: {
+        400: `The request breaks a rule of the domain`,
+        403: `The user is no member of the project, or the feature is disabled`,
+        404: `A path id, or an id the route reads, is not in the project`,
+        409: `A body id violates a foreign key, or a value a unique constraint`,
         422: `Validation Error`,
       },
     });
@@ -93,6 +105,10 @@ export class ClassifierService {
         classifier_id: classifierId,
       },
       errors: {
+        400: `The request breaks a rule of the domain`,
+        403: `The user is no member of the project, or the feature is disabled`,
+        404: `A path id, or an id the route reads, is not in the project`,
+        409: `A body id violates a foreign key, or a value a unique constraint`,
         422: `Validation Error`,
       },
     });
@@ -118,6 +134,10 @@ export class ClassifierService {
       body: requestBody,
       mediaType: "application/json",
       errors: {
+        400: `The request breaks a rule of the domain`,
+        403: `The user is no member of the project, or the feature is disabled`,
+        404: `A path id, or an id the route reads, is not in the project`,
+        409: `A body id violates a foreign key, or a value a unique constraint`,
         422: `Validation Error`,
       },
     });

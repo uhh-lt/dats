@@ -82,6 +82,10 @@ export class UserService {
       body: requestBody,
       mediaType: "application/json",
       errors: {
+        400: `The request breaks a rule of the domain`,
+        403: `The user is no member of the project, or the feature is disabled`,
+        404: `A path id, or an id the route reads, is not in the project`,
+        409: `A body id violates a foreign key, or a value a unique constraint`,
         422: `Validation Error`,
       },
     });
@@ -99,6 +103,10 @@ export class UserService {
         project_id: projectId,
       },
       errors: {
+        400: `The request breaks a rule of the domain`,
+        403: `The user is no member of the project, or the feature is disabled`,
+        404: `A path id, or an id the route reads, is not in the project`,
+        409: `A body id violates a foreign key, or a value a unique constraint`,
         422: `Validation Error`,
       },
     });
@@ -124,6 +132,10 @@ export class UserService {
       body: requestBody,
       mediaType: "application/json",
       errors: {
+        400: `The request breaks a rule of the domain`,
+        403: `The user is no member of the project, or the feature is disabled`,
+        404: `A path id, or an id the route reads, is not in the project`,
+        409: `A body id violates a foreign key, or a value a unique constraint`,
         422: `Validation Error`,
       },
     });
@@ -133,25 +145,29 @@ export class UserService {
    * @returns UserRead Successful Response
    * @throws ApiError
    */
-  public static updateById({
+  public static updateVirtualUser({
     projectId,
-    userId,
+    virtualUserId,
     requestBody,
   }: {
     projectId: number;
-    userId: number;
+    virtualUserId: number;
     requestBody: UserUpdate;
   }): CancelablePromise<UserRead> {
     return __request(OpenAPI, {
       method: "PATCH",
-      url: "/projects/{project_id}/virtual-users/{user_id}",
+      url: "/projects/{project_id}/virtual-users/{virtual_user_id}",
       path: {
         project_id: projectId,
-        user_id: userId,
+        virtual_user_id: virtualUserId,
       },
       body: requestBody,
       mediaType: "application/json",
       errors: {
+        400: `The request breaks a rule of the domain`,
+        403: `The user is no member of the project, or the feature is disabled`,
+        404: `A path id, or an id the route reads, is not in the project`,
+        409: `A body id violates a foreign key, or a value a unique constraint`,
         422: `Validation Error`,
       },
     });
@@ -161,15 +177,25 @@ export class UserService {
    * @returns UserRead Successful Response
    * @throws ApiError
    */
-  public static deleteById({ projectId, userId }: { projectId: number; userId: number }): CancelablePromise<UserRead> {
+  public static deleteVirtualUser({
+    projectId,
+    virtualUserId,
+  }: {
+    projectId: number;
+    virtualUserId: number;
+  }): CancelablePromise<UserRead> {
     return __request(OpenAPI, {
       method: "DELETE",
-      url: "/projects/{project_id}/virtual-users/{user_id}",
+      url: "/projects/{project_id}/virtual-users/{virtual_user_id}",
       path: {
         project_id: projectId,
-        user_id: userId,
+        virtual_user_id: virtualUserId,
       },
       errors: {
+        400: `The request breaks a rule of the domain`,
+        403: `The user is no member of the project, or the feature is disabled`,
+        404: `A path id, or an id the route reads, is not in the project`,
+        409: `A body id violates a foreign key, or a value a unique constraint`,
         422: `Validation Error`,
       },
     });
@@ -194,6 +220,10 @@ export class UserService {
         user_id: userId,
       },
       errors: {
+        400: `The request breaks a rule of the domain`,
+        403: `The user is no member of the project, or the feature is disabled`,
+        404: `A path id, or an id the route reads, is not in the project`,
+        409: `A body id violates a foreign key, or a value a unique constraint`,
         422: `Validation Error`,
       },
     });

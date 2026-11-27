@@ -1,6 +1,6 @@
 import { SidebarContentLayout } from "@components/content-layouts";
 import { PercentageResizablePanel, useLayoutPercentage } from "@components/resizable-panels";
-import { COTARead } from "@models/COTARead";
+import { ConceptOverTimeAnalysisRead } from "@models/ConceptOverTimeAnalysisRead";
 import { useAppSelector } from "@store/storeHooks";
 import { CotaConceptList } from "./CotaConceptList";
 import { CotaControl } from "./CotaControl";
@@ -10,7 +10,7 @@ import { CotaTimelinePlot } from "./CotaTimelinePlot";
 import { CotaTimelineSettings } from "./CotaTimelineSettings";
 
 interface CotaViewContentProps {
-  cota: COTARead;
+  cota: ConceptOverTimeAnalysisRead;
 }
 
 export function CotaViewContent({ cota }: CotaViewContentProps) {

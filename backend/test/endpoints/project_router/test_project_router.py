@@ -42,7 +42,7 @@ ROUTES_OUTSIDE_PROJECTS = {
     "POST /authentication/logout",
     "GET /authentication/oidc/callback",
     "GET /authentication/oidc/login",
-    "POST /authentication/refresh_access",
+    "POST /authentication/refresh-access",
     "POST /authentication/register",
     "POST /authentication/sync-session",
     # the logged-in user
@@ -88,10 +88,9 @@ PATH_IDS: dict[str, Callable[[TenantRows], int]] = {
     "aspect_id": lambda rows: rows["aspect"].id,
     "cluster_id": lambda rows: rows["cluster"].id,
     "prompt_id": lambda rows: rows["prompt"].id,
-    "version_id": lambda rows: rows["prompt_version"].id,
-    "view_id": lambda rows: rows["search_view"].id,
+    "search_view_id": lambda rows: rows["search_view"].id,
     # a virtual user belongs to its project; it is no member of any project
-    "user_id": lambda rows: rows["virtual_user"].id,
+    "virtual_user_id": lambda rows: rows["virtual_user"].id,
 }
 
 # path parameters that name no row of a project (a feature is named by its name)
@@ -140,10 +139,10 @@ BODIES: dict[str, Callable[[TenantRows], Any]] = {
     "PATCH /projects/{project_id}/concept-over-time-analyses/{cota_id}": (
         lambda rows: {"name": "renamed"}
     ),
-    "PATCH /projects/{project_id}/concept-over-time-analyses/{cota_id}/annotate": (
+    "PATCH /projects/{project_id}/concept-over-time-analyses/{cota_id}/annotate-sentences": (
         lambda rows: []
     ),
-    "PATCH /projects/{project_id}/concept-over-time-analyses/{cota_id}/remove": (
+    "PATCH /projects/{project_id}/concept-over-time-analyses/{cota_id}/remove-sentences": (
         lambda rows: []
     ),
     "POST /projects/{project_id}/concept-over-time-analyses/{cota_id}/refine": (
@@ -152,22 +151,27 @@ BODIES: dict[str, Callable[[TenantRows], Any]] = {
     "PATCH /projects/{project_id}/experiments/{experiment_id}": (
         lambda rows: {"name": "renamed"}
     ),
+    "PUT /projects/{project_id}/experiments/{experiment_id}/runs": lambda rows: {
+        "name": "second run",
+        "prompt_version_id": rows["prompt_version"].id,
+        "model": "model",
+    },
     "PATCH /projects/{project_id}/classifiers/{classifier_id}": (
         lambda rows: {"name": "renamed"}
     ),
     "PATCH /projects/{project_id}/perspectives/aspects/{aspect_id}": (
         lambda rows: {"name": "renamed"}
     ),
-    "PATCH /projects/{project_id}/perspectives/clusters/{cluster_id}": (
+    "PATCH /projects/{project_id}/perspectives/aspects/{aspect_id}/clusters/{cluster_id}": (
         lambda rows: {"name": "renamed"}
     ),
     "POST /projects/{project_id}/perspectives/aspects/{aspect_id}/visualize": (
         lambda rows: {"filter": _NO_FILTER, "sorts": []}
     ),
-    "POST /projects/{project_id}/perspectives/aspects/{aspect_id}/accept-labels": (
+    "PATCH /projects/{project_id}/perspectives/aspects/{aspect_id}/accept-labels": (
         lambda rows: {"sdoc_ids": [rows["sdoc"].id], "filter": _NO_FILTER, "sorts": []}
     ),
-    "POST /projects/{project_id}/perspectives/aspects/{aspect_id}/revert-labels": (
+    "PATCH /projects/{project_id}/perspectives/aspects/{aspect_id}/revert-labels": (
         lambda rows: {"sdoc_ids": [rows["sdoc"].id], "filter": _NO_FILTER, "sorts": []}
     ),
     "PUT /projects/{project_id}/prompts/{prompt_id}/versions": lambda rows: {
@@ -177,10 +181,10 @@ BODIES: dict[str, Callable[[TenantRows], Any]] = {
     "PATCH /projects/{project_id}/prompts/{prompt_id}": (
         lambda rows: {"name": "renamed"}
     ),
-    "PATCH /projects/{project_id}/search-views/{view_id}": (
+    "PATCH /projects/{project_id}/search-views/{search_view_id}": (
         lambda rows: {"name": "renamed"}
     ),
-    "PATCH /projects/{project_id}/virtual-users/{user_id}": (
+    "PATCH /projects/{project_id}/virtual-users/{virtual_user_id}": (
         lambda rows: {"first_name": "renamed"}
     ),
     "PATCH /projects/{project_id}/source-document-metadata/{sdoc_metadata_id}": (
@@ -196,7 +200,7 @@ BODIES: dict[str, Callable[[TenantRows], Any]] = {
 
 # the required query parameters of the routes with a path id, by "<METHOD> <path>"
 QUERIES: dict[str, dict[str, str]] = {
-    "POST /projects/{project_id}/experiments/runs/{run_id}/export-log": {
+    "POST /projects/{project_id}/experiments/{experiment_id}/runs/{run_id}/export-log": {
         "export_format": "json"
     },
     "GET /projects/{project_id}/perspectives/aspects/{aspect_id}/clusters": {
@@ -205,10 +209,10 @@ QUERIES: dict[str, dict[str, str]] = {
     "POST /projects/{project_id}/perspectives/aspects/{aspect_id}/visualize": {
         "search_query": ""
     },
-    "POST /projects/{project_id}/perspectives/aspects/{aspect_id}/accept-labels": {
+    "PATCH /projects/{project_id}/perspectives/aspects/{aspect_id}/accept-labels": {
         "search_query": ""
     },
-    "POST /projects/{project_id}/perspectives/aspects/{aspect_id}/revert-labels": {
+    "PATCH /projects/{project_id}/perspectives/aspects/{aspect_id}/revert-labels": {
         "search_query": ""
     },
 }
@@ -216,11 +220,15 @@ QUERIES: dict[str, dict[str, str]] = {
 # the routes that answer no 2xx with the path ids of the own tenant, by
 # "<METHOD> <path>": their status and why the fixture cannot give them a 2xx
 OWN_ID_EXCEPTIONS: dict[str, tuple[int, str]] = {
-    "PATCH /projects/{project_id}/experiments/{experiment_id}/scores": (
+    "PUT /projects/{project_id}/experiments/{experiment_id}/runs": (
         409,
         "the experiment has no gold annotator",
     ),
-    "PATCH /projects/{project_id}/experiments/runs/{run_id}/scores": (
+    "PATCH /projects/{project_id}/experiments/{experiment_id}/refresh-scores": (
+        409,
+        "the experiment has no gold annotator",
+    ),
+    "PATCH /projects/{project_id}/experiments/{experiment_id}/runs/{run_id}/refresh-scores": (
         409,
         "the experiment of the run has no gold annotator",
     ),
@@ -228,7 +236,7 @@ OWN_ID_EXCEPTIONS: dict[str, tuple[int, str]] = {
         409,
         "the virtual user of its run is the test user, who is still in use",
     ),
-    "DELETE /projects/{project_id}/experiments/runs/{run_id}": (
+    "DELETE /projects/{project_id}/experiments/{experiment_id}/runs/{run_id}": (
         409,
         "the virtual user of the run is the test user, who is still in use",
     ),
@@ -359,7 +367,7 @@ def test_every_project_route_is_covered(client: TestClient) -> None:
     assert routes, "no route under /projects/{project_id}"
     for method, path, route in routes:
         for name in _path_params(path):
-            assert name in PATH_IDS or name == JOB_ID, (
+            assert name in PATH_IDS or name == JOB_ID or path == MEMBER_PATH, (
                 f"{method} {path}: add {name} to PATH_IDS"
             )
         if _path_params(path) and route.body_field is not None:

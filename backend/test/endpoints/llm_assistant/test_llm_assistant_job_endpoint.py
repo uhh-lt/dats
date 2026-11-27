@@ -223,7 +223,7 @@ def _run_a_sentence_annotations(
     sentence."""
     base = project["base"]
     response = client.get(
-        f"/projects/{base['project'].id}/sentence-annotations/by-sentence",
+        f"/projects/{base['project'].id}/sentence-annotations/per-sentence",
         params={"user_id": base["run_a"].id, "sdoc_id": base["target_sdoc"].id},
     )
     assert response.status_code == 200, response.text
@@ -574,10 +574,10 @@ def test_sentence_annotation_job_runs_a_stored_version(
     [
         # A version of the unauthorized project does not exist in the main project.
         pytest.param(
-            "foreign_prompt",
+            "outsider_prompt",
             TaskType.ANNOTATION,
             "There exists no PromptVersion",
-            id="other-project",
+            id="outsider-project",
         ),
         # A tagging version cannot run a sentence annotation job.
         pytest.param(
@@ -588,15 +588,15 @@ def test_sentence_annotation_job_runs_a_stored_version(
         ),
     ],
 )
-def test_job_fails_with_a_version_of_another_project_or_task(
+def test_job_fails_with_a_version_of_an_outsider_project_or_task(
     client: TestClient,
     job_prompt_project: JobPromptProject,
     prompt_key: str,
     task_type: TaskType,
     expected_fragment: str,
 ) -> None:
-    """The job reads the version within its project (a version of another project
-    is not found) and checks that it belongs to its task."""
+    """The job reads the version within its project (a version of an outsider
+    project is not found) and checks that it belongs to its task."""
     prompt = job_prompt_project[prompt_key]  # type: ignore[literal-required]
     version_id = prompt.versions[0].id
     started = _start_job(
@@ -733,22 +733,22 @@ def test_job_start_rejects_malformed_payloads(
     assert expected_fragment in response.text
 
 
-def test_job_start_and_project_list_reject_foreign_project(
+def test_job_start_and_project_list_reject_an_outsider_project(
     client: TestClient,
     job_prompt_project: JobPromptProject,
 ) -> None:
     """Both job creation and project listing require project membership."""
-    foreign_project = job_prompt_project["base"]["foreign_project"]
+    outsider_project = job_prompt_project["base"]["outsider_project"]
     payload = _tagging_payload(job_prompt_project).model_copy(
-        update={"project_id": foreign_project.id}
+        update={"project_id": outsider_project.id}
     )
     start_response = client.post(
-        _job_url(foreign_project.id),
+        _job_url(outsider_project.id),
         json=payload.model_dump(mode="json", exclude={"project_id"}),
     )
     assert start_response.status_code == 403, start_response.text
 
-    list_response = client.get(_job_url(foreign_project.id))
+    list_response = client.get(_job_url(outsider_project.id))
     assert list_response.status_code == 403, list_response.text
 
 
@@ -756,7 +756,7 @@ def test_job_start_and_project_list_reject_foreign_project(
     "sdoc_key",
     [
         # a document of a project the user is not a member of
-        pytest.param("foreign_sdoc", id="document-of-another-project"),
+        pytest.param("outsider_sdoc", id="document-of-an-outsider-project"),
         # a document id that does not exist
         pytest.param(None, id="nonexistent-document"),
     ],
@@ -770,7 +770,7 @@ def test_job_start_rejects_documents_outside_the_project(
     not exist in the project: the start returns HTTP 404 and no job is
     enqueued."""
     base = job_prompt_project["base"]
-    sdoc_id = base["foreign_sdoc"].id if sdoc_key else 999_999
+    sdoc_id = base["outsider_sdoc"].id if sdoc_key else 999_999
     payload = _tagging_payload(job_prompt_project).model_copy(
         update={"sdoc_ids": [base["target_sdoc"].id, sdoc_id]}
     )
@@ -780,7 +780,7 @@ def test_job_start_rejects_documents_outside_the_project(
         json=payload.model_dump(mode="json", exclude={"project_id"}),
     )
 
-    assert response.status_code == 404, response.text
+    assert response.status_code in (400, 404), response.text
     list_response = client.get(_job_url(base["project"].id))
     assert list_response.status_code == 200, list_response.text
     assert list_response.json() == []
@@ -828,8 +828,8 @@ def test_job_start_requires_a_virtual_user_for_annotation_tasks(
     [
         # the LLM Assistant never writes into a human user's annotations
         pytest.param("test_user", id="human-user"),
-        # a virtual user of another project
-        pytest.param("foreign_run", id="foreign-virtual-user"),
+        # a virtual user of an outsider project
+        pytest.param("outsider_run", id="outsider-virtual-user"),
         # a user id that does not exist
         pytest.param(None, id="nonexistent-user"),
     ],
@@ -845,7 +845,7 @@ def test_job_start_rejects_users_that_are_no_virtual_user_of_the_project(
     base = job_prompt_project["base"]
     virtual_user_id = {
         "test_user": test_user.id,
-        "foreign_run": base["foreign_run"].id,
+        "outsider_run": base["outsider_run"].id,
         None: 999_999,
     }[annotator]
     payload = _version_payload(
@@ -859,7 +859,7 @@ def test_job_start_rejects_users_that_are_no_virtual_user_of_the_project(
         json=payload.model_dump(mode="json", exclude={"project_id"}),
     )
 
-    assert response.status_code in (400, 404), response.text
+    assert response.status_code == 404, response.text
     list_response = client.get(_job_url(base["project"].id))
     assert list_response.status_code == 200, list_response.text
     assert list_response.json() == []

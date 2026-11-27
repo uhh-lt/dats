@@ -43,7 +43,7 @@ class PipelineSettings(BaseModel):
 
 
 # Properties shared across all DTOs
-class AspectBase(BaseModel):
+class AspectBaseDTO(BaseModel):
     name: str = Field(description="Name of the aspect")
     doc_embedding_prompt: str = Field(description="Prompt for document embedding")
     doc_modification_prompt: str | None = Field(
@@ -75,7 +75,7 @@ class AspectBase(BaseModel):
 
 
 # Properties for creation
-class AspectCreate(AspectBase):
+class AspectCreate(AspectBaseDTO):
     pass
 
 
@@ -98,7 +98,7 @@ class AspectUpdateIntern(AspectUpdate):
 
 
 # Properties for reading (as in ORM)
-class AspectRead(AspectBase):
+class AspectRead(AspectBaseDTO):
     id: int = Field(description="ID of the aspect")
     project_id: int = Field(description="ID of the project this aspect belongs to")
     most_recent_job_id: str | None = Field(

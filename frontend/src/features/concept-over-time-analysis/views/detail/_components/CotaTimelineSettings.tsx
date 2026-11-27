@@ -1,6 +1,6 @@
 import { ProjectMetadataHooks } from "@core/project-metadata";
 import { SdocsWithDateCounter } from "@core/sdoc-metadata";
-import { COTARead } from "@models/COTARead";
+import { ConceptOverTimeAnalysisRead } from "@models/ConceptOverTimeAnalysisRead";
 import { DateGroupBy } from "@models/DateGroupBy";
 import { DocType } from "@models/DocType";
 import { MetaType } from "@models/MetaType";
@@ -14,7 +14,7 @@ import { ChangeEvent, FocusEvent } from "react";
 import { CotaHooks } from "../../../api/cotaHooks";
 
 interface CotaSettingsProps {
-  cota: COTARead;
+  cota: ConceptOverTimeAnalysisRead;
 }
 
 export function CotaTimelineSettings({ cota }: CotaSettingsProps) {

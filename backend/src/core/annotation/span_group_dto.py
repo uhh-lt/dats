@@ -46,9 +46,3 @@ class SpanGroupWithAnnotationsRead(SpanGroupRead):
     span_annotations: list[SpanAnnotationRead] = Field(
         description="Annotations of the SpanGroup"
     )
-
-
-# To link a SpanAnnotation with a SpanGroup
-class SpanAnnotationSpanGroupLink(BaseModel):
-    span_annotation_id: int = Field(description="ID of the SpanAnnotation")
-    span_group_id: int = Field(description="ID of the SpanGroup")

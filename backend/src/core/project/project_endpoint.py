@@ -28,7 +28,7 @@ router.include_router(project)
     response_model=ProjectRead,
     summary="Creates a new Project",
 )
-def create_project(
+def create(
     *,
     db: DBSession,
     proj: ProjectCreate,
@@ -50,7 +50,7 @@ def create_project(
     response_model=ProjectRead,
     summary="Returns the Project with the given ID if it exists",
 )
-def get_project(*, db: DBSession, project_id: int) -> ProjectRead:
+def get_by_id(*, db: DBSession, project_id: int) -> ProjectRead:
     db_obj = crud_project.read(db=db, id=project_id)
     return ProjectRead.model_validate(db_obj)
 
@@ -63,7 +63,7 @@ def get_project(*, db: DBSession, project_id: int) -> ProjectRead:
     response_model=ProjectRead,
     summary="Updates the Project with the given ID.",
 )
-def update_project(
+def update_by_id(
     *,
     db: DBSession,
     project_id: int,
@@ -86,7 +86,7 @@ def update_project(
     response_model=ProjectRead,
     summary="Removes the Project with the given ID.",
 )
-def delete_project(
+def delete_by_id(
     *,
     db: DBSession,
     project_id: int,

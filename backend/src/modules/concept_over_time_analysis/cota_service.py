@@ -8,15 +8,15 @@ from core.metadata.project_metadata_crud import crud_project_meta
 from core.metadata.project_metadata_dto import ProjectMetadataRead
 from modules.concept_over_time_analysis.cota_crud import crud_cota
 from modules.concept_over_time_analysis.cota_dto import (
-    COTACreateIntern,
-    COTARead,
+    ConceptOverTimeAnalysisCreateIntern,
+    ConceptOverTimeAnalysisRead,
+    ConceptOverTimeAnalysisUpdate,
+    ConceptOverTimeAnalysisUpdateIntern,
     COTARefinementHyperparameters,
     COTARefinementJobInput,
     COTASentence,
     COTASentenceID,
     COTATimelineSettings,
-    COTAUpdate,
-    COTAUpdateIntern,
 )
 from modules.concept_over_time_analysis.cota_exceptions import (
     COTASentenceNotFoundError,
@@ -30,8 +30,12 @@ class COTAService(metaclass=SingletonMeta):
         return super(COTAService, cls).__new__(cls)
 
     def create(
-        self, *, db: Session, project_id: int, cota_create: COTACreateIntern
-    ) -> COTARead:
+        self,
+        *,
+        db: Session,
+        project_id: int,
+        cota_create: ConceptOverTimeAnalysisCreateIntern,
+    ) -> ConceptOverTimeAnalysisRead:
         db_obj = crud_cota.create(db=db, project_id=project_id, create_dto=cota_create)
 
         # initialize the date metadata if possible
@@ -49,14 +53,14 @@ class COTAService(metaclass=SingletonMeta):
                 db=db,
                 project_id=project_id,
                 cota_id=db_obj.id,
-                cota_update=COTAUpdate(
+                cota_update=ConceptOverTimeAnalysisUpdate(
                     timeline_settings=COTATimelineSettings(
                         date_metadata_id=project_metadata[0].id
                     )
                 ),
             )
 
-        return COTARead.model_validate(db_obj)
+        return ConceptOverTimeAnalysisRead.model_validate(db_obj)
 
     def update(
         self,
@@ -64,8 +68,8 @@ class COTAService(metaclass=SingletonMeta):
         db: Session,
         project_id: int,
         cota_id: int,
-        cota_update: COTAUpdate,
-    ) -> COTARead:
+        cota_update: ConceptOverTimeAnalysisUpdate,
+    ) -> ConceptOverTimeAnalysisRead:
 
         update_data = cota_update.model_dump(
             exclude={
@@ -97,7 +101,7 @@ class COTAService(metaclass=SingletonMeta):
             )
 
         # build the update DTO only now: it rejects being created without any field
-        update_dto_as_in_db = COTAUpdateIntern(**update_data)
+        update_dto_as_in_db = ConceptOverTimeAnalysisUpdateIntern(**update_data)
 
         # update the cota in db
         db_obj = crud_cota.update(
@@ -105,7 +109,7 @@ class COTAService(metaclass=SingletonMeta):
         )
 
         # return the results
-        return COTARead.model_validate(db_obj)
+        return ConceptOverTimeAnalysisRead.model_validate(db_obj)
 
     def reset(
         self,
@@ -113,19 +117,19 @@ class COTAService(metaclass=SingletonMeta):
         db: Session,
         project_id: int,
         cota_id: int,
-    ) -> COTARead:
+    ) -> ConceptOverTimeAnalysisRead:
         # reset the search space & refinement job
         db_obj = crud_cota.update(
             db=db,
             project_id=project_id,
             id=cota_id,
-            update_dto=COTAUpdateIntern(
+            update_dto=ConceptOverTimeAnalysisUpdateIntern(
                 search_space=[],
                 last_refinement_job_id=None,
             ),
         )
         # return the results
-        return COTARead.model_validate(db_obj)
+        return ConceptOverTimeAnalysisRead.model_validate(db_obj)
 
     def annotate_sentences(
         self,
@@ -135,9 +139,9 @@ class COTAService(metaclass=SingletonMeta):
         cota_id: int,
         cota_sentence_ids: list[COTASentenceID],
         concept_id: str | None = None,
-    ) -> COTARead:  # noqa: F821
+    ) -> ConceptOverTimeAnalysisRead:  # noqa: F821
         db_obj = crud_cota.read(db=db, project_id=project_id, id=cota_id)
-        cota = COTARead.model_validate(db_obj)
+        cota = ConceptOverTimeAnalysisRead.model_validate(db_obj)
 
         # create map
         cota_sentence_id2_cota_sentence: dict[str, COTASentence] = dict()
@@ -162,13 +166,13 @@ class COTAService(metaclass=SingletonMeta):
             db=db,
             project_id=project_id,
             id=cota_id,
-            update_dto=COTAUpdateIntern(
+            update_dto=ConceptOverTimeAnalysisUpdateIntern(
                 search_space=search_space,
             ),
         )
 
         # return the results
-        return COTARead.model_validate(db_obj)
+        return ConceptOverTimeAnalysisRead.model_validate(db_obj)
 
     def remove_sentences(
         self,
@@ -177,9 +181,9 @@ class COTAService(metaclass=SingletonMeta):
         project_id: int,
         cota_id: int,
         cota_sentence_ids: list[COTASentenceID],
-    ) -> COTARead:
+    ) -> ConceptOverTimeAnalysisRead:
         db_obj = crud_cota.read(db=db, project_id=project_id, id=cota_id)
-        cota = COTARead.model_validate(db_obj)
+        cota = ConceptOverTimeAnalysisRead.model_validate(db_obj)
 
         # create map
         cota_sentence_id2_cota_sentence: dict[str, COTASentence] = dict()
@@ -204,13 +208,13 @@ class COTAService(metaclass=SingletonMeta):
             db=db,
             project_id=project_id,
             id=cota_id,
-            update_dto=COTAUpdateIntern(
+            update_dto=ConceptOverTimeAnalysisUpdateIntern(
                 search_space=search_space,
             ),
         )
 
         # return the results
-        return COTARead.model_validate(db_obj)
+        return ConceptOverTimeAnalysisRead.model_validate(db_obj)
 
     def start_refinement_job(
         self,
@@ -219,7 +223,7 @@ class COTAService(metaclass=SingletonMeta):
         project_id: int,
         cota_id: int,
         hyperparams: COTARefinementHyperparameters,
-    ) -> COTARead:
+    ) -> ConceptOverTimeAnalysisRead:
         # make sure the cota exists in the project
         crud_cota.read(db=db, project_id=project_id, id=cota_id)
 
@@ -236,8 +240,8 @@ class COTAService(metaclass=SingletonMeta):
             db=db,
             project_id=project_id,
             id=cota_id,
-            update_dto=COTAUpdateIntern(
+            update_dto=ConceptOverTimeAnalysisUpdateIntern(
                 last_refinement_job_id=job.get_id(),
             ),
         )
-        return COTARead.model_validate(db_obj)
+        return ConceptOverTimeAnalysisRead.model_validate(db_obj)

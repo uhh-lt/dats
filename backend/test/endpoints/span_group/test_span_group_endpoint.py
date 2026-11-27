@@ -28,12 +28,12 @@ def _group_names(client: TestClient, project_id: int, user_id: int) -> list[str]
 
 
 def test_create_span_group_in_a_document_without_annotation_document(
-    client: TestClient, two_tenants: TwoTenants, test_user
+    client: TestClient, tenants: TwoTenants, test_user
 ) -> None:
     """A span group of the current user on a document the user has not annotated
     creates the user's annotation document and belongs to the document and the
     user."""
-    own = two_tenants["own"]
+    own = tenants["own"]
     payload = SpanGroupCreate(name="New group", sdoc_id=own["bare_sdoc"].id)
 
     response = client.put(_url(own["project"].id), json=payload.model_dump())
@@ -48,12 +48,12 @@ def test_create_span_group_in_a_document_without_annotation_document(
 
 
 def test_create_span_group_with_a_document_of_another_project_is_a_conflict(
-    client: TestClient, two_tenants: TwoTenants, test_user
+    client: TestClient, tenants: TwoTenants, test_user
 ) -> None:
     """A document of the other project in the body is rejected by the composite
     foreign key (409), also when the user annotated it there; nothing is
     created."""
-    own, foreign = two_tenants["own"], two_tenants["foreign"]
+    own, foreign = tenants["own"], tenants["foreign"]
     payload = SpanGroupCreate(name="Foreign group", sdoc_id=foreign["sdoc"].id)
 
     response = client.put(_url(own["project"].id), json=payload.model_dump())
@@ -65,15 +65,13 @@ def test_create_span_group_with_a_document_of_another_project_is_a_conflict(
 
 
 def test_create_span_group_with_a_document_that_does_not_exist_is_a_conflict(
-    client: TestClient, two_tenants: TwoTenants
+    client: TestClient, tenants: TwoTenants
 ) -> None:
     """A document that exists in no project is rejected by the composite foreign key
     of the user's annotation document (409)."""
     payload = SpanGroupCreate(name="Lost group", sdoc_id=999999)
 
-    response = client.put(
-        _url(two_tenants["own"]["project"].id), json=payload.model_dump()
-    )
+    response = client.put(_url(tenants["own"]["project"].id), json=payload.model_dump())
 
     assert response.status_code == 409, response.text
 
@@ -84,11 +82,11 @@ def test_create_span_group_with_a_document_that_does_not_exist_is_a_conflict(
 
 
 def test_get_span_groups_of_the_user_in_the_document(
-    client: TestClient, two_tenants: TwoTenants, test_user
+    client: TestClient, tenants: TwoTenants, test_user
 ) -> None:
     """The span groups of the user in the document (#903: the document comes from
     the query), each with its span annotations."""
-    own = two_tenants["own"]
+    own = tenants["own"]
 
     response = client.get(
         _url(own["project"].id),
@@ -102,11 +100,11 @@ def test_get_span_groups_of_the_user_in_the_document(
 
 
 def test_get_span_groups_of_another_document_returns_none(
-    client: TestClient, two_tenants: TwoTenants, test_user
+    client: TestClient, tenants: TwoTenants, test_user
 ) -> None:
     """A document of the project without span groups of the user matches no
     group."""
-    own = two_tenants["own"]
+    own = tenants["own"]
 
     response = client.get(
         _url(own["project"].id),
@@ -118,11 +116,11 @@ def test_get_span_groups_of_another_document_returns_none(
 
 
 def test_get_span_groups_filtered_by_a_document_of_another_project_match_nothing(
-    client: TestClient, two_tenants: TwoTenants, test_user
+    client: TestClient, tenants: TwoTenants, test_user
 ) -> None:
     """A document of the other project in the filter matches no group, although
     the user has a span group there."""
-    own, foreign = two_tenants["own"], two_tenants["foreign"]
+    own, foreign = tenants["own"], tenants["foreign"]
 
     response = client.get(
         _url(own["project"].id),
@@ -134,11 +132,11 @@ def test_get_span_groups_filtered_by_a_document_of_another_project_match_nothing
 
 
 def test_get_span_groups_without_document_returns_those_of_the_project(
-    client: TestClient, two_tenants: TwoTenants, test_user
+    client: TestClient, tenants: TwoTenants, test_user
 ) -> None:
     """Without a document filter the user's span groups of the path's project are
     returned, not those of the other project."""
-    own = two_tenants["own"]
+    own = tenants["own"]
 
     assert _group_names(client, own["project"].id, test_user.id) == [
         own["span_group"].name
@@ -146,10 +144,10 @@ def test_get_span_groups_without_document_returns_those_of_the_project(
 
 
 def test_get_span_groups_requires_the_user(
-    client: TestClient, two_tenants: TwoTenants
+    client: TestClient, tenants: TwoTenants
 ) -> None:
     """The user filter is required (422)."""
-    response = client.get(_url(two_tenants["own"]["project"].id))
+    response = client.get(_url(tenants["own"]["project"].id))
 
     assert response.status_code == 422, response.text
 
@@ -159,9 +157,9 @@ def test_get_span_groups_requires_the_user(
 # ===========================================================================
 
 
-def test_get_span_group_by_id(client: TestClient, two_tenants: TwoTenants) -> None:
+def test_get_span_group_by_id(client: TestClient, tenants: TwoTenants) -> None:
     """The span group of the project with its document and user."""
-    own = two_tenants["own"]
+    own = tenants["own"]
 
     response = client.get(f"{_url(own['project'].id)}/{own['span_group'].id}")
 
@@ -176,11 +174,11 @@ def test_get_span_group_by_id(client: TestClient, two_tenants: TwoTenants) -> No
 
 
 def test_get_span_group_of_another_project_is_not_found(
-    client: TestClient, two_tenants: TwoTenants
+    client: TestClient, tenants: TwoTenants
 ) -> None:
     """A span group of the other project does not exist in the path's project
     (404), although the user is a member of both."""
-    own, foreign = two_tenants["own"], two_tenants["foreign"]
+    own, foreign = tenants["own"], tenants["foreign"]
 
     response = client.get(f"{_url(own['project'].id)}/{foreign['span_group'].id}")
 
@@ -194,10 +192,10 @@ def test_get_span_group_of_another_project_is_not_found(
 
 
 def test_get_annotations_of_the_span_group(
-    client: TestClient, two_tenants: TwoTenants
+    client: TestClient, tenants: TwoTenants
 ) -> None:
     """The span annotations the span group contains."""
-    own = two_tenants["own"]
+    own = tenants["own"]
 
     response = client.get(
         f"{_url(own['project'].id)}/{own['span_group'].id}/span-annotations"
@@ -209,11 +207,11 @@ def test_get_annotations_of_the_span_group(
 
 
 def test_get_annotations_of_a_span_group_of_another_project_is_not_found(
-    client: TestClient, two_tenants: TwoTenants
+    client: TestClient, tenants: TwoTenants
 ) -> None:
     """The span group of the other project does not exist in the path's project
     (404)."""
-    own, foreign = two_tenants["own"], two_tenants["foreign"]
+    own, foreign = tenants["own"], tenants["foreign"]
 
     response = client.get(
         f"{_url(own['project'].id)}/{foreign['span_group'].id}/span-annotations"
@@ -227,11 +225,9 @@ def test_get_annotations_of_a_span_group_of_another_project_is_not_found(
 # ===========================================================================
 
 
-def test_update_span_group_renames_it(
-    client: TestClient, two_tenants: TwoTenants
-) -> None:
+def test_update_span_group_renames_it(client: TestClient, tenants: TwoTenants) -> None:
     """The new name is stored and returned."""
-    own = two_tenants["own"]
+    own = tenants["own"]
     url = f"{_url(own['project'].id)}/{own['span_group'].id}"
 
     response = client.patch(url, json=SpanGroupUpdate(name="Renamed").model_dump())
@@ -242,11 +238,11 @@ def test_update_span_group_renames_it(
 
 
 def test_update_span_group_of_another_project_is_not_found(
-    client: TestClient, two_tenants: TwoTenants
+    client: TestClient, tenants: TwoTenants
 ) -> None:
     """The span group of the other project is not found (404) and keeps its
     name."""
-    own, foreign = two_tenants["own"], two_tenants["foreign"]
+    own, foreign = tenants["own"], tenants["foreign"]
 
     response = client.patch(
         f"{_url(own['project'].id)}/{foreign['span_group'].id}",
@@ -264,11 +260,11 @@ def test_update_span_group_of_another_project_is_not_found(
 
 
 def test_delete_span_group_keeps_its_span_annotations(
-    client: TestClient, two_tenants: TwoTenants
+    client: TestClient, tenants: TwoTenants
 ) -> None:
     """The span group is returned and gone; its span annotation stays without
     group."""
-    own = two_tenants["own"]
+    own = tenants["own"]
     project_id = own["project"].id
 
     response = client.delete(f"{_url(project_id)}/{own['span_group'].id}")
@@ -283,10 +279,10 @@ def test_delete_span_group_keeps_its_span_annotations(
 
 
 def test_delete_span_group_of_another_project_is_not_found(
-    client: TestClient, two_tenants: TwoTenants
+    client: TestClient, tenants: TwoTenants
 ) -> None:
     """The span group of the other project is not found (404) and stays."""
-    own, foreign = two_tenants["own"], two_tenants["foreign"]
+    own, foreign = tenants["own"], tenants["foreign"]
 
     response = client.delete(f"{_url(own['project'].id)}/{foreign['span_group'].id}")
 

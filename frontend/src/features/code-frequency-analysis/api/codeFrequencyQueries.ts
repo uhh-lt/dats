@@ -20,7 +20,7 @@ export const codeFrequencyQueries = {
     queryOptions({
       queryKey: [...codeFrequencyQueries.frequenciesScope(projectId), userIds, codeIds, docTypes] as const,
       queryFn: () =>
-        CodeFrequencyService.codeFrequencies({
+        CodeFrequencyService.computeCodeFrequencies({
           projectId,
           requestBody: { user_ids: userIds, code_ids: codeIds, doctypes: docTypes },
         }),
@@ -45,7 +45,7 @@ export const codeFrequencyQueries = {
       queryFn: !codeId
         ? skipToken
         : () =>
-            CodeFrequencyService.codeOccurrences({
+            CodeFrequencyService.computeCodeOccurrences({
               projectId,
               codeId,
               requestBody: { user_ids: userIds, doctypes: docTypes },

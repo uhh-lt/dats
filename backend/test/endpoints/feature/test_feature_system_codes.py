@@ -43,9 +43,7 @@ def _codes(db: Session, project_id: int) -> dict[str, CodeORM]:
         name: code
         for name in ("NAMED_ENTITY", "PERSON")
         if (
-            code := crud_code.read_by_name_and_project(
-                db=db, code_name=name, project_id=project_id
-            )
+            code := crud_code.read_by_name(db=db, code_name=name, project_id=project_id)
         )
         is not None
     }
@@ -179,7 +177,7 @@ def test_import_keeps_a_user_tree_whose_names_are_declared_below_its_user_parent
     _round_trip(db_session, p["user_animals"], p["target"])
 
     for name in ("ANIMAL", "DOG"):
-        code = crud_code.read_by_name_and_project(
+        code = crud_code.read_by_name(
             db=db_session, code_name=name, project_id=p["target"].id
         )
         assert code is not None, name
@@ -195,7 +193,7 @@ def test_import_keeps_a_top_level_user_code_named_like_a_system_code(
 
     _round_trip(db_session, p["user_named_entity"], p["target"])
 
-    code = crud_code.read_by_name_and_project(
+    code = crud_code.read_by_name(
         db=db_session, code_name="NAMED_ENTITY", project_id=p["target"].id
     )
     assert code is not None
@@ -229,9 +227,7 @@ def test_import_of_entity_spans_keeps_the_annotations_on_one_set_of_system_codes
 
     db_session.expire_all()
     for name in ("NAMED_ENTITY", "PERSON"):
-        code = crud_code.read_by_name_and_project(
-            db_session, code_name=name, project_id=target.id
-        )
+        code = crud_code.read_by_name(db_session, code_name=name, project_id=target.id)
         assert code is not None and code.is_system
     person = _codes(db_session, target.id)["PERSON"]
     assert person.parent_id == _codes(db_session, target.id)["NAMED_ENTITY"].id

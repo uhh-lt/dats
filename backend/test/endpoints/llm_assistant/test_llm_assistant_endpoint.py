@@ -167,14 +167,14 @@ def test_count_existing_assistant_annotations_rejects_a_non_member(
     """Annotation counts must not reveal data of a project the user is no member
     of (HTTP 403)."""
     response = client.post(
-        _count_url(llm_assistant_project["foreign_project"].id),
+        _count_url(llm_assistant_project["outsider_project"].id),
         params={
             "task_type": TaskType.ANNOTATION.value,
-            "virtual_user_id": llm_assistant_project["foreign_run"].id,
+            "virtual_user_id": llm_assistant_project["outsider_run"].id,
         },
         json={
-            "sdoc_ids": [llm_assistant_project["foreign_sdoc"].id],
-            "code_ids": [llm_assistant_project["foreign_code"].id],
+            "sdoc_ids": [llm_assistant_project["outsider_sdoc"].id],
+            "code_ids": [llm_assistant_project["outsider_code"].id],
         },
     )
     assert response.status_code == 403, response.text
@@ -183,24 +183,26 @@ def test_count_existing_assistant_annotations_rejects_a_non_member(
 @pytest.mark.parametrize(
     "annotator_key,sdoc_key,code_key",
     [
-        # The virtual user, document and code of the other project: its span
+        # The virtual user, document and code of the outsider project: its span
         # annotation "Eve" is not counted in the path's project.
-        pytest.param("foreign_run", "foreign_sdoc", "foreign_code", id="all-foreign"),
-        # The virtual user of the other project on the project's own target.
-        pytest.param("foreign_run", "target_sdoc", "person_code", id="foreign-user"),
-        # The project's own virtual user on a document of the other project.
-        pytest.param("run_a", "foreign_sdoc", "person_code", id="foreign-document"),
+        pytest.param(
+            "outsider_run", "outsider_sdoc", "outsider_code", id="all-outsider"
+        ),
+        # The virtual user of the outsider project on the project's own target.
+        pytest.param("outsider_run", "target_sdoc", "person_code", id="outsider-user"),
+        # The project's own virtual user on a document of the outsider project.
+        pytest.param("run_a", "outsider_sdoc", "person_code", id="outsider-document"),
     ],
 )
-def test_count_existing_assistant_annotations_of_another_project_counts_zero(
+def test_count_existing_assistant_annotations_of_an_outsider_project_counts_zero(
     client: TestClient,
     llm_assistant_project: LLMAssistantProject,
     annotator_key: str,
     sdoc_key: str,
     code_key: str,
 ) -> None:
-    """Ids of another project match nothing in the path's project: the requested
-    code is counted with 0."""
+    """Ids of an outsider project match nothing in the path's project: the
+    requested code is counted with 0."""
     code = llm_assistant_project[code_key]
     response = client.post(
         _count_url(llm_assistant_project["project"].id),

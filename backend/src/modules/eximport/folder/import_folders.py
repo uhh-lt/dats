@@ -155,7 +155,7 @@ class FolderImporter:
         )
 
         # Check if folder already exists
-        existing_folder = crud_folder.read_by_name_and_project(
+        existing_folder = crud_folder.read_by_name(
             db=self.db, folder_name=folder.folder_name, project_id=self.project_id
         )
 

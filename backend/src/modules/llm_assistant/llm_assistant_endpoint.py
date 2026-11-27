@@ -3,7 +3,7 @@ from common.project_router import project_router
 from core.prompt.prompt_enum import TaskType
 from modules.llm_assistant.llm_assistant_service import LLMAssistantService
 
-router = project_router("/llm-assistant", tags=["llm_assistant"])
+router = project_router("/llm-assistant", tags=["llmAssistant"])
 
 llmas: LLMAssistantService = LLMAssistantService()
 

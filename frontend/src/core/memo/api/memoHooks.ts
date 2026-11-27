@@ -1,6 +1,5 @@
 import { queryClient } from "@api/queryClient";
 import { MemoService } from "@api/services/MemoService";
-import { AttachedObjectType } from "@models/AttachedObjectType";
 import { MemoRead } from "@models/MemoRead";
 import { useAppSelector } from "@store/storeHooks";
 import { useMutation, useQuery } from "@tanstack/react-query";
@@ -16,7 +15,7 @@ const useGetMemo = (memoId: number | null | undefined) => {
 const useCreateMemo = () =>
   useMutation({
     mutationKey: [...memoQueries.all(), "createMemo"],
-    mutationFn: MemoService.createMemo,
+    mutationFn: MemoService.create,
     meta: {
       datsEvent: "MEMO_CREATED",
       successMessage: (memo: MemoRead) => `Created memo "${memo.title}"`,
@@ -36,7 +35,7 @@ const useUpdateMemo = () =>
 const useUpdateMemos = () =>
   useMutation({
     mutationKey: [...memoQueries.all(), "updateMemos"],
-    mutationFn: MemoService.updateMemosBulk,
+    mutationFn: MemoService.updateBulk,
     meta: {
       datsEvent: "MEMO_UPDATED_BATCH",
       successMessage: (memos: MemoRead[]) => `Updated ${memos.length} memo(s)`,
@@ -57,7 +56,7 @@ const useDeleteMemos = () =>
   useMutation({
     mutationKey: [...memoQueries.all(), "deleteMemos"],
     mutationFn: ({ projectId, memoIds }: { projectId: number; memoIds: number[] }) =>
-      MemoService.deleteMemosBulk({ projectId, requestBody: memoIds }),
+      MemoService.deleteBulk({ projectId, requestBody: memoIds }),
     meta: {
       datsEvent: "MEMO_DELETED_BATCH",
       successMessage: (memos: MemoRead[]) => `Deleted ${memos.length} memo(s)`,
@@ -67,22 +66,11 @@ const useDeleteMemos = () =>
 const useRecordRecentMemo = () =>
   useMutation({
     mutationKey: [...memoQueries.all(), "recordRecentMemo"],
-    mutationFn: MemoService.recordRecentMemo,
+    mutationFn: MemoService.markRecent,
     // The recent memos are private to the user, so there is no DATS event for this: refresh them here.
     onSuccess: (_data, { projectId }) => {
       queryClient.invalidateQueries({ queryKey: memoQueries.recent(projectId).queryKey });
     },
-  });
-
-const useGetObjectMemos = (
-  projectId: number,
-  attachedObjType: AttachedObjectType,
-  attachedObjId: number | null | undefined,
-  options?: { enabled?: boolean },
-) =>
-  useQuery({
-    ...memoQueries.byAttachedObject(projectId, attachedObjType, attachedObjId),
-    enabled: options?.enabled ?? true,
   });
 
 export const MemoHooks = {
@@ -93,5 +81,4 @@ export const MemoHooks = {
   useDeleteMemo,
   useDeleteMemos,
   useRecordRecentMemo,
-  useGetObjectMemos,
 };

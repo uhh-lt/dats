@@ -466,32 +466,75 @@ def test_count_sdocs_counts_the_documents_of_the_project(
     assert finished.json() == 1
 
 
-# ===========================================================================
-# BY FILENAME (/projects/{project_id}/source-documents/by-filename) TESTS
-# ===========================================================================
-
-
-def test_resolve_filename_returns_the_id_of_the_document(
-    client: TestClient, project_with_sdoc
+def test_count_sdocs_with_date_metadata_counts_the_documents_with_a_date(
+    client: TestClient, project_with_date_metadata
 ):
-    sdoc = project_with_sdoc["source_document"]
+    """The text document has a date for the text key "published", the image
+    document has none: one of the two documents of the project is counted."""
+    project_id = project_with_date_metadata["project"].id
+    metadata_id = project_with_date_metadata["date_metadata"].id
 
     response = client.get(
-        _url(sdoc.project_id, "/by-filename"), params={"filename": sdoc.filename}
+        _url(project_id, "/count"), params={"date_metadata_id": metadata_id}
     )
 
     assert response.status_code == 200, response.text
-    assert response.json() == sdoc.id
+    assert response.json() == 1
 
 
-def test_resolve_filename_matches_no_document_of_another_project(
-    client: TestClient, test_project, foreign_project_with_sdoc
+def test_count_sdocs_with_date_metadata_of_another_project_matches_nothing(
+    client: TestClient, project_with_date_metadata, foreign_date_metadata
 ):
-    """The filename of a document of another project matches nothing (404)."""
-    foreign = foreign_project_with_sdoc["source_document"]
+    """The date key of another project of the user matches no document of the
+    path's project, although its own document has a date."""
+    project_id = project_with_date_metadata["project"].id
 
     response = client.get(
-        _url(test_project.id, "/by-filename"), params={"filename": foreign.filename}
+        _url(project_id, "/count"),
+        params={"date_metadata_id": foreign_date_metadata.id},
     )
 
-    assert response.status_code == 404, response.text
+    assert response.status_code == 200, response.text
+    assert response.json() == 0
+
+
+# ===========================================================================
+# GET BY FILENAME (/projects/{project_id}/source-documents?filename=) TESTS
+# ===========================================================================
+
+
+def test_get_by_filename_returns_the_document(client: TestClient, project_with_sdoc):
+    """The filename names one document: a list of one."""
+    sdoc = project_with_sdoc["source_document"]
+
+    response = client.get(_url(sdoc.project_id), params={"filename": sdoc.filename})
+
+    assert response.status_code == 200, response.text
+    assert [SourceDocumentRead.model_validate(d).id for d in response.json()] == [
+        sdoc.id
+    ]
+
+
+def test_get_by_filename_of_an_unknown_filename_is_empty(
+    client: TestClient, project_with_sdoc
+):
+    """A filename no document of the project has gives an empty list, no 404."""
+    project = project_with_sdoc["project"]
+
+    response = client.get(_url(project.id), params={"filename": "missing.txt"})
+
+    assert response.status_code == 200, response.text
+    assert response.json() == []
+
+
+def test_get_by_filename_matches_no_document_of_another_project(
+    client: TestClient, test_project, foreign_project_with_sdoc
+):
+    """The filename of a document of another project matches nothing: an empty
+    list."""
+    foreign = foreign_project_with_sdoc["source_document"]
+
+    response = client.get(_url(test_project.id), params={"filename": foreign.filename})
+
+    assert response.status_code == 200, response.text
+    assert response.json() == []

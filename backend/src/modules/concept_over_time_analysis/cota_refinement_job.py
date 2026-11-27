@@ -2,10 +2,10 @@ from fastapi.encoders import jsonable_encoder
 
 from modules.concept_over_time_analysis.cota_crud import crud_cota
 from modules.concept_over_time_analysis.cota_dto import (
-    COTARead,
+    ConceptOverTimeAnalysisRead,
+    ConceptOverTimeAnalysisUpdateIntern,
     COTARefinementJobInput,
     COTARefinementJobRead,
-    COTAUpdateIntern,
 )
 from modules.concept_over_time_analysis.refinement_steps.finetune_apply_compute import (
     finetune_apply_compute,
@@ -49,7 +49,7 @@ def cota_refinement(payload: COTARefinementJobInput, job: Job) -> None:
         db_obj = crud_cota.read(
             db=db, project_id=payload.project_id, id=payload.cota_id
         )
-        cota = COTARead.model_validate(db_obj)
+        cota = ConceptOverTimeAnalysisRead.model_validate(db_obj)
 
         # Make sure there are at least two concepts
         if len(cota.concepts) < 2:
@@ -69,5 +69,7 @@ def cota_refinement(payload: COTARefinementJobInput, job: Job) -> None:
             db=db,
             project_id=payload.project_id,
             id=cota.id,
-            update_dto=COTAUpdateIntern(search_space=jsonable_encoder(search_space)),
+            update_dto=ConceptOverTimeAnalysisUpdateIntern(
+                search_space=jsonable_encoder(search_space)
+            ),
         )

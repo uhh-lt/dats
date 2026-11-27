@@ -236,9 +236,7 @@ def test_project_import_restores_experiments_and_runs(
         for filename in ("doc_a.txt", "doc_b.txt")
     }
     claim, evidence = [
-        crud_code.read_by_name_and_project(
-            db=db_session, code_name=name, project_id=target_id
-        )
+        crud_code.read_by_name(db=db_session, code_name=name, project_id=target_id)
         for name in ("Claim", "Evidence")
     ]
     assert claim is not None and evidence is not None

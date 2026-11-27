@@ -233,12 +233,12 @@ def test_get_by_id_if_id_not_exists(
 
 
 def test_get_by_id_of_another_project_is_not_found(
-    client: TestClient, two_tenants: TwoTenants
+    client: TestClient, tenants: TwoTenants
 ) -> None:
     """The span annotation of another project does not exist in the path's project,
     also when the user is a member of both."""
-    own_project = two_tenants["own"]["project"]
-    foreign_span = two_tenants["foreign"]["span"]
+    own_project = tenants["own"]["project"]
+    foreign_span = tenants["foreign"]["span"]
 
     resp = client.get(f"{_url(own_project.id)}/{foreign_span.id}")
 
@@ -748,23 +748,21 @@ def test_add_to_group_not_found(client: TestClient, test_project: ProjectORM):
 
 
 def test_add_to_group_rejects_a_span_group_of_another_project(
-    client: TestClient, two_tenants: TwoTenants
+    client: TestClient, tenants: TwoTenants
 ):
     """A span annotation cannot join the span group of another project, also when
     the user is a member of both: the group does not exist in the path's project
     (404) and the span annotation keeps its groups."""
-    project = two_tenants["own"]["project"]
-    span = two_tenants["own"]["span"]
-    foreign_group = two_tenants["foreign"]["span_group"]
+    project = tenants["own"]["project"]
+    span = tenants["own"]["span"]
+    foreign_group = tenants["foreign"]["span_group"]
 
     resp = client.put(f"{_url(project.id)}/{span.id}/span-groups/{foreign_group.id}")
 
     assert resp.status_code == 404, resp.text
     resp = client.get(f"{_url(project.id)}/{span.id}/span-groups")
     assert resp.status_code == 200, resp.text
-    assert [group["id"] for group in resp.json()] == [
-        two_tenants["own"]["span_group"].id
-    ]
+    assert [group["id"] for group in resp.json()] == [tenants["own"]["span_group"].id]
 
 
 def test_remove_from_group_ok(
@@ -796,23 +794,21 @@ def test_remove_from_group_ok(
 
 
 def test_remove_from_group_rejects_a_span_group_of_another_project(
-    client: TestClient, two_tenants: TwoTenants
+    client: TestClient, tenants: TwoTenants
 ):
     """Removing a span annotation from the span group of another project fails,
     because the group does not exist in the path's project (404); the span
     annotation keeps its groups."""
-    project = two_tenants["own"]["project"]
-    span = two_tenants["own"]["span"]
-    foreign_group = two_tenants["foreign"]["span_group"]
+    project = tenants["own"]["project"]
+    span = tenants["own"]["span"]
+    foreign_group = tenants["foreign"]["span_group"]
 
     resp = client.delete(f"{_url(project.id)}/{span.id}/span-groups/{foreign_group.id}")
 
     assert resp.status_code == 404, resp.text
     resp = client.get(f"{_url(project.id)}/{span.id}/span-groups")
     assert resp.status_code == 200, resp.text
-    assert [group["id"] for group in resp.json()] == [
-        two_tenants["own"]["span_group"].id
-    ]
+    assert [group["id"] for group in resp.json()] == [tenants["own"]["span_group"].id]
 
 
 def test_remove_from_group_not_exists(client: TestClient, test_project: ProjectORM):
@@ -1098,7 +1094,7 @@ def test_create_copy_of_source_of_another_document_is_rejected(
         # the source was deleted after the comparison was opened
         pytest.param(None, id="nonexistent"),
         # the source belongs to another project of the same user
-        pytest.param("other_project_source_id", id="other-project"),
+        pytest.param("other_project_source_id", id="another-project"),
     ],
 )
 def test_create_copy_of_source_not_in_project_is_not_found(
@@ -1206,11 +1202,11 @@ def test_create_span_annotation_as_current_user(
     [
         # another user (not virtual)
         pytest.param("other_user", id="other-user"),
-        # a virtual user of another project
-        pytest.param("other_run", id="foreign-virtual-user"),
+        # a virtual user of an outsider project
+        pytest.param("other_run", id="outsider-virtual-user"),
     ],
 )
-def test_create_span_annotation_as_other_user_or_foreign_virtual_user_is_forbidden(
+def test_create_span_annotation_as_other_user_or_outsider_virtual_user_is_forbidden(
     client: TestClient,
     virtual_user_project: VirtualUserProject,
     user_key: str,

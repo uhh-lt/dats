@@ -92,7 +92,7 @@ export const ProjectVirtualUsers = memo(({ project }: ProjectVirtualUsersProps) 
       if (trimmed.length === 0 || trimmed === virtualUser.first_name) return;
       updateVirtualUserMutation({
         projectId: project.id,
-        userId: virtualUser.id,
+        virtualUserId: virtualUser.id,
         requestBody: { first_name: trimmed },
       });
     },
@@ -106,7 +106,7 @@ export const ProjectVirtualUsers = memo(({ project }: ProjectVirtualUsersProps) 
     (virtualUser: UserRead) => {
       openConfirmationDialog({
         text: `Do you really want to delete the virtual user "${virtualUser.first_name}"? All its annotations are deleted as well. This cannot be undone.`,
-        onAccept: () => deleteVirtualUserMutation({ projectId: project.id, userId: virtualUser.id }),
+        onAccept: () => deleteVirtualUserMutation({ projectId: project.id, virtualUserId: virtualUser.id }),
       });
     },
     [deleteVirtualUserMutation, openConfirmationDialog, project.id],

@@ -44,7 +44,7 @@ export const tagQueries = {
     queryOptions({
       queryKey: [...tagQueries.sdocCountScope(projectId), sdocIds] as const,
       queryFn: async () => {
-        const stringRecord = await TagService.countTags({ projectId, requestBody: { sdoc_ids: sdocIds } });
+        const stringRecord = await TagService.count({ projectId, requestBody: { sdoc_ids: sdocIds } });
         return new Map(Object.entries(stringRecord).map(([key, val]) => [parseInt(key, 10), val]));
       },
     }),

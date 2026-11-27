@@ -4,6 +4,7 @@ what the first one answered, with its own project id. A route that matched a row
 its id alone, or read the rows of all projects, would mix in the rows of the other
 project."""
 
+import json
 from typing import Any, Callable
 
 from fastapi.testclient import TestClient
@@ -33,7 +34,7 @@ ARGUMENTS: dict[str, Callable[[TenantRows], dict[str, Any]]] = {
     "GET /projects/{project_id}/sentence-annotations": lambda rows: {
         "params": {"user_id": rows["adoc"].user_id}
     },
-    "GET /projects/{project_id}/sentence-annotations/by-sentence": lambda rows: {
+    "GET /projects/{project_id}/sentence-annotations/per-sentence": lambda rows: {
         "params": {"user_id": rows["adoc"].user_id, "sdoc_id": rows["sdoc"].id}
     },
     "GET /projects/{project_id}/bbox-annotations": lambda rows: {
@@ -42,13 +43,10 @@ ARGUMENTS: dict[str, Callable[[TenantRows], dict[str, Any]]] = {
     "GET /projects/{project_id}/span-groups": lambda rows: {
         "params": {"user_id": rows["adoc"].user_id}
     },
-    "GET /projects/{project_id}/source-documents/by-filename": lambda rows: {
+    "GET /projects/{project_id}/source-documents": lambda rows: {
         "params": {"filename": rows["sdoc"].filename}
     },
     "GET /projects/{project_id}/source-document-metadata": lambda rows: {
-        "params": {"sdoc_id": rows["sdoc"].id}
-    },
-    "GET /projects/{project_id}/word-frequencies": lambda rows: {
         "params": {"sdoc_id": rows["sdoc"].id}
     },
     "GET /projects/{project_id}/search-views": lambda rows: {
@@ -115,7 +113,7 @@ ARGUMENTS: dict[str, Callable[[TenantRows], dict[str, Any]]] = {
         "params": {"doctype": "text", "page": 0, "page_size": 10},
         "json": [],
     },
-    "POST /projects/{project_id}/agreement/compute": lambda rows: {
+    "POST /projects/{project_id}/agreements": lambda rows: {
         "json": {
             "sdoc_ids": [rows["sdoc"].id],
             "code_ids": [rows["code"].id],
@@ -125,7 +123,7 @@ ARGUMENTS: dict[str, Callable[[TenantRows], dict[str, Any]]] = {
             "scoring": "exact",
         }
     },
-    "POST /projects/{project_id}/agreement/export-counts": lambda rows: {
+    "POST /projects/{project_id}/agreements/export": lambda rows: {
         "json": {
             "sdoc_ids": [rows["sdoc"].id],
             "code_ids": [rows["code"].id],
@@ -135,7 +133,7 @@ ARGUMENTS: dict[str, Callable[[TenantRows], dict[str, Any]]] = {
             "scoring": "constituents",
         }
     },
-    "POST /projects/{project_id}/agreement/segment-texts": lambda rows: {
+    "POST /projects/{project_id}/agreements/segment-texts": lambda rows: {
         "json": [{"sdoc_id": rows["sdoc"].id, "begin": 0, "end": 5}]
     },
     "POST /projects/{project_id}/llm-assistant/count-existing-annotations": (
@@ -147,7 +145,7 @@ ARGUMENTS: dict[str, Callable[[TenantRows], dict[str, Any]]] = {
             "json": {"sdoc_ids": [rows["sdoc"].id], "code_ids": [rows["code"].id]},
         }
     ),
-    "POST /projects/{project_id}/document-sampler/sample-by-tags": lambda rows: {
+    "POST /projects/{project_id}/document-samples": lambda rows: {
         "params": {"n": 10, "frac": 1.0},
         "json": [[rows["tag"].id, rows["child_tag"].id]],
     },
@@ -161,14 +159,14 @@ ARGUMENTS: dict[str, Callable[[TenantRows], dict[str, Any]]] = {
             "merge_children_into_parent": False,
         }
     },
-    "POST /projects/{project_id}/code-frequency/frequencies": lambda rows: {
+    "POST /projects/{project_id}/code-frequencies": lambda rows: {
         "json": {
             "code_ids": [rows["code"].id],
             "user_ids": [rows["adoc"].user_id],
             "doctypes": ["text"],
         }
     },
-    "POST /projects/{project_id}/code-frequency/occurrences": lambda rows: {
+    "POST /projects/{project_id}/code-frequencies/occurrences": lambda rows: {
         "params": {"code_id": rows["code"].id, "return_children": True},
         "json": {"user_ids": [rows["adoc"].user_id], "doctypes": ["text"]},
     },
@@ -186,8 +184,31 @@ ARGUMENTS: dict[str, Callable[[TenantRows], dict[str, Any]]] = {
     "POST /projects/{project_id}/word-frequencies/export": lambda rows: {
         "json": {"filter": _NO_FILTER, "sorts": []}
     },
-    "POST /projects/{project_id}/prompts/examples": lambda rows: {
+    "POST /projects/{project_id}/prompts/build-examples": lambda rows: {
         "json": {"kind": "SPAN", "annotation_ids": [rows["span"].id]}
+    },
+    "POST /projects/{project_id}/keyword-statistics": lambda rows: {
+        "json": [rows["sdoc"].id, rows["bare_sdoc"].id]
+    },
+    "POST /projects/{project_id}/similarity-search/sentences": lambda rows: {
+        "params": {"top_k": 10, "threshold": 0.0},
+        "json": {"query": "text", "filter": _NO_FILTER},
+    },
+    "POST /projects/{project_id}/similarity-search/images": lambda rows: {
+        "params": {"top_k": 10, "threshold": 0.0},
+        "json": {"query": "text", "filter": _NO_FILTER},
+    },
+    "POST /projects/{project_id}/perspectives/aspects/{aspect_id}/visualize": (
+        lambda rows: {
+            "params": {"search_query": ""},
+            "json": {"filter": _NO_FILTER, "sorts": []},
+        }
+    ),
+    "POST /projects/{project_id}/experiments/{experiment_id}/runs/{run_id}/export-log": (
+        lambda rows: {"params": {"export_format": "json"}}
+    ),
+    "POST /projects/{project_id}/search-annotate/auto-annotate": lambda rows: {
+        "params": {"query": "text"}
     },
     "POST /projects/{project_id}/prompts/preview": lambda rows: {
         "json": {
@@ -227,14 +248,19 @@ def _in_project(value: Any, source_id: int, target_id: int) -> Any:
 
 
 def _content(response: Response) -> Any:
-    """The JSON body of the response, or its text if it has none; the text of the
-    file instead of its path for an export (the path holds a new uuid each time)."""
+    """The JSON body of the response, or its text if it has none; the content of
+    the file instead of its path for an export (the path holds a new uuid each
+    time), parsed if it is JSON so that its project ids compare like a body's."""
     try:
         content = response.json()
     except ValueError:
         return response.text
     if isinstance(content, str) and "/exports/" in content:
-        return (FilesystemRepo().root_dir / content).read_text()
+        text = (FilesystemRepo().root_dir / content).read_text()
+        try:
+            return json.loads(text)
+        except ValueError:
+            return text
     return content
 
 
@@ -281,6 +307,24 @@ def _differences(actual: dict[str, Answer], expected: dict[str, Answer]) -> list
         for key in expected
         if actual[key] != expected[key]
     ]
+
+
+def test_every_get_route_with_a_required_query_has_arguments(
+    client: TestClient,
+) -> None:
+    """Every GET route without path ids whose query has a required parameter is in
+    ARGUMENTS, so the twin test compares its answers instead of two errors."""
+    missing = [
+        f"{method} {path}"
+        for method, path, route in _project_routes(client)
+        if method == "GET"
+        and not _path_params(path)
+        and any(
+            param.field_info.is_required() for param in route.dependant.query_params
+        )
+        and f"{method} {path}" not in ARGUMENTS
+    ]
+    assert missing == []
 
 
 def test_every_read_route_answers_the_same_after_a_project_with_the_same_ids_exists(

@@ -87,11 +87,11 @@ def test_enable_creates_the_quotation_codes_disable_keeps_them_and_enable_reuses
     activation = FeatureActivation(settings=SETTINGS).model_dump(mode="json")
     assert _quotation_codes(db_session, plain_project.id) == {}
 
-    enabled = client.post(f"{path}/enable", json=activation)
+    enabled = client.patch(f"{path}/enable", json=activation)
     created = _quotation_codes(db_session, plain_project.id)
-    disabled = client.post(f"{path}/disable")
+    disabled = client.patch(f"{path}/disable")
     kept = _quotation_codes(db_session, plain_project.id)
-    enabled_again = client.post(f"{path}/enable", json=activation)
+    enabled_again = client.patch(f"{path}/enable", json=activation)
 
     for response in (enabled, disabled, enabled_again):
         assert response.status_code == 200, response.text

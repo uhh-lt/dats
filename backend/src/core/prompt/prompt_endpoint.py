@@ -15,7 +15,6 @@ from core.prompt.prompt_dto import (
     PromptTaskInfo,
     PromptUpdate,
     PromptVersionCreate,
-    PromptVersionRead,
 )
 from core.prompt.prompt_enum import (
     OutputFormat,
@@ -79,11 +78,11 @@ def create_version(
 
 
 @router.post(
-    "/examples",
+    "/build-examples",
     response_model=list[PromptExample],
     summary="Turns span or sentence annotations into few-shot examples for a prompt",
 )
-def create_examples(
+def build_examples(
     *,
     db: DBSession,
     project_id: int,
@@ -147,20 +146,6 @@ def get_by_project(
     project_id: int,
 ) -> list[PromptRead]:
     return pts.read_prompts_by_project(db=db, project_id=project_id)
-
-
-@router.get(
-    "/versions/{version_id}",
-    response_model=PromptVersionRead,
-    summary="Returns the prompt version with the given ID",
-)
-def get_version_by_id(
-    *,
-    db: DBSession,
-    project_id: int,
-    version_id: int,
-) -> PromptVersionRead:
-    return pts.read_prompt_version(db=db, project_id=project_id, version_id=version_id)
 
 
 @router.get(

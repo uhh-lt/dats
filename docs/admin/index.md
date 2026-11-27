@@ -44,6 +44,50 @@ Migration `7f1bbe0f69d7_key_every_project_owned_table_by_its_project` gives ever
 
 The same release moves every route of a project's data below `/projects/{project_id}/`, for example `/projects/{project_id}/span-annotations`, without compatibility routes. Deploy the frontend and the backend together and update external API clients; MCP clients discover the new tool names and arguments from the server.
 
+The release also renames or changes these routes. The paths are below `/projects/{project_id}/` unless they start with `/authentication`:
+
+| Old route                                                                     | New route                                                                             |
+| ----------------------------------------------------------------------------- | ------------------------------------------------------------------------------------- |
+| `POST /authentication/refresh_access`                                         | `POST /authentication/refresh-access`                                                 |
+| `PUT /experiments/runs` (body with `experiment_id`)                           | `PUT /experiments/{experiment_id}/runs` (body without `experiment_id`)                |
+| `DELETE /experiments/runs/{run_id}`                                           | `DELETE /experiments/{experiment_id}/runs/{run_id}`                                   |
+| `PATCH /experiments/runs/{run_id}/scores`                                     | `PATCH /experiments/{experiment_id}/runs/{run_id}/refresh-scores`                     |
+| `POST /experiments/runs/{run_id}/export-log`                                  | `POST /experiments/{experiment_id}/runs/{run_id}/export-log`                          |
+| `PATCH /experiments/{experiment_id}/scores`                                   | `PATCH /experiments/{experiment_id}/refresh-scores`                                   |
+| `PATCH /perspectives/clusters/{cluster_id}`                                   | `PATCH /perspectives/aspects/{aspect_id}/clusters/{cluster_id}`                       |
+| `POST /perspectives/aspects/{aspect_id}/accept-labels`, `/revert-labels`      | `PATCH /perspectives/aspects/{aspect_id}/accept-labels`, `/revert-labels`             |
+| `POST /jobs/perspectives?aspect_id=...` (body: the parameters)                | `POST /jobs/perspectives` (body `{"aspect_id": ..., "parameters": {...}}`)            |
+| `GET /prompts/versions/{version_id}`                                          | removed                                                                               |
+| `POST /prompts/examples`                                                      | `POST /prompts/build-examples`                                                        |
+| `POST /features/{feature}/enable`, `/disable`                                 | `PATCH /features/{feature}/enable`, `/disable`                                        |
+| `GET /memos/recent?limit=...`                                                 | `GET /memos?recent=true&limit=...`                                                    |
+| `POST /memos/{memo_id}/recent` (no response body)                             | `PATCH /memos/{memo_id}/mark-recent` (returns the memo)                               |
+| `POST /annotation-scaling/suggest` (body field `reject_cide_id`)              | `POST /annotation-scaling/suggestions` (body field `reject_code_id`)                  |
+| `POST /annotation-scaling/confirm-suggestions`                                | `PUT /annotation-scaling/suggestions/confirm`                                         |
+| `GET /rag/chat-session`                                                       | removed                                                                               |
+| `GET /word-frequencies?sdoc_id=...`                                           | removed                                                                               |
+| `PATCH /concept-over-time-analyses/{cota_id}/annotate`, `/remove`             | `PATCH /concept-over-time-analyses/{cota_id}/annotate-sentences`, `/remove-sentences` |
+| `PATCH /search-views/order`                                                   | `PATCH /search-views/reorder`                                                         |
+| `POST /code-frequency/frequencies`                                            | `POST /code-frequencies`                                                              |
+| `POST /code-frequency/occurrences`                                            | `POST /code-frequencies/occurrences`                                                  |
+| `POST /keyword-statistics/keywords`                                           | `POST /keyword-statistics`                                                            |
+| `POST /document-sampler/sample-by-tags`                                       | `POST /document-samples`                                                              |
+| `POST /agreement/compute`                                                     | `POST /agreements`                                                                    |
+| `POST /agreement/export-counts`                                               | `POST /agreements/export`                                                             |
+| `POST /agreement/segment-texts`                                               | `POST /agreements/segment-texts`                                                      |
+| `POST /simsearch/sentences`, `/simsearch/images`                              | `POST /similarity-search/sentences`, `/similarity-search/images`                      |
+| `GET /source-documents/by-filename?filename=...` (the id, 404 if none)        | `GET /source-documents?filename=...` (a list with zero or one document)               |
+| `GET /sentence-annotations/by-sentence`                                       | `GET /sentence-annotations/per-sentence`                                              |
+| `GET /source-document-metadata/date-count?date_metadata_id=...` (two counts)  | `GET /source-documents/count?date_metadata_id=...` (one count)                        |
+| `PATCH /tags/bulk/source-documents/set`                                       | `PATCH /tags/bulk/source-documents/replace`                                           |
+| `PATCH /tag-recommendations/review` (body field `reviewd_recommendation_ids`) | `PATCH /tag-recommendations/review` (body field `reviewed_recommendation_ids`)        |
+
+An installation whose `objecthandle` table holds handles of users or memos (rows with `user_id` or `memo_id` set) cannot upgrade: these handles belong to no project, so the new `project_id` stays empty and the migration rolls back. Before upgrading, find them with:
+
+```sql
+SELECT id, user_id, memo_id FROM objecthandle WHERE user_id IS NOT NULL OR memo_id IS NOT NULL;
+```
+
 !!! warning "Back up and allow time for the upgrade"
 
     Back up the database before upgrading. The migration rewrites the keys of every project-owned table, so it can take several minutes on a large installation. It rolls back if a row has no parent or references a row of another project. A downgrade restores the dropped handle columns empty.

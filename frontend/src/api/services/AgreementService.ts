@@ -23,13 +23,17 @@ export class AgreementService {
   }): CancelablePromise<AgreementResult> {
     return __request(OpenAPI, {
       method: "POST",
-      url: "/projects/{project_id}/agreement/compute",
+      url: "/projects/{project_id}/agreements",
       path: {
         project_id: projectId,
       },
       body: requestBody,
       mediaType: "application/json",
       errors: {
+        400: `The request breaks a rule of the domain`,
+        403: `The user is no member of the project, or the feature is disabled`,
+        404: `A path id, or an id the route reads, is not in the project`,
+        409: `A body id violates a foreign key, or a value a unique constraint`,
         422: `Validation Error`,
       },
     });
@@ -48,13 +52,17 @@ export class AgreementService {
   }): CancelablePromise<string> {
     return __request(OpenAPI, {
       method: "POST",
-      url: "/projects/{project_id}/agreement/export-counts",
+      url: "/projects/{project_id}/agreements/export",
       path: {
         project_id: projectId,
       },
       body: requestBody,
       mediaType: "application/json",
       errors: {
+        400: `The request breaks a rule of the domain`,
+        403: `The user is no member of the project, or the feature is disabled`,
+        404: `A path id, or an id the route reads, is not in the project`,
+        409: `A body id violates a foreign key, or a value a unique constraint`,
         422: `Validation Error`,
       },
     });
@@ -64,7 +72,7 @@ export class AgreementService {
    * @returns string Successful Response
    * @throws ApiError
    */
-  public static getSegmentTexts({
+  public static computeSegmentTexts({
     projectId,
     requestBody,
   }: {
@@ -73,13 +81,17 @@ export class AgreementService {
   }): CancelablePromise<Array<string>> {
     return __request(OpenAPI, {
       method: "POST",
-      url: "/projects/{project_id}/agreement/segment-texts",
+      url: "/projects/{project_id}/agreements/segment-texts",
       path: {
         project_id: projectId,
       },
       body: requestBody,
       mediaType: "application/json",
       errors: {
+        400: `The request breaks a rule of the domain`,
+        403: `The user is no member of the project, or the feature is disabled`,
+        404: `A path id, or an id the route reads, is not in the project`,
+        409: `A body id violates a foreign key, or a value a unique constraint`,
         422: `Validation Error`,
       },
     });

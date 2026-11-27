@@ -76,11 +76,11 @@ def test_create_tag_in_a_project_of_no_membership_is_forbidden(client: TestClien
 
 
 def test_create_tag_with_a_parent_of_another_project_is_a_conflict(
-    client: TestClient, two_tenants: TwoTenants
+    client: TestClient, tenants: TwoTenants
 ):
     """The parent of a new tag is a body reference: a tag of another project is
     rejected by the composite foreign key (409)."""
-    own, foreign = two_tenants["own"], two_tenants["foreign"]
+    own, foreign = tenants["own"], tenants["foreign"]
     payload = TagCreate(name="New", color="Red", parent_id=foreign["tag"].id)
 
     resp = client.put(_tags_url(own["project"].id), json=payload.model_dump())
@@ -120,11 +120,11 @@ def test_get_tags_by_sdoc(
 
 
 def test_get_tags_by_sdoc_of_another_project_matches_nothing(
-    client: TestClient, two_tenants: TwoTenants
+    client: TestClient, tenants: TwoTenants
 ):
     """A document of another project in the filter matches no tag, while the own
     document returns its tag."""
-    own, foreign = two_tenants["own"], two_tenants["foreign"]
+    own, foreign = tenants["own"], tenants["foreign"]
     url = _tags_url(own["project"].id)
 
     resp = client.get(url, params={"sdoc_id": own["sdoc"].id})
@@ -167,11 +167,11 @@ def test_get_by_id_not_found(client: TestClient, test_project):
 
 
 def test_get_by_id_of_another_project_is_not_found(
-    client: TestClient, two_tenants: TwoTenants
+    client: TestClient, tenants: TwoTenants
 ):
     """A tag of another project does not exist in the project of the path (404),
     also for a member of both projects."""
-    own, foreign = two_tenants["own"], two_tenants["foreign"]
+    own, foreign = tenants["own"], tenants["foreign"]
 
     resp = client.get(f"{_tags_url(own['project'].id)}/{foreign['tag'].id}")
 
@@ -255,11 +255,11 @@ def test_update_tag_not_found(client: TestClient, test_project):
 
 
 def test_update_tag_with_a_parent_of_another_project_is_a_conflict(
-    client: TestClient, two_tenants: TwoTenants
+    client: TestClient, tenants: TwoTenants
 ):
     """A tag cannot get the parent of another project: the composite foreign key
     rejects it (409) and the tag keeps its parent."""
-    own, foreign = two_tenants["own"], two_tenants["foreign"]
+    own, foreign = tenants["own"], tenants["foreign"]
     url = f"{_tags_url(own['project'].id)}/{own['child_tag'].id}"
 
     resp = client.patch(url, json={"parent_id": foreign["tag"].id})
@@ -324,10 +324,10 @@ def test_update_tags_bulk_rejects_a_taken_name_without_changes(
 
 
 def test_update_tags_bulk_rejects_tags_of_another_project(
-    client: TestClient, two_tenants: TwoTenants
+    client: TestClient, tenants: TwoTenants
 ):
     """A tag of another project does not exist in the project of the path (404)."""
-    own, foreign = two_tenants["own"], two_tenants["foreign"]
+    own, foreign = tenants["own"], tenants["foreign"]
 
     response = client.patch(
         f"{_tags_url(own['project'].id)}/bulk",
@@ -397,11 +397,11 @@ def test_link_tags_bulk(
 
 @pytest.mark.parametrize("foreign_field", ["source_document_ids", "tag_ids"])
 def test_link_tags_bulk_with_an_id_of_another_project_is_a_conflict(
-    client: TestClient, two_tenants: TwoTenants, foreign_field: str
+    client: TestClient, tenants: TwoTenants, foreign_field: str
 ):
     """The documents and tags of a link are body references: one of another
     project is rejected by the composite foreign keys of the link table (409)."""
-    own, foreign = two_tenants["own"], two_tenants["foreign"]
+    own, foreign = tenants["own"], tenants["foreign"]
     payload = {
         "source_document_ids": [own["bare_sdoc"].id],
         "tag_ids": [own["tag"].id],
@@ -487,11 +487,11 @@ def test_update_sdoc_tags_bulk_parametrize(
 
 
 def test_update_sdoc_tags_bulk_linking_a_tag_of_another_project_is_a_conflict(
-    client: TestClient, two_tenants: TwoTenants
+    client: TestClient, tenants: TwoTenants
 ):
     """A tag of another project to link is rejected by the composite foreign key
     (409)."""
-    own, foreign = two_tenants["own"], two_tenants["foreign"]
+    own, foreign = tenants["own"], tenants["foreign"]
     payload = {
         "sdoc_ids": [own["sdoc"].id],
         "unlink_tag_ids": [],
@@ -506,7 +506,7 @@ def test_update_sdoc_tags_bulk_linking_a_tag_of_another_project_is_a_conflict(
 
 
 # ===========================================================================
-# SET LINKS (PATCH /projects/{project_id}/tags/bulk/source-documents/set) TESTS
+# REPLACE LINKS (PATCH /projects/{project_id}/tags/bulk/source-documents/replace) TESTS
 # ===========================================================================
 
 
@@ -522,7 +522,7 @@ def test_set_sdoc_tags_bulk(
     payload = SdocTagLinks(links={sdoc1.id: [tag2.id], sdoc2.id: [tag1.id, tag2.id]})
 
     resp = client.patch(
-        f"{_tags_url(project.id)}/bulk/source-documents/set",
+        f"{_tags_url(project.id)}/bulk/source-documents/replace",
         json=payload.model_dump(),
     )
 
@@ -531,15 +531,15 @@ def test_set_sdoc_tags_bulk(
 
 
 def test_set_sdoc_tags_bulk_with_a_document_of_another_project_is_a_conflict(
-    client: TestClient, two_tenants: TwoTenants
+    client: TestClient, tenants: TwoTenants
 ):
     """A document of another project gets no tags of the path's project: the
     composite foreign key rejects the link (409)."""
-    own, foreign = two_tenants["own"], two_tenants["foreign"]
+    own, foreign = tenants["own"], tenants["foreign"]
     payload = SdocTagLinks(links={foreign["bare_sdoc"].id: [own["tag"].id]})
 
     resp = client.patch(
-        f"{_tags_url(own['project'].id)}/bulk/source-documents/set",
+        f"{_tags_url(own['project'].id)}/bulk/source-documents/replace",
         json=payload.model_dump(),
     )
 
@@ -568,11 +568,11 @@ def test_unlink_tags_bulk(client: TestClient, project_with_sdoc_and_multiple_tag
 
 
 def test_unlink_tags_bulk_of_another_project_removes_nothing(
-    client: TestClient, two_tenants: TwoTenants
+    client: TestClient, tenants: TwoTenants
 ):
     """Unlinking the link of another project through the own project matches no
     link: the foreign document keeps its tag."""
-    own, foreign = two_tenants["own"], two_tenants["foreign"]
+    own, foreign = tenants["own"], tenants["foreign"]
     payload = {
         "source_document_ids": [foreign["sdoc"].id],
         "tag_ids": [foreign["tag"].id],
@@ -631,11 +631,11 @@ def test_count_tags_of_given_tags(
 
 
 def test_count_tags_of_another_project_counts_nothing(
-    client: TestClient, two_tenants: TwoTenants
+    client: TestClient, tenants: TwoTenants
 ):
     """A document and a tag of another project match no link of the path's
     project."""
-    own, foreign = two_tenants["own"], two_tenants["foreign"]
+    own, foreign = tenants["own"], tenants["foreign"]
 
     resp = client.post(
         f"{_tags_url(own['project'].id)}/count",

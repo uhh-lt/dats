@@ -15,7 +15,7 @@ from core.artefacts.sentence_embeddings.sentence_embedding_dto import (
     SentenceObjectIdentifier,
 )
 from modules.concept_over_time_analysis.cota_dto import (
-    COTARead,
+    ConceptOverTimeAnalysisRead,
     COTASentence,
 )
 from repos.filesystem.temporary_file_crud import crud_temporary_file
@@ -26,7 +26,7 @@ BATCH_SIZE = conf.cota.batch_size
 
 
 def finetune_apply_compute(
-    cota: COTARead, search_space: list[COTASentence]
+    cota: ConceptOverTimeAnalysisRead, search_space: list[COTASentence]
 ) -> list[COTASentence]:
     # 1. rank search space sentences for each concept
     # this can only be done if a concept has sentence annotations, because we need those to compute the concept representation
@@ -254,7 +254,7 @@ def __apply_umap(
 
 
 def __has_min_concept_sentence_annotations(
-    cota: COTARead,
+    cota: ConceptOverTimeAnalysisRead,
     search_space: list[COTASentence],
 ) -> bool:
     """Returns true if each concept has at least min_required_annotations_per_concept"""
@@ -274,7 +274,7 @@ def __has_min_concept_sentence_annotations(
 
 
 def __get_concept_sentence_annotations(
-    cota: COTARead,
+    cota: ConceptOverTimeAnalysisRead,
     search_space: list[COTASentence],
 ) -> dict[str, list[COTASentence]]:
     """Returns the sentences in the search space that are annotated with a concept, for each concept"""

@@ -14,6 +14,7 @@ from core.doc.source_document_exceptions import (
     SourceDocumentPreprocessingUnfinishedError,
 )
 from core.doc.source_document_orm import SourceDocumentORM
+from core.metadata.source_document_metadata_orm import SourceDocumentMetadataORM
 from core.tag.tag_orm import TagORM
 from repos.db.crud_base import BATCH_SIZE
 from repos.db.project_crud_base import ProjectCRUDBase
@@ -122,7 +123,7 @@ class CRUDSourceDocument(
         return query.all()
 
     def read_by_name(
-        self, db: Session, *, name: str, project_id: int
+        self, db: Session, *, project_id: int, name: str
     ) -> SourceDocumentORM | None:
         return (
             db.query(self.model)
@@ -294,17 +295,35 @@ class CRUDSourceDocument(
 
     ### OTHER OPERATIONS ###
 
-    def count_by_project_and_status(
-        self, db: Session, *, project_id: int, status: SDocStatus | None = None
+    def count_by_project(
+        self,
+        db: Session,
+        *,
+        project_id: int,
+        status: SDocStatus | None = None,
+        date_metadata_id: int | None = None,
     ) -> int:
-        query = db.query(self.model)
+        """
+        Count the documents of the project, optionally filtered.
+
+        Args:
+            project_id: The project of the documents.
+            status: Only documents with this status.
+            date_metadata_id: Only documents with a value for this date metadata.
+
+        Returns:
+            The number of matching documents.
+        """
+        query = db.query(self.model).filter(self.model.project_id == project_id)
         if status is not None:
+            query = query.filter(document_status_filter(status))
+        if date_metadata_id is not None:
             query = query.filter(
-                self.model.project_id == project_id,
-                document_status_filter(status),
+                self.model.metadata_.any(
+                    (SourceDocumentMetadataORM.project_metadata_id == date_metadata_id)
+                    & SourceDocumentMetadataORM.date_value.isnot(None)
+                )
             )
-        else:
-            query = query.filter(self.model.project_id == project_id)
         return query.with_entities(func.count()).scalar()
 
 

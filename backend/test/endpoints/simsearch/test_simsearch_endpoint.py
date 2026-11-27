@@ -20,15 +20,15 @@ from .conftest import SimSearchProject, TaggedImages
 EMPTY_FILTER = {"id": "root", "logic_operator": "and", "items": []}
 
 # ===========================================================================
-# GATING (/projects/{project_id}/simsearch/sentences, .../images) TESTS
+# GATING (/projects/{project_id}/similarity-search/sentences, .../images) TESTS
 # ===========================================================================
 
 
 @pytest.mark.parametrize(
     "path",
     [
-        pytest.param("/simsearch/sentences", id="sentences"),
-        pytest.param("/simsearch/images", id="images"),
+        pytest.param("/similarity-search/sentences", id="sentences"),
+        pytest.param("/similarity-search/images", id="images"),
     ],
 )
 def test_similarity_search_is_rejected_when_semantic_search_is_disabled(
@@ -48,15 +48,15 @@ def test_similarity_search_is_rejected_when_semantic_search_is_disabled(
 
 
 # ===========================================================================
-# QUERY (/projects/{project_id}/simsearch/sentences, .../images) TESTS
+# QUERY (/projects/{project_id}/similarity-search/sentences, .../images) TESTS
 # ===========================================================================
 
 
 @pytest.mark.parametrize(
     "path",
     [
-        pytest.param("/simsearch/sentences", id="sentences"),
-        pytest.param("/simsearch/images", id="images"),
+        pytest.param("/similarity-search/sentences", id="sentences"),
+        pytest.param("/similarity-search/images", id="images"),
     ],
 )
 def test_similarity_search_rejects_a_list_query(
@@ -118,7 +118,7 @@ def test_sentence_search_by_text_embeds_the_text_with_clip(
     sentence 1 ([0, 1]) lies below the threshold (its certainty is 0.5)."""
     p = simsearch_project
 
-    response = _search(client, "/simsearch/sentences", p["project"].id, "a cat")
+    response = _search(client, "/similarity-search/sentences", p["project"].id, "a cat")
 
     assert response.status_code == 200, response.text
     hits = [SimSearchSentenceHit.model_validate(h) for h in response.json()]
@@ -148,7 +148,7 @@ def test_image_search_by_an_image_id_embeds_the_image_with_clip(
 
     response = _search(
         client,
-        "/simsearch/images",
+        "/similarity-search/images",
         p["project"].id,
         str(image_id) if as_text else image_id,
     )
@@ -168,7 +168,9 @@ def test_search_by_the_id_of_a_text_document_is_rejected(
     document answers 400 and embeds nothing."""
     p = simsearch_project
 
-    response = _search(client, "/simsearch/images", p["project"].id, p["text"].id)
+    response = _search(
+        client, "/similarity-search/images", p["project"].id, p["text"].id
+    )
 
     assert response.status_code == 400, response.text
     assert "not an image" in response.text
@@ -186,7 +188,7 @@ def test_search_by_an_image_of_another_project_is_not_found(
 
     response = _search(
         client,
-        "/simsearch/images",
+        "/similarity-search/images",
         p["project"].id,
         tagged_images["foreign_image"].id,
     )
@@ -221,7 +223,7 @@ def test_image_search_filtered_by_a_tag_of_another_project_finds_nothing(
     )
 
     response = client.post(
-        f"/projects/{p['project'].id}/simsearch/images",
+        f"/projects/{p['project'].id}/similarity-search/images",
         params={"top_k": 10, "threshold": 0.75},
         json={
             "query": "red",

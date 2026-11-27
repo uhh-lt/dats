@@ -43,25 +43,3 @@ def rag_session(
         db=db,
         session_id=session_id,
     )
-
-
-@router.get(
-    "/chat-session",
-    response_model=ChatSessionResponse,
-    summary="Initiate or continue a chat session with the LLM using a prompt",
-)
-def chat_session(
-    *,
-    project_id: int,
-    model: str,
-    prompt: str,
-    session_id: str | None = None,
-    authz_user: AuthzUser = Depends(),
-) -> ChatSessionResponse:
-    return RAGService().chat_with_session(
-        project_id=project_id,
-        user_id=authz_user.user.id,
-        model=model,
-        prompt=prompt,
-        session_id=session_id,
-    )

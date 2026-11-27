@@ -119,6 +119,8 @@ class CRUDMemo(ProjectCRUDBase[MemoORM, MemoCreateIntern, MemoUpdate]):
         attached_object_type: AttachedObjectType | None = None,
         attached_object_id: int | None = None,
         user_id: int | None = None,
+        opened_by_user_id: int | None = None,
+        limit: int | None = None,
     ) -> list[MemoORM]:
         """
         Read the memos of a project, optionally filtered.
@@ -129,6 +131,9 @@ class CRUDMemo(ProjectCRUDBase[MemoORM, MemoCreateIntern, MemoUpdate]):
             attached_object_id: Only memos attached to the object with this id; needs
                 `attached_object_type`.
             user_id: Only memos of this author.
+            opened_by_user_id: Only memos this user opened, most recently opened
+                first.
+            limit: At most this many memos.
 
         Returns:
             The matching memos.
@@ -158,6 +163,20 @@ class CRUDMemo(ProjectCRUDBase[MemoORM, MemoCreateIntern, MemoUpdate]):
             raise ValueError("Filtering by attached_object_id needs its type.")
         if user_id is not None:
             query = query.where(self.model.user_id == user_id)
+        if opened_by_user_id is not None:
+            query = (
+                query.join(
+                    MemoRecentORM,
+                    and_(
+                        MemoRecentORM.project_id == self.model.project_id,
+                        MemoRecentORM.memo_id == self.model.id,
+                    ),
+                )
+                .where(MemoRecentORM.user_id == opened_by_user_id)
+                .order_by(MemoRecentORM.last_opened.desc())
+            )
+        if limit is not None:
+            query = query.limit(limit)
         return query.all()
 
     def read_by_project_and_uuid(
@@ -176,29 +195,6 @@ class CRUDMemo(ProjectCRUDBase[MemoORM, MemoCreateIntern, MemoUpdate]):
             )
         )
         return query.first()
-
-    def read_recents(
-        self, db: Session, *, project_id: int, user_id: int, limit: int
-    ) -> list[MemoORM]:
-        """Return the user's most recently opened memos in a project, newest first."""
-        return (
-            db.query(MemoORM)
-            .options(*self._load_options())
-            .join(
-                MemoRecentORM,
-                and_(
-                    MemoRecentORM.project_id == MemoORM.project_id,
-                    MemoRecentORM.memo_id == MemoORM.id,
-                ),
-            )
-            .filter(
-                MemoRecentORM.user_id == user_id,
-                MemoORM.project_id == project_id,
-            )
-            .order_by(MemoRecentORM.last_opened.desc())
-            .limit(limit)
-            .all()
-        )
 
     def read_favorite_ids(
         self, db: Session, *, project_id: int, memo_ids: list[int], user_id: int

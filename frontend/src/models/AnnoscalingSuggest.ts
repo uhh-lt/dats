@@ -10,7 +10,7 @@ export type AnnoscalingSuggest = {
   /**
    * Code to use as opposing code
    */
-  reject_cide_id: number;
+  reject_code_id: number;
   /**
    * Number of suggestions to provide
    */

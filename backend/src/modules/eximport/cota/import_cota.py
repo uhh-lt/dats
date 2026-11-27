@@ -8,8 +8,8 @@ from modules.concept_over_time_analysis.cota_crud import (
     crud_cota,
 )
 from modules.concept_over_time_analysis.cota_dto import (
+    ConceptOverTimeAnalysisCreateIntern,
     COTAConcept,
-    COTACreateIntern,
     COTATimelineSettings,
     COTATrainingSettings,
 )
@@ -58,7 +58,7 @@ def import_cota_to_proj(
     error_messages = []
 
     # Transform the COTA analyses for import
-    transformed_cotas: list[COTACreateIntern] = []
+    transformed_cotas: list[ConceptOverTimeAnalysisCreateIntern] = []
     for cota in cota_collection.cota_analyses:
         try:
             # 1. Transform concepts for import
@@ -94,9 +94,9 @@ def import_cota_to_proj(
             )
             continue
 
-        # 4. Create a COTACreateIntern object for each analysis
+        # 4. Create a ConceptOverTimeAnalysisCreateIntern object for each analysis
         transformed_cotas.append(
-            COTACreateIntern(
+            ConceptOverTimeAnalysisCreateIntern(
                 name=cota.name,
                 concepts=jsonable_encoder(transformed_concepts),
                 timeline_settings=transformed_timeline_settings.model_dump(mode="json"),

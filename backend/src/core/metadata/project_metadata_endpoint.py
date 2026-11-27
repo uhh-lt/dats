@@ -24,7 +24,7 @@ router = project_router("/project-metadata", tags=["projectMetadata", "mcp"])
     response_model=ProjectMetadataRead,
     summary="Creates a new Metadata and returns it with the generated ID.",
 )
-def create_metadata(
+def create(
     *,
     db: DBSession,
     project_id: int,
@@ -83,7 +83,7 @@ def get_by_id(
     response_model=list[ProjectMetadataRead],
     summary="Updates the Metadata with the given IDs.",
 )
-def update_project_metadata_bulk(
+def update_bulk(
     *,
     db: DBSession,
     project_id: int,

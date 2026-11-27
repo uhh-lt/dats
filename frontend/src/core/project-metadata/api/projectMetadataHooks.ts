@@ -34,7 +34,7 @@ const useGetAllProjectMetadata = () => useGetAllProjectMetadataMap({ select: (da
 const useCreateProjectMetadata = () =>
   useMutation({
     mutationKey: [...projectMetadataQueries.all(), "createProjectMetadata"],
-    mutationFn: ProjectMetadataService.createMetadata,
+    mutationFn: ProjectMetadataService.create,
     meta: {
       datsEvent: "PROJECT_METADATA_CREATED",
       successMessage: (data: ProjectMetadataRead) => `Added metadata to Project ${data.project_id}`,
@@ -57,7 +57,7 @@ const useUpdateProjectMetadata = () =>
 const useUpdateBulkProjectMetadata = () =>
   useMutation({
     mutationKey: [...projectMetadataQueries.all(), "updateBulkProjectMetadata"],
-    mutationFn: ProjectMetadataService.updateProjectMetadataBulk,
+    mutationFn: ProjectMetadataService.updateBulk,
     meta: {
       datsEvent: "PROJECT_METADATA_UPDATED_BATCH",
       successMessage: (metadata: ProjectMetadataRead[]) => `Updated ${metadata.length} metadata field(s)`,

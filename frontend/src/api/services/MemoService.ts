@@ -16,7 +16,7 @@ export class MemoService {
    * @returns MemoRead Successful Response
    * @throws ApiError
    */
-  public static createMemo({
+  public static create({
     projectId,
     requestBody,
   }: {
@@ -32,12 +32,16 @@ export class MemoService {
       body: requestBody,
       mediaType: "application/json",
       errors: {
+        400: `The request breaks a rule of the domain`,
+        403: `The user is no member of the project, or the feature is disabled`,
+        404: `A path id, or an id the route reads, is not in the project`,
+        409: `A body id violates a foreign key, or a value a unique constraint`,
         422: `Validation Error`,
       },
     });
   }
   /**
-   * Returns the Memos of the Project, optionally filtered by the attached object (attached_object_id needs attached_object_type) and the author (user_id).
+   * Returns the Memos of the Project, optionally filtered by the attached object (attached_object_id needs attached_object_type), the author (user_id) and the memos the current user opened, most recently opened first (recent), at most limit.
    * @returns MemoRead Successful Response
    * @throws ApiError
    */
@@ -46,11 +50,15 @@ export class MemoService {
     attachedObjectType,
     attachedObjectId,
     userId,
+    recent = false,
+    limit,
   }: {
     projectId: number;
     attachedObjectType?: AttachedObjectType | null;
     attachedObjectId?: number | null;
     userId?: number | null;
+    recent?: boolean;
+    limit?: number | null;
   }): CancelablePromise<Array<MemoRead>> {
     return __request(OpenAPI, {
       method: "GET",
@@ -62,34 +70,14 @@ export class MemoService {
         attached_object_type: attachedObjectType,
         attached_object_id: attachedObjectId,
         user_id: userId,
-      },
-      errors: {
-        422: `Validation Error`,
-      },
-    });
-  }
-  /**
-   * Returns the current user's most recently opened Memos in the project
-   * @returns MemoRead Successful Response
-   * @throws ApiError
-   */
-  public static getRecentMemos({
-    projectId,
-    limit = 10,
-  }: {
-    projectId: number;
-    limit?: number;
-  }): CancelablePromise<Array<MemoRead>> {
-    return __request(OpenAPI, {
-      method: "GET",
-      url: "/projects/{project_id}/memos/recent",
-      path: {
-        project_id: projectId,
-      },
-      query: {
+        recent: recent,
         limit: limit,
       },
       errors: {
+        400: `The request breaks a rule of the domain`,
+        403: `The user is no member of the project, or the feature is disabled`,
+        404: `A path id, or an id the route reads, is not in the project`,
+        409: `A body id violates a foreign key, or a value a unique constraint`,
         422: `Validation Error`,
       },
     });
@@ -108,6 +96,10 @@ export class MemoService {
         memo_id: memoId,
       },
       errors: {
+        400: `The request breaks a rule of the domain`,
+        403: `The user is no member of the project, or the feature is disabled`,
+        404: `A path id, or an id the route reads, is not in the project`,
+        409: `A body id violates a foreign key, or a value a unique constraint`,
         422: `Validation Error`,
       },
     });
@@ -136,6 +128,10 @@ export class MemoService {
       body: requestBody,
       mediaType: "application/json",
       errors: {
+        400: `The request breaks a rule of the domain`,
+        403: `The user is no member of the project, or the feature is disabled`,
+        404: `A path id, or an id the route reads, is not in the project`,
+        409: `A body id violates a foreign key, or a value a unique constraint`,
         422: `Validation Error`,
       },
     });
@@ -154,6 +150,10 @@ export class MemoService {
         memo_id: memoId,
       },
       errors: {
+        400: `The request breaks a rule of the domain`,
+        403: `The user is no member of the project, or the feature is disabled`,
+        404: `A path id, or an id the route reads, is not in the project`,
+        409: `A body id violates a foreign key, or a value a unique constraint`,
         422: `Validation Error`,
       },
     });
@@ -163,7 +163,7 @@ export class MemoService {
    * @returns MemoRead Successful Response
    * @throws ApiError
    */
-  public static updateMemosBulk({
+  public static updateBulk({
     projectId,
     requestBody,
   }: {
@@ -179,6 +179,10 @@ export class MemoService {
       body: requestBody,
       mediaType: "application/json",
       errors: {
+        400: `The request breaks a rule of the domain`,
+        403: `The user is no member of the project, or the feature is disabled`,
+        404: `A path id, or an id the route reads, is not in the project`,
+        409: `A body id violates a foreign key, or a value a unique constraint`,
         422: `Validation Error`,
       },
     });
@@ -188,7 +192,7 @@ export class MemoService {
    * @returns MemoRead Successful Response
    * @throws ApiError
    */
-  public static deleteMemosBulk({
+  public static deleteBulk({
     projectId,
     requestBody,
   }: {
@@ -204,30 +208,32 @@ export class MemoService {
       body: requestBody,
       mediaType: "application/json",
       errors: {
+        400: `The request breaks a rule of the domain`,
+        403: `The user is no member of the project, or the feature is disabled`,
+        404: `A path id, or an id the route reads, is not in the project`,
+        409: `A body id violates a foreign key, or a value a unique constraint`,
         422: `Validation Error`,
       },
     });
   }
   /**
-   * Records that the current user opened the Memo with the given ID
-   * @returns void
+   * Records that the current user opened the Memo with the given ID and returns the Memo
+   * @returns MemoRead Successful Response
    * @throws ApiError
    */
-  public static recordRecentMemo({
-    projectId,
-    memoId,
-  }: {
-    projectId: number;
-    memoId: number;
-  }): CancelablePromise<void> {
+  public static markRecent({ projectId, memoId }: { projectId: number; memoId: number }): CancelablePromise<MemoRead> {
     return __request(OpenAPI, {
-      method: "POST",
-      url: "/projects/{project_id}/memos/{memo_id}/recent",
+      method: "PATCH",
+      url: "/projects/{project_id}/memos/{memo_id}/mark-recent",
       path: {
         project_id: projectId,
         memo_id: memoId,
       },
       errors: {
+        400: `The request breaks a rule of the domain`,
+        403: `The user is no member of the project, or the feature is disabled`,
+        404: `A path id, or an id the route reads, is not in the project`,
+        409: `A body id violates a foreign key, or a value a unique constraint`,
         422: `Validation Error`,
       },
     });
@@ -237,7 +243,7 @@ export class MemoService {
    * @returns string Successful Response
    * @throws ApiError
    */
-  public static generateMemoSuggestion({
+  public static suggest({
     projectId,
     attachedObjectType,
     attachedObjectId,
@@ -260,6 +266,10 @@ export class MemoService {
         model: model,
       },
       errors: {
+        400: `The request breaks a rule of the domain`,
+        403: `The user is no member of the project, or the feature is disabled`,
+        404: `A path id, or an id the route reads, is not in the project`,
+        409: `A body id violates a foreign key, or a value a unique constraint`,
         422: `Validation Error`,
       },
     });

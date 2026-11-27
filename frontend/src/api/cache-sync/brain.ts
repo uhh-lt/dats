@@ -727,7 +727,8 @@ export function handleDATSEvent(event: DATSEvent, source: DATSEventSource): void
       break;
 
     default: {
-      console.warn("Unhandled dats event");
+      const _exhaustive: never = event;
+      console.warn("Unhandled dats event", _exhaustive);
     }
   }
 }

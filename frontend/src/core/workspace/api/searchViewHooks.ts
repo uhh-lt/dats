@@ -24,11 +24,11 @@ export const createSearchViewHooks = <TView extends SearchViewBase>(entityType: 
   const useUpdateView = () =>
     useMutation({
       mutationKey: [...searchViewQueries.all(), entityType, "updateView"],
-      mutationFn: SearchViewService.update,
+      mutationFn: SearchViewService.updateById,
       // Serialize updates per entity: rapid successive patches (e.g. toggling properties)
       // must reach the server in click order, since each patch is merged onto server state.
       scope: { id: `searchViews-update-${entityType}` },
-      onMutate: async ({ projectId, viewId, requestBody }) => {
+      onMutate: async ({ projectId, searchViewId, requestBody }) => {
         // Optimistically merge the patch into the cached view list of the project. This makes the UI
         // react instantly and ensures the next click reads fresh state.
         const key = searchViewQueries.byProject<TView>(entityType, projectId).queryKey;
@@ -36,7 +36,7 @@ export const createSearchViewHooks = <TView extends SearchViewBase>(entityType: 
         const previousViews = queryClient.getQueryData(key);
         queryClient.setQueryData(key, (views) =>
           views?.map((candidate) =>
-            candidate.id === viewId ? ({ ...candidate, ...requestBody } as TView) : candidate,
+            candidate.id === searchViewId ? ({ ...candidate, ...requestBody } as TView) : candidate,
           ),
         );
         return { previousViews };
@@ -93,7 +93,7 @@ export const createSearchViewHooks = <TView extends SearchViewBase>(entityType: 
   const useDeleteView = () =>
     useMutation({
       mutationKey: [...searchViewQueries.all(), entityType, "deleteView"],
-      mutationFn: SearchViewService.delete,
+      mutationFn: SearchViewService.deleteById,
       meta: {
         datsEvent: "SEARCH_VIEW_DELETED",
       },

@@ -17,7 +17,7 @@ const useGetProject = (projectId: number | null | undefined) =>
 const useCreateProject = () => {
   return useMutation({
     mutationKey: [...projectQueries.all(), "createProject"],
-    mutationFn: ProjectService.createProject,
+    mutationFn: ProjectService.create,
     meta: {
       datsEvent: "PROJECT_CREATED",
       successMessage: (project: ProjectRead) => `Successfully Created Project "${project.title}" (ID: ${project.id})`,
@@ -28,7 +28,7 @@ const useCreateProject = () => {
 const useUpdateProject = () =>
   useMutation({
     mutationKey: [...projectQueries.all(), "updateProject"],
-    mutationFn: ProjectService.updateProject,
+    mutationFn: ProjectService.updateById,
     meta: {
       datsEvent: "PROJECT_UPDATED",
       successMessage: (data: ProjectRead) => `Successfully Updated Project "${data.title}"`,
@@ -38,7 +38,7 @@ const useUpdateProject = () =>
 const useDeleteProject = () =>
   useMutation({
     mutationKey: [...projectQueries.all(), "deleteProject"],
-    mutationFn: ProjectService.deleteProject,
+    mutationFn: ProjectService.deleteById,
     meta: {
       datsEvent: "PROJECT_DELETED",
       successMessage: (data: ProjectRead) => `Successfully Deleted Project "${data.title}"`,

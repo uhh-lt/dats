@@ -15,7 +15,7 @@ const useExportAgreementCounts = () =>
 const useGetSegmentTexts = () =>
   useMutation({
     mutationKey: [...agreementQueries.all(), "getSegmentTexts"],
-    mutationFn: AgreementService.getSegmentTexts,
+    mutationFn: AgreementService.computeSegmentTexts,
     meta: {
       errorMessage: "Failed to read the texts of the segments",
     },

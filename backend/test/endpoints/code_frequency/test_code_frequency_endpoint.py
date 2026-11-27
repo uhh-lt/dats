@@ -5,7 +5,7 @@ from composite_keys_test_utils import TwoTenants
 from modules.code_frequency.code_frequency_dto import CodeFrequency, CodeOccurrence
 
 # ===========================================================================
-# CODE FREQUENCIES (/projects/{project_id}/code-frequency/frequencies) TESTS
+# CODE FREQUENCIES (/projects/{project_id}/code-frequencies) TESTS
 # ===========================================================================
 
 
@@ -13,7 +13,7 @@ def _frequencies(
     client: TestClient, project_id: int, code_ids: list[int], user_id: int
 ) -> list[CodeFrequency]:
     response = client.post(
-        f"/projects/{project_id}/code-frequency/frequencies",
+        f"/projects/{project_id}/code-frequencies",
         json={
             "code_ids": code_ids,
             "user_ids": [user_id],
@@ -44,7 +44,7 @@ def test_code_frequencies_count_the_annotations_of_the_project(
 
 
 # ===========================================================================
-# CODE OCCURRENCES (/projects/{project_id}/code-frequency/occurrences) TESTS
+# CODE OCCURRENCES (/projects/{project_id}/code-frequencies/occurrences) TESTS
 # ===========================================================================
 
 
@@ -52,7 +52,7 @@ def _occurrences(
     client: TestClient, project_id: int, code_id: int, user_id: int
 ) -> list[CodeOccurrence]:
     response = client.post(
-        f"/projects/{project_id}/code-frequency/occurrences",
+        f"/projects/{project_id}/code-frequencies/occurrences",
         params={"code_id": code_id, "return_children": False},
         json={"user_ids": [user_id], "doctypes": [DocType.text]},
     )

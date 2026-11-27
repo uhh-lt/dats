@@ -41,6 +41,10 @@ export class SearchViewService {
       body: requestBody,
       mediaType: "application/json",
       errors: {
+        400: `The request breaks a rule of the domain`,
+        403: `The user is no member of the project, or the feature is disabled`,
+        404: `A path id, or an id the route reads, is not in the project`,
+        409: `A body id violates a foreign key, or a value a unique constraint`,
         422: `Validation Error`,
       },
     });
@@ -67,6 +71,10 @@ export class SearchViewService {
         entity_type: entityType,
       },
       errors: {
+        400: `The request breaks a rule of the domain`,
+        403: `The user is no member of the project, or the feature is disabled`,
+        404: `A path id, or an id the route reads, is not in the project`,
+        409: `A body id violates a foreign key, or a value a unique constraint`,
         422: `Validation Error`,
       },
     });
@@ -87,7 +95,7 @@ export class SearchViewService {
   }): CancelablePromise<Array<MemoSearchViewRead | SpanSearchViewRead | SentenceSearchViewRead | BBoxSearchViewRead>> {
     return __request(OpenAPI, {
       method: "PATCH",
-      url: "/projects/{project_id}/search-views/order",
+      url: "/projects/{project_id}/search-views/reorder",
       path: {
         project_id: projectId,
       },
@@ -97,6 +105,10 @@ export class SearchViewService {
       body: requestBody,
       mediaType: "application/json",
       errors: {
+        400: `The request breaks a rule of the domain`,
+        403: `The user is no member of the project, or the feature is disabled`,
+        404: `A path id, or an id the route reads, is not in the project`,
+        409: `A body id violates a foreign key, or a value a unique constraint`,
         422: `Validation Error`,
       },
     });
@@ -106,25 +118,29 @@ export class SearchViewService {
    * @returns any Successful Response
    * @throws ApiError
    */
-  public static update({
+  public static updateById({
     projectId,
-    viewId,
+    searchViewId,
     requestBody,
   }: {
     projectId: number;
-    viewId: number;
+    searchViewId: number;
     requestBody: MemoSearchViewUpdate | SpanSearchViewUpdate | SentenceSearchViewUpdate | BBoxSearchViewUpdate;
   }): CancelablePromise<MemoSearchViewRead | SpanSearchViewRead | SentenceSearchViewRead | BBoxSearchViewRead> {
     return __request(OpenAPI, {
       method: "PATCH",
-      url: "/projects/{project_id}/search-views/{view_id}",
+      url: "/projects/{project_id}/search-views/{search_view_id}",
       path: {
         project_id: projectId,
-        view_id: viewId,
+        search_view_id: searchViewId,
       },
       body: requestBody,
       mediaType: "application/json",
       errors: {
+        400: `The request breaks a rule of the domain`,
+        403: `The user is no member of the project, or the feature is disabled`,
+        404: `A path id, or an id the route reads, is not in the project`,
+        409: `A body id violates a foreign key, or a value a unique constraint`,
         422: `Validation Error`,
       },
     });
@@ -134,21 +150,25 @@ export class SearchViewService {
    * @returns any Successful Response
    * @throws ApiError
    */
-  public static delete({
+  public static deleteById({
     projectId,
-    viewId,
+    searchViewId,
   }: {
     projectId: number;
-    viewId: number;
+    searchViewId: number;
   }): CancelablePromise<MemoSearchViewRead | SpanSearchViewRead | SentenceSearchViewRead | BBoxSearchViewRead> {
     return __request(OpenAPI, {
       method: "DELETE",
-      url: "/projects/{project_id}/search-views/{view_id}",
+      url: "/projects/{project_id}/search-views/{search_view_id}",
       path: {
         project_id: projectId,
-        view_id: viewId,
+        search_view_id: searchViewId,
       },
       errors: {
+        400: `The request breaks a rule of the domain`,
+        403: `The user is no member of the project, or the feature is disabled`,
+        404: `A path id, or an id the route reads, is not in the project`,
+        409: `A body id violates a foreign key, or a value a unique constraint`,
         422: `Validation Error`,
       },
     });
