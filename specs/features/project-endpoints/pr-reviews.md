@@ -9,12 +9,12 @@ Each review looked at one PR at the commit named in it, not at the top of the st
 | PR   | Review workflow                     | Other reviews | Inline comments |
 | ---- | ----------------------------------- | ------------- | --------------- |
 | #941 | 1 finding(s)                        | 0             | 0               |
-| #942 | no review (workflow did not finish) | 0             | 0               |
-| #943 | no review (workflow did not finish) | 0             | 0               |
+| #942 | no issues found                     | 0             | 0               |
+| #943 | no issues found                     | 0             | 0               |
 | #944 | 6 finding(s)                        | 0             | 0               |
 | #945 | no review (workflow did not finish) | 0             | 0               |
 | #946 | no review (workflow did not finish) | 0             | 0               |
-| #947 | no review (workflow did not finish) | 0             | 0               |
+| #947 | no issues found                     | 0             | 0               |
 | #948 | no issues found                     | 0             | 0               |
 | #949 | no issues found                     | 0             | 0               |
 | #950 | no issues found                     | 0             | 0               |
@@ -46,13 +46,21 @@ This PR adds `project_id` and composite foreign keys across project-owned tables
 
 https://github.com/uhh-lt/dats/pull/942
 
-Review workflow: no review. The run hit the workflow's 40-minute limit.
+Review workflow, 2026-11-26, on current head (https://github.com/uhh-lt/dats/pull/942#issuecomment-7204926260):
+
+Reviewed commit: `708df75deadae6300d68244e5cd37cc470d80ab5`
+
+No issues found. ✅
 
 ## #943 feat(api): span groups and annotation documents under /projects/{project_id} (#928)
 
 https://github.com/uhh-lt/dats/pull/943
 
-Review workflow: no review. The run hit the workflow's 40-minute limit.
+Review workflow, 2026-11-26, on current head (https://github.com/uhh-lt/dats/pull/943#issuecomment-7205522925):
+
+Reviewed commit: `09fa1622ce44cc94cb5e6661c98d86c00c77c517`
+
+No issues found. ✅
 
 ## #944 feat(api): codes and tags under /projects/{project_id} (#928)
 
@@ -91,7 +99,11 @@ Review workflow: no review. The run hit the workflow's 40-minute limit.
 
 https://github.com/uhh-lt/dats/pull/947
 
-Review workflow: no review. The run hit the workflow's 40-minute limit.
+Review workflow, 2026-11-27, on current head (https://github.com/uhh-lt/dats/pull/947#issuecomment-7206888004):
+
+Reviewed commit: `8de04cdad9700155091497a08f0eaa7a80729451`
+
+No issues found. ✅
 
 ## #948 feat(api): jobs under /projects/{project_id} (#928)
 
