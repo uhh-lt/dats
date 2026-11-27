@@ -131,7 +131,7 @@ The filters are optional query parameters of the collection, never one route per
 | ------------------------------------------------------------------------------ | ------------------------------------------ |
 | `PUT /codes` with `CodeCreate`                                                 | create                                     |
 | `POST /code-frequencies/occurrences` with `CodeOccurrenceRequest`              | computation                                |
-| `POST /tags/counts` with a list of document ids                                | read with an id list: body, so `POST`      |
+| `POST /tags/counts` with `TagCountRequest`                                     | read with an id list: body, so `POST`      |
 | `POST /search/source-documents` with filter, sorts, `page_number`, `page_size` | search with a filter tree: all in the body |
 | `PATCH /codes/bulk` with a list                                                | bulk: the body is the list                 |
 
