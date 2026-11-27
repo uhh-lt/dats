@@ -49,7 +49,7 @@ export const sentenceAnnotationQueries = {
       queryFn:
         !projectId || !sdocId || !userId
           ? skipToken
-          : () => SentenceAnnotationService.getSentenceAnnotationsBySentence({ projectId, userId, sdocId }),
+          : () => SentenceAnnotationService.getPerSentence({ projectId, userId, sdocId }),
     }),
   // the column infos of the sentence annotation filter table
   tableInfo: (projectId: number) =>

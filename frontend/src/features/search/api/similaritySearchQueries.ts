@@ -1,4 +1,4 @@
-import { SimsearchService } from "@api/services/SimsearchService";
+import { SimilaritySearchService } from "@api/services/SimilaritySearchService";
 import type { MyFilter } from "@core/filter";
 import { SdocColumns } from "@models/SdocColumns";
 import { queryOptions } from "@tanstack/react-query";
@@ -29,7 +29,7 @@ export const similaritySearchQueries = {
     queryOptions({
       queryKey: [...similaritySearchQueries.imageScope(projectId), searchQuery, filter, topK, threshold] as const,
       queryFn: () =>
-        SimsearchService.findSimilarImages({
+        SimilaritySearchService.findSimilarImages({
           projectId,
           threshold,
           topK,
@@ -43,7 +43,7 @@ export const similaritySearchQueries = {
     queryOptions({
       queryKey: [...similaritySearchQueries.sentenceScope(projectId), searchQuery, filter, topK, threshold] as const,
       queryFn: () =>
-        SimsearchService.findSimilarSentences({
+        SimilaritySearchService.findSimilarSentences({
           projectId,
           threshold,
           topK,

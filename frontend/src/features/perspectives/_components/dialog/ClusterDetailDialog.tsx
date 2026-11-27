@@ -57,6 +57,7 @@ export function ClusterDetailDialog({ aspectId }: ClusterDetailDialogProps) {
     updateClusterMutation(
       {
         projectId,
+        aspectId: cluster.aspect_id,
         clusterId: cluster.id,
         requestBody: {
           name: data.name,

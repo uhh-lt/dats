@@ -2,9 +2,13 @@
 /* istanbul ignore file */
 /* tslint:disable */
 /* eslint-disable */
-import type { DocType } from "./DocType";
-export type Body_code_frequency_code_frequencies = {
+export type Body_sentenceAnnotation_count = {
+  /**
+   * The SourceDocuments to count in
+   */
+  sdoc_ids: Array<number>;
+  /**
+   * The Codes to count
+   */
   code_ids: Array<number>;
-  user_ids: Array<number>;
-  doctypes: Array<DocType>;
 };

@@ -72,7 +72,7 @@ const useCreateVirtualUser = () =>
 const useUpdateUser = () =>
   useMutation({
     mutationKey: [...userQueries.all(), "updateUser"],
-    mutationFn: UserService.updateById,
+    mutationFn: UserService.updateVirtualUser,
     meta: {
       datsEvent: "USER_UPDATED",
       successMessage: (user: UserRead) => `Renamed virtual user to ${user.first_name}`,
@@ -83,7 +83,7 @@ const useUpdateUser = () =>
 const useDeleteUser = () =>
   useMutation({
     mutationKey: [...userQueries.all(), "deleteUser"],
-    mutationFn: UserService.deleteById,
+    mutationFn: UserService.deleteVirtualUser,
     meta: {
       datsEvent: "USER_DELETED",
       successMessage: (user: UserRead) => `Deleted virtual user ${user.first_name} and its annotations`,

@@ -2,7 +2,7 @@
 /* istanbul ignore file */
 /* tslint:disable */
 /* eslint-disable */
-import type { Body_spanAnnotation_count_annotations } from "@models/Body_spanAnnotation_count_annotations";
+import type { Body_spanAnnotation_count } from "@models/Body_spanAnnotation_count";
 import type { SpanAnnotationCreate } from "@models/SpanAnnotationCreate";
 import type { SpanAnnotationDeleted } from "@models/SpanAnnotationDeleted";
 import type { SpanAnnotationRead } from "@models/SpanAnnotationRead";
@@ -18,7 +18,7 @@ export class SpanAnnotationService {
    * @returns SpanAnnotationRead Successful Response
    * @throws ApiError
    */
-  public static createSpanAnnotation({
+  public static create({
     projectId,
     requestBody,
     userId,
@@ -42,6 +42,10 @@ export class SpanAnnotationService {
       body: requestBody,
       mediaType: "application/json",
       errors: {
+        400: `The request breaks a rule of the domain`,
+        403: `The user is no member of the project, or the feature is disabled`,
+        404: `A path id, or an id the route reads, is not in the project`,
+        409: `A body id violates a foreign key, or a value a unique constraint`,
         422: `Validation Error`,
       },
     });
@@ -51,7 +55,7 @@ export class SpanAnnotationService {
    * @returns SpanAnnotationRead Successful Response
    * @throws ApiError
    */
-  public static getSpanAnnotations({
+  public static getByProject({
     projectId,
     userId,
     sdocId,
@@ -74,6 +78,10 @@ export class SpanAnnotationService {
         code_id: codeId,
       },
       errors: {
+        400: `The request breaks a rule of the domain`,
+        403: `The user is no member of the project, or the feature is disabled`,
+        404: `A path id, or an id the route reads, is not in the project`,
+        409: `A body id violates a foreign key, or a value a unique constraint`,
         422: `Validation Error`,
       },
     });
@@ -83,7 +91,7 @@ export class SpanAnnotationService {
    * @returns SpanAnnotationRead Successful Response
    * @throws ApiError
    */
-  public static createSpanAnnotationsBulk({
+  public static createBulk({
     projectId,
     requestBody,
     userId,
@@ -107,6 +115,10 @@ export class SpanAnnotationService {
       body: requestBody,
       mediaType: "application/json",
       errors: {
+        400: `The request breaks a rule of the domain`,
+        403: `The user is no member of the project, or the feature is disabled`,
+        404: `A path id, or an id the route reads, is not in the project`,
+        409: `A body id violates a foreign key, or a value a unique constraint`,
         422: `Validation Error`,
       },
     });
@@ -116,7 +128,7 @@ export class SpanAnnotationService {
    * @returns SpanAnnotationRead Successful Response
    * @throws ApiError
    */
-  public static updateSpanAnnotationsBulk({
+  public static updateBulk({
     projectId,
     requestBody,
   }: {
@@ -132,6 +144,10 @@ export class SpanAnnotationService {
       body: requestBody,
       mediaType: "application/json",
       errors: {
+        400: `The request breaks a rule of the domain`,
+        403: `The user is no member of the project, or the feature is disabled`,
+        404: `A path id, or an id the route reads, is not in the project`,
+        409: `A body id violates a foreign key, or a value a unique constraint`,
         422: `Validation Error`,
       },
     });
@@ -141,7 +157,7 @@ export class SpanAnnotationService {
    * @returns SpanAnnotationDeleted Successful Response
    * @throws ApiError
    */
-  public static deleteSpanAnnotationsBulk({
+  public static deleteBulk({
     projectId,
     requestBody,
   }: {
@@ -157,6 +173,10 @@ export class SpanAnnotationService {
       body: requestBody,
       mediaType: "application/json",
       errors: {
+        400: `The request breaks a rule of the domain`,
+        403: `The user is no member of the project, or the feature is disabled`,
+        404: `A path id, or an id the route reads, is not in the project`,
+        409: `A body id violates a foreign key, or a value a unique constraint`,
         422: `Validation Error`,
       },
     });
@@ -184,6 +204,10 @@ export class SpanAnnotationService {
         span_group_id: spanGroupId,
       },
       errors: {
+        400: `The request breaks a rule of the domain`,
+        403: `The user is no member of the project, or the feature is disabled`,
+        404: `A path id, or an id the route reads, is not in the project`,
+        409: `A body id violates a foreign key, or a value a unique constraint`,
         422: `Validation Error`,
       },
     });
@@ -211,6 +235,10 @@ export class SpanAnnotationService {
         span_group_id: spanGroupId,
       },
       errors: {
+        400: `The request breaks a rule of the domain`,
+        403: `The user is no member of the project, or the feature is disabled`,
+        404: `A path id, or an id the route reads, is not in the project`,
+        409: `A body id violates a foreign key, or a value a unique constraint`,
         422: `Validation Error`,
       },
     });
@@ -235,6 +263,10 @@ export class SpanAnnotationService {
         span_annotation_id: spanAnnotationId,
       },
       errors: {
+        400: `The request breaks a rule of the domain`,
+        403: `The user is no member of the project, or the feature is disabled`,
+        404: `A path id, or an id the route reads, is not in the project`,
+        409: `A body id violates a foreign key, or a value a unique constraint`,
         422: `Validation Error`,
       },
     });
@@ -263,6 +295,10 @@ export class SpanAnnotationService {
       body: requestBody,
       mediaType: "application/json",
       errors: {
+        400: `The request breaks a rule of the domain`,
+        403: `The user is no member of the project, or the feature is disabled`,
+        404: `A path id, or an id the route reads, is not in the project`,
+        409: `A body id violates a foreign key, or a value a unique constraint`,
         422: `Validation Error`,
       },
     });
@@ -287,6 +323,10 @@ export class SpanAnnotationService {
         span_annotation_id: spanAnnotationId,
       },
       errors: {
+        400: `The request breaks a rule of the domain`,
+        403: `The user is no member of the project, or the feature is disabled`,
+        404: `A path id, or an id the route reads, is not in the project`,
+        409: `A body id violates a foreign key, or a value a unique constraint`,
         422: `Validation Error`,
       },
     });
@@ -311,6 +351,10 @@ export class SpanAnnotationService {
         span_annotation_id: spanAnnotationId,
       },
       errors: {
+        400: `The request breaks a rule of the domain`,
+        403: `The user is no member of the project, or the feature is disabled`,
+        404: `A path id, or an id the route reads, is not in the project`,
+        409: `A body id violates a foreign key, or a value a unique constraint`,
         422: `Validation Error`,
       },
     });
@@ -335,6 +379,10 @@ export class SpanAnnotationService {
         span_annotation_id: spanAnnotationId,
       },
       errors: {
+        400: `The request breaks a rule of the domain`,
+        403: `The user is no member of the project, or the feature is disabled`,
+        404: `A path id, or an id the route reads, is not in the project`,
+        409: `A body id violates a foreign key, or a value a unique constraint`,
         422: `Validation Error`,
       },
     });
@@ -344,14 +392,14 @@ export class SpanAnnotationService {
    * @returns number Successful Response
    * @throws ApiError
    */
-  public static countAnnotations({
+  public static count({
     projectId,
     userId,
     requestBody,
   }: {
     projectId: number;
     userId: number;
-    requestBody: Body_spanAnnotation_count_annotations;
+    requestBody: Body_spanAnnotation_count;
   }): CancelablePromise<Record<string, number>> {
     return __request(OpenAPI, {
       method: "POST",
@@ -365,6 +413,10 @@ export class SpanAnnotationService {
       body: requestBody,
       mediaType: "application/json",
       errors: {
+        400: `The request breaks a rule of the domain`,
+        403: `The user is no member of the project, or the feature is disabled`,
+        404: `A path id, or an id the route reads, is not in the project`,
+        409: `A body id violates a foreign key, or a value a unique constraint`,
         422: `Validation Error`,
       },
     });

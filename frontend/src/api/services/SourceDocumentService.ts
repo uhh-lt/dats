@@ -12,16 +12,18 @@ import { OpenAPI } from "../core/OpenAPI";
 import { request as __request } from "../core/request";
 export class SourceDocumentService {
   /**
-   * Returns the number of SourceDocuments of the Project, optionally only those with the given status
+   * Returns the number of SourceDocuments of the Project, optionally only those with the given status or with a value for the given date metadata
    * @returns number Successful Response
    * @throws ApiError
    */
-  public static countSdocs({
+  public static count({
     projectId,
     status,
+    dateMetadataId,
   }: {
     projectId: number;
     status?: SDocStatus | null;
+    dateMetadataId?: number | null;
   }): CancelablePromise<number> {
     return __request(OpenAPI, {
       method: "GET",
@@ -31,18 +33,23 @@ export class SourceDocumentService {
       },
       query: {
         status: status,
+        date_metadata_id: dateMetadataId,
       },
       errors: {
+        400: `The request breaks a rule of the domain`,
+        403: `The user is no member of the project, or the feature is disabled`,
+        404: `A path id, or an id the route reads, is not in the project`,
+        409: `A body id violates a foreign key, or a value a unique constraint`,
         422: `Validation Error`,
       },
     });
   }
   /**
-   * Returns the ID of the SourceDocument of the Project with the given filename
-   * @returns number Successful Response
+   * Returns the SourceDocument of the Project with the given filename: a list of one, or an empty list
+   * @returns SourceDocumentRead Successful Response
    * @throws ApiError
    */
-  public static resolveFilename({
+  public static getByProject({
     projectId,
     filename,
     onlyFinished = true,
@@ -50,10 +57,10 @@ export class SourceDocumentService {
     projectId: number;
     filename: string;
     onlyFinished?: boolean;
-  }): CancelablePromise<number> {
+  }): CancelablePromise<Array<SourceDocumentRead>> {
     return __request(OpenAPI, {
       method: "GET",
-      url: "/projects/{project_id}/source-documents/by-filename",
+      url: "/projects/{project_id}/source-documents",
       path: {
         project_id: projectId,
       },
@@ -62,6 +69,10 @@ export class SourceDocumentService {
         only_finished: onlyFinished,
       },
       errors: {
+        400: `The request breaks a rule of the domain`,
+        403: `The user is no member of the project, or the feature is disabled`,
+        404: `A path id, or an id the route reads, is not in the project`,
+        409: `A body id violates a foreign key, or a value a unique constraint`,
         422: `Validation Error`,
       },
     });
@@ -91,6 +102,10 @@ export class SourceDocumentService {
         only_if_finished: onlyIfFinished,
       },
       errors: {
+        400: `The request breaks a rule of the domain`,
+        403: `The user is no member of the project, or the feature is disabled`,
+        404: `A path id, or an id the route reads, is not in the project`,
+        409: `A body id violates a foreign key, or a value a unique constraint`,
         422: `Validation Error`,
       },
     });
@@ -119,6 +134,10 @@ export class SourceDocumentService {
       body: requestBody,
       mediaType: "application/json",
       errors: {
+        400: `The request breaks a rule of the domain`,
+        403: `The user is no member of the project, or the feature is disabled`,
+        404: `A path id, or an id the route reads, is not in the project`,
+        409: `A body id violates a foreign key, or a value a unique constraint`,
         422: `Validation Error`,
       },
     });
@@ -143,6 +162,10 @@ export class SourceDocumentService {
         sdoc_id: sdocId,
       },
       errors: {
+        400: `The request breaks a rule of the domain`,
+        403: `The user is no member of the project, or the feature is disabled`,
+        404: `A path id, or an id the route reads, is not in the project`,
+        409: `A body id violates a foreign key, or a value a unique constraint`,
         422: `Validation Error`,
       },
     });
@@ -172,6 +195,10 @@ export class SourceDocumentService {
         only_if_finished: onlyIfFinished,
       },
       errors: {
+        400: `The request breaks a rule of the domain`,
+        403: `The user is no member of the project, or the feature is disabled`,
+        404: `A path id, or an id the route reads, is not in the project`,
+        409: `A body id violates a foreign key, or a value a unique constraint`,
         422: `Validation Error`,
       },
     });
@@ -196,6 +223,10 @@ export class SourceDocumentService {
         sdoc_id: sdocId,
       },
       errors: {
+        400: `The request breaks a rule of the domain`,
+        403: `The user is no member of the project, or the feature is disabled`,
+        404: `A path id, or an id the route reads, is not in the project`,
+        409: `A body id violates a foreign key, or a value a unique constraint`,
         422: `Validation Error`,
       },
     });
@@ -220,6 +251,10 @@ export class SourceDocumentService {
         sdoc_id: sdocId,
       },
       errors: {
+        400: `The request breaks a rule of the domain`,
+        403: `The user is no member of the project, or the feature is disabled`,
+        404: `A path id, or an id the route reads, is not in the project`,
+        409: `A body id violates a foreign key, or a value a unique constraint`,
         422: `Validation Error`,
       },
     });
@@ -244,6 +279,10 @@ export class SourceDocumentService {
         sdoc_id: sdocId,
       },
       errors: {
+        400: `The request breaks a rule of the domain`,
+        403: `The user is no member of the project, or the feature is disabled`,
+        404: `A path id, or an id the route reads, is not in the project`,
+        409: `A body id violates a foreign key, or a value a unique constraint`,
         422: `Validation Error`,
       },
     });
@@ -253,7 +292,7 @@ export class SourceDocumentService {
    * @returns SourceDocumentRead Successful Response
    * @throws ApiError
    */
-  public static deleteSdocsBulk({
+  public static deleteBulk({
     projectId,
     requestBody,
   }: {
@@ -269,6 +308,10 @@ export class SourceDocumentService {
       body: requestBody,
       mediaType: "application/json",
       errors: {
+        400: `The request breaks a rule of the domain`,
+        403: `The user is no member of the project, or the feature is disabled`,
+        404: `A path id, or an id the route reads, is not in the project`,
+        409: `A body id violates a foreign key, or a value a unique constraint`,
         422: `Validation Error`,
       },
     });

@@ -16,7 +16,7 @@ export class SpanGroupService {
    * @returns SpanGroupRead Successful Response
    * @throws ApiError
    */
-  public static createSpanGroup({
+  public static create({
     projectId,
     requestBody,
   }: {
@@ -32,6 +32,10 @@ export class SpanGroupService {
       body: requestBody,
       mediaType: "application/json",
       errors: {
+        400: `The request breaks a rule of the domain`,
+        403: `The user is no member of the project, or the feature is disabled`,
+        404: `A path id, or an id the route reads, is not in the project`,
+        409: `A body id violates a foreign key, or a value a unique constraint`,
         422: `Validation Error`,
       },
     });
@@ -41,7 +45,7 @@ export class SpanGroupService {
    * @returns SpanGroupWithAnnotationsRead Successful Response
    * @throws ApiError
    */
-  public static getSpanGroups({
+  public static getByProject({
     projectId,
     userId,
     sdocId,
@@ -61,6 +65,10 @@ export class SpanGroupService {
         sdoc_id: sdocId,
       },
       errors: {
+        400: `The request breaks a rule of the domain`,
+        403: `The user is no member of the project, or the feature is disabled`,
+        404: `A path id, or an id the route reads, is not in the project`,
+        409: `A body id violates a foreign key, or a value a unique constraint`,
         422: `Validation Error`,
       },
     });
@@ -85,6 +93,10 @@ export class SpanGroupService {
         span_group_id: spanGroupId,
       },
       errors: {
+        400: `The request breaks a rule of the domain`,
+        403: `The user is no member of the project, or the feature is disabled`,
+        404: `A path id, or an id the route reads, is not in the project`,
+        409: `A body id violates a foreign key, or a value a unique constraint`,
         422: `Validation Error`,
       },
     });
@@ -113,6 +125,10 @@ export class SpanGroupService {
       body: requestBody,
       mediaType: "application/json",
       errors: {
+        400: `The request breaks a rule of the domain`,
+        403: `The user is no member of the project, or the feature is disabled`,
+        404: `A path id, or an id the route reads, is not in the project`,
+        409: `A body id violates a foreign key, or a value a unique constraint`,
         422: `Validation Error`,
       },
     });
@@ -137,6 +153,10 @@ export class SpanGroupService {
         span_group_id: spanGroupId,
       },
       errors: {
+        400: `The request breaks a rule of the domain`,
+        403: `The user is no member of the project, or the feature is disabled`,
+        404: `A path id, or an id the route reads, is not in the project`,
+        409: `A body id violates a foreign key, or a value a unique constraint`,
         422: `Validation Error`,
       },
     });
@@ -161,6 +181,10 @@ export class SpanGroupService {
         span_group_id: spanGroupId,
       },
       errors: {
+        400: `The request breaks a rule of the domain`,
+        403: `The user is no member of the project, or the feature is disabled`,
+        404: `A path id, or an id the route reads, is not in the project`,
+        409: `A body id violates a foreign key, or a value a unique constraint`,
         422: `Validation Error`,
       },
     });

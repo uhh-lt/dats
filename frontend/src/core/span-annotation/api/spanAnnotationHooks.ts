@@ -13,7 +13,7 @@ import { spanAnnotationQueries } from "./spanAnnotationQueries";
 const useCreateBulkAnnotations = () =>
   useMutation({
     mutationKey: [...spanAnnotationQueries.all(), "createBulkAnnotations"],
-    mutationFn: SpanAnnotationService.createSpanAnnotationsBulk,
+    mutationFn: SpanAnnotationService.createBulk,
     meta: {
       datsEvent: "SPAN_ANNOTATION_CREATED_BATCH",
       successMessage: (data: SpanAnnotationRead[]) => `Created ${data.length} Span Annotations`,
@@ -23,7 +23,7 @@ const useCreateBulkAnnotations = () =>
 const useCreateSpanAnnotation = () =>
   useMutation({
     mutationKey: [...spanAnnotationQueries.all(), "createSpanAnnotation"],
-    mutationFn: SpanAnnotationService.createSpanAnnotation,
+    mutationFn: SpanAnnotationService.create,
     meta: {
       datsEvent: "SPAN_ANNOTATION_CREATED",
       successMessage: (data: SpanAnnotationRead) => `Created Span Annotation ${data.id}`,
@@ -94,7 +94,7 @@ const useUpdateSpanAnnotation = () =>
 const useUpdateBulkSpan = () =>
   useMutation({
     mutationKey: [...spanAnnotationQueries.all(), "updateBulkSpan"],
-    mutationFn: SpanAnnotationService.updateSpanAnnotationsBulk,
+    mutationFn: SpanAnnotationService.updateBulk,
     meta: {
       datsEvent: "SPAN_ANNOTATION_UPDATED_BATCH",
       successMessage: (data: SpanAnnotationRead[]) => `Updated ${data.length} Span Annotations`,
@@ -145,7 +145,7 @@ const useDeleteSpanAnnotation = () =>
 const useDeleteBulkSpanAnnotation = () =>
   useMutation({
     mutationKey: [...spanAnnotationQueries.all(), "deleteBulkSpanAnnotation"],
-    mutationFn: SpanAnnotationService.deleteSpanAnnotationsBulk,
+    mutationFn: SpanAnnotationService.deleteBulk,
     meta: {
       datsEvent: "SPAN_ANNOTATION_DELETED_BATCH",
       successMessage: (data: SpanAnnotationDeleted[]) => `Deleted ${data.length} Span Annotations`,
@@ -155,7 +155,7 @@ const useDeleteBulkSpanAnnotation = () =>
 const useCountBySdocsAndUser = () =>
   useMutation({
     mutationKey: [...spanAnnotationQueries.all(), "countBySdocsAndUser"],
-    mutationFn: SpanAnnotationService.countAnnotations,
+    mutationFn: SpanAnnotationService.count,
   });
 
 export const SpanAnnotationHooks = {

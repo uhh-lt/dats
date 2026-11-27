@@ -31,7 +31,7 @@ export const perspectivesQueries = {
     queryOptions({
       queryKey: perspectivesQueries.aspectsByProjectScope(projectId),
       queryFn: async () => {
-        const aspects = await PerspectivesService.getAllAspects({ projectId });
+        const aspects = await PerspectivesService.getByProject({ projectId });
         return aspects.reduce<AspectMap>((acc, aspect) => {
           acc[aspect.id] = aspect;
           return acc;
@@ -109,7 +109,7 @@ export const perspectivesQueries = {
       queryFn:
         !projectId || !aspectId || !sdocId
           ? skipToken
-          : () => PerspectivesService.getClustersForSdoc({ projectId, aspectId, sdocId }),
+          : () => PerspectivesService.getClusters({ projectId, aspectId, sdocId }),
       staleTime: 1000 * 60 * 5,
     }),
 

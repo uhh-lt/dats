@@ -4,10 +4,6 @@
 /* eslint-disable */
 export type ExperimentRunCreate = {
   /**
-   * ID of the experiment of the run
-   */
-  experiment_id: number;
-  /**
    * Name of the run, unique per experiment; the run writes into the virtual user <experiment name>-<run name>
    */
   name: string;

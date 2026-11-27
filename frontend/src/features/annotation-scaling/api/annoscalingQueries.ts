@@ -1,4 +1,4 @@
-import { AnnoscalingService } from "@api/services/AnnoscalingService";
+import { AnnotationScalingService } from "@api/services/AnnotationScalingService";
 import { queryOptions, skipToken } from "@tanstack/react-query";
 
 /**
@@ -21,9 +21,9 @@ export const annoscalingQueries = {
         !codeId || !antiCodeId
           ? skipToken
           : () =>
-              AnnoscalingService.suggest({
+              AnnotationScalingService.suggest({
                 projectId,
-                requestBody: { code_id: codeId, reject_cide_id: antiCodeId, top_k: 10 },
+                requestBody: { code_id: codeId, reject_code_id: antiCodeId, top_k: 10 },
               }),
     }),
 };

@@ -2,7 +2,8 @@
 /* istanbul ignore file */
 /* tslint:disable */
 /* eslint-disable */
-export type Body_llm_assistant_count_existing_assistant_annotations = {
+import type { ProcessingSettings } from "./ProcessingSettings";
+export type Body_docProcessing_recompute_processing_step = {
   sdoc_ids: Array<number>;
-  code_ids: Array<number>;
+  settings: ProcessingSettings;
 };

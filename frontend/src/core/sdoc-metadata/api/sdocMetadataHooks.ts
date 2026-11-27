@@ -1,4 +1,4 @@
-import { SdocMetadataService } from "@api/services/SdocMetadataService";
+import { SourceDocumentMetadataService } from "@api/services/SourceDocumentMetadataService";
 import { SourceDocumentMetadataRead } from "@models/SourceDocumentMetadataRead";
 import { useAppSelector } from "@store/storeHooks";
 import { useMutation, useQueries, useQuery, UseQueryResult } from "@tanstack/react-query";
@@ -91,7 +91,7 @@ const useGetSdocMetadataBulk = (sdocIds: number[]) => {
 const useUpdateBulkSdocMetadata = () =>
   useMutation({
     mutationKey: [...sdocMetadataQueries.all(), "updateBulkSdocMetadata"],
-    mutationFn: SdocMetadataService.updateBulk,
+    mutationFn: SourceDocumentMetadataService.updateBulk,
     meta: {
       datsEvent: "SDOC_METADATA_UPDATED_BATCH",
       successMessage: (data: SourceDocumentMetadataRead[]) => `Updated ${data.length} document metadata values`,

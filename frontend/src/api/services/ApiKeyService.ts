@@ -14,7 +14,7 @@ export class ApiKeyService {
    * @returns ApiKeyCreatedResponse Successful Response
    * @throws ApiError
    */
-  public static createApiKey({
+  public static create({
     name,
     expiresIn,
   }: {
@@ -38,7 +38,7 @@ export class ApiKeyService {
    * @returns ApiKeyRead Successful Response
    * @throws ApiError
    */
-  public static listApiKeys(): CancelablePromise<Array<ApiKeyRead>> {
+  public static getByUser(): CancelablePromise<Array<ApiKeyRead>> {
     return __request(OpenAPI, {
       method: "GET",
       url: "/users/me/api-keys",
@@ -49,7 +49,7 @@ export class ApiKeyService {
    * @returns ApiKeyRead Successful Response
    * @throws ApiError
    */
-  public static deleteApiKey({ apiKeyId }: { apiKeyId: number }): CancelablePromise<ApiKeyRead> {
+  public static deleteById({ apiKeyId }: { apiKeyId: number }): CancelablePromise<ApiKeyRead> {
     return __request(OpenAPI, {
       method: "DELETE",
       url: "/users/me/api-keys/{api_key_id}",

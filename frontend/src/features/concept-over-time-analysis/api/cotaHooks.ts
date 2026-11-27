@@ -41,7 +41,7 @@ const useUpdateCota = () =>
 const useAnnotateCotaSentences = () =>
   useMutation({
     mutationKey: [...cotaQueries.all(), "annotateCotaSentences"],
-    mutationFn: ConceptOverTimeAnalysisService.annotateCotaSentence,
+    mutationFn: ConceptOverTimeAnalysisService.annotateSentences,
     meta: {
       datsEvent: "COTA_UPDATED",
       successMessage: (cota: COTARead) => `Updated annotations in ${cotaTitle()} "${cota.name}"`,
@@ -51,7 +51,7 @@ const useAnnotateCotaSentences = () =>
 const useRemoveCotaSentences = () =>
   useMutation({
     mutationKey: [...cotaQueries.all(), "removeCotaSentences"],
-    mutationFn: ConceptOverTimeAnalysisService.removeCotaSentence,
+    mutationFn: ConceptOverTimeAnalysisService.removeSentences,
     meta: {
       datsEvent: "COTA_UPDATED",
       successMessage: (cota: COTARead) => `Removed sentences from ${cotaTitle()} "${cota.name}"`,
@@ -61,7 +61,7 @@ const useRemoveCotaSentences = () =>
 const useResetCota = () =>
   useMutation({
     mutationKey: [...cotaQueries.all(), "resetCota"],
-    mutationFn: ConceptOverTimeAnalysisService.resetCota,
+    mutationFn: ConceptOverTimeAnalysisService.reset,
     meta: {
       datsEvent: "COTA_UPDATED",
       successMessage: (cota: COTARead) => `Reset ${cotaTitle()} "${cota.name}"`,
@@ -81,7 +81,7 @@ const useDeleteCota = () =>
 const useRefineCota = () =>
   useMutation({
     mutationKey: [...cotaQueries.all(), "refineCota"],
-    mutationFn: ConceptOverTimeAnalysisService.refineCota,
+    mutationFn: ConceptOverTimeAnalysisService.refine,
     meta: {
       datsEvent: "COTA_UPDATED",
       successMessage: (cota: COTARead) => `Started refinement job for "COTA ${cota.id}"`,

@@ -25,7 +25,7 @@ const refetchProjectFeatures = (projectId: number) =>
 const useEnableFeature = () =>
   useMutation({
     mutationKey: [...featureQueries.all(), "enableFeature"],
-    mutationFn: FeatureService.enableFeature,
+    mutationFn: FeatureService.enable,
     onSuccess: (enabledFeatures, { projectId }) => {
       refreshProjectFeatures(projectId, enabledFeatures);
       // Enable creates the system codes of the feature (the set up), which send no code events
@@ -43,7 +43,7 @@ const useEnableFeature = () =>
 const useCompleteFeature = () =>
   useMutation({
     mutationKey: [...featureQueries.all(), "completeFeature"],
-    mutationFn: FeatureService.completeFeature,
+    mutationFn: FeatureService.complete,
     onSuccess: (enabledFeatures, { projectId }) => refreshProjectFeatures(projectId, enabledFeatures),
     onError: (_error, { projectId }) => refetchProjectFeatures(projectId),
     meta: {
@@ -57,7 +57,7 @@ const useCompleteFeature = () =>
 const useDisableFeature = () =>
   useMutation({
     mutationKey: [...featureQueries.all(), "disableFeature"],
-    mutationFn: FeatureService.disableFeature,
+    mutationFn: FeatureService.disable,
     onSuccess: (enabledFeatures, { projectId }) => refreshProjectFeatures(projectId, enabledFeatures),
     onError: (_error, { projectId }) => refetchProjectFeatures(projectId),
     meta: {

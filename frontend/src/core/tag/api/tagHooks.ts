@@ -22,7 +22,7 @@ const useGetTag = (tagId: number | null | undefined) => {
 const useCreateTag = () =>
   useMutation({
     mutationKey: [...tagQueries.all(), "createTag"],
-    mutationFn: TagService.createTag,
+    mutationFn: TagService.create,
     meta: {
       datsEvent: "TAG_CREATED",
       successMessage: (tag: TagRead) => `Created tag ${tag.name}`,
@@ -42,7 +42,7 @@ const useUpdateTag = () =>
 const useUpdateBulkTag = () =>
   useMutation({
     mutationKey: [...tagQueries.all(), "updateBulkTag"],
-    mutationFn: TagService.updateTagsBulk,
+    mutationFn: TagService.updateBulk,
     meta: {
       datsEvent: "TAG_UPDATED_BATCH",
       successMessage: (tags: TagRead[]) => `Updated ${tags.length} tag(s)`,
@@ -64,7 +64,7 @@ const useDeleteTag = () =>
 const useBulkSetTags = () =>
   useMutation({
     mutationKey: [...tagQueries.all(), "bulkSetTags"],
-    mutationFn: TagService.setSdocTagsBulk,
+    mutationFn: TagService.replaceSdocTagsBulk,
     meta: {
       datsEvent: "SDOC_TAGS_LINKED",
       successMessage: (data: SdocTagLinksResult) => `Updated tags for ${Object.keys(data.links).length} documents`,
@@ -104,7 +104,7 @@ const useBulkUpdateTags = () =>
 const useCountTags = () =>
   useMutation({
     mutationKey: [...tagQueries.all(), "countTags"],
-    mutationFn: TagService.countTags,
+    mutationFn: TagService.count,
   });
 
 interface UseProjectTagsQueryParams<T> {

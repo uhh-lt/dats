@@ -1,4 +1,4 @@
-import { DocprocessingService } from "@api/services/DocprocessingService";
+import { DocProcessingService } from "@api/services/DocProcessingService";
 import { FeatureService } from "@api/services/FeatureService";
 import { SourceDocumentService } from "@api/services/SourceDocumentService";
 import { UserService } from "@api/services/UserService";
@@ -38,7 +38,7 @@ export const projectQueries = {
   sdocStatusCount: (projectId: number, status: SDocStatus) =>
     queryOptions({
       queryKey: [...projectQueries.sdocStatusCountScope(projectId), status] as const,
-      queryFn: () => SourceDocumentService.countSdocs({ projectId, status }),
+      queryFn: () => SourceDocumentService.count({ projectId, status }),
     }),
 
   // simple processing status of all documents of a project with the given status
@@ -47,7 +47,7 @@ export const projectQueries = {
   sdocStatusSimple: (projectId: number, status: SDocStatus) =>
     queryOptions({
       queryKey: [...projectQueries.sdocStatusSimpleScope(projectId), status] as const,
-      queryFn: () => DocprocessingService.getSimpleSdocStatusByProjectAndStatus({ projectId, status }),
+      queryFn: () => DocProcessingService.getSimpleSdocStatusByProjectAndStatus({ projectId, status }),
     }),
 
   // state (enabled, ready, coverage) of every toggleable feature in a project, as a map feature -> state; an
@@ -58,7 +58,7 @@ export const projectQueries = {
     queryOptions({
       queryKey: projectQueries.featuresScope(projectId),
       queryFn: async () => {
-        const states = await FeatureService.getProjectFeatures({ projectId });
+        const states = await FeatureService.getByProject({ projectId });
         return states.reduce<ProjectFeatureMap>((acc, state) => {
           acc[state.feature] = state;
           return acc;

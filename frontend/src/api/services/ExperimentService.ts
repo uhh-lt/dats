@@ -32,6 +32,10 @@ export class ExperimentService {
       body: requestBody,
       mediaType: "application/json",
       errors: {
+        400: `The request breaks a rule of the domain`,
+        403: `The user is no member of the project, or the feature is disabled`,
+        404: `A path id, or an id the route reads, is not in the project`,
+        409: `A body id violates a foreign key, or a value a unique constraint`,
         422: `Validation Error`,
       },
     });
@@ -49,6 +53,10 @@ export class ExperimentService {
         project_id: projectId,
       },
       errors: {
+        400: `The request breaks a rule of the domain`,
+        403: `The user is no member of the project, or the feature is disabled`,
+        404: `A path id, or an id the route reads, is not in the project`,
+        409: `A body id violates a foreign key, or a value a unique constraint`,
         422: `Validation Error`,
       },
     });
@@ -60,20 +68,27 @@ export class ExperimentService {
    */
   public static createRun({
     projectId,
+    experimentId,
     requestBody,
   }: {
     projectId: number;
+    experimentId: number;
     requestBody: ExperimentRunCreate;
   }): CancelablePromise<ExperimentRead> {
     return __request(OpenAPI, {
       method: "PUT",
-      url: "/projects/{project_id}/experiments/runs",
+      url: "/projects/{project_id}/experiments/{experiment_id}/runs",
       path: {
         project_id: projectId,
+        experiment_id: experimentId,
       },
       body: requestBody,
       mediaType: "application/json",
       errors: {
+        400: `The request breaks a rule of the domain`,
+        403: `The user is no member of the project, or the feature is disabled`,
+        404: `A path id, or an id the route reads, is not in the project`,
+        409: `A body id violates a foreign key, or a value a unique constraint`,
         422: `Validation Error`,
       },
     });
@@ -98,6 +113,10 @@ export class ExperimentService {
         experiment_id: experimentId,
       },
       errors: {
+        400: `The request breaks a rule of the domain`,
+        403: `The user is no member of the project, or the feature is disabled`,
+        404: `A path id, or an id the route reads, is not in the project`,
+        409: `A body id violates a foreign key, or a value a unique constraint`,
         422: `Validation Error`,
       },
     });
@@ -126,6 +145,10 @@ export class ExperimentService {
       body: requestBody,
       mediaType: "application/json",
       errors: {
+        400: `The request breaks a rule of the domain`,
+        403: `The user is no member of the project, or the feature is disabled`,
+        404: `A path id, or an id the route reads, is not in the project`,
+        409: `A body id violates a foreign key, or a value a unique constraint`,
         422: `Validation Error`,
       },
     });
@@ -150,6 +173,10 @@ export class ExperimentService {
         experiment_id: experimentId,
       },
       errors: {
+        400: `The request breaks a rule of the domain`,
+        403: `The user is no member of the project, or the feature is disabled`,
+        404: `A path id, or an id the route reads, is not in the project`,
+        409: `A body id violates a foreign key, or a value a unique constraint`,
         422: `Validation Error`,
       },
     });
@@ -161,19 +188,26 @@ export class ExperimentService {
    */
   public static refreshRunScores({
     projectId,
+    experimentId,
     runId,
   }: {
     projectId: number;
+    experimentId: number;
     runId: number;
   }): CancelablePromise<ExperimentRead> {
     return __request(OpenAPI, {
       method: "PATCH",
-      url: "/projects/{project_id}/experiments/runs/{run_id}/scores",
+      url: "/projects/{project_id}/experiments/{experiment_id}/runs/{run_id}/refresh-scores",
       path: {
         project_id: projectId,
+        experiment_id: experimentId,
         run_id: runId,
       },
       errors: {
+        400: `The request breaks a rule of the domain`,
+        403: `The user is no member of the project, or the feature is disabled`,
+        404: `A path id, or an id the route reads, is not in the project`,
+        409: `A body id violates a foreign key, or a value a unique constraint`,
         422: `Validation Error`,
       },
     });
@@ -192,12 +226,16 @@ export class ExperimentService {
   }): CancelablePromise<ExperimentRead> {
     return __request(OpenAPI, {
       method: "PATCH",
-      url: "/projects/{project_id}/experiments/{experiment_id}/scores",
+      url: "/projects/{project_id}/experiments/{experiment_id}/refresh-scores",
       path: {
         project_id: projectId,
         experiment_id: experimentId,
       },
       errors: {
+        400: `The request breaks a rule of the domain`,
+        403: `The user is no member of the project, or the feature is disabled`,
+        404: `A path id, or an id the route reads, is not in the project`,
+        409: `A body id violates a foreign key, or a value a unique constraint`,
         422: `Validation Error`,
       },
     });
@@ -209,19 +247,26 @@ export class ExperimentService {
    */
   public static deleteRun({
     projectId,
+    experimentId,
     runId,
   }: {
     projectId: number;
+    experimentId: number;
     runId: number;
   }): CancelablePromise<ExperimentRead> {
     return __request(OpenAPI, {
       method: "DELETE",
-      url: "/projects/{project_id}/experiments/runs/{run_id}",
+      url: "/projects/{project_id}/experiments/{experiment_id}/runs/{run_id}",
       path: {
         project_id: projectId,
+        experiment_id: experimentId,
         run_id: runId,
       },
       errors: {
+        400: `The request breaks a rule of the domain`,
+        403: `The user is no member of the project, or the feature is disabled`,
+        404: `A path id, or an id the route reads, is not in the project`,
+        409: `A body id violates a foreign key, or a value a unique constraint`,
         422: `Validation Error`,
       },
     });
@@ -233,24 +278,31 @@ export class ExperimentService {
    */
   public static exportRunLog({
     projectId,
+    experimentId,
     runId,
     exportFormat,
   }: {
     projectId: number;
+    experimentId: number;
     runId: number;
     exportFormat: ExperimentRunLogFormat;
   }): CancelablePromise<string> {
     return __request(OpenAPI, {
       method: "POST",
-      url: "/projects/{project_id}/experiments/runs/{run_id}/export-log",
+      url: "/projects/{project_id}/experiments/{experiment_id}/runs/{run_id}/export-log",
       path: {
         project_id: projectId,
+        experiment_id: experimentId,
         run_id: runId,
       },
       query: {
         export_format: exportFormat,
       },
       errors: {
+        400: `The request breaks a rule of the domain`,
+        403: `The user is no member of the project, or the feature is disabled`,
+        404: `A path id, or an id the route reads, is not in the project`,
+        409: `A body id violates a foreign key, or a value a unique constraint`,
         422: `Validation Error`,
       },
     });

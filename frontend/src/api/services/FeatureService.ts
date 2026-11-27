@@ -13,7 +13,7 @@ export class FeatureService {
    * @returns ProjectFeatureRead Successful Response
    * @throws ApiError
    */
-  public static getProjectFeatures({ projectId }: { projectId: number }): CancelablePromise<Array<ProjectFeatureRead>> {
+  public static getByProject({ projectId }: { projectId: number }): CancelablePromise<Array<ProjectFeatureRead>> {
     return __request(OpenAPI, {
       method: "GET",
       url: "/projects/{project_id}/features",
@@ -21,6 +21,10 @@ export class FeatureService {
         project_id: projectId,
       },
       errors: {
+        400: `The request breaks a rule of the domain`,
+        403: `The user is no member of the project, or the feature is disabled`,
+        404: `A path id, or an id the route reads, is not in the project`,
+        409: `A body id violates a foreign key, or a value a unique constraint`,
         422: `Validation Error`,
       },
     });
@@ -30,7 +34,7 @@ export class FeatureService {
    * @returns string Successful Response
    * @throws ApiError
    */
-  public static enableFeature({
+  public static enable({
     projectId,
     feature,
     requestBody,
@@ -40,7 +44,7 @@ export class FeatureService {
     requestBody: FeatureActivation;
   }): CancelablePromise<Array<string>> {
     return __request(OpenAPI, {
-      method: "POST",
+      method: "PATCH",
       url: "/projects/{project_id}/features/{feature}/enable",
       path: {
         project_id: projectId,
@@ -49,6 +53,10 @@ export class FeatureService {
       body: requestBody,
       mediaType: "application/json",
       errors: {
+        400: `The request breaks a rule of the domain`,
+        403: `The user is no member of the project, or the feature is disabled`,
+        404: `A path id, or an id the route reads, is not in the project`,
+        409: `A body id violates a foreign key, or a value a unique constraint`,
         422: `Validation Error`,
       },
     });
@@ -58,7 +66,7 @@ export class FeatureService {
    * @returns string Successful Response
    * @throws ApiError
    */
-  public static completeFeature({
+  public static complete({
     projectId,
     feature,
     requestBody,
@@ -77,6 +85,10 @@ export class FeatureService {
       body: requestBody,
       mediaType: "application/json",
       errors: {
+        400: `The request breaks a rule of the domain`,
+        403: `The user is no member of the project, or the feature is disabled`,
+        404: `A path id, or an id the route reads, is not in the project`,
+        409: `A body id violates a foreign key, or a value a unique constraint`,
         422: `Validation Error`,
       },
     });
@@ -86,7 +98,7 @@ export class FeatureService {
    * @returns string Successful Response
    * @throws ApiError
    */
-  public static disableFeature({
+  public static disable({
     projectId,
     feature,
   }: {
@@ -94,13 +106,17 @@ export class FeatureService {
     feature: string;
   }): CancelablePromise<Array<string>> {
     return __request(OpenAPI, {
-      method: "POST",
+      method: "PATCH",
       url: "/projects/{project_id}/features/{feature}/disable",
       path: {
         project_id: projectId,
         feature: feature,
       },
       errors: {
+        400: `The request breaks a rule of the domain`,
+        403: `The user is no member of the project, or the feature is disabled`,
+        404: `A path id, or an id the route reads, is not in the project`,
+        409: `A body id violates a foreign key, or a value a unique constraint`,
         422: `Validation Error`,
       },
     });

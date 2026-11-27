@@ -2,77 +2,26 @@
 /* istanbul ignore file */
 /* tslint:disable */
 /* eslint-disable */
-import type { AddMissingDocsToAspectParams } from "@models/AddMissingDocsToAspectParams";
 import type { AspectCreate } from "@models/AspectCreate";
 import type { AspectRead } from "@models/AspectRead";
 import type { AspectUpdate } from "@models/AspectUpdate";
-import type { Body_perspectives_accept_label } from "@models/Body_perspectives_accept_label";
-import type { Body_perspectives_revert_label } from "@models/Body_perspectives_revert_label";
+import type { Body_perspectives_accept_labels } from "@models/Body_perspectives_accept_labels";
+import type { Body_perspectives_revert_labels } from "@models/Body_perspectives_revert_labels";
 import type { Body_perspectives_visualize_documents } from "@models/Body_perspectives_visualize_documents";
-import type { ChangeClusterParams } from "@models/ChangeClusterParams";
 import type { ClusterRead } from "@models/ClusterRead";
 import type { ClusterUpdate } from "@models/ClusterUpdate";
-import type { CreateClusterWithNameParams } from "@models/CreateClusterWithNameParams";
-import type { CreateClusterWithSdocsParams } from "@models/CreateClusterWithSdocsParams";
-import type { MergeClustersParams } from "@models/MergeClustersParams";
 import type { PerspectivesClusterSimilarities } from "@models/PerspectivesClusterSimilarities";
-import type { PerspectivesJobRead } from "@models/PerspectivesJobRead";
 import type { PerspectivesVisualization } from "@models/PerspectivesVisualization";
-import type { RecomputeClusterTitleAndDescriptionParams } from "@models/RecomputeClusterTitleAndDescriptionParams";
-import type { RefineModelParams } from "@models/RefineModelParams";
-import type { RemoveClusterParams } from "@models/RemoveClusterParams";
-import type { ResetModelParams } from "@models/ResetModelParams";
-import type { SplitClusterParams } from "@models/SplitClusterParams";
 import type { CancelablePromise } from "../core/CancelablePromise";
 import { OpenAPI } from "../core/OpenAPI";
 import { request as __request } from "../core/request";
 export class PerspectivesService {
   /**
-   * Starts the PerspectivesJob of the Aspect (aspect_id) for the given Parameters. If a job is already running, this will raise an error.
-   * @returns PerspectivesJobRead Successful Response
-   * @throws ApiError
-   */
-  public static startPerspectivesJob({
-    projectId,
-    aspectId,
-    requestBody,
-  }: {
-    projectId: number;
-    aspectId: number;
-    requestBody:
-      | AddMissingDocsToAspectParams
-      | CreateClusterWithNameParams
-      | CreateClusterWithSdocsParams
-      | RemoveClusterParams
-      | MergeClustersParams
-      | SplitClusterParams
-      | ChangeClusterParams
-      | RefineModelParams
-      | ResetModelParams
-      | RecomputeClusterTitleAndDescriptionParams;
-  }): CancelablePromise<PerspectivesJobRead> {
-    return __request(OpenAPI, {
-      method: "POST",
-      url: "/projects/{project_id}/jobs/perspectives",
-      path: {
-        project_id: projectId,
-      },
-      query: {
-        aspect_id: aspectId,
-      },
-      body: requestBody,
-      mediaType: "application/json",
-      errors: {
-        422: `Validation Error`,
-      },
-    });
-  }
-  /**
    * Creates a new Aspect
    * @returns AspectRead Successful Response
    * @throws ApiError
    */
-  public static createAspect({
+  public static create({
     projectId,
     requestBody,
   }: {
@@ -88,6 +37,10 @@ export class PerspectivesService {
       body: requestBody,
       mediaType: "application/json",
       errors: {
+        400: `The request breaks a rule of the domain`,
+        403: `The user is no member of the project, or the feature is disabled`,
+        404: `A path id, or an id the route reads, is not in the project`,
+        409: `A body id violates a foreign key, or a value a unique constraint`,
         422: `Validation Error`,
       },
     });
@@ -97,7 +50,7 @@ export class PerspectivesService {
    * @returns AspectRead Successful Response
    * @throws ApiError
    */
-  public static getAllAspects({ projectId }: { projectId: number }): CancelablePromise<Array<AspectRead>> {
+  public static getByProject({ projectId }: { projectId: number }): CancelablePromise<Array<AspectRead>> {
     return __request(OpenAPI, {
       method: "GET",
       url: "/projects/{project_id}/perspectives/aspects",
@@ -105,6 +58,10 @@ export class PerspectivesService {
         project_id: projectId,
       },
       errors: {
+        400: `The request breaks a rule of the domain`,
+        403: `The user is no member of the project, or the feature is disabled`,
+        404: `A path id, or an id the route reads, is not in the project`,
+        409: `A body id violates a foreign key, or a value a unique constraint`,
         422: `Validation Error`,
       },
     });
@@ -129,6 +86,10 @@ export class PerspectivesService {
         aspect_id: aspectId,
       },
       errors: {
+        400: `The request breaks a rule of the domain`,
+        403: `The user is no member of the project, or the feature is disabled`,
+        404: `A path id, or an id the route reads, is not in the project`,
+        409: `A body id violates a foreign key, or a value a unique constraint`,
         422: `Validation Error`,
       },
     });
@@ -138,7 +99,7 @@ export class PerspectivesService {
    * @returns AspectRead Successful Response
    * @throws ApiError
    */
-  public static updateAspectById({
+  public static updateById({
     projectId,
     aspectId,
     requestBody,
@@ -157,6 +118,10 @@ export class PerspectivesService {
       body: requestBody,
       mediaType: "application/json",
       errors: {
+        400: `The request breaks a rule of the domain`,
+        403: `The user is no member of the project, or the feature is disabled`,
+        404: `A path id, or an id the route reads, is not in the project`,
+        409: `A body id violates a foreign key, or a value a unique constraint`,
         422: `Validation Error`,
       },
     });
@@ -166,7 +131,7 @@ export class PerspectivesService {
    * @returns AspectRead Successful Response
    * @throws ApiError
    */
-  public static removeAspectById({
+  public static deleteById({
     projectId,
     aspectId,
   }: {
@@ -181,6 +146,10 @@ export class PerspectivesService {
         aspect_id: aspectId,
       },
       errors: {
+        400: `The request breaks a rule of the domain`,
+        403: `The user is no member of the project, or the feature is disabled`,
+        404: `A path id, or an id the route reads, is not in the project`,
+        409: `A body id violates a foreign key, or a value a unique constraint`,
         422: `Validation Error`,
       },
     });
@@ -205,6 +174,10 @@ export class PerspectivesService {
         aspect_id: aspectId,
       },
       errors: {
+        400: `The request breaks a rule of the domain`,
+        403: `The user is no member of the project, or the feature is disabled`,
+        404: `A path id, or an id the route reads, is not in the project`,
+        409: `A body id violates a foreign key, or a value a unique constraint`,
         422: `Validation Error`,
       },
     });
@@ -232,6 +205,10 @@ export class PerspectivesService {
         sdoc_id: sdocId,
       },
       errors: {
+        400: `The request breaks a rule of the domain`,
+        403: `The user is no member of the project, or the feature is disabled`,
+        404: `A path id, or an id the route reads, is not in the project`,
+        409: `A body id violates a foreign key, or a value a unique constraint`,
         422: `Validation Error`,
       },
     });
@@ -241,7 +218,7 @@ export class PerspectivesService {
    * @returns ClusterRead Successful Response
    * @throws ApiError
    */
-  public static getClustersForSdoc({
+  public static getClusters({
     projectId,
     aspectId,
     sdocId,
@@ -261,6 +238,10 @@ export class PerspectivesService {
         sdoc_id: sdocId,
       },
       errors: {
+        400: `The request breaks a rule of the domain`,
+        403: `The user is no member of the project, or the feature is disabled`,
+        404: `A path id, or an id the route reads, is not in the project`,
+        409: `A body id violates a foreign key, or a value a unique constraint`,
         422: `Validation Error`,
       },
     });
@@ -270,25 +251,32 @@ export class PerspectivesService {
    * @returns ClusterRead Successful Response
    * @throws ApiError
    */
-  public static updateClusterDetails({
+  public static updateCluster({
     projectId,
+    aspectId,
     clusterId,
     requestBody,
   }: {
     projectId: number;
+    aspectId: number;
     clusterId: number;
     requestBody: ClusterUpdate;
   }): CancelablePromise<ClusterRead> {
     return __request(OpenAPI, {
       method: "PATCH",
-      url: "/projects/{project_id}/perspectives/clusters/{cluster_id}",
+      url: "/projects/{project_id}/perspectives/aspects/{aspect_id}/clusters/{cluster_id}",
       path: {
         project_id: projectId,
+        aspect_id: aspectId,
         cluster_id: clusterId,
       },
       body: requestBody,
       mediaType: "application/json",
       errors: {
+        400: `The request breaks a rule of the domain`,
+        403: `The user is no member of the project, or the feature is disabled`,
+        404: `A path id, or an id the route reads, is not in the project`,
+        409: `A body id violates a foreign key, or a value a unique constraint`,
         422: `Validation Error`,
       },
     });
@@ -322,6 +310,10 @@ export class PerspectivesService {
       body: requestBody,
       mediaType: "application/json",
       errors: {
+        400: `The request breaks a rule of the domain`,
+        403: `The user is no member of the project, or the feature is disabled`,
+        404: `A path id, or an id the route reads, is not in the project`,
+        409: `A body id violates a foreign key, or a value a unique constraint`,
         422: `Validation Error`,
       },
     });
@@ -331,7 +323,7 @@ export class PerspectivesService {
    * @returns PerspectivesVisualization Successful Response
    * @throws ApiError
    */
-  public static acceptLabel({
+  public static acceptLabels({
     projectId,
     aspectId,
     searchQuery,
@@ -340,10 +332,10 @@ export class PerspectivesService {
     projectId: number;
     aspectId: number;
     searchQuery: string;
-    requestBody: Body_perspectives_accept_label;
+    requestBody: Body_perspectives_accept_labels;
   }): CancelablePromise<PerspectivesVisualization> {
     return __request(OpenAPI, {
-      method: "POST",
+      method: "PATCH",
       url: "/projects/{project_id}/perspectives/aspects/{aspect_id}/accept-labels",
       path: {
         project_id: projectId,
@@ -355,6 +347,10 @@ export class PerspectivesService {
       body: requestBody,
       mediaType: "application/json",
       errors: {
+        400: `The request breaks a rule of the domain`,
+        403: `The user is no member of the project, or the feature is disabled`,
+        404: `A path id, or an id the route reads, is not in the project`,
+        409: `A body id violates a foreign key, or a value a unique constraint`,
         422: `Validation Error`,
       },
     });
@@ -364,7 +360,7 @@ export class PerspectivesService {
    * @returns PerspectivesVisualization Successful Response
    * @throws ApiError
    */
-  public static revertLabel({
+  public static revertLabels({
     projectId,
     aspectId,
     searchQuery,
@@ -373,10 +369,10 @@ export class PerspectivesService {
     projectId: number;
     aspectId: number;
     searchQuery: string;
-    requestBody: Body_perspectives_revert_label;
+    requestBody: Body_perspectives_revert_labels;
   }): CancelablePromise<PerspectivesVisualization> {
     return __request(OpenAPI, {
-      method: "POST",
+      method: "PATCH",
       url: "/projects/{project_id}/perspectives/aspects/{aspect_id}/revert-labels",
       path: {
         project_id: projectId,
@@ -388,6 +384,10 @@ export class PerspectivesService {
       body: requestBody,
       mediaType: "application/json",
       errors: {
+        400: `The request breaks a rule of the domain`,
+        403: `The user is no member of the project, or the feature is disabled`,
+        404: `A path id, or an id the route reads, is not in the project`,
+        409: `A body id violates a foreign key, or a value a unique constraint`,
         422: `Validation Error`,
       },
     });
@@ -412,6 +412,10 @@ export class PerspectivesService {
         aspect_id: aspectId,
       },
       errors: {
+        400: `The request breaks a rule of the domain`,
+        403: `The user is no member of the project, or the feature is disabled`,
+        404: `A path id, or an id the route reads, is not in the project`,
+        409: `A body id violates a foreign key, or a value a unique constraint`,
         422: `Validation Error`,
       },
     });

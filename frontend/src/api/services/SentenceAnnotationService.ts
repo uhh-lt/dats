@@ -2,7 +2,7 @@
 /* istanbul ignore file */
 /* tslint:disable */
 /* eslint-disable */
-import type { Body_sentenceAnnotation_count_annotations } from "@models/Body_sentenceAnnotation_count_annotations";
+import type { Body_sentenceAnnotation_count } from "@models/Body_sentenceAnnotation_count";
 import type { SentenceAnnotationCreate } from "@models/SentenceAnnotationCreate";
 import type { SentenceAnnotationRead } from "@models/SentenceAnnotationRead";
 import type { SentenceAnnotationUpdate } from "@models/SentenceAnnotationUpdate";
@@ -17,7 +17,7 @@ export class SentenceAnnotationService {
    * @returns SentenceAnnotationRead Successful Response
    * @throws ApiError
    */
-  public static createSentenceAnnotation({
+  public static create({
     projectId,
     requestBody,
     userId,
@@ -41,6 +41,10 @@ export class SentenceAnnotationService {
       body: requestBody,
       mediaType: "application/json",
       errors: {
+        400: `The request breaks a rule of the domain`,
+        403: `The user is no member of the project, or the feature is disabled`,
+        404: `A path id, or an id the route reads, is not in the project`,
+        409: `A body id violates a foreign key, or a value a unique constraint`,
         422: `Validation Error`,
       },
     });
@@ -50,7 +54,7 @@ export class SentenceAnnotationService {
    * @returns SentenceAnnotationRead Successful Response
    * @throws ApiError
    */
-  public static getSentenceAnnotations({
+  public static getByProject({
     projectId,
     userId,
     sdocId,
@@ -73,6 +77,10 @@ export class SentenceAnnotationService {
         code_id: codeId,
       },
       errors: {
+        400: `The request breaks a rule of the domain`,
+        403: `The user is no member of the project, or the feature is disabled`,
+        404: `A path id, or an id the route reads, is not in the project`,
+        409: `A body id violates a foreign key, or a value a unique constraint`,
         422: `Validation Error`,
       },
     });
@@ -82,7 +90,7 @@ export class SentenceAnnotationService {
    * @returns SentenceAnnotationRead Successful Response
    * @throws ApiError
    */
-  public static createSentenceAnnotationsBulk({
+  public static createBulk({
     projectId,
     requestBody,
     userId,
@@ -106,6 +114,10 @@ export class SentenceAnnotationService {
       body: requestBody,
       mediaType: "application/json",
       errors: {
+        400: `The request breaks a rule of the domain`,
+        403: `The user is no member of the project, or the feature is disabled`,
+        404: `A path id, or an id the route reads, is not in the project`,
+        409: `A body id violates a foreign key, or a value a unique constraint`,
         422: `Validation Error`,
       },
     });
@@ -115,7 +127,7 @@ export class SentenceAnnotationService {
    * @returns SentenceAnnotationRead Successful Response
    * @throws ApiError
    */
-  public static updateSentenceAnnotationsBulk({
+  public static updateBulk({
     projectId,
     requestBody,
   }: {
@@ -131,6 +143,10 @@ export class SentenceAnnotationService {
       body: requestBody,
       mediaType: "application/json",
       errors: {
+        400: `The request breaks a rule of the domain`,
+        403: `The user is no member of the project, or the feature is disabled`,
+        404: `A path id, or an id the route reads, is not in the project`,
+        409: `A body id violates a foreign key, or a value a unique constraint`,
         422: `Validation Error`,
       },
     });
@@ -140,7 +156,7 @@ export class SentenceAnnotationService {
    * @returns SentenceAnnotationRead Successful Response
    * @throws ApiError
    */
-  public static deleteSentenceAnnotationsBulk({
+  public static deleteBulk({
     projectId,
     requestBody,
   }: {
@@ -156,6 +172,10 @@ export class SentenceAnnotationService {
       body: requestBody,
       mediaType: "application/json",
       errors: {
+        400: `The request breaks a rule of the domain`,
+        403: `The user is no member of the project, or the feature is disabled`,
+        404: `A path id, or an id the route reads, is not in the project`,
+        409: `A body id violates a foreign key, or a value a unique constraint`,
         422: `Validation Error`,
       },
     });
@@ -165,7 +185,7 @@ export class SentenceAnnotationService {
    * @returns SentenceAnnotatorResult Successful Response
    * @throws ApiError
    */
-  public static getSentenceAnnotationsBySentence({
+  public static getPerSentence({
     projectId,
     userId,
     sdocId,
@@ -176,7 +196,7 @@ export class SentenceAnnotationService {
   }): CancelablePromise<SentenceAnnotatorResult> {
     return __request(OpenAPI, {
       method: "GET",
-      url: "/projects/{project_id}/sentence-annotations/by-sentence",
+      url: "/projects/{project_id}/sentence-annotations/per-sentence",
       path: {
         project_id: projectId,
       },
@@ -185,6 +205,10 @@ export class SentenceAnnotationService {
         sdoc_id: sdocId,
       },
       errors: {
+        400: `The request breaks a rule of the domain`,
+        403: `The user is no member of the project, or the feature is disabled`,
+        404: `A path id, or an id the route reads, is not in the project`,
+        409: `A body id violates a foreign key, or a value a unique constraint`,
         422: `Validation Error`,
       },
     });
@@ -209,6 +233,10 @@ export class SentenceAnnotationService {
         sentence_annotation_id: sentenceAnnotationId,
       },
       errors: {
+        400: `The request breaks a rule of the domain`,
+        403: `The user is no member of the project, or the feature is disabled`,
+        404: `A path id, or an id the route reads, is not in the project`,
+        409: `A body id violates a foreign key, or a value a unique constraint`,
         422: `Validation Error`,
       },
     });
@@ -237,6 +265,10 @@ export class SentenceAnnotationService {
       body: requestBody,
       mediaType: "application/json",
       errors: {
+        400: `The request breaks a rule of the domain`,
+        403: `The user is no member of the project, or the feature is disabled`,
+        404: `A path id, or an id the route reads, is not in the project`,
+        409: `A body id violates a foreign key, or a value a unique constraint`,
         422: `Validation Error`,
       },
     });
@@ -261,6 +293,10 @@ export class SentenceAnnotationService {
         sentence_annotation_id: sentenceAnnotationId,
       },
       errors: {
+        400: `The request breaks a rule of the domain`,
+        403: `The user is no member of the project, or the feature is disabled`,
+        404: `A path id, or an id the route reads, is not in the project`,
+        409: `A body id violates a foreign key, or a value a unique constraint`,
         422: `Validation Error`,
       },
     });
@@ -270,14 +306,14 @@ export class SentenceAnnotationService {
    * @returns number Successful Response
    * @throws ApiError
    */
-  public static countAnnotations({
+  public static count({
     projectId,
     userId,
     requestBody,
   }: {
     projectId: number;
     userId: number;
-    requestBody: Body_sentenceAnnotation_count_annotations;
+    requestBody: Body_sentenceAnnotation_count;
   }): CancelablePromise<Record<string, number>> {
     return __request(OpenAPI, {
       method: "POST",
@@ -291,6 +327,10 @@ export class SentenceAnnotationService {
       body: requestBody,
       mediaType: "application/json",
       errors: {
+        400: `The request breaks a rule of the domain`,
+        403: `The user is no member of the project, or the feature is disabled`,
+        404: `A path id, or an id the route reads, is not in the project`,
+        409: `A body id violates a foreign key, or a value a unique constraint`,
         422: `Validation Error`,
       },
     });

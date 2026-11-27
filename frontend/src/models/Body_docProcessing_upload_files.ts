@@ -2,7 +2,7 @@
 /* istanbul ignore file */
 /* tslint:disable */
 /* eslint-disable */
-export type Body_docprocessing_upload_files = {
+export type Body_docProcessing_upload_files = {
   /**
    * ProcessingSettings as JSON string
    */

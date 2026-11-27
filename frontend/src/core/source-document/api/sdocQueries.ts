@@ -56,7 +56,11 @@ export const sdocQueries = {
       queryKey: [...sdocQueries.idByFilenameScope(projectId), filename] as const,
       queryFn: !filename
         ? skipToken
-        : () => SourceDocumentService.resolveFilename({ projectId, filename, onlyFinished: true }),
+        : () =>
+            SourceDocumentService.getByProject({ projectId, filename, onlyFinished: true }).then((sdocs) => {
+              if (sdocs.length === 0) throw new Error(`No document with the filename ${filename}`);
+              return sdocs[0].id;
+            }),
       staleTime: Infinity,
     }),
 

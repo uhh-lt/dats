@@ -62,7 +62,7 @@ export const memoQueries = {
   recent: (projectId: number | null | undefined) =>
     queryOptions({
       queryKey: memoQueries.recentScope(projectId),
-      queryFn: !projectId ? skipToken : () => MemoService.getRecentMemos({ projectId }),
+      queryFn: !projectId ? skipToken : () => MemoService.getByProject({ projectId, recent: true }),
     }),
 
   // search results (flat) and search results grouped by a column

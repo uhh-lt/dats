@@ -2,10 +2,9 @@
 /* istanbul ignore file */
 /* tslint:disable */
 /* eslint-disable */
-import type { Body_word_frequency_word_frequency_analysis } from "@models/Body_word_frequency_word_frequency_analysis";
-import type { Body_word_frequency_word_frequency_analysis_export } from "@models/Body_word_frequency_word_frequency_analysis_export";
+import type { Body_wordFrequency_word_frequency_analysis } from "@models/Body_wordFrequency_word_frequency_analysis";
+import type { Body_wordFrequency_word_frequency_analysis_export } from "@models/Body_wordFrequency_word_frequency_analysis_export";
 import type { ColumnInfo_WordFrequencyColumns_ } from "@models/ColumnInfo_WordFrequencyColumns_";
-import type { WordFrequencyRead } from "@models/WordFrequencyRead";
 import type { WordFrequencyResult } from "@models/WordFrequencyResult";
 import type { CancelablePromise } from "../core/CancelablePromise";
 import { OpenAPI } from "../core/OpenAPI";
@@ -28,32 +27,10 @@ export class WordFrequencyService {
         project_id: projectId,
       },
       errors: {
-        422: `Validation Error`,
-      },
-    });
-  }
-  /**
-   * Returns the word frequencies of the SourceDocument
-   * @returns WordFrequencyRead Successful Response
-   * @throws ApiError
-   */
-  public static getWordFrequencies({
-    projectId,
-    sdocId,
-  }: {
-    projectId: number;
-    sdocId: number;
-  }): CancelablePromise<Array<WordFrequencyRead>> {
-    return __request(OpenAPI, {
-      method: "GET",
-      url: "/projects/{project_id}/word-frequencies",
-      path: {
-        project_id: projectId,
-      },
-      query: {
-        sdoc_id: sdocId,
-      },
-      errors: {
+        400: `The request breaks a rule of the domain`,
+        403: `The user is no member of the project, or the feature is disabled`,
+        404: `A path id, or an id the route reads, is not in the project`,
+        409: `A body id violates a foreign key, or a value a unique constraint`,
         422: `Validation Error`,
       },
     });
@@ -72,7 +49,7 @@ export class WordFrequencyService {
     projectId: number;
     page: number;
     pageSize: number;
-    requestBody: Body_word_frequency_word_frequency_analysis;
+    requestBody: Body_wordFrequency_word_frequency_analysis;
   }): CancelablePromise<WordFrequencyResult> {
     return __request(OpenAPI, {
       method: "POST",
@@ -87,6 +64,10 @@ export class WordFrequencyService {
       body: requestBody,
       mediaType: "application/json",
       errors: {
+        400: `The request breaks a rule of the domain`,
+        403: `The user is no member of the project, or the feature is disabled`,
+        404: `A path id, or an id the route reads, is not in the project`,
+        409: `A body id violates a foreign key, or a value a unique constraint`,
         422: `Validation Error`,
       },
     });
@@ -101,7 +82,7 @@ export class WordFrequencyService {
     requestBody,
   }: {
     projectId: number;
-    requestBody: Body_word_frequency_word_frequency_analysis_export;
+    requestBody: Body_wordFrequency_word_frequency_analysis_export;
   }): CancelablePromise<string> {
     return __request(OpenAPI, {
       method: "POST",
@@ -112,6 +93,10 @@ export class WordFrequencyService {
       body: requestBody,
       mediaType: "application/json",
       errors: {
+        400: `The request breaks a rule of the domain`,
+        403: `The user is no member of the project, or the feature is disabled`,
+        404: `A path id, or an id the route reads, is not in the project`,
+        409: `A body id violates a foreign key, or a value a unique constraint`,
         422: `Validation Error`,
       },
     });

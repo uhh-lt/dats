@@ -50,7 +50,7 @@ export const classifierQueries = {
   info: (projectId: number | undefined) =>
     queryOptions({
       queryKey: classifierQueries.infoScope(projectId),
-      queryFn: projectId === undefined ? skipToken : () => ClassifierService.getClassifierInfo({ projectId }),
+      queryFn: projectId === undefined ? skipToken : () => ClassifierService.getInfo({ projectId }),
       // Classifier settings come from backend configuration and do not change at
       // runtime, so one response can be reused for the lifetime of the frontend.
       staleTime: Infinity,

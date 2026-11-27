@@ -52,7 +52,7 @@ export const bboxAnnotationQueries = {
       queryFn:
         !projectId || !codeId || !userId
           ? skipToken
-          : () => BboxAnnotationService.getBboxAnnotations({ projectId, userId, codeId }),
+          : () => BboxAnnotationService.getByProject({ projectId, userId, codeId }),
     }),
 
   bySdocScope: (projectId: number | null | undefined) =>
@@ -67,7 +67,7 @@ export const bboxAnnotationQueries = {
       queryFn:
         !projectId || !sdocId || !userId
           ? skipToken
-          : () => BboxAnnotationService.getBboxAnnotations({ projectId, userId, sdocId }),
+          : () => BboxAnnotationService.getByProject({ projectId, userId, sdocId }),
     }),
   // the column infos of the bbox annotation filter table
   tableInfo: (projectId: number) =>

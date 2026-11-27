@@ -43,38 +43,10 @@ export class RagService {
       body: requestBody,
       mediaType: "application/json",
       errors: {
-        422: `Validation Error`,
-      },
-    });
-  }
-  /**
-   * Initiate or continue a chat session with the LLM using a prompt
-   * @returns ChatSessionResponse Successful Response
-   * @throws ApiError
-   */
-  public static chatSession({
-    projectId,
-    model,
-    prompt,
-    sessionId,
-  }: {
-    projectId: number;
-    model: string;
-    prompt: string;
-    sessionId?: string | null;
-  }): CancelablePromise<ChatSessionResponse> {
-    return __request(OpenAPI, {
-      method: "GET",
-      url: "/projects/{project_id}/rag/chat-session",
-      path: {
-        project_id: projectId,
-      },
-      query: {
-        model: model,
-        prompt: prompt,
-        session_id: sessionId,
-      },
-      errors: {
+        400: `The request breaks a rule of the domain`,
+        403: `The user is no member of the project, or the feature is disabled`,
+        404: `A path id, or an id the route reads, is not in the project`,
+        409: `A body id violates a foreign key, or a value a unique constraint`,
         422: `Validation Error`,
       },
     });
