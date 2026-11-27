@@ -20,7 +20,7 @@ from core.memo.memo_utils import (
 )
 from systems.websocket_system.websocket_dependency import WebsocketEmitter
 
-router = project_router("/memos", tags=["memo", "mcp"])
+router = project_router("/memos", tags=["memos", "mcp"])
 
 
 # --- create operations
@@ -230,11 +230,11 @@ def delete_by_id(
 
 
 @router.post(
-    "/suggestions",
+    "/suggestion",
     response_model=str,
     summary="Generates a 1–2 sentence memo suggestion using LLM based on the attached object",
 )
-def compute_suggestions(
+def compute_suggestion(
     *,
     db: DBSession,
     project_id: int,

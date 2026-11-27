@@ -15,7 +15,7 @@ from systems.websocket_system.websocket_dependency import WebsocketEmitter
 
 router = project_router(
     "/tag-recommendations",
-    tags=["TagRecommendation"],
+    tags=["tagRecommendations"],
     feature=TAG_RECOMMENDATION,
 )
 

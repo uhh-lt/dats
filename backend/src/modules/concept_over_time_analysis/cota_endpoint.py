@@ -21,7 +21,7 @@ cotas = COTAService()
 
 router = project_router(
     "/concept-over-time-analyses",
-    tags=["conceptOverTimeAnalysis"],
+    tags=["conceptOverTimeAnalyses"],
     feature=CONCEPTS_OVER_TIME,
 )
 

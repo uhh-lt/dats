@@ -15,7 +15,7 @@ from modules.experiment.experiment_run_dto import ExperimentRunCreate
 from modules.experiment.experiment_service import ExperimentService
 from systems.websocket_system.websocket_dependency import WebsocketEmitter
 
-router = project_router("/experiments", tags=["experiment"])
+router = project_router("/experiments", tags=["experiments"])
 
 exs = ExperimentService()
 

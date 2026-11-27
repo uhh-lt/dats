@@ -16,7 +16,7 @@ from modules.search_view.search_view_enum import SearchEntityType
 from modules.search_view.search_view_service import SearchViewService
 from systems.websocket_system.websocket_dependency import WebsocketEmitter
 
-router = project_router("/search-views", tags=["searchView"])
+router = project_router("/search-views", tags=["searchViews"])
 
 
 # --- create operations

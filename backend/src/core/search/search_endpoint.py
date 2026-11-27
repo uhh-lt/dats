@@ -49,11 +49,11 @@ router = project_router("/search", tags=["search", "mcp"])
 
 
 @router.get(
-    "/source-documents/info",
+    "/source-documents/columns",
     response_model=list[ColumnInfo[SdocColumns]],
     summary="Returns Search Info.",
 )
-def search_sdoc_info(
+def search_sdoc_columns(
     *,
     db: DBSession,
     project_id: int,
@@ -89,11 +89,11 @@ def search_sdocs(
 
 
 @router.get(
-    "/memos/info",
+    "/memos/columns",
     response_model=list[ColumnInfo[MemoColumns]],
     summary="Returns Memo Table Info.",
 )
-def search_memo_info(*, project_id: int) -> list[ColumnInfo[MemoColumns]]:
+def search_memo_columns(*, project_id: int) -> list[ColumnInfo[MemoColumns]]:
     return find_memo_info(project_id=project_id)
 
 
@@ -132,11 +132,11 @@ def search_memo_groups(
 
 
 @router.get(
-    "/span-annotations/info",
+    "/span-annotations/columns",
     response_model=list[ColumnInfo[SpanColumns]],
     summary="Returns SpanAnnotationSearch Info.",
 )
-def search_span_annotation_info(
+def search_span_annotation_columns(
     *,
     db: DBSession,
     project_id: int,
@@ -182,11 +182,11 @@ def search_span_annotation_groups(
 
 
 @router.get(
-    "/sentence-annotations/info",
+    "/sentence-annotations/columns",
     response_model=list[ColumnInfo[SentAnnoColumns]],
     summary="Returns SentenceAnnotationSearch Info.",
 )
-def search_sentence_annotation_info(
+def search_sentence_annotation_columns(
     *,
     db: DBSession,
     project_id: int,
@@ -232,11 +232,11 @@ def search_sentence_annotation_groups(
 
 
 @router.get(
-    "/bbox-annotations/info",
+    "/bbox-annotations/columns",
     response_model=list[ColumnInfo[BBoxColumns]],
     summary="Returns BBoxAnnotationSearch Info.",
 )
-def search_bbox_annotation_info(
+def search_bbox_annotation_columns(
     *,
     db: DBSession,
     project_id: int,

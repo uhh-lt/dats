@@ -11,7 +11,7 @@ from core.doc.folder_exceptions import FolderNotSdocFolderError
 from core.doc.folder_service import FolderService
 from systems.websocket_system.websocket_dependency import WebsocketEmitter
 
-router = project_router("/folders", tags=["folder", "mcp"])
+router = project_router("/folders", tags=["folders", "mcp"])
 
 
 # --- create operations

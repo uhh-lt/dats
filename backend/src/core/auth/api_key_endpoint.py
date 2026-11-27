@@ -20,7 +20,7 @@ from core.auth.security import generate_api_key, hash_api_key
 from core.user.user_orm import UserORM
 from systems.websocket_system.websocket_dependency import WebsocketEmitter
 
-router = APIRouter(prefix="/users/me/api-keys", tags=["apiKey"])
+router = APIRouter(prefix="/users/me/api-keys", tags=["users"])
 
 
 # --- create operations
@@ -31,7 +31,7 @@ router = APIRouter(prefix="/users/me/api-keys", tags=["apiKey"])
     response_model=ApiKeyCreatedResponse,
     summary="Generate a new API key with optional expiration.",
 )
-def create(
+def create_api_key(
     *,
     db: DBSession,
     api_key: ApiKeyCreate,
@@ -77,7 +77,7 @@ def create(
     response_model=list[ApiKeyRead],
     summary="List all active API keys for the current user.",
 )
-def get_by_user(
+def get_api_keys(
     *,
     db: DBSession,
     current_user: UserORM = Depends(get_current_user),
@@ -95,7 +95,7 @@ def get_by_user(
     "/{api_key_id}",
     summary="Revoke/Delete an API key.",
 )
-def delete_by_id(
+def delete_api_key(
     *,
     db: DBSession,
     api_key_id: int,

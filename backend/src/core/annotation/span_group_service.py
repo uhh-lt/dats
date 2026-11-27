@@ -78,23 +78,36 @@ class SpanGroupService(metaclass=SingletonMeta):
         ]
 
     def read_with_annotations_by_user(
-        self, *, db: Session, project_id: int, user_id: int, sdoc_id: int | None
+        self,
+        *,
+        db: Session,
+        project_id: int,
+        user_id: int,
+        sdoc_id: int | None,
+        span_annotation_id: int | None = None,
     ) -> list[SpanGroupWithAnnotationsRead]:
         """
         Read the span groups of a user in the project, optionally only those in a
-        document, with their span annotations.
+        document or those that contain a span annotation, with their span
+        annotations.
 
         Args:
             project_id: The project of the span groups.
             user_id: The user the span groups belong to.
             sdoc_id: Only the span groups in this document.
+            span_annotation_id: Only the span groups that contain this span
+                annotation.
 
         Returns:
             The span groups ordered by id, each with its span annotations ordered by
             id.
         """
         groups = crud_span_group.read_by_user(
-            db=db, project_id=project_id, user_id=user_id, sdoc_id=sdoc_id
+            db=db,
+            project_id=project_id,
+            user_id=user_id,
+            sdoc_id=sdoc_id,
+            span_annotation_id=span_annotation_id,
         )
 
         # the spans through crud_span_anno, which eager-loads what their DTO reads

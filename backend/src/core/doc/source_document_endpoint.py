@@ -15,7 +15,7 @@ from core.doc.source_document_dto import (
 from core.doc.source_document_service import SourceDocumentService
 from systems.websocket_system.websocket_dependency import WebsocketEmitter
 
-router = project_router("/source-documents", tags=["sourceDocument", "mcp"])
+router = project_router("/source-documents", tags=["sourceDocuments", "mcp"])
 
 
 # --- read operations

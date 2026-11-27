@@ -590,7 +590,7 @@ def test_unlink_tags_bulk_of_another_project_removes_nothing(
 
 
 # ===========================================================================
-# COUNT TAGS (POST /projects/{project_id}/tags/count) TESTS
+# COUNT TAGS (POST /projects/{project_id}/tags/counts) TESTS
 # ===========================================================================
 
 
@@ -606,7 +606,7 @@ def test_count_tags_of_all_tags(
     tag2 = project_with_multiple_sdocs_and_multiple_tags["tag2"]
 
     resp = client.post(
-        f"{_tags_url(project.id)}/count", json={"sdoc_ids": [sdoc1.id, sdoc2.id]}
+        f"{_tags_url(project.id)}/counts", json={"sdoc_ids": [sdoc1.id, sdoc2.id]}
     )
 
     assert resp.status_code == 200, resp.text
@@ -622,7 +622,7 @@ def test_count_tags_of_given_tags(
     tag2 = project_with_multiple_sdocs_and_multiple_tags["tag2"]
 
     resp = client.post(
-        f"{_tags_url(project.id)}/count",
+        f"{_tags_url(project.id)}/counts",
         json={"sdoc_ids": [sdoc2.id], "tag_ids": [tag2.id]},
     )
 
@@ -638,7 +638,7 @@ def test_count_tags_of_another_project_counts_nothing(
     own, foreign = tenants["own"], tenants["foreign"]
 
     resp = client.post(
-        f"{_tags_url(own['project'].id)}/count",
+        f"{_tags_url(own['project'].id)}/counts",
         json={"sdoc_ids": [foreign["sdoc"].id], "tag_ids": [foreign["tag"].id]},
     )
 

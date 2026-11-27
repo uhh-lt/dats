@@ -11,7 +11,7 @@ from systems.feature_system.feature_service import FeatureService
 from systems.websocket_system.websocket_dependency import WebsocketEmitter
 
 # the Features of a project
-router = project_router("/features", tags=["feature", "mcp"])
+router = project_router("/features", tags=["features", "mcp"])
 
 
 # --- read operations

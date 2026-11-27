@@ -8,11 +8,11 @@ from modules.statistics.statistics_dto import (
 )
 from modules.statistics.statistics_service import StatisticsService
 
-router = project_router("", tags=["statistics"])
+router = project_router("/statistics", tags=["statistics"])
 
 
 @router.post(
-    "/code-statistics",
+    "/codes",
     response_model=list[SpanEntityStat],
     summary="Returns SpanEntityStats for the given SourceDocuments.",
 )
@@ -41,7 +41,7 @@ def compute_code_statistics(
 
 
 @router.post(
-    "/tag-statistics",
+    "/tags",
     response_model=list[TagStat],
     summary="Returns Stat for the given SourceDocuments.",
 )

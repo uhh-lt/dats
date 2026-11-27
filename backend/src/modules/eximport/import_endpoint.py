@@ -10,7 +10,7 @@ from modules.eximport.import_service import ImportJobPreparationError, ImportSer
 from repos.filesystem.temporary_file_crud import crud_temporary_file
 from systems.job_system.job_service import JobService
 
-router = project_router("/jobs/import", tags=["job"])
+router = project_router("/jobs/import", tags=["jobs"])
 
 ims: ImportService = ImportService()
 js: JobService = JobService()

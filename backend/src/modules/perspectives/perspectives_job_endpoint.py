@@ -16,7 +16,7 @@ from systems.job_system.job_service import JobService
 from systems.job_system.job_system_enum import JobStatus
 from systems.websocket_system.websocket_dependency import WebsocketEmitter
 
-router = project_router("/jobs/perspectives", tags=["job"])
+router = project_router("/jobs/perspectives", tags=["jobs"])
 
 js = JobService()
 

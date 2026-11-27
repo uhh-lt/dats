@@ -41,7 +41,10 @@ ARGUMENTS: dict[str, Callable[[TenantRows], dict[str, Any]]] = {
         "params": {"user_id": rows["adoc"].user_id}
     },
     "GET /projects/{project_id}/span-groups": lambda rows: {
-        "params": {"user_id": rows["adoc"].user_id}
+        "params": {
+            "user_id": rows["adoc"].user_id,
+            "span_annotation_id": rows["span"].id,
+        }
     },
     "GET /projects/{project_id}/source-documents": lambda rows: {
         "params": {"filename": rows["sdoc"].filename}
@@ -91,21 +94,21 @@ ARGUMENTS: dict[str, Callable[[TenantRows], dict[str, Any]]] = {
     "POST /projects/{project_id}/search/bbox-annotations/groups": lambda rows: {
         "json": {"filter": _NO_FILTER, "group_by": {"field": "BB_USER_ID"}}
     },
-    "POST /projects/{project_id}/span-annotations/count": lambda rows: {
+    "POST /projects/{project_id}/span-annotations/counts": lambda rows: {
         "json": {
             "user_id": rows["adoc"].user_id,
             "sdoc_ids": [rows["sdoc"].id],
             "code_ids": [rows["code"].id, rows["child_code"].id],
         },
     },
-    "POST /projects/{project_id}/sentence-annotations/count": lambda rows: {
+    "POST /projects/{project_id}/sentence-annotations/counts": lambda rows: {
         "json": {
             "user_id": rows["adoc"].user_id,
             "sdoc_ids": [rows["sdoc"].id],
             "code_ids": [rows["code"].id, rows["child_code"].id],
         },
     },
-    "POST /projects/{project_id}/tags/count": lambda rows: {
+    "POST /projects/{project_id}/tags/counts": lambda rows: {
         "json": {"sdoc_ids": [rows["sdoc"].id, rows["bare_sdoc"].id], "tag_ids": None}
     },
     "POST /projects/{project_id}/doc-processing/statuses": lambda rows: {
@@ -176,13 +179,13 @@ ARGUMENTS: dict[str, Callable[[TenantRows], dict[str, Any]]] = {
             "doctypes": ["text"],
         },
     },
-    "POST /projects/{project_id}/code-statistics": lambda rows: {
+    "POST /projects/{project_id}/statistics/codes": lambda rows: {
         "json": {
             "code_id": rows["code"].id,
             "sdoc_ids": [rows["sdoc"].id, rows["bare_sdoc"].id],
         },
     },
-    "POST /projects/{project_id}/tag-statistics": lambda rows: {
+    "POST /projects/{project_id}/statistics/tags": lambda rows: {
         "json": {"sdoc_ids": [rows["sdoc"].id, rows["bare_sdoc"].id]}
     },
     "POST /projects/{project_id}/word-frequencies": lambda rows: {

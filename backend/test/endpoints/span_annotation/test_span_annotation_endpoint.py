@@ -8,7 +8,6 @@ from core.annotation.span_annotation_dto import (
     SpanAnnotationRead,
     SpanAnnotationUpdate,
 )
-from core.annotation.span_group_dto import SpanGroupRead
 from core.project.project_orm import ProjectORM
 from provenance_test_utils import (
     annotation_route,
@@ -694,7 +693,7 @@ def test_count_span_annotations(
 
     payload = {"sdoc_ids": [sdoc.id], "code_ids": [code.id]}
     resp = client.post(
-        f"{_url(project.id)}/count", json={"user_id": test_user.id, **(payload)}
+        f"{_url(project.id)}/counts", json={"user_id": test_user.id, **(payload)}
     )
 
     assert resp.status_code == 200, resp.text
@@ -711,160 +710,12 @@ def test_count_annotation_if_not_exists(
     payload = {"sdoc_ids": [not_existing_id], "code_ids": [not_existing_id]}
 
     resp = client.post(
-        f"{_url(test_project.id)}/count",
+        f"{_url(test_project.id)}/counts",
         json={"user_id": not_existing_id, **(payload)},
     )
 
     assert resp.status_code == 200, resp.text
     assert resp.json() == {}
-
-
-def test_add_to_group_ok(
-    client: TestClient,
-    project_with_span_annotations_and_group,
-):
-    project = project_with_span_annotations_and_group["project"]
-    span_annotation = project_with_span_annotations_and_group["span_annotation"]
-    span_group = project_with_span_annotations_and_group["span_group"]
-    sdoc = project_with_span_annotations_and_group["source_document"]
-    code = project_with_span_annotations_and_group["code"]
-
-    resp = client.put(
-        f"{_url(project.id)}/{span_annotation.id}/span-groups/{span_group.id}"
-    )
-
-    assert resp.status_code == 200, resp.text
-    body = resp.json()
-    assert body["id"] == span_annotation.id
-    assert body["sdoc_id"] == sdoc.id
-    assert body["code_id"] == code.id
-
-
-def test_add_to_group_not_found(client: TestClient, test_project: ProjectORM):
-    resp = client.put(f"{_url(test_project.id)}/999999/span-groups/888888")
-
-    assert resp.status_code == 404, resp.text
-
-
-def test_add_to_group_rejects_a_span_group_of_another_project(
-    client: TestClient, tenants: TwoTenants
-):
-    """A span annotation cannot join the span group of another project, also when
-    the user is a member of both: the group does not exist in the path's project
-    (404) and the span annotation keeps its groups."""
-    project = tenants["own"]["project"]
-    span = tenants["own"]["span"]
-    foreign_group = tenants["foreign"]["span_group"]
-
-    resp = client.put(f"{_url(project.id)}/{span.id}/span-groups/{foreign_group.id}")
-
-    assert resp.status_code == 404, resp.text
-    resp = client.get(f"{_url(project.id)}/{span.id}/span-groups")
-    assert resp.status_code == 200, resp.text
-    assert [group["id"] for group in resp.json()] == [tenants["own"]["span_group"].id]
-
-
-def test_remove_from_group_ok(
-    client: TestClient,
-    project_with_span_annotations_and_linked_group,
-):
-    project = project_with_span_annotations_and_linked_group["project"]
-    sdoc = project_with_span_annotations_and_linked_group["source_document"]
-    code = project_with_span_annotations_and_linked_group["code"]
-    span_annotation = project_with_span_annotations_and_linked_group["span_annotation"]
-    span_group = project_with_span_annotations_and_linked_group["span_group"]
-
-    resp = client.delete(
-        f"{_url(project.id)}/{span_annotation.id}/span-groups/{span_group.id}"
-    )
-
-    assert resp.status_code == 200, resp.text
-    deleted = SpanAnnotationRead.model_validate(resp.json())
-    assert deleted.id == span_annotation.id
-    assert deleted.sdoc_id == sdoc.id
-    assert deleted.code_id == code.id
-    assert deleted.begin == span_annotation.begin
-    assert deleted.end == span_annotation.end
-    assert span_group.id not in deleted.group_ids
-
-    groups_resp = client.get(f"{_url(project.id)}/{span_annotation.id}/span-groups")
-    assert groups_resp.status_code == 200, groups_resp.text
-    assert groups_resp.json() == []
-
-
-def test_remove_from_group_rejects_a_span_group_of_another_project(
-    client: TestClient, tenants: TwoTenants
-):
-    """Removing a span annotation from the span group of another project fails,
-    because the group does not exist in the path's project (404); the span
-    annotation keeps its groups."""
-    project = tenants["own"]["project"]
-    span = tenants["own"]["span"]
-    foreign_group = tenants["foreign"]["span_group"]
-
-    resp = client.delete(f"{_url(project.id)}/{span.id}/span-groups/{foreign_group.id}")
-
-    assert resp.status_code == 404, resp.text
-    resp = client.get(f"{_url(project.id)}/{span.id}/span-groups")
-    assert resp.status_code == 200, resp.text
-    assert [group["id"] for group in resp.json()] == [tenants["own"]["span_group"].id]
-
-
-def test_remove_from_group_not_exists(client: TestClient, test_project: ProjectORM):
-    resp = client.delete(f"{_url(test_project.id)}/999999/span-groups/888888")
-
-    assert resp.status_code == 404, resp.text
-
-
-def test_remove_from_all_groups_ok(
-    client: TestClient,
-    project_with_span_annotations_and_linked_group,
-):
-    """Removing a span annotation from all its groups returns the span annotation
-    without groups."""
-    project = project_with_span_annotations_and_linked_group["project"]
-    span_annotation = project_with_span_annotations_and_linked_group["span_annotation"]
-    sdoc = project_with_span_annotations_and_linked_group["source_document"]
-    code = project_with_span_annotations_and_linked_group["code"]
-
-    resp = client.delete(f"{_url(project.id)}/{span_annotation.id}/span-groups")
-
-    assert resp.status_code == 200, resp.text
-    updated = SpanAnnotationRead.model_validate(resp.json())
-    assert updated.id == span_annotation.id
-    assert updated.sdoc_id == sdoc.id
-    assert updated.code_id == code.id
-    assert updated.begin == span_annotation.begin
-    assert updated.end == span_annotation.end
-    assert updated.group_ids == []
-
-
-def test_remove_from_all_groups_not_found(client: TestClient, test_project: ProjectORM):
-    resp = client.delete(f"{_url(test_project.id)}/999999/span-groups")
-
-    assert resp.status_code == 404, resp.text
-
-
-def test_get_groups_ok(
-    client: TestClient,
-    project_with_span_annotations_and_linked_group,
-):
-    project = project_with_span_annotations_and_linked_group["project"]
-    span_annotation = project_with_span_annotations_and_linked_group["span_annotation"]
-    span_group = project_with_span_annotations_and_linked_group["span_group"]
-
-    resp = client.get(f"{_url(project.id)}/{span_annotation.id}/span-groups")
-
-    assert resp.status_code == 200, resp.text
-    groups = [SpanGroupRead.model_validate(g) for g in resp.json()]
-    returned_ids = {g.id for g in groups}
-    assert returned_ids == {span_group.id}
-
-
-def test_get_groups_not_found(client: TestClient, test_project: ProjectORM):
-    resp = client.get(f"{_url(test_project.id)}/999999/span-groups")
-
-    assert resp.status_code == 404, resp.text
 
 
 # ===========================================================================

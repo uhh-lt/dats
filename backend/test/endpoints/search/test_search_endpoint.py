@@ -89,9 +89,9 @@ SPAN_URL = "/search/span-annotations"
 SENT_URL = "/search/sentence-annotations"
 BBOX_URL = "/search/bbox-annotations"
 
-SPAN_INFO_URL = "/search/span-annotations/info"
-SENT_INFO_URL = "/search/sentence-annotations/info"
-BBOX_INFO_URL = "/search/bbox-annotations/info"
+SPAN_INFO_URL = "/search/span-annotations/columns"
+SENT_INFO_URL = "/search/sentence-annotations/columns"
+BBOX_INFO_URL = "/search/bbox-annotations/columns"
 
 SPAN_GROUPS_URL = "/search/span-annotations/groups"
 SENT_GROUPS_URL = "/search/sentence-annotations/groups"
@@ -148,7 +148,7 @@ def _on_sdoc_one_indices(entity: str) -> set[int]:
 
 
 # ===========================================================================
-# SEARCH MEMO INFO (/search/memos/info) TESTS
+# SEARCH MEMO INFO (/search/memos/columns) TESTS
 # ===========================================================================
 
 
@@ -156,7 +156,7 @@ def test_memo_info_marks_all_columns_except_content_groupable(
     client: TestClient, search_project
 ):
     """Memo info exposes every MemoColumns member; all but CONTENT are groupable."""
-    response = client.get(_url("/search/memos/info", search_project["project"].id))
+    response = client.get(_url("/search/memos/columns", search_project["project"].id))
     assert response.status_code == 200, response.text
     infos = [ColumnInfo[MemoColumns].model_validate(x) for x in response.json()]
     groupable = {info.column for info in infos if info.groupable}

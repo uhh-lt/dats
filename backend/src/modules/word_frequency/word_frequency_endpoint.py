@@ -11,7 +11,7 @@ from modules.word_frequency.word_frequency_service import WordFrequencyService
 from systems.search_system.column_info import ColumnInfo
 
 router = project_router(
-    "/word-frequencies", tags=["wordFrequency"], feature=WORD_FREQUENCY
+    "/word-frequencies", tags=["wordFrequencies"], feature=WORD_FREQUENCY
 )
 
 
@@ -19,11 +19,11 @@ router = project_router(
 
 
 @router.get(
-    "/info",
+    "/columns",
     response_model=list[ColumnInfo[WordFrequencyColumns]],
     summary="Returns WordFrequency Info.",
 )
-def get_info(
+def get_columns(
     *,
     db: DBSession,
     project_id: int,

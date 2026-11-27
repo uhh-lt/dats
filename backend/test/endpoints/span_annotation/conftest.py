@@ -7,10 +7,6 @@ from core.annotation.span_annotation_crud import crud_span_anno
 from core.annotation.span_annotation_dto import SpanAnnotationCreate
 from core.annotation.span_annotation_orm import SpanAnnotationORM
 from core.annotation.span_annotation_service import SpanAnnotationService
-from core.annotation.span_group_crud import crud_span_group
-from core.annotation.span_group_dto import SpanGroupCreate
-from core.annotation.span_group_orm import SpanGroupORM
-from core.annotation.span_group_service import SpanGroupService
 from core.code.code_crud import crud_code
 from core.code.code_dto import CodeCreate
 from core.code.code_orm import CodeORM
@@ -207,93 +203,6 @@ def project_with_span_annotations_for_count_test(
         "code": code,
         "span_annotation": span_annotation,
         "span_annotation2": span_annotation2,
-    }
-
-
-class ProjectWithSpanAnnotationsAndGroup(ProjectWithSpanAnnotation):
-    span_group: SpanGroupORM
-
-
-@pytest.fixture(scope="function")
-def project_with_span_annotations_and_group(
-    db_session, test_user, project_with_span_annotation
-) -> ProjectWithSpanAnnotationsAndGroup:
-    """Create a project for the test user with a source document, a code, a span annotation, and a span group."""
-
-    project = project_with_span_annotation["project"]
-    sdoc = project_with_span_annotation["source_document"]
-    code = project_with_span_annotation["code"]
-    span_annotation = project_with_span_annotation["span_annotation"]
-
-    # Create a span group
-    span_group = crud_span_group.read(
-        db=db_session,
-        project_id=project.id,
-        id=SpanGroupService()
-        .create(
-            db=db_session,
-            project_id=project.id,
-            user_id=test_user.id,
-            create_dto=SpanGroupCreate(name="g1", sdoc_id=sdoc.id),
-        )
-        .id,
-    )
-
-    # Commit the changes to the database and refresh the objects
-    db_session.commit()
-    db_session.refresh(span_group)
-
-    return {
-        "project": project,
-        "source_document": sdoc,
-        "code": code,
-        "span_annotation": span_annotation,
-        "span_group": span_group,
-    }
-
-
-@pytest.fixture(scope="function")
-def project_with_span_annotations_and_linked_group(
-    db_session, test_user, project_with_span_annotation
-) -> ProjectWithSpanAnnotationsAndGroup:
-    """Create a project for the test user with a source document, a code, a span annotation, and a span group. The span annotation is linked to the span group."""
-
-    project = project_with_span_annotation["project"]
-    sdoc = project_with_span_annotation["source_document"]
-    code = project_with_span_annotation["code"]
-    span_annotation = project_with_span_annotation["span_annotation"]
-
-    # Create a span group
-    span_group = crud_span_group.read(
-        db=db_session,
-        project_id=project.id,
-        id=SpanGroupService()
-        .create(
-            db=db_session,
-            project_id=project.id,
-            user_id=test_user.id,
-            create_dto=SpanGroupCreate(name="g1", sdoc_id=sdoc.id),
-        )
-        .id,
-    )
-
-    # Link the span annotation to the group
-    crud_span_group.link_spans_multi(
-        db=db_session,
-        project_id=project.id,
-        links={span_group.id: [span_annotation.id]},
-    )
-
-    # Commit the changes to the database and refresh the objects
-    db_session.commit()
-    db_session.refresh(span_group)
-
-    return {
-        "project": project,
-        "source_document": sdoc,
-        "code": code,
-        "span_annotation": span_annotation,
-        "span_group": span_group,
     }
 
 

@@ -24,7 +24,7 @@ from core.prompt.prompt_enum import (
 from core.prompt.prompt_service import PromptService
 from systems.websocket_system.websocket_dependency import WebsocketEmitter
 
-router = project_router("/prompts", tags=["prompt"])
+router = project_router("/prompts", tags=["prompts"])
 
 pts: PromptService = PromptService()
 

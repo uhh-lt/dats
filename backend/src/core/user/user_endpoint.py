@@ -11,8 +11,9 @@ from core.user.user_crud import crud_user
 from core.user.user_dto import ProjectAddUser, UserRead, UserUpdate, VirtualUserCreate
 from systems.websocket_system.websocket_dependency import WebsocketEmitter
 
-# the users of a project: its members and its virtual users
-router = project_router("", tags=["user", "mcp"])
+# the users of a project: its members and its virtual users, each with the tag of
+# its first path segment
+router = project_router("", tags=[])
 
 
 # --- create operations
@@ -20,6 +21,7 @@ router = project_router("", tags=["user", "mcp"])
 
 @router.put(
     "/virtual-users",
+    tags=["virtualUsers", "mcp"],
     response_model=UserRead,
     summary="Creates a virtual user (a user that cannot log in) in the Project",
 )
@@ -43,6 +45,7 @@ def create_virtual_user(
 
 @router.get(
     "/members",
+    tags=["members", "mcp"],
     response_model=list[UserRead],
     summary=(
         "Returns all Users of the Project with the given ID: its members, then its "
@@ -61,6 +64,7 @@ def get_by_project(*, project_id: int, db: DBSession) -> list[UserRead]:
 
 @router.patch(
     "/virtual-users/{virtual_user_id}",
+    tags=["virtualUsers", "mcp"],
     response_model=UserRead,
     summary="Updates the virtual user with the given ID of the Project",
 )
@@ -86,6 +90,7 @@ def update_virtual_user(
 
 @router.put(
     "/members",
+    tags=["members", "mcp"],
     response_model=ProjectUserLinks,
     summary="Adds the existing User with the given email to the Project as a member",
 )
@@ -119,6 +124,7 @@ def associate_user_to_project(
 
 @router.delete(
     "/virtual-users/{virtual_user_id}",
+    tags=["virtualUsers", "mcp"],
     response_model=UserRead,
     summary=(
         "Removes the virtual user with the given ID of the Project together with all "
@@ -143,6 +149,7 @@ def delete_virtual_user(
 
 @router.delete(
     "/members/{user_id}",
+    tags=["members", "mcp"],
     response_model=ProjectUserLinks,
     summary="Removes the member with the given ID from the Project",
 )

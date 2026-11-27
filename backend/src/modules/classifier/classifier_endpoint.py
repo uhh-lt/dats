@@ -17,7 +17,7 @@ from modules.classifier.classifier_dto import (
 from modules.classifier.classifier_service import ClassifierService
 from systems.websocket_system.websocket_dependency import WebsocketEmitter
 
-router = project_router("/classifiers", tags=["classifier"])
+router = project_router("/classifiers", tags=["classifiers"])
 
 
 # --- read operations

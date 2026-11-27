@@ -11,7 +11,7 @@ from systems.websocket_system.websocket_dependency import WebsocketEmitter
 
 # the logged-in user, outside every project
 router = APIRouter(
-    prefix="/users/me", dependencies=[Depends(get_current_user)], tags=["user", "mcp"]
+    prefix="/users/me", dependencies=[Depends(get_current_user)], tags=["users", "mcp"]
 )
 
 

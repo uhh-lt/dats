@@ -240,7 +240,7 @@ OWN_ID_EXCEPTIONS: dict[str, tuple[int, str]] = {
         409,
         "the virtual user of the run is the test user, who is still in use",
     ),
-    "PUT /projects/{project_id}/span-annotations/{span_annotation_id}/span-groups/{span_group_id}": (
+    "PUT /projects/{project_id}/span-groups/{span_group_id}/span-annotations/{span_annotation_id}": (
         409,
         "the span annotation is in the span group already",
     ),
@@ -685,4 +685,34 @@ def test_every_route_takes_one_body_dto_and_query_parameters_only_on_reads(
                 violations.append(f"{route}: loose body fields")
             if body_schema.get("type") == "array" and "/bulk" not in path:
                 violations.append(f"{route}: bare list body")
+    assert violations == []
+
+
+# ===========================================================================
+# ALL ROUTES: TAGS
+# ===========================================================================
+# The guide's "Tags": the first tag of a route is the first path segment after
+# `/projects/{project_id}` in camelCase, and `projects` for the project itself.
+
+
+def _first_segment_tag(path: str) -> str:
+    """The tag the path gets: its first segment after the project in camelCase."""
+    segments = [s for s in path.removeprefix("/projects/{project_id}").split("/") if s]
+    if not segments:
+        return "projects"
+    first, *rest = segments[0].split("-")
+    return first + "".join(word.capitalize() for word in rest)
+
+
+def test_every_route_has_the_tag_of_its_first_path_segment(app: FastAPI) -> None:
+    """The first tag names the generated client service and the MCP tools, so it
+    follows the path: `/span-annotations` → `spanAnnotations`,
+    `/perspectives/aspects` → `perspectives`, `/users/me` → `users`."""
+    schema = app.openapi()
+    violations = [
+        f"{method.upper()} {path}: {operation['tags'][0]}"
+        for path, operations in schema["paths"].items()
+        for method, operation in operations.items()
+        if operation["tags"][0] != _first_segment_tag(path)
+    ]
     assert violations == []

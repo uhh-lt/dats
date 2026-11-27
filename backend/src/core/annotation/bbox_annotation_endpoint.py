@@ -14,7 +14,7 @@ from core.annotation.bbox_annotation_service import BBoxAnnotationService
 from core.auth.authz_user import AuthzUser
 from systems.websocket_system.websocket_dependency import WebsocketEmitter
 
-router = project_router("/bbox-annotations", tags=["bboxAnnotation", "mcp"])
+router = project_router("/bbox-annotations", tags=["bboxAnnotations", "mcp"])
 
 
 # --- create operations

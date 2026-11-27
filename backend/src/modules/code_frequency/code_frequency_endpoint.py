@@ -8,7 +8,7 @@ from modules.code_frequency.code_frequency_dto import (
 )
 from modules.code_frequency.code_frequency_service import CodeFrequencyService
 
-router = project_router("/code-frequencies", tags=["codeFrequency"])
+router = project_router("/code-frequencies", tags=["codeFrequencies"])
 
 
 # --- other operations

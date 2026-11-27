@@ -651,7 +651,7 @@ def test_delete_bulk_by_id_if_not_exists(
 
 
 # ===========================================================================
-# COUNT SENTENCE ANNOTATIONS (POST /projects/{project_id}/sentence-annotations/count) TESTS
+# COUNT SENTENCE ANNOTATIONS (POST /projects/{project_id}/sentence-annotations/counts) TESTS
 # ===========================================================================
 
 
@@ -666,7 +666,7 @@ def test_count_annotations(
     annotations = project_with_multiple_sentence_annotations["sentence_annotations"]
 
     resp = client.post(
-        _route(project.id) + "/count",
+        _route(project.id) + "/counts",
         json={"user_id": test_user.id, "sdoc_ids": [sdoc.id], "code_ids": [code.id]},
     )
 
@@ -679,7 +679,7 @@ def test_count_annotation_if_not_exists(
 ):
     """Documents and codes that do not exist match nothing."""
     resp = client.post(
-        _route(test_project.id) + "/count",
+        _route(test_project.id) + "/counts",
         json={"user_id": test_user.id, "sdoc_ids": [2000], "code_ids": [2000]},
     )
 
@@ -696,7 +696,7 @@ def test_count_annotations_of_another_project_match_nothing(
     foreign = tenants["foreign"]
 
     resp = client.post(
-        _route(own["project"].id) + "/count",
+        _route(own["project"].id) + "/counts",
         json={
             "user_id": own["adoc"].user_id,
             "sdoc_ids": [foreign["sdoc"].id],

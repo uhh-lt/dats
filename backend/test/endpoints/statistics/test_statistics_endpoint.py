@@ -9,7 +9,7 @@ from modules.statistics.statistics_dto import (
 )
 
 # ===========================================================================
-# CODE STATISTICS (/projects/{project_id}/code-statistics) TESTS
+# CODE STATISTICS (/projects/{project_id}/statistics/codes) TESTS
 # ===========================================================================
 
 
@@ -17,7 +17,7 @@ def _code_stats(
     client: TestClient, project_id: int, code_id: int, sdoc_ids: list[int]
 ) -> list[SpanEntityStat]:
     response = client.post(
-        f"/projects/{project_id}/code-statistics",
+        f"/projects/{project_id}/statistics/codes",
         json=CodeStatisticsRequest(code_id=code_id, sdoc_ids=sdoc_ids).model_dump(
             mode="json"
         ),
@@ -68,7 +68,7 @@ def test_code_statistics_of_no_documents_are_empty(
 
 
 # ===========================================================================
-# TAG STATISTICS (/projects/{project_id}/tag-statistics) TESTS
+# TAG STATISTICS (/projects/{project_id}/statistics/tags) TESTS
 # ===========================================================================
 
 
@@ -76,7 +76,7 @@ def _tag_stats(
     client: TestClient, project_id: int, sdoc_ids: list[int]
 ) -> list[TagStat]:
     response = client.post(
-        f"/projects/{project_id}/tag-statistics",
+        f"/projects/{project_id}/statistics/tags",
         json=TagStatisticsRequest(sdoc_ids=sdoc_ids).model_dump(mode="json"),
     )
     assert response.status_code == 200, response.text

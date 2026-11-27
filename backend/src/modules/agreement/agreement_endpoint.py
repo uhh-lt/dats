@@ -7,7 +7,7 @@ from modules.agreement.agreement_dto import (
 )
 from modules.agreement.agreement_service import AgreementService
 
-router = project_router("/agreements", tags=["agreement"])
+router = project_router("/agreements", tags=["agreements"])
 
 
 # --- other operations

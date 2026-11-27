@@ -16,7 +16,7 @@ from core.annotation.sentence_annotation_service import SentenceAnnotationServic
 from core.auth.authz_user import AuthzUser
 from systems.websocket_system.websocket_dependency import WebsocketEmitter
 
-router = project_router("/sentence-annotations", tags=["sentenceAnnotation", "mcp"])
+router = project_router("/sentence-annotations", tags=["sentenceAnnotations", "mcp"])
 
 
 # --- create operations
@@ -240,7 +240,7 @@ def delete_by_id(
 
 
 @router.post(
-    "/count",
+    "/counts",
     response_model=dict[int, int],
     summary=(
         "Counts the SentenceAnnotations of the User per Code (by code_ids) in the "

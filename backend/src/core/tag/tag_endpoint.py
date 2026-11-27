@@ -18,7 +18,7 @@ from core.tag.tag_dto import (
 )
 from systems.websocket_system.websocket_dependency import WebsocketEmitter
 
-router = project_router("/tags", tags=["tag", "mcp"])
+router = project_router("/tags", tags=["tags", "mcp"])
 
 
 def _read_sdoc_tag_links(
@@ -298,7 +298,7 @@ def delete_by_id(
 
 
 @router.post(
-    "/count",
+    "/counts",
     response_model=dict[int, int],
     summary=(
         "Counts per Tag how many of the SourceDocuments carry it, for the given Tags "

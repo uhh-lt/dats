@@ -15,7 +15,7 @@ from modules.whiteboard.whiteboard_dto import (
 from modules.whiteboard.whiteboard_service import WhiteboardService
 from systems.websocket_system.websocket_dependency import WebsocketEmitter
 
-router = project_router("/whiteboards", tags=["whiteboard"])
+router = project_router("/whiteboards", tags=["whiteboards"])
 
 
 # --- create operations

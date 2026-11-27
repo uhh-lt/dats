@@ -6,7 +6,7 @@ from modules.document_sampler.document_sampler_dto import (
 )
 from modules.document_sampler.document_sampler_service import DocumentSamplerService
 
-router = project_router("/document-samples", tags=["documentSample"])
+router = project_router("/document-samples", tags=["documentSamples"])
 
 
 # --- other operations

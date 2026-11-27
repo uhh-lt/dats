@@ -13,11 +13,10 @@ from core.annotation.span_annotation_dto import (
     SpanAnnotationUpdateBulk,
 )
 from core.annotation.span_annotation_service import SpanAnnotationService
-from core.annotation.span_group_dto import SpanGroupRead
 from core.auth.authz_user import AuthzUser
 from systems.websocket_system.websocket_dependency import WebsocketEmitter
 
-router = project_router("/span-annotations", tags=["spanAnnotation", "mcp"])
+router = project_router("/span-annotations", tags=["spanAnnotations", "mcp"])
 
 
 # --- create operations
@@ -71,27 +70,6 @@ def create_bulk(
     return results
 
 
-@router.put(
-    "/{span_annotation_id}/span-groups/{span_group_id}",
-    response_model=SpanAnnotationRead,
-    summary="Adds the SpanAnnotation to the SpanGroup",
-)
-def add_to_span_group(
-    *,
-    db: DBSession,
-    project_id: int,
-    span_annotation_id: int,
-    span_group_id: int,
-    ws: WebsocketEmitter = Depends(),
-) -> SpanAnnotationRead:
-    db_obj = crud_span_anno.add_to_span_group(
-        db=db, project_id=project_id, span_id=span_annotation_id, group_id=span_group_id
-    )
-    result = SpanAnnotationRead.model_validate(db_obj)
-    ws.emit_to_project(DATSEvent.SPAN_ANNOTATION_UPDATED, result, project_id=project_id)
-    return result
-
-
 # --- read operations
 
 
@@ -130,21 +108,6 @@ def get_by_id(
 ) -> SpanAnnotationRead:
     db_obj = crud_span_anno.read(db=db, project_id=project_id, id=span_annotation_id)
     return SpanAnnotationRead.model_validate(db_obj)
-
-
-@router.get(
-    "/{span_annotation_id}/span-groups",
-    response_model=list[SpanGroupRead],
-    summary="Returns all SpanGroups that contain the SpanAnnotation.",
-)
-def get_span_groups(
-    *,
-    db: DBSession,
-    project_id: int,
-    span_annotation_id: int,
-) -> list[SpanGroupRead]:
-    db_obj = crud_span_anno.read(db=db, project_id=project_id, id=span_annotation_id)
-    return [SpanGroupRead.model_validate(group) for group in db_obj.span_groups]
 
 
 # --- update operations
@@ -236,52 +199,11 @@ def delete_by_id(
     return result
 
 
-@router.delete(
-    "/{span_annotation_id}/span-groups",
-    response_model=SpanAnnotationRead,
-    summary="Removes the SpanAnnotation from all SpanGroups",
-)
-def remove_from_all_span_groups(
-    *,
-    db: DBSession,
-    project_id: int,
-    span_annotation_id: int,
-    ws: WebsocketEmitter = Depends(),
-) -> SpanAnnotationRead:
-    db_obj = crud_span_anno.remove_from_all_span_groups(
-        db=db, project_id=project_id, span_id=span_annotation_id
-    )
-    result = SpanAnnotationRead.model_validate(db_obj)
-    ws.emit_to_project(DATSEvent.SPAN_ANNOTATION_UPDATED, result, project_id=project_id)
-    return result
-
-
-@router.delete(
-    "/{span_annotation_id}/span-groups/{span_group_id}",
-    response_model=SpanAnnotationRead,
-    summary="Removes the SpanAnnotation from the SpanGroup",
-)
-def remove_from_span_group(
-    *,
-    db: DBSession,
-    project_id: int,
-    span_annotation_id: int,
-    span_group_id: int,
-    ws: WebsocketEmitter = Depends(),
-) -> SpanAnnotationRead:
-    db_obj = crud_span_anno.remove_from_span_group(
-        db=db, project_id=project_id, span_id=span_annotation_id, group_id=span_group_id
-    )
-    result = SpanAnnotationRead.model_validate(db_obj)
-    ws.emit_to_project(DATSEvent.SPAN_ANNOTATION_UPDATED, result, project_id=project_id)
-    return result
-
-
 # --- other operations
 
 
 @router.post(
-    "/count",
+    "/counts",
     response_model=dict[int, int],
     summary=(
         "Counts the SpanAnnotations of the User per Code (by code_ids) in the "
