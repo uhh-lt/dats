@@ -136,7 +136,8 @@ class CRUDMemo(ProjectCRUDBase[MemoORM, MemoCreateIntern, MemoUpdate]):
             limit: At most this many memos.
 
         Returns:
-            The matching memos.
+            The matching memos, ordered by id, or most recently opened first (then
+            by id) for `opened_by_user_id`.
         """
         query = (
             db.query(self.model)
@@ -173,8 +174,10 @@ class CRUDMemo(ProjectCRUDBase[MemoORM, MemoCreateIntern, MemoUpdate]):
                     ),
                 )
                 .where(MemoRecentORM.user_id == opened_by_user_id)
-                .order_by(MemoRecentORM.last_opened.desc())
+                .order_by(MemoRecentORM.last_opened.desc(), self.model.id)
             )
+        else:
+            query = query.order_by(self.model.id)
         if limit is not None:
             query = query.limit(limit)
         return query.all()

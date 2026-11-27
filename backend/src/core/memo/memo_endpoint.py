@@ -1,4 +1,4 @@
-from fastapi import Depends
+from fastapi import Depends, Query
 
 from common.dats_event import DATSEvent
 from common.dependencies import DBSession
@@ -62,7 +62,7 @@ def get_by_project(
     attached_object_id: int | None = None,
     user_id: int | None = None,
     recent: bool = False,
-    limit: int | None = None,
+    limit: int | None = Query(default=None, ge=1),
     authz_user: AuthzUser = Depends(),
 ) -> list[MemoRead]:
     return MemoService().read_by_project(

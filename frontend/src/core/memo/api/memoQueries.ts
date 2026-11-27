@@ -57,12 +57,12 @@ export const memoQueries = {
       retry: false,
     }),
 
-  // recently opened memos of a project
+  // the ten most recently opened memos of a project
   recentScope: (projectId: number | null | undefined) => [...memoQueries.projectScope(projectId), "recent"] as const,
   recent: (projectId: number | null | undefined) =>
     queryOptions({
       queryKey: memoQueries.recentScope(projectId),
-      queryFn: !projectId ? skipToken : () => MemosService.getByProject({ projectId, recent: true }),
+      queryFn: !projectId ? skipToken : () => MemosService.getByProject({ projectId, recent: true, limit: 10 }),
     }),
 
   // search results (flat) and search results grouped by a column
