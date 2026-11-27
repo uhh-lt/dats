@@ -466,6 +466,12 @@ What derives from the tag: the generated frontend services (`SpanAnnotationServi
 
 `test_every_route_has_the_tag_of_its_first_path_segment` (`test_project_router.py`) compares the first tag of every operation in `app.openapi()` with the camelCase first path segment after `/projects/{project_id}` (`projects` for the project itself). The request-shape test stays green. Every example route of the instruction, the docs page and the rules file exists in `openapi.json` (except the placeholders and the "do not" examples).
 
+### Checks
+
+- Tests: the folders `span_group`, `span_annotation`, `sentence_annotation`, `tag`, `memo`, `rag`, `statistics`, `word_frequency`, `project_router`, `info`, `coreference_resolution`, `search`, `user`, `api_key`, `project` and the span group CRUD tests: 796 passed.
+- `just lint backend`, `just typecheck backend`, `just lint frontend`, `just typecheck frontend`: pass.
+- Browser (demo user, the project of section 12): the search page loads its columns from `GET /search/source-documents/columns`, the tag and code statistics tabs call `POST /statistics/tags` and `POST /statistics/codes`, the annotator loads the members through `MembersService`, and "Add Tags" in the document panel calls `POST /tags/counts`; no console errors. The UI has no span group add or remove and no memo suggestion; the memo suggestion and the RAG answer were called on the dev backend with the hosted LLM (both 200, the answer "Alice."). Not clicked: the RAG chat of the perspectives map.
+
 ### Decided by the session
 
 | #    | Decision                                                                                                                                                                                                                                                                                                                                                                                                                                                     |
