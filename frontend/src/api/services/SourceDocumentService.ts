@@ -85,7 +85,7 @@ export class SourceDocumentService {
   public static getById({
     projectId,
     sdocId,
-    onlyIfFinished = true,
+    onlyIfFinished = false,
   }: {
     projectId: number;
     sdocId: number;
@@ -178,7 +178,7 @@ export class SourceDocumentService {
   public static getByIdWithData({
     projectId,
     sdocId,
-    onlyIfFinished = true,
+    onlyIfFinished = false,
   }: {
     projectId: number;
     sdocId: number;

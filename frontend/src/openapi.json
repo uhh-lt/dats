@@ -7147,7 +7147,7 @@
             "name": "only_if_finished",
             "in": "query",
             "required": false,
-            "schema": { "type": "boolean", "default": true, "title": "Only If Finished" }
+            "schema": { "type": "boolean", "default": false, "title": "Only If Finished" }
           }
         ],
         "responses": {
@@ -7246,7 +7246,7 @@
             "name": "only_if_finished",
             "in": "query",
             "required": false,
-            "schema": { "type": "boolean", "default": true, "title": "Only If Finished" }
+            "schema": { "type": "boolean", "default": false, "title": "Only If Finished" }
           }
         ],
         "responses": {
